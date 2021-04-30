@@ -47,7 +47,7 @@ class PhysiCellXMLCreator(QTabWidget):
         # self.grid = QGridLayout()
         # lay.addLayout(self.grid)
         self.setLayout(lay)
-        # self.setMinimumSize(400, 320)
+        self.setMinimumSize(400, 320)
 
         # self.menubar = QtWidgets.QMenuBar(self)
         # self.file_menu = QtWidgets.QMenu('File')
@@ -66,7 +66,7 @@ class PhysiCellXMLCreator(QTabWidget):
         model_name = "template"
         model_name = "biorobots_flat"
         # model_name = "randy_test"  #rwh
-        read_file = "../data/" + model_name + ".xml"
+        read_file = "data/" + model_name + ".xml"
         self.setWindowTitle(self.title_prefix + model_name)
 
 
@@ -299,7 +299,7 @@ class PhysiCellXMLCreator(QTabWidget):
         # self.config_file = "config_samples/template.xml"
         # self.show_sample_model()
         name = "template"
-        sample_file = "../data/" + name + ".xml"
+        sample_file = "data/" + name + ".xml"
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
@@ -310,7 +310,7 @@ class PhysiCellXMLCreator(QTabWidget):
     def biorobots_cb(self):
         print("\n\n\n================ copy/load sample ======================================")
         name = "biorobots_flat"
-        sample_file = "../data/" + name + ".xml"
+        sample_file = "data/" + name + ".xml"
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
@@ -327,7 +327,7 @@ class PhysiCellXMLCreator(QTabWidget):
 
     def cancer_biorobots_cb(self):
         name = "cancer_biorobots_flat"
-        sample_file = "../data/" + name + ".xml"
+        sample_file = "data/" + name + ".xml"
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
@@ -347,13 +347,13 @@ class PhysiCellXMLCreator(QTabWidget):
     def pred_prey_cb(self):
         name = "pred_prey_flat"
         self.add_new_model(name, True)
-        self.config_file = "../data/" + name + ".xml"
+        self.config_file = "data/" + name + ".xml"
         self.show_sample_model()
 
     def virus_mac_cb(self):
         name = "virus_macrophage_flat"
         self.add_new_model(name, True)
-        self.config_file = "../data/" + name + ".xml"
+        self.config_file = "data/" + name + ".xml"
         self.show_sample_model()
         # self.tree = ET.parse(self.config_file)
         # self.xml_root = self.tree.getroot()
@@ -363,18 +363,18 @@ class PhysiCellXMLCreator(QTabWidget):
     def worm_cb(self):
         name = "worm"
         self.add_new_model(name, True)
-        self.config_file = "../data/" + name + ".xml"
+        self.config_file = "data/" + name + ".xml"
         self.show_sample_model()
 
     def cancer_immune_cb(self):
         name = "cancer_immune3D_flat"
         self.add_new_model(name, True)
-        self.config_file = "../data/" + name + ".xml"
+        self.config_file = "data/" + name + ".xml"
         self.show_sample_model()
 
     def template_cb(self):
         name = "template"
-        sample_file = "../data/" + name + ".xml"
+        sample_file = "data/" + name + ".xml"
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
@@ -390,14 +390,14 @@ class PhysiCellXMLCreator(QTabWidget):
     def subcell_cb(self):
         name = "subcellular_flat"
         self.add_new_model(name, True)
-        self.config_file = "../data/" + name + ".xml"
+        self.config_file = "data/" + name + ".xml"
         self.show_sample_model()
 
 		
 def main():
     app = QApplication(sys.argv)
     ex = PhysiCellXMLCreator()
-    ex.setGeometry(100,100, 800,600)
+    # ex.setGeometry(100,100, 800,600)
     ex.show()
     sys.exit(app.exec_())
 	
