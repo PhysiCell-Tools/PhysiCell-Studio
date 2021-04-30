@@ -40,14 +40,14 @@ class PhysiCellXMLCreator(QTabWidget):
 
         # Menus
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(5, 35, 5, 5)
+        # lay.setContentsMargins(5, 35, 5, 5)
         self.menu()
         # self.setWindowIcon(self.style().standardIcon(getattr(QStyle, 'SP_DialogNoButton')))
-        self.setWindowIcon(QtGui.QIcon('physicell_logo_25pct.png'))
+        # self.setWindowIcon(QtGui.QIcon('physicell_logo_25pct.png'))
         # self.grid = QGridLayout()
         # lay.addLayout(self.grid)
         self.setLayout(lay)
-        self.setMinimumSize(400, 320)
+        # self.setMinimumSize(400, 320)
 
         # self.menubar = QtWidgets.QMenuBar(self)
         # self.file_menu = QtWidgets.QMenu('File')
