@@ -67,6 +67,11 @@ class PhysiCellXMLCreator(QTabWidget):
         model_name = "template"
         # model_name = "randy_test"  #rwh
         # read_file = "data/" + model_name + ".xml"
+
+        # then what??
+        binDirectory = os.path.realpath(os.path.abspath(__file__))
+        dataDirectory = os.path.join(binDirectory,'..','data')
+
         read_file = model_name + ".xml"
         self.setWindowTitle(self.title_prefix + model_name)
 
