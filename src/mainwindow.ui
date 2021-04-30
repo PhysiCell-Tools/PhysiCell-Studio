@@ -1,0 +1,2538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>919</width>
+    <height>628</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTreeWidget" name="outline">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>181</width>
+      <height>581</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <property name="columnCount">
+     <number>1</number>
+    </property>
+    <column>
+     <property name="text">
+      <string>New Config</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignLeading|AlignVCenter</set>
+     </property>
+    </column>
+    <item>
+     <property name="text">
+      <string>Microenvironment</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Cell Definitions</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QStackedWidget" name="pages_widget">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>10</y>
+      <width>691</width>
+      <height>531</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="microenviornment_page">
+     <widget class="QScrollArea" name="scroll_area">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>120</y>
+        <width>451</width>
+        <height>401</height>
+       </rect>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scroll_area_widget_contents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>449</width>
+         <height>399</height>
+        </rect>
+       </property>
+       <widget class="QLabel" name="dirichletBoundaryLabel">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>150</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Dirichlet Boundary</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="initialConditionLabel">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>110</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Initial Condition</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="decayRateLabel">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>70</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Decay Rate</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="diffusionCoefficientLabel">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>30</y>
+          <width>101</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Diffusion Coefficient</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="dirichletBoundaryCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>150</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="diffusionCoefficient">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>30</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="inputMethodHints">
+         <set>Qt::ImhDigitsOnly</set>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="decayRate">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>70</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="initialCondition">
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>110</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="dirchletBoundary">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="geometry">
+         <rect>
+          <x>170</x>
+          <y>150</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="advancedBoundaryLabel">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>190</y>
+          <width>111</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Advanced Boundary</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="xMaximumLabel">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>220</y>
+          <width>71</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>X Maximum</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="xMinimumLabel">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>260</y>
+          <width>71</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>X Minimum</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="yMaximumLabel">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>300</y>
+          <width>71</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Y Maximum</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="yMinimumLabel">
+        <property name="geometry">
+         <rect>
+          <x>130</x>
+          <y>340</y>
+          <width>71</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Y Minimum</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="xMaximum">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>220</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="xMinimum">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>260</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="yMaximum">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>300</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="yMinimum">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>340</y>
+          <width>161</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>0</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="xMaximumCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>100</x>
+          <y>220</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="xMinimumCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>100</x>
+          <y>260</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="yMaximumCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>100</x>
+          <y>300</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="yMinimumCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>100</x>
+          <y>340</y>
+          <width>16</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QLabel" name="diffusionCoefficientUnits">
+        <property name="geometry">
+         <rect>
+          <x>340</x>
+          <y>30</y>
+          <width>71</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>micron^2/min</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="decayRateUnits">
+        <property name="geometry">
+         <rect>
+          <x>340</x>
+          <y>70</y>
+          <width>47</width>
+          <height>13</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>1/min</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QLineEdit" name="Name">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>70</y>
+        <width>161</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>Default</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="nameLabel">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>70</y>
+        <width>101</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="New">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>20</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>New Substrate</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="Clone">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>20</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Clone Substrate</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="Remove">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>20</y>
+        <width>111</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remove Substrate</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="cell_definitions_page">
+     <widget class="QTabWidget" name="cell_tab_widget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>681</width>
+        <height>441</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="currentIndex">
+       <number>4</number>
+      </property>
+      <widget class="QWidget" name="cycle_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>685</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
+       </property>
+       <attribute name="title">
+        <string>Cycle</string>
+       </attribute>
+       <widget class="QWidget" name="layoutWidget_36">
+        <property name="geometry">
+         <rect>
+          <x>40</x>
+          <y>30</y>
+          <width>331</width>
+          <height>32</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="CYCLENameLayout">
+         <item>
+          <widget class="QLabel" name="CYCLEnameLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Cycle Name</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="CYCLEname">
+           <property name="text">
+            <string>Default</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QTabWidget" name="cycle_phase_tab_widget">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>80</y>
+          <width>591</width>
+          <height>311</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="cycle_phase_duration_tab">
+         <attribute name="title">
+          <string>Phase as Durations</string>
+         </attribute>
+         <widget class="QWidget" name="gridLayoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>561</width>
+            <height>261</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="CYCLEPhaseDurationLayout"/>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="cycle_phase_transition_tab">
+         <attribute name="title">
+          <string>Phase as Transitions</string>
+         </attribute>
+         <widget class="QWidget" name="gridLayoutWidget_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>561</width>
+            <height>261</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="CYCLEPhaseTransitionLayout"/>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QComboBox" name="CYCLEmodel">
+        <property name="geometry">
+         <rect>
+          <x>390</x>
+          <y>30</y>
+          <width>231</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <item>
+         <property name="text">
+          <string>Select a Model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>advanced_Ki67_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>basic_Ki67_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>flow_cytometry_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>live_apoptotic_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>total_cells_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>live_cells_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>flow_cytometry_separated_cycle_model</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>cycling_quiescent_model</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="death_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <attribute name="title">
+        <string>Death</string>
+       </attribute>
+       <widget class="QScrollArea" name="DEATHscrollArea">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>671</width>
+          <height>411</height>
+         </rect>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustIgnored</enum>
+        </property>
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>652</width>
+           <height>569</height>
+          </rect>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QFrame" name="DEATHAframe">
+            <property name="minimumSize">
+             <size>
+              <width>615</width>
+              <height>273</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <widget class="QWidget" name="layoutWidget_48">
+             <property name="geometry">
+              <rect>
+               <x>310</x>
+               <y>190</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHACalcificationLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAcalcificationRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Calcification Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAcalcificationRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAcalcificationRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_42">
+             <property name="geometry">
+              <rect>
+               <x>309</x>
+               <y>219</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHARelativeRuptureVolumeLayout">
+              <item>
+               <widget class="QLabel" name="DEATHArelativeRuptureVolumeLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Relative Rupture Volume</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHArelativeRuptureVolume">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_43">
+             <property name="geometry">
+              <rect>
+               <x>9</x>
+               <y>66</y>
+               <width>281</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHADeathRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAdeathRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Death Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAdeathRateField">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAdeathRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QTabWidget" name="deathA_phase_tab_widget">
+             <property name="geometry">
+              <rect>
+               <x>7</x>
+               <y>104</y>
+               <width>278</width>
+               <height>141</height>
+              </rect>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="tabShape">
+              <enum>QTabWidget::Rounded</enum>
+             </property>
+             <property name="currentIndex">
+              <number>0</number>
+             </property>
+             <widget class="QWidget" name="deathA_phase_duration_tab">
+              <attribute name="title">
+               <string>Phase as Durations</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout">
+               <item row="0" column="2">
+                <widget class="QLineEdit" name="DEATHAphase0Duration">
+                 <property name="text">
+                  <string>0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="DEATHAphase0DurationLabel">
+                 <property name="text">
+                  <string>Phase 0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QCheckBox" name="DEATHAphase0DurationCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="4">
+                <widget class="QLabel" name="DEATHAphase0DurationUnits">
+                 <property name="text">
+                  <string>min</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="deathA_phase_transition_tab">
+              <attribute name="title">
+               <string>Phase as Transitions</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_2">
+               <item row="0" column="0">
+                <widget class="QLabel" name="DEATHAphase0TransitionLabel">
+                 <property name="text">
+                  <string>Phase 0 -&gt; 1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="DEATHAphase0Transition"/>
+               </item>
+               <item row="0" column="2">
+                <widget class="QCheckBox" name="DEATHAphase0TransitionCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="DEATHAphase0TransitionUnits">
+                 <property name="text">
+                  <string>1/min</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_44">
+             <property name="geometry">
+              <rect>
+               <x>310</x>
+               <y>67</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHAUnlysedFluidChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAunlysedFluidChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Unlysed Fluid Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAunlysedFluidChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAunlysedFluidChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_47">
+             <property name="geometry">
+              <rect>
+               <x>310</x>
+               <y>159</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHANuclearBiomassChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAnuclearBiomassChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Nuclear Biomass Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAnuclearBiomassChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAnuclearBiomassChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_45">
+             <property name="geometry">
+              <rect>
+               <x>310</x>
+               <y>98</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHALysedFluidChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAlysedFluidChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Lysed Fluid Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAlysedFluidChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAlysedFluidChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QLabel" name="DEATHapoptosisLabel">
+             <property name="geometry">
+              <rect>
+               <x>347</x>
+               <y>14</y>
+               <width>191</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string># Apoptosis Model</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_46">
+             <property name="geometry">
+              <rect>
+               <x>310</x>
+               <y>128</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHACytoplasmicBiomassChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAcytoplasmicBiomassChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Cytoplasmic Biomass Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAcytoplasmicBiomassChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHAcytoplasmicBiomassChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_71">
+             <property name="geometry">
+              <rect>
+               <x>10</x>
+               <y>20</y>
+               <width>181</width>
+               <height>25</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHANameLayout">
+              <item>
+               <widget class="QLabel" name="DEATHAnameLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Name</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHAname">
+                <property name="text">
+                 <string>Apoptosis</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+          <item>
+           <widget class="QFrame" name="DEATHNframe">
+            <property name="minimumSize">
+             <size>
+              <width>615</width>
+              <height>272</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <widget class="QTabWidget" name="deathN_phase_tab_widget">
+             <property name="geometry">
+              <rect>
+               <x>20</x>
+               <y>110</y>
+               <width>278</width>
+               <height>141</height>
+              </rect>
+             </property>
+             <property name="currentIndex">
+              <number>1</number>
+             </property>
+             <widget class="QWidget" name="deathN_phase_duration_tab">
+              <attribute name="title">
+               <string>Phase as Durations</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_3">
+               <item row="0" column="3">
+                <widget class="QLabel" name="DEATHNphase0DurationUnits">
+                 <property name="text">
+                  <string>min</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="DEATHNphase0DurationLabel">
+                 <property name="text">
+                  <string>Phase 0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="DEATHNphase0Duration">
+                 <property name="text">
+                  <string>0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QCheckBox" name="DEATHNphase0DurationCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="DEATHNphase1DurationLabel">
+                 <property name="text">
+                  <string>Phase 1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="DEATHNphase1Duration">
+                 <property name="text">
+                  <string>0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QCheckBox" name="DEATHNphase1DurationCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QLabel" name="DEATHNphase1DurationUnits">
+                 <property name="text">
+                  <string>min</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="deathN_phase_transition_tab">
+              <attribute name="title">
+               <string>Phase as Transitions</string>
+              </attribute>
+              <layout class="QGridLayout" name="gridLayout_4">
+               <item row="0" column="3">
+                <widget class="QLabel" name="DEATHNphase0TransitionUnits">
+                 <property name="text">
+                  <string>1/min</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="DEATHNphase0Transition"/>
+               </item>
+               <item row="0" column="2">
+                <widget class="QCheckBox" name="DEATHNphase0TransitionCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="DEATHNphase0TransitionLabel">
+                 <property name="text">
+                  <string>Phase 0 -&gt; 1</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="DEATHNphase1TransitionLabel">
+                 <property name="text">
+                  <string>Phase 1 -&gt; 2</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="DEATHNphase1Transition"/>
+               </item>
+               <item row="1" column="2">
+                <widget class="QCheckBox" name="DEATHNphase1TransitionCheckBox">
+                 <property name="text">
+                  <string>Fixed</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="QLabel" name="DEATHNphase1TransitionUnits">
+                 <property name="text">
+                  <string>1/min</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_54">
+             <property name="geometry">
+              <rect>
+               <x>323</x>
+               <y>104</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNLysedFluidChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNlysedFluidChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Lysed Fluid Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNlysedFluidChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNlysedFluidChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_52">
+             <property name="geometry">
+              <rect>
+               <x>323</x>
+               <y>73</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNUnlysedFluidChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNunlysedFluidChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Unlysed Fluid Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNunlysedFluidChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNunlysedFluidChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_50">
+             <property name="geometry">
+              <rect>
+               <x>22</x>
+               <y>72</y>
+               <width>281</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNDeathRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNdeathRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Death Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNdeathRateField">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNdeathRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_58">
+             <property name="geometry">
+              <rect>
+               <x>323</x>
+               <y>134</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNCytoplasmicBiomassChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNcytoplasmicBiomassChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Cytoplasmic Biomass Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNcytoplasmicBiomassChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNcytoplasmicBiomassChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_49">
+             <property name="geometry">
+              <rect>
+               <x>322</x>
+               <y>225</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNRelativeRuptureVolumeLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNrelativeRuptureVolumeLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Relative Rupture Volume</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNrelativeRuptureVolume">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_72">
+             <property name="geometry">
+              <rect>
+               <x>20</x>
+               <y>30</y>
+               <width>181</width>
+               <height>25</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNNameLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNnameLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Name</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNname">
+                <property name="text">
+                 <string>Necrosis</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_56">
+             <property name="geometry">
+              <rect>
+               <x>323</x>
+               <y>196</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNCalcificationLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNcalcificationRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Calcification Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNcalcificationRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNcalcificationRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QLabel" name="DEATHnecrosisLabel">
+             <property name="geometry">
+              <rect>
+               <x>360</x>
+               <y>20</y>
+               <width>191</width>
+               <height>31</height>
+              </rect>
+             </property>
+             <property name="text">
+              <string># Necrosis Model</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::MarkdownText</enum>
+             </property>
+            </widget>
+            <widget class="QWidget" name="layoutWidget_53">
+             <property name="geometry">
+              <rect>
+               <x>323</x>
+               <y>165</y>
+               <width>291</width>
+               <height>24</height>
+              </rect>
+             </property>
+             <layout class="QHBoxLayout" name="DEATHNNuclearBiomassChangeRateLayout">
+              <item>
+               <widget class="QLabel" name="DEATHNnuclearBiomassChangeRateLabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Nuclear Biomass Change Rate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="DEATHNnuclearBiomassChangeRate">
+                <property name="text">
+                 <string>0</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="DEATHNnuclearBiomassChangeRateUnits">
+                <property name="text">
+                 <string>1/min</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="volume_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <attribute name="title">
+        <string>Volume</string>
+       </attribute>
+       <widget class="QWidget" name="layoutWidget_51">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>90</y>
+          <width>281</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMEFluidFractionLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEfluidFractionLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Fluid Fraction</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEfluidFraction"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget_55">
+        <property name="geometry">
+         <rect>
+          <x>360</x>
+          <y>240</y>
+          <width>287</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMECalcifiedFractionLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEcalcifiedFractionLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Calcified Fraction</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEcalcifiedFraction"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget_57">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>240</y>
+          <width>281</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMERelativeRuptureVolumeLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMErelativeRuptureVolumeLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Relative Rupture Volume</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMErelativeRuptureVolume">
+           <property name="inputMethodHints">
+            <set>Qt::ImhNone</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>22</x>
+          <y>32</y>
+          <width>281</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMETotalVolumeLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEtotalVolumeLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Total Volume</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEtotalVolume"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEtotalVolumeUnits">
+           <property name="text">
+            <string>um^3</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>22</x>
+          <y>62</y>
+          <width>281</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMENuclearVolumeLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEnuclearVolumeLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Nuclear Volume</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEnuclearVolume"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEnuclearVolumeUnits">
+           <property name="text">
+            <string>um^3</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>362</x>
+          <y>272</y>
+          <width>281</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMECalcificationRateLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEcalcificationRateLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Calcification Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEcalcificationRate"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEcalcificationRateUnits">
+           <property name="text">
+            <string>1/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>362</x>
+          <y>92</y>
+          <width>301</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMEFluidChangeRateLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEfluidChangeRateLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Fluid Change Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEfluidChangeRate"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEfluidChangeRateUnits">
+           <property name="text">
+            <string>1/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>362</x>
+          <y>62</y>
+          <width>301</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMECytoplasmicBiomassChangeRateLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEcytoplasmicBiomassChangeRateLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Cytoplasmic Biomass Change Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEcytoplasmicBiomassChangeRate"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEcytoplasmicBiomassChangeRateUnits">
+           <property name="text">
+            <string>1/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>362</x>
+          <y>32</y>
+          <width>302</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="VOLUMENuclearBiomassChangeRateLayout">
+         <item>
+          <widget class="QLabel" name="VOLUMEnuclearBiomassChangeRateLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Nuclear Biomass Change Rate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="VOLUMEnuclearBiomassChangeRate"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="VOLUMEnuclearBiomassChangeRateUnits">
+           <property name="text">
+            <string>1/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="mechanics_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <attribute name="title">
+        <string>Mechanics</string>
+       </attribute>
+       <widget class="QWidget" name="layoutWidget_60">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>301</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MECHANICSRelativeMaximumAdhesionStrengthLayout">
+         <item>
+          <widget class="QLabel" name="MECHANICSrelativeMaximumAdhesionStrengthLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Relative Maximum Adhesion Strength</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MECHANICSrelativeMaximumAdhesionStrength"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QTabWidget" name="mechanics_phase_tab_widget">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>130</y>
+          <width>431</width>
+          <height>81</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <widget class="QWidget" name="mechanics_relative_equilibrium_distance_tab">
+         <attribute name="title">
+          <string>Relative Equilibrium Distance</string>
+         </attribute>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>12</x>
+            <y>22</y>
+            <width>296</width>
+            <height>24</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="MECHANICSRelativeEquilibriumDistanceLayout">
+           <item>
+            <widget class="QLabel" name="MECHANICSrelativeEquilibriumDistanceLabel">
+             <property name="styleSheet">
+              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Set Relative Equilibrium Distance</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="MECHANICSrelativeEquilibriumDistance"/>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+        <widget class="QWidget" name="mechanics_absolute_equilibrium_distance_tab">
+         <attribute name="title">
+          <string>Absolute Equilibrium Distance</string>
+         </attribute>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>12</x>
+            <y>22</y>
+            <width>312</width>
+            <height>24</height>
+           </rect>
+          </property>
+          <layout class="QHBoxLayout" name="MECHANICSAbsoluteEquilibriumDistanceLayout">
+           <item>
+            <widget class="QLabel" name="MECHANICSabsoluteEquilibriumDistanceLabel">
+             <property name="styleSheet">
+              <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+             </property>
+             <property name="text">
+              <string>Set Abs. Equilibrium Distance</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="MECHANICSabsoluteEquilibriumDistance"/>
+           </item>
+           <item>
+            <widget class="QToolButton" name="MECHANICSabsoluteEquilibriumDistanceUnits">
+             <property name="text">
+              <string>um</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>12</x>
+          <y>22</y>
+          <width>301</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MECHANICSCellAdhesionStrengthLayout">
+         <item>
+          <widget class="QLabel" name="MECHANICScellAdhesionStrengthLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Cell Adhesion Strength</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MECHANICScellAdhesionStrength"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="MECHANICScellAdhesionStrengthUnits">
+           <property name="text">
+            <string>um/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>12</x>
+          <y>52</y>
+          <width>301</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MECHANICSCellRepulsionStrengthLayout">
+         <item>
+          <widget class="QLabel" name="MECHANICScellRepulsionStrengthLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Cell Repulsion Strength</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MECHANICScellRepulsionStrength"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="MECHANICScellRepulsionStrengtUnits">
+           <property name="text">
+            <string>um/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="motility_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <attribute name="title">
+        <string>Motility</string>
+       </attribute>
+       <widget class="QCheckBox" name="MOTILITYenableCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>101</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Enable Motility</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="MOTILITYuse2dCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>20</y>
+          <width>70</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Use 2D</string>
+        </property>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>60</y>
+          <width>291</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MOTILITYSpeedLayout">
+         <item>
+          <widget class="QLabel" name="MOTILITYspeedLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Speed</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MOTILITYspeed"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="MOTILITYspeedUnits">
+           <property name="text">
+            <string>um/min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>90</y>
+          <width>291</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MOTILITYPersistenceTimeLayout">
+         <item>
+          <widget class="QLabel" name="MOTILITYpersistenceTimeLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Persistence Time</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MOTILITYpersistenceTime"/>
+         </item>
+         <item>
+          <widget class="QToolButton" name="MOTILITYpersistenceTimeUnits">
+           <property name="text">
+            <string>min</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>120</y>
+          <width>291</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MOTILITYMitigationBiasLayout">
+         <item>
+          <widget class="QLabel" name="MOTILITYmitigationBiasLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Mitigation Bias</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="MOTILITYmitigationBias"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="layoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>240</y>
+          <width>271</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MOTILITYDirectionLayout">
+         <item>
+          <widget class="QLabel" name="MOTILITYdirectionLabel">
+           <property name="styleSheet">
+            <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+           </property>
+           <property name="text">
+            <string>Direction</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="MOTILITYdirectionComboBox">
+           <item>
+            <property name="text">
+             <string>Towards Gradient</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Against Gradient</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QLabel" name="MOTILITYchemotaxisLabel">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>170</y>
+          <width>191</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string># CHEMOTAXIS</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::MarkdownText</enum>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="MOTILITYenableChemotaxisCheckBox">
+        <property name="geometry">
+         <rect>
+          <x>190</x>
+          <y>180</y>
+          <width>121</width>
+          <height>17</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Enable Chemotaxis</string>
+        </property>
+       </widget>
+       <widget class="QWidget" name="">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>210</y>
+          <width>271</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="MOTILITYSubstrateLayout">
+         <item>
+          <widget class="QLabel" name="MOTILITYsubstrateLabel">
+           <property name="text">
+            <string>Substrate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="MOTILITYchemotaxisComboBox"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="secretion_tab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <attribute name="title">
+        <string>Secretion</string>
+       </attribute>
+       <widget class="QWidget" name="secretion_substrate_0" native="true">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>641</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <widget class="QLabel" name="SECRETIONsubstrateNameLabel0">
+         <property name="geometry">
+          <rect>
+           <x>270</x>
+           <y>10</y>
+           <width>91</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>SUBSTRATE-NAME</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>42</y>
+           <width>291</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="SECRETIONSecretionRateLayout">
+          <item>
+           <widget class="QLabel" name="SECRETIONsecretionRateLabel">
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Secreation Rate</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="SECRETIONsecretionRate"/>
+          </item>
+          <item>
+           <widget class="QToolButton" name="SECRETIONsecretionRateUnits">
+            <property name="text">
+             <string>1/min</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>72</y>
+           <width>291</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="SECRETIONSecretionTargetLayout">
+          <item>
+           <widget class="QLabel" name="SECRETIONsecretionTargetLabel">
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Secretion Target</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="SECRETIONsecretionTarget"/>
+          </item>
+          <item>
+           <widget class="QToolButton" name="SECRETIONsecretionTargetUnits">
+            <property name="text">
+             <string>Substrate Density</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>102</y>
+           <width>291</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="SECRETIONUptakeRateLayout">
+          <item>
+           <widget class="QLabel" name="SECRETIONuptakeRateLabel">
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Uptake Rate</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="SECRETIONuptakeRate">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="SECRETIONUptakeRateUnits">
+            <property name="text">
+             <string>1/min</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="layoutWidget">
+         <property name="geometry">
+          <rect>
+           <x>12</x>
+           <y>132</y>
+           <width>291</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <layout class="QHBoxLayout" name="SECRETIONNetExportRateLayout">
+          <item>
+           <widget class="QLabel" name="SECRETIONnetExportRateLabel">
+            <property name="styleSheet">
+             <string notr="true">font: 8pt &quot;MS Shell Dlg 2&quot;;</string>
+            </property>
+            <property name="text">
+             <string>Net Export Rate</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="SECRETIONnetExportRate">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="SECRETIONnetExportRateUnits">
+            <property name="text">
+             <string>Total Substrate/min</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="cellNameLabel">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>60</y>
+        <width>47</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Name</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="newCellButton">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>New Cell</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="cloneCellButton">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>10</y>
+        <width>91</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Clone Cell</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="removeCellButton">
+      <property name="geometry">
+       <rect>
+        <x>574</x>
+        <y>10</y>
+        <width>101</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remove Cell</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="cellName">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>60</y>
+        <width>161</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Default</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>919</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuNew">
+     <property name="title">
+      <string>New</string>
+     </property>
+     <addaction name="action2D"/>
+     <addaction name="action3D"/>
+    </widget>
+    <addaction name="menuNew"/>
+    <addaction name="actionLoad"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionXML_Out"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew_Substrate">
+   <property name="text">
+    <string>New Substrate</string>
+   </property>
+  </action>
+  <action name="actionLoad">
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionExport_to_XML">
+   <property name="text">
+    <string>Export to XML</string>
+   </property>
+  </action>
+  <action name="actionLink">
+   <property name="text">
+    <string>Microenvironments</string>
+   </property>
+  </action>
+  <action name="actionCell_Definitions">
+   <property name="text">
+    <string>Cell Definitions</string>
+   </property>
+  </action>
+  <action name="actionXML_Out">
+   <property name="text">
+    <string>XML Out</string>
+   </property>
+  </action>
+  <action name="action2D">
+   <property name="text">
+    <string>2D</string>
+   </property>
+  </action>
+  <action name="action3D">
+   <property name="text">
+    <string>3D</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <slot>on_totalVolume_textEdited(QString)</slot>
+  <slot>on_nuclearVolume_textEdited(QString)</slot>
+  <slot>on_fluidFraction_textEdited(QString)</slot>
+  <slot>on_nuclearBiomassChangeRate_textEdited(QString)</slot>
+  <slot>on_cytoplasmicBiomassChangeRate_textEdited(QString)</slot>
+  <slot>on_fluidChangeRate_textEdited(Qstring)</slot>
+ </slots>
+</ui>
