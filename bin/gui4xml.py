@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 # https://doc.qt.io/qtforpython/gettingstarted.html
 
+import os
 import sys
 import shutil
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -72,7 +73,8 @@ class PhysiCellXMLCreator(QTabWidget):
         binDirectory = os.path.realpath(os.path.abspath(__file__))
         dataDirectory = os.path.join(binDirectory,'..','data')
 
-        read_file = model_name + ".xml"
+        # read_file = model_name + ".xml"
+        read_file = os.path.join(dataDirectory, model_name + ".xml")
         self.setWindowTitle(self.title_prefix + model_name)
 
 
