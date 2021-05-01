@@ -70,7 +70,8 @@ class PhysiCellXMLCreator(QTabWidget):
         # read_file = "data/" + model_name + ".xml"
 
         # then what??
-        binDirectory = os.path.realpath(os.path.abspath(__file__))
+        # binDirectory = os.path.realpath(os.path.abspath(__file__))
+        binDirectory = os.path.dirname(os.path.abspath(__file__))
         dataDirectory = os.path.join(binDirectory,'..','data')
 
         # read_file = model_name + ".xml"
@@ -79,10 +80,11 @@ class PhysiCellXMLCreator(QTabWidget):
 
 
         copy_file = "copy_" + model_name + ".xml"
-        shutil.copy(read_file, copy_file)
+        # shutil.copy(read_file, copy_file)
         # self.add_new_model(copy_file, True)
         # self.config_file = "config_samples/" + name + ".xml"
         self.config_file = copy_file  # to Save
+        self.config_file = read_file  # to Save
         self.tree = ET.parse(self.config_file)
         # tree = ET.parse(read_file)
         # self.tree = ET.parse(read_file)
