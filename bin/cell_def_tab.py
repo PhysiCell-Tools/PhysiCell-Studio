@@ -1840,7 +1840,7 @@ class CellDef(QWidget):
         # self.uep_cell_defs = self.xml_root.find(".//cell_definitions")
         # print('self.uep_cell_defs= ',self.uep_cell_defs)
         # # secretion_path = ".//cell_definition[" + str(idx_current_cell_def) + "]//phenotype//secretion//"
-        # uep_secretion = self.xml_root.find(".//cell_definitions//cell_definition[" + str(self.idx_current_cell_def) + "]//phenotype//secretion")
+        # uep_secretion = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//secretion")
         # print('uep_secretion = ',uep_secretion )
         # # vp = []   # pointers to <variable> nodes
         # if self.uep_cell_defs:
@@ -2095,6 +2095,7 @@ class CellDef(QWidget):
         # self.select = QtWidgets.QCheckBox("")
         w = QLabel("Name(read only)")
         w.setAlignment(QtCore.Qt.AlignCenter)
+        w.setStyleSheet("color: Salmon")  # PaleVioletRed")
         # hbox.addWidget(w)
         idr = 0
         glayout.addWidget(w, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -2109,6 +2110,7 @@ class CellDef(QWidget):
         
         w = QLabel("Units(r/o)")
         w.setAlignment(QtCore.Qt.AlignCenter)
+        w.setStyleSheet("color: Salmon")  # PaleVioletRed")
         # hbox.addWidget(w)
         glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2320,7 +2322,7 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def secretion_substrate_changed_cb(self, idx):
         print('------ secretion_substrate_changed_cb(): idx = ',idx)
-        print(self.secretion_substrate_dropdown.currentText())
+        print("    dropdown currentText = ",self.secretion_substrate_dropdown.currentText())
         if idx == -1:
             return
 
@@ -2501,6 +2503,7 @@ class CellDef(QWidget):
 
                 self.param_d[cell_def_name] = {}
                 self.param_d[cell_def_name]["name"] = cell_def_name
+                self.current_cell_def = cell_def_name  # do this for the callback methods?
 
                 cellname = QTreeWidgetItem([cell_def_name])
                 self.tree.insertTopLevelItem(idx,cellname)
@@ -2511,16 +2514,397 @@ class CellDef(QWidget):
 
                 # Now fill the param dict for each substrate and the Qt widget values for the 0th
 
-                # death_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//phenotype//death//"
-                death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
-                print('death_path=',death_path)
+                # death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
+                # print('death_path=',death_path)
 
-                # rwh/TODO: validate we've got apoptosis or necrosis since order is not required in XML?
-                apoptosis_path = death_path + "model[1]//"
+                # # rwh/TODO: validate we've got apoptosis or necrosis since order is not required in XML?
+                # apoptosis_path = death_path + "model[1]//"
                 # self.apoptosis_death_rate.setText(uep.find('.//cell_definition[1]//phenotype//death//model[1]//death_rate').text)
                 # val = uep.find(apoptosis_path + 'death_rate').text
                 # self.param_d[cell_def_name]["apop_death_rate"] = val
                 # self.apoptosis_death_rate.setText(val)
+
+
+                cycle_path = ".//cell_definition[" + str(idx) + "]//phenotype//cycle"
+                cycle_code = int(uep.find(cycle_path).attrib['code'])
+                print(' >> cycle_path=',cycle_path, ", code=",cycle_code)
+                # static const int advanced_Ki67_cycle_model= 0;
+                # static const int basic_Ki67_cycle_model=1;
+                # static const int flow_cytometry_cycle_model=2;
+                # static const int live_apoptotic_cycle_model=3;
+                # static const int total_cells_cycle_model=4;
+                # static const int live_cells_cycle_model = 5; 
+                # static const int flow_cytometry_separated_cycle_model = 6; 
+                # static const int cycling_quiescent_model = 7; 
+
+                # self.cycle_dropdown.addItem("live cells")
+                # self.cycle_dropdown.addItem("basic Ki67")
+                # self.cycle_dropdown.addItem("advanced Ki67")
+                # self.cycle_dropdown.addItem("flow cytometry")
+                # self.cycle_dropdown.addItem("flow cytometry separated")
+                # self.cycle_dropdown.addItem("cycling quiescent")
+
+                if cycle_code == 0:
+                    self.cycle_dropdown.setCurrentIndex(2)
+                elif cycle_code == 1:
+                    self.cycle_dropdown.setCurrentIndex(1)
+                elif cycle_code == 2:
+                    self.cycle_dropdown.setCurrentIndex(3)
+                elif cycle_code == 5:
+                    self.cycle_dropdown.setCurrentIndex(0)
+                elif cycle_code == 6:
+                    self.cycle_dropdown.setCurrentIndex(4)
+                elif cycle_code == 7:
+                    self.cycle_dropdown.setCurrentIndex(5)
+
+                # <cell_definition name="cargo cell" ID="2" visible="true">
+                # 	<phenotype>
+                # 		<cycle code="5" name="live">  
+                # 			<phase_transition_rates units="1/min"> 
+                # 				<rate start_index="0" end_index="0" fixed_duration="false">0.0</rate>
+                # 			</phase_transition_rates>
+                phase_transition_path = cycle_path + "//phase_transition_rates"
+                print(' >> phase_transition_path ')
+                pt_uep = uep.find(phase_transition_path)
+                if pt_uep:
+                    # self.rb1 = QRadioButton("transition rate(s)", self)
+                    self.rb1.setChecked(True)
+                    self.cycle_duration_flag = False
+                    self.customize_cycle_choices()
+
+                    for rate in pt_uep: 
+                        print(rate)
+                        print("start_index=",rate.attrib["start_index"])
+                        if (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "0"):
+                            self.cycle_trate00.setText(rate.text)
+                        elif (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "1"):
+                            self.cycle_trate01.setText(rate.text)
+                        elif (rate.attrib['start_index'] == "1") and (rate.attrib['end_index'] == "2"):
+                            self.cycle_trate_02_12.setText(rate.text)
+                        elif (rate.attrib['start_index'] == "2") and (rate.attrib['end_index'] == "3"):
+                            self.cycle_trate_03_23.setText(rate.text)
+                        elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
+                            self.cycle_trate_03_30.setText(rate.text)
+
+
+                # template.xml:
+                # <cycle code="6" name="Flow cytometry model (separated)">  
+                #     <phase_durations units="min"> 
+                #         <duration index="0" fixed_duration="false">300.0</duration>
+                #         <duration index="1" fixed_duration="true">480</duration>
+                #         <duration index="2" fixed_duration="true">240</duration>
+                #         <duration index="3" fixed_duration="true">60</duration>
+                #     </phase_durations>
+                #
+                # self.phase0_duration = QLineEdit()
+                phase_durations_path = cycle_path + "//phase_durations"
+                print(' >> phase_durations_path =',phase_durations_path )
+                pd_uep = uep.find(phase_durations_path)
+                print(' >> pd_uep =',pd_uep )
+                if pd_uep:
+                    self.rb2.setChecked(True)
+                    self.cycle_duration_flag = True
+                    self.customize_cycle_choices()
+
+                    for pd in pd_uep:   # phase_duration
+                        print(pd)
+                        print("index=",pd.attrib["index"])
+                        if  pd.attrib['index'] == "0":
+                            print("--> handling duration index=0")
+
+                            sval = pd.text
+                            self.param_d[cell_def_name]['cycle_duration00'] = sval
+                            # if idx == 1:  
+                            self.cycle_duration00.setText(sval)
+
+                            self.param_d[cell_def_name]['cycle_duration01'] = sval
+                            self.cycle_duration01.setText(sval)
+
+                            self.param_d[cell_def_name]['cycle_duration_02_01'] = sval
+                            self.cycle_duration_02_01.setText(sval)
+
+                            self.param_d[cell_def_name]['cycle_duration_03_01'] = sval
+                            self.cycle_duration_03_01.setText(sval)
+                        elif  pd.attrib['index'] == "1":
+                            print("--> handling duration index=1")
+                            self.cycle_duration10.setText(pd.text)
+                            self.cycle_duration_02_12.setText(pd.text)
+                            self.cycle_duration_03_12.setText(pd.text)
+                        elif  pd.attrib['index'] == "2":
+                            print("--> handling duration index=2")
+                            self.cycle_duration_02_20.setText(pd.text)
+                            self.cycle_duration_03_23.setText(pd.text)
+                        elif  pd.attrib['index'] == "3":
+                            print("--> handling duration index=3")
+                            self.cycle_duration_03_30.setText(pd.text)
+
+                # rf. microenv:
+                # self.cell_type_name.setText(var.attrib['name'])
+                # self.diffusion_coef.setText(vp[0].find('.//diffusion_coefficient').text)
+
+                # ------------------ cell_definition: default
+                # ---------  cycle (live)
+                # self.float0.value = float(uep.find('.//cell_definition[1]//phenotype//cycle//phase_transition_rates//rate[1]').text)
+
+                        # <death> 
+                        #   <model code="100" name="apoptosis"> 
+                        #    ...
+                        #   <model code="101" name="necrosis">
+
+                # ---------  death 
+
+                death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
+                print('death_path=',death_path)
+
+                # rwh/TODO: validate we've got apoptosis or necrosis since order is not required in XML.
+                apoptosis_path = death_path + "model[1]//"
+                # self.apoptosis_death_rate.setText(uep.find('.//cell_definition[1]//phenotype//death//model[1]//death_rate').text)
+                self.apoptosis_death_rate.setText(uep.find(apoptosis_path + 'death_rate').text)
+
+                phase_durations_path = apoptosis_path + "phase_durations"
+                print(' >> phase_durations_path =',phase_durations_path )
+                pd_uep = uep.find(phase_durations_path)
+                print(' >> pd_uep =',pd_uep )
+                if pd_uep:
+                    for pd in pd_uep: 
+                        print(pd)
+                        print("index=",pd.attrib["index"])
+                        if  pd.attrib['index'] == "0":
+                            self.apoptosis_phase0_duration.setText(pd.text)
+                        # elif  pd.attrib['index'] == "1":
+                        #     self.apoptosis_phase1_duration.setText(pd.text)
+                        # elif  pd.attrib['index'] == "2":
+                        #     self.apoptosis_phase2_duration.setText(pd.text)
+                        # elif  pd.attrib['index'] == "3":
+                        #     self.apoptosis_phase3_duration.setText(pd.text)
+
+                #-----
+                necrosis_path = death_path + "model[2]//"
+                self.necrosis_death_rate.setText(uep.find(necrosis_path + 'death_rate').text)
+
+                phase_durations_path = necrosis_path + "phase_durations"
+                print(' >> necrosis phase_durations_path =',phase_durations_path )
+                pd_uep = uep.find(phase_durations_path)
+                print(' >> pd_uep =',pd_uep )
+                if pd_uep:
+                    for pd in pd_uep: 
+                        print(pd)
+                        print("index=",pd.attrib["index"])
+                        if  pd.attrib['index'] == "0":
+                            self.necrosis_phase0_duration.setText(pd.text)
+                        elif  pd.attrib['index'] == "1":
+                            self.necrosis_phase1_duration.setText(pd.text)
+                        # elif  pd.attrib['index'] == "2":
+                        #     self.necrosis_phase2_duration.setText(pd.text)
+                        # elif  pd.attrib['index'] == "3":
+                        #     self.necrosis_phase3_duration.setText(pd.text)
+
+                #-----
+                apoptosis_params_path = apoptosis_path + "parameters//"
+                necrosis_params_path = necrosis_path + "parameters//"
+
+
+                # <parameters>
+                #     <unlysed_fluid_change_rate units="1/min">0.07</unlysed_fluid_change_rate>
+                #     <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+                #     <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+                #     <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+                #     <calcification_rate units="1/min">0</calcification_rate>
+                #     <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+
+                #---- apoptosis
+                self.apoptosis_unlysed_rate.setText(uep.find(apoptosis_params_path+"unlysed_fluid_change_rate").text)
+                self.apoptosis_lysed_rate.setText(uep.find(apoptosis_params_path+"lysed_fluid_change_rate").text)
+                self.apoptosis_cytoplasmic_biomass_change_rate.setText(uep.find(apoptosis_params_path+"cytoplasmic_biomass_change_rate").text)
+                self.apoptosis_nuclear_biomass_change_rate.setText(uep.find(apoptosis_params_path+"nuclear_biomass_change_rate").text)
+                self.apoptosis_calcification_rate.setText(uep.find(apoptosis_params_path+"nuclear_biomass_change_rate").text)
+                self.apoptosis_relative_rupture_volume.setText(uep.find(apoptosis_params_path+"relative_rupture_volume").text)
+
+                #---- necrosis
+                self.necrosis_unlysed_rate.setText(uep.find(necrosis_params_path+"unlysed_fluid_change_rate").text)
+                self.necrosis_lysed_rate.setText(uep.find(necrosis_params_path+"lysed_fluid_change_rate").text)
+                self.necrosis_cytoplasmic_biomass_change_rate.setText(uep.find(necrosis_params_path+"cytoplasmic_biomass_change_rate").text)
+                self.necrosis_nuclear_biomass_change_rate.setText(uep.find(necrosis_params_path+"nuclear_biomass_change_rate").text)
+                self.necrosis_calcification_rate.setText(uep.find(necrosis_params_path+"nuclear_biomass_change_rate").text)
+                self.necrosis_relative_rupture_volume.setText(uep.find(necrosis_params_path+"relative_rupture_volume").text)
+
+
+                # # ---------  volume 
+                        # <volume>  
+                        # 	<total units="micron^3">2494</total>
+                        # 	<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+                        # 	<nuclear units="micron^3">540</nuclear>
+                            
+                        # 	<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+                        # 	<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+                        # 	<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+                            
+                        # 	<calcified_fraction units="dimensionless">0</calcified_fraction>
+                        # 	<calcification_rate units="1/min">0</calcification_rate>
+                            
+                        # 	<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+
+                volume_path = ".//cell_definition[" + str(idx) + "]//phenotype//volume//"
+                print('volume_path=',volume_path)
+
+                self.volume_total.setText(uep.find(volume_path+"total").text)
+                self.volume_fluid_fraction.setText(uep.find(volume_path+"fluid_fraction").text)
+                self.volume_nuclear.setText(uep.find(volume_path+"nuclear").text)
+                self.volume_fluid_change_rate.setText(uep.find(volume_path+"fluid_change_rate").text)
+                self.volume_cytoplasmic_biomass_change_rate.setText(uep.find(volume_path+"cytoplasmic_biomass_change_rate").text)
+                self.volume_nuclear_biomass_change_rate.setText(uep.find(volume_path+"nuclear_biomass_change_rate").text)
+                self.volume_calcified_fraction.setText(uep.find(volume_path+"calcified_fraction").text)
+                self.volume_calcification_rate.setText(uep.find(volume_path+"calcification_rate").text)
+                self.relative_rupture_volume.setText(uep.find(volume_path+"relative_rupture_volume").text)
+
+
+                        # <mechanics> 
+                        # 	<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+                        # 	<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+                        # 	<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+                            
+                        # 	<options>
+                        # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+                        # 		<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+                        # 	</options>
+
+                # # ---------  mechanics 
+                mechanics_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//"
+                print('mechanics_path=',mechanics_path)
+
+                self.cell_cell_adhesion_strength.setText(uep.find(mechanics_path+"cell_cell_adhesion_strength").text)
+                self.cell_cell_repulsion_strength.setText(uep.find(mechanics_path+"cell_cell_repulsion_strength").text)
+                self.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
+
+                mechanics_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//options//"
+                self.set_relative_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text)
+                self.set_absolute_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text)
+
+                if uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true':
+                    self.set_relative_equilibrium_distance_enabled.setChecked(True)
+                else:
+                    self.set_relative_equilibrium_distance_enabled.setChecked(False)
+
+                if uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true':
+                    self.set_absolute_equilibrium_distance_enabled.setChecked(True)
+                else:
+                    self.set_absolute_equilibrium_distance_enabled.setChecked(False)
+
+
+                        # <motility>  
+                        # 	<speed units="micron/min">5.0</speed>
+                        # 	<persistence_time units="min">5.0</persistence_time>
+                        # 	<migration_bias units="dimensionless">0.5</migration_bias>
+                            
+                        # 	<options>
+                        # 		<enabled>true</enabled>
+                        # 		<use_2D>true</use_2D>
+                        # 		<chemotaxis>
+                        # 			<enabled>false</enabled>
+                        # 			<substrate>director signal</substrate>
+                        # 			<direction>1</direction>
+                        # 		</chemotaxis>
+                        # 	</options>
+
+                # # ---------  motility 
+                motility_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//"
+                print('motility_path=',motility_path)
+
+                self.speed.setText(uep.find(motility_path+"speed").text)
+                self.persistence_time.setText(uep.find(motility_path+"persistence_time").text)
+                self.migration_bias.setText(uep.find(motility_path+"migration_bias").text)
+
+                motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
+
+                # print(' motility options enabled', uep.find(motility_options_path +'enabled').text)
+                if uep.find(motility_options_path +'enabled').text.lower() == 'true':
+                    self.motility_enabled.setChecked(True)
+                else:
+                    self.motility_enabled.setChecked(False)
+
+                if uep.find(motility_options_path +'use_2D').text.lower() == 'true':
+                    self.motility_2D.setChecked(True)
+                else:
+                    self.motility_2D.setChecked(False)
+
+                        # 		<chemotaxis>
+                        # 			<enabled>false</enabled>
+                        # 			<substrate>director signal</substrate>
+                        # 			<direction>1</direction>
+                        # 		</chemotaxis>
+                motility_chemotaxis_path = motility_options_path + "chemotaxis//"
+                if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
+                    self.chemotaxis_enabled.setChecked(True)
+                else:
+                    self.chemotaxis_enabled.setChecked(False)
+
+                if uep.find(motility_chemotaxis_path +'direction').text == '1':
+                    self.chemotaxis_direction_towards.setChecked(True)
+                else:
+                    self.chemotaxis_direction_against.setChecked(True)
+
+
+                # # ---------  secretion 
+
+                # <substrate name="virus">
+                #     <secretion_rate units="1/min">0</secretion_rate>
+                #     <secretion_target units="substrate density">1</secretion_target>
+                #     <uptake_rate units="1/min">10</uptake_rate>
+                #     <net_export_rate units="total substrate/min">0</net_export_rate> 
+                # </substrate> 
+
+                secretion_path = ".//cell_definition[" + str(idx) + "]//phenotype//secretion//"
+                print('secretion_path =',secretion_path)
+                secretion_sub1_path = ".//cell_definition[" + str(idx) + "]//phenotype//secretion//substrate[1]//"
+
+                uep_secretion = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//secretion")
+                print('uep_secretion = ',uep_secretion )
+                
+                self.secretion_rate_val.clear()
+                self.secretion_target_val.clear()
+                self.secretion_uptake_rate_val.clear()
+                self.secretion_net_export_rate_val.clear()
+                idx = 0
+                for sub in uep_secretion.findall('substrate'):
+                    print(idx,") -- secretion substrate = ",sub.attrib['name'])
+                    self.secretion_rate_val.append(sub.find("secretion_rate").text)
+                    self.secretion_target_val.append(sub.find("secretion_target").text)
+                    self.secretion_uptake_rate_val.append(sub.find("uptake_rate").text)
+                    self.secretion_net_export_rate_val.append(sub.find("net_export_rate").text)
+                    idx += 1
+
+
+                self.secretion_rate.setText(self.secretion_rate_val[0])
+                self.secretion_target.setText(self.secretion_target_val[0])
+                self.uptake_rate.setText(self.secretion_uptake_rate_val[0])
+                self.secretion_net_export_rate.setText(self.secretion_net_export_rate_val[0])
+
+                # # ---------  molecular 
+
+
+                # # ---------  custom data 
+                # <custom_data>  
+                # 	<receptor units="dimensionless">0.0</receptor>
+                # 	<cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
+
+                uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//custom_data")
+                # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
+                print('uep_custom_data=',uep_custom_data)
+
+                jdx = 0
+                # rwh/TODO: if we have more vars than we initially created rows for, we'll need
+                # to call 'append_more_cb' for the excess.
+                for var in uep_custom_data:
+                    print(idx, ") ",var)
+                    self.custom_data_name[idx].setText(var.tag)
+                    print("tag=",var.tag)
+                    self.custom_data_value[idx].setText(var.text)
+
+                    if 'units' in var.keys():
+                        self.custom_data_units[idx].setText(var.attrib['units'])
+                    jdx += 1
+
+
 
         self.current_cell_def = cell_def_0th
         self.tree.setCurrentItem(self.tree.topLevelItem(0))  # select the top (0th) item
@@ -2572,9 +2956,9 @@ class CellDef(QWidget):
                 # self.tree.insertTopLevelItem(idx,cellname)
                 idx += 1
 
-        self.idx_current_cell_def = idx + 1  # we use 1-offset indices below 
+        # self.idx_current_cell_def = idx + 1  # we use 1-offset indices below 
 
-        cycle_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//phenotype//cycle"
+        cycle_path = ".//cell_definition[" + str(idx) + "]//phenotype//cycle"
         cycle_code = int(uep.find(cycle_path).attrib['code'])
         print(' >> cycle_path=',cycle_path, ", code=",cycle_code)
         # static const int advanced_Ki67_cycle_model= 0;

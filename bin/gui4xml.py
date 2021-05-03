@@ -105,8 +105,6 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
         print("gui4xml: substrate_name=",substrate_name)
-        # self.microenv_tab.fill_gui(substrate_name)
-        # self.microenv_tab.fill_gui()
         self.microenv_tab.populate_tree()  # rwh: both fill_gui and populate_tree??
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
@@ -115,7 +113,6 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.xml_root = self.xml_root
         cd_name = self.celldef_tab.first_cell_def_name()
         print("gui4xml: cd_name=",cd_name)
-        self.celldef_tab.fill_gui(cd_name)
         self.celldef_tab.populate_tree()
         self.celldef_tab.fill_substrates_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab

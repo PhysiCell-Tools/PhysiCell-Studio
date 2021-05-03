@@ -45,6 +45,7 @@ class SubstrateDef(QWidget):
         tree_widget_width = 160
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; meh.
+        # self.tree.itemDoubleClicked.connect(self.treeitem_edit_cb)
         # self.tree.setStyleSheet("background-color: lightgray")
         self.tree.setFixedWidth(tree_widget_width)
         # self.tree.currentChanged(self.tree_item_changed_cb)
@@ -116,6 +117,7 @@ class SubstrateDef(QWidget):
         hbox.addWidget(label)
 
         self.substrate_name = QLineEdit()
+        self.substrate_name.textChanged.connect(self.substrate_name_cb)  # todo - rename it
         # Want to validate name, e.g., starts with alpha, no special chars, etc.
         # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
         # self.cycle_trate0_1.enter.connect(self.save_xml)
@@ -378,9 +380,29 @@ class SubstrateDef(QWidget):
         self.layout.addWidget(splitter)
 
         # self.layout.addWidget(self.vbox)
+
         # self.layout.addWidget(self.text)
         # self.layout.addWidget(self.save_button)
         # self.save_button.clicked.connect(self.save_xml)
+
+
+    def treeitem_edit_cb(self, *args):
+        itm = self.tree.itemFromIndex(self.tree.selectedIndexes()[0])
+        column = self.tree.currentColumn()
+        edit = QLineEdit()
+        edit.returnPressed.connect(lambda*_:self.project.setData(column, edit.text(), itm, column, self.tree))
+        edit.returnPressed.connect(lambda*_:self.update())
+        print(edit.text())
+        self.tree.setItemWidget(itm,column,edit)
+
+    def substrate_name_cb(self, text):
+        print("Text: %s", text)
+        self.param_d[self.current_substrate]["name"] = text
+
+        treeitem = QTreeWidgetItem([text])  # todo - figure out how to rename it in the tree!
+        column = self.tree.currentColumn()
+        # self.tree.setCurrentItem(treeitem)
+        self.tree.setItemWidget(treeitem,column,None)
 
 
     def diffusion_coef_changed(self, text):
@@ -603,11 +625,13 @@ class SubstrateDef(QWidget):
 
                     self.param_d[substrate_name]["name"] = substrate_name
 
-                    subname = QTreeWidgetItem([substrate_name])
+                    treeitem = QTreeWidgetItem([substrate_name])
+                    treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
+
                     # self.substrate[var_name] = {}  # a dict of dicts
-                    self.tree.insertTopLevelItem(idx,subname)
+                    self.tree.insertTopLevelItem(idx,treeitem)
                     if idx == 0:  # select the 1st (0th) entry
-                        self.tree.setCurrentItem(subname)
+                        self.tree.setCurrentItem(treeitem)
 
                     # Now fill the param dict for each substrate and the Qt widget values for the 0th
 
@@ -762,73 +786,73 @@ class SubstrateDef(QWidget):
 
     #----------------------------------------------------------------------------
     # def fill_gui(self, substrate_name):
-    def fill_gui(self):
-        # <microenvironment_setup>
-		#   <variable name="food" units="dimensionless" ID="0">
-        uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
+#     def fill_gui(self):
+#         # <microenvironment_setup>
+# 		#   <variable name="food" units="dimensionless" ID="0">
+#         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
 
-        # if substrate_name == None:
-        #     substrate_name = self.xml_root.find(".//microenvironment_setup//variable").attrib['name']
+#         # if substrate_name == None:
+#         #     substrate_name = self.xml_root.find(".//microenvironment_setup//variable").attrib['name']
 
-        # self.substrate_name.setText(substrate_name)
+#         # self.substrate_name.setText(substrate_name)
 
-        self.param_d.clear()
-        # self.param_d[substrate_name] = {}  # a dict of dicts
+#         self.param_d.clear()
+#         # self.param_d[substrate_name] = {}  # a dict of dicts
 
-        vp = []   # pointers to <variable> nodes
-        if uep:
-            # self.tree.clear()
-            idx = 0
-            for var in uep.findall('variable'):
-                vp.append(var)
-                # print(var.attrib['name'])
-                substrate_name = var.attrib['name']
-                self.param_d[substrate_name] = {}
-                subname = QTreeWidgetItem([substrate_name])
-                # self.tree.insertTopLevelItem(idx,substrate_name)
-                # if subname.text(0) == substrate_name:
-                #     print("break out of substrate (variable) name loop with idx=",idx)
-                #     break
-                # idx += 1
+#         vp = []   # pointers to <variable> nodes
+#         if uep:
+#             # self.tree.clear()
+#             idx = 0
+#             for var in uep.findall('variable'):
+#                 vp.append(var)
+#                 # print(var.attrib['name'])
+#                 substrate_name = var.attrib['name']
+#                 self.param_d[substrate_name] = {}
+#                 treeitem = QTreeWidgetItem([substrate_name])
+#                 # self.tree.insertTopLevelItem(idx,substrate_name)
+#                 # if subname.text(0) == substrate_name:
+#                 #     print("break out of substrate (variable) name loop with idx=",idx)
+#                 #     break
+#                 # idx += 1
 
-        # self.tree.setCurrentItem(substrate_name,0)  # RWH/TODO: select 1st (0th?) item upon startup or loading new model
+#         # self.tree.setCurrentItem(substrate_name,0)  # RWH/TODO: select 1st (0th?) item upon startup or loading new model
 
-                idx += 1  # we use 1-offset indices below 
+#                 idx += 1  # we use 1-offset indices below 
 
-                var_param_path = self.xml_root.find(".//microenvironment_setup//variable[" + str(idx) + "]//physical_parameter_set")
-                var_path = self.xml_root.find(".//microenvironment_setup//variable[" + str(idx) + "]")
-                # uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
+#                 var_param_path = self.xml_root.find(".//microenvironment_setup//variable[" + str(idx) + "]//physical_parameter_set")
+#                 var_path = self.xml_root.find(".//microenvironment_setup//variable[" + str(idx) + "]")
+#                 # uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
 
-                # <variable name="oxygen" units="mmHg" ID="0">
-                # 	<physical_parameter_set>
-                # 		<diffusion_coefficient units="micron^2/min">100000.0</diffusion_coefficient>
-                # 		<decay_rate units="1/min">0.1</decay_rate>  
-                # 	</physical_parameter_set>
-                # 	<initial_condition units="mmHg">38.0</initial_condition>
-                # 	<Dirichlet_boundary_condition units="mmHg" enabled="true">38.0</
+#                 # <variable name="oxygen" units="mmHg" ID="0">
+#                 # 	<physical_parameter_set>
+#                 # 		<diffusion_coefficient units="micron^2/min">100000.0</diffusion_coefficient>
+#                 # 		<decay_rate units="1/min">0.1</decay_rate>  
+#                 # 	</physical_parameter_set>
+#                 # 	<initial_condition units="mmHg">38.0</initial_condition>
+#                 # 	<Dirichlet_boundary_condition units="mmHg" enabled="true">38.0</
 
-                # self.substrate_name.setText(var.attrib['name'])
-                sval = var_param_path.find('.//diffusion_coefficient').text
-                # self.diffusion_coef.setText(var_param_path.find('.//diffusion_coefficient').text)
-                self.param_d[substrate_name]['diffusion_coef'] = sval
-                if idx == 1:  
-                    self.diffusion_coef.setText(sval)
+#                 # self.substrate_name.setText(var.attrib['name'])
+#                 sval = var_param_path.find('.//diffusion_coefficient').text
+#                 # self.diffusion_coef.setText(var_param_path.find('.//diffusion_coefficient').text)
+#                 self.param_d[substrate_name]['diffusion_coef'] = sval
+#                 if idx == 1:  
+#                     self.diffusion_coef.setText(sval)
 
-#        ---- populate_tree(): self.param_d =  {'director signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}, 'cargo signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}}
-                sval = var_param_path.find('.//decay_rate').text
-                self.param_d[substrate_name]['decay_rate'] = sval
-                if idx == 1:  
-                    self.decay_rate.setText(sval)
+# #        ---- populate_tree(): self.param_d =  {'director signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}, 'cargo signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}}
+#                 sval = var_param_path.find('.//decay_rate').text
+#                 self.param_d[substrate_name]['decay_rate'] = sval
+#                 if idx == 1:  
+#                     self.decay_rate.setText(sval)
 
-                sval = var_path.find('.initial_condition').text
-                self.param_d[substrate_name]['init_cond'] = sval
-                if idx == 1:  
-                    self.init_cond.setText(var_path.find('.initial_condition').text)
+#                 sval = var_path.find('.initial_condition').text
+#                 self.param_d[substrate_name]['init_cond'] = sval
+#                 if idx == 1:  
+#                     self.init_cond.setText(var_path.find('.initial_condition').text)
 
-                sval = var_path.find('.Dirichlet_boundary_condition').text
-                self.param_d[substrate_name]['dirichlet_bc'] = sval
-                if idx == 1:  
-                    self.dirichlet_bc.setText(sval)
+#                 sval = var_path.find('.Dirichlet_boundary_condition').text
+#                 self.param_d[substrate_name]['dirichlet_bc'] = sval
+#                 if idx == 1:  
+#                     self.dirichlet_bc.setText(sval)
 
                 # self.chemical_A_decay_rate.value = float(vp[0].find('.//decay_rate').text)
                 # self.chemical_A_initial_condition.value = float(vp[0].find('.//initial_condition').text)
