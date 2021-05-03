@@ -127,6 +127,20 @@ class CellDef(QWidget):
         self.controls_hbox.addWidget(self.delete_button)
 
         #------------------
+        self.name_hbox = QHBoxLayout()
+        label = QLabel("Name of cell type:")
+        label.setFixedWidth(180)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.name_hbox.addWidget(label)
+
+        self.cell_type_name = QLineEdit()
+        # Want to validate name, e.g., starts with alpha, no special chars, etc.
+        # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
+        # self.cycle_trate0_1.enter.connect(self.save_xml)
+        self.name_hbox.addWidget(self.cell_type_name)
+        # self.vbox.addLayout(hbox)
+
+        #------------------
         self.cycle_tab = QWidget()
         self.death_tab = QWidget()
         self.volume_tab = QWidget()
@@ -230,7 +244,7 @@ class CellDef(QWidget):
         self.new_cell_def_count += 1
 
         self.current_cell_def = celldefname
-        self.cell_def_name.setText(celldefname)
+        self.cell_type_name.setText(celldefname)
 
         # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
 
@@ -263,7 +277,7 @@ class CellDef(QWidget):
         self.new_cell_def_count += 1
 
         self.current_cell_def = celldefname
-        self.cell_def_name.setText(celldefname)
+        self.cell_type_name.setText(celldefname)
 
         # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
 
@@ -384,6 +398,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate00 = QLineEdit()
+        self.cycle_trate00.textChanged.connect(self.cycle_trate00_changed)
         self.cycle_trate00.setValidator(QtGui.QDoubleValidator())
         # self.cycle_trate0_0.enter.connect(self.save_xml)
         glayout.addWidget(self.cycle_trate00, 0,1,1,2) # w, row, column, rowspan, colspan
@@ -416,6 +431,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate01 = QLineEdit()
+        self.cycle_trate01.textChanged.connect(self.cycle_trate01_changed)
         self.cycle_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -434,6 +450,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate10 = QLineEdit()
+        self.cycle_trate10.textChanged.connect(self.cycle_trate10_changed)
         self.cycle_trate10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -471,6 +488,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_02_01 = QLineEdit()
+        self.cycle_trate_02_01.textChanged.connect(self.cycle_trate_02_01_changed)
         self.cycle_trate_02_01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_02_01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -489,6 +507,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_02_12 = QLineEdit()
+        self.cycle_trate_02_12.textChanged.connect(self.cycle_trate_02_12_changed)
         self.cycle_trate_02_12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_02_12, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -507,6 +526,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_02_20 = QLineEdit()
+        self.cycle_trate_02_20.textChanged.connect(self.cycle_trate_02_20_changed)
         self.cycle_trate_02_20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_02_20, 2,1,1,2) # w, row, column, rowspan, colspan
 
@@ -537,6 +557,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_03_01 = QLineEdit()
+        self.cycle_trate_03_01.textChanged.connect(self.cycle_trate_03_01_changed)
         self.cycle_trate_03_01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_03_01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -555,6 +576,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_03_12 = QLineEdit()
+        self.cycle_trate_03_12.textChanged.connect(self.cycle_trate_03_12_changed)
         self.cycle_trate_03_12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_03_12, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -573,6 +595,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_03_23 = QLineEdit()
+        self.cycle_trate_03_23.textChanged.connect(self.cycle_trate_03_23_changed)
         self.cycle_trate_03_23.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_03_23, 2,1,1,2) # w, row, column, rowspan, colspan
 
@@ -591,6 +614,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_trate_03_30 = QLineEdit()
+        self.cycle_trate_03_30.textChanged.connect(self.cycle_trate_03_30_changed)
         self.cycle_trate_03_30.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_trate_03_30, 3,1,1,2) # w, row, column, rowspan, colspan
 
@@ -623,6 +647,7 @@ class CellDef(QWidget):
         # glayout.addWidget(*Widget, row, column, rowspan, colspan)
 
         self.cycle_duration00 = QLineEdit()
+        self.cycle_duration00.textChanged.connect(self.cycle_duration00_changed)
         self.cycle_duration00.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration00, 0,1,1,2)
 
@@ -654,6 +679,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration01 = QLineEdit()
+        self.cycle_duration01.textChanged.connect(self.cycle_duration01_changed)
         self.cycle_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -672,6 +698,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration10 = QLineEdit()
+        self.cycle_duration10.textChanged.connect(self.cycle_duration10_changed)
         self.cycle_duration10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -706,6 +733,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_02_01 = QLineEdit()
+        self.cycle_duration_02_01.textChanged.connect(self.cycle_duration_02_01_changed)
         self.cycle_duration_02_01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_02_01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -724,6 +752,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_02_12 = QLineEdit()
+        self.cycle_duration_02_12.textChanged.connect(self.cycle_duration_02_12_changed)
         self.cycle_duration_02_12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_02_12, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -742,6 +771,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_02_20 = QLineEdit()
+        self.cycle_duration_02_20.textChanged.connect(self.cycle_duration_02_20_changed)
         self.cycle_duration_02_20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_02_20, 2,1,1,2) # w, row, column, rowspan, colspan
 
@@ -773,6 +803,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_03_01 = QLineEdit()
+        self.cycle_duration_03_01.textChanged.connect(self.cycle_duration_03_01_changed)
         self.cycle_duration_03_01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_03_01, 0,1,1,2) # w, row, column, rowspan, colspan
 
@@ -791,6 +822,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_03_12 = QLineEdit()
+        self.cycle_duration_03_12.textChanged.connect(self.cycle_duration_03_12_changed)
         self.cycle_duration_03_12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_03_12, 1,1,1,2) # w, row, column, rowspan, colspan
 
@@ -809,6 +841,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_03_23 = QLineEdit()
+        self.cycle_duration_03_23.textChanged.connect(self.cycle_duration_03_23_changed)
         self.cycle_duration_03_23.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_03_23, 2,1,1,2) # w, row, column, rowspan, colspan
 
@@ -827,6 +860,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
 
         self.cycle_duration_03_30 = QLineEdit()
+        self.cycle_duration_03_30.textChanged.connect(self.cycle_duration_03_30_changed)
         self.cycle_duration_03_30.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_duration_03_30, 3,1,1,2) # w, row, column, rowspan, colspan
 
@@ -890,6 +924,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_death_rate = QLineEdit()
+        self.apoptosis_death_rate.textChanged.connect(self.apoptosis_death_rate_changed)
         self.apoptosis_death_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_death_rate.textChanged.connect(self.apop_death_rate_changed)
         # hbox.addWidget(self.apoptosis_death_rate)
@@ -919,6 +954,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_phase0_duration = QLineEdit()
+        self.apoptosis_phase0_duration.textChanged.connect(self.apoptosis_phase0_duration_changed)
         self.apoptosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_phase0_duration.textChanged.connect(self.apop_phase0_changed)
         # self.apoptosis_phase0_duration_hbox.addWidget(self.apoptosis_phase0_duration)
@@ -952,6 +988,7 @@ class CellDef(QWidget):
 
         # self.apoptosis_unlysed_rate_hbox.addWidget(label)
         self.apoptosis_unlysed_rate = QLineEdit()
+        self.apoptosis_unlysed_rate.textChanged.connect(self.apoptosis_unlysed_rate_changed)
         self.apoptosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_unlysed_rate.textChanged.connect(self.apop_unlysed_changed)
         # self.apoptosis_unlysed_rate_hbox.addWidget(self.apoptosis_unlysed_rate)
@@ -973,6 +1010,7 @@ class CellDef(QWidget):
         # self.apoptosis_lysed_rate_hbox.addWidget(label)
 
         self.apoptosis_lysed_rate = QLineEdit()
+        self.apoptosis_lysed_rate.textChanged.connect(self.apoptosis_lysed_rate_changed)
         self.apoptosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_lysed_rate.textChanged.connect(self.apop_lysed_changed)
         glayout.addWidget(self.apoptosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -993,6 +1031,7 @@ class CellDef(QWidget):
         # self.apoptosis_cytoplasmic_hbox.addWidget(label)
 
         self.apoptosis_cytoplasmic_biomass_change_rate = QLineEdit()
+        self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.apoptosis_cytoplasmic_biomass_change_rate_changed)
         self.apoptosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.apop_cyto_changed)
         glayout.addWidget(self.apoptosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1018,6 +1057,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_nuclear_biomass_change_rate = QLineEdit()
+        self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.apoptosis_nuclear_biomass_change_rate_changed)
         self.apoptosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.apop_nuclear_changed)
         # self.apoptosis_nuclear_hbox.addWidget(self.apoptosis_nuclear_biomass_change_rate)
@@ -1039,6 +1079,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_calcification_rate = QLineEdit()
+        self.apoptosis_calcification_rate.textChanged.connect(self.apoptosis_calcification_rate_changed)
         self.apoptosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_calcification_rate.textChanged.connect(self.apop_calcif_changed)
         # self.apoptosis_calcification_hbox.addWidget(self.apoptosis_calcification_rate)
@@ -1060,6 +1101,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_relative_rupture_volume = QLineEdit()
+        self.apoptosis_relative_rupture_volume.textChanged.connect(self.apoptosis_relative_rupture_volume_changed)
         self.apoptosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         # self.apoptosis_relative_rupture_volume.textChanged.connect(self.apop_rupture_changed)
         # self.apoptosis_rel_rupture_volume_hbox.addWidget(self.apoptosis_relative_rupture_volume)
@@ -1087,6 +1129,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_death_rate = QLineEdit()
+        self.necrosis_death_rate.textChanged.connect(self.necrosis_death_rate_changed)
         self.necrosis_death_rate.setValidator(QtGui.QDoubleValidator())
         # hbox.addWidget(self.necrosis_death_rate)
         glayout.addWidget(self.necrosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1115,6 +1158,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_phase0_duration = QLineEdit()
+        self.necrosis_phase0_duration.textChanged.connect(self.necrosis_phase0_duration_changed)
         self.necrosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
         # self.necrosis_phase0_duration_hbox.addWidget(self.necrosis_phase0_duration)
         glayout.addWidget(self.necrosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1137,6 +1181,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_phase1_duration = QLineEdit()
+        self.necrosis_phase1_duration.textChanged.connect(self.necrosis_phase1_duration_changed)
         self.necrosis_phase1_duration.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_phase1_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1167,6 +1212,7 @@ class CellDef(QWidget):
 
         # self.necrosis_unlysed_rate_hbox.addWidget(label)
         self.necrosis_unlysed_rate = QLineEdit()
+        self.necrosis_unlysed_rate.textChanged.connect(self.necrosis_unlysed_rate_changed)
         self.necrosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         # self.necrosis_unlysed_rate_hbox.addWidget(self.necrosis_unlysed_rate)
         glayout.addWidget(self.necrosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1187,6 +1233,7 @@ class CellDef(QWidget):
         # self.necrosis_lysed_rate_hbox.addWidget(label)
 
         self.necrosis_lysed_rate = QLineEdit()
+        self.necrosis_lysed_rate.textChanged.connect(self.necrosis_lysed_rate_changed)
         self.necrosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         # self.necrosis_lysed_rate_hbox.addWidget(self.necrosis_lysed_rate)
@@ -1206,6 +1253,7 @@ class CellDef(QWidget):
         # self.necrosis_cytoplasmic_hbox.addWidget(label)
 
         self.necrosis_cytoplasmic_biomass_change_rate = QLineEdit()
+        self.necrosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.necrosis_cytoplasmic_biomass_change_rate_changed)
         self.necrosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         # self.necrosis_cytoplasmic_hbox.addWidget(self.necrosis_cytoplasmic_biomass_change_rate)
@@ -1230,6 +1278,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_nuclear_biomass_change_rate = QLineEdit()
+        self.necrosis_nuclear_biomass_change_rate.textChanged.connect(self.necrosis_nuclear_biomass_change_rate_changed)
         self.necrosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         # self.necrosis_nuclear_hbox.addWidget(self.necrosis_nuclear_biomass_change_rate)
         glayout.addWidget(self.necrosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1250,6 +1299,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_calcification_rate = QLineEdit()
+        self.necrosis_calcification_rate.textChanged.connect(self.necrosis_calcification_rate_changed)
         self.necrosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         # self.necrosis_calcification_hbox.addWidget(self.necrosis_calcification_rate)
         glayout.addWidget(self.necrosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1270,6 +1320,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_relative_rupture_volume = QLineEdit()
+        self.necrosis_relative_rupture_volume.textChanged.connect(self.necrosis_relative_rupture_volume_changed)
         self.necrosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         # self.necrosis_rel_rupture_volume_hbox.addWidget(self.necrosis_relative_rupture_volume)
         glayout.addWidget(self.necrosis_relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1328,6 +1379,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_total = QLineEdit()
+        self.volume_total.textChanged.connect(self.volume_total_changed)
         self.volume_total.setValidator(QtGui.QDoubleValidator())
         # self.volume_total_hbox.addWidget(self.volume_total)
         glayout.addWidget(self.volume_total, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1347,6 +1399,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_fluid_fraction = QLineEdit()
+        self.volume_fluid_fraction.textChanged.connect(self.volume_fluid_fraction_changed)
         self.volume_fluid_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1363,6 +1416,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_nuclear = QLineEdit()
+        self.volume_nuclear.textChanged.connect(self.volume_nuclear_changed)
         self.volume_nuclear.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1383,6 +1437,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_fluid_change_rate = QLineEdit()
+        self.volume_fluid_change_rate.textChanged.connect(self.volume_fluid_change_rate_changed)
         self.volume_fluid_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1399,6 +1454,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_cytoplasmic_biomass_change_rate = QLineEdit()
+        self.volume_cytoplasmic_biomass_change_rate.textChanged.connect(self.volume_cytoplasmic_biomass_change_rate_changed)
         self.volume_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1415,6 +1471,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_nuclear_biomass_change_rate = QLineEdit()
+        self.volume_nuclear_biomass_change_rate.textChanged.connect(self.volume_nuclear_biomass_change_rate_changed)
         self.volume_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1433,6 +1490,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_calcified_fraction = QLineEdit()
+        self.volume_calcified_fraction.textChanged.connect(self.volume_calcified_fraction_changed)
         self.volume_calcified_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcified_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1449,6 +1507,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_calcification_rate = QLineEdit()
+        self.volume_calcification_rate.textChanged.connect(self.volume_calcification_rate_changed)
         self.volume_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1466,6 +1525,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.relative_rupture_volume = QLineEdit()
+        self.relative_rupture_volume.textChanged.connect(self.relative_rupture_volume_changed)
         self.relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1505,6 +1565,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_cell_adhesion_strength = QLineEdit()
+        self.cell_cell_adhesion_strength.textChanged.connect(self.cell_cell_adhesion_strength_changed)
         self.cell_cell_adhesion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_cell_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1521,6 +1582,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_cell_repulsion_strength = QLineEdit()
+        self.cell_cell_repulsion_strength.textChanged.connect(self.cell_cell_repulsion_strength_changed)
         self.cell_cell_repulsion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_cell_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1537,6 +1599,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.relative_maximum_adhesion_distance = QLineEdit()
+        self.relative_maximum_adhesion_distance.textChanged.connect(self.relative_maximum_adhesion_distance_changed)
         self.relative_maximum_adhesion_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.relative_maximum_adhesion_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1564,6 +1627,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.set_relative_equilibrium_distance = QLineEdit()
+        self.set_relative_equilibrium_distance.textChanged.connect(self.set_relative_equilibrium_distance_changed)
         self.set_relative_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_relative_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1583,6 +1647,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.set_absolute_equilibrium_distance = QLineEdit()
+        self.set_absolute_equilibrium_distance.textChanged.connect(self.set_absolute_equilibrium_distance_changed)
         self.set_absolute_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_absolute_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1628,6 +1693,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.speed = QLineEdit()
+        self.speed.textChanged.connect(self.speed_changed)
         self.speed.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.speed, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1645,6 +1711,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.persistence_time = QLineEdit()
+        self.persistence_time.textChanged.connect(self.persistence_time_changed)
         self.persistence_time.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.persistence_time, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1661,6 +1728,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.migration_bias = QLineEdit()
+        self.migration_bias.textChanged.connect(self.migration_bias_changed)
         self.migration_bias.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.migration_bias, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1796,6 +1864,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.secretion_rate = QLineEdit()
+        self.secretion_rate.textChanged.connect(self.secretion_rate_changed)
         self.secretion_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1814,6 +1883,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.secretion_target = QLineEdit()
+        self.secretion_target.textChanged.connect(self.secretion_target_changed)
         self.secretion_target.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_target, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1833,6 +1903,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.uptake_rate = QLineEdit()
+        self.uptake_rate.textChanged.connect(self.uptake_rate_changed)
         self.uptake_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.uptake_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1849,6 +1920,7 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.secretion_net_export_rate = QLineEdit()
+        self.secretion_net_export_rate.textChanged.connect(self.secretion_net_export_rate_changed)
         self.secretion_net_export_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_net_export_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
@@ -1874,6 +1946,127 @@ class CellDef(QWidget):
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
         self.vbox.addWidget(label)
+
+    #--------------------------------------------------------
+    # The following were generated by the gen_qline_cb.py script
+    def cycle_trate00_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate00'] = text
+    def cycle_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate01'] = text
+    def cycle_trate10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate10'] = text
+    def cycle_trate_02_01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_02_01'] = text
+    def cycle_trate_02_12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_02_12'] = text
+    def cycle_trate_02_20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_02_20'] = text
+    def cycle_trate_03_01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_03_01'] = text
+    def cycle_trate_03_12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_03_12'] = text
+    def cycle_trate_03_23_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_03_23'] = text
+    def cycle_trate_03_30_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_trate_03_30'] = text
+    def cycle_duration00_changed(self, text):
+        print("---- cycle_duration00_changed(self, text): self.current_cell_def = ",self.current_cell_def)
+        print("---- self.param_d = ",self.param_d)
+        self.param_d[self.current_cell_def]['cycle_duration00'] = text
+    def cycle_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration01'] = text
+    def cycle_duration10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration10'] = text
+    def cycle_duration_02_01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_02_01'] = text
+    def cycle_duration_02_12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_02_12'] = text
+    def cycle_duration_02_20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_02_20'] = text
+    def cycle_duration_03_01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_03_01'] = text
+    def cycle_duration_03_12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_03_12'] = text
+    def cycle_duration_03_23_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_03_23'] = text
+    def cycle_duration_03_30_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_duration_03_30'] = text
+    def apoptosis_death_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_death_rate'] = text
+    def apoptosis_phase0_duration_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_phase0_duration'] = text
+    def apoptosis_unlysed_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_unlysed_rate'] = text
+    def apoptosis_lysed_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_lysed_rate'] = text
+    def apoptosis_cytoplasmic_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_cytoplasmic_biomass_change_rate'] = text
+    def apoptosis_nuclear_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_nuclear_biomass_change_rate'] = text
+    def apoptosis_calcification_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_calcification_rate'] = text
+    def apoptosis_relative_rupture_volume_changed(self, text):
+        self.param_d[self.current_cell_def]['apoptosis_relative_rupture_volume'] = text
+    def necrosis_death_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_death_rate'] = text
+    def necrosis_phase0_duration_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_phase0_duration'] = text
+    def necrosis_phase1_duration_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_phase1_duration'] = text
+    def necrosis_unlysed_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_unlysed_rate'] = text
+    def necrosis_lysed_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_lysed_rate'] = text
+    def necrosis_cytoplasmic_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_cytoplasmic_biomass_change_rate'] = text
+    def necrosis_nuclear_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_nuclear_biomass_change_rate'] = text
+    def necrosis_calcification_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_calcification_rate'] = text
+    def necrosis_relative_rupture_volume_changed(self, text):
+        self.param_d[self.current_cell_def]['necrosis_relative_rupture_volume'] = text
+    def volume_total_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_total'] = text
+    def volume_fluid_fraction_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_fluid_fraction'] = text
+    def volume_nuclear_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_nuclear'] = text
+    def volume_fluid_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_fluid_change_rate'] = text
+    def volume_cytoplasmic_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_cytoplasmic_biomass_change_rate'] = text
+    def volume_nuclear_biomass_change_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_nuclear_biomass_change_rate'] = text
+    def volume_calcified_fraction_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_calcified_fraction'] = text
+    def volume_calcification_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['volume_calcification_rate'] = text
+    def relative_rupture_volume_changed(self, text):
+        self.param_d[self.current_cell_def]['relative_rupture_volume'] = text
+    def cell_cell_adhesion_strength_changed(self, text):
+        self.param_d[self.current_cell_def]['cell_cell_adhesion_strength'] = text
+    def cell_cell_repulsion_strength_changed(self, text):
+        self.param_d[self.current_cell_def]['cell_cell_repulsion_strength'] = text
+    def relative_maximum_adhesion_distance_changed(self, text):
+        self.param_d[self.current_cell_def]['relative_maximum_adhesion_distance'] = text
+    def set_relative_equilibrium_distance_changed(self, text):
+        self.param_d[self.current_cell_def]['set_relative_equilibrium_distance'] = text
+    def set_absolute_equilibrium_distance_changed(self, text):
+        self.param_d[self.current_cell_def]['set_absolute_equilibrium_distance'] = text
+    def speed_changed(self, text):
+        self.param_d[self.current_cell_def]['speed'] = text
+    def persistence_time_changed(self, text):
+        self.param_d[self.current_cell_def]['persistence_time'] = text
+    def migration_bias_changed(self, text):
+        self.param_d[self.current_cell_def]['migration_bias'] = text
+    def secretion_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['secretion_rate'] = text
+    def secretion_target_changed(self, text):
+        self.param_d[self.current_cell_def]['secretion_target'] = text
+    def uptake_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['uptake_rate'] = text
+    def secretion_net_export_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
 
     #--------------------------------------------------------
     def create_custom_data_tab(self):
@@ -2020,6 +2213,7 @@ class CellDef(QWidget):
         # self.layout.addWidget(self.params)
 
         self.layout.addLayout(self.controls_hbox)
+        self.layout.addLayout(self.name_hbox)
         # self.layout.addLayout(self.cell_types_tabs_layout)
         # self.layout.addWidget(self.tab_widget)
 
@@ -2290,8 +2484,8 @@ class CellDef(QWidget):
 
         # fill in the GUI with this one's params
         # self.fill_gui(self.current_cell_def)
-        self.substrate_name.setText(self.param_d[self.current_cell_def]["name"])
-        self.diffusion_coef.setText(self.param_d[self.current_cell_def]["diffusion_coef"])
+        self.cell_type_name.setText(self.param_d[self.current_cell_def]["name"])
+        # self.diffusion_coef.setText(self.param_d[self.current_cell_def]["diffusion_coef"])
 
     #-------------------------------------------------------------------
     def populate_tree(self):
@@ -2302,11 +2496,20 @@ class CellDef(QWidget):
             for cell_def in uep:
                 # print(cell_def.attrib['name'])
                 cell_def_name = cell_def.attrib['name']
+                if idx == 0:
+                    cell_def_0th = cell_def_name
+
+                self.param_d[cell_def_name] = {}
+                self.param_d[cell_def_name]["name"] = cell_def_name
+
                 cellname = QTreeWidgetItem([cell_def_name])
                 self.tree.insertTopLevelItem(idx,cellname)
                 if idx == 0:  # select the 1st (0th) entry
                     self.tree.setCurrentItem(cellname)
+
                 idx += 1
+
+                # Now fill the param dict for each substrate and the Qt widget values for the 0th
 
                 # death_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//phenotype//death//"
                 death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
@@ -2318,6 +2521,12 @@ class CellDef(QWidget):
                 # val = uep.find(apoptosis_path + 'death_rate').text
                 # self.param_d[cell_def_name]["apop_death_rate"] = val
                 # self.apoptosis_death_rate.setText(val)
+
+        self.current_cell_def = cell_def_0th
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))  # select the top (0th) item
+        self.tree_item_changed_cb(self.tree.topLevelItem(0), 0)  # arg. good grief.
+
+        print("\n\n---- populate_tree(): self.param_d = ",self.param_d)
 
     #-------------------------------------------------------------------
     def first_cell_def_name(self):
@@ -2345,8 +2554,11 @@ class CellDef(QWidget):
             for cell_def in uep:
                 # print(cell_def.attrib['name'])
                 cell_def_name = cell_def.attrib['name']
+                self.current_cell_def = cell_def_name
                 print("--------- creating empty {} for ",cell_def_name)
                 self.param_d[cell_def_name] = {}
+                if idx == 0:
+                    self.param_d[self.current_cell_def]["name"] = cell_def_name
 
                 # cd_cycle_code = cell_def.attrib['name']
                 cellname = QTreeWidgetItem([cell_def_name])
@@ -2448,10 +2660,20 @@ class CellDef(QWidget):
                 print("index=",pd.attrib["index"])
                 if  pd.attrib['index'] == "0":
                     print("--> handling duration index=0")
-                    self.cycle_duration00.setText(pd.text)
-                    self.cycle_duration01.setText(pd.text)
-                    self.cycle_duration_02_01.setText(pd.text)
-                    self.cycle_duration_03_01.setText(pd.text)
+
+                    sval = pd.text
+                    self.param_d[cell_def_name]['cycle_duration00'] = sval
+                    # if idx == 1:  
+                    self.cycle_duration00.setText(sval)
+
+                    self.param_d[cell_def_name]['cycle_duration01'] = sval
+                    self.cycle_duration01.setText(sval)
+
+                    self.param_d[cell_def_name]['cycle_duration_02_01'] = sval
+                    self.cycle_duration_02_01.setText(sval)
+
+                    self.param_d[cell_def_name]['cycle_duration_03_01'] = sval
+                    self.cycle_duration_03_01.setText(sval)
                 elif  pd.attrib['index'] == "1":
                     print("--> handling duration index=1")
                     self.cycle_duration10.setText(pd.text)

@@ -609,7 +609,7 @@ class SubstrateDef(QWidget):
                     if idx == 0:  # select the 1st (0th) entry
                         self.tree.setCurrentItem(subname)
 
-                    # Now fill the param (Qt widget) values for each substrate
+                    # Now fill the param dict for each substrate and the Qt widget values for the 0th
 
                     idx += 1
 
@@ -814,10 +814,21 @@ class SubstrateDef(QWidget):
                 if idx == 1:  
                     self.diffusion_coef.setText(sval)
 
-                self.decay_rate.setText(var_param_path.find('.//decay_rate').text)
+#        ---- populate_tree(): self.param_d =  {'director signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}, 'cargo signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}}
+                sval = var_param_path.find('.//decay_rate').text
+                self.param_d[substrate_name]['decay_rate'] = sval
+                if idx == 1:  
+                    self.decay_rate.setText(sval)
 
-                self.init_cond.setText(var_path.find('.initial_condition').text)
-                self.dirichlet_bc.setText(var_path.find('.Dirichlet_boundary_condition').text)
+                sval = var_path.find('.initial_condition').text
+                self.param_d[substrate_name]['init_cond'] = sval
+                if idx == 1:  
+                    self.init_cond.setText(var_path.find('.initial_condition').text)
+
+                sval = var_path.find('.Dirichlet_boundary_condition').text
+                self.param_d[substrate_name]['dirichlet_bc'] = sval
+                if idx == 1:  
+                    self.dirichlet_bc.setText(sval)
 
                 # self.chemical_A_decay_rate.value = float(vp[0].find('.//decay_rate').text)
                 # self.chemical_A_initial_condition.value = float(vp[0].find('.//initial_condition').text)

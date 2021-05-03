@@ -32,7 +32,8 @@ def SingleBrowse(self):
         #         self.csv.append(filePath)
         # print(self.csv)
   
-class PhysiCellXMLCreator(QTabWidget):
+#class PhysiCellXMLCreator(QTabWidget):
+class PhysiCellXMLCreator(QWidget):
     def __init__(self, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
@@ -40,15 +41,16 @@ class PhysiCellXMLCreator(QTabWidget):
         self.setWindowTitle(self.title_prefix)
 
         # Menus
-        lay = QVBoxLayout(self)
-        # lay.setContentsMargins(5, 35, 5, 5)
-        self.menu()
+        vlayout = QVBoxLayout(self)
+        # vlayout.setContentsMargins(5, 35, 5, 5)
+        menuWidget = QWidget(self.menu())
+        vlayout.addWidget(menuWidget)
         # self.setWindowIcon(self.style().standardIcon(getattr(QStyle, 'SP_DialogNoButton')))
         # self.setWindowIcon(QtGui.QIcon('physicell_logo_25pct.png'))
         # self.grid = QGridLayout()
         # lay.addLayout(self.grid)
-        self.setLayout(lay)
-        self.setMinimumSize(400, 320)
+        self.setLayout(vlayout)
+        self.setMinimumSize(400, 650)
 
         # self.menubar = QtWidgets.QMenuBar(self)
         # self.file_menu = QtWidgets.QMenu('File')
@@ -132,22 +134,26 @@ class PhysiCellXMLCreator(QTabWidget):
         # self.sbml_tab.fill_gui()
 
         #------------------
-        self.addTab(self.config_tab,"Config Basics")
-        self.addTab(self.microenv_tab,"Microenvironment")
-        self.addTab(self.celldef_tab,"Cell Types")
-        self.addTab(self.cell_customdata_tab,"Cell Custom Data")
-        self.addTab(self.user_params_tab,"User Params")
+        tabWidget = QTabWidget()
+        tabWidget.addTab(self.config_tab,"Config Basics")
+        tabWidget.addTab(self.microenv_tab,"Microenvironment")
+        tabWidget.addTab(self.celldef_tab,"Cell Types")
+        tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
+        tabWidget.addTab(self.user_params_tab,"User Params")
+
+        vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
         # self.setCurrentIndex(2)  # rwh/debug: display the Cell Types tab on startup
-        self.setCurrentIndex(1)  # rwh/debug: select Microenv
+        tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
 
 
     def menu(self):
         menubar = QMenuBar(self)
+        menubar.setNativeMenuBar(False)
 
         #--------------
-        file_menu = menubar.addMenu('File')
+        file_menu = menubar.addMenu('&File')
 
         # open_act = QtGui.QAction('Open', self, checkable=True)
         # open_act = QtGui.QAction('Open', self)
@@ -213,16 +219,18 @@ class PhysiCellXMLCreator(QTabWidget):
 
 
         #--------------
-        self.models_menu = menubar.addMenu('Models')
+        self.models_menu = menubar.addMenu('&Models')
         models_menu_act = QAction('-----', self)
         self.models_menu.addAction(models_menu_act)
         models_menu_act.triggered.connect(self.select_current_model_cb)
         # self.models_menu.addAction('Load sample', self.select_current_model_cb)
 
         #--------------
-        tools_menu = menubar.addMenu('Tools')
+        tools_menu = menubar.addMenu('&Tools')
         tools_menu_act = QAction('Validate', self)
         tools_menu.addAction(tools_menu_act)
+
+        menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
     #-----------------------------------------------------------------
     def add_new_model(self, name, read_only):
