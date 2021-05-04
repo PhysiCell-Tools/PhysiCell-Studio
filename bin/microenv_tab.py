@@ -597,7 +597,8 @@ class SubstrateDef(QWidget):
     #     self.current_substrate = it.text(col)
     #     print('self.current_substrate= ',self.current_substrate )
 
-    # def tree_item_changed(self,idx1,idx2):
+
+    # Update the widget values with values from param_d
     def tree_item_clicked_cb(self, it,col):
         print('--------- tree_item_clicked_cb():', it, col, it.text(col) )  # col=0 always
         self.current_substrate = it.text(col)
@@ -701,31 +702,37 @@ class SubstrateDef(QWidget):
                     diffusion_coef = var_param_path.find('.//diffusion_coefficient').text
                     # self.substrate["diffusion_coef"] = diffusion_coef
                     self.param_d[substrate_name]["diffusion_coef"] = diffusion_coef
-                    self.diffusion_coef.setText(diffusion_coef)
+                    if idx == 1:
+                        self.diffusion_coef.setText(diffusion_coef)
 
                     decay_rate = var_param_path.find('.//decay_rate').text
                     # self.substrate["decay_rate"] = decay_rate
                     self.param_d[substrate_name]["decay_rate"] = decay_rate
-                    self.decay_rate.setText(decay_rate)
+                    if idx == 1:
+                        self.decay_rate.setText(decay_rate)
 
                     init_cond = var_path.find('.//initial_condition').text
                     # self.substrate["init_cond"] = init_cond
                     self.param_d[substrate_name]["init_cond"] = init_cond
-                    self.init_cond.setText(init_cond)
+                    if idx == 1:
+                        self.init_cond.setText(init_cond)
 
 			# <Dirichlet_boundary_condition units="dimensionless" enabled="false">1</Dirichlet_boundary_condition>
                     dirichlet_bc_path = var_path.find('.//Dirichlet_boundary_condition')
                     dirichlet_bc = dirichlet_bc_path.text
                     # self.substrate["init_cond"] = init_cond
                     self.param_d[substrate_name]["dirichlet_bc"] = dirichlet_bc
-                    self.dirichlet_bc.setText(dirichlet_bc)
+                    if idx == 1:
+                        self.dirichlet_bc.setText(dirichlet_bc)
 
                     if "false" in dirichlet_bc_path.attrib['enabled'].lower():
                         self.param_d[substrate_name]["dirichlet_enabled"] = False
-                        self.dirichlet_bc_enabled.setChecked(False)
+                        if idx == 1:
+                            self.dirichlet_bc_enabled.setChecked(False)
                     else:
                         self.param_d[substrate_name]["dirichlet_enabled"] = True
-                        self.dirichlet_bc_enabled.setChecked(True)
+                        if idx == 1:
+                            self.dirichlet_bc_enabled.setChecked(True)
                         # self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
 
                     # 			<Dirichlet_options>
@@ -750,18 +757,22 @@ class SubstrateDef(QWidget):
 
                                 # BEWARE: doing a 'setText' here will invoke the callback associated with
                                 # the widget (e.g., self.dirichlet_xmin.textChanged.connect(self.dirichlet_xmin_changed))
-                                self.dirichlet_xmin.setText(bv.text)
+                                if idx == 1:
+                                    self.dirichlet_xmin.setText(bv.text)
+
                                 if "true" in bv.attrib['enabled'].lower():
                                     # self.param_d[self.current_substrate]["enable_xmin"] = True
                                     self.param_d[substrate_name]["enable_xmin"] = True
                             elif "xmax" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_xmax"] = bv.text
-                                self.dirichlet_xmax.setText(bv.text)
+                                if idx == 1:
+                                    self.dirichlet_xmax.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_xmax"] = True
                             elif "ymin" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_ymin"] = bv.text
-                                self.dirichlet_ymin.setText(bv.text)
+                                if idx == 1:
+                                    self.dirichlet_ymin.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_ymin"] = True
                             elif "ymax" in bv.attrib['ID']:

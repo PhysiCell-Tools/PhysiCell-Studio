@@ -66,8 +66,10 @@ class PhysiCellXMLCreator(QWidget):
         # read_file = "../data/pred_prey_flat.xml"
 
         model_name = "pred_prey_flat"
-        model_name = "biorobots_flat"
         model_name = "template"
+        model_name = "biorobots_flat"
+        model_name = "cancer_biorobots_flat"
+        model_name = "test1"
         # model_name = "randy_test"  #rwh
         # read_file = "data/" + model_name + ".xml"
 
@@ -141,8 +143,8 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        # self.setCurrentIndex(2)  # rwh/debug: display the Cell Types tab on startup
-        tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
+        # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
+        tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
 
     def menu(self):
