@@ -49,9 +49,11 @@ class SubstrateDef(QWidget):
         # self.tree.setStyleSheet("background-color: lightgray")
         self.tree.setFixedWidth(tree_widget_width)
         # self.tree.currentChanged(self.tree_item_changed_cb)
-        self.tree.itemClicked.connect(self.tree_item_changed_cb)
+        self.tree.itemClicked.connect(self.tree_item_clicked_cb)
         # self.tree.itemSelectionChanged.connect(self.tree_item_changed_cb2)
-        self.tree.itemDoubleClicked.connect(self.tree_item_changed_cb2)
+        # self.tree.itemDoubleClicked.connect(self.tree_item_changed_cb2)
+        # self.tree.itemSelectionChanged.connect(self.tree_item_changed_cb2)
+        self.tree.itemChanged.connect(self.tree_item_changed_cb)
         # self.tree.itemSelectionChanged()
         # self.tree.setColumnCount(1)
 
@@ -117,19 +119,19 @@ class SubstrateDef(QWidget):
         # self.vbox.addWidget(QHLine())
 
         #------------------
-        hbox = QHBoxLayout()
-        label = QLabel("Name of substrate:")
-        label.setFixedWidth(180)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        # hbox = QHBoxLayout()
+        # label = QLabel("Name of substrate:")
+        # label.setFixedWidth(180)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # hbox.addWidget(label)
 
-        self.substrate_name = QLineEdit()
-        self.substrate_name.textChanged.connect(self.substrate_name_cb)  # todo - rename it
-        # Want to validate name, e.g., starts with alpha, no special chars, etc.
-        # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
-        # self.cycle_trate0_1.enter.connect(self.save_xml)
-        hbox.addWidget(self.substrate_name)
-        self.vbox.addLayout(hbox)
+        # self.substrate_name = QLineEdit()
+        # self.substrate_name.textChanged.connect(self.substrate_name_cb)  # todo - rename it
+        # # Want to validate name, e.g., starts with alpha, no special chars, etc.
+        # # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
+        # # self.cycle_trate0_1.enter.connect(self.save_xml)
+        # hbox.addWidget(self.substrate_name)
+        # self.vbox.addLayout(hbox)
 
         #------------------
         hbox = QHBoxLayout()
@@ -402,14 +404,14 @@ class SubstrateDef(QWidget):
         print(edit.text())
         self.tree.setItemWidget(itm,column,edit)
 
-    def substrate_name_cb(self, text):
-        print("Text: %s", text)
-        self.param_d[self.current_substrate]["name"] = text
+    # def substrate_name_cb(self, text):
+    #     print("Text: %s", text)
+    #     self.param_d[self.current_substrate]["name"] = text
 
-        treeitem = QTreeWidgetItem([text])  # todo - figure out how to rename it in the tree!
-        column = self.tree.currentColumn()
-        # self.tree.setCurrentItem(treeitem)
-        self.tree.setItemWidget(treeitem,column,None)
+    #     treeitem = QTreeWidgetItem([text])  # todo - figure out how to rename it in the tree!
+    #     column = self.tree.currentColumn()
+    #     # self.tree.setCurrentItem(treeitem)
+    #     self.tree.setItemWidget(treeitem,column,None)
 
 
     def diffusion_coef_changed(self, text):
@@ -430,9 +432,10 @@ class SubstrateDef(QWidget):
 
     # global to all substrates
     def gradients_cb(self):
-        self.param_d[self.current_substrate]["gradients"] = self.gradients.isChecked()
+        # self.param_d[self.current_substrate]["gradients"] = self.gradients.isChecked()
+        self.param_d["gradients"] = self.gradients.isChecked()
     def track_in_agents_cb(self):
-        self.param_d[self.current_substrate]["track_in_agents"] = self.track_in_agents.isChecked()
+        self.param_d["track_in_agents"] = self.track_in_agents.isChecked()
 
     def dirichlet_xmin_changed(self, text):
         # print("\n\n------> def dirichlet_xmin_changed(self, text)  called!!!")
@@ -498,8 +501,8 @@ class SubstrateDef(QWidget):
         self.param_d[subname]["enable_zmin"] = bval
         self.param_d[subname]["enable_zmax"] = bval
 
-        self.param_d[subname]["gradients"] = bval
-        self.param_d[subname]["track_in_agents"] = bval
+        self.param_d["gradients"] = bval
+        self.param_d["track_in_agents"] = bval
 
         print("\n ----- new dict:")
         for k in self.param_d.keys():
@@ -508,17 +511,18 @@ class SubstrateDef(QWidget):
         self.new_substrate_count += 1
 
         self.current_substrate = subname
-        self.substrate_name.setText(subname)
+        # self.substrate_name.setText(subname)
 
         # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
 
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
         treeitem = QTreeWidgetItem([subname])
+        treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
-        self.tree_item_changed_cb(treeitem, 0)
+        self.tree_item_clicked_cb(treeitem, 0)
 
     # @QtCore.Slot()
     def copy_substrate(self):
@@ -534,17 +538,18 @@ class SubstrateDef(QWidget):
         self.new_substrate_count += 1
 
         self.current_substrate = subname
-        self.substrate_name.setText(subname)
+        # self.substrate_name.setText(subname)
 
         # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
 
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
         treeitem = QTreeWidgetItem([subname])
+        treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
-        self.tree_item_changed_cb(treeitem, 0)
+        self.tree_item_clicked_cb(treeitem, 0)
         
     # @QtCore.Slot()
     def delete_substrate(self):
@@ -575,15 +580,26 @@ class SubstrateDef(QWidget):
     #     # self.text.setText(random.choice(self.hello))
     #     pass
 
-    def tree_item_changed_cb2(self, it,col):
-        print('--------- tree_item_changed_cb2():', it, col, it.text(col) )  # col=0 always
-
-        self.current_substrate = it.text(col)
-        print('self.current_substrate= ',self.current_substrate )
-
-    # def tree_item_changed(self,idx1,idx2):
     def tree_item_changed_cb(self, it,col):
         print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
+
+        prev_current_substrate = self.current_substrate
+        self.current_substrate = it.text(col)
+        self.param_d[self.current_substrate] = self.param_d.pop(prev_current_substrate)  # sweet
+        print('self.current_substrate= ',self.current_substrate )
+        for k in self.param_d.keys():
+            print(" ===>>> ",k, " : ", self.param_d[k])
+        print()
+
+    # def tree_item_changed_cb2(self, it,col):
+    #     print('--------- tree_item_changed_cb2():', it, col, it.text(col) )  # col=0 always
+
+    #     self.current_substrate = it.text(col)
+    #     print('self.current_substrate= ',self.current_substrate )
+
+    # def tree_item_changed(self,idx1,idx2):
+    def tree_item_clicked_cb(self, it,col):
+        print('--------- tree_item_clicked_cb():', it, col, it.text(col) )  # col=0 always
         self.current_substrate = it.text(col)
         print('self.current_substrate= ',self.current_substrate )
         # print('self.= ',self.tree.indexFromItem )
@@ -593,7 +609,7 @@ class SubstrateDef(QWidget):
         # fill in the GUI with this one's params
         # self.fill_gui(self.current_substrate)
 
-        self.substrate_name.setText(self.param_d[self.current_substrate]["name"])
+        # self.substrate_name.setText(self.param_d[self.current_substrate]["name"])
         self.diffusion_coef.setText(self.param_d[self.current_substrate]["diffusion_coef"])
         self.decay_rate.setText(self.param_d[self.current_substrate]["decay_rate"])
         self.init_cond.setText(self.param_d[self.current_substrate]["init_cond"])
@@ -620,8 +636,8 @@ class SubstrateDef(QWidget):
 
 
         # global to all substrates
-        self.gradients.setChecked(self.param_d[self.current_substrate]["gradients"])
-        self.track_in_agents.setChecked(self.param_d[self.current_substrate]["track_in_agents"])
+        self.gradients.setChecked(self.param_d["gradients"])
+        self.track_in_agents.setChecked(self.param_d["track_in_agents"])
 
 
 # 		<variable name="substrate" units="dimensionless" ID="0">
@@ -664,7 +680,7 @@ class SubstrateDef(QWidget):
                         substrate_0th = substrate_name
                     self.param_d[substrate_name] = {}
 
-                    self.param_d[substrate_name]["name"] = substrate_name
+                    # self.param_d[substrate_name]["name"] = substrate_name
 
                     treeitem = QTreeWidgetItem([substrate_name])
                     treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
@@ -777,6 +793,8 @@ class SubstrateDef(QWidget):
             # 	<calculate_gradients>true</calculate_gradients>
             # 	<track_internalized_substrates_in_each_agent>false</track_internalized_substrates_in_each_agent>
                 elif var.tag == 'options':
+                    self.param_d["gradients"] = False
+                    self.param_d["track_in_agents"] = False
                     self.gradients.setChecked(False)
                     self.track_in_agents.setChecked(False)
                     for opt in var:
@@ -784,9 +802,12 @@ class SubstrateDef(QWidget):
                         if "calculate_gradients" in opt.tag:
                             if "true" in opt.text.lower():
                                 self.gradients.setChecked(True)
+                                self.param_d["gradients"] = True
                         elif "track_internalized_substrates_in_each_agent" in opt.tag:
                             if "true" in opt.text.lower():
                                 self.track_in_agents.setChecked(True)
+                                self.param_d["track_in_agents"] = True
+
                     
 
             # options_path = uep.find(".//options")
@@ -811,7 +832,7 @@ class SubstrateDef(QWidget):
 
         self.current_substrate = substrate_0th
         self.tree.setCurrentItem(self.tree.topLevelItem(0))  # select the top (0th) item
-        self.tree_item_changed_cb(self.tree.topLevelItem(0), 0)  # arg. good grief.
+        self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # arg. good grief.
 
         print("\n\n---- populate_tree(): self.param_d = ",self.param_d)
 

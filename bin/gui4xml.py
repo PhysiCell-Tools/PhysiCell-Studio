@@ -273,7 +273,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.celldef_tab.clear_gui()
         self.celldef_tab.populate_tree()
-        self.celldef_tab.fill_gui(None)
+        # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
