@@ -50,6 +50,8 @@ class SubstrateDef(QWidget):
         self.tree.setFixedWidth(tree_widget_width)
         # self.tree.currentChanged(self.tree_item_changed_cb)
         self.tree.itemClicked.connect(self.tree_item_changed_cb)
+        # self.tree.itemSelectionChanged.connect(self.tree_item_changed_cb2)
+        self.tree.itemDoubleClicked.connect(self.tree_item_changed_cb2)
         # self.tree.itemSelectionChanged()
         # self.tree.setColumnCount(1)
 
@@ -64,11 +66,16 @@ class SubstrateDef(QWidget):
         # cellname = QTreeWidgetItem(["interferon"])
         # self.tree.insertTopLevelItem(1,cellname)
 
+        #-------------------------
+        # self.name_list = QListWidget() # tree is overkill; list would suffice; meh.
 
         self.microenv_hbox.addWidget(self.tree)
+        # self.microenv_hbox.addWidget(self.name_list)
+
 
         self.scroll_cell_def_tree = QScrollArea()
         self.scroll_cell_def_tree.setWidget(self.tree)
+        # self.scroll_cell_def_tree.setWidget(self.name_list)
 
         # splitter.addWidget(self.tree)
         splitter.addWidget(self.scroll_cell_def_tree)
@@ -331,13 +338,13 @@ class SubstrateDef(QWidget):
         hbox.addWidget(QLabel("For all substrates: "))
 
         self.gradients = QCheckBox("calculate gradients")
-        # self.gradients.stateChanged.connect(self.gradients_cb)
+        self.gradients.stateChanged.connect(self.gradients_cb)
         hbox.addWidget(self.gradients)
         # self.vbox.addLayout(hbox)
 
         # hbox = QHBoxLayout()
         self.track_in_agents = QCheckBox("track in agents")
-        # self.track_in_agents.stateChanged.connect(self.track_in_agents_cb)
+        self.track_in_agents.stateChanged.connect(self.track_in_agents_cb)
         hbox.addWidget(self.track_in_agents)
         self.vbox.addLayout(hbox)
 
@@ -420,10 +427,12 @@ class SubstrateDef(QWidget):
     def dirichlet_toggle_cb(self):
         print("dirichlet_toggle_cb()")
         self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
-    # def gradients_cb(self):
-    #     self.param_d[self.current_substrate]["gradients"] = self.gradients.isChecked()
-    # def track_in_agents_cb(self):
-    #     self.param_d[self.current_substrate]["track_in_agents"] = self.track_in_agents.isChecked()
+
+    # global to all substrates
+    def gradients_cb(self):
+        self.param_d[self.current_substrate]["gradients"] = self.gradients.isChecked()
+    def track_in_agents_cb(self):
+        self.param_d[self.current_substrate]["track_in_agents"] = self.track_in_agents.isChecked()
 
     def dirichlet_xmin_changed(self, text):
         # print("\n\n------> def dirichlet_xmin_changed(self, text)  called!!!")
@@ -458,8 +467,41 @@ class SubstrateDef(QWidget):
         print('------ new_substrate')
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[subname] = self.param_d[self.current_substrate]
+        self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+        self.param_d[subname]["name"] = subname
+        for k in self.param_d.keys():
+            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        print()
 
+        # Then "zero out" all entries(?)
+        text = "0.0"
+        self.param_d[subname]["diffusion_coef"] = text
+        self.param_d[subname]["decay_rate"] = text
+        self.param_d[subname]["init_cond"] = text
+        self.param_d[subname]["dirichlet_bc"] = text
+        bval = False
+        self.param_d[subname]["dirichlet_enabled"] = bval
+
+        text = ""
+        self.param_d[subname]["dirichlet_xmin"] = text
+        self.param_d[subname]["dirichlet_xmax"] = text
+        self.param_d[subname]["dirichlet_ymin"] = text
+        self.param_d[subname]["dirichlet_ymax"] = text
+        self.param_d[subname]["dirichlet_zmin"] = text
+        self.param_d[subname]["dirichlet_zmax"] = text
+
+        bval = False
+        self.param_d[subname]["enable_xmin"] = bval
+        self.param_d[subname]["enable_xmax"] = bval
+        self.param_d[subname]["enable_ymin"] = bval
+        self.param_d[subname]["enable_ymax"] = bval
+        self.param_d[subname]["enable_zmin"] = bval
+        self.param_d[subname]["enable_zmax"] = bval
+
+        self.param_d[subname]["gradients"] = bval
+        self.param_d[subname]["track_in_agents"] = bval
+
+        print("\n ----- new dict:")
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
 
@@ -476,22 +518,15 @@ class SubstrateDef(QWidget):
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
-        # print('------      item_idx=',item_idx)
-        # self.tree.removeItemWidget(self.tree.currentItem(), 0)
-        # self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
-
-        # self.celldef_tab.delete_substrate_from_comboboxes(item_idx)
-        # print('------      new name=',self.tree.currentItem().text(0))
-        # self.current_substrate = self.tree.currentItem().text(0)
-
-        # self.fill_gui()
+        self.tree_item_changed_cb(treeitem, 0)
 
     # @QtCore.Slot()
     def copy_substrate(self):
         print('------ copy_substrate')
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[subname] = self.param_d[self.current_substrate]
+        self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+        self.param_d[subname]["name"] = subname
 
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
@@ -508,6 +543,8 @@ class SubstrateDef(QWidget):
         treeitem = QTreeWidgetItem([subname])
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
+
+        self.tree_item_changed_cb(treeitem, 0)
         
     # @QtCore.Slot()
     def delete_substrate(self):
@@ -526,25 +563,27 @@ class SubstrateDef(QWidget):
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         print('------      item_idx=',item_idx)
-        # self.tree.removeItemWidget(self.tree.currentItem(), 0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
         self.celldef_tab.delete_substrate_from_comboboxes(item_idx)
         print('------      new name=',self.tree.currentItem().text(0))
         self.current_substrate = self.tree.currentItem().text(0)
 
-        # self.fill_gui(self.current_substrate)
-        # self.fill_gui()
-        
 
     # @QtCore.Slot()
     # def save_xml(self):
     #     # self.text.setText(random.choice(self.hello))
     #     pass
 
+    def tree_item_changed_cb2(self, it,col):
+        print('--------- tree_item_changed_cb2():', it, col, it.text(col) )  # col=0 always
+
+        self.current_substrate = it.text(col)
+        print('self.current_substrate= ',self.current_substrate )
+
     # def tree_item_changed(self,idx1,idx2):
     def tree_item_changed_cb(self, it,col):
-        print('--------- tree_item_changed():', it, col, it.text(col) )  # col=0 always
+        print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
         self.current_substrate = it.text(col)
         print('self.current_substrate= ',self.current_substrate )
         # print('self.= ',self.tree.indexFromItem )
@@ -579,8 +618,10 @@ class SubstrateDef(QWidget):
             self.enable_zmin.setChecked(self.param_d[self.current_substrate]["enable_zmin"])
             self.enable_zmax.setChecked(self.param_d[self.current_substrate]["enable_zmax"])
 
-        # self.gradients.setChecked(self.param_d[self.current_substrate]["gradients"])
-        # self.track_in_agents.setChecked(self.param_d[self.current_substrate]["track_in_agents"])
+
+        # global to all substrates
+        self.gradients.setChecked(self.param_d[self.current_substrate]["gradients"])
+        self.track_in_agents.setChecked(self.param_d[self.current_substrate]["track_in_agents"])
 
 
 # 		<variable name="substrate" units="dimensionless" ID="0">
