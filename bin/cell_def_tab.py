@@ -236,68 +236,72 @@ class CellDef(QWidget):
         print('------ new_cell_def')
         celldefname = "cell_def%02d" % self.new_cell_def_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[celldefname] = self.param_d[self.current_cell_def]
+        self.param_d[celldefname] = self.param_d[self.current_cell_def].copy()
 
+        for k in self.param_d.keys():
+            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        print()
+
+
+        # Then "zero out" all entries(?)
+        text = "0.0"
+        self.param_d[celldefname]["death_rate"] = text
+
+        self.param_d[celldefname]["volume_total"] = text
+
+        print("\n ----- new dict:")
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
 
         self.new_cell_def_count += 1
-
         self.current_cell_def = celldefname
-        self.cell_type_name.setText(celldefname)
 
-        # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-
+        #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
         treeitem = QTreeWidgetItem([celldefname])
+        treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
-        # print('------      item_idx=',item_idx)
-        # self.tree.removeItemWidget(self.tree.currentItem(), 0)
-        # self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
+        self.tree_item_clicked_cb(treeitem, 0)
 
-        # self.celldef_tab.delete_substrate_from_comboboxes(item_idx)
-        # print('------      new name=',self.tree.currentItem().text(0))
-        # self.current_substrate = self.tree.currentItem().text(0)
 
-        # self.fill_gui()
-
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def copy_cell_def(self):
         print('------ copy_cell_def')
         celldefname = "cell_def%02d" % self.new_cell_def_count
         # Make a new cell_def (that's a copy of the currently selected one)
-        self.param_d[celldefname] = self.param_d[self.current_cell_def]
+        self.param_d[celldefname] = self.param_d[self.current_cell_def].copy()
 
         for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        print()
 
         self.new_cell_def_count += 1
 
         self.current_cell_def = celldefname
-        self.cell_type_name.setText(celldefname)
+        # self.cell_type_name.setText(celldefname)
 
-        # item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-
+        #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
         treeitem = QTreeWidgetItem([celldefname])
+        treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
+
+        self.tree_item_clicked_cb(treeitem, 0)
+
         
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def delete_cell_def(self):
         print('------ delete_cell_def')
 
-        # rwh: BEWARE of mutating the dict!
+        # rwh: is this safe?
         del self.param_d[self.current_cell_def]
-
-        # may need to make a copy instead??
-        # new_dict = {key:val for key, val in self.param_d.items() if key != 'Mani'}
-        # self.param_d = new_dict
-
 
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
@@ -310,8 +314,6 @@ class CellDef(QWidget):
         print('------      new name=',self.tree.currentItem().text(0))
         self.current_cell_def = self.tree.currentItem().text(0)
 
-        # self.fill_gui(self.current_substrate)
-        # self.fill_gui()
 
     #--------------------------------------------------------
     def create_cycle_tab(self):
@@ -2549,16 +2551,15 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_volume_params(self):
-        pass
-        # self.volume_total.setText(
-        # self.volume_fluid_fraction.setText(
-        # self.volume_nuclear.setText(
-        # self.volume_fluid_change_rate.setText(
-        # self.volume_cytoplasmic_biomass_change_rate.setText(
-        # self.volume_nuclear_biomass_change_rate.setText(
-        # self.volume_calcified_fraction.setText(
-        # self.volume_calcification_rate.setText(
-        # self.relative_rupture_volume.setText(
+        self.volume_total.setText(self.param_d[self.current_cell_def]["volume_total"])
+        self.volume_fluid_fraction.setText(self.param_d[self.current_cell_def]["volume_fluid_fraction"])
+        self.volume_nuclear.setText(self.param_d[self.current_cell_def]["volume_nuclear"])
+        self.volume_fluid_change_rate.setText(self.param_d[self.current_cell_def]["volume_fluid_change_rate"])
+        self.volume_cytoplasmic_biomass_change_rate.setText(self.param_d[self.current_cell_def]["volume_cytoplasmic_rate"])
+        self.volume_nuclear_biomass_change_rate.setText(self.param_d[self.current_cell_def]["volume_nuclear_rate"])
+        self.volume_calcified_fraction.setText(self.param_d[self.current_cell_def]["volume_calcif_fraction"])
+        self.volume_calcification_rate.setText(self.param_d[self.current_cell_def]["volume_calcif_rate"])
+        self.relative_rupture_volume.setText(self.param_d[self.current_cell_def]["volume_rel_rupture_vol"])
 
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
@@ -2884,15 +2885,25 @@ class CellDef(QWidget):
                 volume_path = ".//cell_definition[" + str(idx) + "]//phenotype//volume//"
                 print('volume_path=',volume_path)
 
-                self.volume_total.setText(uep.find(volume_path+"total").text)
-                self.volume_fluid_fraction.setText(uep.find(volume_path+"fluid_fraction").text)
-                self.volume_nuclear.setText(uep.find(volume_path+"nuclear").text)
-                self.volume_fluid_change_rate.setText(uep.find(volume_path+"fluid_change_rate").text)
-                self.volume_cytoplasmic_biomass_change_rate.setText(uep.find(volume_path+"cytoplasmic_biomass_change_rate").text)
-                self.volume_nuclear_biomass_change_rate.setText(uep.find(volume_path+"nuclear_biomass_change_rate").text)
-                self.volume_calcified_fraction.setText(uep.find(volume_path+"calcified_fraction").text)
-                self.volume_calcification_rate.setText(uep.find(volume_path+"calcification_rate").text)
-                self.relative_rupture_volume.setText(uep.find(volume_path+"relative_rupture_volume").text)
+                # self.volume_total.setText(uep.find(volume_path+"total").text)
+                # self.volume_fluid_fraction.setText(uep.find(volume_path+"fluid_fraction").text)
+                # self.volume_nuclear.setText(uep.find(volume_path+"nuclear").text)
+                # self.volume_fluid_change_rate.setText(uep.find(volume_path+"fluid_change_rate").text)
+                # self.volume_cytoplasmic_biomass_change_rate.setText(uep.find(volume_path+"cytoplasmic_biomass_change_rate").text)
+                # self.volume_nuclear_biomass_change_rate.setText(uep.find(volume_path+"nuclear_biomass_change_rate").text)
+                # self.volume_calcified_fraction.setText(uep.find(volume_path+"calcified_fraction").text)
+                # self.volume_calcification_rate.setText(uep.find(volume_path+"calcification_rate").text)
+                # self.relative_rupture_volume.setText(uep.find(volume_path+"relative_rupture_volume").text)
+
+                self.param_d[cell_def_name]["volume_total"] = uep.find(volume_path+"total").text
+                self.param_d[cell_def_name]["volume_fluid_fraction"] = uep.find(volume_path+"fluid_fraction").text
+                self.param_d[cell_def_name]["volume_nuclear"] = uep.find(volume_path+"nuclear").text
+                self.param_d[cell_def_name]["volume_fluid_change_rate"] = uep.find(volume_path+"fluid_change_rate").text
+                self.param_d[cell_def_name]["volume_cytoplasmic_rate"] = uep.find(volume_path+"cytoplasmic_biomass_change_rate").text
+                self.param_d[cell_def_name]["volume_nuclear_rate"] = uep.find(volume_path+"nuclear_biomass_change_rate").text
+                self.param_d[cell_def_name]["volume_calcif_fraction"] = uep.find(volume_path+"calcified_fraction").text
+                self.param_d[cell_def_name]["volume_calcif_rate"] = uep.find(volume_path+"calcification_rate").text
+                self.param_d[cell_def_name]["volume_rel_rupture_vol"] = uep.find(volume_path+"relative_rupture_volume").text
 
 
                 # # ---------  mechanics 
@@ -2912,13 +2923,13 @@ class CellDef(QWidget):
                 # self.cell_cell_adhesion_strength.setText(uep.find(mechanics_path+"cell_cell_adhesion_strength").text)
                 # self.cell_cell_repulsion_strength.setText(uep.find(mechanics_path+"cell_cell_repulsion_strength").text)
                 val =  uep.find(mechanics_path+"cell_cell_adhesion_strength").text
-                self.param_d[self.current_cell_def]["mechanics_adhesion"] = val
+                self.param_d[cell_def_name]["mechanics_adhesion"] = val
 
                 val =  uep.find(mechanics_path+"cell_cell_repulsion_strength").text
-                self.param_d[self.current_cell_def]["mechanics_repulsion"] = val
+                self.param_d[cell_def_name]["mechanics_repulsion"] = val
 
                 val =  uep.find(mechanics_path+"relative_maximum_adhesion_distance").text
-                self.param_d[self.current_cell_def]["mechanics_adhesion_distance"] = val
+                self.param_d[cell_def_name]["mechanics_adhesion_distance"] = val
 
                 # self.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
 
@@ -2928,20 +2939,20 @@ class CellDef(QWidget):
                 # self.set_absolute_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text)
 
                 val =  uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text
-                self.param_d[self.current_cell_def]["mechanics_relative_equilibrium_distance"] = val
+                self.param_d[cell_def_name]["mechanics_relative_equilibrium_distance"] = val
 
                 val =  uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text
-                self.param_d[self.current_cell_def]["mechanics_absolute_equilibrium_distance"] = val
+                self.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance"] = val
 
                 if uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true':
-                    self.param_d[self.current_cell_def]["mechanics_relative_equilibrium_distance_enabled"] = True
+                    self.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = True
                 else:
-                    self.param_d[self.current_cell_def]["mechanics_relative_equilibrium_distance_enabled"] = False
+                    self.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = False
 
                 if uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true':
-                    self.param_d[self.current_cell_def]["mechanics_absolute_equilibrium_distance_enabled"] = True
+                    self.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = True
                 else:
-                    self.param_d[self.current_cell_def]["mechanics_absolute_equilibrium_distance_enabled"] = False
+                    self.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = False
 
 
                 # # ---------  motility 
@@ -2964,26 +2975,26 @@ class CellDef(QWidget):
                 print('motility_path=',motility_path)
 
                 val = uep.find(motility_path+"speed").text
-                self.param_d[self.current_cell_def]["speed"] = val
+                self.param_d[cell_def_name]["speed"] = val
 
                 val = uep.find(motility_path+"persistence_time").text
-                self.param_d[self.current_cell_def]["persistence_time"] = val
+                self.param_d[cell_def_name]["persistence_time"] = val
 
                 val = uep.find(motility_path+"migration_bias").text
-                self.param_d[self.current_cell_def]["migration_bias"] = val
+                self.param_d[cell_def_name]["migration_bias"] = val
 
                 motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
 
                 # print(' motility options enabled', uep.find(motility_options_path +'enabled').text)
                 if uep.find(motility_options_path +'enabled').text.lower() == 'true':
-                    self.param_d[self.current_cell_def]["motility_enabled"] = True
+                    self.param_d[cell_def_name]["motility_enabled"] = True
                 else:
-                    self.param_d[self.current_cell_def]["motility_enabled"] = False
+                    self.param_d[cell_def_name]["motility_enabled"] = False
 
                 if uep.find(motility_options_path +'use_2D').text.lower() == 'true':
-                    self.param_d[self.current_cell_def]["motility_use2D"] = True
+                    self.param_d[cell_def_name]["motility_use2D"] = True
                 else:
-                    self.param_d[self.current_cell_def]["motility_use2D"] = False
+                    self.param_d[cell_def_name]["motility_use2D"] = False
 
                         # 		<chemotaxis>
                         # 			<enabled>false</enabled>
@@ -2992,18 +3003,18 @@ class CellDef(QWidget):
                         # 		</chemotaxis>
                 motility_chemotaxis_path = motility_options_path + "chemotaxis//"
                 if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
-                    self.param_d[self.current_cell_def]["motility_chemotaxis"] = True
+                    self.param_d[cell_def_name]["motility_chemotaxis"] = True
                 else:
-                    self.param_d[self.current_cell_def]["motility_chemotaxis"] = False
+                    self.param_d[cell_def_name]["motility_chemotaxis"] = False
 
                 val = uep.find(motility_chemotaxis_path +'substrate').text
-                self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = val
+                self.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
 
                 val = uep.find(motility_chemotaxis_path +'direction').text
                 if val == '1':
-                    self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = True
+                    self.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
                 else:
-                    self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = False
+                    self.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
 
 
                 # # ---------  secretion 
@@ -3026,7 +3037,7 @@ class CellDef(QWidget):
                 # e.g.: param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
                 # or,   param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
                 # or,   param_d["cancer cell"]["secretion"] = {"oxygen" : { "secretion_rate" : 42.0 } }
-                self.param_d[self.current_cell_def]['secretion'] = {}  # a dict for these params
+                self.param_d[cell_def_name]['secretion'] = {}  # a dict for these params
 
                 jdx = 0
                 for sub in uep_secretion.findall('substrate'):
@@ -3036,7 +3047,7 @@ class CellDef(QWidget):
 
                     print(jdx,") -- secretion substrate = ",substrate_name)
                     # self.param_d[self.current_cell_def]['secretion'][substrate_name]["secretion_rate"] = {}
-                    self.param_d[self.current_cell_def]['secretion'][substrate_name] = {}
+                    self.param_d[cell_def_name]['secretion'][substrate_name] = {}
 
                     val = sub.find("secretion_rate").text
                     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val

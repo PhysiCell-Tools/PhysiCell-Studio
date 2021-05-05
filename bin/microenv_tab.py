@@ -471,7 +471,7 @@ class SubstrateDef(QWidget):
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
-        self.param_d[subname]["name"] = subname
+        # self.param_d[subname]["name"] = subname
         for k in self.param_d.keys():
             print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
         print()
@@ -615,6 +615,7 @@ class SubstrateDef(QWidget):
         self.decay_rate.setText(self.param_d[self.current_substrate]["decay_rate"])
         self.init_cond.setText(self.param_d[self.current_substrate]["init_cond"])
         self.dirichlet_bc.setText(self.param_d[self.current_substrate]["dirichlet_bc"])
+        self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
 
         # xmin = self.param_d[self.current_substrate]["dirichlet_xmin"]
         # print("    xmin=",xmin)
@@ -627,7 +628,6 @@ class SubstrateDef(QWidget):
             self.dirichlet_zmax.setText(self.param_d[self.current_substrate]["dirichlet_zmax"])
 
             # QCheckBoxs
-            self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
             self.enable_xmin.setChecked(self.param_d[self.current_substrate]["enable_xmin"])
             self.enable_xmax.setChecked(self.param_d[self.current_substrate]["enable_xmax"])
             self.enable_ymin.setChecked(self.param_d[self.current_substrate]["enable_ymin"])
@@ -722,17 +722,17 @@ class SubstrateDef(QWidget):
                     dirichlet_bc = dirichlet_bc_path.text
                     # self.substrate["init_cond"] = init_cond
                     self.param_d[substrate_name]["dirichlet_bc"] = dirichlet_bc
-                    if idx == 1:
-                        self.dirichlet_bc.setText(dirichlet_bc)
+                    # if idx == 1:
+                    #     self.dirichlet_bc.setText(dirichlet_bc)
 
                     if "false" in dirichlet_bc_path.attrib['enabled'].lower():
                         self.param_d[substrate_name]["dirichlet_enabled"] = False
-                        if idx == 1:
-                            self.dirichlet_bc_enabled.setChecked(False)
+                        # if idx == 1:
+                        #     self.dirichlet_bc_enabled.setChecked(False)
                     else:
                         self.param_d[substrate_name]["dirichlet_enabled"] = True
-                        if idx == 1:
-                            self.dirichlet_bc_enabled.setChecked(True)
+                        # if idx == 1:
+                        #     self.dirichlet_bc_enabled.setChecked(True)
                         # self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
 
                     # 			<Dirichlet_options>
@@ -765,14 +765,14 @@ class SubstrateDef(QWidget):
                                     self.param_d[substrate_name]["enable_xmin"] = True
                             elif "xmax" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_xmax"] = bv.text
-                                if idx == 1:
-                                    self.dirichlet_xmax.setText(bv.text)
+                                # if idx == 1:
+                                #     self.dirichlet_xmax.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_xmax"] = True
                             elif "ymin" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_ymin"] = bv.text
-                                if idx == 1:
-                                    self.dirichlet_ymin.setText(bv.text)
+                                # if idx == 1:
+                                #     self.dirichlet_ymin.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_ymin"] = True
                             elif "ymax" in bv.attrib['ID']:
@@ -782,12 +782,12 @@ class SubstrateDef(QWidget):
                                     self.param_d[substrate_name]["enable_ymax"] = True
                             elif "zmin" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_zmin"] = bv.text
-                                self.dirichlet_zmin.setText(bv.text)
+                                # self.dirichlet_zmin.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_zmin"] = True
                             elif "zmax" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_zmax"] = bv.text
-                                self.dirichlet_zmax.setText(bv.text)
+                                # self.dirichlet_zmax.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_zmax"] = True
                     else:
@@ -806,17 +806,17 @@ class SubstrateDef(QWidget):
                 elif var.tag == 'options':
                     self.param_d["gradients"] = False
                     self.param_d["track_in_agents"] = False
-                    self.gradients.setChecked(False)
-                    self.track_in_agents.setChecked(False)
+                    # self.gradients.setChecked(False)
+                    # self.track_in_agents.setChecked(False)
                     for opt in var:
                         print("------- options: ",opt)
                         if "calculate_gradients" in opt.tag:
                             if "true" in opt.text.lower():
-                                self.gradients.setChecked(True)
+                                # self.gradients.setChecked(True)
                                 self.param_d["gradients"] = True
                         elif "track_internalized_substrates_in_each_agent" in opt.tag:
                             if "true" in opt.text.lower():
-                                self.track_in_agents.setChecked(True)
+                                # self.track_in_agents.setChecked(True)
                                 self.param_d["track_in_agents"] = True
 
                     
@@ -843,7 +843,7 @@ class SubstrateDef(QWidget):
 
         self.current_substrate = substrate_0th
         self.tree.setCurrentItem(self.tree.topLevelItem(0))  # select the top (0th) item
-        self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # arg. good grief.
+        self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and invoke its callback to fill widget values
 
         print("\n\n=======================  leaving microenv populate_tree  ======================= ")
         for k in self.param_d.keys():
