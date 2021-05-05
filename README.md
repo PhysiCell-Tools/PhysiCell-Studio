@@ -7,16 +7,18 @@ We are currently exploring two approaches to building a Qt application that will
 
 ## Directions for contributors: fork the repo, make edits to the dev branch, and submit Pull requests to dev.
 
-To compile and run the C++ version:
+
+To run the Python version (the preferred version for now as it's more feature complete):
+
+We recommend installing the [Anaconda Python distribution](https://www.anaconda.com/products/individual) to have the necessary Qt modules and, later, plotting modules.
+```
+python bin/gui4xml.py
+```
+
+To compile and run the C++ version, if you'd like to compare with the Python version:
 ```
 cd src
 qmake
 make
 # run the generated application
-```
-
-To run the Python version:
-```
-cd bin
-python gui4xml.py
 ```
