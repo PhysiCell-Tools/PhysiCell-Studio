@@ -51,7 +51,7 @@
 	<microenvironment_setup>
 		<variable name="oxygen" units="mmHg" ID="0">
 			<physical_parameter_set>
-				<diffusion_coefficient units="micron^2/min">410.0</diffusion_coefficient>
+				<diffusion_coefficient units="micron^2/min">420.0</diffusion_coefficient>
 				<decay_rate units="1/min">.41</decay_rate>  
 			</physical_parameter_set>
 			<initial_condition units="mmHg">41.0</initial_condition>
@@ -64,7 +64,7 @@
 				<decay_rate units="1/min">.42</decay_rate>  
 			</physical_parameter_set>
 			<initial_condition units="mmHg">42.0</initial_condition>
-			<Dirichlet_boundary_condition units="mmHg" enabled="true">42.1</Dirichlet_boundary_condition>
+			<Dirichlet_boundary_condition units="mmHg" enabled="false">42.1</Dirichlet_boundary_condition>
 		</variable>
 		
 		<variable name="therapeutic" units="dimensionless" ID="2">
@@ -101,17 +101,17 @@
 				
 				<death>  
 					<model code="100" name="apoptosis"> 
-						<death_rate units="1/min">5.31667e-05</death_rate>
+						<death_rate units="1/min">5.1e-05</death_rate>
 						<phase_durations units="min">
-							<duration index="0" fixed_duration="true">516</duration>
+							<duration index="0" fixed_duration="true">511</duration>
 						</phase_durations>
 						<parameters>
-							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">1.e-99</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.61e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.81e-03</nuclear_biomass_change_rate>
 							<calcification_rate units="1/min">0</calcification_rate>
-							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+							<relative_rupture_volume units="dimensionless">2.1</relative_rupture_volume>
 						</parameters>
 					</model> 
 
@@ -220,17 +220,17 @@
 				
 				<death>  
 					<model code="100" name="apoptosis"> 
-						<death_rate units="1/min">4.065e-5</death_rate>
+						<death_rate units="1/min">5.2e-05</death_rate>
 						<phase_durations units="min">
-							<duration index="0" fixed_duration="true">516</duration>
+							<duration index="0" fixed_duration="true">512</duration>
 						</phase_durations>
 						<parameters>
-							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-							<calcification_rate units="1/min">0</calcification_rate>
-							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+							<unlysed_fluid_change_rate units="1/min">0.02</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">2.e-99</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.62e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.82e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">2</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.2</relative_rupture_volume>
 						</parameters>
 					</model> 
 
@@ -339,17 +339,17 @@
 				
 				<death>  
 					<model code="100" name="apoptosis"> 
-						<death_rate units="1/min">0</death_rate>
+						<death_rate units="1/min">5.3e-05</death_rate>
 						<phase_durations units="min">
-							<duration index="0" fixed_duration="true">516</duration>
+							<duration index="0" fixed_duration="true">513</duration>
 						</phase_durations>
 						<parameters>
-							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-							<calcification_rate units="1/min">0</calcification_rate>
-							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+							<unlysed_fluid_change_rate units="1/min">0.03</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">3.e-99</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.63e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">3</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.3</relative_rupture_volume>
 						</parameters>
 					</model> 
 

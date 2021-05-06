@@ -173,8 +173,12 @@ class Config(QWidget):
         hbox.addWidget(self.max_time)
 
         label = QLabel("min")
-        label.setFixedWidth(units_width)
+        label.setFixedWidth(200)
         label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(label)
+
+        label = QLabel(" ")  # weird, but nicer layout
+        label.setFixedWidth(200)
         hbox.addWidget(label)
 
         self.vbox.addLayout(hbox)
@@ -192,9 +196,12 @@ class Config(QWidget):
         self.num_threads.setValidator(QtGui.QIntValidator())
         hbox.addWidget(self.num_threads)
 
-        label = QLabel("   ")
-        label.setFixedWidth(units_width)
-        label.setAlignment(QtCore.Qt.AlignLeft)
+        label = QLabel("   ")  # weird, but nicer layout
+        label.setFixedWidth(200)  # 70?
+        hbox.addWidget(label)
+
+        label = QLabel(" ")
+        label.setFixedWidth(200)
         hbox.addWidget(label)
 
         self.vbox.addLayout(hbox)
