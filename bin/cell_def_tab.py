@@ -317,6 +317,7 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def create_cycle_tab(self):
+        print("\n====================== create_cycle_tab ===================")
         # self.group_cycle = QGroupBox()
         self.params_cycle = QWidget()
         self.vbox_cycle = QVBoxLayout()
@@ -324,14 +325,14 @@ class CellDef(QWidget):
 
         #----------------------------
         self.cycle_rate_duration_hbox = QHBoxLayout()
-        self.rb1 = QRadioButton("transition rate(s)", self)
+        self.cycle_rb1 = QRadioButton("transition rate(s)", self)
         # self.rb1.clicked.connect(self.cycle_phase_transition_cb)
-        self.rb1.toggled.connect(self.cycle_phase_transition_cb)
-        self.cycle_rate_duration_hbox.addWidget(self.rb1)
-        self.rb2 = QRadioButton("duration(s)", self)
+        self.cycle_rb1.toggled.connect(self.cycle_phase_transition_cb)
+        self.cycle_rate_duration_hbox.addWidget(self.cycle_rb1)
+        self.cycle_rb2 = QRadioButton("duration(s)", self)
         # self.rb2.clicked.connect(self.cycle_phase_transition_cb)
-        self.rb2.toggled.connect(self.cycle_phase_transition_cb)
-        self.cycle_rate_duration_hbox.addWidget(self.rb2)
+        self.cycle_rb2.toggled.connect(self.cycle_phase_transition_cb)
+        self.cycle_rate_duration_hbox.addWidget(self.cycle_rb2)
         self.cycle_rate_duration_hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox_cycle.addLayout(self.cycle_rate_duration_hbox)
 
@@ -1781,7 +1782,6 @@ class CellDef(QWidget):
         # self.motility_substrate_dropdown.setFixedWidth(240)
         idr += 1
         glayout.addWidget(self.motility_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.cycle_dropdown.currentIndex.connect(self.cycle_changed_cb)
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
         # self.motility_substrate_dropdown.addItem("oxygen")
 
@@ -1868,7 +1868,6 @@ class CellDef(QWidget):
         self.secretion_substrate_dropdown = QComboBox()
         idr = 0
         glayout.addWidget(self.secretion_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.cycle_dropdown.currentIndex.connect(self.cycle_changed_cb)
         self.secretion_substrate_dropdown.currentIndexChanged.connect(self.secretion_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
 
         label = QLabel("secretion rate")
@@ -2351,7 +2350,10 @@ class CellDef(QWidget):
     def cycle_changed_cb(self, idx):
         # pass
         print('------ cycle_changed_cb(): idx = ',idx)
-        # self.param_d[self.current_cell_def]['cycle'] = 
+        print('------ cycle_changed_cb(): item = ',str(self.cycle_dropdown.currentText()))
+        if self.current_cell_def:
+            self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
+
         self.customize_cycle_choices()
         # QMessageBox.information(self, "Cycle Changed:",
                 #   "Current Cycle Index: %d" % idx )
@@ -2422,6 +2424,8 @@ class CellDef(QWidget):
             self.cycle_duration_flag = False
             self.customize_cycle_choices()
             # pass
+
+        self.param_d[self.current_cell_def]['cycle_duration_flag'] = self.cycle_duration_flag
         
 
         # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
@@ -2534,12 +2538,19 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
-        # pass
         cdname = self.current_cell_def
-        if 'live' in self.param_d[cdname]['cycle']:
-            self.cycle_dropdown.setCurrentIndex(0)
-        elif 'separated' in self.param_d[cdname]['cycle']:
-            self.cycle_dropdown.setCurrentIndex(4)
+
+        # if 'live' in self.param_d[cdname]['cycle']:
+        #     self.cycle_dropdown.setCurrentIndex(0)
+        # elif 'separated' in self.param_d[cdname]['cycle']:
+        #     self.cycle_dropdown.setCurrentIndex(4)
+
+        if self.param_d[cdname]['cycle_duration_flag']:
+            self.cycle_rb2.setChecked(True)
+        else:
+            self.cycle_rb1.setChecked(True)
+
+        self.cycle_dropdown.setCurrentIndex(self.param_d[cdname]['cycle_choice_idx'])
 
                 # if cycle_code == 0:
                 #     self.cycle_dropdown.setCurrentIndex(2)
@@ -2771,6 +2782,8 @@ class CellDef(QWidget):
                     self.cycle_dropdown.setCurrentIndex(5)
                     self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
 
+                self.param_d[cell_def_name]['cycle_choice_idx'] = self.cycle_dropdown.currentIndex()
+
             # rwh: We only use cycle code=5 or 6 in ALL sample projs?!
                 # <cell_definition name="cargo cell" ID="2" visible="true">
                 # 	<phenotype>
@@ -2791,7 +2804,8 @@ class CellDef(QWidget):
                 pt_uep = uep.find(phase_transition_path)
                 if pt_uep:
                     # self.rb1 = QRadioButton("transition rate(s)", self)
-                    self.rb1.setChecked(True)
+                    self.cycle_rb1.setChecked(True)
+                    self.param_d[cell_def_name]['cycle_duration_flag'] = False
                     self.cycle_duration_flag = False
                     self.customize_cycle_choices()
 
@@ -2832,7 +2846,8 @@ class CellDef(QWidget):
                 pd_uep = uep.find(phase_durations_path)
                 print(' >> pd_uep =',pd_uep )
                 if pd_uep:
-                    self.rb2.setChecked(True)
+                    self.cycle_rb2.setChecked(True)
+                    self.param_d[cell_def_name]['cycle_duration_flag'] = True
                     self.cycle_duration_flag = True
                     self.customize_cycle_choices()
 

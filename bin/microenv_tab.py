@@ -676,7 +676,7 @@ class SubstrateDef(QWidget):
 # -->
 #  		</variable>
     def populate_tree(self):
-        print("=======================  populate_tree  ======================= ")
+        print("=======================  microenv populate_tree  ======================= ")
         uep = self.xml_root.find(".//microenvironment_setup")
         if uep:
             # self.substrate.clear()
