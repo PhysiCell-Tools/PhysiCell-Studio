@@ -325,10 +325,12 @@ class CellDef(QWidget):
         #----------------------------
         self.cycle_rate_duration_hbox = QHBoxLayout()
         self.rb1 = QRadioButton("transition rate(s)", self)
-        self.rb1.clicked.connect(self.cycle_phase_transition_cb)
+        # self.rb1.clicked.connect(self.cycle_phase_transition_cb)
+        self.rb1.toggled.connect(self.cycle_phase_transition_cb)
         self.cycle_rate_duration_hbox.addWidget(self.rb1)
         self.rb2 = QRadioButton("duration(s)", self)
-        self.rb2.clicked.connect(self.cycle_phase_transition_cb)
+        # self.rb2.clicked.connect(self.cycle_phase_transition_cb)
+        self.rb2.toggled.connect(self.cycle_phase_transition_cb)
         self.cycle_rate_duration_hbox.addWidget(self.rb2)
         self.cycle_rate_duration_hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox_cycle.addLayout(self.cycle_rate_duration_hbox)
@@ -2349,6 +2351,7 @@ class CellDef(QWidget):
     def cycle_changed_cb(self, idx):
         # pass
         print('------ cycle_changed_cb(): idx = ',idx)
+        # self.param_d[self.current_cell_def]['cycle'] = 
         self.customize_cycle_choices()
         # QMessageBox.information(self, "Cycle Changed:",
                 #   "Current Cycle Index: %d" % idx )
@@ -2531,7 +2534,32 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
-        pass
+        # pass
+        cdname = self.current_cell_def
+        if 'live' in self.param_d[cdname]['cycle']:
+            self.cycle_dropdown.setCurrentIndex(0)
+        elif 'separated' in self.param_d[cdname]['cycle']:
+            self.cycle_dropdown.setCurrentIndex(4)
+
+                # if cycle_code == 0:
+                #     self.cycle_dropdown.setCurrentIndex(2)
+                #     self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
+                # elif cycle_code == 1:
+                #     self.cycle_dropdown.setCurrentIndex(1)
+                #     self.param_d[cell_def_name]['cycle'] = 'basic Ki67'
+                # elif cycle_code == 2:
+                #     self.cycle_dropdown.setCurrentIndex(3)
+                #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry'
+                # elif cycle_code == 5:
+                #     self.cycle_dropdown.setCurrentIndex(0)
+                #     self.param_d[cell_def_name]['cycle'] = 'live cells'
+                # elif cycle_code == 6:
+                #     self.cycle_dropdown.setCurrentIndex(4)
+                #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry separated'
+                # elif cycle_code == 7:
+                #     self.cycle_dropdown.setCurrentIndex(5)
+                #     self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
+
     #     self.cycle_trate00.setText(rate.text)
     #     self.cycle_trate01.setText(rate.text)
     #     self.cycle_trate_02_12.setText(rate.text)
@@ -2726,23 +2754,38 @@ class CellDef(QWidget):
 
                 if cycle_code == 0:
                     self.cycle_dropdown.setCurrentIndex(2)
+                    self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
                 elif cycle_code == 1:
                     self.cycle_dropdown.setCurrentIndex(1)
+                    self.param_d[cell_def_name]['cycle'] = 'basic Ki67'
                 elif cycle_code == 2:
                     self.cycle_dropdown.setCurrentIndex(3)
+                    self.param_d[cell_def_name]['cycle'] = 'flow cytometry'
                 elif cycle_code == 5:
                     self.cycle_dropdown.setCurrentIndex(0)
+                    self.param_d[cell_def_name]['cycle'] = 'live cells'
                 elif cycle_code == 6:
                     self.cycle_dropdown.setCurrentIndex(4)
+                    self.param_d[cell_def_name]['cycle'] = 'flow cytometry separated'
                 elif cycle_code == 7:
                     self.cycle_dropdown.setCurrentIndex(5)
+                    self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
 
+            # rwh: We only use cycle code=5 or 6 in ALL sample projs?!
                 # <cell_definition name="cargo cell" ID="2" visible="true">
                 # 	<phenotype>
                 # 		<cycle code="5" name="live">  
                 # 			<phase_transition_rates units="1/min"> 
                 # 				<rate start_index="0" end_index="0" fixed_duration="false">0.0</rate>
                 # 			</phase_transition_rates>
+
+                # <cycle code="6" name="Flow cytometry model (separated)">  
+				# 	<phase_transition_rates units="1/min"> 
+				# 		<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+				# 		<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+				# 		<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+				# 		<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+
                 phase_transition_path = cycle_path + "//phase_transition_rates"
                 print(' >> phase_transition_path ')
                 pt_uep = uep.find(phase_transition_path)
@@ -2755,16 +2798,23 @@ class CellDef(QWidget):
                     for rate in pt_uep: 
                         print(rate)
                         print("start_index=",rate.attrib["start_index"])
+                        # todo? aren't there more? 1->0, 2->0?
+                        # We only use cycle code=5 or 6 in ALL sample projs?!
                         if (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "0"):
-                            self.cycle_trate00.setText(rate.text)
+                            # self.cycle_trate00.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_trate00'] = rate.text
                         elif (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "1"):
-                            self.cycle_trate01.setText(rate.text)
+                            # self.cycle_trate01.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_trate01'] = rate.text
                         elif (rate.attrib['start_index'] == "1") and (rate.attrib['end_index'] == "2"):
-                            self.cycle_trate_02_12.setText(rate.text)
+                            # self.cycle_trate_02_12.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_trate_02_12'] = rate.text
                         elif (rate.attrib['start_index'] == "2") and (rate.attrib['end_index'] == "3"):
-                            self.cycle_trate_03_23.setText(rate.text)
+                            # self.cycle_trate_03_23.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_trate_03_23'] = rate.text
                         elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
-                            self.cycle_trate_03_30.setText(rate.text)
+                            # self.cycle_trate_03_30.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_trate_03_30'] = rate.text
 
 
                 # template.xml:
@@ -2789,34 +2839,37 @@ class CellDef(QWidget):
                     for pd in pd_uep:   # phase_duration
                         print(pd)
                         print("index=",pd.attrib["index"])
+                        sval = pd.text
                         if  pd.attrib['index'] == "0":
                             print("--> handling duration index=0")
 
-                            sval = pd.text
-                            self.param_d[cell_def_name]['cycle_duration00'] = sval
                             # if idx == 1:  
-                            self.cycle_duration00.setText(sval)
-
+                            # self.cycle_duration00.setText(sval)
+                            # self.cycle_duration01.setText(sval)
+                            # self.cycle_duration_02_01.setText(sval)
+                            # self.cycle_duration_03_01.setText(sval)
+                            self.param_d[cell_def_name]['cycle_duration00'] = sval
                             self.param_d[cell_def_name]['cycle_duration01'] = sval
-                            self.cycle_duration01.setText(sval)
-
                             self.param_d[cell_def_name]['cycle_duration_02_01'] = sval
-                            self.cycle_duration_02_01.setText(sval)
-
                             self.param_d[cell_def_name]['cycle_duration_03_01'] = sval
-                            self.cycle_duration_03_01.setText(sval)
                         elif  pd.attrib['index'] == "1":
                             print("--> handling duration index=1")
-                            self.cycle_duration10.setText(pd.text)
-                            self.cycle_duration_02_12.setText(pd.text)
-                            self.cycle_duration_03_12.setText(pd.text)
+                            # self.cycle_duration10.setText(pd.text)
+                            # self.cycle_duration_02_12.setText(pd.text)
+                            # self.cycle_duration_03_12.setText(pd.text)
+                            self.param_d[cell_def_name]['cycle_duration10'] = sval
+                            self.param_d[cell_def_name]['cycle_duration_02_12'] = sval
+                            self.param_d[cell_def_name]['cycle_duration_03_12'] = sval
                         elif  pd.attrib['index'] == "2":
                             print("--> handling duration index=2")
-                            self.cycle_duration_02_20.setText(pd.text)
-                            self.cycle_duration_03_23.setText(pd.text)
+                            # self.cycle_duration_02_20.setText(pd.text)
+                            # self.cycle_duration_03_23.setText(pd.text)
+                            self.param_d[cell_def_name]['cycle_duration_02_20'] = sval
+                            self.param_d[cell_def_name]['cycle_duration_03_23'] = sval
                         elif  pd.attrib['index'] == "3":
                             print("--> handling duration index=3")
-                            self.cycle_duration_03_30.setText(pd.text)
+                            # self.cycle_duration_03_30.setText(pd.text)
+                            self.param_d[cell_def_name]['cycle_duration_03_30'] = sval
 
                 # rf. microenv:
                 # self.cell_type_name.setText(var.attrib['name'])
