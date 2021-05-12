@@ -34,16 +34,28 @@ class CellDef(QWidget):
 
         self.stacked_cycle = QStackedWidget()
         # transition rates
-        self.stack_idx_t00 = -1
-        self.stack_idx_t01 = -1
-        self.stack_idx_t02 = -1
-        self.stack_idx_t03 = -1
+        # self.stack_idx_t00 = -1
+        # self.stack_idx_t01 = -1
+        # self.stack_idx_t02 = -1
+        # self.stack_idx_t03 = -1
+        self.stack_trate_live_idx = -1 
+        self.stack_trate_Ki67_idx = -1 
+        self.stack_trate_advancedKi67_idx = -1 
+        self.stack_trate_flowcyto_idx = -1 
+        self.stack_trate_flowcytosep_idx = -1 
+        self.stack_trate_quiescent_idx = -1 
 
-        # duration rates
-        self.stack_idx_d00 = -1
-        self.stack_idx_d01 = -1
-        self.stack_idx_d02 = -1
-        self.stack_idx_d03 = -1
+        # # duration rates
+        # self.stack_idx_d00 = -1
+        # self.stack_idx_d01 = -1
+        # self.stack_idx_d02 = -1
+        # self.stack_idx_d03 = -1
+        self.stack_duration_live_idx = -1 
+        self.stack_duration_Ki67_idx = -1 
+        self.stack_duration_advancedKi67_idx = -1 
+        self.stack_duration_flowcyto_idx = -1 
+        self.stack_duration_flowcytosep_idx = -1 
+        self.stack_duration_quiescent_idx = -1 
 
         # <substrate name="virus">
         #     <secretion_rate units="1/min">0</secretion_rate>
@@ -379,19 +391,32 @@ class CellDef(QWidget):
         # self.stacked_cycle = QStackedWidget()
 
         # transition rates
-        self.stack_t00 = QWidget()
-        self.stack_t01 = QWidget()
-        self.stack_t02 = QWidget()
-        self.stack_t03 = QWidget()
+        self.stack_trate_live = QWidget()
+        self.stack_trate_Ki67 = QWidget()
+        self.stack_trate_advancedKi67 = QWidget()
+        self.stack_trate_flowcyto = QWidget()
+        self.stack_trate_flowcytosep = QWidget()
+        self.stack_trate_quiescent = QWidget()
 
         # duration times
-        self.stack_d00 = QWidget()
-        self.stack_d01 = QWidget()
-        self.stack_d02 = QWidget()
-        self.stack_d03 = QWidget()
+        self.stack_duration_live = QWidget()
+        self.stack_duration_Ki67 = QWidget()
+        self.stack_duration_advancedKi67 = QWidget()
+        self.stack_duration_flowcyto = QWidget()
+        self.stack_duration_flowcytosep = QWidget()
+        self.stack_duration_quiescent = QWidget()
 
 
-        #------ Cycle transition rate (1 node) ----------------------
+        #===========================================================
+        #  Naming scheme for sets ("stacks") of cycle widgets:
+        #     cycle_<type>_trate<SE>[_changed] (S=start, E=end)
+        #     stack_trate_<type>[_idx]
+        #
+        #     cycle_<type>_duration<SE>[_changed] (S=start, E=end)
+        #     stack_duration_<type>[_idx]
+        #===========================================================
+
+        #------ Cycle transition rate (live) ----------------------
         # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
 
         glayout = QGridLayout()
@@ -399,34 +424,32 @@ class CellDef(QWidget):
         label = QLabel("phase 0->0 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # glayout.addWidget(*Widget, row, column, rowspan, colspan)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate00 = QLineEdit()
-        self.cycle_trate00.textChanged.connect(self.cycle_trate00_changed)
-        self.cycle_trate00.setValidator(QtGui.QDoubleValidator())
-        # self.cycle_trate0_0.enter.connect(self.save_xml)
-        glayout.addWidget(self.cycle_trate00, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_live_trate00 = QLineEdit()
+        self.cycle_live_trate00.textChanged.connect(self.cycle_live_trate00_changed)
+        self.cycle_live_trate00.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_live_trate00, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate00_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_live_trate00_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_live_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-        # hbox.addWidget(units_1min)
-        self.stack_t00.setLayout(glayout)   
+
+        #---
+        self.stack_trate_live.setLayout(glayout)   
 
         idx_stacked_widget = 0
-        self.stack_idx_t00 = idx_stacked_widget 
-        print(" new stacked widget: t00 -------------> ",idx_stacked_widget)
-        self.stacked_cycle.addWidget(self.stack_t00)  # <------------- stack widget 0
+        self.stack_trate_live_idx = idx_stacked_widget 
+        print(" new stacked widget: trate live -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_trate_live)  # <------------- stack widget 0
 
 
-        #------ Cycle transition rates (2 nodes) ----------------------
+        #------ Cycle transition rates (Ki67) ----------------------
         # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
 
         glayout = QGridLayout()
 
@@ -435,13 +458,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate01 = QLineEdit()
-        self.cycle_trate01.textChanged.connect(self.cycle_trate01_changed)
-        self.cycle_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate01 = QLineEdit()
+        self.cycle_Ki67_trate01.textChanged.connect(self.cycle_Ki67_trate01_changed)
+        self.cycle_Ki67_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_Ki67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_Ki67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -454,36 +477,30 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate10 = QLineEdit()
-        self.cycle_trate10.textChanged.connect(self.cycle_trate10_changed)
-        self.cycle_trate10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate10 = QLineEdit()
+        self.cycle_Ki67_trate10.textChanged.connect(self.cycle_Ki67_trate10_changed)
+        self.cycle_Ki67_trate10.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_Ki67_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate10_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate10_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_Ki67_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
 
-        #-------
-        # glayout.addWidget(QLabel("rwh-------------------------------AAAAAAAAAAAAAAAAAAAAAaa"), 2,0,4,4) # w, row, column, rowspan, colspan
-        # glayout.addWidget(QLabel(""), 2,0,3,4) # w, row, column, rowspan, colspan
-        # glayout.addStretch(0)
-
         #---
-        self.stack_t01.setLayout(glayout)
+        self.stack_trate_Ki67.setLayout(glayout)
 
         idx_stacked_widget += 1
-        self.stack_idx_t01 = idx_stacked_widget 
-        print(" new stacked widget: t01 -------------> ",idx_stacked_widget)
-        self.stacked_cycle.addWidget(self.stack_t01) # <------------- stack widget 1
+        self.stack_trate_Ki67_idx = idx_stacked_widget 
+        print(" new stacked widget: trate Ki67 -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_trate_Ki67) # <------------- stack widget 1
 
 
-        #------ Cycle transition rates (3 nodes) ----------------------
+        #------ Cycle transition rates (advanced Ki67) ----------------------
         # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
 
         glayout = QGridLayout()
 
@@ -492,13 +509,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_01 = QLineEdit()
-        self.cycle_trate_02_01.textChanged.connect(self.cycle_trate_02_01_changed)
-        self.cycle_trate_02_01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_02_01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate01 = QLineEdit()
+        self.cycle_advancedKi67_trate01.textChanged.connect(self.cycle_advancedKi67_trate01_changed)
+        self.cycle_advancedKi67_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_02_01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -511,13 +528,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_12 = QLineEdit()
-        self.cycle_trate_02_12.textChanged.connect(self.cycle_trate_02_12_changed)
-        self.cycle_trate_02_12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_02_12, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate12 = QLineEdit()
+        self.cycle_advancedKi67_trate12.textChanged.connect(self.cycle_advancedKi67_trate12_changed)
+        self.cycle_advancedKi67_trate12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_12_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_02_12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -530,13 +547,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_20 = QLineEdit()
-        self.cycle_trate_02_20.textChanged.connect(self.cycle_trate_02_20_changed)
-        self.cycle_trate_02_20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_02_20, 2,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate20 = QLineEdit()
+        self.cycle_advancedKi67_trate20.textChanged.connect(self.cycle_advancedKi67_trate20_changed)
+        self.cycle_advancedKi67_trate20.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_02_20_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_02_20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate20_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -544,15 +561,15 @@ class CellDef(QWidget):
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
 
         #-----
-        self.stack_t02.setLayout(glayout)
+        self.stack_trate_advancedKi67.setLayout(glayout)
         idx_stacked_widget += 1
         print(" new stacked widget: t02 -------------> ",idx_stacked_widget)
-        self.stack_idx_t02 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_t02)
+        self.stack_trate_advancedKi67_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_trate_advancedKi67)
 
 
-        #------ Cycle transition rates (4 nodes) ----------------------
-        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
+        #------ Cycle transition rates (flow cytometry) ----------------------
+        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
 
         glayout = QGridLayout()
 
@@ -561,13 +578,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_01 = QLineEdit()
-        self.cycle_trate_03_01.textChanged.connect(self.cycle_trate_03_01_changed)
-        self.cycle_trate_03_01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_03_01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate01 = QLineEdit()
+        self.cycle_flowcyto_trate01.textChanged.connect(self.cycle_flowcyto_trate01_changed)
+        self.cycle_flowcyto_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_03_01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -580,13 +597,82 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_12 = QLineEdit()
-        self.cycle_trate_03_12.textChanged.connect(self.cycle_trate_03_12_changed)
-        self.cycle_trate_03_12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_03_12, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate12 = QLineEdit()
+        self.cycle_flowcyto_trate12.textChanged.connect(self.cycle_flowcyto_trate12_changed)
+        self.cycle_flowcyto_trate12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_12_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_03_12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 2->0 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcyto_trate20 = QLineEdit()
+        self.cycle_flowcyto_trate20.textChanged.connect(self.cycle_flowcyto_trate20_changed)
+        self.cycle_flowcyto_trate20.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcyto_trate20_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
+
+        #-----
+        self.stack_trate_flowcyto.setLayout(glayout)
+        idx_stacked_widget += 1
+        print(" new stacked widget: trate_flowcyto -------------> ",idx_stacked_widget)
+        self.stack_trate_flowcyto_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_trate_flowcyto)
+
+
+        #------ Cycle transition rates (flow cytometry separated) ----------------------
+        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
+
+        glayout = QGridLayout()
+
+        label = QLabel("phase 0->1 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcytosep_trate01 = QLineEdit()
+        self.cycle_flowcytosep_trate01.textChanged.connect(self.cycle_flowcytosep_trate01_changed)
+        self.cycle_flowcytosep_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcytosep_trate01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 1->2 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcytosep_trate12 = QLineEdit()
+        self.cycle_flowcytosep_trate12.textChanged.connect(self.cycle_flowcytosep_trate12_changed)
+        self.cycle_flowcytosep_trate12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_flowcytosep_trate12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -599,13 +685,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_23 = QLineEdit()
-        self.cycle_trate_03_23.textChanged.connect(self.cycle_trate_03_23_changed)
-        self.cycle_trate_03_23.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_03_23, 2,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate23 = QLineEdit()
+        self.cycle_flowcytosep_trate23.textChanged.connect(self.cycle_flowcytosep_trate23_changed)
+        self.cycle_flowcytosep_trate23.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_trate23, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_23_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_03_23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate23_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_trate23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -618,13 +704,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_30 = QLineEdit()
-        self.cycle_trate_03_30.textChanged.connect(self.cycle_trate_03_30_changed)
-        self.cycle_trate_03_30.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_trate_03_30, 3,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate30 = QLineEdit()
+        self.cycle_flowcytosep_trate30.textChanged.connect(self.cycle_flowcytosep_trate30_changed)
+        self.cycle_flowcytosep_trate30.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_trate30, 3,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_trate_03_30_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_trate_03_30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate30_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_trate30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -632,49 +718,98 @@ class CellDef(QWidget):
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
 
         #-----
-        self.stack_t03.setLayout(glayout)
+        self.stack_trate_flowcytosep.setLayout(glayout)
         idx_stacked_widget += 1
-        print(" new stacked widget: t03 -------------> ",idx_stacked_widget)
-        self.stack_idx_t03 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_t03)
+        print(" new stacked widget: flow cyto sep -------------> ",idx_stacked_widget)
+        self.stack_trate_flowcytosep_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_trate_flowcytosep)
+
+
+        #------ Cycle transition rates (cycling quiescent) ----------------------
+        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+
+        glayout = QGridLayout()
+
+        label = QLabel("phase 0->1 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_trate01 = QLineEdit()
+        self.cycle_quiescent_trate01.textChanged.connect(self.cycle_quiescent_trate01_changed)
+        self.cycle_quiescent_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_quiescent_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_trate01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_quiescent_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 1->0 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_trate10 = QLineEdit()
+        self.cycle_quiescent_trate10.textChanged.connect(self.cycle_quiescent_trate10_changed)
+        self.cycle_quiescent_trate10.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_quiescent_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_trate10_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_quiescent_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
+
+        #---
+        self.stack_trate_quiescent.setLayout(glayout)
+
+        idx_stacked_widget += 1
+        self.stack_trate_quiescent_idx = idx_stacked_widget 
+        print(" new stacked widget: trate_quiescent -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_trate_quiescent) # <------------- stack widget 1
 
 
         #===========================================================================
         #------ Cycle duration rates ----------------------
         # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-
         glayout = QGridLayout()
 
         label = QLabel("phase 0 duration")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1)
-        # glayout.addWidget(*Widget, row, column, rowspan, colspan)
+        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration00 = QLineEdit()
-        self.cycle_duration00.textChanged.connect(self.cycle_duration00_changed)
-        self.cycle_duration00.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration00, 0,1,1,2)
+        self.cycle_live_duration00 = QLineEdit()
+        self.cycle_live_duration00.textChanged.connect(self.cycle_live_duration00_changed)
+        self.cycle_live_duration00.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_live_duration00, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration00_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration00_fixed, 0,3,1,1)
+        self.cycle_live_duration00_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_live_duration00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
-        units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
-        glayout.addWidget(units, 0,4,1,1)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
 
-        #-----
-        self.stack_d00.setLayout(glayout)
+        #---
+        self.stack_duration_live.setLayout(glayout)   
+
         idx_stacked_widget += 1
-        print(" new stacked widget: d00 -------------> ",idx_stacked_widget)
-        self.stack_idx_d00 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_d00)
+        self.stack_duration_live_idx = idx_stacked_widget 
+        print(" new stacked widget: duration live -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_duration_live)
 
 
-        #------ Cycle duration rates (2 nodes) ----------------------
+        #------ Cycle duration (Ki67) ----------------------
         # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
 
         glayout = QGridLayout()
 
@@ -683,13 +818,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration01 = QLineEdit()
-        self.cycle_duration01.textChanged.connect(self.cycle_duration01_changed)
-        self.cycle_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_duration01 = QLineEdit()
+        self.cycle_Ki67_duration01.textChanged.connect(self.cycle_Ki67_duration01_changed)
+        self.cycle_Ki67_duration01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_Ki67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_duration01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_Ki67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -702,32 +837,98 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration10 = QLineEdit()
-        self.cycle_duration10.textChanged.connect(self.cycle_duration10_changed)
-        self.cycle_duration10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_duration10 = QLineEdit()
+        self.cycle_Ki67_duration10.textChanged.connect(self.cycle_Ki67_duration10_changed)
+        self.cycle_Ki67_duration10.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_Ki67_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration10_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_duration10_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_Ki67_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
 
-        # glayout.addWidget(QLabel(""), 2,0,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        self.stack_d01.setLayout(glayout)
+        #---
+        self.stack_duration_Ki67.setLayout(glayout)
 
         idx_stacked_widget += 1
-        print(" new stacked widget: d01 -------------> ",idx_stacked_widget)
-        self.stack_idx_d01 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_d01)
+        self.stack_duration_Ki67_idx = idx_stacked_widget 
+        print(" new stacked widget: duration Ki67 -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_duration_Ki67) # <------------- stack widget 1
 
 
-        #------ Cycle duration (3 nodes) ----------------------
+        #------ Cycle duration (advanced Ki67) ----------------------
         # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
+
+        glayout = QGridLayout()
+
+        label = QLabel("phase 0 duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration01 = QLineEdit()
+        self.cycle_advancedKi67_duration01.textChanged.connect(self.cycle_advancedKi67_duration01_changed)
+        self.cycle_advancedKi67_duration01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 1 duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration12 = QLineEdit()
+        self.cycle_advancedKi67_duration12.textChanged.connect(self.cycle_advancedKi67_duration12_changed)
+        self.cycle_advancedKi67_duration12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 2 duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration20 = QLineEdit()
+        self.cycle_advancedKi67_duration20.textChanged.connect(self.cycle_advancedKi67_duration20_changed)
+        self.cycle_advancedKi67_duration20.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_advancedKi67_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_advancedKi67_duration20_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_advancedKi67_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
+
+        #-----
+        self.stack_duration_advancedKi67.setLayout(glayout)
+        idx_stacked_widget += 1
+        print(" new stacked widget: t02 -------------> ",idx_stacked_widget)
+        self.stack_duration_advancedKi67_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_duration_advancedKi67)
+
+
+        #------ Cycle duration (flow cytometry) ----------------------
         # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
 
         glayout = QGridLayout()
@@ -737,13 +938,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_01 = QLineEdit()
-        self.cycle_duration_02_01.textChanged.connect(self.cycle_duration_02_01_changed)
-        self.cycle_duration_02_01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_02_01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration01 = QLineEdit()
+        self.cycle_flowcyto_duration01.textChanged.connect(self.cycle_flowcyto_duration01_changed)
+        self.cycle_flowcyto_duration01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_02_01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -756,13 +957,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_12 = QLineEdit()
-        self.cycle_duration_02_12.textChanged.connect(self.cycle_duration_02_12_changed)
-        self.cycle_duration_02_12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_02_12, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration12 = QLineEdit()
+        self.cycle_flowcyto_duration12.textChanged.connect(self.cycle_flowcyto_duration12_changed)
+        self.cycle_flowcyto_duration12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_12_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_02_12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -775,13 +976,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_20 = QLineEdit()
-        self.cycle_duration_02_20.textChanged.connect(self.cycle_duration_02_20_changed)
-        self.cycle_duration_02_20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_02_20, 2,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration20 = QLineEdit()
+        self.cycle_flowcyto_duration20.textChanged.connect(self.cycle_flowcyto_duration20_changed)
+        self.cycle_flowcyto_duration20.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcyto_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_02_20_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_02_20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_duration20_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcyto_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -789,15 +990,14 @@ class CellDef(QWidget):
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
 
         #-----
-        self.stack_d02.setLayout(glayout)
-
+        self.stack_duration_flowcyto.setLayout(glayout)
         idx_stacked_widget += 1
-        print(" new stacked widget: d02 -------------> ",idx_stacked_widget)
-        self.stack_idx_d02 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_d02) 
+        print(" new stacked widget: duration_flowcyto -------------> ",idx_stacked_widget)
+        self.stack_duration_flowcyto_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_duration_flowcyto)
 
 
-        #------ Cycle duration (4 nodes) ----------------------
+        #------ Cycle duration (flow cytometry separated) ----------------------
         # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
 
         glayout = QGridLayout()
@@ -807,13 +1007,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_01 = QLineEdit()
-        self.cycle_duration_03_01.textChanged.connect(self.cycle_duration_03_01_changed)
-        self.cycle_duration_03_01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_03_01, 0,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration01 = QLineEdit()
+        self.cycle_flowcytosep_duration01.textChanged.connect(self.cycle_flowcytosep_duration01_changed)
+        self.cycle_flowcytosep_duration01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_01_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_03_01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -826,13 +1026,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_12 = QLineEdit()
-        self.cycle_duration_03_12.textChanged.connect(self.cycle_duration_03_12_changed)
-        self.cycle_duration_03_12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_03_12, 1,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration12 = QLineEdit()
+        self.cycle_flowcytosep_duration12.textChanged.connect(self.cycle_flowcytosep_duration12_changed)
+        self.cycle_flowcytosep_duration12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_12_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_03_12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration12_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -845,13 +1045,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_23 = QLineEdit()
-        self.cycle_duration_03_23.textChanged.connect(self.cycle_duration_03_23_changed)
-        self.cycle_duration_03_23.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_03_23, 2,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration23 = QLineEdit()
+        self.cycle_flowcytosep_duration23.textChanged.connect(self.cycle_flowcytosep_duration23_changed)
+        self.cycle_flowcytosep_duration23.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_duration23, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_23_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_03_23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration23_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_duration23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -864,13 +1064,13 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_30 = QLineEdit()
-        self.cycle_duration_03_30.textChanged.connect(self.cycle_duration_03_30_changed)
-        self.cycle_duration_03_30.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_duration_03_30, 3,1,1,2) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration30 = QLineEdit()
+        self.cycle_flowcytosep_duration30.textChanged.connect(self.cycle_flowcytosep_duration30_changed)
+        self.cycle_flowcytosep_duration30.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_flowcytosep_duration30, 3,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_duration_03_30_fixed = QCheckBox("Fixed")
-        glayout.addWidget(self.cycle_duration_03_30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_duration30_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_flowcytosep_duration30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -878,11 +1078,63 @@ class CellDef(QWidget):
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
 
         #-----
-        self.stack_d03.setLayout(glayout)
+        self.stack_duration_flowcytosep.setLayout(glayout)
         idx_stacked_widget += 1
-        print(" new stacked widget: d03 -------------> ",idx_stacked_widget)
-        self.stack_idx_d03 = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_d03)
+        print(" new stacked widget: flow cyto sep -------------> ",idx_stacked_widget)
+        self.stack_duration_flowcytosep_idx = idx_stacked_widget 
+        self.stacked_cycle.addWidget(self.stack_duration_flowcytosep)
+
+
+        #------ Cycle duration (cycling quiescent) ----------------------
+        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+
+        glayout = QGridLayout()
+
+        label = QLabel("phase 0 duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_duration01 = QLineEdit()
+        self.cycle_quiescent_duration01.textChanged.connect(self.cycle_quiescent_duration01_changed)
+        self.cycle_quiescent_duration01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_quiescent_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_duration01_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_quiescent_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
+
+        #-------
+        label = QLabel("phase 1 duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_duration10 = QLineEdit()
+        self.cycle_quiescent_duration10.textChanged.connect(self.cycle_quiescent_duration10_changed)
+        self.cycle_quiescent_duration10.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cycle_quiescent_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
+
+        self.cycle_quiescent_duration10_fixed = QCheckBox("Fixed")
+        glayout.addWidget(self.cycle_quiescent_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        units.setFixedWidth(self.units_width)
+        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
+
+        #---
+        self.stack_duration_quiescent.setLayout(glayout)
+
+        idx_stacked_widget += 1
+        self.stack_duration_quiescent_idx = idx_stacked_widget 
+        print(" new stacked widget: duration_quiescent -------------> ",idx_stacked_widget)
+        self.stacked_cycle.addWidget(self.stack_duration_quiescent) # <------------- stack widget 1
+
 
 
         #---------------------------------------------
@@ -1962,50 +2214,82 @@ class CellDef(QWidget):
         self.vbox.addWidget(label)
 
     #--------------------------------------------------------
-    # The following (text-based widgets) were auto-generated by the gen_qline_cb.py script
-    # --- cycle
-    def cycle_trate00_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate00'] = text
-    def cycle_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate01'] = text
-    def cycle_trate10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate10'] = text
-    def cycle_trate_02_01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_02_01'] = text
-    def cycle_trate_02_12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_02_12'] = text
-    def cycle_trate_02_20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_02_20'] = text
-    def cycle_trate_03_01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_03_01'] = text
-    def cycle_trate_03_12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_03_12'] = text
-    def cycle_trate_03_23_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_03_23'] = text
-    def cycle_trate_03_30_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_trate_03_30'] = text
-    def cycle_duration00_changed(self, text):
-        print("---- cycle_duration00_changed(self, text): self.current_cell_def = ",self.current_cell_def)
-        print("---- self.param_d = ",self.param_d)
-        self.param_d[self.current_cell_def]['cycle_duration00'] = text
-    def cycle_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration01'] = text
-    def cycle_duration10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration10'] = text
-    def cycle_duration_02_01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_02_01'] = text
-    def cycle_duration_02_12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_02_12'] = text
-    def cycle_duration_02_20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_02_20'] = text
-    def cycle_duration_03_01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_03_01'] = text
-    def cycle_duration_03_12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_03_12'] = text
-    def cycle_duration_03_23_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_03_23'] = text
-    def cycle_duration_03_30_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_duration_03_30'] = text
+    # The following (text-based widgets) were (originally) auto-generated by the gen_qline_cb.py script
+    # --- cycle transition rates
+    def cycle_live_trate00_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_live_trate00'] = text
+
+    def cycle_Ki67_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate01'] = text
+    def cycle_Ki67_trate10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate10'] = text
+
+    def cycle_advancedKi67_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01'] = text
+    def cycle_advancedKi67_trate12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12'] = text
+    def cycle_advancedKi67_trate20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20'] = text
+
+    def cycle_flowcyto_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01'] = text
+    def cycle_flowcyto_trate12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12'] = text
+    def cycle_flowcyto_trate20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate_20'] = text
+
+    def cycle_flowcytosep_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01'] = text
+    def cycle_flowcytosep_trate12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12'] = text
+    def cycle_flowcytosep_trate23_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23'] = text
+    def cycle_flowcytosep_trate30_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30'] = text
+
+    def cycle_quiescent_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate01'] = text
+    def cycle_quiescent_trate10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate10'] = text
+
+    #--------
+    # --- cycle durations
+    def cycle_live_duration00_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_live_duration00'] = text
+
+    def cycle_Ki67_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration01'] = text
+    def cycle_Ki67_duration10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration10'] = text
+
+    def cycle_advancedKi67_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01'] = text
+    def cycle_advancedKi67_duration12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12'] = text
+    def cycle_advancedKi67_duration20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20'] = text
+
+    def cycle_flowcyto_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01'] = text
+    def cycle_flowcyto_duration12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12'] = text
+    def cycle_flowcyto_duration20_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration_20'] = text
+
+    def cycle_flowcytosep_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01'] = text
+    def cycle_flowcytosep_duration12_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12'] = text
+    def cycle_flowcytosep_duration23_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23'] = text
+    def cycle_flowcytosep_duration30_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30'] = text
+
+    def cycle_quiescent_duration01_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration01'] = text
+    def cycle_quiescent_duration10_changed(self, text):
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration10'] = text
+
 
     # --- death
     def apoptosis_death_rate_changed(self, text):
@@ -2361,7 +2645,11 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def motility_substrate_changed_cb(self, idx):
         print('------ motility_substrate_changed_cb(): idx = ',idx)
-        print(self.motility_substrate_dropdown.currentText())
+        val = self.motility_substrate_dropdown.currentText()
+        print("   text = ",val)
+        self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = val
+        # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
+
         if idx == -1:
             return
 
@@ -2434,35 +2722,41 @@ class CellDef(QWidget):
         # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
         # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
         # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+    # Called whenever there's a toggle between "transition rate(s)" vs. "duration(S)", or if a
+    # different cycle model is chosen from the dropdown combobox.
     def customize_cycle_choices(self):
 
+        print("-- customize_cycle_choices(): index= ",self.cycle_dropdown.currentIndex())
+
         if self.cycle_duration_flag:  # specifying duration times (radio button)
-            if self.cycle_dropdown.currentIndex() == 0:  # live
-                print("customize_cycle_choices():  idx = ",self.stack_idx_d00)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_d00)
-            elif (self.cycle_dropdown.currentIndex() == 1) or (self.cycle_dropdown.currentIndex() == 5):  # basic Ki67 or cycling quiescent
-                print("customize_cycle_choices():  idx = ",self.stack_idx_d01)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_d01)
-            elif (self.cycle_dropdown.currentIndex() == 2) or (self.cycle_dropdown.currentIndex() == 3):  # advanced Ki67 or flow cytometry
-                print("customize_cycle_choices():  idx = ",self.stack_idx_d02)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_d02)
-            elif (self.cycle_dropdown.currentIndex() == 4):  # flow cytometry separated
-                print("customize_cycle_choices():  idx = ",self.stack_idx_d03)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_d03)
+            if self.cycle_dropdown.currentIndex() == 0:
+                # print("customize_cycle_choices():  idx = ",self.stack_duration_live_idx)
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_live_idx)
+            elif self.cycle_dropdown.currentIndex() == 1:
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_Ki67_idx)
+            elif self.cycle_dropdown.currentIndex() == 2:
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_advancedKi67_idx)
+            elif self.cycle_dropdown.currentIndex() == 3:
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_flowcyto_idx)
+            elif self.cycle_dropdown.currentIndex() == 4:
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_flowcytosep_idx)
+            elif self.cycle_dropdown.currentIndex() == 5:
+                self.stacked_cycle.setCurrentIndex(self.stack_duration_quiescent_idx)
 
         else:  # specifying transition rates (radio button)
-            if self.cycle_dropdown.currentIndex() == 0:  # live
-                print("customize_cycle_choices():  idx = ",self.stack_idx_t00)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_t00)
-            elif (self.cycle_dropdown.currentIndex() == 1) or (self.cycle_dropdown.currentIndex() == 5):  # basic Ki67 or cycling quiescent
-                print("customize_cycle_choices():  idx = ",self.stack_idx_t01)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_t01)
-            elif (self.cycle_dropdown.currentIndex() == 2) or (self.cycle_dropdown.currentIndex() == 3):  # advanced Ki67 or flow cytometry
-                print("customize_cycle_choices():  idx = ",self.stack_idx_t02)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_t02)
-            elif (self.cycle_dropdown.currentIndex() == 4):  # flow cytometry separated
-                print("customize_cycle_choices():  idx = ",self.stack_idx_t03)
-                self.stacked_cycle.setCurrentIndex(self.stack_idx_t03)
+            if self.cycle_dropdown.currentIndex() == 0:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_live_idx)
+            elif self.cycle_dropdown.currentIndex() == 1:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_Ki67_idx)
+            elif self.cycle_dropdown.currentIndex() == 2:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_advancedKi67_idx)
+            elif self.cycle_dropdown.currentIndex() == 3:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_flowcyto_idx)
+            elif self.cycle_dropdown.currentIndex() == 4:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_flowcytosep_idx)
+            elif self.cycle_dropdown.currentIndex() == 5:
+                self.stacked_cycle.setCurrentIndex(self.stack_trate_quiescent_idx)
+
 
     def chemotaxis_direction_cb(self):
         print('chemotaxis_direction_cb: ')
@@ -2538,65 +2832,45 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
+        pass
         cdname = self.current_cell_def
 
-        # if 'live' in self.param_d[cdname]['cycle']:
-        #     self.cycle_dropdown.setCurrentIndex(0)
-        # elif 'separated' in self.param_d[cdname]['cycle']:
-        #     self.cycle_dropdown.setCurrentIndex(4)
+        # # if 'live' in self.param_d[cdname]['cycle']:
+        # #     self.cycle_dropdown.setCurrentIndex(0)
+        # # elif 'separated' in self.param_d[cdname]['cycle']:
+        # #     self.cycle_dropdown.setCurrentIndex(4)
 
         if self.param_d[cdname]['cycle_duration_flag']:
             self.cycle_rb2.setChecked(True)
         else:
             self.cycle_rb1.setChecked(True)
 
+            # self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
         self.cycle_dropdown.setCurrentIndex(self.param_d[cdname]['cycle_choice_idx'])
 
-                # if cycle_code == 0:
-                #     self.cycle_dropdown.setCurrentIndex(2)
-                #     self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
-                # elif cycle_code == 1:
-                #     self.cycle_dropdown.setCurrentIndex(1)
-                #     self.param_d[cell_def_name]['cycle'] = 'basic Ki67'
-                # elif cycle_code == 2:
-                #     self.cycle_dropdown.setCurrentIndex(3)
-                #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry'
-                # elif cycle_code == 5:
-                #     self.cycle_dropdown.setCurrentIndex(0)
-                #     self.param_d[cell_def_name]['cycle'] = 'live cells'
-                # elif cycle_code == 6:
-                #     self.cycle_dropdown.setCurrentIndex(4)
-                #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry separated'
-                # elif cycle_code == 7:
-                #     self.cycle_dropdown.setCurrentIndex(5)
-                #     self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
+        #         # if cycle_code == 0:
+        #         #     self.cycle_dropdown.setCurrentIndex(2)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
+        #         # elif cycle_code == 1:
+        #         #     self.cycle_dropdown.setCurrentIndex(1)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'basic Ki67'
+        #         # elif cycle_code == 2:
+        #         #     self.cycle_dropdown.setCurrentIndex(3)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry'
+        #         # elif cycle_code == 5:
+        #         #     self.cycle_dropdown.setCurrentIndex(0)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'live cells'
+        #         # elif cycle_code == 6:
+        #         #     self.cycle_dropdown.setCurrentIndex(4)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry separated'
+        #         # elif cycle_code == 7:
+        #         #     self.cycle_dropdown.setCurrentIndex(5)
+        #         #     self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
 
-    #     self.cycle_trate00.setText(rate.text)
-    #     self.cycle_trate01.setText(rate.text)
-    #     self.cycle_trate_02_12.setText(rate.text)
-    #     self.cycle_trate_03_23.setText(rate.text)
-    #     self.cycle_trate_03_30.setText(rate.text)
-
-    #     self.rb2.setChecked(True)
-    #     self.cycle_duration_flag = True
-    #     self.customize_cycle_choices()
-
-    #     self.cycle_duration00.setText(self.param_d[self.current_cell_def]['cycle_duration00'])
-    #     self.cycle_duration01.setText(self.param_d[self.current_cell_def]['cycle_duration01'])
-
-    #     self.cycle_duration_02_01.setText(self.param_d[cell_def_name]['cycle_duration_02_01'])
-    #     self.cycle_duration_03_01.setText(self.param_d[cell_def_name]['cycle_duration_03_01'])
-    #     print("--> handling duration index=1")
-    #     self.cycle_duration10.setText(pd.text)
-    #     self.cycle_duration_02_12.setText(pd.text)
-    #     self.cycle_duration_03_12.setText(pd.text)
-    # elif  pd.attrib['index'] == "2":
-    #     print("--> handling duration index=2")
-    #     self.cycle_duration_02_20.setText(pd.text)
-    #     self.cycle_duration_03_23.setText(pd.text)
-    # elif  pd.attrib['index'] == "3":
-    #     print("--> handling duration index=3")
-    #     self.cycle_duration_03_30.setText(pd.text)
+        # self.cycle_trate00.setText(self.param_d[self.current_cell_def]['cycle_trate00'])
+        # self.cycle_trate01.setText(self.param_d[self.current_cell_def]['cycle_trate01'])
+        # # self.cycle_flowcyto_trate01.setText(self.param_d[self.current_cell_def]['cycle_flowcyto_trate01'])
+        # self.cycle_flowcyto_trate12.setText(self.param_d[self.current_cell_def]['cycle_flowcyto_trate12'])
 
     #-----------------------------------------------------------------------------------------
     def update_death_params(self):
@@ -2663,6 +2937,8 @@ class CellDef(QWidget):
         self.motility_enabled.setChecked(self.param_d[cdname]["motility_enabled"])
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
+        self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
+
         if self.param_d[cdname]["motility_chemotaxis_towards"]:
             self.chemotaxis_direction_towards.setChecked(True)
         else:
@@ -2799,6 +3075,13 @@ class CellDef(QWidget):
 				# 		<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
 				# 		<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
 
+                sval = '42.42'
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate00'] = sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = sval
+
                 phase_transition_path = cycle_path + "//phase_transition_rates"
                 print(' >> phase_transition_path ')
                 pt_uep = uep.find(phase_transition_path)
@@ -2817,18 +3100,23 @@ class CellDef(QWidget):
                         if (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "0"):
                             # self.cycle_trate00.setText(rate.text)
                             self.param_d[cell_def_name]['cycle_trate00'] = rate.text
+                            print('--  cycle_trate00',  rate.text)
                         elif (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "1"):
                             # self.cycle_trate01.setText(rate.text)
                             self.param_d[cell_def_name]['cycle_trate01'] = rate.text
+                            print('--  cycle_trate01',  rate.text)
                         elif (rate.attrib['start_index'] == "1") and (rate.attrib['end_index'] == "2"):
-                            # self.cycle_trate_02_12.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_trate_02_12'] = rate.text
+                            # self.cycle_flowcytosep_trate12.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = rate.text
+                            print('--  cycle_flowcytosep_trate12',  rate.text)
                         elif (rate.attrib['start_index'] == "2") and (rate.attrib['end_index'] == "3"):
-                            # self.cycle_trate_03_23.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_trate_03_23'] = rate.text
+                            # self.cycle_flowcytosep_trate23.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = rate.text
+                            print('--  cycle_flowcytosep_trate23',  rate.text)
                         elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
-                            # self.cycle_trate_03_30.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_trate_03_30'] = rate.text
+                            # self.cycle_flowcytosep_trate30.setText(rate.text)
+                            self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = rate.text
+                            print('--  cycle_flowcytosep_trate30',  rate.text)
 
 
                 # template.xml:
@@ -2858,32 +3146,21 @@ class CellDef(QWidget):
                         if  pd.attrib['index'] == "0":
                             print("--> handling duration index=0")
 
-                            # if idx == 1:  
-                            # self.cycle_duration00.setText(sval)
-                            # self.cycle_duration01.setText(sval)
-                            # self.cycle_duration_02_01.setText(sval)
-                            # self.cycle_duration_03_01.setText(sval)
                             self.param_d[cell_def_name]['cycle_duration00'] = sval
                             self.param_d[cell_def_name]['cycle_duration01'] = sval
                             self.param_d[cell_def_name]['cycle_duration_02_01'] = sval
                             self.param_d[cell_def_name]['cycle_duration_03_01'] = sval
                         elif  pd.attrib['index'] == "1":
                             print("--> handling duration index=1")
-                            # self.cycle_duration10.setText(pd.text)
-                            # self.cycle_duration_02_12.setText(pd.text)
-                            # self.cycle_duration_03_12.setText(pd.text)
                             self.param_d[cell_def_name]['cycle_duration10'] = sval
                             self.param_d[cell_def_name]['cycle_duration_02_12'] = sval
                             self.param_d[cell_def_name]['cycle_duration_03_12'] = sval
                         elif  pd.attrib['index'] == "2":
                             print("--> handling duration index=2")
-                            # self.cycle_duration_02_20.setText(pd.text)
-                            # self.cycle_duration_03_23.setText(pd.text)
                             self.param_d[cell_def_name]['cycle_duration_02_20'] = sval
                             self.param_d[cell_def_name]['cycle_duration_03_23'] = sval
                         elif  pd.attrib['index'] == "3":
                             print("--> handling duration index=3")
-                            # self.cycle_duration_03_30.setText(pd.text)
                             self.param_d[cell_def_name]['cycle_duration_03_30'] = sval
 
                 # rf. microenv:
@@ -3251,13 +3528,13 @@ class CellDef(QWidget):
         self.cycle_trate00.setText('')
         self.cycle_trate01.setText('')
         self.cycle_trate10.setText('')
-        self.cycle_trate_02_01.setText('')
-        self.cycle_trate_02_12.setText('')
+        self.cycle_flowcyto_trate01.setText('')
+        self.cycle_flowcyto_trate12.setText('')
         self.cycle_trate_02_20.setText('')
-        self.cycle_trate_03_01.setText('')
-        self.cycle_trate_03_12.setText('')
-        self.cycle_trate_03_23.setText('')
-        self.cycle_trate_03_30.setText('')
+        self.cycle_flowcytosep_trate01.setText('')
+        self.cycle_flowcytosep_trate12.setText('')
+        self.cycle_flowcytosep_trate23.setText('')
+        self.cycle_flowcytosep_trate30.setText('')
 
         self.cycle_duration00.setText('')
         self.cycle_duration01.setText('')
