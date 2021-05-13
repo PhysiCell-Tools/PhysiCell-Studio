@@ -51,7 +51,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.grid = QGridLayout()
         # lay.addLayout(self.grid)
         self.setLayout(vlayout)
-        self.setMinimumSize(400, 650)
+        self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
 
         # self.menubar = QtWidgets.QMenuBar(self)
         # self.file_menu = QtWidgets.QMenu('File')
@@ -280,7 +280,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.microenv_tab.fill_gui(None)
         # self.microenv_tab.fill_gui()
 
-        self.celldef_tab.clear_gui()
+        # self.celldef_tab.clear_gui()
         self.celldef_tab.populate_tree()
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 

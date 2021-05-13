@@ -2832,7 +2832,7 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
-        pass
+        # pass
         cdname = self.current_cell_def
 
         # # if 'live' in self.param_d[cdname]['cycle']:
@@ -2847,6 +2847,51 @@ class CellDef(QWidget):
 
             # self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
         self.cycle_dropdown.setCurrentIndex(self.param_d[cdname]['cycle_choice_idx'])
+
+
+        # transition rates
+        self.cycle_live_trate00.setText(self.param_d[cdname]['cycle_live_trate00'])
+
+        self.cycle_Ki67_trate01.setText(self.param_d[cdname]['cycle_Ki67_trate01'])
+        self.cycle_Ki67_trate10.setText(self.param_d[cdname]['cycle_Ki67_trate10'])
+
+        self.cycle_advancedKi67_trate01.setText(self.param_d[cdname]['cycle_advancedKi67_trate01'])
+        self.cycle_advancedKi67_trate12.setText(self.param_d[cdname]['cycle_advancedKi67_trate12'])
+        self.cycle_advancedKi67_trate20.setText(self.param_d[cdname]['cycle_advancedKi67_trate20'])
+
+        self.cycle_flowcyto_trate01.setText(self.param_d[cdname]['cycle_flowcyto_trate01'])
+        self.cycle_flowcyto_trate12.setText(self.param_d[cdname]['cycle_flowcyto_trate12'])
+        self.cycle_flowcyto_trate20.setText(self.param_d[cdname]['cycle_flowcyto_trate20'])
+
+        self.cycle_flowcytosep_trate01.setText(self.param_d[cdname]['cycle_flowcytosep_trate01'])
+        self.cycle_flowcytosep_trate12.setText(self.param_d[cdname]['cycle_flowcytosep_trate12'])
+        self.cycle_flowcytosep_trate23.setText(self.param_d[cdname]['cycle_flowcytosep_trate23'])
+        self.cycle_flowcytosep_trate30.setText(self.param_d[cdname]['cycle_flowcytosep_trate30'])
+
+        self.cycle_quiescent_trate01.setText(self.param_d[cdname]['cycle_quiescent_trate01'])
+        self.cycle_quiescent_trate10.setText(self.param_d[cdname]['cycle_quiescent_trate10'])
+
+        # duration times
+        self.cycle_live_duration00.setText(self.param_d[cdname]['cycle_live_duration00'])
+
+        self.cycle_Ki67_duration01.setText(self.param_d[cdname]['cycle_Ki67_duration01'])
+        self.cycle_Ki67_duration10.setText(self.param_d[cdname]['cycle_Ki67_duration10'])
+
+        self.cycle_advancedKi67_duration01.setText(self.param_d[cdname]['cycle_advancedKi67_duration01'])
+        self.cycle_advancedKi67_duration12.setText(self.param_d[cdname]['cycle_advancedKi67_duration12'])
+        self.cycle_advancedKi67_duration20.setText(self.param_d[cdname]['cycle_advancedKi67_duration20'])
+
+        self.cycle_flowcyto_duration01.setText(self.param_d[cdname]['cycle_flowcyto_duration01'])
+        self.cycle_flowcyto_duration12.setText(self.param_d[cdname]['cycle_flowcyto_duration12'])
+        self.cycle_flowcyto_duration20.setText(self.param_d[cdname]['cycle_flowcyto_duration20'])
+
+        self.cycle_flowcytosep_duration01.setText(self.param_d[cdname]['cycle_flowcytosep_duration01'])
+        self.cycle_flowcytosep_duration12.setText(self.param_d[cdname]['cycle_flowcytosep_duration12'])
+        self.cycle_flowcytosep_duration23.setText(self.param_d[cdname]['cycle_flowcytosep_duration23'])
+        self.cycle_flowcytosep_duration30.setText(self.param_d[cdname]['cycle_flowcytosep_duration30'])
+
+        self.cycle_quiescent_duration01.setText(self.param_d[cdname]['cycle_quiescent_duration01'])
+        self.cycle_quiescent_duration10.setText(self.param_d[cdname]['cycle_quiescent_duration10'])
 
         #         # if cycle_code == 0:
         #         #     self.cycle_dropdown.setCurrentIndex(2)
@@ -2983,6 +3028,7 @@ class CellDef(QWidget):
 
 
     #-------------------------------------------------------------------
+    # Parse the .xml, populate the dict of params (self.param_d) and self.tree
     def populate_tree(self):
         print("=======================  cell_def populate_tree  ======================= ")
         uep = self.xml_root.find(".//cell_definitions")
@@ -3023,6 +3069,8 @@ class CellDef(QWidget):
                 print(" >> cycle_path=",cycle_path)
                 cycle_code = int(uep.find(cycle_path).attrib['code'])
                 print("   cycle code=",cycle_code)
+
+                # NOTE: we don't seem to use 3 or 4
                 # static const int advanced_Ki67_cycle_model= 0;
                 # static const int basic_Ki67_cycle_model=1;
                 # static const int flow_cytometry_cycle_model=2;
@@ -3032,12 +3080,12 @@ class CellDef(QWidget):
                 # static const int flow_cytometry_separated_cycle_model = 6; 
                 # static const int cycling_quiescent_model = 7; 
 
-                # self.cycle_dropdown.addItem("live cells")
-                # self.cycle_dropdown.addItem("basic Ki67")
-                # self.cycle_dropdown.addItem("advanced Ki67")
-                # self.cycle_dropdown.addItem("flow cytometry")
-                # self.cycle_dropdown.addItem("flow cytometry separated")
-                # self.cycle_dropdown.addItem("cycling quiescent")
+                # self.cycle_dropdown.addItem("live cells")  # 5
+                # self.cycle_dropdown.addItem("basic Ki67")  # 1
+                # self.cycle_dropdown.addItem("advanced Ki67")  # 0
+                # self.cycle_dropdown.addItem("flow cytometry")  # 2
+                # self.cycle_dropdown.addItem("flow cytometry separated")  # 6
+                # self.cycle_dropdown.addItem("cycling quiescent")  # 7
 
                 if cycle_code == 0:
                     self.cycle_dropdown.setCurrentIndex(2)
@@ -3075,18 +3123,34 @@ class CellDef(QWidget):
 				# 		<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
 				# 		<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
 
-                sval = '42.42'
-                self.param_d[cell_def_name]['cycle_flowcytosep_trate00'] = sval
-                self.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = sval
-                self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = sval
-                self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = sval
-                self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = sval
+                default_sval = '0.0'
+
+                #  transition rates: set default values for all params
+                self.param_d[cell_def_name]['cycle_live_trate00'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_Ki67_trate01'] = default_sval
+                self.param_d[cell_def_name]['cycle_Ki67_trate10'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = default_sval
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = default_sval
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_flowcyto_trate01'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcyto_trate12'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcyto_trate20'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_quiescent_trate01'] = default_sval
+                self.param_d[cell_def_name]['cycle_quiescent_trate10'] = default_sval
 
                 phase_transition_path = cycle_path + "//phase_transition_rates"
                 print(' >> phase_transition_path ')
                 pt_uep = uep.find(phase_transition_path)
                 if pt_uep:
-                    # self.rb1 = QRadioButton("transition rate(s)", self)
                     self.cycle_rb1.setChecked(True)
                     self.param_d[cell_def_name]['cycle_duration_flag'] = False
                     self.cycle_duration_flag = False
@@ -3094,29 +3158,61 @@ class CellDef(QWidget):
 
                     for rate in pt_uep: 
                         print(rate)
-                        print("start_index=",rate.attrib["start_index"])
-                        # todo? aren't there more? 1->0, 2->0?
-                        # We only use cycle code=5 or 6 in ALL sample projs?!
-                        if (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "0"):
-                            # self.cycle_trate00.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_trate00'] = rate.text
-                            print('--  cycle_trate00',  rate.text)
-                        elif (rate.attrib['start_index'] == "0") and (rate.attrib['end_index'] == "1"):
-                            # self.cycle_trate01.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_trate01'] = rate.text
-                            print('--  cycle_trate01',  rate.text)
-                        elif (rate.attrib['start_index'] == "1") and (rate.attrib['end_index'] == "2"):
-                            # self.cycle_flowcytosep_trate12.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = rate.text
-                            print('--  cycle_flowcytosep_trate12',  rate.text)
-                        elif (rate.attrib['start_index'] == "2") and (rate.attrib['end_index'] == "3"):
-                            # self.cycle_flowcytosep_trate23.setText(rate.text)
-                            self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = rate.text
-                            print('--  cycle_flowcytosep_trate23',  rate.text)
+                        # print("start_index=",rate.attrib["start_index"])
+                        # We only use cycle code=5 or 6 in ALL sample projs?
+
+                        # if cycle_code == 0: #'advanced Ki67'
+                        # elif cycle_code == 1: # 'basic Ki67'
+                        # elif cycle_code == 2: # 'flow cytometry'
+                        # elif cycle_code == 5: # 'live cells'
+                        # elif cycle_code == 6: # 'flow cytometry separated'
+                        # elif cycle_code == 7: # 'cycling quiescent'
+
+                        sval = rate.text
+                        if (rate.attrib['start_index'] == "0"): 
+                            if (rate.attrib['end_index'] == "0"): #  Must be 'live'
+                                print('--  cycle_live_trate00',  sval)
+                                self.param_d[cell_def_name]['cycle_live_trate00'] = rate.text
+                            elif (rate.attrib['end_index'] == "1"): 
+                                if cycle_code == 0: #'advanced Ki67'
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = sval
+                                elif cycle_code == 1: # 'basic Ki67'
+                                    self.param_d[cell_def_name]['cycle_Ki67_trate01'] = sval
+                                elif cycle_code == 2: # 'flow cytometry'
+                                    self.param_d[cell_def_name]['cycle_flowcyto_trate01'] = sval
+                                elif cycle_code == 6: # 'flow cytometry separated'
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = sval
+                                elif cycle_code == 7: # 'cycling quiescent'
+                                    self.param_d[cell_def_name]['cycle_quiescent_trate01'] = sval
+
+                        elif (rate.attrib['start_index'] == "1"):
+                            if (rate.attrib['end_index'] == "0"):  # must be 'basic Ki67'
+                                self.param_d[cell_def_name]['cycle_Ki67_trate10'] = sval
+
+                            elif (rate.attrib['end_index'] == "2"):
+                                if cycle_code == 0: #'advanced Ki67'
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = sval
+                                elif cycle_code == 2: # 'flow cytometry'
+                                    self.param_d[cell_def_name]['cycle_flowcyto_trate12'] = sval
+                                elif cycle_code == 6: # 'flow cytometry separated'
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = sval
+                                elif cycle_code == 7: # 'cycling quiescent'
+                                    self.param_d[cell_def_name]['cycle_quiescent_trate12'] = sval
+
+                        elif (rate.attrib['start_index'] == "2"):
+                            if (rate.attrib['end_index'] == "0"):
+                                if cycle_code == 0: #'advanced Ki67'
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = sval
+                                elif cycle_code == 2: # 'flow cytometry'
+                                    self.param_d[cell_def_name]['cycle_flowcyto_trate20'] = sval
+
+                            elif (rate.attrib['end_index'] == "3"):
+                                # if cycle_code == 6: # 'flow cytometry separated'
+                                self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = sval
+
                         elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
                             # self.cycle_flowcytosep_trate30.setText(rate.text)
                             self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = rate.text
-                            print('--  cycle_flowcytosep_trate30',  rate.text)
 
 
                 # template.xml:
@@ -3129,6 +3225,48 @@ class CellDef(QWidget):
                 #     </phase_durations>
                 #
                 # self.phase0_duration = QLineEdit()
+                default_sval = '0.0'
+
+                #  duration times: set default values for all params
+                        # self.cycle_live_duration00 = QLineEdit()
+                        # self.cycle_Ki67_duration01 = QLineEdit()
+                        # self.cycle_Ki67_duration10 = QLineEdit()
+                        # self.cycle_advancedKi67_duration01 = QLineEdit()
+                        # self.cycle_advancedKi67_duration12 = QLineEdit()
+                        # self.cycle_advancedKi67_duration20 = QLineEdit()
+                        # self.cycle_flowcyto_duration01 = QLineEdit()
+                        # self.cycle_flowcyto_duration12 = QLineEdit()
+                        # self.cycle_flowcyto_duration20 = QLineEdit()
+                        # self.cycle_flowcytosep_duration01 = QLineEdit()
+                        # self.cycle_flowcytosep_duration12 = QLineEdit()
+                        # self.cycle_flowcytosep_duration23 = QLineEdit()
+                        # self.cycle_flowcytosep_duration30 = QLineEdit()
+                        # self.cycle_quiescent_duration01 = QLineEdit()
+                        # self.cycle_quiescent_duration10 = QLineEdit()
+
+                self.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_Ki67_duration01'] = default_sval
+                self.param_d[cell_def_name]['cycle_Ki67_duration10'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = default_sval
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = default_sval
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_flowcyto_duration01'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcyto_duration12'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcyto_duration20'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration00'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = default_sval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = default_sval
+
+                self.param_d[cell_def_name]['cycle_quiescent_duration01'] = default_sval
+                self.param_d[cell_def_name]['cycle_quiescent_duration10'] = default_sval
+
+
                 phase_durations_path = cycle_path + "//phase_durations"
                 print(' >> phase_durations_path =',phase_durations_path )
                 pd_uep = uep.find(phase_durations_path)
@@ -3139,29 +3277,55 @@ class CellDef(QWidget):
                     self.cycle_duration_flag = True
                     self.customize_cycle_choices()
 
+                # if cycle_code == 0: #'advanced Ki67'
+                # elif cycle_code == 1: # 'basic Ki67'
+                # elif cycle_code == 2: # 'flow cytometry'
+                # elif cycle_code == 5: # 'live cells'
+                # elif cycle_code == 6: # 'flow cytometry separated'
+                # elif cycle_code == 7: # 'cycling quiescent'
+
                     for pd in pd_uep:   # phase_duration
                         print(pd)
-                        print("index=",pd.attrib["index"])
+                        # print("index=",pd.attrib["index"])
                         sval = pd.text
-                        if  pd.attrib['index'] == "0":
-                            print("--> handling duration index=0")
 
-                            self.param_d[cell_def_name]['cycle_duration00'] = sval
-                            self.param_d[cell_def_name]['cycle_duration01'] = sval
-                            self.param_d[cell_def_name]['cycle_duration_02_01'] = sval
-                            self.param_d[cell_def_name]['cycle_duration_03_01'] = sval
-                        elif  pd.attrib['index'] == "1":
-                            print("--> handling duration index=1")
-                            self.param_d[cell_def_name]['cycle_duration10'] = sval
-                            self.param_d[cell_def_name]['cycle_duration_02_12'] = sval
-                            self.param_d[cell_def_name]['cycle_duration_03_12'] = sval
-                        elif  pd.attrib['index'] == "2":
-                            print("--> handling duration index=2")
-                            self.param_d[cell_def_name]['cycle_duration_02_20'] = sval
-                            self.param_d[cell_def_name]['cycle_duration_03_23'] = sval
-                        elif  pd.attrib['index'] == "3":
-                            print("--> handling duration index=3")
-                            self.param_d[cell_def_name]['cycle_duration_03_30'] = sval
+                        if (pd.attrib['index'] == "0"): 
+                            if cycle_code == 0: #'advanced Ki67'
+                                self.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = sval
+                            elif cycle_code == 1: # 'basic Ki67'
+                                self.param_d[cell_def_name]['cycle_Ki67_duration01'] = sval
+                            elif cycle_code == 2: # 'flow cytometry'
+                                self.param_d[cell_def_name]['cycle_flowcyto_duration01'] = sval
+                            elif cycle_code == 5: # 'live'
+                                self.param_d[cell_def_name]['cycle_live_duration00'] = sval
+                            elif cycle_code == 6: # 'flow cytometry separated'
+                                self.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = sval
+                            elif cycle_code == 7: # 'cycling quiescent'
+                                self.param_d[cell_def_name]['cycle_quiescent_duration01'] = sval
+
+                        elif (pd.attrib['index'] == "1"):
+                            if cycle_code == 0: #'advanced Ki67'
+                                self.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = sval
+                            elif cycle_code == 1: #'basic Ki67'
+                                self.param_d[cell_def_name]['cycle_Ki67_duration10'] = sval
+                            elif cycle_code == 2: # 'flow cytometry'
+                                self.param_d[cell_def_name]['cycle_flowcyto_duration12'] = sval
+                            elif cycle_code == 6: # 'flow cytometry separated'
+                                self.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = sval
+                            elif cycle_code == 7: # 'cycling quiescent'
+                                self.param_d[cell_def_name]['cycle_quiescent_duration10'] = sval
+
+                        elif (pd.attrib['index'] == "2"):
+                            if cycle_code == 0: #'advanced Ki67'
+                                self.param_d[cell_def_name]['cycle_advancedKi67_duration23'] = sval
+                            elif cycle_code == 2: # 'flow cytometry'
+                                self.param_d[cell_def_name]['cycle_flowcyto_duration20'] = sval
+                            elif cycle_code == 6: # 'flow cytometry separated'
+                                self.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = sval
+
+                        elif (pd.attrib['index'] == "3"):
+                            self.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = sval
+
 
                 # rf. microenv:
                 # self.cell_type_name.setText(var.attrib['name'])
@@ -3522,71 +3686,71 @@ class CellDef(QWidget):
         # xml_root.find(".//x_max").text = str(self.xmax.value)
 
     #-------------------------------------------------------------------
-    # rwh: ever called?
-    def clear_gui(self):
-        # self.cell_type_name.setText('')
-        self.cycle_trate00.setText('')
-        self.cycle_trate01.setText('')
-        self.cycle_trate10.setText('')
-        self.cycle_flowcyto_trate01.setText('')
-        self.cycle_flowcyto_trate12.setText('')
-        self.cycle_trate_02_20.setText('')
-        self.cycle_flowcytosep_trate01.setText('')
-        self.cycle_flowcytosep_trate12.setText('')
-        self.cycle_flowcytosep_trate23.setText('')
-        self.cycle_flowcytosep_trate30.setText('')
+    # rwh: even needed? We set default params in 'populate'
+    # def clear_gui(self):
+    #     # self.cell_type_name.setText('')
+    #     self.cycle_trate00.setText('')
+    #     self.cycle_trate01.setText('')
+    #     self.cycle_trate10.setText('')
+    #     self.cycle_flowcyto_trate01.setText('')
+    #     self.cycle_flowcyto_trate12.setText('')
+    #     # self.cycle_trate_02_20.setText('')
+    #     self.cycle_flowcytosep_trate01.setText('')
+    #     self.cycle_flowcytosep_trate12.setText('')
+    #     self.cycle_flowcytosep_trate23.setText('')
+    #     self.cycle_flowcytosep_trate30.setText('')
 
-        self.cycle_duration00.setText('')
-        self.cycle_duration01.setText('')
-        self.cycle_duration10.setText('')
-        self.cycle_duration_02_01.setText('')
-        self.cycle_duration_02_12.setText('')
-        self.cycle_duration_02_20.setText('')
-        self.cycle_duration_03_01.setText('')
-        self.cycle_duration_03_12.setText('')
-        self.cycle_duration_03_23.setText('')
-        self.cycle_duration_03_30.setText('')
+    #     self.cycle_duration00.setText('')
+    #     self.cycle_duration01.setText('')
+    #     self.cycle_duration10.setText('')
+    #     self.cycle_duration_02_01.setText('')
+    #     self.cycle_duration_02_12.setText('')
+    #     self.cycle_duration_02_20.setText('')
+    #     self.cycle_duration_03_01.setText('')
+    #     self.cycle_duration_03_12.setText('')
+    #     self.cycle_duration_03_23.setText('')
+    #     self.cycle_duration_03_30.setText('')
 
-        self.apoptosis_death_rate.setText('')
-        self.apoptosis_phase0_duration.setText('')
-        # self.apoptosis_phase1_duration.setText('')
-        # self.apoptosis_phase2_duration.setText('')
-        # self.apoptosis_phase3_duration.setText('')
-        self.apoptosis_unlysed_rate.setText('')
-        self.apoptosis_lysed_rate.setText('')
-        self.apoptosis_cytoplasmic_biomass_change_rate.setText('')
-        self.apoptosis_nuclear_biomass_change_rate.setText('')
-        self.apoptosis_calcification_rate.setText('')
-        self.apoptosis_relative_rupture_volume.setText('')
-        self.necrosis_death_rate.setText('')
-        self.necrosis_phase0_duration.setText('')
-        self.necrosis_phase1_duration.setText('')
-        # self.necrosis_phase2_duration.setText('')
-        # self.necrosis_phase3_duration.setText('')
-        self.necrosis_unlysed_rate.setText('')
-        self.necrosis_lysed_rate.setText('')
-        self.necrosis_cytoplasmic_biomass_change_rate.setText('')
-        self.necrosis_nuclear_biomass_change_rate.setText('')
-        self.necrosis_calcification_rate.setText('')
-        self.necrosis_relative_rupture_volume.setText('')
-        self.volume_total.setText('')
-        self.volume_fluid_fraction.setText('')
-        self.volume_nuclear.setText('')
-        self.volume_fluid_change_rate.setText('')
-        self.volume_cytoplasmic_biomass_change_rate.setText('')
-        self.volume_nuclear_biomass_change_rate.setText('')
-        self.volume_calcified_fraction.setText('')
-        self.volume_calcification_rate.setText('')
-        self.relative_rupture_volume.setText('')
-        self.cell_cell_adhesion_strength.setText('')
-        self.cell_cell_repulsion_strength.setText('')
-        self.relative_maximum_adhesion_distance.setText('')
-        self.set_relative_equilibrium_distance.setText('')
-        self.set_absolute_equilibrium_distance.setText('')
-        self.speed.setText('')
-        self.persistence_time.setText('')
-        self.migration_bias.setText('')
-        self.secretion_rate.setText('')
-        self.secretion_target.setText('')
-        self.uptake_rate.setText('')
-        self.secretion_net_export_rate.setText('')
+    #     self.apoptosis_death_rate.setText('')
+    #     self.apoptosis_phase0_duration.setText('')
+    #     # self.apoptosis_phase1_duration.setText('')
+    #     # self.apoptosis_phase2_duration.setText('')
+    #     # self.apoptosis_phase3_duration.setText('')
+    #     self.apoptosis_unlysed_rate.setText('')
+    #     self.apoptosis_lysed_rate.setText('')
+    #     self.apoptosis_cytoplasmic_biomass_change_rate.setText('')
+    #     self.apoptosis_nuclear_biomass_change_rate.setText('')
+    #     self.apoptosis_calcification_rate.setText('')
+    #     self.apoptosis_relative_rupture_volume.setText('')
+    #     self.necrosis_death_rate.setText('')
+    #     self.necrosis_phase0_duration.setText('')
+    #     self.necrosis_phase1_duration.setText('')
+    #     # self.necrosis_phase2_duration.setText('')
+    #     # self.necrosis_phase3_duration.setText('')
+    #     self.necrosis_unlysed_rate.setText('')
+    #     self.necrosis_lysed_rate.setText('')
+    #     self.necrosis_cytoplasmic_biomass_change_rate.setText('')
+    #     self.necrosis_nuclear_biomass_change_rate.setText('')
+    #     self.necrosis_calcification_rate.setText('')
+    #     self.necrosis_relative_rupture_volume.setText('')
+    #     self.volume_total.setText('')
+    #     self.volume_fluid_fraction.setText('')
+    #     self.volume_nuclear.setText('')
+    #     self.volume_fluid_change_rate.setText('')
+    #     self.volume_cytoplasmic_biomass_change_rate.setText('')
+    #     self.volume_nuclear_biomass_change_rate.setText('')
+    #     self.volume_calcified_fraction.setText('')
+    #     self.volume_calcification_rate.setText('')
+    #     self.relative_rupture_volume.setText('')
+    #     self.cell_cell_adhesion_strength.setText('')
+    #     self.cell_cell_repulsion_strength.setText('')
+    #     self.relative_maximum_adhesion_distance.setText('')
+    #     self.set_relative_equilibrium_distance.setText('')
+    #     self.set_absolute_equilibrium_distance.setText('')
+    #     self.speed.setText('')
+    #     self.persistence_time.setText('')
+    #     self.migration_bias.setText('')
+    #     self.secretion_rate.setText('')
+    #     self.secretion_target.setText('')
+    #     self.uptake_rate.setText('')
+    #     self.secretion_net_export_rate.setText('')
