@@ -308,9 +308,28 @@ class CellDef(QWidget):
 
         
     #----------------------------------------------------------------------
+    def show_delete_warning(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Not allowed to delete all cell types.")
+        #    msgBox.setWindowTitle("Example")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        # msgBox.buttonClicked.connect(msgButtonClick)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
+
+
     # @QtCore.Slot()
     def delete_cell_def(self):
-        print('------ delete_cell_def')
+        num_items = self.tree.invisibleRootItem().childCount()
+        print('------ delete_cell_def: num_items=',num_items)
+        if num_items == 1:
+            print("Not allowed to delete all substrates.")
+            # QMessageBox.information(self, "Not allowed to delete all substrates")
+            self.show_delete_warning()
+            return
 
         # rwh: is this safe?
         del self.param_d[self.current_cell_def]
@@ -433,6 +452,7 @@ class CellDef(QWidget):
 
         self.cycle_live_trate00_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_live_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_live_trate00_fixed.clicked.connect(self.cycle_live_trate00_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -465,6 +485,7 @@ class CellDef(QWidget):
 
         self.cycle_Ki67_trate01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_Ki67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate01_fixed.clicked.connect(self.cycle_Ki67_trate01_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -484,6 +505,7 @@ class CellDef(QWidget):
 
         self.cycle_Ki67_trate10_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_Ki67_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_Ki67_trate10_fixed.clicked.connect(self.cycle_Ki67_trate10_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -516,6 +538,7 @@ class CellDef(QWidget):
 
         self.cycle_advancedKi67_trate01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate01_fixed.clicked.connect(self.cycle_advancedKi67_trate01_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -535,6 +558,7 @@ class CellDef(QWidget):
 
         self.cycle_advancedKi67_trate12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate12_fixed.clicked.connect(self.cycle_advancedKi67_trate12_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -554,6 +578,7 @@ class CellDef(QWidget):
 
         self.cycle_advancedKi67_trate20_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_advancedKi67_trate20_fixed.clicked.connect(self.cycle_advancedKi67_trate20_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -585,6 +610,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcyto_trate01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate01_fixed.clicked.connect(self.cycle_flowcyto_trate01_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -604,6 +630,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcyto_trate12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate12_fixed.clicked.connect(self.cycle_flowcyto_trate12_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -623,6 +650,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcyto_trate20_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcyto_trate20_fixed.clicked.connect(self.cycle_flowcyto_trate20_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -654,6 +682,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcytosep_trate01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate01_fixed.clicked.connect(self.cycle_flowcytosep_trate01_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -673,6 +702,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcytosep_trate12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate12_fixed.clicked.connect(self.cycle_flowcytosep_trate12_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -692,6 +722,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcytosep_trate23_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate23_fixed.clicked.connect(self.cycle_flowcytosep_trate23_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -711,6 +742,7 @@ class CellDef(QWidget):
 
         self.cycle_flowcytosep_trate30_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_flowcytosep_trate30_fixed.clicked.connect(self.cycle_flowcytosep_trate30_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -742,6 +774,7 @@ class CellDef(QWidget):
 
         self.cycle_quiescent_trate01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_quiescent_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_quiescent_trate01_fixed.clicked.connect(self.cycle_quiescent_trate01_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -761,6 +794,7 @@ class CellDef(QWidget):
 
         self.cycle_quiescent_trate10_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_quiescent_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
+        self.cycle_quiescent_trate10_fixed.clicked.connect(self.cycle_quiescent_trate10_fixed_clicked)
 
         units = QLabel("1/min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -793,6 +827,7 @@ class CellDef(QWidget):
 
         self.cycle_live_duration00_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_live_duration00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
+        # NOTE: callbacks to all Fixed checkboxes are below, after the widgets are created.
 
         units = QLabel("min")
         units.setAlignment(QtCore.Qt.AlignCenter)
@@ -1126,6 +1161,23 @@ class CellDef(QWidget):
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
+
+        #----- duration Fixed callbacks:
+        self.cycle_live_duration00_fixed.clicked.connect(self.cycle_live_duration00_fixed_clicked)
+        self.cycle_Ki67_duration01_fixed.clicked.connect(self.cycle_Ki67_duration01_fixed_clicked)
+        self.cycle_Ki67_duration10_fixed.clicked.connect(self.cycle_Ki67_duration10_fixed_clicked)
+        self.cycle_advancedKi67_duration01_fixed.clicked.connect(self.cycle_advancedKi67_duration01_fixed_clicked)
+        self.cycle_advancedKi67_duration12_fixed.clicked.connect(self.cycle_advancedKi67_duration12_fixed_clicked)
+        self.cycle_advancedKi67_duration20_fixed.clicked.connect(self.cycle_advancedKi67_duration20_fixed_clicked)
+        self.cycle_flowcyto_duration01_fixed.clicked.connect(self.cycle_flowcyto_duration01_fixed_clicked)
+        self.cycle_flowcyto_duration12_fixed.clicked.connect(self.cycle_flowcyto_duration12_fixed_clicked)
+        self.cycle_flowcyto_duration20_fixed.clicked.connect(self.cycle_flowcyto_duration20_fixed_clicked)
+        self.cycle_flowcytosep_duration01_fixed.clicked.connect(self.cycle_flowcytosep_duration01_fixed_clicked)
+        self.cycle_flowcytosep_duration12_fixed.clicked.connect(self.cycle_flowcytosep_duration12_fixed_clicked)
+        self.cycle_flowcytosep_duration23_fixed.clicked.connect(self.cycle_flowcytosep_duration23_fixed_clicked)
+        self.cycle_flowcytosep_duration30_fixed.clicked.connect(self.cycle_flowcytosep_duration30_fixed_clicked)
+        self.cycle_quiescent_duration01_fixed.clicked.connect(self.cycle_quiescent_duration01_fixed_clicked)
+        self.cycle_quiescent_duration10_fixed.clicked.connect(self.cycle_quiescent_duration10_fixed_clicked)
 
         #---
         self.stack_duration_quiescent.setLayout(glayout)
@@ -2214,7 +2266,8 @@ class CellDef(QWidget):
         self.vbox.addWidget(label)
 
     #--------------------------------------------------------
-    # The following (text-based widgets) were (originally) auto-generated by the gen_qline_cb.py script
+    # The following (text-based widgets) were (originally) auto-generated by 
+    # a mix of sed and Python scripts. See the gen_qline_cb.py script as an early example.
     # --- cycle transition rates
     def cycle_live_trate00_changed(self, text):
         self.param_d[self.current_cell_def]['cycle_live_trate00'] = text
@@ -2290,7 +2343,85 @@ class CellDef(QWidget):
     def cycle_quiescent_duration10_changed(self, text):
         self.param_d[self.current_cell_def]['cycle_quiescent_duration10'] = text
 
+    #------------------------------
+    #----- handle all checkboxes for cycle models 'fixed_duration' for 
+    # both transition rates and duration times
+    def cycle_live_trate00_fixed_clicked(self, bval):
+        # print('cycle_live_trate00_fixed_clicked: bval=',bval)
+        self.param_d[self.current_cell_def]['cycle_live_trate00_fixed'] = bval
 
+    def cycle_Ki67_trate01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate01_fixed'] = bval
+    def cycle_Ki67_trate10_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate10_fixed'] = bval
+
+    def cycle_advancedKi67_trate01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01_fixed'] = bval
+    def cycle_advancedKi67_trate12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12_fixed'] = bval
+    def cycle_advancedKi67_trate20_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20_fixed'] = bval
+
+    def cycle_flowcyto_trate01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01_fixed'] = bval
+    def cycle_flowcyto_trate12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12_fixed'] = bval
+    def cycle_flowcyto_trate20_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate20_fixed'] = bval
+
+    def cycle_flowcytosep_trate01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01_fixed'] = bval
+    def cycle_flowcytosep_trate12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12_fixed'] = bval
+    def cycle_flowcytosep_trate23_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23_fixed'] = bval
+    def cycle_flowcytosep_trate30_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30_fixed'] = bval
+
+    def cycle_quiescent_trate01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate01_fixed'] = bval
+    def cycle_quiescent_trate10_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate10_fixed'] = bval
+
+    # --- duration
+    def cycle_live_duration00_fixed_clicked(self, bval):
+        # print('cycle_live_duration00_fixed_clicked: bval=',bval)
+        self.param_d[self.current_cell_def]['cycle_live_duration00_fixed'] = bval
+
+    def cycle_Ki67_duration01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration01_fixed'] = bval
+    def cycle_Ki67_duration10_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration10_fixed'] = bval
+
+    def cycle_advancedKi67_duration01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01_fixed'] = bval
+    def cycle_advancedKi67_duration12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12_fixed'] = bval
+    def cycle_advancedKi67_duration20_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20_fixed'] = bval
+
+    def cycle_flowcyto_duration01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01_fixed'] = bval
+    def cycle_flowcyto_duration12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12_fixed'] = bval
+    def cycle_flowcyto_duration20_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration20_fixed'] = bval
+
+    def cycle_flowcytosep_duration01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01_fixed'] = bval
+    def cycle_flowcytosep_duration12_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12_fixed'] = bval
+    def cycle_flowcytosep_duration23_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23_fixed'] = bval
+    def cycle_flowcytosep_duration30_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30_fixed'] = bval
+
+    def cycle_quiescent_duration01_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration01_fixed'] = bval
+    def cycle_quiescent_duration10_fixed_clicked(self, bval):
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration10_fixed'] = bval
+
+    #------------------------------
     # --- death
     def apoptosis_death_rate_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_death_rate'] = text
@@ -2364,6 +2495,7 @@ class CellDef(QWidget):
 
     # insert callbacks for QCheckBoxes
     def set_absolute_equilibrium_distance_enabled_cb(self,bval):
+        print("set_absolute_equilibrium_distance_enabled_cb: bval=",bval)
         self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance_enabled'] = bval
 
     # --- motility
@@ -2893,6 +3025,55 @@ class CellDef(QWidget):
         self.cycle_quiescent_duration01.setText(self.param_d[cdname]['cycle_quiescent_duration01'])
         self.cycle_quiescent_duration10.setText(self.param_d[cdname]['cycle_quiescent_duration10'])
 
+
+        #-------------------------
+        # transition rates "fixed"
+        # self.apoptosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["apoptosis_phase0_fixed"])
+
+        self.cycle_live_trate00_fixed.setChecked(self.param_d[cdname]['cycle_live_trate00_fixed'])
+
+        self.cycle_Ki67_trate01_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_trate01_fixed'])
+        self.cycle_Ki67_trate10_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_trate10_fixed'])
+
+        self.cycle_advancedKi67_trate01_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate01_fixed'])
+        self.cycle_advancedKi67_trate12_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'])
+        self.cycle_advancedKi67_trate20_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'])
+
+        self.cycle_flowcyto_trate01_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate01_fixed'])
+        self.cycle_flowcyto_trate12_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate12_fixed'])
+        self.cycle_flowcyto_trate20_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate20_fixed'])
+
+        self.cycle_flowcytosep_trate01_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate01_fixed'])
+        self.cycle_flowcytosep_trate12_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate12_fixed'])
+        self.cycle_flowcytosep_trate23_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate23_fixed'])
+        self.cycle_flowcytosep_trate30_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate30_fixed'])
+
+        self.cycle_quiescent_trate01_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_trate01_fixed'])
+        self.cycle_quiescent_trate10_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_trate10_fixed'])
+
+
+        #------ duration times "fixed"
+        self.cycle_live_duration00_fixed.setChecked(self.param_d[cdname]['cycle_live_duration00_fixed'])
+
+        self.cycle_Ki67_duration01_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_duration01_fixed'])
+        self.cycle_Ki67_duration10_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_duration10_fixed'])
+
+        self.cycle_advancedKi67_duration01_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration01_fixed'])
+        self.cycle_advancedKi67_duration12_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'])
+        self.cycle_advancedKi67_duration20_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'])
+
+        self.cycle_flowcyto_duration01_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration01_fixed'])
+        self.cycle_flowcyto_duration12_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration12_fixed'])
+        self.cycle_flowcyto_duration20_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration20_fixed'])
+
+        self.cycle_flowcytosep_duration01_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration01_fixed'])
+        self.cycle_flowcytosep_duration12_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration12_fixed'])
+        self.cycle_flowcytosep_duration23_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration23_fixed'])
+        self.cycle_flowcytosep_duration30_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration30_fixed'])
+
+        self.cycle_quiescent_duration01_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_duration01_fixed'])
+        self.cycle_quiescent_duration10_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_duration10_fixed'])
+
         #         # if cycle_code == 0:
         #         #     self.cycle_dropdown.setCurrentIndex(2)
         #         #     self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
@@ -3123,9 +3304,9 @@ class CellDef(QWidget):
 				# 		<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
 				# 		<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
 
-                default_sval = '0.0'
 
                 #  transition rates: set default values for all params
+                default_sval = '0.0'
                 self.param_d[cell_def_name]['cycle_live_trate00'] = default_sval
 
                 self.param_d[cell_def_name]['cycle_Ki67_trate01'] = default_sval
@@ -3146,6 +3327,30 @@ class CellDef(QWidget):
 
                 self.param_d[cell_def_name]['cycle_quiescent_trate01'] = default_sval
                 self.param_d[cell_def_name]['cycle_quiescent_trate10'] = default_sval
+
+
+                #  transition rates: set default values for all "fixed_duration" checkboxes
+                default_bval = False
+                self.param_d[cell_def_name]['cycle_live_trate00_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = default_bval
 
                 phase_transition_path = cycle_path + "//phase_transition_rates"
                 print(' >> phase_transition_path ')
@@ -3266,6 +3471,28 @@ class CellDef(QWidget):
                 self.param_d[cell_def_name]['cycle_quiescent_duration01'] = default_sval
                 self.param_d[cell_def_name]['cycle_quiescent_duration10'] = default_sval
 
+                #  duration: set default values for all "fixed_duration" checkboxes
+                default_bval = False
+                self.param_d[cell_def_name]['cycle_live_duration00_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = default_bval
+
+                self.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = default_bval
+                self.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = default_bval
 
                 phase_durations_path = cycle_path + "//phase_durations"
                 print(' >> phase_durations_path =',phase_durations_path )

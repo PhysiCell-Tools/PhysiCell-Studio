@@ -51,7 +51,9 @@ class PhysiCellXMLCreator(QWidget):
         # self.grid = QGridLayout()
         # lay.addLayout(self.grid)
         self.setLayout(vlayout)
-        self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
+        # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
 
         # self.menubar = QtWidgets.QMenuBar(self)
         # self.file_menu = QtWidgets.QMenu('File')
@@ -82,16 +84,18 @@ class PhysiCellXMLCreator(QWidget):
 
         # read_file = model_name + ".xml"
         read_file = os.path.join(dataDirectory, model_name + ".xml")
-        self.setWindowTitle(self.title_prefix + model_name)
+        # self.setWindowTitle(self.title_prefix + model_name)
 
 
+        # NOTE! We create a *copy* of the .xml sample model and will save to it.
         copy_file = "copy_" + model_name + ".xml"
-        # shutil.copy(read_file, copy_file)
+        shutil.copy(read_file, copy_file)
+        self.setWindowTitle(self.title_prefix + copy_file)
         # self.add_new_model(copy_file, True)
         # self.config_file = "config_samples/" + name + ".xml"
         self.config_file = copy_file  # to Save
 
-        self.config_file = read_file  # nanoHUB... to Save
+        # self.config_file = read_file  # nanoHUB... to Save
         self.tree = ET.parse(self.config_file)
         # tree = ET.parse(read_file)
         # self.tree = ET.parse(read_file)
@@ -299,6 +303,7 @@ class PhysiCellXMLCreator(QWidget):
         self.tree = ET.parse(self.config_file)
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
+        self.setWindowTitle(self.title_prefix + self.config_file)
         # self.config_tab.fill_gui(self.xml_root)  # 
         # self.microenv_tab.fill_gui(self.xml_root)  # microenv
         # self.celldef_tab.fill_gui("foobar")  # cell defs
@@ -316,7 +321,7 @@ class PhysiCellXMLCreator(QWidget):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         # print("gui4xml:  save_cb: writing to: ",self.config_file)
         out_file = self.config_file
-        out_file = "mymodel.xml"
+        # out_file = "mymodel.xml"
         print("gui4xml:  save_cb: writing to: ",out_file)
         # self.tree.write(self.config_file)
         self.tree.write(out_file)

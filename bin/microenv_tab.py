@@ -553,9 +553,27 @@ class SubstrateDef(QWidget):
 
         self.tree_item_clicked_cb(treeitem, 0)
         
+    def show_delete_warning(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Not allowed to delete all substrates.")
+        #    msgBox.setWindowTitle("Example")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        # msgBox.buttonClicked.connect(msgButtonClick)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
+
     # @QtCore.Slot()
     def delete_substrate(self):
-        print('------ delete_substrate')
+        num_items = self.tree.invisibleRootItem().childCount()
+        print('------ delete_substrate: num_items=',num_items)
+        if num_items == 1:
+            print("Not allowed to delete all substrates.")
+            # QMessageBox.information(self, "Not allowed to delete all substrates")
+            self.show_delete_warning()
+            return
 
         # rwh: BEWARE of mutating the dict!
         del self.param_d[self.current_substrate]
@@ -917,22 +935,64 @@ class SubstrateDef(QWidget):
             # 	</options>
             # </microenvironment_setup>
 
+
+    # <microenvironment_setup>
+	# 	<variable name="oxygen" units="mmHg" ID="0">
+	# 		<physical_parameter_set>
+	# 			<diffusion_coefficient units="micron^2/min">421.0</diffusion_coefficient>
+	# 			<decay_rate units="1/min">.41</decay_rate>  
+	# 		</physical_parameter_set>
+	# 		<initial_condition units="mmHg">41.0</initial_condition>
+	# 		<Dirichlet_boundary_condition units="mmHg" enabled="true">41.1</Dirichlet_boundary_condition>
+    #         <Dirichlet_options>
+ 	# 			<boundary_value ID="xmin" enabled="false">1</boundary_value>
+ 	# 			<boundary_value ID="xmax" enabled="true">2</boundary_value>
+ 	# 			<boundary_value ID="ymin" enabled="false">3</boundary_value>
+ 	# 			<boundary_value ID="ymax" enabled="true">4</boundary_value>
+ 	# 			<boundary_value ID="zmin" enabled="false">5</boundary_value>
+ 	# 			<boundary_value ID="zmax" enabled="true">6</boundary_value>
+ 	# 		</Dirichlet_options>
+	# 	</variable>
+	
+	# 	<variable name="glue" units="dimensionless" ID="1">
+	# 		<physical_parameter_set>
+	# 			<diffusion_coefficient units="micron^2/min">422.0</diffusion_coefficient>
+	# 			<decay_rate units="1/min">.42</decay_rate>  
+	# 		</physical_parameter_set>
+	# 		<initial_condition units="mmHg">42.0</initial_condition>
+	# 		<Dirichlet_boundary_condition units="mmHg" enabled="false">42.1</Dirichlet_boundary_condition>
+	# 	</variable>
+		
+	# 	<options>
+	# 		<calculate_gradients>true</calculate_gradients>
+	# 		<track_internalized_substrates_in_each_agent>false</track_internalized_substrates_in_each_agent>
+			 
+	# 		<initial_condition type="matlab" enabled="false">
+	# 			<filename>./config/initial.mat</filename>
+	# 		</initial_condition>
+			 
+	# 		<dirichlet_nodes type="matlab" enabled="false">
+	# 			<filename>./config/dirichlet.mat</filename>
+	# 		</dirichlet_nodes>
+	# 	</options>
+	# </microenvironment_setup>	
+
     def fill_xml(self):
         uep = self.xml_root.find('.//microenvironment_setup')
-        vp = []   # pointers to <variable> nodes
-        if uep:
-            for var in uep.findall('variable'):
-                vp.append(var)
+        # vp = []   # pointers to <variable> nodes
+        # if uep:
+        #     for var in uep.findall('variable'):
+        #         vp.append(var)
 
-        uep = self.xml_root.find('.//microenvironment_setup')  
+        # uep = self.xml_root.find('.//microenvironment_setup')  
 
-        # self.diffusion_coef.setText(var_param_path.find('.//diffusion_coefficient').text)
-        # self.decay_rate.setText(var_param_path.find('.//decay_rate').text)
+        # # self.diffusion_coef.setText(var_param_path.find('.//diffusion_coefficient').text)
+        # # self.decay_rate.setText(var_param_path.find('.//decay_rate').text)
 
-        # self.init_cond.setText(var_path.find('.initial_condition').text)
-        # self.dirichlet_bc.setText(var_path.find('.Dirichlet_boundary_condition').text)
+        # # self.init_cond.setText(var_path.find('.initial_condition').text)
+        # # self.dirichlet_bc.setText(var_path.find('.Dirichlet_boundary_condition').text)
 
-        vp[0].find('.//diffusion_coefficient').text = str(self.diffusion_coef.text() )
+        # vp[0].find('.//diffusion_coefficient').text = str(self.diffusion_coef.text() )
 
         # vp[0].find('.//diffusion_coefficient').text = str(self.director_signal_diffusion_coefficient.value)
         # vp[0].find('.//decay_rate').text = str(self.director_signal_decay_rate.value)
