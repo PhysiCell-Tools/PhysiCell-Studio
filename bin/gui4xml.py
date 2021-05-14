@@ -216,6 +216,10 @@ class PhysiCellXMLCreator(QWidget):
         samples_menu.addAction(subcell_act)
         subcell_act.triggered.connect(self.subcell_cb)
 
+        # covid19_act = QAction('covid19', self)
+        # samples_menu.addAction(covid19_act)
+        # covid19_act.triggered.connect(self.covid19_cb)
+
         test_gui_act = QAction('test-gui', self)
         samples_menu.addAction(test_gui_act)
         test_gui_act.triggered.connect(self.test_gui_cb)
@@ -310,7 +314,6 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.fill_motility_substrates()
 
     def open_as_cb(self):
-        # self.microenv_tab.fill_xml()
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
 
@@ -318,11 +321,15 @@ class PhysiCellXMLCreator(QWidget):
         # self.config_file = copy_file
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
+        self.celldef_tab.fill_xml()
+        self.user_params_tab.fill_xml()
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         # print("gui4xml:  save_cb: writing to: ",self.config_file)
+
         out_file = self.config_file
         # out_file = "mymodel.xml"
         print("gui4xml:  save_cb: writing to: ",out_file)
+
         # self.tree.write(self.config_file)
         self.tree.write(out_file)
 
@@ -429,6 +436,15 @@ class PhysiCellXMLCreator(QWidget):
 
     def subcell_cb(self):
         name = "subcellular_flat"
+        sample_file = Path("data", name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        shutil.copy(sample_file, copy_file)
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        self.show_sample_model()
+
+    def covid19_cb(self):
+        name = "covid19_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)

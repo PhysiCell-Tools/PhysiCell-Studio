@@ -979,10 +979,21 @@ class SubstrateDef(QWidget):
 
     def fill_xml(self):
         uep = self.xml_root.find('.//microenvironment_setup')
-        # vp = []   # pointers to <variable> nodes
-        # if uep:
-        #     for var in uep.findall('variable'):
-        #         vp.append(var)
+        vp = []   # pointers to <variable> nodes
+        if uep:
+            # Begin by removing all previously defined substrates in the .xml
+            for var in uep.findall('variable'):
+                uep.remove(var)
+                # vp.append(var)
+
+
+# cell_defs = tree.find('cell_definitions')
+# print("--- Remove all but default cell_defs")
+# for cell_def in list(cell_defs):
+#     # print(cell_def.tag, cell_def.attrib['name'])
+#     if (cell_def.attrib['name'] != 'default'):
+#         print("removing ", cell_def.attrib['name'])
+#         cell_defs.remove(cell_def)
 
         # uep = self.xml_root.find('.//microenvironment_setup')  
 
@@ -1006,8 +1017,15 @@ class SubstrateDef(QWidget):
         # vp[1].find('.//Dirichlet_boundary_condition').text = str(self.cargo_signal_Dirichlet_boundary_condition.value)
         # vp[1].find('.//Dirichlet_boundary_condition').attrib['enabled'] = str(self.cargo_signal_Dirichlet_boundary_condition_toggle.value).lower()
 
-        # uep.find('.//options//calculate_gradients').text = str(self.calculate_gradient.value)
-        # uep.find('.//options//track_internalized_substrates_in_each_agent').text = str(self.track_internal.value)
+        if self.gradients.isChecked():
+            self.xml_root.find(".//options//calculate_gradients").text = 'true'
+        else:
+            self.xml_root.find(".//options//calculate_gradients").text = 'false'
+
+        if self.track_in_agents.isChecked():
+            self.xml_root.find(".//options//track_internalized_substrates_in_each_agent").text = 'true'
+        else:
+            self.xml_root.find(".//options//track_internalized_substrates_in_each_agent").text = 'false'
     
     def clear_gui(self):
         pass

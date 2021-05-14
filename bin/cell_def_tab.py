@@ -21,6 +21,8 @@ class CellDef(QWidget):
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
+        self.default_sval = '0.0'
+        self.default_bval = False
 
         self.current_cell_def = None
         self.new_cell_def_count = 1
@@ -246,32 +248,33 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def new_cell_def(self):
         print('------ new_cell_def')
-        celldefname = "cell_def%02d" % self.new_cell_def_count
+        cdname = "cell_def%02d" % self.new_cell_def_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[celldefname] = self.param_d[self.current_cell_def].copy()
+        self.param_d[cdname] = self.param_d[self.current_cell_def].copy()
 
         for k in self.param_d.keys():
             print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
         print()
 
+        # Then "zero out" all entries and uncheck checkboxes
+        self.new_cycle_params(cdname)
 
-        # Then "zero out" all entries(?)
         text = "0.0"
-        self.param_d[celldefname]["death_rate"] = text
+        self.param_d[cdname]["death_rate"] = text
 
-        self.param_d[celldefname]["volume_total"] = text
+        self.param_d[cdname]["volume_total"] = text
 
         print("\n ----- new dict:")
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
 
         self.new_cell_def_count += 1
-        self.current_cell_def = celldefname
+        self.current_cell_def = cdname
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
-        treeitem = QTreeWidgetItem([celldefname])
+        treeitem = QTreeWidgetItem([cdname])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
@@ -2962,6 +2965,125 @@ class CellDef(QWidget):
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
 
+
+    #-----------------------------------------------------------------------------------------
+    def new_cycle_params(self, cdname):
+        # cdname = self.current_cell_def
+        sval = self.default_sval
+        self.param_d[cdname]['cycle_choice_idx'] = 0
+
+        self.param_d[cdname]['cycle_live_trate00'] = sval
+
+        self.param_d[cdname]['cycle_Ki67_trate01'] = sval
+        self.param_d[cdname]['cycle_Ki67_trate10'] = sval
+
+        self.param_d[cdname]['cycle_advancedKi67_trate01'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_trate12'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_trate20'] = sval
+
+        self.param_d[cdname]['cycle_flowcyto_trate01'] = sval
+        self.param_d[cdname]['cycle_flowcyto_trate12'] = sval
+        self.param_d[cdname]['cycle_flowcyto_trate20'] = sval
+
+        self.param_d[cdname]['cycle_flowcytosep_trate01'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_trate12'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_trate23'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_trate30'] = sval
+
+        self.param_d[cdname]['cycle_quiescent_trate01'] = sval
+        self.param_d[cdname]['cycle_quiescent_trate10'] = sval
+
+        # duration times
+        self.param_d[cdname]['cycle_live_duration00'] = sval
+
+        self.param_d[cdname]['cycle_Ki67_duration01'] = sval
+        self.param_d[cdname]['cycle_Ki67_duration10'] = sval
+
+        self.param_d[cdname]['cycle_advancedKi67_duration01'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_duration12'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_duration20'] = sval
+
+        self.param_d[cdname]['cycle_flowcyto_duration01'] = sval
+        self.param_d[cdname]['cycle_flowcyto_duration12'] = sval
+        self.param_d[cdname]['cycle_flowcyto_duration20'] = sval
+
+        self.param_d[cdname]['cycle_flowcytosep_duration01'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_duration12'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_duration23'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_duration30'] = sval
+
+        self.param_d[cdname]['cycle_quiescent_duration01'] = sval
+        self.param_d[cdname]['cycle_quiescent_duration10'] = sval
+
+
+        #-------------------------
+        # transition rates "fixed"
+
+        bval = self.default_bval
+        self.param_d[cdname]['cycle_live_trate00_fixed'] = bval
+
+        self.param_d[cdname]['cycle_Ki67_trate01_fixed'] = bval
+        self.param_d[cdname]['cycle_Ki67_trate10_fixed'] = bval
+
+        self.param_d[cdname]['cycle_advancedKi67_trate01_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'] = bval
+
+        self.param_d[cdname]['cycle_flowcyto_trate01_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_trate12_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_trate20_fixed'] = bval
+
+        self.param_d[cdname]['cycle_flowcytosep_trate01_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_trate12_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_trate23_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_trate30_fixed'] = bval
+
+        self.param_d[cdname]['cycle_quiescent_trate01_fixed'] = bval
+        self.param_d[cdname]['cycle_quiescent_trate10_fixed'] = bval
+
+
+        #------ duration times "fixed"
+        self.param_d[cdname]['cycle_live_duration00_fixed'] = bval
+
+        self.param_d[cdname]['cycle_Ki67_duration01_fixed'] = bval
+        self.param_d[cdname]['cycle_Ki67_duration10_fixed'] = bval
+
+        self.param_d[cdname]['cycle_advancedKi67_duration01_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'] = bval
+
+        self.param_d[cdname]['cycle_flowcyto_duration01_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_duration12_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_duration20_fixed'] = bval
+
+        self.param_d[cdname]['cycle_flowcytosep_duration01_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_duration12_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_duration23_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_duration30_fixed'] = bval
+
+        self.param_d[cdname]['cycle_quiescent_duration01_fixed'] = bval
+        self.param_d[cdname]['cycle_quiescent_duration10_fixed'] = bval
+
+
+    def new_death_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+    def new_volume_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+    def new_mechanics_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+    def new_motility_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+    def new_secretion_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+    def new_custom_data_params(self):
+        cdname = self.current_cell_def
+        sval = self.default_sval
+
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
         # pass
@@ -3907,77 +4029,9 @@ class CellDef(QWidget):
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
-        pass
-        # TODO: verify valid type (numeric) and range?
-        # xml_root.find(".//x_min").text = str(self.xmin.value)
-        # xml_root.find(".//x_max").text = str(self.xmax.value)
-
-    #-------------------------------------------------------------------
-    # rwh: even needed? We set default params in 'populate'
-    # def clear_gui(self):
-    #     # self.cell_type_name.setText('')
-    #     self.cycle_trate00.setText('')
-    #     self.cycle_trate01.setText('')
-    #     self.cycle_trate10.setText('')
-    #     self.cycle_flowcyto_trate01.setText('')
-    #     self.cycle_flowcyto_trate12.setText('')
-    #     # self.cycle_trate_02_20.setText('')
-    #     self.cycle_flowcytosep_trate01.setText('')
-    #     self.cycle_flowcytosep_trate12.setText('')
-    #     self.cycle_flowcytosep_trate23.setText('')
-    #     self.cycle_flowcytosep_trate30.setText('')
-
-    #     self.cycle_duration00.setText('')
-    #     self.cycle_duration01.setText('')
-    #     self.cycle_duration10.setText('')
-    #     self.cycle_duration_02_01.setText('')
-    #     self.cycle_duration_02_12.setText('')
-    #     self.cycle_duration_02_20.setText('')
-    #     self.cycle_duration_03_01.setText('')
-    #     self.cycle_duration_03_12.setText('')
-    #     self.cycle_duration_03_23.setText('')
-    #     self.cycle_duration_03_30.setText('')
-
-    #     self.apoptosis_death_rate.setText('')
-    #     self.apoptosis_phase0_duration.setText('')
-    #     # self.apoptosis_phase1_duration.setText('')
-    #     # self.apoptosis_phase2_duration.setText('')
-    #     # self.apoptosis_phase3_duration.setText('')
-    #     self.apoptosis_unlysed_rate.setText('')
-    #     self.apoptosis_lysed_rate.setText('')
-    #     self.apoptosis_cytoplasmic_biomass_change_rate.setText('')
-    #     self.apoptosis_nuclear_biomass_change_rate.setText('')
-    #     self.apoptosis_calcification_rate.setText('')
-    #     self.apoptosis_relative_rupture_volume.setText('')
-    #     self.necrosis_death_rate.setText('')
-    #     self.necrosis_phase0_duration.setText('')
-    #     self.necrosis_phase1_duration.setText('')
-    #     # self.necrosis_phase2_duration.setText('')
-    #     # self.necrosis_phase3_duration.setText('')
-    #     self.necrosis_unlysed_rate.setText('')
-    #     self.necrosis_lysed_rate.setText('')
-    #     self.necrosis_cytoplasmic_biomass_change_rate.setText('')
-    #     self.necrosis_nuclear_biomass_change_rate.setText('')
-    #     self.necrosis_calcification_rate.setText('')
-    #     self.necrosis_relative_rupture_volume.setText('')
-    #     self.volume_total.setText('')
-    #     self.volume_fluid_fraction.setText('')
-    #     self.volume_nuclear.setText('')
-    #     self.volume_fluid_change_rate.setText('')
-    #     self.volume_cytoplasmic_biomass_change_rate.setText('')
-    #     self.volume_nuclear_biomass_change_rate.setText('')
-    #     self.volume_calcified_fraction.setText('')
-    #     self.volume_calcification_rate.setText('')
-    #     self.relative_rupture_volume.setText('')
-    #     self.cell_cell_adhesion_strength.setText('')
-    #     self.cell_cell_repulsion_strength.setText('')
-    #     self.relative_maximum_adhesion_distance.setText('')
-    #     self.set_relative_equilibrium_distance.setText('')
-    #     self.set_absolute_equilibrium_distance.setText('')
-    #     self.speed.setText('')
-    #     self.persistence_time.setText('')
-    #     self.migration_bias.setText('')
-    #     self.secretion_rate.setText('')
-    #     self.secretion_target.setText('')
-    #     self.uptake_rate.setText('')
-    #     self.secretion_net_export_rate.setText('')
+        # pass
+        uep = self.xml_root.find('.//cell_definitions')
+        if uep:
+            # Begin by removing all previously defined cell defs in the .xml
+            for cell_def in uep.findall('cell_definition'):
+                uep.remove(cell_def)

@@ -275,5 +275,17 @@ class UserParams(QtWidgets.QWidget):
             idx += 1
 
     def fill_xml(self):
-        pass
+        # pass
+        # for params in self.xml_root.find('.//user_parameters'):
+        #     self.xml_root.remove(params)
+
+        uep = self.xml_root.find('.//user_parameters')
+        print("--------- user_params_tab.py:  fill_xml():")
+        if uep:
+            print("--------- found //user_parameters")
+            # Begin by removing all previously defined user params in the .xml
+            # weird, this only removes the 1st child
+            for var in list(uep):
+                print("------ remove ",var)
+                uep.remove(var)
     
