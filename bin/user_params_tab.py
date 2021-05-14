@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
@@ -279,8 +280,8 @@ class UserParams(QtWidgets.QWidget):
         # for params in self.xml_root.find('.//user_parameters'):
         #     self.xml_root.remove(params)
 
+        print("--------- user_params_tab.py:  fill_xml(): self.count = ",self.count)
         uep = self.xml_root.find('.//user_parameters')
-        print("--------- user_params_tab.py:  fill_xml():")
         if uep:
             print("--------- found //user_parameters")
             # Begin by removing all previously defined user params in the .xml
@@ -289,3 +290,37 @@ class UserParams(QtWidgets.QWidget):
                 print("------ remove ",var)
                 uep.remove(var)
     
+    # <user_parameters>
+	# 	<random_seed type="int" units="dimensionless">13</random_seed> 
+	# 	<glue_stickiness type="double" units="min">42.0</glue_stickiness>
+	# </user_parameters>
+
+        uep = self.xml_root.find('.//user_parameters')
+        knt = 0
+        for idx in range(self.count):
+            vname = self.name[idx].text()
+            if vname:
+                print(vname)
+                    # w = QComboBox()
+                    # # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
+                    # w.addItem("double")
+                    # w.addItem("int")
+                    # w.addItem("bool")
+                    # w.addItem("string")
+                    # self.type.append(w)
+
+                    # self.value[idx].setText("0.0")
+                    # self.units[idx].setText("")
+                    # self.description[idx].setText("")
+
+                elm = ET.Element(vname, 
+                    {"type":self.type[idx].currentText(), 
+                     "units":self.units[idx].text(),
+                     "description":self.description[idx].text()})
+                # elm = ET.Element(vname, { "units":self.units[idx]})
+                # elm = ET.Element(vname)
+                elm.text = self.value[idx].text()
+                elm.tail = '\n        '
+                uep.insert(knt,elm)
+                knt += 1
+        print("found ",knt)

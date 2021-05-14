@@ -14,6 +14,7 @@ import sys
 import shutil
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
+from xml.dom import minidom
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
@@ -150,8 +151,8 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
-        tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
+        tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
+        # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
 
     def menu(self):
@@ -317,6 +318,28 @@ class PhysiCellXMLCreator(QWidget):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
 
+    def indent(elem, level=0):
+        i = "\n" + level*"  "
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + "  "
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for elem in elem:
+                indent(elem, level+1)
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
+
+    def prettify(self, elem):
+        """Return a pretty-printed XML string for the Element.
+        """
+        rough_string = ET.tostring(elem, 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
+
     def save_cb(self):
         # self.config_file = copy_file
         self.config_tab.fill_xml()
@@ -331,6 +354,18 @@ class PhysiCellXMLCreator(QWidget):
         print("gui4xml:  save_cb: writing to: ",out_file)
 
         # self.tree.write(self.config_file)
+        # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
+        # tree = ET.ElementTree(root)
+        # ET.indent(self.tree)  # ugh, only in 3.9
+        # root = ET.tostring(self.tree)
+        # self.indent(self.tree)
+        # self.indent(root)
+
+        # rwh: ARGH, doesn't work
+        # root = self.tree.getroot()
+        # out_str = self.prettify(root)
+        # print(out_str)
+
         self.tree.write(out_file)
 
     def new_model_cb(self):

@@ -9,9 +9,12 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
+# from ElementTree_pretty import prettify
+
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtGui import QDoubleValidator #, QTreeWidgetItemIterator
 
 class QHLine(QFrame):
     def __init__(self):
@@ -575,7 +578,7 @@ class SubstrateDef(QWidget):
             self.show_delete_warning()
             return
 
-        # rwh: BEWARE of mutating the dict!
+        # rwh: BEWARE of mutating the dict?
         del self.param_d[self.current_substrate]
 
         # may need to make a copy instead??
@@ -977,7 +980,17 @@ class SubstrateDef(QWidget):
 	# 	</options>
 	# </microenvironment_setup>	
 
+    def iterate_tree(self, node, count, subs):
+        for idx in range(count):
+            item = node.child(idx)
+            # print('******* State: %s, Text: "%s"' % (Item.checkState(3), Item.text(0)))
+            subs.append(item.text(0))
+            child_count = item.childCount()
+            if child_count > 0:
+                self.iterate_tree(item, child_count)
+                
     def fill_xml(self):
+        print("----------- microenv_tab.py: fill_xml(): ----------")
         uep = self.xml_root.find('.//microenvironment_setup')
         vp = []   # pointers to <variable> nodes
         if uep:
@@ -985,7 +998,90 @@ class SubstrateDef(QWidget):
             for var in uep.findall('variable'):
                 uep.remove(var)
                 # vp.append(var)
+        # self.tree_status()
 
+        num_subs = self.tree.invisibleRootItem().childCount()  # rwh: get number of items in tree
+        print('num subtrates = ',num_subs)
+        substrates_in_tree = []
+        self.iterate_tree(self.tree.invisibleRootItem(), num_subs, substrates_in_tree)
+        print("substrates_in_tree =",substrates_in_tree)
+
+        uep = self.xml_root.find('.//microenvironment_setup')
+        idx = 0
+        indent1 = '\n'
+        indent6 = '\n      '
+        indent8 = '\n        '
+        indent10 = '\n          '
+        for substrate in self.param_d.keys():
+            print('key in param_d.keys() = ',substrate)
+            if substrate in substrates_in_tree:
+                print("matched! ",substrate)
+	# 	<variable name="glue" units="dimensionless" ID="1">
+	# 		<physical_parameter_set>
+	# 			<diffusion_coefficient units="micron^2/min">422.0</diffusion_coefficient>
+	# 			<decay_rate units="1/min">.42</decay_rate>  
+	# 		</physical_parameter_set>
+	# 		<initial_condition units="mmHg">42.0</initial_condition>
+	# 		<Dirichlet_boundary_condition units="mmHg" enabled="false">42.1</Dirichlet_boundary_condition>
+                # elm = ET.Element(substrate)
+                # elm = ET.Element(substrate+'\n', {'foo':'bar'})
+
+
+        # self.param_d[self.current_substrate]["diffusion_coef"] = text
+        # self.param_d[self.current_substrate]["decay_rate"] = text
+        # self.param_d[self.current_substrate]["init_cond"] = text
+        # self.param_d[self.current_substrate]["dirichlet_bc"] = text
+        # self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
+                elm = ET.Element("variable", 
+                        {"name":substrate, "units":"dimensionless", "ID":str(idx)})
+                elm.tail = '\n' + indent6
+                elm.text = indent8
+                subelm = ET.SubElement(elm, 'physical_parameter_set')
+                subelm.text = indent10
+                subelm.tail = indent8
+                subelm2 = ET.SubElement(subelm, "diffusion_coefficient",{"units":"micron^2/min"})
+                subelm2.text = self.param_d[substrate]["diffusion_coef"]
+                subelm2.tail = indent10
+                subelm2 = ET.SubElement(subelm, "decay_rate",{"units":"1/min"})
+                subelm2.text = self.param_d[substrate]["decay_rate"]
+                subelm2.tail = indent8
+
+                subelm = ET.SubElement(elm, 'initial_condition', {"units":"mmHg"})
+                subelm.text = self.param_d[substrate]["init_cond"]
+                subelm.tail = indent8
+                subelm = ET.SubElement(elm, "Dirichlet_boundary_condition",
+                        {"units":"mmHg", "enabled":str(self.param_d[self.current_substrate]["dirichlet_enabled"])})
+                subelm.text = self.param_d[substrate]["dirichlet_bc"]
+                subelm.tail = indent6
+                        
+                #              {'text':"foo",
+                #               'xmlUrl':"bar",
+                #               'htmlUrl':"grrr",
+                #               })
+                # uep.append(elm)
+                uep.insert(idx,elm)
+                idx += 1
+
+        # print(prettify(self.xml_root))
+
+
+
+	# 	<variable name="oxygen" units="mmHg" ID="0">
+	# 		<physical_parameter_set>
+	# 			<diffusion_coefficient units="micron^2/min">421.0</diffusion_coefficient>
+	# 			<decay_rate units="1/min">.41</decay_rate>  
+	# 		</physical_parameter_set>
+	# 		<initial_condition units="mmHg">41.0</initial_condition>
+	# 		<Dirichlet_boundary_condition units="mmHg" enabled="true">41.1</Dirichlet_boundary_condition>
+    #         <Dirichlet_options>
+ 	# 			<boundary_value ID="xmin" enabled="false">1</boundary_value>
+ 	# 			<boundary_value ID="xmax" enabled="true">2</boundary_value>
+ 	# 			<boundary_value ID="ymin" enabled="false">3</boundary_value>
+ 	# 			<boundary_value ID="ymax" enabled="true">4</boundary_value>
+ 	# 			<boundary_value ID="zmin" enabled="false">5</boundary_value>
+ 	# 			<boundary_value ID="zmax" enabled="true">6</boundary_value>
+ 	# 		</Dirichlet_options>
+	# 	</variable>
 
 # cell_defs = tree.find('cell_definitions')
 # print("--- Remove all but default cell_defs")
