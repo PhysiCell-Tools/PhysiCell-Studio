@@ -60,6 +60,22 @@ class CellDef(QWidget):
         self.stack_duration_flowcytosep_idx = -1 
         self.stack_duration_quiescent_idx = -1 
 
+        # used in fill_xml_cycle()
+        self.cycle_combo_idx_code = {0:"5", 1:"1", 2:"0", 3:"2", 4:"6", 5:"7"}
+        # TODO: check if these names must be specific in the C++ 
+        self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
+
+        # ugly attempt to prettyprint XML
+        self.indent1 = '\n'
+        self.indent6 = '\n      '
+        self.indent8 = '\n        '
+        self.indent10 = '\n          '
+        self.indent12 = '\n            '
+        self.indent14 = '\n              '
+        self.indent16 = '\n                '
+        self.indent18 = '\n                  '
+        self.indent20 = '\n                    '
+
         # <substrate name="virus">
         #     <secretion_rate units="1/min">0</secretion_rate>
         #     <secretion_target units="substrate density">1</secretion_target>
@@ -2475,15 +2491,16 @@ class CellDef(QWidget):
     def volume_fluid_change_rate_changed(self, text):
         self.param_d[self.current_cell_def]['volume_fluid_change_rate'] = text
     def volume_cytoplasmic_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_cytoplasmic_biomass_change_rate'] = text
+        # self.param_d[self.current_cell_def]['volume_cytoplasmic_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['volume_cytoplasmic_rate'] = text
     def volume_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_nuclear_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['volume_nuclear_rate'] = text
     def volume_calcified_fraction_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_calcified_fraction'] = text
+        self.param_d[self.current_cell_def]['volume_calcif_fraction'] = text
     def volume_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_calcification_rate'] = text
+        self.param_d[self.current_cell_def]['volume_calcif_rate'] = text
     def relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['relative_rupture_volume'] = text
+        self.param_d[self.current_cell_def]['volume_rel_rupture_vol'] = text
 
     # --- mechanics
     def cell_cell_adhesion_strength_changed(self, text):
@@ -3624,7 +3641,7 @@ class CellDef(QWidget):
                 if pd_uep:
                     self.cycle_rb2.setChecked(True)
                     self.param_d[cell_def_name]['cycle_duration_flag'] = True
-                    self.cycle_duration_flag = True
+                    self.cycle_duration_flag = True   # rwh: TODO - why do this??
                     self.customize_cycle_choices()
 
                 # if cycle_code == 0: #'advanced Ki67'
@@ -3693,6 +3710,7 @@ class CellDef(QWidget):
 
 
                 # ---------  death 
+                self.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
 
                 death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
                 print('death_path=',death_path)
@@ -4038,6 +4056,453 @@ class CellDef(QWidget):
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_cycle(self,pheno,cdef):
+        # ------- cycle ------- 
+        # <cycle code="5" name="live">  
+        # <cycle code="6" name="Flow cytometry model (separated)">  
+
+
+        # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
+        # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
+        # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
+        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
+        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
+        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+
+        # static const int advanced_Ki67_cycle_model= 0;
+        # static const int basic_Ki67_cycle_model=1;
+        # static const int flow_cytometry_cycle_model=2;
+        # static const int live_apoptotic_cycle_model=3;
+        # static const int total_cells_cycle_model=4;
+        # static const int live_cells_cycle_model = 5; 
+        # static const int flow_cytometry_separated_cycle_model = 6; 
+        # static const int cycling_quiescent_model = 7; 
+
+        # self.cycle_combo_idx_code = {0:"5", 1:"1", 2:"0", 3:"2", 4:"6", 5:"7"}
+        # TODO: check if these names must be specific in the C++ 
+        # self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
+
+        combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
+        cycle = ET.SubElement(pheno, "cycle",
+            {"code":self.cycle_combo_idx_code[combo_widget_idx],
+                "name":self.cycle_combo_idx_name[combo_widget_idx] } )
+        cycle.text = self.indent12  # affects self.indent of child, i.e., <phase_transition_rates, for example.
+        cycle.tail = self.indent8
+
+        #-- duration
+        # if self.cycle_duration_flag:
+        if self.param_d[cdef]['cycle_duration_flag']:
+            subelm = ET.SubElement(cycle, "phase_durations",{"units":"min"})
+            subelm.text = self.indent14
+            subelm.tail = self.indent12
+
+            #--- live
+            if combo_widget_idx == 0:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_live_duration00_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_live_duration00']
+                subelm2.tail = self.indent12
+
+            elif combo_widget_idx == 1:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_Ki67_duration01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_duration01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_Ki67_duration10_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_duration01']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
+            elif combo_widget_idx == 2:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_duration01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_duration12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_duration20_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration20']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
+            elif combo_widget_idx == 3:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_duration01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_duration12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_duration20_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration20']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("flow cytometry sepaduration") # 0->1, 1->2, 2->3, 3->0
+            elif combo_widget_idx == 4:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_duration01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_duration12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_duration23_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration23']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_duration30_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"3", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration30']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+            elif combo_widget_idx == 5:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_quiescent_duration01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_duration01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_quiescent_duration10_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_duration01']
+                subelm2.tail = self.indent12
+
+
+
+        #-- transition rates
+        else:
+            subelm = ET.SubElement(cycle, "phase_transition_rates",{"units":"1/min"})
+            subelm.text = self.indent14  # affects </cycle>, i.e., its parent
+            subelm.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
+            # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
+            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
+            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
+            # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
+            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+            if combo_widget_idx == 0:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_live_trate00_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_live_trate00']
+                subelm2.tail = self.indent12
+
+            elif combo_widget_idx == 1:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_Ki67_trate01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_trate01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_Ki67_trate10_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_trate01']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
+            elif combo_widget_idx == 2:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_trate01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_trate12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_advancedKi67_trate20_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate20']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
+            elif combo_widget_idx == 3:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_trate01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_trate12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcyto_trate20_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate20']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
+            elif combo_widget_idx == 4:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_trate01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_trate12_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate12']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_trate23_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"3", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate23']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_flowcytosep_trate30_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"3", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate30']
+                subelm2.tail = self.indent12
+
+            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
+            elif combo_widget_idx == 5:
+                sfix = "false"
+                if self.param_d[cdef]['cycle_quiescent_trate01_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_trate01']
+                subelm2.tail = self.indent14
+
+                sfix = "false"
+                if self.param_d[cdef]['cycle_quiescent_trate10_fixed']:
+                    sfix = "true"
+                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_trate01']
+                subelm2.tail = self.indent12
+
+                # ------- death ------- 
+                # ------- volume ------- 
+                # ------- mechanics ------- 
+                # ------- motility ------- 
+                # ------- secretion ------- 
+                # ------- custom data ------- 
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_death(self,pheno,cdname):
+        # <model code="100" name="apoptosis"> 
+        death = ET.SubElement(pheno, "death")
+        death.text = self.indent12  # affects indent of child
+        death.tail = self.indent8
+
+					# <model code="100" name="apoptosis"> 
+					# 	<death_rate units="1/min">5.31667e-05</death_rate>
+					# 	<!-- use phase_transition_rates OR phase_durations -->
+					# 	<!--
+					# 	<phase_transition_rates units="1/min">
+					# 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+					# 	</phase_transition_rates>
+					# 	-->
+					# 	<phase_durations units="min">
+					# 		<duration index="0" fixed_duration="true">516</duration>
+					# 	</phase_durations>
+					# 	<parameters>
+					# 		<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+					# 		<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+					# 		<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+					# 		<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+					# 		<calcification_rate units="1/min">0</calcification_rate>
+					# 		<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+					# 	</parameters>
+					# </model> 
+        elm = ET.SubElement(death, "model",{"code":"100", "name":"apoptosis"})
+        elm.text = self.indent12  # affects indent of child
+        elm.tail = self.indent12
+
+        subelm = ET.SubElement(elm, "death_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_death_rate"]
+        subelm.tail = self.indent12
+
+        # (self.param_d[cdname]["apoptosis_phase0_duration"])
+        # (self.param_d[cdname]["apoptosis_phase0_fixed"])
+
+        # (self.param_d[cdname]["apoptosis_unlysed_rate"])
+        # (self.param_d[cdname]["apoptosis_lysed_rate"])
+        # (self.param_d[cdname]["apoptosis_cyto_rate"])
+        # (self.param_d[cdname]["apoptosis_nuclear_rate"])
+        # (self.param_d[cdname]["apoptosis_calcif_rate"])
+        # (self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+
+        #-----
+        # <model code="101" name="necrosis"> 
+                        # <phase_durations units="min">
+						# 	<duration index="0" fixed_duration="true">0</duration>
+						# 	<duration index="1" fixed_duration="true">86400</duration>
+						# </phase_durations>
+						
+						# <parameters>
+        elm = ET.SubElement(death, "model",{"code":"101", "name":"necrosis"})
+        elm.text = self.indent12  # affects indent of child
+        elm.tail = self.indent8
+
+        subelm = ET.SubElement(elm, "death_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_death_rate"]
+        subelm.tail = self.indent12
+
+        # (self.param_d[cdname]["necrosis_phase0_duration"])
+        # (self.param_d[cdname]["necrosis_phase0_fixed"])
+        # (self.param_d[cdname]["necrosis_phase1_duration"])
+        # (self.param_d[cdname]["necrosis_phase1_fixed"])
+
+        # (self.param_d[cdname]["necrosis_unlysed_rate"])
+        # (self.param_d[cdname]["necrosis_lysed_rate"])
+        # (self.param_d[cdname]["necrosis_cyto_rate"])
+        # (self.param_d[cdname]["necrosis_nuclear_rate"])
+        # (self.param_d[cdname]["necrosis_calcif_rate"])
+        # (self.param_d[cdname]["necrosis_rel_rupture_rate"])
+
+    #-------------------------------------------------------------------
+                # <volume>  
+				# 	<total units="micron^3">2494</total>
+				# 	<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+				# 	<nuclear units="micron^3">540</nuclear>
+					
+				# 	<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+				# 	<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+				# 	<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+				# 	<calcified_fraction units="dimensionless">0</calcified_fraction>
+				# 	<calcification_rate units="1/min">0</calcification_rate>
+					
+				# 	<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				# </volume> 				
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_volume(self,pheno,cdef):
+        volume = ET.SubElement(pheno, "volume")
+        volume.text = self.indent12  # affects indent of child
+        volume.tail = self.indent8
+
+        elm = ET.SubElement(volume, 'total')
+        elm.text = self.param_d[cdef]['volume_total']
+        print("-------- fill_xml_volume(): total = ",elm.text)
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'fluid_fraction')
+        elm.text = self.param_d[cdef]['volume_fluid_fraction']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'nuclear')
+        elm.text = self.param_d[cdef]['volume_nuclear']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'fluid_change_rate')
+        elm.text = self.param_d[cdef]['volume_fluid_change_rate']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'cytoplasmic_biomass_change_rate')
+        # elm.text = self.param_d[cdef]['volume_cytoplasmic_biomass_change_rate']
+        elm.text = self.param_d[cdef]['volume_cytoplasmic_rate']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'nuclear_biomass_change_rate')
+        elm.text = self.param_d[cdef]['volume_nuclear_rate']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'calcified_fraction')
+        elm.text = self.param_d[cdef]['volume_calcif_fraction']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'calcification_rate')
+        elm.text = self.param_d[cdef]['volume_calcif_rate']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(volume, 'relative_rupture_volume')
+        elm.text = self.param_d[cdef]['volume_rel_rupture_vol']
+        elm.tail = self.indent12
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_mechanics(self,pheno,cdef):
+        mechanics = ET.SubElement(pheno, "mechanics")
+        mechanics.text = self.indent12  # affects indent of child
+        mechanics.tail = self.indent8
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_motility(self,pheno,cdef):
+        motility = ET.SubElement(pheno, "motility")
+        motility.text = self.indent12  # affects indent of child
+        motility.tail = self.indent8
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_secretion(self,pheno,cdef):
+        secretion = ET.SubElement(pheno, "secretion")
+        secretion.text = self.indent12  # affects indent of child
+        secretion.tail = self.indent8
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
         # pass
         print("----------- cell_def_tab.py: fill_xml(): ----------")
@@ -4056,14 +4521,6 @@ class CellDef(QWidget):
 
         uep = self.xml_root.find('.//cell_definitions')
 
-        # ugly attempt to prettyprint
-        indent1 = '\n'
-        indent6 = '\n      '
-        indent8 = '\n        '
-        indent10 = '\n          '
-        indent12 = '\n            '
-        indent14 = '\n              '
-        indent16 = '\n                '
 
         idx = 0
         for cdef in self.param_d.keys():
@@ -4087,79 +4544,14 @@ class CellDef(QWidget):
 					# </phase_durations>
                 elm = ET.Element("cell_definition", 
                         {"name":cdef, "ID":str(idx)})
-                elm.tail = '\n' + indent6
-                elm.text = indent8
+                elm.tail = '\n' + self.indent6
+                elm.text = self.indent8
                 pheno = ET.SubElement(elm, 'phenotype')
-                pheno.text = indent10
-                pheno.tail = indent8
+                pheno.text = self.indent10
+                pheno.tail = self.indent8
 
-                # ------- cycle ------- 
-		 		# <cycle code="5" name="live">  
-                # <cycle code="6" name="Flow cytometry model (separated)">  
-
-
-                # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-                # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-                # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-                # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-                # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-                # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-
-                # static const int advanced_Ki67_cycle_model= 0;
-                # static const int basic_Ki67_cycle_model=1;
-                # static const int flow_cytometry_cycle_model=2;
-                # static const int live_apoptotic_cycle_model=3;
-                # static const int total_cells_cycle_model=4;
-                # static const int live_cells_cycle_model = 5; 
-                # static const int flow_cytometry_separated_cycle_model = 6; 
-                # static const int cycling_quiescent_model = 7; 
-                self.cycle_combo_idx_code = {0:"5", 1:"1", 2:"0", 3:"2", 4:"6", 5:"7"}
-                # TODO: check if these names must be specific in the C++ 
-                self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
-                combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
-                cycle = ET.SubElement(pheno, "cycle",
-                    {"code":self.cycle_combo_idx_code[combo_widget_idx],
-                     "name":self.cycle_combo_idx_name[combo_widget_idx] } )
-                cycle.text = indent12
-                cycle.tail = indent12
-
-                #-- duration
-                if self.cycle_duration_flag:
-                    subelm = ET.SubElement(cycle, "phase_durations",{"units":"min"})
-                    subelm.text = indent14
-                    subelm.tail = indent14
-
-                    #--- live
-                    if combo_widget_idx == 0:
-                        sfix = "false"
-                        if self.param_d[cdef]['cycle_live_duration00_fixed']:
-                            sfix = "true"
-                        subelm2 = ET.SubElement(subelm, "rate",{"index":"0", "fixed_duration":sfix} )
-                        subelm2.text = self.param_d[cdef]['cycle_live_duration00']
-
-                    subelm2.tail = '\n' + indent10
-
-                #-- transition rates
-                else:
-                    subelm = ET.SubElement(cycle, "phase_transition_rates",{"units":"1/min"})
-                    subelm.text = indent14
-                    # subelm.tail = '\n' + indent14
-                    subelm.tail = indent14
-
-                    # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-                    # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-                    # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-                    # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-                    # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-                    # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-                    if combo_widget_idx == 0:
-                        sfix = "false"
-                        if self.param_d[cdef]['cycle_live_trate00_fixed']:
-                            sfix = "true"
-                        subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"0", "fixed_duration":sfix} )
-                        subelm2.text = self.param_d[cdef]['cycle_live_trate00']
-
-                    subelm2.tail = '\n' + indent10
+                self.fill_xml_cycle(pheno,cdef)
+                    # subelm2.tail = '\n' + self.indent10
                     # <phase_transition_rates units="1/min"> 
 					# 	<rate start_index="0" end_index="0" fixed_duration="true">0.000072</rate>
 					# </phase_transition_rates>
@@ -4174,10 +4566,17 @@ class CellDef(QWidget):
                 # cycle.text = self.param_d[cdef]["diffusion_coef"]
 
                 # ------- death ------- 
+                self.fill_xml_death(pheno,cdef)
                 # ------- volume ------- 
+                self.fill_xml_volume(pheno,cdef)
                 # ------- mechanics ------- 
+                self.fill_xml_mechanics(pheno,cdef)
                 # ------- motility ------- 
+                self.fill_xml_motility(pheno,cdef)
                 # ------- secretion ------- 
+                self.fill_xml_secretion(pheno,cdef)
+
+
                 # ------- custom data ------- 
 
 
