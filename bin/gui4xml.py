@@ -151,8 +151,8 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
-        # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
+        # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
+        tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
 
     def menu(self):
