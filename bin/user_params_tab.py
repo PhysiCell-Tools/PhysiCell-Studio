@@ -173,6 +173,14 @@ class UserParams(QtWidgets.QWidget):
     # @QtCore.Slot()
     def clear_rows_cb(self):
         print("----- clearing all selected rows")
+        for idx in range(self.count):
+            if self.select[idx].isChecked():
+                self.name[idx].clear()
+                self.type[idx].setCurrentIndex(0)  # double
+                self.value[idx].clear()
+                self.units[idx].clear()
+                self.description[idx].clear()
+                self.select[idx].setChecked(False)
 
     # @QtCore.Slot()
     def append_more_cb(self):
@@ -276,10 +284,6 @@ class UserParams(QtWidgets.QWidget):
             idx += 1
 
     def fill_xml(self):
-        # pass
-        # for params in self.xml_root.find('.//user_parameters'):
-        #     self.xml_root.remove(params)
-
         print("--------- user_params_tab.py:  fill_xml(): self.count = ",self.count)
         uep = self.xml_root.find('.//user_parameters')
         if uep:
@@ -299,20 +303,8 @@ class UserParams(QtWidgets.QWidget):
         knt = 0
         for idx in range(self.count):
             vname = self.name[idx].text()
-            if vname:
+            if vname:  # only deal with rows having names
                 print(vname)
-                    # w = QComboBox()
-                    # # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
-                    # w.addItem("double")
-                    # w.addItem("int")
-                    # w.addItem("bool")
-                    # w.addItem("string")
-                    # self.type.append(w)
-
-                    # self.value[idx].setText("0.0")
-                    # self.units[idx].setText("")
-                    # self.description[idx].setText("")
-
                 elm = ET.Element(vname, 
                     {"type":self.type[idx].currentText(), 
                      "units":self.units[idx].text(),

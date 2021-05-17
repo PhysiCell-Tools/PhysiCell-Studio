@@ -26,6 +26,7 @@ class CellCustomData(QWidget):
         # self.current_param = None
         self.xml_root = None
         self.count = 0
+        self.custom_vars_to_delete = []
 
         #-------------------------------------------
         self.label_width = 150
@@ -173,6 +174,16 @@ class CellCustomData(QWidget):
     # @QtCore.Slot()
     def clear_rows_cb(self):
         print("----- clearing all selected rows")
+        self.custom_vars_to_delete.clear()
+        for idx in range(self.count):
+            if self.select[idx].isChecked():
+                self.custom_vars_to_delete.append(self.name[idx].text())
+                self.name[idx].clear()
+                self.value[idx].clear()
+                self.units[idx].clear()
+                self.description[idx].clear()
+                self.select[idx].setChecked(False)
+        print("custom_vars_to_delete = ",self.custom_vars_to_delete)
 
     # @QtCore.Slot()
     def append_more_cb(self):
@@ -265,10 +276,14 @@ class CellCustomData(QWidget):
             print(idx, ") ",var)
             self.name[idx].setText(var.tag)
             print("tag=",var.tag)
+
             self.value[idx].setText(var.text)
 
             if 'units' in var.keys():
                 self.units[idx].setText(var.attrib['units'])
+
+            if 'description' in var.keys():
+                self.description[idx].setText(var.attrib['description'])
             idx += 1
 
     def fill_xml(self):

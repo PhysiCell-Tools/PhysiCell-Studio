@@ -193,12 +193,9 @@
 				<molecular />
 			</phenotype>
 			<custom_data>  
-				<receptor units="dimensionless">0.0</receptor>
-				<cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
-				<damage_rate units="1/min">0.03333</damage_rate>
-				<repair_rate units="1/min">0.004167</repair_rate>
-				<drug_death_rate units="1/min">0.004167</drug_death_rate>
-				<damage units="dimensionless">0.0</damage> 
+				<cvar1 units="dimensionless" description="cvar1s are awesome">41.0</cvar1>
+				<cvar2 units="mmHg">0.41</cvar2>
+				<cvar3 units="1/min">0.041</cvar3>
 			</custom_data>
 		</cell_definition>
 		
@@ -307,12 +304,9 @@
 				<molecular />
 			</phenotype>
 			<custom_data>  
-				<receptor units="dimensionless">1.0</receptor>
-				<cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
-				<damage_rate units="1/min">0.03333</damage_rate>
-				<repair_rate units="1/min">0.004167</repair_rate>
-				<drug_death_rate units="1/min">0.004167</drug_death_rate>
-				<damage units="dimensionless">0.0</damage> 
+				<cvar1 units="dimensionless" description="cvar1s are awesome">42.0</cvar1>
+				<cvar2 units="mmHg">0.42</cvar2>
+				<cvar3 units="1/min">0.042</cvar3>
 			</custom_data>
 		</cell_definition>
 		

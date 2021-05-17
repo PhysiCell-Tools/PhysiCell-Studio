@@ -4796,6 +4796,17 @@ class CellDef(QWidget):
         # self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
         # self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
 
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_custom_data(self,cdata,cdef):
+				# <receptor units="dimensionless">1.0</receptor>
+				# <cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
+        for idx in range(5):
+            elm = ET.SubElement(cdata, "foo")
+            elm.text = "42.0"
+            elm.tail = self.indent10
+
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
@@ -4873,6 +4884,8 @@ class CellDef(QWidget):
 
 
                 # ------- custom data ------- 
+                customdata = ET.SubElement(elm, 'custom_data')
+                self.fill_xml_custom_data(customdata,cdef)
 
 
                 uep.insert(idx,elm)
