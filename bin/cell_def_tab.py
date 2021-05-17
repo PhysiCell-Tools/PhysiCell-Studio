@@ -2554,6 +2554,13 @@ class CellDef(QWidget):
     def secretion_net_export_rate_changed(self, text):
         self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
 
+    # --- custom data
+    def custom_data_value_changed(self, text):
+        print("custom_data_value_changed(): text = ", text)
+        # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
+        print(self.param_d[self.current_cell_def]['custom_data'])
+        self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
+
     #--------------------------------------------------------
     def create_custom_data_tab(self):
         custom_data_tab = QWidget()
@@ -2593,11 +2600,10 @@ class CellDef(QWidget):
         # hbox.addWidget(w)
         glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
         
-        w = QLabel("Units(r/o)")
-        w.setAlignment(QtCore.Qt.AlignCenter)
-        w.setStyleSheet("color: Salmon")  # PaleVioletRed")
-        # hbox.addWidget(w)
-        glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
+        # w = QLabel("Units(r/o)")
+        # w.setAlignment(QtCore.Qt.AlignCenter)
+        # w.setStyleSheet("color: Salmon")  # PaleVioletRed")
+        # glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         # glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
         # idx = 0
@@ -2614,7 +2620,7 @@ class CellDef(QWidget):
         # self.custom_data_select = []
         self.custom_data_name = []
         self.custom_data_value = []
-        self.custom_data_units = []
+        # self.custom_data_units = []
 
         for idx in range(10):   # rwh/TODO - this should depend on how many in the .xml
             # self.main_layout.addLayout(NewUserParam(self))
@@ -2635,8 +2641,11 @@ class CellDef(QWidget):
             # if idx == 0:
             #     w.setText("random_seed")
 
+            # mapper = QtCore.QSignalMapper()
+            mapper = QtCore.QSignalMapper()
             w = QLineEdit()
             w.setValidator(QtGui.QDoubleValidator())
+            w.textChanged.connect(self.custom_data_value_changed)
             self.custom_data_value.append(w)
             # w.setValidator(QtGui.QDoubleValidator())
             # if idx == 0:
@@ -2644,13 +2653,12 @@ class CellDef(QWidget):
             # hbox.addWidget(w)
             glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-            w = QLineEdit()
-            w.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
-            w.setReadOnly(True)
-            w.setFixedWidth(self.custom_data_units_width)
-            self.custom_data_units.append(w)
-            # hbox.addWidget(w)
-            glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
+            # w = QLineEdit()
+            # w.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
+            # w.setReadOnly(True)
+            # w.setFixedWidth(self.custom_data_units_width)
+            # self.custom_data_units.append(w)
+            # glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
 
             # glayout.addLayout(hbox, idx,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -2736,7 +2744,7 @@ class CellDef(QWidget):
 
             self.custom_data_units[idx].setReadOnly(False)
             self.custom_data_units[idx].setText("")
-            self.custom_data_units[idx].setReadOnly(True)
+            # self.custom_data_units[idx].setReadOnly(True)
         
         self.custom_data_count = 0
 
@@ -2774,8 +2782,8 @@ class CellDef(QWidget):
                 print("tag=",var.tag)
                 self.custom_data_value[idx].setText(var.text)
 
-                if 'units' in var.keys():
-                    self.custom_data_units[idx].setText(var.attrib['units'])
+                # if 'units' in var.keys():
+                #     self.custom_data_units[idx].setText(var.attrib['units'])
                 idx += 1
             idx_cell_def += 1
             break
@@ -3329,7 +3337,16 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_custom_data_params(self):
-        pass
+        cdname = self.current_cell_def
+        print("--------- update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        num_vals = len(self.param_d[cdname]['custom_data'].keys())
+        print("num_vals =", num_vals)
+        idx = 0
+        for key in self.param_d[cdname]['custom_data'].keys():
+            print(key,self.param_d[cdname]['custom_data'][key])
+            self.custom_data_name[idx].setText(key)
+            self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
+            idx += 1
         # jdx = 0
         # for var in uep_custom_data:
         #     print(jdx, ") ",var)
@@ -4028,8 +4045,17 @@ class CellDef(QWidget):
                 jdx = 0
                 # rwh/TODO: if we have more vars than we initially created rows for, we'll need
                 # to call 'append_more_cb' for the excess.
-                # for var in uep_custom_data:
-                #     print(jdx, ") ",var)
+                if uep_custom_data:
+                    print("--------------- populate: custom_dat for cell_def_name= ",cell_def_name)
+                    self.param_d[cell_def_name]['custom_data'] = {}
+                    for var in uep_custom_data:
+                        print(jdx, ") ",var)
+                        # val = sub.find("secretion_rate").text
+                        val = var.text
+                        print("tag= ",var.tag)
+                        print("val= ",val)
+                        # self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
+                        self.param_d[cell_def_name]['custom_data'][var.tag] = val
                 #     self.custom_data_name[jdx].setText(var.tag)
                 #     print("tag=",var.tag)
                 #     self.custom_data_value[jdx].setText(var.text)
@@ -4038,6 +4064,7 @@ class CellDef(QWidget):
                 #         self.custom_data_units[jdx].setText(var.attrib['units'])
                 #     jdx += 1
 
+                    print("--------- populate: self.param_d[cell_def_name]['custom_data'] = ",self.param_d[cell_def_name]['custom_data'])
 
 
         self.current_cell_def = cell_def_0th
