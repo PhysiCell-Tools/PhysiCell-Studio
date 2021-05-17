@@ -94,7 +94,7 @@
 			<phenotype>
 				<cycle code="5" name="live">  
 					<phase_transition_rates units="1/min"> 
-						<rate start_index="0" end_index="0" fixed_duration="false">0.000072</rate>
+						<rate start_index="0" end_index="0" fixed_duration="true">0.000072</rate>
 					</phase_transition_rates>
 				</cycle>
 				
@@ -278,10 +278,10 @@
 					<migration_bias units="dimensionless">2.3</migration_bias>
 					
 					<options>
-						<enabled>false</enabled>
+						<enabled>true</enabled>
 						<use_2D>true</use_2D>
 						<chemotaxis>
-							<enabled>false</enabled>
+							<enabled>true</enabled>
 							<substrate>glue</substrate>
 							<direction>1</direction>
 						</chemotaxis>

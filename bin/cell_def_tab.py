@@ -35,6 +35,8 @@ class CellDef(QWidget):
         self.custom_data_units_width = 90
         self.cycle_duration_flag = False
 
+        self.substrate_list = []
+
         self.stacked_cycle = QStackedWidget()
         # transition rates
         # self.stack_idx_t00 = -1
@@ -2965,6 +2967,7 @@ class CellDef(QWidget):
     # def fill_motility_substrates(self):
     def fill_substrates_comboboxes(self):
         print("cell_def_tab.py: ------- fill_substrates_comboboxes")
+        self.substrate_list.clear()
         self.motility_substrate_dropdown.clear()
         self.secretion_substrate_dropdown.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
@@ -2975,8 +2978,10 @@ class CellDef(QWidget):
                 # vp.append(var)
                 print(" --> ",var.attrib['name'])
                 name = var.attrib['name']
+                self.substrate_list.append(name)
                 self.motility_substrate_dropdown.addItem(name)
                 self.secretion_substrate_dropdown.addItem(name)
+        print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
 
     # def delete_substrate_from_comboboxes(self, name):
     def delete_substrate_from_comboboxes(self, item_idx):
@@ -4091,7 +4096,7 @@ class CellDef(QWidget):
             {"code":self.cycle_combo_idx_code[combo_widget_idx],
                 "name":self.cycle_combo_idx_name[combo_widget_idx] } )
         cycle.text = self.indent12  # affects self.indent of child, i.e., <phase_transition_rates, for example.
-        cycle.tail = self.indent8
+        cycle.tail = "\n" + self.indent10
 
         #-- duration
         # if self.cycle_duration_flag:
@@ -4353,11 +4358,11 @@ class CellDef(QWidget):
                 # ------- custom data ------- 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
-    def fill_xml_death(self,pheno,cdname):
+    def fill_xml_death(self,pheno,cdname):  # we use "cdname" here instead of cdef (for easier copy/paste from elsewhere)
         # <model code="100" name="apoptosis"> 
         death = ET.SubElement(pheno, "death")
         death.text = self.indent12  # affects indent of child
-        death.tail = self.indent8
+        death.tail = "\n" + self.indent10
 
 					# <model code="100" name="apoptosis"> 
 					# 	<death_rate units="1/min">5.31667e-05</death_rate>
@@ -4379,16 +4384,29 @@ class CellDef(QWidget):
 					# 		<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 					# 	</parameters>
 					# </model> 
-        elm = ET.SubElement(death, "model",{"code":"100", "name":"apoptosis"})
-        elm.text = self.indent12  # affects indent of child
-        elm.tail = self.indent12
+        model = ET.SubElement(death, "model",{"code":"100", "name":"apoptosis"})
+        model.text = self.indent14  # affects indent of child
+        model.tail = self.indent12
 
-        subelm = ET.SubElement(elm, "death_rate",{"units":"1/min"})
+        subelm = ET.SubElement(model, "death_rate",{"units":"1/min"})
         subelm.text = self.param_d[cdname]["apoptosis_death_rate"]
-        subelm.tail = self.indent12
+        subelm.tail = self.indent14
 
         # (self.param_d[cdname]["apoptosis_phase0_duration"])
         # (self.param_d[cdname]["apoptosis_phase0_fixed"])
+						# <phase_durations units="min">
+							# <duration index="0" fixed_duration="true">511</duration>
+						# </phase_durations>
+        subelm = ET.SubElement(model, "phase_durations",{"units":"min"})
+        subelm.text = self.indent16
+        subelm.tail = self.indent14
+
+        bval = "false"
+        if self.param_d[cdname]["apoptosis_phase0_fixed"]:
+            bval = "true"
+        subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
+        subelm2.text = self.param_d[cdname]["apoptosis_phase0_duration"]
+        subelm2.tail = self.indent14
 
         # (self.param_d[cdname]["apoptosis_unlysed_rate"])
         # (self.param_d[cdname]["apoptosis_lysed_rate"])
@@ -4396,8 +4414,47 @@ class CellDef(QWidget):
         # (self.param_d[cdname]["apoptosis_nuclear_rate"])
         # (self.param_d[cdname]["apoptosis_calcif_rate"])
         # (self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+					# 		<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+					# 		<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+					# 		<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+					# 		<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+					# 		<calcification_rate units="1/min">0</calcification_rate>
+					# 		<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+        # (self.param_d[cdname]["apoptosis_unlysed_rate"])
+        # (self.param_d[cdname]["apoptosis_lysed_rate"])
+        # (self.param_d[cdname]["apoptosis_cyto_rate"])
+        # (self.param_d[cdname]["apoptosis_nuclear_rate"])
+        # (self.param_d[cdname]["apoptosis_calcif_rate"])
+        # (self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+        elm = ET.SubElement(model, "parameters")
+        elm.text = self.indent16  # affects indent of child
+        elm.tail = self.indent12
 
-        #-----
+        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_unlysed_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_lysed_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_cyto_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_nuclear_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "calcification_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["apoptosis_calcif_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "relative_rupture_volume",{"units":"dimensionless"})
+        subelm.text = self.param_d[cdname]["apoptosis_rel_rupture_rate"]
+        subelm.tail = self.indent14
+
+        #---------------------------------
         # <model code="101" name="necrosis"> 
                         # <phase_durations units="min">
 						# 	<duration index="0" fixed_duration="true">0</duration>
@@ -4405,13 +4462,31 @@ class CellDef(QWidget):
 						# </phase_durations>
 						
 						# <parameters>
-        elm = ET.SubElement(death, "model",{"code":"101", "name":"necrosis"})
-        elm.text = self.indent12  # affects indent of child
-        elm.tail = self.indent8
+        model = ET.SubElement(death, "model",{"code":"101", "name":"necrosis"})
+        model.text = self.indent14  # affects indent of child
+        model.tail = self.indent10
 
-        subelm = ET.SubElement(elm, "death_rate",{"units":"1/min"})
+        subelm = ET.SubElement(model, "death_rate",{"units":"1/min"})
         subelm.text = self.param_d[cdname]["necrosis_death_rate"]
-        subelm.tail = self.indent12
+        subelm.tail = self.indent14
+
+        subelm = ET.SubElement(model, "phase_durations",{"units":"min"})
+        subelm.text = self.indent16
+        subelm.tail = self.indent14
+
+        bval = "false"
+        if self.param_d[cdname]["necrosis_phase0_fixed"]:
+            bval = "true"
+        subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
+        subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
+        subelm2.tail = self.indent16
+
+        bval = "false"
+        if self.param_d[cdname]["necrosis_phase1_fixed"]:
+            bval = "true"
+        subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":bval})
+        subelm2.text = self.param_d[cdname]["necrosis_phase1_duration"]
+        subelm2.tail = self.indent14
 
         # (self.param_d[cdname]["necrosis_phase0_duration"])
         # (self.param_d[cdname]["necrosis_phase0_fixed"])
@@ -4424,6 +4499,34 @@ class CellDef(QWidget):
         # (self.param_d[cdname]["necrosis_nuclear_rate"])
         # (self.param_d[cdname]["necrosis_calcif_rate"])
         # (self.param_d[cdname]["necrosis_rel_rupture_rate"])
+        elm = ET.SubElement(model, "parameters")
+        elm.text = self.indent16  # affects indent of child
+        elm.tail = self.indent12
+
+        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_unlysed_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_lysed_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_cyto_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_nuclear_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "calcification_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdname]["necrosis_calcif_rate"]
+        subelm.tail = self.indent16
+
+        subelm = ET.SubElement(elm, "relative_rupture_volume",{"units":"dimensionless"})
+        subelm.text = self.param_d[cdname]["necrosis_rel_rupture_rate"]
+        subelm.tail = self.indent14
+
 
     #-------------------------------------------------------------------
                 # <volume>  
@@ -4444,11 +4547,10 @@ class CellDef(QWidget):
     def fill_xml_volume(self,pheno,cdef):
         volume = ET.SubElement(pheno, "volume")
         volume.text = self.indent12  # affects indent of child
-        volume.tail = self.indent8
+        volume.tail = "\n" + self.indent10
 
         elm = ET.SubElement(volume, 'total')
         elm.text = self.param_d[cdef]['volume_total']
-        print("-------- fill_xml_volume(): total = ",elm.text)
         elm.tail = self.indent12
 
         elm = ET.SubElement(volume, 'fluid_fraction')
@@ -4482,7 +4584,7 @@ class CellDef(QWidget):
 
         elm = ET.SubElement(volume, 'relative_rupture_volume')
         elm.text = self.param_d[cdef]['volume_rel_rupture_vol']
-        elm.tail = self.indent12
+        elm.tail = self.indent10
 
     #-------------------------------------------------------------------
             # <mechanics> 
@@ -4503,7 +4605,7 @@ class CellDef(QWidget):
     def fill_xml_mechanics(self,pheno,cdef):
         mechanics = ET.SubElement(pheno, "mechanics")
         mechanics.text = self.indent12  # affects indent of child
-        mechanics.tail = self.indent8
+        mechanics.tail = "\n" + self.indent10
             # 	<cell_cell_adhesion_strength units="micron/min">1.1</cell_cell_adhesion_strength>
             # 	<cell_cell_repulsion_strength units="micron/min">11.0</cell_cell_repulsion_strength>
             # 	<relative_maximum_adhesion_distance units="dimensionless">1.11</relative_maximum_adhesion_distance>
@@ -4564,14 +4666,135 @@ class CellDef(QWidget):
     def fill_xml_motility(self,pheno,cdef):
         motility = ET.SubElement(pheno, "motility")
         motility.text = self.indent12  # affects indent of child
-        motility.tail = self.indent8
+        motility.tail = "\n" + self.indent10
+
+                    # <speed units="micron/min">1.1</speed>
+					# <persistence_time units="min">1.2</persistence_time>
+					# <migration_bias units="dimensionless">1.3</migration_bias>
+					# <options>
+					# 	<enabled>false</enabled>
+					# 	<use_2D>true</use_2D>
+					# 	<chemotaxis>
+					# 		<enabled>false</enabled>
+					# 		<substrate>oxygen</substrate>
+					# 		<direction>-1</direction>
+					# 	</chemotaxis>
+					# </options>
+        # self.speed.setText(self.param_d[cdname]["speed"])
+        # self.persistence_time.setText(self.param_d[cdname]["persistence_time"])
+        # self.migration_bias.setText(self.param_d[cdname]["migration_bias"])
+
+        # self.motility_enabled.setChecked(self.param_d[cdname]["motility_enabled"])
+        # self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
+        # self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
+        # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
+
+        # if self.param_d[cdname]["motility_chemotaxis_towards"]:
+        #     self.chemotaxis_direction_towards.setChecked(True)
+        # else:
+        #     self.chemotaxis_direction_against.setChecked(True)
+
+        elm = ET.SubElement(motility, 'speed')
+        elm.text = self.param_d[cdef]['speed']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(motility, 'persistence_time')
+        elm.text = self.param_d[cdef]['persistence_time']
+        elm.tail = self.indent12
+        
+        elm = ET.SubElement(motility, 'migration_bias')
+        elm.text = self.param_d[cdef]['migration_bias']
+        elm.tail = self.indent12
+
+        options = ET.SubElement(motility, 'options')
+        options.text = self.indent14
+        options.tail = self.indent10
+
+        bval = "false"
+        if self.param_d[cdef]['motility_enabled']:
+            bval = "true"
+        elm = ET.SubElement(options, 'enabled')
+        elm.text = bval
+        elm.tail = self.indent14
+
+        bval = "false"
+        if self.param_d[cdef]['motility_use_2D']:
+            bval = "true"
+        elm = ET.SubElement(options, 'use_2D')
+        elm.text = bval
+        elm.tail = self.indent14
+
+        taxis = ET.SubElement(options, 'chemotaxis')
+        taxis.text = self.indent16
+        taxis.tail = self.indent12
+
+        bval = "false"
+        if self.param_d[cdef]['motility_chemotaxis']:
+            bval = "true"
+        elm = ET.SubElement(taxis, 'enabled')
+        elm.text = bval
+        elm.tail = self.indent16
+
+        # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
+        elm = ET.SubElement(taxis, 'substrate')
+        elm.text = self.param_d[cdef]['motility_chemotaxis_substrate']
+        elm.tail = self.indent16
+        # if self.param_d[cdname]["motility_chemotaxis_towards"]:
+        #     self.chemotaxis_direction_towards.setChecked(True)
+        # else:
+        #     self.chemotaxis_direction_against.setChecked(True)
+        direction = "-1"
+        if self.param_d[cdef]["motility_chemotaxis_towards"]:
+            direction = "1"
+        elm = ET.SubElement(taxis, 'direction')
+        elm.text = direction
+        elm.tail = self.indent14
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_secretion(self,pheno,cdef):
         secretion = ET.SubElement(pheno, "secretion")
         secretion.text = self.indent12  # affects indent of child
-        secretion.tail = self.indent8
+        secretion.tail = "\n" + self.indent10
+
+                    # <substrate name="oxygen">
+					# 	<secretion_rate units="1/min">21.0</secretion_rate>
+					# 	<secretion_target units="substrate density">21.1</secretion_target>
+					# 	<uptake_rate units="1/min">21.2</uptake_rate>
+					# 	<net_export_rate units="total substrate/min">21.3</net_export_rate> 
+					# </substrate> 
+					# <substrate name="glue">
+					# 	<secretion_rate units="1/min">22.0</secretion_rate>
+					# 	<secretion_target units="substrate density">22.1</secretion_target>
+					# 	<uptake_rate units="1/min">22.2</uptake_rate>
+					# 	<net_export_rate units="total substrate/min">22.3</net_export_rate> 
+					# </substrate> 
+
+        for substrate in self.substrate_list:
+            elm = ET.SubElement(secretion, "substrate",{"name":substrate})
+            elm.text = self.indent14
+            elm.tail = self.indent12
+
+            subelm = ET.SubElement(elm, "secretion_rate",{"units":"1/min"})
+            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
+            subelm.tail = self.indent14
+
+            subelm = ET.SubElement(elm, "secretion_target",{"units":"substrate density"})
+            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
+            subelm.tail = self.indent14
+
+            subelm = ET.SubElement(elm, "uptake_rate",{"units":"1/min"})
+            subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
+            subelm.tail = self.indent14
+
+            subelm = ET.SubElement(elm, "net_export_rate",{"units":"total substrate/min"})
+            subelm.text = self.param_d[cdef]["secretion"][substrate]["net_export_rate"]
+            subelm.tail = self.indent12
+
+        # self.secretion_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"])
+        # self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
+        # self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
+        # self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
