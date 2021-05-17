@@ -1962,6 +1962,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.set_relative_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.set_relative_equilibrium_distance_enabled = QCheckBox("enable")
+        self.set_relative_equilibrium_distance_enabled.clicked.connect(self.set_relative_equilibrium_distance_enabled_cb)
         glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         # units = QLabel("")
@@ -2504,19 +2505,22 @@ class CellDef(QWidget):
 
     # --- mechanics
     def cell_cell_adhesion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['cell_cell_adhesion_strength'] = text
+        self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
     def cell_cell_repulsion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['cell_cell_repulsion_strength'] = text
+        self.param_d[self.current_cell_def]['mechanics_repulsion'] = text
     def relative_maximum_adhesion_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['relative_maximum_adhesion_distance'] = text
+        self.param_d[self.current_cell_def]['mechanics_adhesion_distance'] = text
     def set_relative_equilibrium_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['set_relative_equilibrium_distance'] = text
+        self.param_d[self.current_cell_def]['mechanics_relative_equilibrium_distance'] = text
     def set_absolute_equilibrium_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['set_absolute_equilibrium_distance'] = text
+        self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance'] = text
 
     # insert callbacks for QCheckBoxes
+    def set_relative_equilibrium_distance_enabled_cb(self,bval):
+        # print("set_relative_equilibrium_distance_enabled_cb: bval=",bval)
+        self.param_d[self.current_cell_def]['mechanics_relative_equilibrium_distance_enabled'] = bval
     def set_absolute_equilibrium_distance_enabled_cb(self,bval):
-        print("set_absolute_equilibrium_distance_enabled_cb: bval=",bval)
+        # print("set_absolute_equilibrium_distance_enabled_cb: bval=",bval)
         self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance_enabled'] = bval
 
     # --- motility
@@ -4481,11 +4485,79 @@ class CellDef(QWidget):
         elm.tail = self.indent12
 
     #-------------------------------------------------------------------
+            # <mechanics> 
+            # 	<cell_cell_adhesion_strength units="micron/min">1.1</cell_cell_adhesion_strength>
+            # 	<cell_cell_repulsion_strength units="micron/min">11.0</cell_cell_repulsion_strength>
+            # 	<relative_maximum_adhesion_distance units="dimensionless">1.11</relative_maximum_adhesion_distance>
+                
+            # 	<options>
+            # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.111</set_relative_equilibrium_distance>
+            # 		<set_absolute_equilibrium_distance enabled="false" units="micron">11.111</set_absolute_equilibrium_distance>
+            # 	</options>
+            # </mechanics>
+
+        # # insert callbacks for QCheckBoxes
+        # self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance_enabled'] = bval
+
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_mechanics(self,pheno,cdef):
         mechanics = ET.SubElement(pheno, "mechanics")
         mechanics.text = self.indent12  # affects indent of child
         mechanics.tail = self.indent8
+            # 	<cell_cell_adhesion_strength units="micron/min">1.1</cell_cell_adhesion_strength>
+            # 	<cell_cell_repulsion_strength units="micron/min">11.0</cell_cell_repulsion_strength>
+            # 	<relative_maximum_adhesion_distance units="dimensionless">1.11</relative_maximum_adhesion_distance>
+                
+            # 	<options>
+            # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.111</set_relative_equilibrium_distance>
+            # 		<set_absolute_equilibrium_distance enabled="false" units="micron">11.111</set_absolute_equilibrium_distance>
+
+
+        # self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
+        # self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
+        # self.relative_maximum_adhesion_distance.setText(self.param_d[cdname]["mechanics_adhesion_distance"])
+
+        # self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
+        # self.set_absolute_equilibrium_distance.setText(self.param_d[cdname]["mechanics_absolute_equilibrium_distance"])
+
+        # self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
+        # self.set_absolute_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"])
+
+        elm = ET.SubElement(mechanics, 'cell_cell_adhesion_strength',{"units":"micron/min"})
+        elm.text = self.param_d[cdef]['mechanics_adhesion']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(mechanics, 'cell_cell_repulsion_strength',{"units":"micron/min"})
+        elm.text = self.param_d[cdef]['mechanics_repulsion']
+        elm.tail = self.indent12
+
+        elm = ET.SubElement(mechanics, 'relative_maximum_adhesion_distance',{"units":"dimensionless"})
+        elm.text = self.param_d[cdef]['mechanics_adhesion_distance']
+        elm.tail = self.indent12
+
+            # 	<options>
+            # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.111</set_relative_equilibrium_distance>
+            # 		<set_absolute_equilibrium_distance enabled="false" units="micron">11.111</set_absolute_equilibrium_distance>
+            # 	</options>
+        elm = ET.SubElement(mechanics, 'options')
+        elm.text = self.indent14
+        elm.tail = self.indent10
+
+        # self.param_d[self.current_cell_def]['set_relative_equilibrium_distance'] = text
+        # self.param_d[self.current_cell_def]['set_absolute_equilibrium_distance'] = text
+        bval = "false"
+        if self.param_d[cdef]['mechanics_relative_equilibrium_distance_enabled']:
+            bval = "true"
+        subelm = ET.SubElement(elm, 'set_relative_equilibrium_distance',{"enabled":bval, "units":"dimensionless"})
+        subelm.text = self.param_d[cdef]['mechanics_relative_equilibrium_distance'] 
+        subelm.tail = self.indent14
+
+        bval = "false"
+        if self.param_d[cdef]['mechanics_absolute_equilibrium_distance_enabled']:
+            bval = "true"
+        subelm = ET.SubElement(elm, 'set_absolute_equilibrium_distance',{"enabled":bval, "units":"micron"})
+        subelm.text = self.param_d[cdef]['mechanics_absolute_equilibrium_distance'] 
+        subelm.tail = self.indent12
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
