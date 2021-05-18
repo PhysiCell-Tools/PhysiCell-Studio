@@ -2980,6 +2980,7 @@ class CellDef(QWidget):
     # Fill them using the given model (the .xml)
     def fill_substrates_comboboxes(self):
         print("cell_def_tab.py: ------- fill_substrates_comboboxes")
+        print("self.substrate_list = ",self.substrate_list)
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.motility_substrate_dropdown.clear()
         self.secretion_substrate_dropdown.clear()
@@ -2999,22 +3000,45 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def delete_substrate_from_comboboxes(self, item_idx):
         # print("------- delete_substrate_from_comboboxes: name=",name)
-        print("------- delete_substrate_from_comboboxes: name=",item_idx)
+        print("------- delete_substrate_from_comboboxes: index=",item_idx)
+        subname = self.motility_substrate_dropdown.itemText(item_idx)
+        print("        name = ", subname)
+        self.substrate_list.remove(subname)
+        print("self.substrate_list = ",self.substrate_list)
         self.motility_substrate_dropdown.removeItem(item_idx)
         self.secretion_substrate_dropdown.removeItem(item_idx)
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
 
     #-----------------------------------------------------------------------------------------
-    def update_substrates_comboboxes(self, substrate_name):
-        print("cell_def_tab.py: ------- update_substrates_comboboxes")
+    def add_new_substrate_comboboxes(self, substrate_name):
+        print("cell_def_tab.py: ------- add_new_substrate_comboboxes")
+        self.substrate_list.append(substrate_name)
+        print("self.substrate_list = ",self.substrate_list)
         # self.substrate_list.clear()
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
         # self.substrate_list.append(name)
         self.motility_substrate_dropdown.addItem(substrate_name)
         self.secretion_substrate_dropdown.addItem(substrate_name)
-        # print("cell_def_tab.py: ------- update_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
+    #-----------------------------------------------------------------------------------------
+    def rename_substrate_comboboxes(self, old_name,new_name):
+        print("cell_def_tab.py: ------- rename_substrate_comboboxes")
+        # self.substrate_list.replace(old_name, new_name)
+        self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
+        print("self.substrate_list = ",self.substrate_list)
+        # self.substrate_list.clear()
+        # self.motility_substrate_dropdown.clear()
+        # self.secretion_substrate_dropdown.clear()
+        # self.substrate_list.append(name)
+
+        for idx in range(len(self.substrate_list)):
+            if old_name in self.motility_substrate_dropdown.itemText(idx):
+                self.motility_substrate_dropdown.setItemText(idx, new_name)
+            if old_name in self.secretion_substrate_dropdown.itemText(idx):
+                self.secretion_substrate_dropdown.setItemText(idx, new_name)
+        # self.motility_substrate_dropdown.addItem(substrate_name)
+        # self.secretion_substrate_dropdown.addItem(substrate_name)
 
     #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
