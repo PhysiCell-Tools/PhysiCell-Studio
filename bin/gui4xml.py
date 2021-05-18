@@ -53,7 +53,8 @@ class PhysiCellXMLCreator(QWidget):
         # lay.addLayout(self.grid)
         self.setLayout(vlayout)
         # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(800, 600)  # width, height (height >= Cell Types|Death params)
         # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
 
         # self.menubar = QtWidgets.QMenuBar(self)
@@ -244,8 +245,9 @@ class PhysiCellXMLCreator(QWidget):
 
         #--------------
         tools_menu = menubar.addMenu('&Tools')
-        tools_menu_act = QAction('Validate', self)
-        tools_menu.addAction(tools_menu_act)
+        validate_act = QAction('Validate', self)
+        tools_menu.addAction(validate_act)
+        validate_act.triggered.connect(self.validate_cb)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -383,6 +385,16 @@ class PhysiCellXMLCreator(QWidget):
         # self.xml_root = self.tree.getroot()
         # self.reset_xml_root()
 
+
+    def validate_cb(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Validation not yet implemented.")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
 
     def save_as_cb(self):
         # save_as_file = QFileDialog.getSaveFileName(self,'',".")
