@@ -12,13 +12,7 @@ To run the Python version (the preferred version for now as it's more feature co
 
 We recommend installing the [Anaconda Python distribution](https://www.anaconda.com/products/individual) to have the necessary Qt modules and, later, plotting modules.
 ```
-python bin/gui4xml.py
-```
+Download the latest release, then run this python script from the root folder in your Terminal/Command Prompt:
 
-To compile and run the C++ version, if you'd like to compare with the Python version:
-```
-cd src
-qmake
-make
-# run the generated application
+.../PhysiCell-model-builder-0.1$ python bin/gui4xml.py
 ```
