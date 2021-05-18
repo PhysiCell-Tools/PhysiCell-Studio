@@ -141,13 +141,13 @@ class CellCustomData(QWidget):
 
             #-----
             hbox = QHBoxLayout()
-            w = QLabel("Desc:")
+            w = QLabel("      Description:")
             hbox.addWidget(w)
 
             w = QLineEdit()
             self.description.append(w)
             hbox.addWidget(w)
-            w.setStyleSheet("background-color: lightgray")
+            # w.setStyleSheet("background-color: lightgray")
             # w.setStyleSheet("background-color: #e4e4e4")
             self.main_layout.addLayout(hbox)
 
@@ -250,7 +250,7 @@ class CellCustomData(QWidget):
         celldef_tab.clear_custom_data_tab()
 
 
-    def fill_gui(self, celldef_tab):
+    def fill_gui(self, celldef_tab):   # == populate()
         # pass
         uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[1]//custom_data")
         print('fill_gui(): uep_custom_data=',uep_custom_data)

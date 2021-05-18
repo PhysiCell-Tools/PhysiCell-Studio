@@ -289,15 +289,20 @@ class PhysiCellXMLCreator(QWidget):
         # self.microenv_tab.fill_gui(None)
         # self.microenv_tab.fill_gui()
 
+        # Do this before the celldef_tab
+        self.cell_customdata_tab.clear_gui(self.celldef_tab)
+        self.cell_customdata_tab.fill_gui(self.celldef_tab)
+
         # self.celldef_tab.clear_gui()
+        self.celldef_tab.clear_custom_data_params()
         self.celldef_tab.populate_tree()
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.cell_customdata_tab.clear_gui(self.celldef_tab)
-        self.cell_customdata_tab.fill_gui(self.celldef_tab)
+        # self.cell_customdata_tab.clear_gui(self.celldef_tab)
+        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
 
         self.user_params_tab.clear_gui()
         self.user_params_tab.fill_gui()

@@ -515,6 +515,8 @@ class SubstrateDef(QWidget):
 
         self.new_substrate_count += 1
 
+        self.celldef_tab.update_substrates_comboboxes(subname)
+
         self.current_substrate = subname
         # self.substrate_name.setText(subname)
 
@@ -991,7 +993,7 @@ class SubstrateDef(QWidget):
                 
     def fill_xml(self):
         print("----------- microenv_tab.py: fill_xml(): ----------")
-        uep = self.xml_root.find('.//microenvironment_setup')
+        uep = self.xml_root.find('.//microenvironment_setup') # guaranteed to exist since we start with a valid model
         vp = []   # pointers to <variable> nodes
         if uep:
             # Begin by removing all previously defined substrates in the .xml
@@ -1000,18 +1002,20 @@ class SubstrateDef(QWidget):
                 # vp.append(var)
         # self.tree_status()
 
+        # Obtain a list of all substrates in self.tree (QTreeWidget()). Used below.
+        substrates_in_tree = []
         num_subs = self.tree.invisibleRootItem().childCount()  # rwh: get number of items in tree
         print('num subtrates = ',num_subs)
-        substrates_in_tree = []
         self.iterate_tree(self.tree.invisibleRootItem(), num_subs, substrates_in_tree)
         print("substrates_in_tree =",substrates_in_tree)
 
         uep = self.xml_root.find('.//microenvironment_setup')
-        idx = 0
         indent1 = '\n'
         indent6 = '\n      '
         indent8 = '\n        '
         indent10 = '\n          '
+
+        idx = 0
         for substrate in self.param_d.keys():
             print('key in param_d.keys() = ',substrate)
             if substrate in substrates_in_tree:
@@ -1064,8 +1068,6 @@ class SubstrateDef(QWidget):
 
         # print(prettify(self.xml_root))
 
-
-
 	# 	<variable name="oxygen" units="mmHg" ID="0">
 	# 		<physical_parameter_set>
 	# 			<diffusion_coefficient units="micron^2/min">421.0</diffusion_coefficient>
@@ -1083,36 +1085,8 @@ class SubstrateDef(QWidget):
  	# 		</Dirichlet_options>
 	# 	</variable>
 
-# cell_defs = tree.find('cell_definitions')
-# print("--- Remove all but default cell_defs")
-# for cell_def in list(cell_defs):
-#     # print(cell_def.tag, cell_def.attrib['name'])
-#     if (cell_def.attrib['name'] != 'default'):
-#         print("removing ", cell_def.attrib['name'])
-#         cell_defs.remove(cell_def)
 
-        # uep = self.xml_root.find('.//microenvironment_setup')  
-
-        # # self.diffusion_coef.setText(var_param_path.find('.//diffusion_coefficient').text)
-        # # self.decay_rate.setText(var_param_path.find('.//decay_rate').text)
-
-        # # self.init_cond.setText(var_path.find('.initial_condition').text)
-        # # self.dirichlet_bc.setText(var_path.find('.Dirichlet_boundary_condition').text)
-
-        # vp[0].find('.//diffusion_coefficient').text = str(self.diffusion_coef.text() )
-
-        # vp[0].find('.//diffusion_coefficient').text = str(self.director_signal_diffusion_coefficient.value)
-        # vp[0].find('.//decay_rate').text = str(self.director_signal_decay_rate.value)
-        # vp[0].find('.//initial_condition').text = str(self.director_signal_initial_condition.value)
-        # vp[0].find('.//Dirichlet_boundary_condition').text = str(self.director_signal_Dirichlet_boundary_condition.value)
-        # vp[0].find('.//Dirichlet_boundary_condition').attrib['enabled'] = str(self.director_signal_Dirichlet_boundary_condition_toggle.value).lower()
-
-        # vp[1].find('.//diffusion_coefficient').text = str(self.cargo_signal_diffusion_coefficient.value)
-        # vp[1].find('.//decay_rate').text = str(self.cargo_signal_decay_rate.value)
-        # vp[1].find('.//initial_condition').text = str(self.cargo_signal_initial_condition.value)
-        # vp[1].find('.//Dirichlet_boundary_condition').text = str(self.cargo_signal_Dirichlet_boundary_condition.value)
-        # vp[1].find('.//Dirichlet_boundary_condition').attrib['enabled'] = str(self.cargo_signal_Dirichlet_boundary_condition_toggle.value).lower()
-
+        # ------ Finally, append the flags that apply to all substrates
         if self.gradients.isChecked():
             self.xml_root.find(".//options//calculate_gradients").text = 'true'
         else:

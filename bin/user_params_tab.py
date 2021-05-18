@@ -142,13 +142,14 @@ class UserParams(QtWidgets.QWidget):
 
             #-----
             hbox = QHBoxLayout()
-            w = QLabel("Desc:")
+            # w = QLabel("Desc:")
+            w = QLabel("      Description:")
             hbox.addWidget(w)
 
             w = QLineEdit()
             self.description.append(w)
             hbox.addWidget(w)
-            w.setStyleSheet("background-color: lightgray")
+            # w.setStyleSheet("background-color: lightgray")
             # w.setStyleSheet("background-color: #e4e4e4")
             self.main_layout.addLayout(hbox)
 

@@ -205,7 +205,7 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_death_tab(),"Death")
         self.tab_widget.addTab(self.create_volume_tab(),"Volume")
         self.tab_widget.addTab(self.create_mechanics_tab(),"Mechanics")
-        self.tab_widget.addTab(self.create_motility_tab(),"Motlity")
+        self.tab_widget.addTab(self.create_motility_tab(),"Motility")
         self.tab_widget.addTab(self.create_secretion_tab(),"Secretion")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
         # self.tab_widget.tabBarClicked.connect(self.tabbar_clicked_cb)
@@ -286,13 +286,8 @@ class CellDef(QWidget):
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname)
         self.new_motility_params(cdname)
-        self.new_secretion_params(cdname)
+        # self.new_secretion_params(cdname)  # todo: fix this method
         # self.new_custom_data_params(cdname)
-
-    # def new_custom_data_params(self, cdname):
-
-
-        # self.param_d[cdname]["volume_total"] = text
 
         print("\n ----- new dict:")
         for k in self.param_d.keys():
@@ -2981,11 +2976,11 @@ class CellDef(QWidget):
     #         self.custom_data_count = self.custom_data_count + 1
     #         print(self.custom_data_count)
 
-    #---------------------------------
-    # def fill_motility_substrates(self):
+    #-----------------------------------------------------------------------------------------
+    # Fill them using the given model (the .xml)
     def fill_substrates_comboboxes(self):
         print("cell_def_tab.py: ------- fill_substrates_comboboxes")
-        self.substrate_list.clear()
+        self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.motility_substrate_dropdown.clear()
         self.secretion_substrate_dropdown.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
@@ -3001,7 +2996,7 @@ class CellDef(QWidget):
                 self.secretion_substrate_dropdown.addItem(name)
         print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
 
-    # def delete_substrate_from_comboboxes(self, name):
+    #-----------------------------------------------------------------------------------------
     def delete_substrate_from_comboboxes(self, item_idx):
         # print("------- delete_substrate_from_comboboxes: name=",name)
         print("------- delete_substrate_from_comboboxes: name=",item_idx)
@@ -3010,6 +3005,16 @@ class CellDef(QWidget):
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
 
+    #-----------------------------------------------------------------------------------------
+    def update_substrates_comboboxes(self, substrate_name):
+        print("cell_def_tab.py: ------- update_substrates_comboboxes")
+        # self.substrate_list.clear()
+        # self.motility_substrate_dropdown.clear()
+        # self.secretion_substrate_dropdown.clear()
+        # self.substrate_list.append(name)
+        self.motility_substrate_dropdown.addItem(substrate_name)
+        self.secretion_substrate_dropdown.addItem(substrate_name)
+        # print("cell_def_tab.py: ------- update_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
 
     #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
@@ -3177,6 +3182,7 @@ class CellDef(QWidget):
 
         self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
+    # todo: fix this (currently we don't call it because it clears the previously selected cell def's values)
     def new_secretion_params(self, cdname):
         sval = self.default_sval
         self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
@@ -3186,6 +3192,14 @@ class CellDef(QWidget):
 
     def new_custom_data_params(self, cdname):
         sval = self.default_sval
+        num_vals = len(self.param_d[cdname]['custom_data'].keys())
+        print("num_vals =", num_vals)
+        idx = 0
+        for key in self.param_d[cdname]['custom_data'].keys():
+            print(key,self.param_d[cdname]['custom_data'][key])
+            # self.custom_data_name[idx].setText(key)
+            self.param_d[cdname]['custom_data'][key] = sval
+            idx += 1
 
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
@@ -3402,6 +3416,20 @@ class CellDef(QWidget):
         self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
         self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
         self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+
+    #-----------------------------------------------------------------------------------------
+    def clear_custom_data_params(self):
+        cdname = self.current_cell_def
+        print("--------- clear_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        num_vals = len(self.param_d[cdname]['custom_data'].keys())
+        print("num_vals =", num_vals)
+        idx = 0
+        for idx in range(num_vals):
+        # for key in self.param_d[cdname]['custom_data'].keys():
+            # print(key,self.param_d[cdname]['custom_data'][key])
+            self.custom_data_name[idx].setText('')
+            self.custom_data_value[idx].setText('')
+            # idx += 1
 
     #-----------------------------------------------------------------------------------------
     def update_custom_data_params(self):
@@ -4140,8 +4168,8 @@ class CellDef(QWidget):
         self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and have its params shown
 
         print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
 
     #-------------------------------------------------------------------
     def first_cell_def_name(self):
