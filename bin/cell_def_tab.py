@@ -14,6 +14,11 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
 
+
+# Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
+class MyQLineEdit(QLineEdit):
+    vname = None
+
 class CellDef(QWidget):
     def __init__(self):
         super().__init__()
@@ -32,7 +37,7 @@ class CellDef(QWidget):
         self.idx_current_cell_def = 1  # 1-offset for XML
         self.xml_root = None
         self.custom_data_count = 0
-        self.custom_data_units_width = 90
+        # self.custom_data_units_width = 90
         self.cycle_duration_flag = False
 
         self.substrate_list = []
@@ -277,11 +282,17 @@ class CellDef(QWidget):
 
         # Then "zero out" all entries and uncheck checkboxes
         self.new_cycle_params(cdname)
+        self.new_death_params(cdname)
+        self.new_volume_params(cdname)
+        self.new_mechanics_params(cdname)
+        self.new_motility_params(cdname)
+        self.new_secretion_params(cdname)
+        # self.new_custom_data_params(cdname)
 
-        text = "0.0"
-        self.param_d[cdname]["death_rate"] = text
+    # def new_custom_data_params(self, cdname):
 
-        self.param_d[cdname]["volume_total"] = text
+
+        # self.param_d[cdname]["volume_total"] = text
 
         print("\n ----- new dict:")
         for k in self.param_d.keys():
@@ -2554,12 +2565,16 @@ class CellDef(QWidget):
     def secretion_net_export_rate_changed(self, text):
         self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
 
-    # --- custom data
+    # --- custom data (rwh: OMG, this took a lot of time to solve!)
     def custom_data_value_changed(self, text):
+        # print("self.sender() = ", self.sender())
+        vname = self.sender().vname.text()
+        print("vname = ", vname)
         print("custom_data_value_changed(): text = ", text)
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
+        # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
+        self.param_d[self.current_cell_def]['custom_data'][vname] = text
         print(self.param_d[self.current_cell_def]['custom_data'])
-        self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
 
     #--------------------------------------------------------
     def create_custom_data_tab(self):
@@ -2629,28 +2644,23 @@ class CellDef(QWidget):
             # self.custom_data_select.append(w)
             # hbox.addWidget(w)
 
-            w = QLineEdit()
-            w.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
-            w.setReadOnly(True)
-            self.custom_data_name.append(w)
+            w_varname = QLineEdit()
+            w_varname.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
+            w_varname.setReadOnly(True)
+            self.custom_data_name.append(w_varname)
             # self.name.setValidator(QtGui.QDoubleValidator())
             # self.diffusion_coef.enter.connect(self.save_xml)
             # hbox.addWidget(w)
             idr += 1
-            glayout.addWidget(w, idr,0, 1,1) # w, row, column, rowspan, colspan
+            glayout.addWidget(w_varname, idr,0, 1,1) # w, row, column, rowspan, colspan
             # if idx == 0:
             #     w.setText("random_seed")
 
-            # mapper = QtCore.QSignalMapper()
-            mapper = QtCore.QSignalMapper()
-            w = QLineEdit()
+            w = MyQLineEdit()  # using an overloaded class to allow the connection to the custom data variable name!!!
+            w.vname = w_varname
             w.setValidator(QtGui.QDoubleValidator())
-            w.textChanged.connect(self.custom_data_value_changed)
+            w.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
             self.custom_data_value.append(w)
-            # w.setValidator(QtGui.QDoubleValidator())
-            # if idx == 0:
-            #     w.setText("0")
-            # hbox.addWidget(w)
             glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
 
             # w = QLineEdit()
@@ -2742,8 +2752,8 @@ class CellDef(QWidget):
 
             self.custom_data_value[idx].setText("")
 
-            self.custom_data_units[idx].setReadOnly(False)
-            self.custom_data_units[idx].setText("")
+            # self.custom_data_units[idx].setReadOnly(False)
+            # self.custom_data_units[idx].setText("")
             # self.custom_data_units[idx].setReadOnly(True)
         
         self.custom_data_count = 0
@@ -3100,23 +3110,81 @@ class CellDef(QWidget):
         self.param_d[cdname]['cycle_quiescent_duration10_fixed'] = bval
 
 
-    def new_death_params(self):
-        cdname = self.current_cell_def
+    def new_death_params(self, cdname):
         sval = self.default_sval
-    def new_volume_params(self):
-        cdname = self.current_cell_def
+        self.param_d[cdname]["death_rate"] = sval
+        self.param_d[cdname]["apoptosis_death_rate"] = sval
+        self.param_d[cdname]["apoptosis_phase0_duration"] = sval
+        self.param_d[cdname]["apoptosis_phase0_fixed"] = False
+
+        self.param_d[cdname]["apoptosis_unlysed_rate"] = sval
+        self.param_d[cdname]["apoptosis_lysed_rate"] = sval
+        self.param_d[cdname]["apoptosis_cyto_rate"] = sval
+        self.param_d[cdname]["apoptosis_nuclear_rate"] = sval
+        self.param_d[cdname]["apoptosis_calcif_rate"] = sval
+        self.param_d[cdname]["apoptosis_rel_rupture_rate"] = sval
+
+        #-----
+        self.param_d[cdname]["necrosis_death_rate"] = sval
+        self.param_d[cdname]["necrosis_phase0_duration"] = sval
+        self.param_d[cdname]["necrosis_phase0_fixed"] = False
+        self.param_d[cdname]["necrosis_phase1_duration"] = sval
+        self.param_d[cdname]["necrosis_phase1_fixed"] = False
+
+        self.param_d[cdname]["necrosis_unlysed_rate"] = sval
+        self.param_d[cdname]["necrosis_lysed_rate"] = sval
+        self.param_d[cdname]["necrosis_cyto_rate"] = sval
+        self.param_d[cdname]["necrosis_nuclear_rate"] = sval
+        self.param_d[cdname]["necrosis_calcif_rate"] = sval
+        self.param_d[cdname]["necrosis_rel_rupture_rate"] = sval
+
+    def new_volume_params(self, cdname):
         sval = self.default_sval
-    def new_mechanics_params(self):
-        cdname = self.current_cell_def
+        self.param_d[cdname]["volume_total"] = sval
+        self.param_d[cdname]["volume_fluid_fraction"] = sval
+        self.param_d[cdname]["volume_nuclear"] = sval
+        self.param_d[cdname]["volume_fluid_change_rate"] = sval
+        self.param_d[cdname]["volume_cytoplasmic_rate"] = sval
+        self.param_d[cdname]["volume_nuclear_rate"] = sval
+        self.param_d[cdname]["volume_calcif_fraction"] = sval
+        self.param_d[cdname]["volume_calcif_rate"] = sval
+        self.param_d[cdname]["volume_rel_rupture_vol"] = sval
+
+    def new_mechanics_params(self, cdname):
         sval = self.default_sval
-    def new_motility_params(self):
-        cdname = self.current_cell_def
+        self.param_d[cdname]["mechanics_adhesion"] = sval
+        self.param_d[cdname]["mechanics_repulsion"] = sval
+        self.param_d[cdname]["mechanics_adhesion_distance"] = sval
+
+        self.param_d[cdname]["mechanics_relative_equilibrium_distance"] = sval
+        self.param_d[cdname]["mechanics_absolute_equilibrium_distance"] = sval
+
+        self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"] = False
+        self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"] = False
+
+    def new_motility_params(self, cdname):
         sval = self.default_sval
-    def new_secretion_params(self):
-        cdname = self.current_cell_def
+        self.param_d[cdname]["speed"] = sval
+        self.param_d[cdname]["persistence_time"] = sval
+        self.param_d[cdname]["migration_bias"] = sval
+
+        self.param_d[cdname]["motility_enabled"] = False
+        self.param_d[cdname]["motility_use_2D"] = True
+        self.param_d[cdname]["motility_chemotaxis"] = False
+
+        # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
+        # self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = sval
+
+        self.param_d[cdname]["motility_chemotaxis_towards"] = True
+
+    def new_secretion_params(self, cdname):
         sval = self.default_sval
-    def new_custom_data_params(self):
-        cdname = self.current_cell_def
+        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
+        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
+        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
+        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+
+    def new_custom_data_params(self, cdname):
         sval = self.default_sval
 
     #-----------------------------------------------------------------------------------------
