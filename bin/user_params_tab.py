@@ -292,7 +292,7 @@ class UserParams(QtWidgets.QWidget):
             # Begin by removing all previously defined user params in the .xml
             # weird, this only removes the 1st child
             for var in list(uep):
-                print("------ remove ",var)
+                # print("------ remove ",var)
                 uep.remove(var)
     
     # <user_parameters>

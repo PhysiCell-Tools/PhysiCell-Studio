@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea
 
@@ -205,6 +206,29 @@ class Config(QWidget):
         hbox.addWidget(label)
 
         self.vbox.addLayout(hbox)
+        #----------
+        hbox = QHBoxLayout()
+
+        label = QLabel("output folder")
+        label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.folder = QLineEdit()
+        # self.num_threads.setFixedWidth(value_width)
+        self.folder.setFixedWidth(domain_value_width)
+        # self.folder.setValidator(QtGui.QTex())
+        hbox.addWidget(self.folder)
+
+        label = QLabel("   ")  # weird, but nicer layout
+        label.setFixedWidth(200)  # 70?
+        hbox.addWidget(label)
+
+        label = QLabel(" ")
+        label.setFixedWidth(200)
+        hbox.addWidget(label)
+
+        self.vbox.addLayout(hbox)
 
         #------------------
         hbox = QHBoxLayout()
@@ -316,6 +340,8 @@ class Config(QWidget):
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
+
+        self.folder.setText(self.xml_root.find(".//folder").text)
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
@@ -334,6 +360,11 @@ class Config(QWidget):
 
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
+
+        indent1 = '\n'
+        indent6 = '\n      '
+        indent8 = '\n        '
+        indent10 = '\n          '
         # pass
         # self.xmin.setText(self.xml_root.find(".//x_min").text)
         print("config_tab: fill_xml: xmin=",str(self.xmin.text))
@@ -349,17 +380,56 @@ class Config(QWidget):
         self.xml_root.find(".//z_max").text = self.zmax.text()
         self.xml_root.find(".//dz").text = self.zdel.text()
 
-        if not self.xml_root.find(".//virtual_wall_at_domain_edge"):
-            # create it?
-            print("config_tab.py: no virtual_wall_at_domain_edge tag")
-        else:
-            if self.virtual_walls.isChecked():
-                self.xml_root.find(".//virtual_wall_at_domain_edge").text = 'true'
-            else:
-                self.xml_root.find(".//virtual_wall_at_domain_edge").text = 'false'
+        # if not self.xml_root.find(".//virtual_wall_at_domain_edge"):
+        # opts = self.xml_root.find(".//options")
+        # if not opts:
+        #     print("------ Missing <options> in config .xml.  HALT.")
+        #     sys.exit(1)
+
+
+        # rwh: I ended up *requiring* the original .xml (which is copied) have the <virtual_wall_at_domain_edge...> element.
+        bval = "false"
+        if self.virtual_walls.isChecked():
+            bval = "true"
+        self.xml_root.find(".//virtual_wall_at_domain_edge").text = bval
+
+        # rwh: Not sure why I couldn't get this to work, i.e., to *insert* the element (just one time) if it didn't exist.
+        # vwall = self.xml_root.find(".//virtual_wall_at_domain_edge")
+        # # if self.xml_root.find(".//virtual_wall_at_domain_edge"):
+        # if False:
+        #     print("\n------ FOUND virtual_wall_at_domain_edge.")
+        # # if not opts.find(".//virtual_wall_at_domain_edge"):
+        # # if not opts.find("virtual_wall_at_domain_edge"):
+        #     if self.virtual_walls.isChecked():
+        #         # self.xml_root.find(".//virtual_wall_at_domain_edge").text = 'true'
+        #         vwall.text = 'true'
+        #     else:
+        #         vwall.text = 'false'
+        #         # self.xml_root.find(".//virtual_wall_at_domain_edge").text = 'false'
+        # else:
+        #     print("\n------ virtual_wall_at_domain_edge NOT found.  Create it.")
+        #     # todo: create it?  Child of root.
+        #     print("------config_tab.py: no virtual_wall_at_domain_edge tag")
+        #     # <options>
+        #     #     <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
+        #     #     <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>		
+        #     # </options>	
+        #     # elm = ET.Element("options") 
+        #     # # elm.tail = '\n' + indent6
+        #     # elm.tail = indent6
+        #     # elm.text = indent6
+        #     opts = self.xml_root.find(".//options")
+        #     bval = "false"
+        #     if self.virtual_walls.isChecked():
+        #         bval = "true"
+        #     subelm = ET.SubElement(opts, 'virtual_wall_at_domain_edge')
+        #     subelm.text = bval
+        #     subelm.tail = indent8
+        #     opts.insert(0,subelm)
 
         self.xml_root.find(".//max_time").text = self.max_time.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
+        self.xml_root.find(".//folder").text = self.folder.text()
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'

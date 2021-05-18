@@ -2739,7 +2739,6 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def clear_custom_data_tab(self):
-        # pass
         for idx in range(self.custom_data_count):
             self.custom_data_name[idx].setReadOnly(False)
             self.custom_data_name[idx].setText("")
@@ -4165,6 +4164,7 @@ class CellDef(QWidget):
                 jdx = 0
                 # rwh/TODO: if we have more vars than we initially created rows for, we'll need
                 # to call 'append_more_cb' for the excess.
+                self.custom_data_count = 0
                 if uep_custom_data:
                     print("--------------- populate: custom_dat for cell_def_name= ",cell_def_name)
                     self.param_d[cell_def_name]['custom_data'] = {}
@@ -4176,6 +4176,7 @@ class CellDef(QWidget):
                         print("val= ",val)
                         # self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
                         self.param_d[cell_def_name]['custom_data'][var.tag] = val
+                        self.custom_data_count += 1
                 #     self.custom_data_name[jdx].setText(var.tag)
                 #     print("tag=",var.tag)
                 #     self.custom_data_value[jdx].setText(var.text)
@@ -4946,13 +4947,28 @@ class CellDef(QWidget):
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
-    def fill_xml_custom_data(self,cdata,cdef):
+    def fill_xml_custom_data(self,custom_data,cdef):
+        print("------------------- fill_xml_custom_data():  self.custom_data_count = ", self.custom_data_count)
 				# <receptor units="dimensionless">1.0</receptor>
 				# <cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
-        for idx in range(5):
-            elm = ET.SubElement(cdata, "foo")
-            elm.text = "42.0"
-            elm.tail = self.indent10
+
+                # --------- update_custom_data_params():  self.param_d[cdname]['custom_data'] =  {'receptor': '1.0', 'cargo_release_o2_threshold': '10', 'damage_rate': '0.03333', 'repair_rate': '0.004167', 'drug_death_rate': '0.004167', 'damage': '0.0'}
+
+        # for idx in range(self.custom_data_count):
+        for key in self.param_d[cdef]['custom_data'].keys():
+            # vname = self.custom_data_name[idx].text()
+            # if vname:
+                # elm = ET.SubElement(custom_data, self.custom_data_name[idx].text())
+                # elm = ET.SubElement(custom_data, self.param_d[cdef][custom_data_name[idx].text())
+                elm = ET.SubElement(custom_data, key)
+                elm.text = self.param_d[cdef]['custom_data'][key]
+                # elm.text = self.custom_data_value[idx].text()
+                elm.tail = self.indent10
+
+        # for idx in range(5):
+        #     elm = ET.SubElement(cdata, "foo")
+        #     elm.text = "42.0"
+        #     elm.tail = self.indent10
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -5032,6 +5048,8 @@ class CellDef(QWidget):
 
                 # ------- custom data ------- 
                 customdata = ET.SubElement(elm, 'custom_data')
+                customdata.text = self.indent10
+                customdata.tail = self.indent10
                 self.fill_xml_custom_data(customdata,cdef)
 
 

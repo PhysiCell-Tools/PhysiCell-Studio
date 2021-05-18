@@ -86,26 +86,17 @@
 		<cell_definition name="epithelial cell" ID="0">
 			<phenotype>
 				<cycle code="6" name="Flow cytometry model (separated)">  
-					 
-
-					
-					
 					<phase_transition_rates units="1/min"> 
 						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
 						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
 						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
 						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
 					</phase_transition_rates>
-					
-					
-					
 				</cycle>
 				
 				<death>  
 					<model code="100" name="apoptosis"> 
 						<death_rate units="1/min">0</death_rate>
-						
-						
 						<phase_durations units="min">
 							<duration index="0" fixed_duration="true">516</duration>
 						</phase_durations>
@@ -216,26 +207,17 @@
 		<cell_definition name="macrophage" ID="1" visible="true">
 			<phenotype>
 				<cycle code="6" name="Flow cytometry model (separated)">  
-					 
-
-					
-					
 					<phase_transition_rates units="1/min"> 
 						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
 						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
 						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
 						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
 					</phase_transition_rates>
-					
-					
-					
 				</cycle>
 				
 				<death>  
 					<model code="100" name="apoptosis"> 
 						<death_rate units="1/min">0</death_rate>
-						
-						
 						<phase_durations units="min">
 							<duration index="0" fixed_duration="true">516</duration>
 						</phase_durations>
@@ -251,9 +233,6 @@
 
 					<model code="101" name="necrosis">
 						<death_rate units="1/min">0.0</death_rate>
-						
-						 
-						
 						<phase_durations units="min">
 							<duration index="0" fixed_duration="true">0</duration>
 							<duration index="1" fixed_duration="true">86400</duration>
@@ -354,21 +333,12 @@
 	
 	<user_parameters>
 		<random_seed type="int" units="dimensionless" hidden="true">0</random_seed> 
-		 
-		
-		 
 		<number_of_infected_cells type="int" units="none" description="initial number of infected cells">10</number_of_infected_cells>
 		<number_of_uninfected_cells type="int" units="none" description="initial number of uninfected cells">1000</number_of_uninfected_cells>
 		<fraction_released_at_death type="double" units="dimensionless" description="fraction of virions released at cell lysis">1.0</fraction_released_at_death>
 		<fraction_transferred_when_ingested type="double" units="dimensionless" description="fraction of virions absorbed when phagocytosing a cell">1.0</fraction_transferred_when_ingested>
-		 
-		
-		 
 		<number_of_macrophages type="int" units="none" description="initial number of macrophages">50</number_of_macrophages> 
-		
 		<macrophage_relative_adhesion type="double" units="dimensionless">0.05</macrophage_relative_adhesion>
-				
 	</user_parameters>
-	
 	
 </PhysiCell_settings>

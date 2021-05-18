@@ -70,11 +70,11 @@ class PhysiCellXMLCreator(QWidget):
         # read_file = "../data/pred_prey_flat.xml"
 
         model_name = "pred_prey_flat"
-        model_name = "template"
         model_name = "biorobots_flat"
         model_name = "cancer_biorobots_flat"
         model_name = "test1"
         model_name = "test-gui"
+        model_name = "template"
         # model_name = "randy_test"  #rwh
         # read_file = "data/" + model_name + ".xml"
 
@@ -152,7 +152,8 @@ class PhysiCellXMLCreator(QWidget):
         # self.addTab(self.sbml_tab,"SBML")
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
-        tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
+        # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
+        tabWidget.setCurrentIndex(0)  # Config (default)
 
 
     def menu(self):
@@ -168,6 +169,7 @@ class PhysiCellXMLCreator(QWidget):
         file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
         file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+        file_menu.addAction("Save as", self.save_as_cb)
         # recent_act = QtGui.QAction('Recent', self)
         # save_act = QtGui.QAction('Save', self)
         # save_act.triggered.connect(self.save_cb)
@@ -234,11 +236,11 @@ class PhysiCellXMLCreator(QWidget):
 
 
         #--------------
-        self.models_menu = menubar.addMenu('&Models')
-        models_menu_act = QAction('-----', self)
-        self.models_menu.addAction(models_menu_act)
-        models_menu_act.triggered.connect(self.select_current_model_cb)
-        # self.models_menu.addAction('Load sample', self.select_current_model_cb)
+        # self.models_menu = menubar.addMenu('&Models')
+        # models_menu_act = QAction('-----', self)
+        # self.models_menu.addAction(models_menu_act)
+        # models_menu_act.triggered.connect(self.select_current_model_cb)
+        # # self.models_menu.addAction('Load sample', self.select_current_model_cb)
 
         #--------------
         tools_menu = menubar.addMenu('&Tools')
@@ -256,23 +258,24 @@ class PhysiCellXMLCreator(QWidget):
         self.num_models += 1
         print("add_new_model: self.model (dict)= ",self.model)
 
-        models_menu_act = QAction(name, self)
-        self.models_menu.addAction(models_menu_act)
-        models_menu_act.triggered.connect(self.select_current_model_cb)
+        # models_menu_act = QAction(name, self)
+        # self.models_menu.addAction(models_menu_act)
+        # models_menu_act.triggered.connect(self.select_current_model_cb)
 
         print("add_new_model: title suffix= ",name)
         self.setWindowTitle(self.title_prefix + name)
 
-    def select_current_model_cb(self):
-        # models_menu_act = QtGui.QAction(name, self)
-        # self.models_menu.addAction(models_menu_act)
-        model_act = self.models_menu.menuAction()
-        print('select_current_model_cb: ',model_act)
-        action = self.sender()
-        model_name = action.text()
-        print('select_current_model_cb: title suffix name= ',model_name)
+    # Probably not used unless we later implement it
+    # def select_current_model_cb(self):
+    #     # models_menu_act = QtGui.QAction(name, self)
+    #     # self.models_menu.addAction(models_menu_act)
+    #     model_act = self.models_menu.menuAction()
+    #     print('select_current_model_cb: ',model_act)
+    #     action = self.sender()
+    #     model_name = action.text()
+    #     print('select_current_model_cb: title suffix name= ',model_name)
 
-        self.setWindowTitle(self.title_prefix + model_name)
+    #     self.setWindowTitle(self.title_prefix + model_name)
 
     def reset_xml_root(self):
         self.xml_root = self.tree.getroot()
@@ -323,6 +326,7 @@ class PhysiCellXMLCreator(QWidget):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
 
+
     def indent(elem, level=0):
         i = "\n" + level*"  "
         if len(elem):
@@ -348,9 +352,10 @@ class PhysiCellXMLCreator(QWidget):
     def save_cb(self):
         # self.config_file = copy_file
         self.config_tab.fill_xml()
-        self.microenv_tab.fill_xml()
-        self.celldef_tab.fill_xml()
-        self.user_params_tab.fill_xml()
+        # self.microenv_tab.fill_xml()
+        # self.celldef_tab.fill_xml()
+        # self.user_params_tab.fill_xml()
+
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         # print("gui4xml:  save_cb: writing to: ",self.config_file)
 
@@ -372,6 +377,28 @@ class PhysiCellXMLCreator(QWidget):
         # print(out_str)
 
         self.tree.write(out_file)
+
+        # rwh NOTE: after saving the .xml, do we need to read it back in to reflect changes.
+        # self.tree = ET.parse(self.config_file)
+        # self.xml_root = self.tree.getroot()
+        # self.reset_xml_root()
+
+
+    def save_as_cb(self):
+        # save_as_file = QFileDialog.getSaveFileName(self,'',".")
+        # if save_as_file:
+        #     print(save_as_file)
+        #     print(" save_as_file: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
+
+        self.config_tab.fill_xml()
+        self.microenv_tab.fill_xml()
+        self.celldef_tab.fill_xml()
+        self.user_params_tab.fill_xml()
+
+        save_as_file = "mymodel.xml"
+        print("gui4xml:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
+        self.tree.write(save_as_file)
+
 
     def new_model_cb(self):
         # name = "copy_template"
