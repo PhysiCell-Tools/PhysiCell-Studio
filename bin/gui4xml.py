@@ -282,6 +282,7 @@ class PhysiCellXMLCreator(QWidget):
     #     self.setWindowTitle(self.title_prefix + model_name)
 
     def reset_xml_root(self):
+        self.celldef_tab.clear_custom_data_tab()
         self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
         self.celldef_tab.current_cell_def = None
         # self.microenv_tab.param_d.clear()

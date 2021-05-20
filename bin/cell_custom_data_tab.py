@@ -21,6 +21,7 @@ class QHLine(QFrame):
 
 # Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
 class MyQLineEdit(QLineEdit):
+    # prev_vname = None  # previous variable name (before changed)
     vname = None  # variable name
     idx = None  # index
 
@@ -108,8 +109,12 @@ class CellCustomData(QWidget):
             self.select.append(w)
             hbox.addWidget(w)
 
-            w_varname = QLineEdit()
+            # Need to distinguish between editing an existing name, read in from .xml, and creating a new one.
+            w_varname = MyQLineEdit()
             self.name.append(w_varname)
+            w_varname.vname = w_varname  # ??
+            w_varname.idx = idx
+            w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
             # self.diffusion_coef.enter.connect(self.save_xml)
             hbox.addWidget(w_varname)
             # if idx == 0:
@@ -126,7 +131,7 @@ class CellCustomData(QWidget):
             # self.type.append(w)
             # hbox.addWidget(w)
 
-            w = QLineEdit()
+            w = MyQLineEdit()
             w.setValidator(QtGui.QDoubleValidator())
             w.setText("0.0")
             w.vname = w_varname
@@ -182,6 +187,36 @@ class CellCustomData(QWidget):
         self.layout.addWidget(warning)
         self.layout.addWidget(self.scroll_area)
 
+    # --- custom data (rwh: OMG, this took a lot of time to solve!)
+    def custom_data_name_changed(self, text):
+        print("--------- (master) custom_data tab: custom_data_name_changed() --------")
+        # print("self.sender() = ", self.sender())
+        vname = self.sender().vname.text()
+        idx = self.sender().idx
+        prev_vname = self.celldef_tab.custom_data_name[idx].text()
+        print(" prev = ",prev_vname)
+        # print("(master) prev_vname = ", self.sender().prev_vname)
+        print("(master) vname = ", vname)
+        print("(master) idx = ", idx)
+        print("(master) custom_data_name_changed(): text = ", text)
+        print()
+
+        # Update the value in all Cell Types|Custom Data
+        num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
+        print("  num_cell_defs =",num_cell_defs )
+        for k in self.celldef_tab.param_d.keys():   # for all cell types
+            # mydict[k_new] = mydict.pop(k_old)
+            if len(prev_vname) > 0:
+                self.celldef_tab.param_d[k]['custom_data'][vname] = self.celldef_tab.param_d[k]['custom_data'].pop(prev_vname)
+            else:  # adding a new one
+                self.celldef_tab.param_d[k]['custom_data'][vname] = "0.0"
+                self.celldef_tab.custom_data_value[idx].setText("0.0")
+                self.celldef_tab.custom_data_count += 1
+        #     self.celldef_tab.param_d[k]['custom_data'][vname] = text
+        #     print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+
+            self.celldef_tab.custom_data_name[idx].setText(vname)
+        #     print()
 
     # --- custom data (rwh: OMG, this took a lot of time to solve!)
     def custom_data_value_changed(self, text):
@@ -219,11 +254,14 @@ class CellCustomData(QWidget):
             if self.select[idx].isChecked():
                 self.custom_vars_to_delete.append(self.name[idx].text())
                 self.name[idx].clear()
-                self.value[idx].clear()
+                # self.value[idx].clear()
+                self.value[idx].setText("0.0")
                 self.units[idx].clear()
                 self.description[idx].clear()
                 self.select[idx].setChecked(False)
         print("custom_vars_to_delete = ",self.custom_vars_to_delete)
+
+        # rwh/todo: also update all cell types custom data
 
     # @QtCore.Slot()
     def append_more_cb(self):

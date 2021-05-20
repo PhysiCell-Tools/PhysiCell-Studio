@@ -2472,6 +2472,8 @@ class CellDef(QWidget):
         # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
         print("vname = ", vname)
+        if len(vname) == 0:
+            return
         print("custom_data_value_changed(): text = ", text)
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
         # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
@@ -2645,12 +2647,13 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def clear_custom_data_tab(self):
+        print("\n\n------- cell_def_tab.py: clear_custom_data_tab(self):  self.custom_data_count = ",self.custom_data_count)
         for idx in range(self.custom_data_count):
-            self.custom_data_name[idx].setReadOnly(False)
-            self.custom_data_name[idx].setText("")
+            self.custom_data_name[idx].setReadOnly(False)  # turn off read-only so we can change it. ugh.
+            self.custom_data_name[idx].setText("")  # beware this triggering a callback
             self.custom_data_name[idx].setReadOnly(True)
 
-            self.custom_data_value[idx].setText("")
+            self.custom_data_value[idx].setText("") # triggering a callback)  # beware thiis 
 
             # self.custom_data_units[idx].setReadOnly(False)
             # self.custom_data_units[idx].setText("")
@@ -3371,7 +3374,7 @@ class CellDef(QWidget):
         print("num_vals =", num_vals)
         idx = 0
         for key in self.param_d[cdname]['custom_data'].keys():
-            print(key,self.param_d[cdname]['custom_data'][key])
+            print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
             self.custom_data_name[idx].setText(key)
             self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
             idx += 1
@@ -4056,7 +4059,7 @@ class CellDef(QWidget):
                     jdx += 1
 
                 print("------ after parsing secretion:")
-                print("------ self.param_d = ",self.param_d)
+                # print("------ self.param_d = ",self.param_d)
                 
 
                 # # ---------  molecular 
@@ -4070,6 +4073,11 @@ class CellDef(QWidget):
                 uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//custom_data")
                 # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
                 print('uep_custom_data=',uep_custom_data)
+
+                # for jdx in range(self.custom_data_count):
+                #     self.custom_data_name[jdx].setText('')
+                #     self.custom_data_value[jdx].setText('')
+                    
 
                 jdx = 0
                 # rwh/TODO: if we have more vars than we initially created rows for, we'll need
@@ -4867,8 +4875,10 @@ class CellDef(QWidget):
 
         # for idx in range(self.custom_data_count):
         for key in self.param_d[cdef]['custom_data'].keys():
+            print("    key=",key,",  len(key)=",len(key))
             # vname = self.custom_data_name[idx].text()
             # if vname:
+            if len(key) > 0:
                 # elm = ET.SubElement(custom_data, self.custom_data_name[idx].text())
                 # elm = ET.SubElement(custom_data, self.param_d[cdef][custom_data_name[idx].text())
                 elm = ET.SubElement(custom_data, key)
