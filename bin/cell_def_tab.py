@@ -34,7 +34,7 @@ class CellDef(QWidget):
         self.new_cell_def_count = 1
         self.label_width = 210
         self.units_width = 70
-        self.idx_current_cell_def = 1  # 1-offset for XML
+        self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.custom_data_count = 0
         # self.custom_data_units_width = 90
@@ -42,12 +42,10 @@ class CellDef(QWidget):
 
         self.substrate_list = []
 
+        # Use a QStackedWidget to let us swap out sets of widgets, depending on the cycle model chosen.
         self.stacked_cycle = QStackedWidget()
+
         # transition rates
-        # self.stack_idx_t00 = -1
-        # self.stack_idx_t01 = -1
-        # self.stack_idx_t02 = -1
-        # self.stack_idx_t03 = -1
         self.stack_trate_live_idx = -1 
         self.stack_trate_Ki67_idx = -1 
         self.stack_trate_advancedKi67_idx = -1 
@@ -55,11 +53,7 @@ class CellDef(QWidget):
         self.stack_trate_flowcytosep_idx = -1 
         self.stack_trate_quiescent_idx = -1 
 
-        # # duration rates
-        # self.stack_idx_d00 = -1
-        # self.stack_idx_d01 = -1
-        # self.stack_idx_d02 = -1
-        # self.stack_idx_d03 = -1
+        # duration rates
         self.stack_duration_live_idx = -1 
         self.stack_duration_Ki67_idx = -1 
         self.stack_duration_advancedKi67_idx = -1 
@@ -115,32 +109,9 @@ class CellDef(QWidget):
         header = QTreeWidgetItem(["---  Cell Type  ---"])
         self.tree.setHeaderItem(header)
 
-        # cellname = QTreeWidgetItem(["epi cell"])
-        # self.tree.insertTopLevelItem(0,cellname)
-
-        # cellname = QTreeWidgetItem(["macrophage"])
-        # self.tree.insertTopLevelItem(1,cellname)
-
-        # cities =  QTreeWidgetItem(treeWidget)
-
-        # titem = QTreeWidgetItem
-        # titem.setText(0,'ttt')
-
-        # header.setText(0,"epithelial cell")
-        # header.setText(1,"macrophage")
-        # self.tree.addTopLevelItem(QTreeWidgetItem("foo"))
-
         items = []
         model = QtCore.QStringListModel()
         model.setStringList(["aaa","bbb"])
-        # self.tree.insertTopLevelItems(None, model)
-        # slist = QtCore.QStringList()
-        # for i in range(10):
-        #     items.append(QTreeWidgetItem(None, QtGui.QStringList(QString("item: %1").arg(i))))
-        # self.tree.insertTopLevelItems(None, items)
-
-        # self.log_widget.setHeaderItem(QTreeWidgetItem(["date", "origin", "type", "message"]))
-
 
         self.cell_def_horiz_layout.addWidget(self.tree)
 
@@ -163,20 +134,6 @@ class CellDef(QWidget):
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_cell_def)
         self.controls_hbox.addWidget(self.delete_button)
-
-        #------------------
-        # self.name_hbox = QHBoxLayout()
-        # label = QLabel("Name of cell type:")
-        # label.setFixedWidth(180)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # self.name_hbox.addWidget(label)
-
-        # self.cell_type_name = QLineEdit()
-        # # Want to validate name, e.g., starts with alpha, no special chars, etc.
-        # # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
-        # # self.cycle_trate0_1.enter.connect(self.save_xml)
-        # self.name_hbox.addWidget(self.cell_type_name)
-        # # self.vbox.addLayout(hbox)
 
         #------------------
         self.cycle_tab = QWidget()
@@ -208,65 +165,9 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_motility_tab(),"Motility")
         self.tab_widget.addTab(self.create_secretion_tab(),"Secretion")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
-        # self.tab_widget.tabBarClicked.connect(self.tabbar_clicked_cb)
 
-        # lay = QVBoxLayout(self)
-        # lay.setContentsMargins(5, 35, 5, 5)
         self.cell_types_tabs_layout = QGridLayout()
         self.cell_types_tabs_layout.addWidget(self.tab_widget, 0,0,1,1) # w, row, column, rowspan, colspan
-        # self.setLayout(lay)
-        # self.setMinimumSize(400, 320)
-
-        # self.tab_widget.addTab(self.celldef_tab,"Cell Types")
-        # self.tab_widget.addTab(self.user_params_tab,"User Params")
-        # self.cell_types_tabs_hbox.addWidget(self.tab_widget)
-
-
-        # self.vbox.addLayout(hbox)
-        # self.vbox.addWidget(QHLine())
-
-        #------------------
-        # hbox = QHBoxLayout()
-        # label = QLabel("Name of cell type:")
-        # label.setFixedWidth(110)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # hbox.addWidget(label)
-
-        # self.cell_type_name = QLineEdit()
-        # # Want to validate name, e.g., starts with alpha, no special chars, etc.
-        # # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
-        # # self.cycle_trate0_1.enter.connect(self.save_xml)
-        # hbox.addWidget(self.cell_type_name)
-        # self.vbox.addLayout(hbox)
-
-        # self.create_cycle_tab()
-        # self.create_death_tab()
-        # self.create_volume_tab()
-        # self.create_mechanics_tab()
-        # self.create_motility_tab()
-        # self.create_secretion_tab()
-        # self.create_custom_data_tab()
-
-        # # self.vbox.hide()
-        # self.show_cycle_tab()
-
-    #--------------------------------------------------------
-    # def tabbar_clicked_cb(self,idx):
-    #     print('tabbar_clicked_cb: idx=',idx)  # 0-indexed
-    #     if idx==0:
-    #         self.show_cycle_tab()
-    #     elif idx==1:
-    #         self.show_death_tab()
-    #     elif idx==2:
-    #         self.show_volume_tab()
-    #     elif idx==3:
-    #         self.show_mechanics_tab()
-    #     elif idx==4:
-    #         self.show_motility_tab()
-    #     elif idx==5:
-    #         self.show_secretion_tab()
-    #     elif idx==6:
-    #         self.show_custom_data_tab()
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
@@ -278,6 +179,7 @@ class CellDef(QWidget):
 
         for k in self.param_d.keys():
             print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+            print()
         print()
 
         # Then "zero out" all entries and uncheck checkboxes
@@ -292,6 +194,7 @@ class CellDef(QWidget):
         print("\n ----- new dict:")
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
+            print()
 
         self.new_cell_def_count += 1
         self.current_cell_def = cdname
@@ -317,6 +220,7 @@ class CellDef(QWidget):
 
         for k in self.param_d.keys():
             print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+            print()
         print()
 
         self.new_cell_def_count += 1
@@ -364,6 +268,7 @@ class CellDef(QWidget):
 
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
+            print()
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         print('------      item_idx=',item_idx)
@@ -2562,6 +2467,8 @@ class CellDef(QWidget):
 
     # --- custom data (rwh: OMG, this took a lot of time to solve!)
     def custom_data_value_changed(self, text):
+        if not self.current_cell_def:
+            return
         # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
         print("vname = ", vname)
@@ -2590,7 +2497,6 @@ class CellDef(QWidget):
         # self.clear_button = QPushButton("Clear selected rows")
         # self.custom_data_controls_hbox.addWidget(self.clear_button)
         # self.clear_button.clicked.connect(self.clear_rows_cb)
-
 
         #-------------------------
         # Fixed names for columns:
@@ -2652,8 +2558,8 @@ class CellDef(QWidget):
             #     w.setText("random_seed")
 
             w = MyQLineEdit()  # using an overloaded class to allow the connection to the custom data variable name!!!
-            w.vname = w_varname
             w.setValidator(QtGui.QDoubleValidator())
+            w.vname = w_varname
             w.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
             self.custom_data_value.append(w)
             glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -3214,6 +3120,7 @@ class CellDef(QWidget):
         self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
 
     def new_custom_data_params(self, cdname):
+        print("------- new_custom_data_params() -----")
         sval = self.default_sval
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
         print("num_vals =", num_vals)
@@ -3443,6 +3350,8 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def clear_custom_data_params(self):
         cdname = self.current_cell_def
+        if not cdname:
+            return
         print("--------- clear_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
         print("num_vals =", num_vals)
@@ -3480,6 +3389,7 @@ class CellDef(QWidget):
 
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
+            print()
 
         # fill in the GUI with this cell def's params
 
@@ -4193,8 +4103,9 @@ class CellDef(QWidget):
         self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and have its params shown
 
         print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        for k in self.param_d.keys():
+            print(" ===>>> ",k, " : ", self.param_d[k])
+            print()
 
     #-------------------------------------------------------------------
     def first_cell_def_name(self):

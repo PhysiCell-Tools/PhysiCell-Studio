@@ -130,6 +130,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.cell_customdata_tab = CellCustomData()
         self.cell_customdata_tab.xml_root = self.xml_root
+        self.cell_customdata_tab.celldef_tab = self.celldef_tab
         self.cell_customdata_tab.fill_gui(self.celldef_tab)
         self.celldef_tab.fill_custom_data_tab()
         
@@ -170,7 +171,8 @@ class PhysiCellXMLCreator(QWidget):
         file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
         file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-        file_menu.addAction("Save as", self.save_as_cb)
+        # file_menu.addAction("Save as", self.save_as_cb)
+        file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
         # recent_act = QtGui.QAction('Recent', self)
         # save_act = QtGui.QAction('Save', self)
         # save_act.triggered.connect(self.save_cb)
@@ -280,6 +282,10 @@ class PhysiCellXMLCreator(QWidget):
     #     self.setWindowTitle(self.title_prefix + model_name)
 
     def reset_xml_root(self):
+        self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
+        self.celldef_tab.current_cell_def = None
+        # self.microenv_tab.param_d.clear()
+
         self.xml_root = self.tree.getroot()
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root

@@ -19,12 +19,18 @@ class QHLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
+# Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
+class MyQLineEdit(QLineEdit):
+    vname = None  # variable name
+    idx = None  # index
+
 class CellCustomData(QWidget):
     def __init__(self):
         super().__init__()
 
         # self.current_param = None
         self.xml_root = None
+        self.celldef_tab = None
         self.count = 0
         self.custom_vars_to_delete = []
 
@@ -102,11 +108,10 @@ class CellCustomData(QWidget):
             self.select.append(w)
             hbox.addWidget(w)
 
-            w = QLineEdit()
-            self.name.append(w)
-            # self.name.setValidator(QtGui.QDoubleValidator())
+            w_varname = QLineEdit()
+            self.name.append(w_varname)
             # self.diffusion_coef.enter.connect(self.save_xml)
-            hbox.addWidget(w)
+            hbox.addWidget(w_varname)
             # if idx == 0:
             #     w.setText("random_seed")
 
@@ -122,9 +127,12 @@ class CellCustomData(QWidget):
             # hbox.addWidget(w)
 
             w = QLineEdit()
-            w.setText("0.0")
-            self.value.append(w)
             w.setValidator(QtGui.QDoubleValidator())
+            w.setText("0.0")
+            w.vname = w_varname
+            w.idx = idx
+            w.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
+            self.value.append(w)
             # if idx == 0:
             #     w.setText("0")
             hbox.addWidget(w)
@@ -169,7 +177,39 @@ class CellCustomData(QWidget):
         self.layout = QVBoxLayout(self)
 
         self.layout.addLayout(controls_hbox)
+        warning = QLabel("                                        Note: changing a default value will also change it in each Cell Type")
+        warning.setStyleSheet('color: red;')  # “background-color: cyan”
+        self.layout.addWidget(warning)
         self.layout.addWidget(self.scroll_area)
+
+
+    # --- custom data (rwh: OMG, this took a lot of time to solve!)
+    def custom_data_value_changed(self, text):
+        print("--------- (master) custom_data tab: custom_data_value_changed() --------")
+        # print("self.sender() = ", self.sender())
+        vname = self.sender().vname.text()
+        idx = self.sender().idx
+        print("(master) vname = ", vname)
+        print("(master) idx = ", idx)
+        print("(master) custom_data_value_changed(): text = ", text)
+        print()
+
+        # Update the value in all Cell Types|Custom Data
+        num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
+        print("  num_cell_defs =",num_cell_defs )
+        for k in self.celldef_tab.param_d.keys():   # for all cell types
+            self.celldef_tab.param_d[k]['custom_data'][vname] = text
+            print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+
+            self.celldef_tab.custom_data_value[idx].setText(text)
+            print()
+
+
+        # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
+        # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
+        # self.param_d[self.current_cell_def]['custom_data'][vname] = text
+        # print(self.param_d[self.current_cell_def]['custom_data'])
+
 
     # @QtCore.Slot()
     def clear_rows_cb(self):

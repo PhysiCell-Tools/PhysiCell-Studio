@@ -360,14 +360,12 @@ class Config(QWidget):
 
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
-
         indent1 = '\n'
         indent6 = '\n      '
         indent8 = '\n        '
         indent10 = '\n          '
-        # pass
-        # self.xmin.setText(self.xml_root.find(".//x_min").text)
-        print("config_tab: fill_xml: xmin=",str(self.xmin.text))
+
+        # print("config_tab: fill_xml: xmin=",self.xmin.text() )
         self.xml_root.find(".//x_min").text = self.xmin.text()
         self.xml_root.find(".//x_max").text = self.xmax.text()
         self.xml_root.find(".//dx").text = self.xdel.text()
