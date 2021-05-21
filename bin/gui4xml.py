@@ -334,6 +334,17 @@ class PhysiCellXMLCreator(QWidget):
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
+        print("\n\nopen_as_cb():  filePath=",filePath)
+        full_path_model_name = filePath[0]
+        # sample_file = Path("data", name + ".xml")
+        # copy_file = "copy_" + name + ".xml"
+        copy_file = "mymodel.xml"
+        # shutil.copy(sample_file, copy_file)
+        shutil.copy(full_path_model_name, copy_file)
+        self.add_new_model(copy_file, True)
+        # self.config_file = "config_samples/" + name + ".xml"
+        self.config_file = copy_file
+        self.show_sample_model()
 
 
     def indent(elem, level=0):
