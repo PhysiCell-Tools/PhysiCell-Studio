@@ -3896,9 +3896,6 @@ class CellDef(QWidget):
                         print("-------- parsing apoptosis!")
                         self.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
 
-                # phase_durations_path = apoptosis_path + "phase_durations"
-                # print(' >> phase_durations_path =',phase_durations_path )
-
                         # 	<model code="100" name="apoptosis"> 
                         # 		<death_rate units="1/min">5.1e-05</death_rate>
                         # 		<phase_durations units="min">
@@ -3907,7 +3904,7 @@ class CellDef(QWidget):
                         # 		<parameters>
                         # 			<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
                         pd_uep = death_model.find("phase_durations")
-                        if pd_uep:
+                        if pd_uep is not None:
                             print(' >> pd_uep =',pd_uep )
                             for pd in pd_uep:   # <duration index= ... >
                                 print(pd)
@@ -3918,18 +3915,31 @@ class CellDef(QWidget):
                                         self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
                                     else:
                                         self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
-                        else:
+
+                        else:  # rwh/TODO - transition rates
                             #     <phase_transition_rates units="1/min">
                             #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
                             #     </phase_transition_rates>
                             tr_uep = death_model.find("phase_transition_rates")
-                            if tr_uep:
+                            if tr_uep is not None:
                                 print(' >> tr_uep =',tr_uep )
+
                                 for tr in tr_uep:   # <duration index= ... >
                                     print(tr)
                                     print("start_index=",tr.attrib["start_index"])
+                                    # if  tr.attrib['start_index'] == "0":
+                                        # self.param_d[cell_def_name]["apoptosis_phase0_duration"] = tr.text
                                     if  tr.attrib['start_index'] == "0":
-                                        self.param_d[cell_def_name]["apoptosis_phase0_duration"] = tr.text
+                                        rate = float(tr.text)
+                                        print(" --- transition rate (float) = ",rate)
+                                        if abs(rate) < 1.e-6:
+                                            dval = 9.e99
+                                        else:
+                                            dval = rate * 60.0
+                                        print(" --- transition rate (float) = ",rate)
+                                        # self.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
+                                        self.param_d[cell_def_name]["apoptosis_phase0_duration"] = str(dval)
+
                                         if  tr.attrib['fixed_duration'].lower() == "true":
                                             self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
                                         else:
@@ -3948,39 +3958,13 @@ class CellDef(QWidget):
                         self.param_d[cell_def_name]["apoptosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
 
                 #--------------
-                # necrosis_path = death_path + "model[2]//"
-                # self.necrosis_death_rate.setText(uep.find(necrosis_path + 'death_rate').text)
-                # self.param_d[cell_def_name]["necrosis_death_rate"] = uep.find(necrosis_path + 'death_rate').text
-
-                # phase_durations_path = necrosis_path + "phase_durations"
-                # print(' >> necrosis phase_durations_path =',phase_durations_path )
-                # pd_uep = uep.find(phase_durations_path)
-                # print(' >> pd_uep =',pd_uep )
-                # if pd_uep:
-                #     for pd in pd_uep: 
-                #         print(pd)
-                #         print("index=",pd.attrib["index"])
-                #         if  pd.attrib['index'] == "0":
-                #             # self.necrosis_phase0_duration.setText(pd.text)
-                #             self.param_d[cell_def_name]["necrosis_phase0_duration"] = pd.text
-                #             if  pd.attrib['fixed_duration'].lower() == "true":
-                #                 self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
-                #             else:
-                #                 self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
-                #         elif  pd.attrib['index'] == "1":
-                #             self.param_d[cell_def_name]["necrosis_phase1_duration"] = pd.text
-                #             if  pd.attrib['fixed_duration'].lower() == "true":
-                #                 self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
-                #             else:
-                #                 self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
-
                 # necrosis_params_path = necrosis_path + "parameters//"
                     elif "necrosis" in death_model.attrib["name"].lower():
                         print("-------- parsing necrosis!")
                         self.param_d[cell_def_name]["necrosis_death_rate"] = death_model.find('death_rate').text
 
                         pd_uep = death_model.find("phase_durations")
-                        if pd_uep:
+                        if pd_uep is not None:
                             print(' >> pd_uep =',pd_uep )
                             for pd in pd_uep:   # <duration index= ... >
                                 print(pd)
@@ -3997,18 +3981,27 @@ class CellDef(QWidget):
                                         self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
                                     else:
                                         self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
-                        else:
+
+                        else:  # rwh/TODO - allow for transition rates
                             #     <phase_transition_rates units="1/min">
                             #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
                             #     </phase_transition_rates>
                             tr_uep = death_model.find("phase_transition_rates")
-                            if tr_uep:
+                            if tr_uep is not None:
                                 print(' >> tr_uep =',tr_uep )
                                 for tr in tr_uep:  # transition rate 
                                     print(tr)
                                     print("start_index=",tr.attrib["start_index"])
                                     if  tr.attrib['start_index'] == "0":
-                                        self.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
+                                        rate = float(tr.text)
+                                        print(" --- transition rate (float) = ",rate)
+                                        if abs(rate) < 1.e-6:
+                                            dval = 9.e99
+                                        else:
+                                            dval = rate * 60.0
+                                        print(" --- transition rate (float) = ",rate)
+                                        # self.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
+                                        self.param_d[cell_def_name]["necrosis_phase0_duration"] = str(dval)
                                         if  tr.attrib['fixed_duration'].lower() == "true":
                                             self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
                                         else:
