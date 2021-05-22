@@ -27,6 +27,7 @@ class UserParams(QtWidgets.QWidget):
         # self.current_param = None
         self.xml_root = None
         self.count = 0
+        self.max_rows = 99  # initially
 
         #-------------------------------------------
         self.label_width = 150
@@ -95,7 +96,7 @@ class UserParams(QtWidgets.QWidget):
         self.type_dropdown.addItem("bool")
         self.type_dropdown.addItem("text")
 
-        for idx in range(25):
+        for idx in range(self.max_rows):
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
             w = QCheckBox("")

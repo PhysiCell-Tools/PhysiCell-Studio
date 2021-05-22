@@ -27,5 +27,5 @@ for loop in range(2):
             print(8*' ' + objname + ".textChanged.connect(" + objname + "_changed)")
         else:
             print(4*' ' + "def " + objname[5:] + "_changed(self, text):")
-            print(8*' ' + "self.param_d[self.current_cell_def][" + objname[5:] + "] = text")
+            print(8*' ' + "self.param_d[self.current_cell_def]['" + objname[5:] + "'] = text")
         # print('after =',line[iptr:])
