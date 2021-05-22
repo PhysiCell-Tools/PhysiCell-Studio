@@ -227,19 +227,19 @@
 					</model> 
 
 					<model code="101" name="necrosis">
-						<death_rate units="1/min">0.0</death_rate>
+						<death_rate units="1/min">0.2</death_rate>
 						<phase_durations units="min">
-							<duration index="0" fixed_duration="true">0</duration>
-							<duration index="1" fixed_duration="true">86400</duration>
+							<duration index="0" fixed_duration="true">0.2</duration>
+							<duration index="1" fixed_duration="true">86400.2</duration>
 						</phase_durations>
 						
 						<parameters>
-							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<unlysed_fluid_change_rate units="1/min">0.052</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0.2</lysed_fluid_change_rate>
 							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-							<calcification_rate units="1/min">0</calcification_rate>
-							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-02</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0.2</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.2</relative_rupture_volume>
 						</parameters>
 					</model> 
 				</death>					

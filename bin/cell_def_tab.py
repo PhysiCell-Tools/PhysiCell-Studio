@@ -37,6 +37,7 @@ class CellDef(QWidget):
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.custom_data_count = 0
+        self.max_custom_data_rows = 99
         # self.custom_data_units_width = 90
         self.cycle_duration_flag = False
 
@@ -280,6 +281,14 @@ class CellDef(QWidget):
 
 
     #--------------------------------------------------------
+    def insert_hacky_blank_lines(self, glayout):
+        idr = 4
+        for idx in range(11):  # rwh: hack solution to align rows
+            blank_line = QLabel("")
+            idr += 1
+            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+    #--------------------------------------------------------
     def create_cycle_tab(self):
         print("\n====================== create_cycle_tab ===================")
         # self.group_cycle = QGroupBox()
@@ -392,6 +401,14 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        # idr = 4
+        # for idx in range(11):  # rwh: hack solution to align rows
+        #     blank_line = QLabel("")
+        #     idr += 1
+        #     glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
+        #---
         #---
         self.stack_trate_live.setLayout(glayout)   
 
@@ -445,7 +462,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
 
-        #---
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         self.stack_trate_Ki67.setLayout(glayout)
 
         idx_stacked_widget += 1
@@ -518,7 +537,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
 
-        #-----
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         self.stack_trate_advancedKi67.setLayout(glayout)
         idx_stacked_widget += 1
         print(" new stacked widget: t02 -------------> ",idx_stacked_widget)
@@ -590,6 +611,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #-----
         self.stack_trate_flowcyto.setLayout(glayout)
         idx_stacked_widget += 1
@@ -682,6 +706,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+
         #-----
         self.stack_trate_flowcytosep.setLayout(glayout)
         idx_stacked_widget += 1
@@ -734,6 +761,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #---
         self.stack_trate_quiescent.setLayout(glayout)
 
@@ -767,6 +797,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #---
         self.stack_duration_live.setLayout(glayout)   
 
@@ -818,6 +851,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #---
         self.stack_duration_Ki67.setLayout(glayout)
 
@@ -888,6 +924,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #-----
         self.stack_duration_advancedKi67.setLayout(glayout)
         idx_stacked_widget += 1
@@ -956,6 +995,9 @@ class CellDef(QWidget):
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
+
+        #------
+        self.insert_hacky_blank_lines(glayout)
 
         #-----
         self.stack_duration_flowcyto.setLayout(glayout)
@@ -1045,6 +1087,9 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
 
+        #------
+        self.insert_hacky_blank_lines(glayout)
+        
         #-----
         self.stack_duration_flowcytosep.setLayout(glayout)
         idx_stacked_widget += 1
@@ -1112,7 +1157,9 @@ class CellDef(QWidget):
         self.cycle_quiescent_duration01_fixed.clicked.connect(self.cycle_quiescent_duration01_fixed_clicked)
         self.cycle_quiescent_duration10_fixed.clicked.connect(self.cycle_quiescent_duration10_fixed_clicked)
 
-        #---
+        #------
+        self.insert_hacky_blank_lines(glayout)
+
         self.stack_duration_quiescent.setLayout(glayout)
 
         idx_stacked_widget += 1
@@ -1151,6 +1198,7 @@ class CellDef(QWidget):
 
         #----------------
         label = QLabel("Apoptosis")
+        label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet('background-color: yellow')
         # layout.addWidget(apoptosis_label)
@@ -1359,6 +1407,7 @@ class CellDef(QWidget):
 
         #----------------
         label = QLabel("Necrosis")
+        label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet('background-color: yellow')
         idr += 1
@@ -1574,9 +1623,14 @@ class CellDef(QWidget):
         # self.necrosis_rel_rupture_volume_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #------
+        for idx in range(11):  # rwh: hack solution to align rows
+            blank_line = QLabel("")
+            idr += 1
+            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
+        #------
 
-
-        glayout.setVerticalSpacing(10)  # rwh - argh
+        # glayout.setVerticalSpacing(10)  # rwh - argh
         death_tab.setLayout(glayout)
         return death_tab
 
@@ -1857,7 +1911,9 @@ class CellDef(QWidget):
     #     <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
     # </options>
         label = QLabel("Options:")
-        label.setFixedWidth(self.label_width)
+        label.setFixedSize(80,20)
+        label.setStyleSheet("background-color: yellow")
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignLeft)
         idr += 1
         glayout.addWidget(label, idr,0, 1,3) # w, row, column, rowspan, colspan
@@ -2540,7 +2596,7 @@ class CellDef(QWidget):
         self.custom_data_value = []
         # self.custom_data_units = []
 
-        for idx in range(10):   # rwh/TODO - this should depend on how many in the .xml
+        for idx in range(self.max_custom_data_rows):   # rwh/TODO - this should depend on how many in the .xml
             # self.main_layout.addLayout(NewUserParam(self))
             # hbox = QHBoxLayout()
             # w = QCheckBox("")
@@ -2551,13 +2607,8 @@ class CellDef(QWidget):
             w_varname.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
             w_varname.setReadOnly(True)
             self.custom_data_name.append(w_varname)
-            # self.name.setValidator(QtGui.QDoubleValidator())
-            # self.diffusion_coef.enter.connect(self.save_xml)
-            # hbox.addWidget(w)
             idr += 1
             glayout.addWidget(w_varname, idr,0, 1,1) # w, row, column, rowspan, colspan
-            # if idx == 0:
-            #     w.setText("random_seed")
 
             w = MyQLineEdit()  # using an overloaded class to allow the connection to the custom data variable name!!!
             w.setValidator(QtGui.QDoubleValidator())
@@ -2644,6 +2695,30 @@ class CellDef(QWidget):
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         custom_data_tab.setLayout(glayout)
         return custom_data_tab
+
+    #--------------------------------------------------------
+    # TODO: fix this; not working yet (and not called)
+    def append_more_custom_data(self):
+        print("---- append_more_custom_data()")
+        for idx in range(5):
+            w_varname = QLineEdit()
+            w_varname.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
+            w_varname.setReadOnly(True)
+            self.custom_data_name.append(w_varname)
+            idr += 1
+            glayout.addWidget(w_varname, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+            w = MyQLineEdit()  # using an overloaded class to allow the connection to the custom data variable name!!!
+            w.setValidator(QtGui.QDoubleValidator())
+            w.vname = w_varname
+            w.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
+            self.custom_data_value.append(w)
+            glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+            # self.main_layout.addLayout(hbox)
+
+            self.custom_data_count = self.custom_data_count + 1
+            print("self.custom_data_count = ",self.custom_data_count)
 
     #--------------------------------------------------------
     def clear_custom_data_tab(self):
@@ -3298,6 +3373,7 @@ class CellDef(QWidget):
         self.necrosis_calcification_rate.setText(self.param_d[cdname]["necrosis_calcif_rate"])
         self.necrosis_relative_rupture_volume.setText(self.param_d[cdname]["necrosis_rel_rupture_rate"])
 
+
     #-----------------------------------------------------------------------------------------
     def update_volume_params(self):
         cdname = self.current_cell_def
@@ -3443,6 +3519,7 @@ class CellDef(QWidget):
                 # self.param_d[cell_def_name]["apop_death_rate"] = val
                 # self.apoptosis_death_rate.setText(val)
 
+                print("\n===== populate():  cycle")
 
                 cycle_path = ".//cell_definition[" + str(idx) + "]//phenotype//cycle"
                 print(" >> cycle_path=",cycle_path)
@@ -3760,106 +3837,198 @@ class CellDef(QWidget):
                 # ---------  cycle (live)
                 # self.float0.value = float(uep.find('.//cell_definition[1]//phenotype//cycle//phase_transition_rates//rate[1]').text)
 
-                        # <death> 
-                        #   <model code="100" name="apoptosis"> 
-                        #    ...
-                        #   <model code="101" name="necrosis">
-
-
-
-                # ---------  death 
                 self.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
 
+                # ---------  death 
+                print("\n===== populate():  death")
+
+                        #------ using transition_rates
+                        # <death> 
+                        #   <model code="100" name="apoptosis"> 
+                            #     <death_rate units="1/min">0</death_rate>  
+                            #     <phase_transition_rates units="1/min">
+                            #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+                            #     </phase_transition_rates>
+                            #     <parameters>
+                            #         <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+                            #         <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+                            #         <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+                            #         <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+                            #         <calcification_rate units="1/min">0</calcification_rate>
+                            #         <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+                            #     </parameters>
+                            # </model> 
+                        #   <model code="101" name="necrosis">
+
+                        #------ using durations
+                        # <death>  
+                        # 	<model code="100" name="apoptosis"> 
+                        # 		<death_rate units="1/min">5.1e-05</death_rate>
+                        # 		<phase_durations units="min">
+                        # 			<duration index="0" fixed_duration="true">511</duration>
+                        # 		</phase_durations>
+                        # 		<parameters>
+                        # 			<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
+                        # 			<lysed_fluid_change_rate units="1/min">1.e-99</lysed_fluid_change_rate>
+                        # 			<cytoplasmic_biomass_change_rate units="1/min">1.61e-02</cytoplasmic_biomass_change_rate>
+                        # 			<nuclear_biomass_change_rate units="1/min">5.81e-03</nuclear_biomass_change_rate>
+                        # 			<calcification_rate units="1/min">0</calcification_rate>
+                        # 			<relative_rupture_volume units="dimensionless">2.1</relative_rupture_volume>
+                        # 		</parameters>
+                        # 	</model> 
+
+                        # 	<model code="101" name="necrosis">
+                        # 		<death_rate units="1/min">0.1</death_rate>
+                        # 		<phase_durations units="min">
+                        # 			<duration index="0" fixed_duration="true">0.1</duration>
+                        # 			<duration index="1" fixed_duration="true">86400.1</duration>
+                        # 		</phase_durations>
+
+
                 death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
-                print('death_path=',death_path)
 
-                # rwh/TODO: validate we've got apoptosis or necrosis since order is not required in XML.
-                apoptosis_path = death_path + "model[1]//"
-                # self.apoptosis_death_rate.setText(uep.find('.//cell_definition[1]//phenotype//death//model[1]//death_rate').text)
-                # self.apoptosis_death_rate.setText(
-                self.param_d[cell_def_name]["apoptosis_death_rate"] = uep.find(apoptosis_path + 'death_rate').text
+                # uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
+                death_uep = uep.find(".//cell_definition[" + str(idx) + "]//phenotype//death")
+                print('death_uep=',death_uep)
 
-        # self.apoptosis_death_rate.setText(self.param_d[self.current_cell_def]["apoptosis_death_rate"])
-        # self.apoptosis_phase0_duration.setText(
-        # #-----
-        # self.necrosis_death_rate.setText(
-        # self.necrosis_phase0_duration.setText(pd.text)
-        # self.necrosis_phase1_duration.setText(pd.text)
+                for death_model in death_uep.findall('model'):
+                    if "apoptosis" in death_model.attrib["name"].lower():
+                        print("-------- parsing apoptosis!")
+                        self.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
 
-        # #---- 
-        # self.apoptosis_unlysed_rate.setText(
-        # self.apoptosis_lysed_rate.setText(u
-        # self.apoptosis_cytoplasmic_biomass_change_rate.setText(
-        # self.apoptosis_nuclear_biomass_change_rate.setText(
-        # self.apoptosis_calcification_rate.setText(
-        # self.apoptosis_relative_rupture_volume.setText(
-        # #---- 
-        # self.necrosis_unlysed_rate.setText(
-        # self.necrosis_lysed_rate.setText(
-        # self.necrosis_cytoplasmic_biomass_change_rate.setText(
-        # self.necrosis_nuclear_biomass_change_rate.setText(
-        # self.necrosis_calcification_rate.setText(
-        # self.necrosis_relative_rupture_volume.setText(
+                # phase_durations_path = apoptosis_path + "phase_durations"
+                # print(' >> phase_durations_path =',phase_durations_path )
 
-                phase_durations_path = apoptosis_path + "phase_durations"
-                print(' >> phase_durations_path =',phase_durations_path )
-                pd_uep = uep.find(phase_durations_path)
-                print(' >> pd_uep =',pd_uep )
-                if pd_uep:
-                    for pd in pd_uep:   # <duration index= ... >
-                        print(pd)
-                        print("index=",pd.attrib["index"])
-                        if  pd.attrib['index'] == "0":
-                            self.param_d[cell_def_name]["apoptosis_phase0_duration"] = pd.text
-                            if  pd.attrib['fixed_duration'].lower() == "true":
-                                self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
-                            else:
-                                self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
+                        # 	<model code="100" name="apoptosis"> 
+                        # 		<death_rate units="1/min">5.1e-05</death_rate>
+                        # 		<phase_durations units="min">
+                        # 			<duration index="0" fixed_duration="true">511</duration>
+                        # 		</phase_durations>
+                        # 		<parameters>
+                        # 			<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
+                        pd_uep = death_model.find("phase_durations")
+                        if pd_uep:
+                            print(' >> pd_uep =',pd_uep )
+                            for pd in pd_uep:   # <duration index= ... >
+                                print(pd)
+                                print("index=",pd.attrib["index"])
+                                if  pd.attrib['index'] == "0":
+                                    self.param_d[cell_def_name]["apoptosis_phase0_duration"] = pd.text
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
+                                        self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
+                                    else:
+                                        self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
+                        else:
+                            #     <phase_transition_rates units="1/min">
+                            #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+                            #     </phase_transition_rates>
+                            tr_uep = death_model.find("phase_transition_rates")
+                            if tr_uep:
+                                print(' >> tr_uep =',tr_uep )
+                                for tr in tr_uep:   # <duration index= ... >
+                                    print(tr)
+                                    print("start_index=",tr.attrib["start_index"])
+                                    if  tr.attrib['start_index'] == "0":
+                                        self.param_d[cell_def_name]["apoptosis_phase0_duration"] = tr.text
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
+                                        else:
+                                            self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
 
-                apoptosis_params_path = apoptosis_path + "parameters//"
+                        # apoptosis_params_path = apoptosis_path + "parameters//"
+                        params_uep = death_model.find("parameters")
+                        # apoptosis_params_path = apoptosis_path + "parameters//"
 
-                self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = uep.find(apoptosis_params_path+"unlysed_fluid_change_rate").text
-                self.param_d[cell_def_name]["apoptosis_lysed_rate"] = uep.find(apoptosis_params_path+"lysed_fluid_change_rate").text
-                self.param_d[cell_def_name]["apoptosis_cyto_rate"] = uep.find(apoptosis_params_path+"cytoplasmic_biomass_change_rate").text
-                self.param_d[cell_def_name]["apoptosis_nuclear_rate"] = uep.find(apoptosis_params_path+"nuclear_biomass_change_rate").text
-                self.param_d[cell_def_name]["apoptosis_calcif_rate"] = uep.find(apoptosis_params_path+"calcification_rate").text
-                self.param_d[cell_def_name]["apoptosis_rel_rupture_rate"] = uep.find(apoptosis_params_path+"relative_rupture_volume").text
+                        self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        self.param_d[cell_def_name]["apoptosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
+                        self.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
+                        self.param_d[cell_def_name]["apoptosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
+                        self.param_d[cell_def_name]["apoptosis_calcif_rate"] = params_uep.find("calcification_rate").text
+                        self.param_d[cell_def_name]["apoptosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
 
-                #-----
-                necrosis_path = death_path + "model[2]//"
+                #--------------
+                # necrosis_path = death_path + "model[2]//"
                 # self.necrosis_death_rate.setText(uep.find(necrosis_path + 'death_rate').text)
-                self.param_d[cell_def_name]["necrosis_death_rate"] = uep.find(necrosis_path + 'death_rate').text
+                # self.param_d[cell_def_name]["necrosis_death_rate"] = uep.find(necrosis_path + 'death_rate').text
 
-                phase_durations_path = necrosis_path + "phase_durations"
-                print(' >> necrosis phase_durations_path =',phase_durations_path )
-                pd_uep = uep.find(phase_durations_path)
-                print(' >> pd_uep =',pd_uep )
-                if pd_uep:
-                    for pd in pd_uep: 
-                        print(pd)
-                        print("index=",pd.attrib["index"])
-                        if  pd.attrib['index'] == "0":
-                            # self.necrosis_phase0_duration.setText(pd.text)
-                            self.param_d[cell_def_name]["necrosis_phase0_duration"] = pd.text
-                            if  pd.attrib['fixed_duration'].lower() == "true":
-                                self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
-                            else:
-                                self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
-                        elif  pd.attrib['index'] == "1":
-                            self.param_d[cell_def_name]["necrosis_phase1_duration"] = pd.text
-                            if  pd.attrib['fixed_duration'].lower() == "true":
-                                self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
-                            else:
-                                self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
+                # phase_durations_path = necrosis_path + "phase_durations"
+                # print(' >> necrosis phase_durations_path =',phase_durations_path )
+                # pd_uep = uep.find(phase_durations_path)
+                # print(' >> pd_uep =',pd_uep )
+                # if pd_uep:
+                #     for pd in pd_uep: 
+                #         print(pd)
+                #         print("index=",pd.attrib["index"])
+                #         if  pd.attrib['index'] == "0":
+                #             # self.necrosis_phase0_duration.setText(pd.text)
+                #             self.param_d[cell_def_name]["necrosis_phase0_duration"] = pd.text
+                #             if  pd.attrib['fixed_duration'].lower() == "true":
+                #                 self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
+                #             else:
+                #                 self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
+                #         elif  pd.attrib['index'] == "1":
+                #             self.param_d[cell_def_name]["necrosis_phase1_duration"] = pd.text
+                #             if  pd.attrib['fixed_duration'].lower() == "true":
+                #                 self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
+                #             else:
+                #                 self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
 
-                necrosis_params_path = necrosis_path + "parameters//"
+                # necrosis_params_path = necrosis_path + "parameters//"
+                    elif "necrosis" in death_model.attrib["name"].lower():
+                        print("-------- parsing necrosis!")
+                        self.param_d[cell_def_name]["necrosis_death_rate"] = death_model.find('death_rate').text
 
-                self.param_d[cell_def_name]["necrosis_unlysed_rate"] = uep.find(necrosis_params_path+"unlysed_fluid_change_rate").text
-                self.param_d[cell_def_name]["necrosis_lysed_rate"] = uep.find(necrosis_params_path+"lysed_fluid_change_rate").text
-                self.param_d[cell_def_name]["necrosis_cyto_rate"] = uep.find(necrosis_params_path+"cytoplasmic_biomass_change_rate").text
-                self.param_d[cell_def_name]["necrosis_nuclear_rate"] = uep.find(necrosis_params_path+"nuclear_biomass_change_rate").text
-                self.param_d[cell_def_name]["necrosis_calcif_rate"] = uep.find(necrosis_params_path+"calcification_rate").text
-                self.param_d[cell_def_name]["necrosis_rel_rupture_rate"] = uep.find(necrosis_params_path+"relative_rupture_volume").text
+                        pd_uep = death_model.find("phase_durations")
+                        if pd_uep:
+                            print(' >> pd_uep =',pd_uep )
+                            for pd in pd_uep:   # <duration index= ... >
+                                print(pd)
+                                print("index=",pd.attrib["index"])
+                                if  pd.attrib['index'] == "0":
+                                    self.param_d[cell_def_name]["necrosis_phase0_duration"] = pd.text
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
+                                        self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
+                                    else:
+                                        self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
+                                elif  pd.attrib['index'] == "1":
+                                    self.param_d[cell_def_name]["necrosis_phase1_duration"] = pd.text
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
+                                        self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
+                                    else:
+                                        self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
+                        else:
+                            #     <phase_transition_rates units="1/min">
+                            #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+                            #     </phase_transition_rates>
+                            tr_uep = death_model.find("phase_transition_rates")
+                            if tr_uep:
+                                print(' >> tr_uep =',tr_uep )
+                                for tr in tr_uep:  # transition rate 
+                                    print(tr)
+                                    print("start_index=",tr.attrib["start_index"])
+                                    if  tr.attrib['start_index'] == "0":
+                                        self.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            self.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
+                                        else:
+                                            self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
+                                    elif  tr.attrib['start_index'] == "1":
+                                        self.param_d[cell_def_name]["necrosis_phase1_duration"] = tr.text
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            self.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
+                                        else:
+                                            self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
+
+
+                        params_uep = death_model.find("parameters")
+
+                        self.param_d[cell_def_name]["necrosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        self.param_d[cell_def_name]["necrosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
+                        self.param_d[cell_def_name]["necrosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
+                        self.param_d[cell_def_name]["necrosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
+                        self.param_d[cell_def_name]["necrosis_calcif_rate"] = params_uep.find("calcification_rate").text
+                        self.param_d[cell_def_name]["necrosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
 
 
                 # # ---------  volume 
@@ -3902,6 +4071,7 @@ class CellDef(QWidget):
 
 
                 # # ---------  mechanics 
+                print("\n===== populate():  mechanics")
                         # <mechanics> 
                         # 	<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
                         # 	<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
@@ -3951,6 +4121,7 @@ class CellDef(QWidget):
 
 
                 # # ---------  motility 
+                print("\n===== populate():  motility")
                         # <motility>  
                         # 	<speed units="micron/min">5.0</speed>
                         # 	<persistence_time units="min">5.0</persistence_time>
@@ -4013,6 +4184,7 @@ class CellDef(QWidget):
 
 
                 # # ---------  secretion 
+                print("\n===== populate():  secretion")
 
                 # <substrate name="virus">
                 #     <secretion_rate units="1/min">0</secretion_rate>
@@ -4034,6 +4206,18 @@ class CellDef(QWidget):
                 # or,   param_d["cancer cell"]["secretion"] = {"oxygen" : { "secretion_rate" : 42.0 } }
                 self.param_d[cell_def_name]['secretion'] = {}  # a dict for these params
 
+                # Initialize (set to 0.0) all substrates' secretion params
+                # val = "0.0"
+                # print('----- populate: self.substrate_list = ',self.substrate_list )
+                # for substrate_name in self.substrate_list:
+                #     print('----- populate: substrate_name = ',substrate_name )
+                #     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
+                #     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_target"] = val
+                #     self.param_d[cell_def_name]['secretion'][substrate_name]["uptake_rate"] = val
+                #     self.param_d[cell_def_name]['secretion'][substrate_name]["net_export_rate"] = val
+                # foo = 1/0
+
+
                 jdx = 0
                 for sub in uep_secretion.findall('substrate'):
                     substrate_name = sub.attrib['name']
@@ -4044,28 +4228,47 @@ class CellDef(QWidget):
                     # self.param_d[self.current_cell_def]['secretion'][substrate_name]["secretion_rate"] = {}
                     self.param_d[cell_def_name]['secretion'][substrate_name] = {}
 
-                    val = sub.find("secretion_rate").text
+                    tptr = sub.find("secretion_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
                     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
+                    # print(self.param_d[cell_def_name]['secretion'][substrate_name] )
 
-                    val = sub.find("secretion_target").text
+                    tptr = sub.find("secretion_target")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
                     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_target"] = val
 
-                    val = sub.find("uptake_rate").text
+                    tptr = sub.find("uptake_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
                     self.param_d[cell_def_name]['secretion'][substrate_name]["uptake_rate"] = val
 
-                    val = sub.find("net_export_rate").text
+                    tptr = sub.find("net_export_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
                     self.param_d[cell_def_name]['secretion'][substrate_name]["net_export_rate"] = val
 
                     jdx += 1
 
-                print("------ after parsing secretion:")
+                print("------ done parsing secretion:")
                 # print("------ self.param_d = ",self.param_d)
                 
 
                 # # ---------  molecular 
+                print("\n===== populate():  molecular")
 
 
                 # # ---------  custom data 
+                print("\n===== populate():  custom data")
                 # <custom_data>  
                 # 	<receptor units="dimensionless">0.0</receptor>
                 # 	<cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
@@ -4417,12 +4620,6 @@ class CellDef(QWidget):
                 subelm2.text = self.param_d[cdef]['cycle_quiescent_trate01']
                 subelm2.tail = self.indent12
 
-                # ------- death ------- 
-                # ------- volume ------- 
-                # ------- mechanics ------- 
-                # ------- motility ------- 
-                # ------- secretion ------- 
-                # ------- custom data ------- 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_death(self,pheno,cdname):  # we use "cdname" here instead of cdef (for easier copy/paste from elsewhere)

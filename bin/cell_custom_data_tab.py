@@ -33,6 +33,7 @@ class CellCustomData(QWidget):
         self.xml_root = None
         self.celldef_tab = None
         self.count = 0
+        self.max_rows = 99  # initially
         self.custom_vars_to_delete = []
 
         #-------------------------------------------
@@ -102,7 +103,7 @@ class CellCustomData(QWidget):
         # self.type_dropdown.addItem("bool")
         # self.type_dropdown.addItem("text")
 
-        for idx in range(25):
+        for idx in range(self.max_rows):  # TODO: mismatch with # rows in Cell Types|Custom Data may cause problems.
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
             w = QCheckBox("")
@@ -182,7 +183,7 @@ class CellCustomData(QWidget):
         self.layout = QVBoxLayout(self)
 
         self.layout.addLayout(controls_hbox)
-        warning = QLabel("                                        Note: changing a default value will also change it in each Cell Type")
+        warning = QLabel("                                        Note: changing a default value here will also change it in each Cell Type")
         warning.setStyleSheet('color: red;')  # “background-color: cyan”
         self.layout.addWidget(warning)
         self.layout.addWidget(self.scroll_area)
@@ -363,7 +364,11 @@ class CellCustomData(QWidget):
             if 'description' in var.keys():
                 self.description[idx].setText(var.attrib['description'])
             idx += 1
+            print("custom_data:  fill_gui(): idx=",idx,", count=",self.count)
+            if idx > self.count:
+                self.append_more_cb()
 
-    def fill_xml(self):
-        pass
+    # doesn't make sense for this tab; custom_data is saved in XML for each cell type
+    # def fill_xml(self):
+        # pass
     
