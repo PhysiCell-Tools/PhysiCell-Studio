@@ -54,7 +54,7 @@ class PhysiCellXMLCreator(QWidget):
         self.setLayout(vlayout)
         # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(800, 600)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
         # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
 
         # self.menubar = QtWidgets.QMenuBar(self)
