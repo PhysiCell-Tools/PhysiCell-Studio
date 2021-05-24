@@ -1205,28 +1205,67 @@ class CellDef(QWidget):
         idr = 0
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # hbox = QHBoxLayout()
         label = QLabel("death rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_death_rate = QLineEdit()
         self.apoptosis_death_rate.textChanged.connect(self.apoptosis_death_rate_changed)
         self.apoptosis_death_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_death_rate.textChanged.connect(self.apop_death_rate_changed)
-        # hbox.addWidget(self.apoptosis_death_rate)
         glayout.addWidget(self.apoptosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # layout.addLayout(hbox)
 
+        #-------
+        self.apoptosis_rb1 = QRadioButton("transition rate", self)
+        self.apoptosis_rb1.toggled.connect(self.apoptosis_phase_transition_cb)
+        idr += 1
+        glayout.addWidget(self.apoptosis_rb1, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_rb2 = QRadioButton("duration", self)
+        self.apoptosis_rb2.toggled.connect(self.apoptosis_phase_transition_cb)
+        glayout.addWidget(self.apoptosis_rb2, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        #-----
+        # 	<model code="100" name="apoptosis"> 
+        # 	<death_rate units="1/min">2.1e-4</death_rate>  
+        # 	<phase_transition_rates units="1/min">
+        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+        # 	</phase_transition_rates>
+
+        # <model code="101" name="necrosis">
+        # 	<death_rate units="1/min">0.0</death_rate>
+        # 	<phase_transition_rates units="1/min">
+        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+        # 	</phase_transition_rates>
+
+        label = QLabel("phase 0->1 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_trate01 = QLineEdit()
+        self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
+        self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_trate01_fixed = QCheckBox("Fixed")
+        self.apoptosis_trate01_fixed.toggled.connect(self.apoptosis_trate01_fixed_toggled)
+        glayout.addWidget(self.apoptosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #-----
         # <cycle code="6" name="Flow cytometry model (separated)">  
         #     <phase_durations units="min"> 
         #         <duration index="0" fixed_duration="false">300.0</duration>
@@ -1635,11 +1674,55 @@ class CellDef(QWidget):
         return death_tab
 
     #--------------------------------------------------------
+    def apoptosis_phase_transition_cb(self):
+        # rb1.toggled.connect(self.updateLabel)(self, idx_choice):
+        # print('self.cycle_rows_vbox.count()=', self.cycle_rows_vbox.count())
+        print('-------- apoptosis_phase_transition_cb: ')
+
+        radioBtn = self.sender()
+        if radioBtn.isChecked():
+            print("--------- ",radioBtn.text())
+
+        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
+        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
+
+        # self.cycle_rows_vbox.clear()
+        # if radioBtn.text().find("duration"):
+        if "duration" in radioBtn.text():
+            print('apoptosis_phase_transition_cb: --> duration')
+            self.apoptosis_duration_flag = True
+            # self.customize_cycle_choices()
+            self.apoptosis_trate01.setReadOnly(True)
+            self.apoptosis_trate01.setStyleSheet("background-color: gray")  # Salmon, PaleVioletRed
+            self.apoptosis_trate01_fixed.setEnabled(False)
+
+            self.apoptosis_phase0_duration.setReadOnly(False)
+            self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
+            self.apoptosis_phase0_duration_fixed.setEnabled(True)
+        else:  # transition rates
+            print('apoptosis_phase_transition_cb: NOT duration')
+            self.apoptosis_duration_flag = False
+            self.apoptosis_phase0_duration.setReadOnly(True)
+            self.apoptosis_phase0_duration.setStyleSheet("background-color: gray")  # Salmon, PaleVioletRed
+            self.apoptosis_phase0_duration_fixed.setEnabled(False)
+
+            self.apoptosis_trate01.setReadOnly(False)
+            self.apoptosis_trate01.setStyleSheet("background-color: white")  
+            self.apoptosis_trate01_fixed.setEnabled(True)
+            # self.customize_cycle_choices()
+            # pass
+
+        self.param_d[self.current_cell_def]['apoptosis_duration_flag'] = self.apoptosis_duration_flag
+
+    #-------
+
     def apop_death_rate_changed(self, text):
         print("----- apop_death_rate_changed: self.current_cell_def = ",self.current_cell_def)
         self.param_d[self.current_cell_def]["apop_death_rate"] = text
     def apop_phase0_changed(self, text):
         self.param_d[self.current_cell_def]["apop_phase0"] = text
+    def apoptosis_trate01_changed(self):
+        self.param_d[self.current_cell_def]["apop_trate01"] = text
     def apop_unlysed_changed(self, text):
         self.param_d[self.current_cell_def]["apop_unlysed"] = text
     def apop_lysed_changed(self, text):
@@ -2419,6 +2502,8 @@ class CellDef(QWidget):
         self.param_d[self.current_cell_def]['apoptosis_phase0_duration'] = text
     def apoptosis_phase0_duration_fixed_toggled(self, b):
         self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = b
+    def apoptosis_trate01_fixed_toggled(self, b):
+        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = b
 
     def apoptosis_unlysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_unlysed_rate'] = text
@@ -3906,6 +3991,8 @@ class CellDef(QWidget):
                         pd_uep = death_model.find("phase_durations")
                         if pd_uep is not None:
                             print(' >> pd_uep =',pd_uep )
+                            self.apoptosis_rb2.setChecked(True)  # duration
+
                             for pd in pd_uep:   # <duration index= ... >
                                 print(pd)
                                 print("index=",pd.attrib["index"])
@@ -3923,27 +4010,18 @@ class CellDef(QWidget):
                             tr_uep = death_model.find("phase_transition_rates")
                             if tr_uep is not None:
                                 print(' >> tr_uep =',tr_uep )
+                                self.apoptosis_rb1.setChecked(True)  # trate01
 
                                 for tr in tr_uep:   # <duration index= ... >
                                     print(tr)
                                     print("start_index=",tr.attrib["start_index"])
-                                    # if  tr.attrib['start_index'] == "0":
-                                        # self.param_d[cell_def_name]["apoptosis_phase0_duration"] = tr.text
-                                    if  tr.attrib['start_index'] == "0":
-                                        rate = float(tr.text)
-                                        print(" --- transition rate (float) = ",rate)
-                                        if abs(rate) < 1.e-6:
-                                            dval = 9.e99
-                                        else:
-                                            dval = rate * 60.0
-                                        print(" --- transition rate (float) = ",rate)
-                                        # self.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
-                                        self.param_d[cell_def_name]["apoptosis_phase0_duration"] = str(dval)
 
+                                    if  tr.attrib['start_index'] == "0":
+                                        self.param_d[cell_def_name]["apoptosis_trate01"] = tr.text
                                         if  tr.attrib['fixed_duration'].lower() == "true":
-                                            self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
+                                            self.param_d[cell_def_name]["apoptosis_trate01_fixed"] = True
                                         else:
-                                            self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
+                                            self.param_d[cell_def_name]["apoptosis_trate01_fixed"] = False
 
                         # apoptosis_params_path = apoptosis_path + "parameters//"
                         params_uep = death_model.find("parameters")
