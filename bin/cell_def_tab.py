@@ -15,6 +15,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
 
 
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
 # Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
 class MyQLineEdit(QLineEdit):
     vname = None
@@ -29,6 +35,8 @@ class CellDef(QWidget):
         self.param_d = {}  # a dict of dicts
         self.default_sval = '0.0'
         self.default_bval = False
+        self.default_time_units = "min"
+        self.default_rate_units = "1/min"
 
         self.current_cell_def = None
         self.new_cell_def_count = 1
@@ -298,17 +306,18 @@ class CellDef(QWidget):
 
         #----------------------------
         self.cycle_rate_duration_hbox = QHBoxLayout()
-        self.cycle_rb1 = QRadioButton("transition rate(s)", self)
-        # self.rb1.clicked.connect(self.cycle_phase_transition_cb)
+        # self.cycle_rb1 = QRadioButton("transition rate(s)", self)
+        self.cycle_rb1 = QRadioButton("transition rate(s)")
         self.cycle_rb1.toggled.connect(self.cycle_phase_transition_cb)
         self.cycle_rate_duration_hbox.addWidget(self.cycle_rb1)
-        self.cycle_rb2 = QRadioButton("duration(s)", self)
-        # self.rb2.clicked.connect(self.cycle_phase_transition_cb)
+
+        # self.cycle_rb2 = QRadioButton("duration(s)", self)
+        self.cycle_rb2 = QRadioButton("duration(s)")
         self.cycle_rb2.toggled.connect(self.cycle_phase_transition_cb)
         self.cycle_rate_duration_hbox.addWidget(self.cycle_rb2)
+
         self.cycle_rate_duration_hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox_cycle.addLayout(self.cycle_rate_duration_hbox)
-
 
         #----------------------------
         self.cycle_dropdown = QComboBox()
@@ -792,7 +801,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_live_duration00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         # NOTE: callbacks to all Fixed checkboxes are below, after the widgets are created.
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -827,7 +836,7 @@ class CellDef(QWidget):
         self.cycle_Ki67_duration01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_Ki67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -846,7 +855,7 @@ class CellDef(QWidget):
         self.cycle_Ki67_duration10_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_Ki67_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -881,7 +890,7 @@ class CellDef(QWidget):
         self.cycle_advancedKi67_duration01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -900,7 +909,7 @@ class CellDef(QWidget):
         self.cycle_advancedKi67_duration12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -919,7 +928,7 @@ class CellDef(QWidget):
         self.cycle_advancedKi67_duration20_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -953,7 +962,7 @@ class CellDef(QWidget):
         self.cycle_flowcyto_duration01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -972,7 +981,7 @@ class CellDef(QWidget):
         self.cycle_flowcyto_duration12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -991,7 +1000,7 @@ class CellDef(QWidget):
         self.cycle_flowcyto_duration20_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -1025,7 +1034,7 @@ class CellDef(QWidget):
         self.cycle_flowcytosep_duration01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -1044,7 +1053,7 @@ class CellDef(QWidget):
         self.cycle_flowcytosep_duration12_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -1063,7 +1072,7 @@ class CellDef(QWidget):
         self.cycle_flowcytosep_duration23_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -1082,7 +1091,7 @@ class CellDef(QWidget):
         self.cycle_flowcytosep_duration30_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
@@ -1116,7 +1125,7 @@ class CellDef(QWidget):
         self.cycle_quiescent_duration01_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_quiescent_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -1135,7 +1144,7 @@ class CellDef(QWidget):
         self.cycle_quiescent_duration10_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.cycle_quiescent_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -1172,36 +1181,24 @@ class CellDef(QWidget):
         #---------------------------------------------
         # After adding all combos of cycle widgets (groups) to the stacked widget, 
         # add it to this panel.
-        # self.vbox.addWidget(self.stacked)
         self.vbox_cycle.addWidget(self.stacked_cycle)
 
-        # spacerItem = QSpacerItem(100,500)
-        # self.vbox.addItem(spacerItem)
         self.vbox_cycle.addStretch()
 
         self.params_cycle.setLayout(self.vbox_cycle)
 
         return self.params_cycle
-        # return cycle_tab
 
     #--------------------------------------------------------
     def create_death_tab(self):
         death_tab = QWidget()
-        # layout = QVBoxLayout()
         glayout = QGridLayout()
-
-        # label = QLabel("Phenotype: death")
-        # label.setStyleSheet("background-color: orange")
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-        # self.vbox.addWidget(QHLine())
 
         #----------------
         label = QLabel("Apoptosis")
         label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet('background-color: yellow')
-        # layout.addWidget(apoptosis_label)
         idr = 0
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
@@ -1222,7 +1219,9 @@ class CellDef(QWidget):
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #-------
-        self.apoptosis_rb1 = QRadioButton("transition rate", self)
+        self.apoptosis_group = QButtonGroup(self)
+
+        self.apoptosis_rb1 = QRadioButton("transition rate", self)  # OMG, leave "self" for QButtonGroup
         self.apoptosis_rb1.toggled.connect(self.apoptosis_phase_transition_cb)
         idr += 1
         glayout.addWidget(self.apoptosis_rb1, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -1230,6 +1229,9 @@ class CellDef(QWidget):
         self.apoptosis_rb2 = QRadioButton("duration", self)
         self.apoptosis_rb2.toggled.connect(self.apoptosis_phase_transition_cb)
         glayout.addWidget(self.apoptosis_rb2, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_group.addButton(self.apoptosis_rb1)
+        self.apoptosis_group.addButton(self.apoptosis_rb2)
 
         #-----
         # 	<model code="100" name="apoptosis"> 
@@ -1260,48 +1262,37 @@ class CellDef(QWidget):
         self.apoptosis_trate01_fixed.toggled.connect(self.apoptosis_trate01_fixed_toggled)
         glayout.addWidget(self.apoptosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #-----
-        # <cycle code="6" name="Flow cytometry model (separated)">  
-        #     <phase_durations units="min"> 
-        #         <duration index="0" fixed_duration="false">300.0</duration>
-        #         <duration index="1" fixed_duration="true">480</duration>
-        #         <duration index="2" fixed_duration="true">240</duration>
-        #         <duration index="3" fixed_duration="true">60</duration>
-        #     </phase_durations>
-
-        # self.apoptosis_phase0_duration_hbox = QHBoxLayout()
         label = QLabel("phase 0 duration")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-    #    self.apoptosis_phase0_duration_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_phase0_duration = QLineEdit()
         self.apoptosis_phase0_duration.textChanged.connect(self.apoptosis_phase0_duration_changed)
         self.apoptosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_phase0_duration.textChanged.connect(self.apop_phase0_changed)
-        # self.apoptosis_phase0_duration_hbox.addWidget(self.apoptosis_phase0_duration)
         glayout.addWidget(self.apoptosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_phase0_duration_fixed = QCheckBox("Fixed")
         self.apoptosis_phase0_duration_fixed.toggled.connect(self.apoptosis_phase0_duration_fixed_toggled)
-        # self.apoptosis_phase0_duration_hbox.addWidget(self.apoptosis_phase0_duration_fixed)
         glayout.addWidget(self.apoptosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_phase0_duration_hbox.addWidget(units)
-        #-------
         # <phase_durations units="min">
         #     <duration index="0" fixed_duration="true">516</duration>
+
+        #-------------------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
         # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
@@ -1309,63 +1300,47 @@ class CellDef(QWidget):
         # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
         # <calcification_rate units="1/min">0</calcification_rate>
         # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-        # self.apoptosis_unlysed_rate_hbox = QHBoxLayout()
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        # self.apoptosis_unlysed_rate_hbox.addWidget(label)
         self.apoptosis_unlysed_rate = QLineEdit()
         self.apoptosis_unlysed_rate.textChanged.connect(self.apoptosis_unlysed_rate_changed)
         self.apoptosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_unlysed_rate.textChanged.connect(self.apop_unlysed_changed)
-        # self.apoptosis_unlysed_rate_hbox.addWidget(self.apoptosis_unlysed_rate)
         glayout.addWidget(self.apoptosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_unlysed_rate_hbox.addWidget(units)
-        # self.vbox.addLayout(self.apoptosis_unlysed_rate_hbox)
 
-        # self.apoptosis_lysed_rate_hbox = QHBoxLayout()
         label = QLabel("lysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_lysed_rate_hbox.addWidget(label)
 
         self.apoptosis_lysed_rate = QLineEdit()
         self.apoptosis_lysed_rate.textChanged.connect(self.apoptosis_lysed_rate_changed)
         self.apoptosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_lysed_rate.textChanged.connect(self.apop_lysed_changed)
         glayout.addWidget(self.apoptosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_lysed_rate_hbox.addWidget(self.apoptosis_lysed_rate)
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_lysed_rate_hbox.addWidget(units)
-        # self.vbox.addLayout(self.apoptosis_lysed_rate_hbox)
 
-        # self.apoptosis_cytoplasmic_hbox = QHBoxLayout()
         label = QLabel("cytoplasmic biomass change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_cytoplasmic_hbox.addWidget(label)
 
         self.apoptosis_cytoplasmic_biomass_change_rate = QLineEdit()
         self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.apoptosis_cytoplasmic_biomass_change_rate_changed)
         self.apoptosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.apop_cyto_changed)
         glayout.addWidget(self.apoptosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_cytoplasmic_hbox.addWidget(self.apoptosis_cytoplasmic_biomass_change_rate)
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
@@ -1378,73 +1353,55 @@ class CellDef(QWidget):
         # <calcification_rate units="1/min">0</calcification_rate>
         # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
-        # self.apoptosis_nuclear_hbox = QHBoxLayout()
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.apoptosis_nuclear_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_nuclear_biomass_change_rate = QLineEdit()
         self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.apoptosis_nuclear_biomass_change_rate_changed)
         self.apoptosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.apop_nuclear_changed)
-        # self.apoptosis_nuclear_hbox.addWidget(self.apoptosis_nuclear_biomass_change_rate)
         glayout.addWidget(self.apoptosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.apoptosis_nuclear_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.vbox.addLayout(hbox)
 
-        # self.apoptosis_calcification_hbox = QHBoxLayout()
         label = QLabel("calcification rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.apoptosis_calcification_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_calcification_rate = QLineEdit()
         self.apoptosis_calcification_rate.textChanged.connect(self.apoptosis_calcification_rate_changed)
         self.apoptosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_calcification_rate.textChanged.connect(self.apop_calcif_changed)
-        # self.apoptosis_calcification_hbox.addWidget(self.apoptosis_calcification_rate)
         glayout.addWidget(self.apoptosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.apoptosis_calcification_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.vbox.addLayout(hbox)
 
-        # self.apoptosis_rel_rupture_volume_hbox = QHBoxLayout()
         label = QLabel("relative rupture volume")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.apoptosis_rel_rupture_volume_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_relative_rupture_volume = QLineEdit()
         self.apoptosis_relative_rupture_volume.textChanged.connect(self.apoptosis_relative_rupture_volume_changed)
         self.apoptosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
-        # self.apoptosis_relative_rupture_volume.textChanged.connect(self.apop_rupture_changed)
-        # self.apoptosis_rel_rupture_volume_hbox.addWidget(self.apoptosis_relative_rupture_volume)
         glayout.addWidget(self.apoptosis_relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.apoptosis_rel_rupture_volume_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.vbox.addLayout(hbox)
 
-        #----------------
+        #------------------------------------------------------
         label = QLabel("Necrosis")
         label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -1455,31 +1412,90 @@ class CellDef(QWidget):
         label = QLabel("death rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_death_rate = QLineEdit()
         self.necrosis_death_rate.textChanged.connect(self.necrosis_death_rate_changed)
         self.necrosis_death_rate.setValidator(QtGui.QDoubleValidator())
-        # hbox.addWidget(self.necrosis_death_rate)
         glayout.addWidget(self.necrosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # layout.addLayout(hbox)
 
-        # <cycle code="6" name="Flow cytometry model (separated)">  
-        #     <phase_durations units="min"> 
-        #         <duration index="0" fixed_duration="false">300.0</duration>
-        #         <duration index="1" fixed_duration="true">480</duration>
-        #         <duration index="2" fixed_duration="true">240</duration>
-        #         <duration index="3" fixed_duration="true">60</duration>
-        #     </phase_durations>
+        #-------
+        self.necrosis_group = QButtonGroup(self)
 
+        self.necrosis_rb1 = QRadioButton("transition rate", self)  # OMG, leave "self"
+        self.necrosis_rb1.toggled.connect(self.necrosis_phase_transition_cb)
+        idr += 1
+        glayout.addWidget(self.necrosis_rb1, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_rb2 = QRadioButton("duration", self)
+        self.necrosis_rb2.toggled.connect(self.necrosis_phase_transition_cb)
+        glayout.addWidget(self.necrosis_rb2, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_group.addButton(self.necrosis_rb1)
+        self.necrosis_group.addButton(self.necrosis_rb2)
+
+        #-----
+        # 	<model code="100" name="apoptosis"> 
+        # 	<death_rate units="1/min">2.1e-4</death_rate>  
+        # 	<phase_transition_rates units="1/min">
+        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+        # 	</phase_transition_rates>
+
+        # <model code="101" name="necrosis">
+        # 	<death_rate units="1/min">0.0</death_rate>
+        # 	<phase_transition_rates units="1/min">
+        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+        # 	</phase_transition_rates>
+
+        label = QLabel("phase 0->1 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_trate01 = QLineEdit()
+        self.necrosis_trate01.textChanged.connect(self.necrosis_trate01_changed)
+        self.necrosis_trate01.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_trate01_fixed = QCheckBox("Fixed")
+        self.necrosis_trate01_fixed.toggled.connect(self.necrosis_trate01_fixed_toggled)
+        glayout.addWidget(self.necrosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #-----
+        label = QLabel("phase 1->2 transition rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_trate12 = QLineEdit()
+        self.necrosis_trate12.textChanged.connect(self.necrosis_trate12_changed)
+        self.necrosis_trate12.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_trate12, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_trate12_fixed = QCheckBox("Fixed")
+        self.necrosis_trate12_fixed.toggled.connect(self.necrosis_trate12_fixed_toggled)
+        glayout.addWidget(self.necrosis_trate12_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #-----------------
         # self.necrosis_phase0_duration_hbox = QHBoxLayout()
         label = QLabel("phase 0 duration")
         label.setFixedWidth(self.label_width)
@@ -1491,18 +1507,18 @@ class CellDef(QWidget):
         self.necrosis_phase0_duration = QLineEdit()
         self.necrosis_phase0_duration.textChanged.connect(self.necrosis_phase0_duration_changed)
         self.necrosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
+        # self.necrosis_phase0_duration.textChanged.connect(self.necrosis_phase0_changed)
         # self.necrosis_phase0_duration_hbox.addWidget(self.necrosis_phase0_duration)
         glayout.addWidget(self.necrosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_phase0_duration_fixed = QCheckBox("Fixed")
-        # self.necrosis_phase0_duration_hbox.addWidget(self.necrosis_phase0_duration_fixed)
+        self.necrosis_phase0_duration_fixed.toggled.connect(self.necrosis_phase0_duration_fixed_toggled)
         glayout.addWidget(self.necrosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_phase0_duration_hbox.addWidget(units)
 
         #----
         label = QLabel("phase 1 duration")
@@ -1519,14 +1535,14 @@ class CellDef(QWidget):
         self.necrosis_phase1_duration_fixed = QCheckBox("Fixed")
         glayout.addWidget(self.necrosis_phase1_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
-        #-------
-        # <phase_durations units="min">
-        #     <duration index="0" fixed_duration="true">516</duration>
+        #-------------------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
         # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
@@ -1534,132 +1550,104 @@ class CellDef(QWidget):
         # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
         # <calcification_rate units="1/min">0</calcification_rate>
         # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-        # self.necrosis_unlysed_rate_hbox = QHBoxLayout()
+
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        # self.necrosis_unlysed_rate_hbox.addWidget(label)
         self.necrosis_unlysed_rate = QLineEdit()
         self.necrosis_unlysed_rate.textChanged.connect(self.necrosis_unlysed_rate_changed)
         self.necrosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
-        # self.necrosis_unlysed_rate_hbox.addWidget(self.necrosis_unlysed_rate)
         glayout.addWidget(self.necrosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_unlysed_rate_hbox.addWidget(units)
-        # self.vbox.addLayout(self.necrosis_unlysed_rate_hbox)
 
-        # self.necrosis_lysed_rate_hbox = QHBoxLayout()
         label = QLabel("lysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_lysed_rate_hbox.addWidget(label)
 
         self.necrosis_lysed_rate = QLineEdit()
         self.necrosis_lysed_rate.textChanged.connect(self.necrosis_lysed_rate_changed)
         self.necrosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_lysed_rate_hbox.addWidget(self.necrosis_lysed_rate)
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_lysed_rate_hbox.addWidget(units)
-        # self.vbox.addLayout(self.necrosis_lysed_rate_hbox)
-
-        # self.necrosis_cytoplasmic_hbox = QHBoxLayout()
+        
         label = QLabel("cytoplasmic biomass change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_cytoplasmic_hbox.addWidget(label)
 
         self.necrosis_cytoplasmic_biomass_change_rate = QLineEdit()
         self.necrosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.necrosis_cytoplasmic_biomass_change_rate_changed)
         self.necrosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_cytoplasmic_hbox.addWidget(self.necrosis_cytoplasmic_biomass_change_rate)
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.necrosis_cytoplasmic_hbox.addWidget(units)
-        # self.vbox.addLayout(self.necrosis_cytoplasmic_biomass_change_rate_hbox)
 
         # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
         # <calcification_rate units="1/min">0</calcification_rate>
         # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
-        # self.necrosis_nuclear_hbox = QHBoxLayout()
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.necrosis_nuclear_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_nuclear_biomass_change_rate = QLineEdit()
         self.necrosis_nuclear_biomass_change_rate.textChanged.connect(self.necrosis_nuclear_biomass_change_rate_changed)
         self.necrosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
-        # self.necrosis_nuclear_hbox.addWidget(self.necrosis_nuclear_biomass_change_rate)
         glayout.addWidget(self.necrosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.necrosis_nuclear_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.vbox.addLayout(hbox)
 
-        # self.necrosis_calcification_hbox = QHBoxLayout()
         label = QLabel("calcification rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.necrosis_calcification_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_calcification_rate = QLineEdit()
         self.necrosis_calcification_rate.textChanged.connect(self.necrosis_calcification_rate_changed)
         self.necrosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
-        # self.necrosis_calcification_hbox.addWidget(self.necrosis_calcification_rate)
         glayout.addWidget(self.necrosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.necrosis_calcification_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.vbox.addLayout(hbox)
 
-        # self.necrosis_rel_rupture_volume_hbox = QHBoxLayout()
         label = QLabel("relative rupture volume")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # self.necrosis_rel_rupture_volume_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_relative_rupture_volume = QLineEdit()
         self.necrosis_relative_rupture_volume.textChanged.connect(self.necrosis_relative_rupture_volume_changed)
         self.necrosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
-        # self.necrosis_rel_rupture_volume_hbox.addWidget(self.necrosis_relative_rupture_volume)
         glayout.addWidget(self.necrosis_relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.necrosis_rel_rupture_volume_hbox.addWidget(units)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #------
@@ -1675,25 +1663,17 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def apoptosis_phase_transition_cb(self):
-        # rb1.toggled.connect(self.updateLabel)(self, idx_choice):
-        # print('self.cycle_rows_vbox.count()=', self.cycle_rows_vbox.count())
-        print('-------- apoptosis_phase_transition_cb: ')
+        print('\n  ---- apoptosis_phase_transition_cb: ')
 
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("--------- ",radioBtn.text())
+            print("apoptosis: ------>>",radioBtn.text())
 
-        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
-        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
-
-        # self.cycle_rows_vbox.clear()
-        # if radioBtn.text().find("duration"):
         if "duration" in radioBtn.text():
             print('apoptosis_phase_transition_cb: --> duration')
             self.apoptosis_duration_flag = True
-            # self.customize_cycle_choices()
             self.apoptosis_trate01.setReadOnly(True)
-            self.apoptosis_trate01.setStyleSheet("background-color: gray")  # Salmon, PaleVioletRed
+            self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
             self.apoptosis_trate01_fixed.setEnabled(False)
 
             self.apoptosis_phase0_duration.setReadOnly(False)
@@ -1703,38 +1683,88 @@ class CellDef(QWidget):
             print('apoptosis_phase_transition_cb: NOT duration')
             self.apoptosis_duration_flag = False
             self.apoptosis_phase0_duration.setReadOnly(True)
-            self.apoptosis_phase0_duration.setStyleSheet("background-color: gray")  # Salmon, PaleVioletRed
+            self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
             self.apoptosis_phase0_duration_fixed.setEnabled(False)
 
             self.apoptosis_trate01.setReadOnly(False)
             self.apoptosis_trate01.setStyleSheet("background-color: white")  
             self.apoptosis_trate01_fixed.setEnabled(True)
-            # self.customize_cycle_choices()
-            # pass
 
         self.param_d[self.current_cell_def]['apoptosis_duration_flag'] = self.apoptosis_duration_flag
 
+    #------------
+    def necrosis_phase_transition_cb(self):
+        # rb1.toggled.connect(self.updateLabel)(self, idx_choice):
+        # print('self.cycle_rows_vbox.count()=', self.cycle_rows_vbox.count())
+        print('\n  ---- necrosis_phase_transition_cb: ')
+
+        radioBtn = self.sender()
+        if radioBtn.isChecked():
+            print("necrosis: ------>>",radioBtn.text())
+
+        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
+        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
+
+        # self.cycle_rows_vbox.clear()
+        # if radioBtn.text().find("duration"):
+        if "duration" in radioBtn.text():
+            print('necrosis_phase_transition_cb: --> duration')
+            self.necrosis_duration_flag = True
+            # self.customize_cycle_choices()
+            self.necrosis_trate01.setReadOnly(True)
+            self.necrosis_trate01.setStyleSheet("background-color: lightgray")
+            self.necrosis_trate01_fixed.setEnabled(False)
+            self.necrosis_trate12.setReadOnly(True)
+            self.necrosis_trate12.setStyleSheet("background-color: lightgray")
+            self.necrosis_trate12_fixed.setEnabled(False)
+
+            self.necrosis_phase0_duration.setReadOnly(False)
+            self.necrosis_phase0_duration.setStyleSheet("background-color: white")
+            self.necrosis_phase0_duration_fixed.setEnabled(True)
+            self.necrosis_phase1_duration.setReadOnly(False)
+            self.necrosis_phase1_duration.setStyleSheet("background-color: white")
+            self.necrosis_phase1_duration_fixed.setEnabled(True)
+        else:  # transition rates
+            print('necrosis_phase_transition_cb: NOT duration')
+            self.necrosis_duration_flag = False
+            self.necrosis_phase0_duration.setReadOnly(True)
+            self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_phase0_duration_fixed.setEnabled(False)
+            self.necrosis_phase1_duration.setReadOnly(True)
+            self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_phase1_duration_fixed.setEnabled(False)
+
+            self.necrosis_trate01.setReadOnly(False)
+            self.necrosis_trate01.setStyleSheet("background-color: white")  
+            self.necrosis_trate01_fixed.setEnabled(True)
+            self.necrosis_trate12.setReadOnly(False)
+            self.necrosis_trate12.setStyleSheet("background-color: white")  
+            self.necrosis_trate12_fixed.setEnabled(True)
+            # self.customize_cycle_choices()
+            # pass
+
+        self.param_d[self.current_cell_def]['necrosis_duration_flag'] = self.necrosis_duration_flag
+
     #-------
 
-    def apop_death_rate_changed(self, text):
-        print("----- apop_death_rate_changed: self.current_cell_def = ",self.current_cell_def)
-        self.param_d[self.current_cell_def]["apop_death_rate"] = text
-    def apop_phase0_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_phase0"] = text
-    def apoptosis_trate01_changed(self):
-        self.param_d[self.current_cell_def]["apop_trate01"] = text
-    def apop_unlysed_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_unlysed"] = text
-    def apop_lysed_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_lysed"] = text
-    def apop_cyto_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_cyto"] = text
-    def apop_nuclear_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_nuclear"] = text
-    def apop_calcif_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_calcif"] = text
-    def apop_rupture_changed(self, text):
-        self.param_d[self.current_cell_def]["apop_rupture"] = text
+    # def apop_death_rate_changed(self, text):
+    #     print("----- apop_death_rate_changed: self.current_cell_def = ",self.current_cell_def)
+    #     self.param_d[self.current_cell_def]["apop_death_rate"] = text
+    # def apop_phase0_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_phase0"] = text
+
+    # def apop_unlysed_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_unlysed"] = text
+    # def apop_lysed_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_lysed"] = text
+    # def apop_cyto_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_cyto"] = text
+    # def apop_nuclear_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_nuclear"] = text
+    # def apop_calcif_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_calcif"] = text
+    # def apop_rupture_changed(self, text):
+    #     self.param_d[self.current_cell_def]["apop_rupture"] = text
 
     #--------------------------------------------------------
     def create_volume_tab(self):
@@ -2099,7 +2129,7 @@ class CellDef(QWidget):
         self.persistence_time.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.persistence_time, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("min")
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2498,10 +2528,13 @@ class CellDef(QWidget):
     # --- death
     def apoptosis_death_rate_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_death_rate'] = text
+
     def apoptosis_phase0_duration_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_phase0_duration'] = text
     def apoptosis_phase0_duration_fixed_toggled(self, b):
         self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = b
+    def apoptosis_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]["apoptosis_trate01"] = text
     def apoptosis_trate01_fixed_toggled(self, b):
         self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = b
 
@@ -2510,31 +2543,47 @@ class CellDef(QWidget):
     def apoptosis_lysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_lysed_rate'] = text
     def apoptosis_cytoplasmic_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_cytoplasmic_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['apoptosis_cyto_rate'] = text
     def apoptosis_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_nuclear_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['apoptosis_nuclear_rate'] = text
     def apoptosis_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_calcification_rate'] = text
+        self.param_d[self.current_cell_def]['apoptosis_calcif_rate'] = text
     def apoptosis_relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_relative_rupture_volume'] = text
+        self.param_d[self.current_cell_def]['apoptosis_rel_rupture_volume'] = text
+
+    #------
     def necrosis_death_rate_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_death_rate'] = text
+
+
     def necrosis_phase0_duration_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_phase0_duration'] = text
+    def necrosis_phase0_duration_fixed_toggled(self, b):
+        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = b
+
     def necrosis_phase1_duration_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_phase1_duration'] = text
+    def necrosis_trate01_changed(self, text):
+        self.param_d[self.current_cell_def]["necrosis_trate01"] = text
+    def necrosis_trate01_fixed_toggled(self, b):
+        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = b
+    def necrosis_trate12_changed(self, text):
+        self.param_d[self.current_cell_def]["necrosis_trate12"] = text
+    def necrosis_trate12_fixed_toggled(self, b):
+        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = b
+
     def necrosis_unlysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_unlysed_rate'] = text
     def necrosis_lysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_lysed_rate'] = text
     def necrosis_cytoplasmic_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_cytoplasmic_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['necrosis_cyto_rate'] = text
     def necrosis_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_nuclear_biomass_change_rate'] = text
+        self.param_d[self.current_cell_def]['necrosis_nuclear_rate'] = text
     def necrosis_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_calcification_rate'] = text
+        self.param_d[self.current_cell_def]['necrosis_calcif_rate'] = text
     def necrosis_relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_relative_rupture_volume'] = text
+        self.param_d[self.current_cell_def]['necrosis_rel_rupture_rate'] = text
 
     # --- volume
     def volume_total_changed(self, text):
@@ -3219,7 +3268,7 @@ class CellDef(QWidget):
         self.param_d[cdname]["apoptosis_cyto_rate"] = sval
         self.param_d[cdname]["apoptosis_nuclear_rate"] = sval
         self.param_d[cdname]["apoptosis_calcif_rate"] = sval
-        self.param_d[cdname]["apoptosis_rel_rupture_rate"] = sval
+        self.param_d[cdname]["apoptosis_rel_rupture_volume"] = sval
 
         #-----
         self.param_d[cdname]["necrosis_death_rate"] = sval
@@ -3432,24 +3481,48 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_death_params(self):
+        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print("\n ------------------  update_death_params() ")
         cdname = self.current_cell_def
         self.apoptosis_death_rate.setText(self.param_d[cdname]["apoptosis_death_rate"])
+
+        if self.param_d[cdname]['apoptosis_duration_flag']:
+            print(" ------------------  apoptosis_rb2.setChecked(True) ")
+            self.apoptosis_rb2.setChecked(True)
+        else:
+            print(" ------------------  apoptosis_rb1.setChecked(True) ")
+            self.apoptosis_rb1.setChecked(True)
         self.apoptosis_phase0_duration.setText(self.param_d[cdname]["apoptosis_phase0_duration"])
         self.apoptosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["apoptosis_phase0_fixed"])
+        # vs.
+        self.apoptosis_trate01.setText(self.param_d[cdname]["apoptosis_trate01"])
+        self.apoptosis_trate01_fixed.setChecked(self.param_d[cdname]["apoptosis_trate01_fixed"])
 
         self.apoptosis_unlysed_rate.setText(self.param_d[cdname]["apoptosis_unlysed_rate"])
         self.apoptosis_lysed_rate.setText(self.param_d[cdname]["apoptosis_lysed_rate"])
         self.apoptosis_cytoplasmic_biomass_change_rate.setText(self.param_d[cdname]["apoptosis_cyto_rate"])
         self.apoptosis_nuclear_biomass_change_rate.setText(self.param_d[cdname]["apoptosis_nuclear_rate"])
         self.apoptosis_calcification_rate.setText(self.param_d[cdname]["apoptosis_calcif_rate"])
-        self.apoptosis_relative_rupture_volume.setText(self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+        self.apoptosis_relative_rupture_volume.setText(self.param_d[cdname]["apoptosis_rel_rupture_volume"])
 
         #-----
         self.necrosis_death_rate.setText(self.param_d[cdname]["necrosis_death_rate"])
+
+        if self.param_d[cdname]['necrosis_duration_flag']:
+            print(" ------------------  necrosis_rb2.setChecked(True) ")
+            self.necrosis_rb2.setChecked(True)
+        else:
+            print(" ------------------  necrosis_rb1.setChecked(True) ")
+            self.necrosis_rb1.setChecked(True)
         self.necrosis_phase0_duration.setText(self.param_d[cdname]["necrosis_phase0_duration"])
         self.necrosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["necrosis_phase0_fixed"])
         self.necrosis_phase1_duration.setText(self.param_d[cdname]["necrosis_phase1_duration"])
         self.necrosis_phase1_duration_fixed.setChecked(self.param_d[cdname]["necrosis_phase1_fixed"])
+        # vs.
+        self.necrosis_trate01.setText(self.param_d[cdname]["necrosis_trate01"])
+        self.necrosis_trate01_fixed.setChecked(self.param_d[cdname]["necrosis_trate01_fixed"])
+        self.necrosis_trate12.setText(self.param_d[cdname]["necrosis_trate12"])
+        self.necrosis_trate12_fixed.setChecked(self.param_d[cdname]["necrosis_trate12_fixed"])
 
         self.necrosis_unlysed_rate.setText(self.param_d[cdname]["necrosis_unlysed_rate"])
         self.necrosis_lysed_rate.setText(self.param_d[cdname]["necrosis_lysed_rate"])
@@ -3457,6 +3530,7 @@ class CellDef(QWidget):
         self.necrosis_nuclear_biomass_change_rate.setText(self.param_d[cdname]["necrosis_nuclear_rate"])
         self.necrosis_calcification_rate.setText(self.param_d[cdname]["necrosis_calcif_rate"])
         self.necrosis_relative_rupture_volume.setText(self.param_d[cdname]["necrosis_rel_rupture_rate"])
+        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~  leaving  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
     #-----------------------------------------------------------------------------------------
@@ -3593,16 +3667,6 @@ class CellDef(QWidget):
                 idx += 1
 
                 # Now fill the param dict for each substrate and the Qt widget values for the 0th
-
-                # death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
-                # print('death_path=',death_path)
-
-                # # rwh/TODO: validate we've got apoptosis or necrosis since order is not required in XML?
-                # apoptosis_path = death_path + "model[1]//"
-                # self.apoptosis_death_rate.setText(uep.find('.//cell_definition[1]//phenotype//death//model[1]//death_rate').text)
-                # val = uep.find(apoptosis_path + 'death_rate').text
-                # self.param_d[cell_def_name]["apop_death_rate"] = val
-                # self.apoptosis_death_rate.setText(val)
 
                 print("\n===== populate():  cycle")
 
@@ -3972,6 +4036,22 @@ class CellDef(QWidget):
 
                 death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
 
+                self.param_d[cell_def_name]['apoptosis_duration_flag'] = False
+                self.param_d[cell_def_name]["apoptosis_phase0_duration"] = "0.0"
+                self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
+                self.param_d[cell_def_name]["apoptosis_trate01"] = "0.0"
+                self.param_d[cell_def_name]["apoptosis_trate01_fixed"] = False
+
+                self.param_d[cell_def_name]['necrosis_duration_flag'] = False
+                self.param_d[cell_def_name]["necrosis_phase0_duration"] = "0.0"
+                self.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
+                self.param_d[cell_def_name]["necrosis_phase1_duration"] = "0.0"
+                self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
+                self.param_d[cell_def_name]["necrosis_trate01"] = "0.0"
+                self.param_d[cell_def_name]["necrosis_trate01_fixed"] = False
+                self.param_d[cell_def_name]["necrosis_trate12"] = "0.0"
+                self.param_d[cell_def_name]["necrosis_trate12_fixed"] = False
+
                 # uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
                 death_uep = uep.find(".//cell_definition[" + str(idx) + "]//phenotype//death")
                 print('death_uep=',death_uep)
@@ -3991,7 +4071,8 @@ class CellDef(QWidget):
                         pd_uep = death_model.find("phase_durations")
                         if pd_uep is not None:
                             print(' >> pd_uep =',pd_uep )
-                            self.apoptosis_rb2.setChecked(True)  # duration
+                            self.param_d[cell_def_name]['apoptosis_duration_flag'] = True
+                            # self.apoptosis_rb2.setChecked(True)  # duration
 
                             for pd in pd_uep:   # <duration index= ... >
                                 print(pd)
@@ -4003,14 +4084,14 @@ class CellDef(QWidget):
                                     else:
                                         self.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
 
-                        else:  # rwh/TODO - transition rates
+                        else:  #  transition rates
                             #     <phase_transition_rates units="1/min">
                             #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
                             #     </phase_transition_rates>
                             tr_uep = death_model.find("phase_transition_rates")
                             if tr_uep is not None:
                                 print(' >> tr_uep =',tr_uep )
-                                self.apoptosis_rb1.setChecked(True)  # trate01
+                                # self.apoptosis_rb1.setChecked(True)  # trate01
 
                                 for tr in tr_uep:   # <duration index= ... >
                                     print(tr)
@@ -4033,7 +4114,7 @@ class CellDef(QWidget):
                         self.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
                         self.param_d[cell_def_name]["apoptosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
                         self.param_d[cell_def_name]["apoptosis_calcif_rate"] = params_uep.find("calcification_rate").text
-                        self.param_d[cell_def_name]["apoptosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
+                        self.param_d[cell_def_name]["apoptosis_rel_rupture_volume"] = params_uep.find("relative_rupture_volume").text
 
                 #--------------
                 # necrosis_params_path = necrosis_path + "parameters//"
@@ -4044,6 +4125,9 @@ class CellDef(QWidget):
                         pd_uep = death_model.find("phase_durations")
                         if pd_uep is not None:
                             print(' >> pd_uep =',pd_uep )
+                            # self.necrosis_rb2.setChecked(True)  # duration
+                            self.param_d[cell_def_name]['necrosis_duration_flag'] = True
+
                             for pd in pd_uep:   # <duration index= ... >
                                 print(pd)
                                 print("index=",pd.attrib["index"])
@@ -4060,13 +4144,14 @@ class CellDef(QWidget):
                                     else:
                                         self.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
 
-                        else:  # rwh/TODO - allow for transition rates
+                        else:  # transition rates
                             #     <phase_transition_rates units="1/min">
                             #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
                             #     </phase_transition_rates>
                             tr_uep = death_model.find("phase_transition_rates")
                             if tr_uep is not None:
                                 print(' >> tr_uep =',tr_uep )
+                                # self.necrosis_rb1.setChecked(True)  
                                 for tr in tr_uep:  # transition rate 
                                     print(tr)
                                     print("start_index=",tr.attrib["start_index"])
@@ -4385,6 +4470,7 @@ class CellDef(QWidget):
         self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and have its params shown
 
         print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
+        print()
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
             print()
@@ -4442,7 +4528,7 @@ class CellDef(QWidget):
         #-- duration
         # if self.cycle_duration_flag:
         if self.param_d[cdef]['cycle_duration_flag']:
-            subelm = ET.SubElement(cycle, "phase_durations",{"units":"min"})
+            subelm = ET.SubElement(cycle, "phase_durations",{"units":self.default_time_units})
             subelm.text = self.indent14
             subelm.tail = self.indent12
 
@@ -4732,23 +4818,38 @@ class CellDef(QWidget):
 						# <phase_durations units="min">
 							# <duration index="0" fixed_duration="true">511</duration>
 						# </phase_durations>
-        subelm = ET.SubElement(model, "phase_durations",{"units":"min"})
-        subelm.text = self.indent16
-        subelm.tail = self.indent14
+        if self.param_d[cdname]['apoptosis_duration_flag']:
+            subelm = ET.SubElement(model, "phase_durations",{"units":self.default_time_units})
+            subelm.text = self.indent16
+            subelm.tail = self.indent14
 
-        bval = "false"
-        if self.param_d[cdname]["apoptosis_phase0_fixed"]:
-            bval = "true"
-        subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
-        subelm2.text = self.param_d[cdname]["apoptosis_phase0_duration"]
-        subelm2.tail = self.indent14
+            bval = "false"
+            if self.param_d[cdname]["apoptosis_phase0_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["apoptosis_phase0_duration"]
+            subelm2.tail = self.indent14
+        else:   # transition rate
+            # 	<phase_transition_rates units="1/min">
+            # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+            # 	</phase_transition_rates>
+            subelm = ET.SubElement(model, "phase_transition_rates",{"units":self.default_rate_units})
+            subelm.text = self.indent16
+            subelm.tail = self.indent14
+
+            bval = "false"
+            if self.param_d[cdname]["apoptosis_trate01_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0","end_index":"1", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["apoptosis_trate01"]
+            subelm2.tail = self.indent14
 
         # (self.param_d[cdname]["apoptosis_unlysed_rate"])
         # (self.param_d[cdname]["apoptosis_lysed_rate"])
         # (self.param_d[cdname]["apoptosis_cyto_rate"])
         # (self.param_d[cdname]["apoptosis_nuclear_rate"])
         # (self.param_d[cdname]["apoptosis_calcif_rate"])
-        # (self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+        # (self.param_d[cdname]["apoptosis_rel_rupture_volume"])
 					# 		<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
 					# 		<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
 					# 		<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
@@ -4760,7 +4861,7 @@ class CellDef(QWidget):
         # (self.param_d[cdname]["apoptosis_cyto_rate"])
         # (self.param_d[cdname]["apoptosis_nuclear_rate"])
         # (self.param_d[cdname]["apoptosis_calcif_rate"])
-        # (self.param_d[cdname]["apoptosis_rel_rupture_rate"])
+        # (self.param_d[cdname]["apoptosis_rel_rupture_volume"])
         elm = ET.SubElement(model, "parameters")
         elm.text = self.indent16  # affects indent of child
         elm.tail = self.indent12
@@ -4786,7 +4887,7 @@ class CellDef(QWidget):
         subelm.tail = self.indent16
 
         subelm = ET.SubElement(elm, "relative_rupture_volume",{"units":"dimensionless"})
-        subelm.text = self.param_d[cdname]["apoptosis_rel_rupture_rate"]
+        subelm.text = self.param_d[cdname]["apoptosis_rel_rupture_volume"]
         subelm.tail = self.indent14
 
         #---------------------------------
@@ -4805,23 +4906,65 @@ class CellDef(QWidget):
         subelm.text = self.param_d[cdname]["necrosis_death_rate"]
         subelm.tail = self.indent14
 
-        subelm = ET.SubElement(model, "phase_durations",{"units":"min"})
-        subelm.text = self.indent16
-        subelm.tail = self.indent14
+        # subelm = ET.SubElement(model, "phase_durations",{"units":self.default_time_units})
+        # subelm.text = self.indent16
+        # subelm.tail = self.indent14
 
-        bval = "false"
-        if self.param_d[cdname]["necrosis_phase0_fixed"]:
-            bval = "true"
-        subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
-        subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
-        subelm2.tail = self.indent16
+        # bval = "false"
+        # if self.param_d[cdname]["necrosis_phase0_fixed"]:
+        #     bval = "true"
+        # subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
+        # subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
+        # subelm2.tail = self.indent16
 
-        bval = "false"
-        if self.param_d[cdname]["necrosis_phase1_fixed"]:
-            bval = "true"
-        subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":bval})
-        subelm2.text = self.param_d[cdname]["necrosis_phase1_duration"]
-        subelm2.tail = self.indent14
+        # bval = "false"
+        # if self.param_d[cdname]["necrosis_phase1_fixed"]:
+        #     bval = "true"
+        # subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":bval})
+        # subelm2.text = self.param_d[cdname]["necrosis_phase1_duration"]
+        # subelm2.tail = self.indent14
+    
+
+        if self.param_d[cdname]['necrosis_duration_flag']:
+            subelm = ET.SubElement(model, "phase_durations",{"units":self.default_time_units})
+            subelm.text = self.indent16
+            subelm.tail = self.indent14
+
+            bval = "false"
+            if self.param_d[cdname]["necrosis_phase0_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
+            subelm2.tail = self.indent14
+
+            bval = "false"
+            if self.param_d[cdname]["necrosis_phase1_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
+            subelm2.tail = self.indent14
+        else:   # transition rate
+            # 	<phase_transition_rates units="1/min">
+            # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+            # 	</phase_transition_rates>
+            subelm = ET.SubElement(model, "phase_transition_rates",{"units":self.default_rate_units})
+            subelm.text = self.indent16
+            subelm.tail = self.indent14
+
+            bval = "false"
+            if self.param_d[cdname]["necrosis_trate01_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0","end_index":"1", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["necrosis_trate01"]
+            subelm2.tail = self.indent16
+
+            bval = "false"
+            if self.param_d[cdname]["necrosis_trate12_fixed"]:
+                bval = "true"
+            subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1","end_index":"2", "fixed_duration":bval})
+            subelm2.text = self.param_d[cdname]["necrosis_trate12"]
+            subelm2.tail = self.indent14
+
 
         # (self.param_d[cdname]["necrosis_phase0_duration"])
         # (self.param_d[cdname]["necrosis_phase0_fixed"])
