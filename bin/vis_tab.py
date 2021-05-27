@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
 # from ipywidgets import Layout, Label, Text, Checkbox, Button, BoundedIntText, HBox, VBox, Box, \
@@ -15,7 +16,7 @@ from matplotlib import gridspec
 from collections import deque
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog
 
 import numpy as np
 import matplotlib
@@ -34,6 +35,10 @@ class Vis(QWidget):
         # global self.config_params
 
         self.xml_root = None
+        self.current_svg_frame = 0
+        self.timer = QtCore.QTimer()
+        # self.t.timeout.connect(self.task)
+        self.timer.timeout.connect(self.play_plot_cb)
 
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
@@ -86,19 +91,35 @@ class Vis(QWidget):
 
         #------------------
         controls_hbox = QHBoxLayout()
-        # self.new_button = QPushButton("New")
-        w = QLabel("Directory")
+        # w = QLabel("Directory")
+        w = QPushButton("Directory")
+        w.clicked.connect(self.open_directory_cb)
         controls_hbox.addWidget(w)
 
-        self.output_dir = "/Users/heiland/dev/PhysiCell_V.1.8.0_release/output"
-        w = QLineEdit()
+        # self.output_dir = "/Users/heiland/dev/PhysiCell_V.1.8.0_release/output"
+        self.output_dir_w = QLineEdit()
         # w.setText("/Users/heiland/dev/PhysiCell_V.1.8.0_release/output")
-        w.setText(self.output_dir)
-        controls_hbox.addWidget(w)
+        # w.setText(self.output_dir)
+        # w.textChanged[str].connect(self.output_dir_changed)
+        # w.textChanged.connect(self.output_dir_changed)
+        controls_hbox.addWidget(self.output_dir_w)
 
-        self.prepare_button = QPushButton("Prepare")
-        controls_hbox.addWidget(self.prepare_button)
-        # self.new_button.clicked.connect(self.append_more_cb)
+        self.back_button = QPushButton("<")
+        self.back_button.clicked.connect(self.back_plot_cb)
+        controls_hbox.addWidget(self.back_button)
+
+        self.forward_button = QPushButton(">")
+        self.forward_button.clicked.connect(self.forward_plot_cb)
+        controls_hbox.addWidget(self.forward_button)
+
+        self.play_button = QPushButton("Play")
+        # self.play_button.clicked.connect(self.play_plot_cb)
+        self.play_button.clicked.connect(self.animate)
+        controls_hbox.addWidget(self.play_button)
+
+        # self.prepare_button = QPushButton("Prepare")
+        # self.prepare_button.clicked.connect(self.prepare_plot_cb)
+        # controls_hbox.addWidget(self.prepare_button)
 
         #==================================================================
         self.config_params.setLayout(self.vbox)
@@ -113,6 +134,93 @@ class Vis(QWidget):
         self.layout.addLayout(controls_hbox)
         self.layout.addWidget(self.scroll)
 
+    def open_directory_cb(self):
+        dialog = QFileDialog()
+        self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
+        print(self.output_dir)
+        self.output_dir_w.setText(self.output_dir)
+        # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
+        tree = ET.parse(self.output_dir + "/" + "initial.xml")
+        xml_root = tree.getroot()
+
+        bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
+        bds = bds_str.split()
+        print('bds=',bds)
+        self.xmin = float(bds[0])
+        self.xmax = float(bds[3])
+        self.x_range = self.xmax - self.xmin
+
+        self.ymin = float(bds[1])
+        self.ymax = float(bds[4])
+        self.y_range = self.ymax - self.ymin
+
+    # def output_dir_changed(self, text):
+    #     self.output_dir = text
+    #     print(self.output_dir)
+
+    def back_plot_cb(self, text):
+        self.current_svg_frame -= 1
+        if self.current_svg_frame < 0:
+            self.current_svg_frame = 0
+        print('svg # ',self.current_svg_frame)
+        self.plot_svg(self.current_svg_frame)
+        self.canvas.update()
+        self.canvas.draw()
+
+    def forward_plot_cb(self, text):
+        self.current_svg_frame += 1
+        print('svg # ',self.current_svg_frame)
+        self.plot_svg(self.current_svg_frame)
+        self.canvas.update()
+        self.canvas.draw()
+
+    # def task(self):
+            # self.dc.update_figure()
+    def play_plot_cb(self):
+        for idx in range(1):
+            self.current_svg_frame += 1
+            print('svg # ',self.current_svg_frame)
+
+            fname = "snapshot%08d.svg" % self.current_svg_frame
+            full_fname = os.path.join(self.output_dir, fname)
+            print("full_fname = ",full_fname)
+            # with debug_view:
+                # print("plot_svg:", full_fname) 
+            # print("-- plot_svg:", full_fname) 
+            if not os.path.isfile(full_fname):
+                # print("Once output files are generated, click the slider.")   
+                print("ERROR:  filename not found.")
+                self.timer.stop()
+                return
+
+            self.plot_svg(self.current_svg_frame)
+            self.canvas.update()
+            self.canvas.draw()
+
+    def animate(self, text):
+        self.current_svg_frame = 0
+        # self.timer = QtCore.QTimer()
+        # self.timer.timeout.connect(self.play_plot_cb)
+        # self.timer.start(2000)  # every 2 sec
+        self.timer.start(100)
+
+    # def play_plot_cb0(self, text):
+    #     for idx in range(10):
+    #         self.current_svg_frame += 1
+    #         print('svg # ',self.current_svg_frame)
+    #         self.plot_svg(self.current_svg_frame)
+    #         self.canvas.update()
+    #         self.canvas.draw()
+    #         # time.sleep(1)
+    #         # self.ax0.clear()
+    #         # self.canvas.pause(0.05)
+
+    def prepare_plot_cb(self, text):
+        self.current_svg_frame += 1
+        print('svg # ',self.current_svg_frame)
+        self.plot_svg(self.current_svg_frame)
+        self.canvas.update()
+        self.canvas.draw()
 
     def create_figure(self):
         self.figure = plt.figure()
@@ -125,15 +233,15 @@ class Vis(QWidget):
         # self.ax0.get_yaxis().set_visible(False)
         # plt.tight_layout()
 
-        np.random.seed(19680801)  # for reproducibility
-        N = 50
-        x = np.random.rand(N) * 2000
-        y = np.random.rand(N) * 2000
-        colors = np.random.rand(N)
-        area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
+        # np.random.seed(19680801)  # for reproducibility
+        # N = 50
+        # x = np.random.rand(N) * 2000
+        # y = np.random.rand(N) * 2000
+        # colors = np.random.rand(N)
+        # area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
         # self.ax0.scatter(x, y, s=area, c=colors, alpha=0.5)
 
-        self.plot_svg(1)
+        self.plot_svg(self.current_svg_frame)
 
         # self.imageInit = [[255] * 320 for i in range(240)]
         # self.imageInit[0][0] = 0
@@ -239,8 +347,12 @@ class Vis(QWidget):
             # print("plot_svg:", full_fname) 
         # print("-- plot_svg:", full_fname) 
         if not os.path.isfile(full_fname):
-            print("Once output files are generated, click the slider.")   
+            # print("Once output files are generated, click the slider.")   
+            print("ERROR:  filename not found.")   
             return
+
+        self.ax0.cla()
+        self.title_str = ""
 
         xlist = deque()
         ylist = deque()

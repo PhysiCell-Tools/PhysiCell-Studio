@@ -58,7 +58,10 @@ class PhysiCellXMLCreator(QWidget):
         # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(800, 800)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(600, 600)  # width, height (height >= Cell Types|Death params)
         # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
 
         # self.menubar = QtWidgets.QMenuBar(self)
@@ -156,6 +159,7 @@ class PhysiCellXMLCreator(QWidget):
         tabWidget.addTab(self.user_params_tab,"User Params")
         if show_vis_flag:
             self.vis_tab = Vis()
+            # self.vis_tab.xml_root = self.xml_root
             tabWidget.addTab(self.vis_tab,"Plot")
 
         vlayout.addWidget(tabWidget)
