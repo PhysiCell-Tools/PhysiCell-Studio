@@ -335,6 +335,14 @@
 				</motility>
 
 				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
 					<substrate name="interferon 1">
 						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
@@ -349,6 +357,10 @@
 					</substrate> 	
 					<substrate name="debris">
 						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
                         <uptake_rate units="1/min">0.0</uptake_rate>
 					</substrate>
                     <substrate name="anti-inflammatory cytokine">
