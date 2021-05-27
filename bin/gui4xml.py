@@ -11,6 +11,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import os
 import sys
+import getopt
 import shutil
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -25,6 +26,7 @@ from cell_custom_data_tab import CellCustomData
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
 # from sbml_tab import SBMLParams 
+from vis_tab import Vis 
 
 def SingleBrowse(self):
         # if len(self.csv) < 2:
@@ -36,7 +38,8 @@ def SingleBrowse(self):
   
 #class PhysiCellXMLCreator(QTabWidget):
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, parent = None):
+    # def __init__(self, parent = None):
+    def __init__(self, show_vis_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.title_prefix = "PhysiCell Model Creator: "
@@ -151,13 +154,17 @@ class PhysiCellXMLCreator(QWidget):
         tabWidget.addTab(self.celldef_tab,"Cell Types")
         tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
         tabWidget.addTab(self.user_params_tab,"User Params")
+        if show_vis_flag:
+            self.vis_tab = Vis()
+            tabWidget.addTab(self.vis_tab,"Plot")
 
         vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        tabWidget.setCurrentIndex(0)  # Config (default)
+        # tabWidget.setCurrentIndex(0)  # Config (default)
+        tabWidget.setCurrentIndex(5)  # Config (default)
 
 
     def menu(self):
@@ -561,9 +568,37 @@ class PhysiCellXMLCreator(QWidget):
         self.show_sample_model()
 
 		
+# def main():
+#     app = QApplication(sys.argv)
+#     ex = PhysiCellXMLCreator()
+#     # ex.setGeometry(100,100, 800,600)
+#     ex.show()
+#     sys.exit(app.exec_())
+
 def main():
+    inputfile = ''
+    show_vis_tab = False
+    try:
+        # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["vis"])
+    except getopt.GetoptError:
+        # print 'test.py -i <inputfile> -o <outputfile>'
+        print('getopt exception')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+        #  print 'test.py -i <inputfile> -o <outputfile>'
+            print('bin/gui4xml.py [--vis]')
+            sys.exit(1)
+    #   elif opt in ("-i", "--ifile"):
+        elif opt in ("--vis"):
+            show_vis_tab = True
+    # print 'Input file is "', inputfile
+    # print("show_vis_tab = ",show_vis_tab)
+    # sys.exit()
+
     app = QApplication(sys.argv)
-    ex = PhysiCellXMLCreator()
+    ex = PhysiCellXMLCreator(show_vis_tab)
     # ex.setGeometry(100,100, 800,600)
     ex.show()
     sys.exit(app.exec_())
