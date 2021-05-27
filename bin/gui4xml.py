@@ -76,6 +76,7 @@ class PhysiCellXMLCreator(QWidget):
         model_name = "cancer_biorobots_flat"
         model_name = "test1"
         model_name = "test-gui"
+        model_name = "covid19_v5_flat"
         model_name = "template"
         # model_name = "randy_test"  #rwh
         # read_file = "data/" + model_name + ".xml"
@@ -223,9 +224,9 @@ class PhysiCellXMLCreator(QWidget):
         samples_menu.addAction(subcell_act)
         subcell_act.triggered.connect(self.subcell_cb)
 
-        # covid19_act = QAction('covid19', self)
-        # samples_menu.addAction(covid19_act)
-        # covid19_act.triggered.connect(self.covid19_cb)
+        covid19_act = QAction('covid19_v5', self)
+        samples_menu.addAction(covid19_act)
+        covid19_act.triggered.connect(self.covid19_cb)
 
         test_gui_act = QAction('test-gui', self)
         samples_menu.addAction(test_gui_act)
@@ -542,7 +543,7 @@ class PhysiCellXMLCreator(QWidget):
         self.show_sample_model()
 
     def covid19_cb(self):
-        name = "covid19_flat"
+        name = "covid19_v5_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
