@@ -16,7 +16,7 @@ from matplotlib import gridspec
 from collections import deque
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox
 
 import numpy as np
 import matplotlib
@@ -91,7 +91,6 @@ class Vis(QWidget):
 
         #------------------
         controls_hbox = QHBoxLayout()
-        # w = QLabel("Directory")
         w = QPushButton("Directory")
         w.clicked.connect(self.open_directory_cb)
         controls_hbox.addWidget(w)
@@ -137,10 +136,24 @@ class Vis(QWidget):
     def open_directory_cb(self):
         dialog = QFileDialog()
         self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
-        print(self.output_dir)
+        print("open_directory_cb:  output_dir=",self.output_dir)
+        if self.output_dir is "":
+            return
+
         self.output_dir_w.setText(self.output_dir)
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
-        tree = ET.parse(self.output_dir + "/" + "initial.xml")
+        # tree = ET.parse(self.output_dir + "/" + "initial.xml")
+        xml_file = Path(self.output_dir, "initial.xml")
+        if not os.path.isfile(xml_file):
+            print("Expecting initial.xml, but does not exist.")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Did not find 'initial.xml' in this directory.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        tree = ET.parse(Path(self.output_dir, "initial.xml"))
         xml_root = tree.getroot()
 
         bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
@@ -153,6 +166,11 @@ class Vis(QWidget):
         self.ymin = float(bds[1])
         self.ymax = float(bds[4])
         self.y_range = self.ymax - self.ymin
+
+        # and plot 1st frame (.svg)
+        self.current_svg_frame = 0
+        self.forward_plot_cb("")  
+
 
     # def output_dir_changed(self, text):
     #     self.output_dir = text

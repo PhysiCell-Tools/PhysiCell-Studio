@@ -167,8 +167,10 @@ class PhysiCellXMLCreator(QWidget):
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        # tabWidget.setCurrentIndex(0)  # Config (default)
-        tabWidget.setCurrentIndex(5)  # Config (default)
+        if show_vis_flag:
+            tabWidget.setCurrentIndex(5)    # Vis (default)
+        else:
+            tabWidget.setCurrentIndex(0)  # Config (default)
 
 
     def menu(self):

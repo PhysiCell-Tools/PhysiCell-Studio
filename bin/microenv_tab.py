@@ -515,7 +515,20 @@ class SubstrateDef(QWidget):
 
         self.new_substrate_count += 1
 
-        self.celldef_tab.add_new_substrate_comboboxes(subname)
+        self.celldef_tab.add_new_substrate(subname)
+        # self.celldef_tab.add_new_substrate_comboboxes(subname)
+        # self.param_d[cell_def_name]["secretion"][substrate_name] = {}
+
+        # sval = "0.0"
+        # print("cdnames (keys) = ",self.celldef_tab.param_d.keys())
+        # for cdname in self.celldef_tab.param_d.keys():  # for all cell defs, initialize secretion params
+        #     # self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
+        #     print('cdname = ',cdname)
+        #     print(self.celldef_tab.param_d[cdname]["secretion"])
+        #     self.celldef_tab.param_d[cdname]["secretion"][subname]["secretion_rate"] = sval
+        #     self.celldef_tab.param_d[cdname]["secretion"][subname]["secretion_target"] = sval
+        #     self.celldef_tab.param_d[cdname]["secretion"][subname]["uptake_rate"] = sval
+        #     self.celldef_tab.param_d[cdname]["secretion"][subname]["net_export_rate"] = sval
 
         self.current_substrate = subname
         # self.substrate_name.setText(subname)
@@ -531,6 +544,7 @@ class SubstrateDef(QWidget):
 
         self.tree_item_clicked_cb(treeitem, 0)
 
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def copy_substrate(self):
         print('------ copy_substrate')
@@ -543,6 +557,10 @@ class SubstrateDef(QWidget):
             print(" ===>>> ",k, " : ", self.param_d[k])
 
         self.new_substrate_count += 1
+
+        # self.celldef_tab.add_new_substrate_comboboxes(subname)
+
+        self.celldef_tab.add_new_substrate(subname)
 
         self.current_substrate = subname
         # self.substrate_name.setText(subname)
@@ -558,6 +576,7 @@ class SubstrateDef(QWidget):
 
         self.tree_item_clicked_cb(treeitem, 0)
         
+    #----------------------------------------------------------------------
     def show_delete_warning(self):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
@@ -570,6 +589,7 @@ class SubstrateDef(QWidget):
         if returnValue == QMessageBox.Ok:
             print('OK clicked')
 
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def delete_substrate(self):
         num_items = self.tree.invisibleRootItem().childCount()
@@ -600,6 +620,7 @@ class SubstrateDef(QWidget):
         self.current_substrate = self.tree.currentItem().text(0)
 
 
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     # def save_xml(self):
     #     # self.text.setText(random.choice(self.hello))
@@ -620,7 +641,7 @@ class SubstrateDef(QWidget):
 
         self.celldef_tab.rename_substrate_comboboxes(prev_name, self.current_substrate)
 
-
+    #----------------------------------------------------------------------
     def tree_item_sel_changed_cb(self, it,col):
         print('--------- tree_item_sel_changed_cb():', it, col, it.text(col) )  # col=0 always
 
@@ -639,6 +660,7 @@ class SubstrateDef(QWidget):
     #     print('self.current_substrate= ',self.current_substrate )
 
 
+    #----------------------------------------------------------------------
     # Update the widget values with values from param_d
     def tree_item_clicked_cb(self, it,col):
         print('--------- tree_item_clicked_cb():', it, col, it.text(col) )  # col=0 always
@@ -684,6 +706,7 @@ class SubstrateDef(QWidget):
         self.track_in_agents.setChecked(self.param_d["track_in_agents"])
 
 
+    #----------------------------------------------------------------------
 # 		<variable name="substrate" units="dimensionless" ID="0">
 # 			<physical_parameter_set>
 # 				<diffusion_coefficient units="micron^2/min">100000.0</diffusion_coefficient>

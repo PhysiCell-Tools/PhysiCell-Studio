@@ -2646,8 +2646,8 @@ class CellDef(QWidget):
     def secretion_rate_changed(self, text):
         # self.param_d[self.current_cell_def]['secretion_rate'] = text
 
-        # self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
-        self.param_d[self.current_cell_def]['secretion'][self.current_secretion_substrate]['secretion_rate'] = text
+        # self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
+        self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['secretion_rate'] = text
     def secretion_target_changed(self, text):
         self.param_d[self.current_cell_def]['secretion_target'] = text
     def uptake_rate_changed(self, text):
@@ -3330,6 +3330,22 @@ class CellDef(QWidget):
         self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
         self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
         self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+
+
+    def add_new_substrate(self, sub_name):
+        self.add_new_substrate_comboboxes(sub_name)
+
+
+        sval = self.default_sval
+        for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
+            print('cdname = ',cdname)
+            print(self.param_d[cdname]["secretion"])
+            self.param_d[cdname]["secretion"][sub_name] = {}
+            self.param_d[cdname]["secretion"][sub_name]["secretion_rate"] = sval
+            self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = sval
+            self.param_d[cdname]["secretion"][sub_name]["uptake_rate"] = sval
+            self.param_d[cdname]["secretion"][sub_name]["net_export_rate"] = sval
+
 
     def new_custom_data_params(self, cdname):
         print("------- new_custom_data_params() -----")
@@ -4360,17 +4376,17 @@ class CellDef(QWidget):
                 # e.g.: param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
                 # or,   param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
                 # or,   param_d["cancer cell"]["secretion"] = {"oxygen" : { "secretion_rate" : 42.0 } }
-                self.param_d[cell_def_name]['secretion'] = {}  # a dict for these params
+                self.param_d[cell_def_name]["secretion"] = {}  # a dict for these params
 
                 # Initialize (set to 0.0) all substrates' secretion params
                 # val = "0.0"
                 # print('----- populate: self.substrate_list = ',self.substrate_list )
                 # for substrate_name in self.substrate_list:
                 #     print('----- populate: substrate_name = ',substrate_name )
-                #     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
-                #     self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_target"] = val
-                #     self.param_d[cell_def_name]['secretion'][substrate_name]["uptake_rate"] = val
-                #     self.param_d[cell_def_name]['secretion'][substrate_name]["net_export_rate"] = val
+                #     self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
+                #     self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_target"] = val
+                #     self.param_d[cell_def_name]["secretion"][substrate_name]["uptake_rate"] = val
+                #     self.param_d[cell_def_name]["secretion"][substrate_name]["net_export_rate"] = val
                 # foo = 1/0
 
 
@@ -4381,37 +4397,37 @@ class CellDef(QWidget):
                         self.current_secretion_substrate = substrate_name
 
                     print(jdx,") -- secretion substrate = ",substrate_name)
-                    # self.param_d[self.current_cell_def]['secretion'][substrate_name]["secretion_rate"] = {}
-                    self.param_d[cell_def_name]['secretion'][substrate_name] = {}
+                    # self.param_d[self.current_cell_def]["secretion"][substrate_name]["secretion_rate"] = {}
+                    self.param_d[cell_def_name]["secretion"][substrate_name] = {}
 
                     tptr = sub.find("secretion_rate")
                     if tptr is not None:
                         val = tptr.text
                     else:
                         val = "0.0"
-                    self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
-                    # print(self.param_d[cell_def_name]['secretion'][substrate_name] )
+                    self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
+                    # print(self.param_d[cell_def_name]["secretion"][substrate_name] )
 
                     tptr = sub.find("secretion_target")
                     if tptr is not None:
                         val = tptr.text
                     else:
                         val = "0.0"
-                    self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_target"] = val
+                    self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_target"] = val
 
                     tptr = sub.find("uptake_rate")
                     if tptr is not None:
                         val = tptr.text
                     else:
                         val = "0.0"
-                    self.param_d[cell_def_name]['secretion'][substrate_name]["uptake_rate"] = val
+                    self.param_d[cell_def_name]["secretion"][substrate_name]["uptake_rate"] = val
 
                     tptr = sub.find("net_export_rate")
                     if tptr is not None:
                         val = tptr.text
                     else:
                         val = "0.0"
-                    self.param_d[cell_def_name]['secretion'][substrate_name]["net_export_rate"] = val
+                    self.param_d[cell_def_name]["secretion"][substrate_name]["net_export_rate"] = val
 
                     jdx += 1
 
@@ -4451,7 +4467,7 @@ class CellDef(QWidget):
                         val = var.text
                         print("tag= ",var.tag)
                         print("val= ",val)
-                        # self.param_d[cell_def_name]['secretion'][substrate_name]["secretion_rate"] = val
+                        # self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
                         self.param_d[cell_def_name]['custom_data'][var.tag] = val
                         self.custom_data_count += 1
                 #     self.custom_data_name[jdx].setText(var.tag)
