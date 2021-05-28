@@ -256,7 +256,9 @@ class UserParams(QtWidgets.QWidget):
         # self.description.clear()
 
 
+    # populate the GUI tab with what is in the .xml
     def fill_gui(self):
+        print("\n\n------------  user_params_tab: fill_gui --------------")
         # pass
         uep_user_params = self.xml_root.find(".//user_parameters")
         # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
@@ -268,8 +270,21 @@ class UserParams(QtWidgets.QWidget):
         for var in uep_user_params:
             # type_cast = {"double":"float", "int":"int", "bool":"bool", "string":"", "divider":"Text"}
             if 'type' in var.keys():
+                # print("\n------------  var.attrib['type'] = ", var.attrib['type'])
                 if "divider" in var.attrib['type']:  # just for visual separation in Jupyter notebook
                     continue
+                # select appropriate dropdown/combobox item (double, int, bool, text)
+                elif "double" in var.attrib['type']:
+                    self.type[idx].setCurrentIndex(0)
+                elif "int" in var.attrib['type']:
+                    self.type[idx].setCurrentIndex(1)
+                elif "bool" in var.attrib['type']:
+                    self.type[idx].setCurrentIndex(2)
+                else:
+                    self.type[idx].setCurrentIndex(3)
+            else:  # default 'double'
+                self.type[idx].setCurrentIndex(1)
+
             print(idx, ") ",var)
             self.name[idx].setText(var.tag)
             print("tag=",var.tag)
@@ -285,6 +300,7 @@ class UserParams(QtWidgets.QWidget):
 
             idx += 1
 
+    # Generate the .xml to reflect changes in the GUI
     def fill_xml(self):
         print("--------- user_params_tab.py:  fill_xml(): self.count = ",self.count)
         uep = self.xml_root.find('.//user_parameters')
