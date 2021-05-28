@@ -4340,19 +4340,24 @@ class CellDef(QWidget):
                         # 			<direction>1</direction>
                         # 		</chemotaxis>
                 motility_chemotaxis_path = motility_options_path + "chemotaxis//"
-                if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
-                    self.param_d[cell_def_name]["motility_chemotaxis"] = True
-                else:
+                if uep.find(motility_chemotaxis_path) is None:
                     self.param_d[cell_def_name]["motility_chemotaxis"] = False
-
-                val = uep.find(motility_chemotaxis_path +'substrate').text
-                self.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
-
-                val = uep.find(motility_chemotaxis_path +'direction').text
-                if val == '1':
+                    self.param_d[cell_def_name]["motility_chemotaxis_substrate"] = ""
                     self.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
                 else:
-                    self.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
+                    if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
+                        self.param_d[cell_def_name]["motility_chemotaxis"] = True
+                    else:
+                        self.param_d[cell_def_name]["motility_chemotaxis"] = False
+
+                    val = uep.find(motility_chemotaxis_path +'substrate').text
+                    self.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
+
+                    val = uep.find(motility_chemotaxis_path +'direction').text
+                    if val == '1':
+                        self.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
+                    else:
+                        self.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
 
 
                 # # ---------  secretion 
