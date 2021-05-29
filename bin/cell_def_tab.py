@@ -186,10 +186,10 @@ class CellDef(QWidget):
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[cdname] = self.param_d[self.current_cell_def].copy()
 
-        for k in self.param_d.keys():
-            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-            print()
-        print()
+        # for k in self.param_d.keys():
+        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        #     print()
+        # print()
 
         # Then "zero out" all entries and uncheck checkboxes
         self.new_cycle_params(cdname)
@@ -200,10 +200,10 @@ class CellDef(QWidget):
         # self.new_secretion_params(cdname)  # todo: fix this method
         # self.new_custom_data_params(cdname)
 
-        print("\n ----- new dict:")
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-            print()
+        # print("\n ----- new dict:")
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        #     print()
 
         self.new_cell_def_count += 1
         self.current_cell_def = cdname
@@ -227,10 +227,10 @@ class CellDef(QWidget):
         # Make a new cell_def (that's a copy of the currently selected one)
         self.param_d[celldefname] = self.param_d[self.current_cell_def].copy()
 
-        for k in self.param_d.keys():
-            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-            print()
-        print()
+        # for k in self.param_d.keys():
+        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        #     print()
+        # print()
 
         self.new_cell_def_count += 1
 
@@ -254,7 +254,7 @@ class CellDef(QWidget):
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText("Not allowed to delete all cell types.")
         #    msgBox.setWindowTitle("Example")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.setStandardButtons(QMessageBox.Ok)
         # msgBox.buttonClicked.connect(msgButtonClick)
 
         returnValue = msgBox.exec()
@@ -267,7 +267,7 @@ class CellDef(QWidget):
         num_items = self.tree.invisibleRootItem().childCount()
         print('------ delete_cell_def: num_items=',num_items)
         if num_items == 1:
-            print("Not allowed to delete all substrates.")
+            # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
             self.show_delete_warning()
             return
@@ -275,9 +275,9 @@ class CellDef(QWidget):
         # rwh: is this safe?
         del self.param_d[self.current_cell_def]
 
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-            print()
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        #     print()
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         print('------      item_idx=',item_idx)
@@ -3138,24 +3138,30 @@ class CellDef(QWidget):
         # self.substrate_list.append(name)
         self.motility_substrate_dropdown.addItem(substrate_name)
         self.secretion_substrate_dropdown.addItem(substrate_name)
+
     #-----------------------------------------------------------------------------------------
-    def rename_substrate_comboboxes(self, old_name,new_name):
-        print("cell_def_tab.py: ------- rename_substrate_comboboxes")
-        # self.substrate_list.replace(old_name, new_name)
+    # When a user renames a substrate in the Microenv tab, we need to update all 
+    # cell_defs data structures that reference it.
+    def renamed_substrate(self, old_name,new_name):
+        # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
+        # print("cell_def_tab.py: ------- renamed_substrate")
         self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
-        print("self.substrate_list = ",self.substrate_list)
-        # self.substrate_list.clear()
-        # self.motility_substrate_dropdown.clear()
-        # self.secretion_substrate_dropdown.clear()
-        # self.substrate_list.append(name)
+        # print("self.substrate_list = ",self.substrate_list)
 
         for idx in range(len(self.substrate_list)):
             if old_name in self.motility_substrate_dropdown.itemText(idx):
                 self.motility_substrate_dropdown.setItemText(idx, new_name)
             if old_name in self.secretion_substrate_dropdown.itemText(idx):
                 self.secretion_substrate_dropdown.setItemText(idx, new_name)
-        # self.motility_substrate_dropdown.addItem(substrate_name)
-        # self.secretion_substrate_dropdown.addItem(substrate_name)
+
+        # 2) update in the param_d dict
+        for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
+            # print("--- old: ",self.param_d[cdname]["secretion"])
+            self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
+            # print("--- new: ",self.param_d[cdname]["secretion"])
+
+        if old_name == self.current_secretion_substrate:
+            self.current_secretion_substrate = new_name
 
     #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
@@ -3324,12 +3330,12 @@ class CellDef(QWidget):
         self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
     # todo: fix this (currently we don't call it because it clears the previously selected cell def's values)
-    def new_secretion_params(self, cdname):
-        sval = self.default_sval
-        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
-        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
-        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
-        self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+    # def new_secretion_params(self, cdname):
+    #     sval = self.default_sval
+    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
+    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
+    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
+    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
 
 
     def add_new_substrate(self, sub_name):
@@ -3338,8 +3344,8 @@ class CellDef(QWidget):
 
         sval = self.default_sval
         for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
-            print('cdname = ',cdname)
-            print(self.param_d[cdname]["secretion"])
+            # print('cdname = ',cdname)
+            # # print(self.param_d[cdname]["secretion"])
             self.param_d[cdname]["secretion"][sub_name] = {}
             self.param_d[cdname]["secretion"][sub_name]["secretion_rate"] = sval
             self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = sval
@@ -3641,9 +3647,9 @@ class CellDef(QWidget):
         self.current_cell_def = it.text(col)
         print('--- self.current_cell_def= ',self.current_cell_def )
 
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-            print()
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        #     print()
 
         # fill in the GUI with this cell def's params
 

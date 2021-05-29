@@ -46,11 +46,13 @@ class SubstrateDef(QWidget):
         splitter = QSplitter()
 
         tree_widget_width = 160
+        tree_widget_height = 400
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; Meh.
         # self.tree.itemDoubleClicked.connect(self.treeitem_edit_cb)
         # self.tree.setStyleSheet("background-color: lightgray")
         self.tree.setFixedWidth(tree_widget_width)
+        self.tree.setFixedHeight(tree_widget_height)
         # self.tree.currentChanged(self.tree_item_changed_cb)
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
         # self.tree.itemSelectionChanged.connect(self.tree_item_changed_cb2)
@@ -582,7 +584,8 @@ class SubstrateDef(QWidget):
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText("Not allowed to delete all substrates.")
         #    msgBox.setWindowTitle("Example")
-        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        # msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.setStandardButtons(QMessageBox.Ok)
         # msgBox.buttonClicked.connect(msgButtonClick)
 
         returnValue = msgBox.exec()
@@ -595,7 +598,7 @@ class SubstrateDef(QWidget):
         num_items = self.tree.invisibleRootItem().childCount()
         print('------ delete_substrate: num_items=',num_items)
         if num_items == 1:
-            print("Not allowed to delete all substrates.")
+            # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
             self.show_delete_warning()
             return
@@ -628,18 +631,18 @@ class SubstrateDef(QWidget):
 
     # When a substrate is selected(via double-click) and renamed
     def tree_item_changed_cb(self, it,col):
-        print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
+        # print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
 
         prev_name = self.current_substrate
-        print('prev_name= ',prev_name)
+        # print('prev_name= ',prev_name)
         self.current_substrate = it.text(col)
         self.param_d[self.current_substrate] = self.param_d.pop(prev_name)  # sweet
-        print('self.current_substrate= ',self.current_substrate )
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-        print()
+        # print('self.current_substrate= ',self.current_substrate )
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        # print()
 
-        self.celldef_tab.rename_substrate_comboboxes(prev_name, self.current_substrate)
+        self.celldef_tab.renamed_substrate(prev_name, self.current_substrate)
 
     #----------------------------------------------------------------------
     def tree_item_sel_changed_cb(self, it,col):

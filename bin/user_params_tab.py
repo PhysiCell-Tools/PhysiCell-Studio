@@ -285,18 +285,18 @@ class UserParams(QtWidgets.QWidget):
             else:  # default 'double'
                 self.type[idx].setCurrentIndex(1)
 
-            print(idx, ") ",var)
+            # print(idx, ") ",var)
             self.name[idx].setText(var.tag)
-            print("tag=",var.tag)
+            # print("tag=",var.tag)
             self.value[idx].setText(var.text)
 
             if 'units' in var.keys():
                 self.units[idx].setText(var.attrib['units'])
             if 'description' in var.keys():
-                print("----- found description: ",var.attrib['description'])
+                # print("----- found description: ",var.attrib['description'])
                 self.description[idx].setText(var.attrib['description'])
-            else:
-                print("----- no description found. ")
+            # else:
+            #     print("----- no description found. ")
 
             idx += 1
 

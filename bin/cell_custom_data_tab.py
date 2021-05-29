@@ -235,10 +235,10 @@ class CellCustomData(QWidget):
         print("  num_cell_defs =",num_cell_defs )
         for k in self.celldef_tab.param_d.keys():   # for all cell types
             self.celldef_tab.param_d[k]['custom_data'][vname] = text
-            print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+            # print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
 
             self.celldef_tab.custom_data_value[idx].setText(text)
-            print()
+            # print()
 
 
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
@@ -352,9 +352,9 @@ class CellCustomData(QWidget):
         #     self.custom_data_units[idx].setReadOnly(True)
 
         for var in uep_custom_data:
-            print(idx, ") ",var)
+            # print(idx, ") ",var)
             self.name[idx].setText(var.tag)
-            print("tag=",var.tag)
+            # print("tag=",var.tag)
 
             self.value[idx].setText(var.text)
 
@@ -364,7 +364,7 @@ class CellCustomData(QWidget):
             if 'description' in var.keys():
                 self.description[idx].setText(var.attrib['description'])
             idx += 1
-            print("custom_data:  fill_gui(): idx=",idx,", count=",self.count)
+            # print("custom_data:  fill_gui(): idx=",idx,", count=",self.count)
             if idx > self.count:
                 self.append_more_cb()
 

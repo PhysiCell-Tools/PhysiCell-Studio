@@ -26,6 +26,7 @@ from cell_custom_data_tab import CellCustomData
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
 # from sbml_tab import SBMLParams 
+from vis_tab import Vis 
 
 def SingleBrowse(self):
         # if len(self.csv) < 2:
@@ -37,8 +38,8 @@ def SingleBrowse(self):
   
 #class PhysiCellXMLCreator(QTabWidget):
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, parent = None):
-    # def __init__(self, show_vis_flag, parent = None):
+    # def __init__(self, parent = None):
+    def __init__(self, show_vis_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.title_prefix = "PhysiCell Model Creator: "
@@ -57,9 +58,9 @@ class PhysiCellXMLCreator(QWidget):
         # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 800)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(600, 600)  # width, height (height >= Cell Types|Death params)
         # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
 
@@ -156,13 +157,20 @@ class PhysiCellXMLCreator(QWidget):
         tabWidget.addTab(self.celldef_tab,"Cell Types")
         tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
         tabWidget.addTab(self.user_params_tab,"User Params")
+        if show_vis_flag:
+            self.vis_tab = Vis()
+            # self.vis_tab.xml_root = self.xml_root
+            tabWidget.addTab(self.vis_tab,"Plot")
 
         vlayout.addWidget(tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        tabWidget.setCurrentIndex(0)  # Config (default)
+        if show_vis_flag:
+            tabWidget.setCurrentIndex(5)    # Vis (default)
+        else:
+            tabWidget.setCurrentIndex(0)  # Config (default)
 
 
     def menu(self):
@@ -574,30 +582,29 @@ class PhysiCellXMLCreator(QWidget):
 #     sys.exit(app.exec_())
 
 def main():
-    # inputfile = ''
-    # try:
-    #     # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-    #     opts, args = getopt.getopt(sys.argv[1:],"hv:",["vis"])
-    # except getopt.GetoptError:
-    #     # print 'test.py -i <inputfile> -o <outputfile>'
-    #     print('getopt exception')
-    #     sys.exit(2)
-    # for opt, arg in opts:
-    #     if opt == '-h':
-    #     #  print 'test.py -i <inputfile> -o <outputfile>'
-    #         print('bin/gui4xml.py [--vis]')
-    #         sys.exit(1)
-    # #   elif opt in ("-i", "--ifile"):
-    #     elif opt in ("--vis"):
-    #         show_vis_tab = True
-
+    inputfile = ''
+    show_vis_tab = False
+    try:
+        # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["vis"])
+    except getopt.GetoptError:
+        # print 'test.py -i <inputfile> -o <outputfile>'
+        print('getopt exception')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+        #  print 'test.py -i <inputfile> -o <outputfile>'
+            print('bin/gui4xml.py [--vis]')
+            sys.exit(1)
+    #   elif opt in ("-i", "--ifile"):
+        elif opt in ("--vis"):
+            show_vis_tab = True
     # print 'Input file is "', inputfile
     # print("show_vis_tab = ",show_vis_tab)
     # sys.exit()
 
     app = QApplication(sys.argv)
-    ex = PhysiCellXMLCreator()
-    # ex = PhysiCellXMLCreator(show_vis_tab)
+    ex = PhysiCellXMLCreator(show_vis_tab)
     # ex.setGeometry(100,100, 800,600)
     ex.show()
     sys.exit(app.exec_())
