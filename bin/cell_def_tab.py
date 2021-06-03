@@ -3682,6 +3682,7 @@ class CellDef(QWidget):
                 self.current_cell_def = cell_def_name  # do this for the callback methods?
 
                 cellname = QTreeWidgetItem([cell_def_name])
+                cellname.setFlags(cellname.flags() | QtCore.Qt.ItemIsEditable)
                 self.tree.insertTopLevelItem(idx,cellname)
                 if idx == 0:  # select the 1st (0th) entry
                     self.tree.setCurrentItem(cellname)
