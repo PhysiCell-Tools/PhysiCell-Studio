@@ -114,6 +114,7 @@ class CellDef(QWidget):
         self.tree.setFixedHeight(tree_widget_height)
         # self.tree.setColumnCount(1)
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
+        self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a substrate
 
         header = QTreeWidgetItem(["---  Cell Type  ---"])
         self.tree.setHeaderItem(header)
@@ -218,6 +219,15 @@ class CellDef(QWidget):
 
         self.tree_item_clicked_cb(treeitem, 0)
 
+    #----------------------
+    # When a substrate is selected(via double-click) and renamed
+    def tree_item_changed_cb(self, it,col):
+        # print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
+
+        prev_name = self.current_cell_def
+        # print('prev_name= ',prev_name)
+        self.current_cell_def = it.text(col)
+        self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
@@ -3115,9 +3125,12 @@ class CellDef(QWidget):
         print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
 
     #-----------------------------------------------------------------------------------------
-    def delete_substrate_from_comboboxes(self, item_idx):
+    # def delete_substrate_from_comboboxes(self, item_idx):
+    def delete_substrate(self, item_idx):
+
+        # 1) delete it from the comboboxes
         # print("------- delete_substrate_from_comboboxes: name=",name)
-        print("------- delete_substrate_from_comboboxes: index=",item_idx)
+        print("------- delete_substrate: index=",item_idx)
         subname = self.motility_substrate_dropdown.itemText(item_idx)
         print("        name = ", subname)
         self.substrate_list.remove(subname)
@@ -3126,6 +3139,26 @@ class CellDef(QWidget):
         self.secretion_substrate_dropdown.removeItem(item_idx)
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
+
+        # 2) update (delete) in the param_d dict
+        print("\n\n----- before stepping thru all cell defs, self.param_d:")
+        for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
+            print(self.param_d[cdname]["secretion"])
+            print()
+
+        print()
+        for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
+            print("--- cdname = ",cdname)
+            print("--- old: ",self.param_d[cdname]["secretion"])
+            print(" keys= ",self.param_d[cdname]["secretion"].keys() )
+            # if self.param_d[cdname]["secretion"].has_key(subname):
+            if subname in self.param_d[cdname]["secretion"]:
+                del_key = self.param_d[cdname]["secretion"].pop(subname)
+        print("--- after deletion, param_d=  ",self.param_d[cdname]["secretion"])
+        print("\n--- after deletion, self.current_secretion_substrate=  ",self.current_secretion_substrate)
+
+        # if old_name == self.current_secretion_substrate:
+        #     self.current_secretion_substrate = new_name
 
     #-----------------------------------------------------------------------------------------
     def add_new_substrate_comboboxes(self, substrate_name):
@@ -3156,7 +3189,9 @@ class CellDef(QWidget):
 
         # 2) update in the param_d dict
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print("--- old: ",self.param_d[cdname]["secretion"])
+            print("--- cdname = ",cdname)
+            print("--- old: ",self.param_d[cdname]["secretion"])
+            print("--- new_name: ",new_name)
             self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
             # print("--- new: ",self.param_d[cdname]["secretion"])
 

@@ -402,14 +402,14 @@ class SubstrateDef(QWidget):
         # self.save_button.clicked.connect(self.save_xml)
 
 
-    def treeitem_edit_cb(self, *args):
-        itm = self.tree.itemFromIndex(self.tree.selectedIndexes()[0])
-        column = self.tree.currentColumn()
-        edit = QLineEdit()
-        edit.returnPressed.connect(lambda*_:self.project.setData(column, edit.text(), itm, column, self.tree))
-        edit.returnPressed.connect(lambda*_:self.update())
-        print(edit.text())
-        self.tree.setItemWidget(itm,column,edit)
+    # def treeitem_edit_cb(self, *args):
+    #     itm = self.tree.itemFromIndex(self.tree.selectedIndexes()[0])
+    #     column = self.tree.currentColumn()
+    #     edit = QLineEdit()
+    #     edit.returnPressed.connect(lambda*_:self.project.setData(column, edit.text(), itm, column, self.tree))
+    #     edit.returnPressed.connect(lambda*_:self.update())
+    #     print(edit.text())
+    #     self.tree.setItemWidget(itm,column,edit)
 
     # def substrate_name_cb(self, text):
     #     print("Text: %s", text)
@@ -618,7 +618,7 @@ class SubstrateDef(QWidget):
         print('------      item_idx=',item_idx)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
-        self.celldef_tab.delete_substrate_from_comboboxes(item_idx)
+        self.celldef_tab.delete_substrate(item_idx)
         print('------      new name=',self.tree.currentItem().text(0))
         self.current_substrate = self.tree.currentItem().text(0)
 
