@@ -212,7 +212,7 @@ class SubstrateDef(QWidget):
         hbox.addWidget(units)
 
 # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
-        self.dirichlet_bc_enabled = QCheckBox("on/off")
+        self.dirichlet_bc_enabled = QCheckBox("on")
         self.dirichlet_bc_enabled.stateChanged.connect(self.dirichlet_toggle_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -248,7 +248,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_xmin.textChanged.connect(self.dirichlet_xmin_changed)
         hbox.addWidget(self.dirichlet_xmin)
 
-        self.enable_xmin = QCheckBox("on/off")
+        self.enable_xmin = QCheckBox("on")
         self.enable_xmin.stateChanged.connect(self.enable_xmin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -266,7 +266,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_xmax.textChanged.connect(self.dirichlet_xmax_changed)
         hbox.addWidget(self.dirichlet_xmax)
 
-        self.enable_xmax = QCheckBox("on/off")
+        self.enable_xmax = QCheckBox("on")
         self.enable_xmax.stateChanged.connect(self.enable_xmax_cb)
         hbox.addWidget(self.enable_xmax)
         self.vbox.addLayout(hbox)
@@ -282,7 +282,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_ymin.textChanged.connect(self.dirichlet_ymin_changed)
         hbox.addWidget(self.dirichlet_ymin)
 
-        self.enable_ymin = QCheckBox("on/off")
+        self.enable_ymin = QCheckBox("on")
         self.enable_ymin.stateChanged.connect(self.enable_ymin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -300,7 +300,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_ymax.textChanged.connect(self.dirichlet_ymax_changed)
         hbox.addWidget(self.dirichlet_ymax)
 
-        self.enable_ymax = QCheckBox("on/off")
+        self.enable_ymax = QCheckBox("on")
         self.enable_ymax.stateChanged.connect(self.enable_ymax_cb)
         hbox.addWidget(self.enable_ymax)
         self.vbox.addLayout(hbox)
@@ -316,7 +316,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_zmin.textChanged.connect(self.dirichlet_zmin_changed)
         hbox.addWidget(self.dirichlet_zmin)
 
-        self.enable_zmin = QCheckBox("on/off")
+        self.enable_zmin = QCheckBox("on")
         self.enable_zmin.stateChanged.connect(self.enable_zmin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -334,7 +334,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_zmax.textChanged.connect(self.dirichlet_zmax_changed)
         hbox.addWidget(self.dirichlet_zmax)
 
-        self.enable_zmax = QCheckBox("on/off")
+        self.enable_zmax = QCheckBox("on")
         self.enable_zmax.stateChanged.connect(self.enable_zmax_cb)
         hbox.addWidget(self.enable_zmax)
         self.vbox.addLayout(hbox)

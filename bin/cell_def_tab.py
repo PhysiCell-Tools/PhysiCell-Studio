@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import copy
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
@@ -185,7 +186,7 @@ class CellDef(QWidget):
         print('------ new_cell_def')
         cdname = "cell_def%02d" % self.new_cell_def_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[cdname] = self.param_d[self.current_cell_def].copy()
+        self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -234,8 +235,9 @@ class CellDef(QWidget):
     def copy_cell_def(self):
         print('------ copy_cell_def')
         celldefname = "cell_def%02d" % self.new_cell_def_count
+        print('------ self.current_cell_def = ', self.current_cell_def)
         # Make a new cell_def (that's a copy of the currently selected one)
-        self.param_d[celldefname] = self.param_d[self.current_cell_def].copy()
+        self.param_d[celldefname] = copy.deepcopy(self.param_d[self.current_cell_def])
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -297,6 +299,7 @@ class CellDef(QWidget):
         print('------      new name=',self.tree.currentItem().text(0))
         self.current_cell_def = self.tree.currentItem().text(0)
 
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def insert_hacky_blank_lines(self, glayout):
@@ -2171,7 +2174,7 @@ class CellDef(QWidget):
         #     </chemotaxis>
         # </options>
         #---
-        self.motility_enabled = QCheckBox("enable")
+        self.motility_enabled = QCheckBox("enable motility")
         self.motility_enabled.clicked.connect(self.motility_enabled_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(self.label_width)
@@ -2184,6 +2187,9 @@ class CellDef(QWidget):
         glayout.addWidget(self.motility_use_2D, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         #---
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,2) # w, row, column, rowspan, colspan
+
         label = QLabel("Chemotaxis")
         label.setFixedWidth(200)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -2319,7 +2325,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.secretion_target, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         # units = QLabel("substrate density")
-        units = QLabel("sub density")
+        units = QLabel("sub. density")
         # units.setFixedWidth(self.units_width+5)
         # units.setFixedWidth(110)
         units.setAlignment(QtCore.Qt.AlignLeft)
@@ -2659,11 +2665,14 @@ class CellDef(QWidget):
         # self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['secretion_rate'] = text
     def secretion_target_changed(self, text):
-        self.param_d[self.current_cell_def]['secretion_target'] = text
+        # self.param_d[self.current_cell_def]['secretion_target'] = text
+        self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['secretion_target'] = text
     def uptake_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['uptake_rate'] = text
+        # self.param_d[self.current_cell_def]['uptake_rate'] = text
+        self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['uptake_rate'] = text
     def secretion_net_export_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
+        # self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
+        self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['net_export_rate'] = text
 
     # --- custom data (rwh: OMG, this took a lot of time to solve!)
     def custom_data_value_changed(self, text):
