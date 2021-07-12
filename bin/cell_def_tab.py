@@ -3186,7 +3186,9 @@ class CellDef(QWidget):
     # cell_defs data structures that reference it.
     def renamed_substrate(self, old_name,new_name):
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
-        # print("cell_def_tab.py: ------- renamed_substrate")
+        print("cell_def_tab.py: ------- renamed_substrate")
+        print("       old_name = ",old_name)
+        print("       new_name = ",new_name)
         self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
         # print("self.substrate_list = ",self.substrate_list)
 

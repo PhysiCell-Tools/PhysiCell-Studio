@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import copy
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from ElementTree_pretty import prettify
 
@@ -552,8 +553,10 @@ class SubstrateDef(QWidget):
         print('------ copy_substrate')
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+        # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+        self.param_d[subname] = copy.deepcopy(self.param_d[self.current_substrate])
         self.param_d[subname]["name"] = subname
+
 
         for k in self.param_d.keys():
             print(" ===>>> ",k, " : ", self.param_d[k])
