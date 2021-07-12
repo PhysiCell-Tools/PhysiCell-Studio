@@ -475,14 +475,17 @@ class SubstrateDef(QWidget):
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def new_substrate(self):
-        print('------ new_substrate')
+        # print('------ new_substrate')
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
-        self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+        # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
+
+        self.param_d[subname] = copy.deepcopy(self.param_d[self.current_substrate])
+
         # self.param_d[subname]["name"] = subname
-        for k in self.param_d.keys():
-            print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-        print()
+        # for k in self.param_d.keys():
+        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
+        # print()
 
         # Then "zero out" all entries(?)
         text = "0.0"
@@ -512,9 +515,9 @@ class SubstrateDef(QWidget):
         self.param_d["gradients"] = bval
         self.param_d["track_in_agents"] = bval
 
-        print("\n ----- new dict:")
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+        # print("\n ----- new dict:")
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
 
         self.new_substrate_count += 1
 
@@ -550,7 +553,7 @@ class SubstrateDef(QWidget):
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def copy_substrate(self):
-        print('------ copy_substrate')
+        # print('------ copy_substrate')
         subname = "substrate%02d" % self.new_substrate_count
         # Make a new substrate (that's a copy of the currently selected one)
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
@@ -558,8 +561,8 @@ class SubstrateDef(QWidget):
         self.param_d[subname]["name"] = subname
 
 
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
 
         self.new_substrate_count += 1
 
@@ -614,15 +617,15 @@ class SubstrateDef(QWidget):
         # self.param_d = new_dict
 
 
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-        print('------      item_idx=',item_idx)
+        # print('------      item_idx=',item_idx)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
         self.celldef_tab.delete_substrate(item_idx)
-        print('------      new name=',self.tree.currentItem().text(0))
+        # print('------      new name=',self.tree.currentItem().text(0))
         self.current_substrate = self.tree.currentItem().text(0)
 
 
@@ -649,15 +652,15 @@ class SubstrateDef(QWidget):
 
     #----------------------------------------------------------------------
     def tree_item_sel_changed_cb(self, it,col):
-        print('--------- tree_item_sel_changed_cb():', it, col, it.text(col) )  # col=0 always
+        # print('--------- tree_item_sel_changed_cb():', it, col, it.text(col) )  # col=0 always
 
         prev_current_substrate = self.current_substrate
         self.current_substrate = it.text(col)
         self.param_d[self.current_substrate] = self.param_d.pop(prev_current_substrate)  # sweet
-        print('self.current_substrate= ',self.current_substrate )
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-        print()
+        # print('self.current_substrate= ',self.current_substrate )
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        # print()
 
     # def tree_item_changed_cb2(self, it,col):
     #     print('--------- tree_item_changed_cb2():', it, col, it.text(col) )  # col=0 always
@@ -669,9 +672,9 @@ class SubstrateDef(QWidget):
     #----------------------------------------------------------------------
     # Update the widget values with values from param_d
     def tree_item_clicked_cb(self, it,col):
-        print('--------- tree_item_clicked_cb():', it, col, it.text(col) )  # col=0 always
+        # print('--------- tree_item_clicked_cb():', it, col, it.text(col) )  # col=0 always
         self.current_substrate = it.text(col)
-        print('self.current_substrate= ',self.current_substrate )
+        # print('self.current_substrate= ',self.current_substrate )
         # print('self.= ',self.tree.indexFromItem )
 
         # self.param.clear()
@@ -690,7 +693,7 @@ class SubstrateDef(QWidget):
         # print("    xmin=",xmin)
         if self.dirichlet_options_exist:
             val = self.param_d[self.current_substrate]["dirichlet_xmin"]
-            print('--------- tree_item_clicked_cb(): dirichlet_xmin=', val)
+            # print('--------- tree_item_clicked_cb(): dirichlet_xmin=', val)
             self.dirichlet_xmin.setText(val)
             self.dirichlet_xmax.setText(self.param_d[self.current_substrate]["dirichlet_xmax"])
             self.dirichlet_ymin.setText(self.param_d[self.current_substrate]["dirichlet_ymin"])
@@ -925,8 +928,8 @@ class SubstrateDef(QWidget):
         self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and invoke its callback to fill widget values
 
         print("\n\n=======================  leaving microenv populate_tree  ======================= ")
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
 
 #        ---- populate_tree(): self.param_d =  {'director signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}, 'cargo signal': {'diffusion_coef': '1000', 'decay_rate': '.4', 'init_cond': '0', 'dirichlet_bc': '1', 'dirichlet_enabled': False, 'enable_xmin': False, 'enable_xmax': False, 'enable_ymin': False, 'enable_ymax': False, 'enable_zmin': False, 'enable_zmax': False, 'dirichlet_xmin': '-11', 'dirichlet_xmax': '11', 'dirichlet_ymin': '-12', 'dirichlet_ymax': '12', 'dirichlet_zmin': '-13', 'dirichlet_zmax': '13'}}
 

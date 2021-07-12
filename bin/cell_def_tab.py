@@ -183,7 +183,7 @@ class CellDef(QWidget):
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def new_cell_def(self):
-        print('------ new_cell_def')
+        # print('------ new_cell_def')
         cdname = "cell_def%02d" % self.new_cell_def_count
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
@@ -233,9 +233,9 @@ class CellDef(QWidget):
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def copy_cell_def(self):
-        print('------ copy_cell_def')
+        # print('------ copy_cell_def')
         celldefname = "cell_def%02d" % self.new_cell_def_count
-        print('------ self.current_cell_def = ', self.current_cell_def)
+        # print('------ self.current_cell_def = ', self.current_cell_def)
         # Make a new cell_def (that's a copy of the currently selected one)
         self.param_d[celldefname] = copy.deepcopy(self.param_d[self.current_cell_def])
 
@@ -2895,7 +2895,7 @@ class CellDef(QWidget):
     #     pass
         # uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[1]//custom_data")
         uep_cell_defs = self.xml_root.find(".//cell_definitions")
-        print('--- cell_def_tab.py: fill_custom_data_tab(): uep_cell_defs= ',uep_cell_defs )
+        # print('--- cell_def_tab.py: fill_custom_data_tab(): uep_cell_defs= ',uep_cell_defs )
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need
@@ -2918,9 +2918,9 @@ class CellDef(QWidget):
         for cell_def in uep_cell_defs:
             uep_custom_data = uep_cell_defs.find(".//cell_definition[" + str(idx_cell_def+1) + "]//custom_data")  # 1-offset
             for var in uep_custom_data:
-                print(idx, ") ",var)
+                # print(idx, ") ",var)
                 self.custom_data_name[idx].setText(var.tag)
-                print("tag=",var.tag)
+                # print("tag=",var.tag)
                 self.custom_data_value[idx].setText(var.text)
 
                 # if 'units' in var.keys():
@@ -2941,8 +2941,8 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
         # pass
-        print('------ cycle_changed_cb(): idx = ',idx)
-        print('------ cycle_changed_cb(): item = ',str(self.cycle_dropdown.currentText()))
+        # print('------ cycle_changed_cb(): idx = ',idx)
+        # print('------ cycle_changed_cb(): item = ',str(self.cycle_dropdown.currentText()))
         if self.current_cell_def:
             self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
 
@@ -2952,9 +2952,9 @@ class CellDef(QWidget):
 
     # @QtCore.Slot()
     def motility_substrate_changed_cb(self, idx):
-        print('------ motility_substrate_changed_cb(): idx = ',idx)
+        # print('------ motility_substrate_changed_cb(): idx = ',idx)
         val = self.motility_substrate_dropdown.currentText()
-        print("   text = ",val)
+        # print("   text = ",val)
         self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = val
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
 
@@ -2963,9 +2963,9 @@ class CellDef(QWidget):
 
     # @QtCore.Slot()
     def secretion_substrate_changed_cb(self, idx):
-        print('------ secretion_substrate_changed_cb(): idx = ',idx)
+        # print('------ secretion_substrate_changed_cb(): idx = ',idx)
         self.current_secretion_substrate = self.secretion_substrate_dropdown.currentText()
-        print("    self.current_secretion_substrate = ",self.current_secretion_substrate)
+        # print("    self.current_secretion_substrate = ",self.current_secretion_substrate)
         if idx == -1:
             return
 
@@ -3007,7 +3007,7 @@ class CellDef(QWidget):
             print("--------- ",radioBtn.text())
 
         print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
-        print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
+        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
 
         # self.cycle_rows_vbox.clear()
         # if radioBtn.text().find("duration"):
@@ -3139,41 +3139,41 @@ class CellDef(QWidget):
 
         # 1) delete it from the comboboxes
         # print("------- delete_substrate_from_comboboxes: name=",name)
-        print("------- delete_substrate: index=",item_idx)
+        # print("------- delete_substrate: index=",item_idx)
         subname = self.motility_substrate_dropdown.itemText(item_idx)
         print("        name = ", subname)
         self.substrate_list.remove(subname)
-        print("self.substrate_list = ",self.substrate_list)
+        # print("self.substrate_list = ",self.substrate_list)
         self.motility_substrate_dropdown.removeItem(item_idx)
         self.secretion_substrate_dropdown.removeItem(item_idx)
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
 
         # 2) update (delete) in the param_d dict
-        print("\n\n----- before stepping thru all cell defs, self.param_d:")
-        for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            print(self.param_d[cdname]["secretion"])
-            print()
+        # print("\n\n----- before stepping thru all cell defs, self.param_d:")
+        # for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
+            # print(self.param_d[cdname]["secretion"])
+            # print()
 
-        print()
+        # print()
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            print("--- cdname = ",cdname)
-            print("--- old: ",self.param_d[cdname]["secretion"])
-            print(" keys= ",self.param_d[cdname]["secretion"].keys() )
+            # print("--- cdname = ",cdname)
+            # print("--- old: ",self.param_d[cdname]["secretion"])
+            # print(" keys= ",self.param_d[cdname]["secretion"].keys() )
             # if self.param_d[cdname]["secretion"].has_key(subname):
             if subname in self.param_d[cdname]["secretion"]:
                 del_key = self.param_d[cdname]["secretion"].pop(subname)
-        print("--- after deletion, param_d=  ",self.param_d[cdname]["secretion"])
-        print("\n--- after deletion, self.current_secretion_substrate=  ",self.current_secretion_substrate)
+        # print("--- after deletion, param_d=  ",self.param_d[cdname]["secretion"])
+        # print("\n--- after deletion, self.current_secretion_substrate=  ",self.current_secretion_substrate)
 
         # if old_name == self.current_secretion_substrate:
         #     self.current_secretion_substrate = new_name
 
     #-----------------------------------------------------------------------------------------
     def add_new_substrate_comboboxes(self, substrate_name):
-        print("cell_def_tab.py: ------- add_new_substrate_comboboxes")
+        # print("cell_def_tab.py: ------- add_new_substrate_comboboxes")
         self.substrate_list.append(substrate_name)
-        print("self.substrate_list = ",self.substrate_list)
+        # print("self.substrate_list = ",self.substrate_list)
         # self.substrate_list.clear()
         # self.motility_substrate_dropdown.clear()
         # self.secretion_substrate_dropdown.clear()
@@ -3186,23 +3186,26 @@ class CellDef(QWidget):
     # cell_defs data structures that reference it.
     def renamed_substrate(self, old_name,new_name):
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
-        print("cell_def_tab.py: ------- renamed_substrate")
-        print("       old_name = ",old_name)
-        print("       new_name = ",new_name)
+        # print("cell_def_tab.py: ------- renamed_substrate")
+        # print("       old_name = ",old_name)
+        # print("       new_name = ",new_name)
         self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
         # print("self.substrate_list = ",self.substrate_list)
 
         for idx in range(len(self.substrate_list)):
-            if old_name in self.motility_substrate_dropdown.itemText(idx):
+            # print("idx,old,new = ",idx, old_name,new_name)
+            # if old_name in self.motility_substrate_dropdown.itemText(idx):
+            if old_name == self.motility_substrate_dropdown.itemText(idx):
+                # print("old in dropdown: ", self.motility_substrate_dropdown.itemText(idx))
                 self.motility_substrate_dropdown.setItemText(idx, new_name)
-            if old_name in self.secretion_substrate_dropdown.itemText(idx):
+            if old_name == self.secretion_substrate_dropdown.itemText(idx):
                 self.secretion_substrate_dropdown.setItemText(idx, new_name)
 
         # 2) update in the param_d dict
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            print("--- cdname = ",cdname)
-            print("--- old: ",self.param_d[cdname]["secretion"])
-            print("--- new_name: ",new_name)
+            # print("--- cdname = ",cdname)
+            # print("--- old: ",self.param_d[cdname]["secretion"])
+            # print("--- new_name: ",new_name)
             self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
             # print("--- new: ",self.param_d[cdname]["secretion"])
 
@@ -3549,16 +3552,16 @@ class CellDef(QWidget):
 
     #-----------------------------------------------------------------------------------------
     def update_death_params(self):
-        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        print("\n ------------------  update_death_params() ")
+        # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        # print("\n ------------------  update_death_params() ")
         cdname = self.current_cell_def
         self.apoptosis_death_rate.setText(self.param_d[cdname]["apoptosis_death_rate"])
 
         if self.param_d[cdname]['apoptosis_duration_flag']:
-            print(" ------------------  apoptosis_rb2.setChecked(True) ")
+            # print(" ------------------  apoptosis_rb2.setChecked(True) ")
             self.apoptosis_rb2.setChecked(True)
         else:
-            print(" ------------------  apoptosis_rb1.setChecked(True) ")
+            # print(" ------------------  apoptosis_rb1.setChecked(True) ")
             self.apoptosis_rb1.setChecked(True)
         self.apoptosis_phase0_duration.setText(self.param_d[cdname]["apoptosis_phase0_duration"])
         self.apoptosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["apoptosis_phase0_fixed"])
@@ -3577,10 +3580,10 @@ class CellDef(QWidget):
         self.necrosis_death_rate.setText(self.param_d[cdname]["necrosis_death_rate"])
 
         if self.param_d[cdname]['necrosis_duration_flag']:
-            print(" ------------------  necrosis_rb2.setChecked(True) ")
+            # print(" ------------------  necrosis_rb2.setChecked(True) ")
             self.necrosis_rb2.setChecked(True)
         else:
-            print(" ------------------  necrosis_rb1.setChecked(True) ")
+            # print(" ------------------  necrosis_rb1.setChecked(True) ")
             self.necrosis_rb1.setChecked(True)
         self.necrosis_phase0_duration.setText(self.param_d[cdname]["necrosis_phase0_duration"])
         self.necrosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["necrosis_phase0_fixed"])
@@ -3598,7 +3601,7 @@ class CellDef(QWidget):
         self.necrosis_nuclear_biomass_change_rate.setText(self.param_d[cdname]["necrosis_nuclear_rate"])
         self.necrosis_calcification_rate.setText(self.param_d[cdname]["necrosis_calcif_rate"])
         self.necrosis_relative_rupture_volume.setText(self.param_d[cdname]["necrosis_rel_rupture_rate"])
-        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~  leaving  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~  leaving  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
     #-----------------------------------------------------------------------------------------
@@ -3658,9 +3661,9 @@ class CellDef(QWidget):
         cdname = self.current_cell_def
         if not cdname:
             return
-        print("--------- clear_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        # print("--------- clear_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
-        print("num_vals =", num_vals)
+        # print("num_vals =", num_vals)
         idx = 0
         for idx in range(num_vals):
         # for key in self.param_d[cdname]['custom_data'].keys():
@@ -3674,10 +3677,10 @@ class CellDef(QWidget):
         cdname = self.current_cell_def
         print("--------- update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
-        print("num_vals =", num_vals)
+        # print("num_vals =", num_vals)
         idx = 0
         for key in self.param_d[cdname]['custom_data'].keys():
-            print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
+            # print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
             self.custom_data_name[idx].setText(key)
             self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
             idx += 1
@@ -3689,9 +3692,9 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        print('\n\n------------ tree_item_clicked_cb -----------:', it, col, it.text(col) )
+        # print('\n\n------------ tree_item_clicked_cb -----------:', it, col, it.text(col) )
         self.current_cell_def = it.text(col)
-        print('--- self.current_cell_def= ',self.current_cell_def )
+        # print('--- self.current_cell_def= ',self.current_cell_def )
 
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
@@ -4517,14 +4520,14 @@ class CellDef(QWidget):
                 # to call 'append_more_cb' for the excess.
                 self.custom_data_count = 0
                 if uep_custom_data:
-                    print("--------------- populate: custom_dat for cell_def_name= ",cell_def_name)
+                    # print("--------------- populate: custom_dat for cell_def_name= ",cell_def_name)
                     self.param_d[cell_def_name]['custom_data'] = {}
                     for var in uep_custom_data:
-                        print(jdx, ") ",var)
+                        # print(jdx, ") ",var)
                         # val = sub.find("secretion_rate").text
                         val = var.text
-                        print("tag= ",var.tag)
-                        print("val= ",val)
+                        # print("tag= ",var.tag)
+                        # print("val= ",val)
                         # self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
                         self.param_d[cell_def_name]['custom_data'][var.tag] = val
                         self.custom_data_count += 1
@@ -4536,18 +4539,18 @@ class CellDef(QWidget):
                 #         self.custom_data_units[jdx].setText(var.attrib['units'])
                 #     jdx += 1
 
-                    print("--------- populate: self.param_d[cell_def_name]['custom_data'] = ",self.param_d[cell_def_name]['custom_data'])
+                    # print("--------- populate: self.param_d[cell_def_name]['custom_data'] = ",self.param_d[cell_def_name]['custom_data'])
 
 
         self.current_cell_def = cell_def_0th
         self.tree.setCurrentItem(self.tree.topLevelItem(0))  # select the top (0th) item
         self.tree_item_clicked_cb(self.tree.topLevelItem(0), 0)  # and have its params shown
 
-        print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
-        print()
-        for k in self.param_d.keys():
-            print(" ===>>> ",k, " : ", self.param_d[k])
-            print()
+        # print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
+        # print()
+        # for k in self.param_d.keys():
+        #     print(" ===>>> ",k, " : ", self.param_d[k])
+        #     print()
 
     #-------------------------------------------------------------------
     def first_cell_def_name(self):
