@@ -41,7 +41,7 @@ class PhysiCellXMLCreator(QWidget):
     # def __init__(self, show_vis_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
-        self.title_prefix = "PhysiCell Model Creator: "
+        self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
 
         # Menus
@@ -177,9 +177,9 @@ class PhysiCellXMLCreator(QWidget):
         # open_act.triggered.connect(self.open_as_cb)
         file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-        file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+        file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
         # file_menu.addAction("Save as", self.save_as_cb)
-        file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
+        # file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
         # recent_act = QtGui.QAction('Recent', self)
         # save_act = QtGui.QAction('Save', self)
         # save_act.triggered.connect(self.save_cb)
@@ -341,17 +341,25 @@ class PhysiCellXMLCreator(QWidget):
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
-        print("\n\nopen_as_cb():  filePath=",filePath)
+        # print("\n\nopen_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
-        # sample_file = Path("data", name + ".xml")
-        # copy_file = "copy_" + name + ".xml"
-        copy_file = "mymodel.xml"
-        # shutil.copy(sample_file, copy_file)
-        shutil.copy(full_path_model_name, copy_file)
-        self.add_new_model(copy_file, True)
-        # self.config_file = "config_samples/" + name + ".xml"
-        self.config_file = copy_file
-        self.show_sample_model()
+        print("\n\nopen_as_cb():  full_path_model_name =",full_path_model_name )
+        if (len(full_path_model_name) > 0) and Path(full_path_model_name):
+            print("open_as_cb():  filePath is valid")
+            print("len(full_path_model_name) = ", len(full_path_model_name) )
+            # sample_file = Path("data", name + ".xml")
+            # copy_file = "copy_" + name + ".xml"
+            copy_file = "mymodel.xml"
+
+            # shutil.copy(sample_file, copy_file)
+            shutil.copy(full_path_model_name, copy_file)
+            self.add_new_model(copy_file, True)
+            # self.config_file = "config_samples/" + name + ".xml"
+            self.config_file = copy_file
+            self.show_sample_model()
+
+        else:
+            print("open_as_cb():  full_path_model_name is NOT valid")
 
 
     def indent(elem, level=0):
@@ -379,15 +387,18 @@ class PhysiCellXMLCreator(QWidget):
     def save_cb(self):
         # self.config_file = copy_file
         self.config_tab.fill_xml()
-        # self.microenv_tab.fill_xml()
-        # self.celldef_tab.fill_xml()
-        # self.user_params_tab.fill_xml()
+        self.microenv_tab.fill_xml()
+        self.celldef_tab.fill_xml()
+        self.user_params_tab.fill_xml()
 
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         # print("gui4xml:  save_cb: writing to: ",self.config_file)
 
-        out_file = self.config_file
-        # out_file = "mymodel.xml"
+        # out_file = self.config_file
+        out_file = "mymodel.xml"
+        self.setWindowTitle(self.title_prefix + out_file)
+
+        print("\n\n ===================================")
         print("gui4xml:  save_cb: writing to: ",out_file)
 
         # self.tree.write(self.config_file)

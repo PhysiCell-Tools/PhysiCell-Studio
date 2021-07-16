@@ -3202,10 +3202,11 @@ class CellDef(QWidget):
                 self.secretion_substrate_dropdown.setItemText(idx, new_name)
 
         # 2) update in the param_d dict
-        for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
+        for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
             # print("--- cdname = ",cdname)
             # print("--- old: ",self.param_d[cdname]["secretion"])
             # print("--- new_name: ",new_name)
+            self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
             self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
             # print("--- new: ",self.param_d[cdname]["secretion"])
 
