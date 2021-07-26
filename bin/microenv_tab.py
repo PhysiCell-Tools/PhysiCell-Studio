@@ -800,7 +800,7 @@ class SubstrateDef(QWidget):
                     # if idx == 1:
                     #     self.dirichlet_bc.setText(dirichlet_bc)
 
-                    if "false" in dirichlet_bc_path.attrib['enabled'].lower():
+                    if dirichlet_bc_path.attrib['enabled'].lower() == "false":
                         self.param_d[substrate_name]["dirichlet_enabled"] = False
                         # if idx == 1:
                         #     self.dirichlet_bc_enabled.setChecked(False)
@@ -1091,7 +1091,7 @@ class SubstrateDef(QWidget):
                 subelm.text = self.param_d[substrate]["init_cond"]
                 subelm.tail = indent8
                 subelm = ET.SubElement(elm, "Dirichlet_boundary_condition",
-                        {"units":"mmHg", "enabled":str(self.param_d[self.current_substrate]["dirichlet_enabled"])})
+                        {"units":"mmHg", "enabled":str(self.param_d[substrate]["dirichlet_enabled"])})
                 subelm.text = self.param_d[substrate]["dirichlet_bc"]
                 subelm.tail = indent6
                         

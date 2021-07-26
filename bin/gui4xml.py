@@ -352,7 +352,10 @@ class PhysiCellXMLCreator(QWidget):
             copy_file = "mymodel.xml"
 
             # shutil.copy(sample_file, copy_file)
-            shutil.copy(full_path_model_name, copy_file)
+            try:
+                shutil.copy(full_path_model_name, copy_file)
+            except:
+                print("Warning: unable to copy: ",full_path_model_name, copy_file)
             self.add_new_model(copy_file, True)
             # self.config_file = "config_samples/" + name + ".xml"
             self.config_file = copy_file

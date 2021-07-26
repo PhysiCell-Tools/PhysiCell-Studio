@@ -2680,14 +2680,14 @@ class CellDef(QWidget):
             return
         # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
-        print("vname = ", vname)
+        # print("custom_data_value_changed(): vname = ", vname)
         if len(vname) == 0:
             return
-        print("custom_data_value_changed(): text = ", text)
+        # print("custom_data_value_changed(): text = ", text)
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
         # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
         self.param_d[self.current_cell_def]['custom_data'][vname] = text
-        print(self.param_d[self.current_cell_def]['custom_data'])
+        # print(self.param_d[self.current_cell_def]['custom_data'])
 
     #--------------------------------------------------------
     def create_custom_data_tab(self):
@@ -3875,46 +3875,76 @@ class CellDef(QWidget):
                             if (rate.attrib['end_index'] == "0"): #  Must be 'live'
                                 print('--  cycle_live_trate00',  sval)
                                 self.param_d[cell_def_name]['cycle_live_trate00'] = rate.text
+                                if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_live_trate00_fixed'] = True
                             elif (rate.attrib['end_index'] == "1"): 
                                 if cycle_code == 0: #'advanced Ki67'
                                     self.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = True
                                 elif cycle_code == 1: # 'basic Ki67'
                                     self.param_d[cell_def_name]['cycle_Ki67_trate01'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = True
                                 elif cycle_code == 2: # 'flow cytometry'
                                     self.param_d[cell_def_name]['cycle_flowcyto_trate01'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = True
                                 elif cycle_code == 6: # 'flow cytometry separated'
                                     self.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = True
                                 elif cycle_code == 7: # 'cycling quiescent'
                                     self.param_d[cell_def_name]['cycle_quiescent_trate01'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = True
 
                         elif (rate.attrib['start_index'] == "1"):
                             if (rate.attrib['end_index'] == "0"):  # must be 'basic Ki67'
                                 self.param_d[cell_def_name]['cycle_Ki67_trate10'] = sval
+                                if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = True
 
                             elif (rate.attrib['end_index'] == "2"):
                                 if cycle_code == 0: #'advanced Ki67'
                                     self.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = True
                                 elif cycle_code == 2: # 'flow cytometry'
                                     self.param_d[cell_def_name]['cycle_flowcyto_trate12'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = True
                                 elif cycle_code == 6: # 'flow cytometry separated'
                                     self.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = True
                                 elif cycle_code == 7: # 'cycling quiescent'
                                     self.param_d[cell_def_name]['cycle_quiescent_trate12'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_quiescent_trate12_fixed'] = True
 
                         elif (rate.attrib['start_index'] == "2"):
                             if (rate.attrib['end_index'] == "0"):
                                 if cycle_code == 0: #'advanced Ki67'
                                     self.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = True
                                 elif cycle_code == 2: # 'flow cytometry'
                                     self.param_d[cell_def_name]['cycle_flowcyto_trate20'] = sval
+                                    if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                        self.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = True
 
                             elif (rate.attrib['end_index'] == "3"):
                                 # if cycle_code == 6: # 'flow cytometry separated'
                                 self.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = sval
+                                if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = True
 
                         elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
                             # self.cycle_flowcytosep_trate30.setText(rate.text)
                             self.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = rate.text
+                            if (rate.attrib['fixed_duration'].lower() == "true"): 
+                                self.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = True
 
 
                 # template.xml:
@@ -4016,39 +4046,69 @@ class CellDef(QWidget):
                         if (pd.attrib['index'] == "0"): 
                             if cycle_code == 0: #'advanced Ki67'
                                 self.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = True
                             elif cycle_code == 1: # 'basic Ki67'
                                 self.param_d[cell_def_name]['cycle_Ki67_duration01'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = True
                             elif cycle_code == 2: # 'flow cytometry'
                                 self.param_d[cell_def_name]['cycle_flowcyto_duration01'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = True
                             elif cycle_code == 5: # 'live'
                                 self.param_d[cell_def_name]['cycle_live_duration00'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_live_duration00_fixed'] = True
                             elif cycle_code == 6: # 'flow cytometry separated'
                                 self.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = True
                             elif cycle_code == 7: # 'cycling quiescent'
                                 self.param_d[cell_def_name]['cycle_quiescent_duration01'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = True
 
                         elif (pd.attrib['index'] == "1"):
                             if cycle_code == 0: #'advanced Ki67'
                                 self.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = True
                             elif cycle_code == 1: #'basic Ki67'
                                 self.param_d[cell_def_name]['cycle_Ki67_duration10'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = True
                             elif cycle_code == 2: # 'flow cytometry'
                                 self.param_d[cell_def_name]['cycle_flowcyto_duration12'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = True
                             elif cycle_code == 6: # 'flow cytometry separated'
                                 self.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = True
                             elif cycle_code == 7: # 'cycling quiescent'
                                 self.param_d[cell_def_name]['cycle_quiescent_duration10'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = True
 
                         elif (pd.attrib['index'] == "2"):
                             if cycle_code == 0: #'advanced Ki67'
-                                self.param_d[cell_def_name]['cycle_advancedKi67_duration23'] = sval
+                                self.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = True
                             elif cycle_code == 2: # 'flow cytometry'
                                 self.param_d[cell_def_name]['cycle_flowcyto_duration20'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = True
                             elif cycle_code == 6: # 'flow cytometry separated'
                                 self.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = sval
+                                if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                    self.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = True
 
                         elif (pd.attrib['index'] == "3"):
                             self.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = sval
+                            if (pd.attrib['fixed_duration'].lower() == "true"): 
+                                self.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = True
 
 
                 # rf. microenv:
