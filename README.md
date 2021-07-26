@@ -6,8 +6,8 @@ GUI application to generate the .xml configuration file for a PhysiCell model.
 ## Directions for contributors: fork the repo, make edits to the development branch, and submit pull requests to that branch.
 
 We recommend installing the [Anaconda Python distribution](https://www.anaconda.com/products/individual) to have the necessary Qt modules and, later, plotting modules.
-```
-Download the latest release, then run this python script from the root folder in your Terminal (or Command Prompt) shell:
 
-.../PhysiCell-model-builder-1.1$ python bin/gui4xml.py
+Download the latest release, then run this python script from the root folder in your Terminal (or Command Prompt) shell:
+```
+python bin/gui4xml.py
 ```
