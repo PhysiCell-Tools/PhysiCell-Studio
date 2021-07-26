@@ -1,18 +1,13 @@
 # PhysiCell-model-builder
-GUI application to build a PhysiCell model
+GUI application to generate the .xml configuration file for a PhysiCell model.
 
-## NOTE: this repo is a work in progress. Feel free to explore the code, however, it is not yet a fully functional application. Please check back later for updates.
+## NOTE: This application should be considered "beta". We appreciate anyone willing to try it out and provide feedback. Thanks!
 
-We are currently exploring two approaches to building a Qt application that will allow a user to build a PhysiCell model (a .xml file). One approach uses Qt Creator and the C++ API. The other approach uses the Python API for Qt (either PyQt5 or PySide6). 
-
-## Directions for contributors: fork the repo, make edits to the dev branch, and submit Pull requests to dev.
-
-
-To run the Python version (the preferred version for now as it's more feature complete):
+## Directions for contributors: fork the repo, make edits to the development branch, and submit pull requests to that branch.
 
 We recommend installing the [Anaconda Python distribution](https://www.anaconda.com/products/individual) to have the necessary Qt modules and, later, plotting modules.
 ```
-Download the latest release, then run this python script from the root folder in your Terminal/Command Prompt:
+Download the latest release, then run this python script from the root folder in your Terminal (or Command Prompt) shell:
 
-.../PhysiCell-model-builder-0.1$ python bin/gui4xml.py
+.../PhysiCell-model-builder-1.1$ python bin/gui4xml.py
 ```
