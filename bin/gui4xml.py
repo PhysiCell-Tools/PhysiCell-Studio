@@ -57,7 +57,8 @@ class PhysiCellXMLCreator(QWidget):
         # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(850, 700)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 800)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(600, 600)  # width, height (height >= Cell Types|Death params)
@@ -98,7 +99,11 @@ class PhysiCellXMLCreator(QWidget):
 
         # NOTE! We create a *copy* of the .xml sample model and will save to it.
         copy_file = "copy_" + model_name + ".xml"
-        shutil.copy(read_file, copy_file)
+        try:
+            shutil.copy(read_file, copy_file)
+        except:
+            print("Warning: unable to copy ",read_file," to ",copy_file, "(it may already exist)")
+
         self.setWindowTitle(self.title_prefix + copy_file)
         # self.add_new_model(copy_file, True)
         # self.config_file = "config_samples/" + name + ".xml"
