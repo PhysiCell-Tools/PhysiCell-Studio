@@ -58,7 +58,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(850, 700)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(850, 700)  # works for Zoe; otherwise User Params are scrolled out of sight
         # self.setMinimumSize(800, 800)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
         # self.setMinimumSize(600, 600)  # width, height (height >= Cell Types|Death params)
@@ -156,6 +156,10 @@ class PhysiCellXMLCreator(QWidget):
 
         #------------------
         tabWidget = QTabWidget()
+        stylesheet = """ 
+            QTabBar::tab:selected {background: dodgerblue;}
+            """
+        tabWidget.setStyleSheet(stylesheet)
         tabWidget.addTab(self.config_tab,"Config Basics")
         tabWidget.addTab(self.microenv_tab,"Microenvironment")
         tabWidget.addTab(self.celldef_tab,"Cell Types")
