@@ -4,8 +4,6 @@ Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
 
---- Versions ---
-0.1 - initial version
 """
 
 import sys
@@ -34,7 +32,12 @@ class CellCustomData(QWidget):
         self.celldef_tab = None
         self.count = 0
         self.max_rows = 99  # initially
-        self.custom_vars_to_delete = []
+        self.max_entries = self.max_rows
+        # self.max_entries = -1
+        # self.custom_vars_to_delete = []
+        # self.prev_val = {}  # previous (backup) copy of name:value (where value = [idx,val])
+        self.prev_val = []  # previous (backup) copy of [name,value] (access via list index)
+        self.num_var = 0
 
         #-------------------------------------------
         self.label_width = 150
@@ -50,6 +53,15 @@ class CellCustomData(QWidget):
 
         #------------------
         controls_hbox = QHBoxLayout()
+
+        self.update_button = QPushButton("Update Cell Types")
+        controls_hbox.addWidget(self.update_button)
+        self.update_button.clicked.connect(self.update_cb)
+
+        # self.clear_button = QPushButton("Clear selected rows")
+        # controls_hbox.addWidget(self.clear_button)
+        # self.clear_button.clicked.connect(self.clear_rows_cb)
+
         # self.new_button = QPushButton("New")
         self.new_button = QPushButton("Append 5 more rows")
         controls_hbox.addWidget(self.new_button)
@@ -58,17 +70,13 @@ class CellCustomData(QWidget):
         # self.copy_button = QPushButton("Copy")
         # controls_hbox.addWidget(self.copy_button)
 
-        self.clear_button = QPushButton("Clear selected rows")
-        controls_hbox.addWidget(self.clear_button)
-        self.clear_button.clicked.connect(self.clear_rows_cb)
-
         #------------------
 		# <random_seed type="int" units="dimensionless">0</random_seed> 
 		# <cargo_signal_D type="double" units="micron/min^2">1e3</cargo_signal_D>
 
         # Fixed names for columns:
         hbox = QHBoxLayout()
-        # self.select = QCheckBox("")
+
         col1 = QLabel("Name (required)")
         col1.setAlignment(QtCore.Qt.AlignCenter)
         hbox.addWidget(col1)
@@ -88,7 +96,7 @@ class CellCustomData(QWidget):
         #------------------
 
         # Create lists for the various input boxes
-        self.select = []
+        # self.select = []
         self.name = []
         # self.type = []
         self.value = []
@@ -106,15 +114,24 @@ class CellCustomData(QWidget):
         for idx in range(self.max_rows):  # TODO: mismatch with # rows in Cell Types|Custom Data may cause problems.
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
-            w = QCheckBox("")
-            self.select.append(w)
-            hbox.addWidget(w)
+
+            # w = QCheckBox("")
+            # w.setEnabled(False)
+            # self.select.append(w)
+            # hbox.addWidget(w)
 
             # Need to distinguish between editing an existing name, read in from .xml, and creating a new one.
             w_varname = MyQLineEdit()
+            # rx_valid_varname = QtCore.QRegExp("^[a-zA-Z0-9_]+$")
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            name_validator = QtGui.QRegExpValidator(rx_valid_varname )
+            w_varname.setValidator(name_validator)
+
             self.name.append(w_varname)
             w_varname.vname = w_varname  # ??
             w_varname.idx = idx
+
+            # danger: this "connect" callback can be tricky
             w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
             # self.diffusion_coef.enter.connect(self.save_xml)
             hbox.addWidget(w_varname)
@@ -133,6 +150,7 @@ class CellCustomData(QWidget):
             # hbox.addWidget(w)
 
             w = MyQLineEdit()
+            w.setReadOnly(True)
             w.setValidator(QtGui.QDoubleValidator())
             w.setText("0.0")
             w.vname = w_varname
@@ -144,6 +162,7 @@ class CellCustomData(QWidget):
             hbox.addWidget(w)
 
             w = QLineEdit()
+            w.setReadOnly(True)
             w.setFixedWidth(self.units_width)
             self.units.append(w)
             hbox.addWidget(w)
@@ -160,6 +179,7 @@ class CellCustomData(QWidget):
 
             w = QLineEdit()
             self.description.append(w)
+            w.setReadOnly(True)
             hbox.addWidget(w)
             # w.setStyleSheet("background-color: lightgray")
             # w.setStyleSheet("background-color: #e4e4e4")
@@ -183,62 +203,100 @@ class CellCustomData(QWidget):
         self.layout = QVBoxLayout(self)
 
         self.layout.addLayout(controls_hbox)
-        warning = QLabel("                                        Note: changing a default value here will also change it in each Cell Type")
-        warning.setStyleSheet('color: red;')  # “background-color: cyan”
-        self.layout.addWidget(warning)
+
+        warning1 = QLabel("                                        After making edits, click Update Cell Types.")
+        warning1.setStyleSheet('color: red;')  # “background-color: cyan”
+        self.layout.addWidget(warning1)
+        warning2 = QLabel("                                        Changing a default value here will also change it in each Cell Type.")
+        warning2.setStyleSheet('color: red;')  # “background-color: cyan”
+        self.layout.addWidget(warning2)
         self.layout.addWidget(self.scroll_area)
 
-    # --- custom data (rwh: OMG, this took a lot of time to solve!)
+    # --- (rf. Release 1.3 for fancier/buggier approach)
     def custom_data_name_changed(self, text):
         print("--------- (master) custom_data tab: custom_data_name_changed() --------")
-        # print("self.sender() = ", self.sender())
+
+        # # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
         idx = self.sender().idx
-        prev_vname = self.celldef_tab.custom_data_name[idx].text()
-        print(" prev = ",prev_vname)
-        # print("(master) prev_vname = ", self.sender().prev_vname)
+        # prev_vname = self.celldef_tab.custom_data_name[idx].text()
+        # print("custom_data_name_changed(): prev_vname = ",prev_vname)
+        # # print("(master) prev_vname = ", self.sender().prev_vname)
         print("(master) vname = ", vname)
         print("(master) idx = ", idx)
-        print("(master) custom_data_name_changed(): text = ", text)
-        print()
+        # print("(master) custom_data_name_changed(): text = ", text)
+        # print()
 
-        # Update the value in all Cell Types|Custom Data
-        num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
-        print("  num_cell_defs =",num_cell_defs )
-        for k in self.celldef_tab.param_d.keys():   # for all cell types
-            # mydict[k_new] = mydict.pop(k_old)
-            if len(prev_vname) > 0:
-                self.celldef_tab.param_d[k]['custom_data'][vname] = self.celldef_tab.param_d[k]['custom_data'].pop(prev_vname)
-            else:  # adding a new one
-                self.celldef_tab.param_d[k]['custom_data'][vname] = "0.0"
-                self.celldef_tab.custom_data_value[idx].setText("0.0")
-                self.celldef_tab.custom_data_count += 1
-        #     self.celldef_tab.param_d[k]['custom_data'][vname] = text
-        #     print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+        # New, manual way (Sep 2021): once a user enters a new name for a custom var, enable its other fields.
+        # self.select[idx].setEnabled(True)
+        print("len(vname) = ",len(vname))
+        if len(vname) > 0:
+            self.value[idx].setReadOnly(False)
+            self.units[idx].setReadOnly(False)
+            self.description[idx].setReadOnly(False)
 
-            self.celldef_tab.custom_data_name[idx].setText(vname)
-        #     print()
+            self.name[idx+1].setReadOnly(False)
+        else:
+            print("len(vname) = 0, setting fields readonly")
+            self.value[idx].setReadOnly(True)
+            self.units[idx].setReadOnly(True)
+            self.description[idx].setReadOnly(True)
+
+            # self.name[idx+1].setReadOnly(True)
+
+        # # Update the value in all Cell Types|Custom Data
+        # num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
+        # # print("  num_cell_defs =",num_cell_defs )
+        # for k in self.celldef_tab.param_d.keys():   # for all cell types
+        #     # mydict[k_new] = mydict.pop(k_old)
+
+        #     # rwh - debug overwriting var names with shared root, e.g.: foo, foo2
+        #     if len(prev_vname) > 0:
+        #         print("updating: prev_vname=",prev_vname,", vname=",vname)
+        #         if prev_vname in self.celldef_tab.param_d[k]['custom_data']:
+        #             self.celldef_tab.param_d[k]['custom_data'][vname] = self.celldef_tab.param_d[k]['custom_data'].pop(prev_vname)
+        #         print("post-updating: ",self.celldef_tab.param_d[k]['custom_data'])
+        #     else:  # adding a new one
+        #         self.celldef_tab.param_d[k]['custom_data'][vname] = "0.0"
+        #         self.celldef_tab.custom_data_value[idx].setText("0.0")
+        #         self.celldef_tab.custom_data_count += 1
+
+        #     # NO! will create a new var for *each* character as it's entered, ugh.
+        #     # self.celldef_tab.param_d[k]['custom_data'][vname] = "0.0"
+        #     # self.celldef_tab.custom_data_value[idx].setText("0.0")
+        #     # self.celldef_tab.custom_data_count += 1
+
+        # #     self.celldef_tab.param_d[k]['custom_data'][vname] = text
+        # #     print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+
+        #     self.celldef_tab.custom_data_name[idx].setText(vname)
+        # #     print()
+
+        # for k in self.celldef_tab.param_d.keys():   # for all cell types
+        #     if '' in self.celldef_tab.param_d[k]['custom_data']:
+        #         self.celldef_tab.param_d[k]['custom_data'].pop('')
+
 
     # --- custom data (rwh: OMG, this took a lot of time to solve!)
     def custom_data_value_changed(self, text):
-        print("--------- (master) custom_data tab: custom_data_value_changed() --------")
+        # print("--------- (master) custom_data tab: custom_data_value_changed() --------")
         # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
         idx = self.sender().idx
-        print("(master) vname = ", vname)
-        print("(master) idx = ", idx)
-        print("(master) custom_data_value_changed(): text = ", text)
-        print()
+        # print("(master) vname = ", vname)
+        # print("(master) idx = ", idx)
+        # print("(master) custom_data_value_changed(): text = ", text)
+        # print()
 
         # Update the value in all Cell Types|Custom Data
-        num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
-        print("  num_cell_defs =",num_cell_defs )
-        for k in self.celldef_tab.param_d.keys():   # for all cell types
-            self.celldef_tab.param_d[k]['custom_data'][vname] = text
-            # print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
+        # num_cell_defs = self.celldef_tab.tree.invisibleRootItem().childCount()
+        # # print("  num_cell_defs =",num_cell_defs )
+        # for k in self.celldef_tab.param_d.keys():   # for all cell types
+        #     self.celldef_tab.param_d[k]['custom_data'][vname] = text
+        #     # print(" ===>>> ",k, " : ", self.celldef_tab.param_d[k])
 
-            self.celldef_tab.custom_data_value[idx].setText(text)
-            # print()
+        #     self.celldef_tab.custom_data_value[idx].setText(text)
+        #     # print()
 
 
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
@@ -247,22 +305,259 @@ class CellCustomData(QWidget):
         # print(self.param_d[self.current_cell_def]['custom_data'])
 
 
-    # @QtCore.Slot()
-    def clear_rows_cb(self):
-        print("----- clearing all selected rows")
-        self.custom_vars_to_delete.clear()
-        for idx in range(self.count):
-            if self.select[idx].isChecked():
-                self.custom_vars_to_delete.append(self.name[idx].text())
-                self.name[idx].clear()
-                # self.value[idx].clear()
-                self.value[idx].setText("0.0")
-                self.units[idx].clear()
-                self.description[idx].clear()
-                self.select[idx].setChecked(False)
-        print("custom_vars_to_delete = ",self.custom_vars_to_delete)
+    # Keep a copy of the previous entries to compare againts newly edited ones
+    def update_prev_val(self):
+        # self.prev_val = {}  # previous (backup) copy of name:value
+        print("\n\n>>>> ------- update_prev_val():  --------------------------")
+        print("prev vals:")
+        # for k in self.prev_val.keys():
+            # print(k,self.prev_val[k])
+        idx = 0
+        for elm in self.prev_val:
+            print(idx,elm)
+            idx += 1
 
-        # rwh/todo: also update all cell types custom data
+        print("   (update_prev_val())        new vals:")
+        self.num_var = 0
+        # for idx in range(self.count):
+        for idx in range(self.max_entries):
+            # danger: this triggers custom_data_name_changed()
+            var_name = self.name[idx].text()
+            if len(var_name) > 0:
+                self.num_var += 1
+                var_val = self.value[idx].text()
+                print('idx = ',idx)
+                print(var_name,' = ',var_val)
+                # self.prev_val[var_name] = var_val
+                # self.prev_val[var_name] = [idx,var_val]
+                if idx < len(self.prev_val):
+                    self.prev_val[idx] = [var_name,var_val]
+                else:
+                    var_name_exists = False
+                    for jdx in range(0,self.max_entries):
+                        print("jdx = ",jdx, ", max_entries=",self.max_entries)
+                        if jdx+1 > len(self.prev_val):
+                        # if jdx+1 > self.max_entries:
+                            break
+                        if self.prev_val[jdx][0] == var_name:
+                            var_name_exists = True
+                    if not var_name_exists:
+                        self.prev_val.append([var_name,var_val])
+                    print("\n update_prev_val():")
+                    print("     idx= ",idx, ", self.max_entries= ",self.max_entries)
+                    print("     appended new val, self.prev_val = :",self.prev_val)
+        print("        self.num_var = ",self.num_var)
+
+        for idx in range(self.num_var+1,self.count):
+            self.name[idx].setReadOnly(True)
+            self.value[idx].setReadOnly(True)
+            self.units[idx].setReadOnly(True)
+            self.description[idx].setReadOnly(True)
+
+
+    def find_duplicates(self,listOfElems):
+        name_dict = dict()
+        for elem in listOfElems:
+            if elem in name_dict:
+                name_dict[elem] += 1
+            else:
+                name_dict[elem] = 1    
+    
+        name_dict = { key:value for key, value in name_dict.items() if value > 1}
+        return name_dict
+
+
+    def duplicate_names_popup(self, dups_dict):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("You have duplicate names and need to resolve them: "+ str(dups_dict))
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
+
+    # Update all Cell Types(tab):Custom Data(subtab) entries with changes made in this tab
+    # @QtCore.Slot()
+    def update_cb(self):
+        print("\n===========  update_cb(): have # entries = ",self.count, "  ============")
+
+        # check for duplicate names
+        names = []
+        for idx in range(self.count):
+            var_name = self.name[idx].text()
+            if len(var_name) > 0:
+                names.append(var_name)
+
+        dups_d = self.find_duplicates(names)
+        print("len(dups_d) = ", len(dups_d))
+        print("dups_d = ", dups_d)
+        if len(dups_d) > 0:
+            print("\n\n==========  You have duplicate named custom data and need to fix.\n\n ")
+            self.duplicate_names_popup(dups_d)
+            return
+
+        # for idx in range(self.count):
+        for idx in range(self.max_entries+1):
+            # danger: this triggers custom_data_name_changed()
+            var_name = self.name[idx].text()
+            if len(var_name) > 0:
+                var_val = self.value[idx].text()
+                print(var_name,' = ',var_val)
+                print("    self.prev_val= ",self.prev_val)
+                # print("    var_name = ",var_name,", self.prev_val.keys()= ",self.prev_val.keys())
+                print("    var_val = ",var_val)
+
+                if (idx+1) > len(self.prev_val):
+                    var_name_exists = False
+                    for jdx in range(0,self.max_entries):
+                        print("jdx = ",jdx)
+                        if jdx+1 > len(self.prev_val):
+                            break
+                        if self.prev_val[jdx][0] == var_name:
+                            var_name_exists = True
+                    if not var_name_exists:
+                        print("    ------------ handle brand new var_val (ALL cell types are changed): ",var_name)
+                        self.prev_val.append([var_name, var_val])
+                        print("    -- after append: self.prev_val= ",self.prev_val)
+                        self.max_entries = idx+1
+                    print("    --  self.max_entries",self.max_entries)
+                    for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
+                        # change var name to be new one
+                        self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+
+                # if the var_name and var_val is unchanged from prev_val, do nothing. 
+                # if (var_name in self.prev_val.keys()) and (var_val == self.prev_val[var_name]):
+                elif (var_name == self.prev_val[idx][0]) and (var_val == self.prev_val[idx][1]):
+                    continue
+                elif (var_name != self.prev_val[idx][0]) and (var_val == self.prev_val[idx][1]):
+                    print("    -- handle (only) edited var_name: ",var_name)
+                    for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
+                        # change var name to be new one, i.e., replace key in dict
+                        self.celldef_tab.param_d[k]['custom_data'][var_name] = self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_val[idx][0])
+                    continue
+
+                # elif (var_name == self.prev_val[idx][0]):
+                # if (var_val != self.prev_val[idx][1]):
+                if idx < len(self.prev_val) and (var_val != self.prev_val[idx][1]):
+                    print("    -- handle edited prev var_val (ALL cell types are changed): ",var_name)
+                    for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
+                        # change var name to be new one
+                        self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+                    continue
+
+                # otherwise:
+                for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
+                    print("\n  otherwise:")
+                    print("    -- key in celldef_tab.param_d = ",k)
+                    print("    -- self.prev_val= ",self.prev_val)
+
+                    # Is the variable name (in each cell def) already in the prev_val list, and
+                    #  is its value unchanged?
+                    # if (k in self.prev_val.keys()) and (self.prev_val[k] == var_val):
+                    # if (k in self.prev_val.keys()) and (self.prev_val[k] == var_val):
+                    #     pass
+                    # else:
+                    #     print("    !!! -- updating celldef_tab.param_d: ",var_name," -> ",var_val)
+                    #     self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+                    self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+
+            #-------------------------------
+            else:   # have 0-length var_name (it was deleted)
+                print("    -- doing else branch (0-length var_name)")
+                print("    -- idx, len(self.prev_val) = ", idx, len(self.prev_val) )
+                if idx >= len(self.prev_val):
+                    break
+                else:
+                    print("    -- popping name/key off of each cell type dict. idx=",idx,", var_name=",self.prev_val[idx][0])
+                    for k in self.celldef_tab.param_d.keys():  # for each cell type
+                        print("    ---> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
+                        # self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_val[0])
+                        del self.celldef_tab.param_d[k]['custom_data'][self.prev_val[idx][0]]
+
+                    self.prev_val.pop(idx)
+                    print("    -- post popping entry off,  self.prev_val=",self.prev_val)
+
+
+            # self.value[idx].clear()
+            # self.value[idx].setText("0.0")
+            # self.units[idx].clear()   
+            # self.description[idx].clear()
+            # self.select[idx].setChecked(False)
+
+        self.celldef_tab.update_custom_data_params()
+
+        self.update_prev_val()
+
+        # print("------ update custom vars for each cell def:")
+        # for k in self.celldef_tab.param_d.keys():   # for all cell types
+        #     # print(self.celldef_tab.param_d[k])
+        #     print("--- key: ",k,"\n")
+        #     print(self.celldef_tab.param_d[k]['custom_data'])
+
+
+#   Deprecated (Sep 2021)
+    # @QtCore.Slot()
+    # def clear_rows_cb(self):
+    #     print("\n-------- clear_rows_cb():")
+    #     self.custom_vars_to_delete.clear()
+
+    #     # 1st pass
+    #     for idx in range(self.count):
+    #         if self.select[idx].isChecked():
+    #             self.custom_vars_to_delete.append(self.name[idx].text())
+
+    #             # danger: this triggers custom_data_name_changed()
+    #             # self.name[idx].clear()
+    #             # # self.value[idx].clear()
+    #             # self.value[idx].setText("0.0")
+    #             # self.units[idx].clear()   
+    #             # self.description[idx].clear()
+    #             # self.select[idx].setChecked(False)
+
+    #     print("clear_rows_cb(): self.custom_vars_to_delete = ",self.custom_vars_to_delete)
+
+    #     # rwh/todo: also update all cell types custom data
+    #     for k in self.celldef_tab.param_d.keys():   # for all cell types
+    #         print("-- celldef custom_data:  ",self.celldef_tab.param_d[k]['custom_data'])
+    #         for item in self.custom_vars_to_delete:
+    #             print("> delete: ",item)
+    #             self.celldef_tab.param_d[k]['custom_data'].pop(item)
+    #         # if '' in self.celldef_tab.param_d[k]['custom_data']:
+    #             # self.celldef_tab.param_d[k]['custom_data'].pop('')
+
+    #     print("-- celldef custom_data:  ",self.celldef_tab.param_d[k]['custom_data'])
+
+    #     # 2nd pass
+    #     for idx in range(self.count):
+    #         if self.select[idx].isChecked():
+    #             # self.custom_vars_to_delete.append(self.name[idx].text())
+
+    #             # danger: this triggers custom_data_name_changed()
+    #             self.name[idx].clear()
+    #             # self.value[idx].clear()
+    #             self.value[idx].setText("0.0")
+    #             self.units[idx].clear()   
+    #             self.description[idx].clear()
+    #             self.select[idx].setChecked(False)
+    #         # mydict[k_new] = mydict.pop(k_old)
+
+    #     for k in self.celldef_tab.param_d.keys():   # for all cell types
+    #         if '' in self.celldef_tab.param_d[k]['custom_data']:
+    #             self.celldef_tab.param_d[k]['custom_data'].pop('')
+
+    #         # rwh - debug overwriting var names with shared root, e.g.: foo, foo2
+    #         # if len(prev_vname) > 0:
+    #         #     print("updating: prev_vname=",prev_vname,", vname=",vname)
+    #         #     self.celldef_tab.param_d[k]['custom_data'][vname] = self.celldef_tab.param_d[k]['custom_data'].pop(prev_vname)
+    #         #     print("post-updating: ",self.celldef_tab.param_d[k]['custom_data'])
+    #         # else:  # adding a new one
+    #         #     self.celldef_tab.param_d[k]['custom_data'][vname] = "0.0"
+    #         #     self.celldef_tab.custom_data_value[idx].setText("0.0")
+    #         #     self.celldef_tab.custom_data_count += 1
+
+    #     # print("post-updating: ",self.celldef_tab.param_d[k]['custom_data'])
+
 
     # @QtCore.Slot()
     def append_more_cb(self):
@@ -272,20 +567,28 @@ class CellCustomData(QWidget):
         for idx in range(5):
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
-            w = QCheckBox("")
-            self.select.append(w)
-            hbox.addWidget(w)
+
+            # w = QCheckBox("")
+            # w.setEnabled(False)
+            # self.select.append(w)
+            # hbox.addWidget(w)
 
             w = QLineEdit()
+            # rx_valid_varname = QRegExp("('^[ A-Za-z]{1,16}$')")
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z0-9_]+$")
+            name_validator = QtGui.QRegExpValidator(rx_valid_varname )
+            w.setValidator(name_validator)
             self.name.append(w)
             hbox.addWidget(w)
 
             w = QLineEdit()
+            w.setReadOnly(True)
             self.value.append(w)
             w.setValidator(QtGui.QDoubleValidator())
             hbox.addWidget(w)
 
             w = QLineEdit()
+            w.setReadOnly(True)
             w.setFixedWidth(self.units_width)
             self.units.append(w)
             hbox.addWidget(w)
@@ -297,9 +600,10 @@ class CellCustomData(QWidget):
             hbox.addWidget(w)
 
             w = QLineEdit()
+            w.setReadOnly(True)
             self.description.append(w)
             hbox.addWidget(w)
-            w.setStyleSheet("background-color: lightgray")
+            # w.setStyleSheet("background-color: lightgray")
 
 
             # units = QLabel("micron^2/min")
@@ -332,7 +636,7 @@ class CellCustomData(QWidget):
     def fill_gui(self, celldef_tab):   # == populate()
         # pass
         uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[1]//custom_data")
-        print('fill_gui(): uep_custom_data=',uep_custom_data)
+        # print('fill_gui(): uep_custom_data=',uep_custom_data)
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need
@@ -352,21 +656,30 @@ class CellCustomData(QWidget):
         #     self.custom_data_units[idx].setReadOnly(True)
 
         for var in uep_custom_data:
+            # self.select[idx].setEnabled(True)   # enable checkbox
+
             # print(idx, ") ",var)
             self.name[idx].setText(var.tag)
+            # w.setEnabled(False)
+            self.name[idx].setEnabled(True)
             # print("tag=",var.tag)
 
             self.value[idx].setText(var.text)
+            self.value[idx].setEnabled(True)
 
             if 'units' in var.keys():
                 self.units[idx].setText(var.attrib['units'])
+                self.units[idx].setEnabled(True)
 
             if 'description' in var.keys():
                 self.description[idx].setText(var.attrib['description'])
+                self.description[idx].setEnabled(True)
             idx += 1
             # print("custom_data:  fill_gui(): idx=",idx,", count=",self.count)
             if idx > self.count:
                 self.append_more_cb()
+
+        self.update_prev_val()
 
     # doesn't make sense for this tab; custom_data is saved in XML for each cell type
     # def fill_xml(self):

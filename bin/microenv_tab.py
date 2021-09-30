@@ -3,9 +3,6 @@ Authors:
 Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
-
---- Versions ---
-0.1 - initial version
 """
 
 import sys
@@ -1077,9 +1074,11 @@ class SubstrateDef(QWidget):
                         {"name":substrate, "units":"dimensionless", "ID":str(idx)})
                 elm.tail = '\n' + indent6
                 elm.text = indent8
+
                 subelm = ET.SubElement(elm, 'physical_parameter_set')
                 subelm.text = indent10
                 subelm.tail = indent8
+
                 subelm2 = ET.SubElement(subelm, "diffusion_coefficient",{"units":"micron^2/min"})
                 subelm2.text = self.param_d[substrate]["diffusion_coef"]
                 subelm2.tail = indent10
@@ -1093,7 +1092,37 @@ class SubstrateDef(QWidget):
                 subelm = ET.SubElement(elm, "Dirichlet_boundary_condition",
                         {"units":"mmHg", "enabled":str(self.param_d[substrate]["dirichlet_enabled"])})
                 subelm.text = self.param_d[substrate]["dirichlet_bc"]
-                subelm.tail = indent6
+                subelm.tail = indent8
+
+#dirichlet_xmin 
+                subelm = ET.SubElement(elm, "Dirichlet_options")
+                subelm.tail = indent8
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"xmin", 
+                    "enabled":str(self.param_d[substrate]["enable_xmin"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_xmin"]
+                subelm2.tail = indent10
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"xmax", 
+                    "enabled":str(self.param_d[substrate]["enable_xmax"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_xmax"]
+                subelm2.tail = indent10
+
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"ymin", 
+                    "enabled":str(self.param_d[substrate]["enable_ymin"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_ymin"]
+                subelm2.tail = indent10
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"ymax", 
+                    "enabled":str(self.param_d[substrate]["enable_ymax"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_ymax"]
+                subelm2.tail = indent10
+
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"zmin", 
+                    "enabled":str(self.param_d[substrate]["enable_zmin"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_zmin"]
+                subelm2.tail = indent10
+                subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"zmax", 
+                    "enabled":str(self.param_d[substrate]["enable_zmax"])} )
+                subelm2.text = self.param_d[substrate]["dirichlet_zmax"]
+                subelm2.tail = indent8
                         
                 #              {'text':"foo",
                 #               'xmlUrl':"bar",
