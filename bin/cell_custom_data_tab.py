@@ -35,8 +35,8 @@ class CellCustomData(QWidget):
         self.max_entries = self.max_rows
         # self.max_entries = -1
         # self.custom_vars_to_delete = []
-        # self.prev_val = {}  # previous (backup) copy of name:value (where value = [idx,val])
-        self.prev_val = []  # previous (backup) copy of [name,value] (access via list index)
+        # self.prev_cd = {}  # previous (backup) copy of name:value (where value = [idx,val])
+        self.prev_cd = []  # previous (backup) copy of [name,value] (access via list index)
         self.num_var = 0
 
         #-------------------------------------------
@@ -131,7 +131,7 @@ class CellCustomData(QWidget):
             w_varname.vname = w_varname  # ??
             w_varname.idx = idx
 
-            # danger: this "connect" callback can be tricky
+            # crucial/warning: this "connect" callback can be tricky
             w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
             # self.diffusion_coef.enter.connect(self.save_xml)
             hbox.addWidget(w_varname)
@@ -214,7 +214,7 @@ class CellCustomData(QWidget):
 
     # --- (rf. Release 1.3 for fancier/buggier approach)
     def custom_data_name_changed(self, text):
-        print("--------- (master) custom_data tab: custom_data_name_changed() --------")
+        # print("--------- (master) custom_data tab: custom_data_name_changed() --------")
 
         # # print("self.sender() = ", self.sender())
         vname = self.sender().vname.text()
@@ -222,22 +222,26 @@ class CellCustomData(QWidget):
         # prev_vname = self.celldef_tab.custom_data_name[idx].text()
         # print("custom_data_name_changed(): prev_vname = ",prev_vname)
         # # print("(master) prev_vname = ", self.sender().prev_vname)
-        print("(master) vname = ", vname)
-        print("(master) idx = ", idx)
+        # print("(master) vname = ", vname)
+        # print("(master) idx = ", idx)
         # print("(master) custom_data_name_changed(): text = ", text)
         # print()
 
         # New, manual way (Sep 2021): once a user enters a new name for a custom var, enable its other fields.
         # self.select[idx].setEnabled(True)
-        print("len(vname) = ",len(vname))
+        # print("len(vname) = ",len(vname))
         if len(vname) > 0:
             self.value[idx].setReadOnly(False)
             self.units[idx].setReadOnly(False)
             self.description[idx].setReadOnly(False)
 
-            self.name[idx+1].setReadOnly(False)
+            self.name[idx+1].setReadOnly(False)   # Crucial: enable the *next* var name slot as writable!
+            # print("\n------- Enabling row (name) # ",idx+1, "as editable.")
+            if idx > self.max_entries:
+                self.max_entries = idx
+                # print("\n------- resetting max_entries = ",self.max_entries)
         else:
-            print("len(vname) = 0, setting fields readonly")
+            # print("len(vname) = 0, setting fields readonly")
             self.value[idx].setReadOnly(True)
             self.units[idx].setReadOnly(True)
             self.description[idx].setReadOnly(True)
@@ -305,54 +309,71 @@ class CellCustomData(QWidget):
         # print(self.param_d[self.current_cell_def]['custom_data'])
 
 
-    # Keep a copy of the previous entries to compare againts newly edited ones
-    def update_prev_val(self):
-        # self.prev_val = {}  # previous (backup) copy of name:value
-        print("\n\n>>>> ------- update_prev_val():  --------------------------")
-        print("prev vals:")
-        # for k in self.prev_val.keys():
-            # print(k,self.prev_val[k])
-        idx = 0
-        for elm in self.prev_val:
-            print(idx,elm)
-            idx += 1
+    # Keep a copy of the previous custom data entries to compare againts newly edited ones
+    def update_prev_cd(self):
+        # self.prev_cd = {}  # previous (backup) copy of name:value
+        print(">>>> ------- entering update_prev_cd():  --------------------------")
+        # print("     original self.prev_cd = :",self.prev_cd)
+        # print("prev vals:")
+        # for k in self.prev_cd.keys():
+            # print(k,self.prev_cd[k])
+        # idx = 0
+        # for elm in self.prev_cd:
+        #     print(idx,elm)
+        #     idx += 1
 
-        print("   (update_prev_val())        new vals:")
+        # print("   (update_prev_cd())        new vals:")
         self.num_var = 0
-        # for idx in range(self.count):
         for idx in range(self.max_entries):
-            # danger: this triggers custom_data_name_changed()
+            # crucial/warning: this triggers custom_data_name_changed()
             var_name = self.name[idx].text()
             if len(var_name) > 0:
                 self.num_var += 1
                 var_val = self.value[idx].text()
-                print('idx = ',idx)
-                print(var_name,' = ',var_val)
-                # self.prev_val[var_name] = var_val
-                # self.prev_val[var_name] = [idx,var_val]
-                if idx < len(self.prev_val):
-                    self.prev_val[idx] = [var_name,var_val]
+                # print('idx = ',idx)
+                # print(var_name,' = ',var_val)
+                # self.prev_cd[var_name] = var_val
+                # self.prev_cd[var_name] = [idx,var_val]
+                if idx < len(self.prev_cd):
+                    self.prev_cd[idx] = [var_name,var_val]
                 else:
                     var_name_exists = False
-                    for jdx in range(0,self.max_entries):
-                        print("jdx = ",jdx, ", max_entries=",self.max_entries)
-                        if jdx+1 > len(self.prev_val):
-                        # if jdx+1 > self.max_entries:
-                            break
-                        if self.prev_val[jdx][0] == var_name:
+                    # for jdx in range(0,self.max_entries):
+                    for jdx in range(len(self.prev_cd)):
+                        # print("jdx = ",jdx, ", max_entries=",self.max_entries)
+                        # print("jdx = ",jdx)
+                        # if jdx+1 > len(self.prev_cd):
+                        # # if jdx+1 > self.max_entries:
+                        #     break
+                        # print("compare ",var_name, " against ",self.prev_cd[jdx][0])
+                        if self.prev_cd[jdx][0] == var_name:
                             var_name_exists = True
-                    if not var_name_exists:
-                        self.prev_val.append([var_name,var_val])
-                    print("\n update_prev_val():")
-                    print("     idx= ",idx, ", self.max_entries= ",self.max_entries)
-                    print("     appended new val, self.prev_val = :",self.prev_val)
-        print("        self.num_var = ",self.num_var)
+                            # print(" FOUND IT!!")
 
-        for idx in range(self.num_var+1,self.count):
-            self.name[idx].setReadOnly(True)
+                    if not var_name_exists:
+                        self.prev_cd.append([var_name,var_val])
+                        # print("     appended new val, self.prev_cd = :",self.prev_cd)
+
+                    # print("\n update_prev_cd():")
+                    # print("     idx= ",idx, ", self.max_entries= ",self.max_entries)
+                    # print("     appended new val, self.prev_cd = :",self.prev_cd)
+        # print("        self.num_var = ",self.num_var)
+
+        # Disable all rows after the last one + 1
+        # for idx in range(self.num_var+1,self.count):
+        row_start = self.num_var + 1
+        if self.max_entries != self.max_rows:
+            row_start = self.max_entries + 1
+        # row_start = self.num_var + 1
+        # print("update_prev_cd():  going to disable rows in range(",row_start, ",",self.count,")")
+        # print("update_prev_cd():  and max_entries = ",self.max_entries)
+        for idx in range(row_start,self.count):
+            self.name[idx].setReadOnly(True)  # Crucial/beware...
             self.value[idx].setReadOnly(True)
             self.units[idx].setReadOnly(True)
             self.description[idx].setReadOnly(True)
+
+        # print("\n\n>>>> ------- leaving update_prev_cd():  --------------------------")
 
 
     def find_duplicates(self,listOfElems):
@@ -377,10 +398,12 @@ class CellCustomData(QWidget):
         if returnValue == QMessageBox.Ok:
             print('OK clicked')
 
+
+#------------------------------
     # Update all Cell Types(tab):Custom Data(subtab) entries with changes made in this tab
     # @QtCore.Slot()
     def update_cb(self):
-        print("\n===========  update_cb(): have # entries = ",self.count, "  ============")
+        print("===========  update_cb(): self.max_entries = ",self.max_entries, "  ============")
 
         # check for duplicate names
         names = []
@@ -390,8 +413,8 @@ class CellCustomData(QWidget):
                 names.append(var_name)
 
         dups_d = self.find_duplicates(names)
-        print("len(dups_d) = ", len(dups_d))
-        print("dups_d = ", dups_d)
+        # print("len(dups_d) = ", len(dups_d))
+        # print("dups_d = ", dups_d)
         if len(dups_d) > 0:
             print("\n\n==========  You have duplicate named custom data and need to fix.\n\n ")
             self.duplicate_names_popup(dups_d)
@@ -399,84 +422,109 @@ class CellCustomData(QWidget):
 
         # for idx in range(self.count):
         for idx in range(self.max_entries+1):
-            # danger: this triggers custom_data_name_changed()
+            # crucial/warning: this triggers custom_data_name_changed()
             var_name = self.name[idx].text()
+
             if len(var_name) > 0:
                 var_val = self.value[idx].text()
-                print(var_name,' = ',var_val)
-                print("    self.prev_val= ",self.prev_val)
-                # print("    var_name = ",var_name,", self.prev_val.keys()= ",self.prev_val.keys())
-                print("    var_val = ",var_val)
+                # print(var_name,' = ',var_val)
+                # print("    self.prev_cd= ",self.prev_cd)
+                # print("    var_name = ",var_name,", self.prev_cd.keys()= ",self.prev_cd.keys())
+                # print("    var_val = ",var_val)
 
-                if (idx+1) > len(self.prev_val):
+                if (idx+1) > len(self.prev_cd):
+                    # print("\n======= handling: idx+1 = ",idx+1, " > len(self.prev_cd): ",self.prev_cd)
                     var_name_exists = False
                     for jdx in range(0,self.max_entries):
-                        print("jdx = ",jdx)
-                        if jdx+1 > len(self.prev_val):
+                        # print("jdx = ",jdx)
+                        if jdx+1 > len(self.prev_cd):
                             break
-                        if self.prev_val[jdx][0] == var_name:
+                        if self.prev_cd[jdx][0] == var_name:
                             var_name_exists = True
                     if not var_name_exists:
-                        print("    ------------ handle brand new var_val (ALL cell types are changed): ",var_name)
-                        self.prev_val.append([var_name, var_val])
-                        print("    -- after append: self.prev_val= ",self.prev_val)
-                        self.max_entries = idx+1
-                    print("    --  self.max_entries",self.max_entries)
-                    for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
-                        # change var name to be new one
-                        self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+                        # print("    ------------ handle brand new var_val (ALL cell types are changed): ",var_name)
+                        self.prev_cd.append([var_name, var_val])
+                        # print("    -- after append: self.prev_cd= ",self.prev_cd)
+                        self.max_entries = idx+1  # let's NOT do this?
+                    # print("    --  self.max_entries",self.max_entries)
 
-                # if the var_name and var_val is unchanged from prev_val, do nothing. 
-                # if (var_name in self.prev_val.keys()) and (var_val == self.prev_val[var_name]):
-                elif (var_name == self.prev_val[idx][0]) and (var_val == self.prev_val[idx][1]):
+                    for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
+                        # print("     (1) changing k: ",k,": ",var_name, ", now --> ",var_val)
+                        # change var name to be new one
+                        if var_name in self.celldef_tab.param_d[k]['custom_data'].keys():
+                            pass
+                        else:
+                            self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val    # BEWARE! FIX this!
+
+                # if the var_name and var_val is unchanged from prev_cd, do nothing. 
+                # if (var_name in self.prev_cd.keys()) and (var_val == self.prev_cd[var_name]):
+                elif (var_name == self.prev_cd[idx][0]) and (var_val == self.prev_cd[idx][1]):
                     continue
-                elif (var_name != self.prev_val[idx][0]) and (var_val == self.prev_val[idx][1]):
-                    print("    -- handle (only) edited var_name: ",var_name)
+                elif (var_name != self.prev_cd[idx][0]) and (var_val == self.prev_cd[idx][1]):
+                    # print("    -- handle (only) edited var_name: ",var_name)
                     for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
                         # change var name to be new one, i.e., replace key in dict
-                        self.celldef_tab.param_d[k]['custom_data'][var_name] = self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_val[idx][0])
+                        self.celldef_tab.param_d[k]['custom_data'][var_name] = self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_cd[idx][0])
                     continue
 
-                # elif (var_name == self.prev_val[idx][0]):
-                # if (var_val != self.prev_val[idx][1]):
-                if idx < len(self.prev_val) and (var_val != self.prev_val[idx][1]):
-                    print("    -- handle edited prev var_val (ALL cell types are changed): ",var_name)
+                # elif (var_name == self.prev_cd[idx][0]):
+                # if (var_val != self.prev_cd[idx][1]):
+                if idx < len(self.prev_cd) and (var_val != self.prev_cd[idx][1]):
+                    # print("\n    -- DEBUG THIS!!  idx=",idx,", var_val=",var_val,", self.prev_cd = ",self.prev_cd) 
+                    # print("\n    -- self.prev_cd[idx][1]=",self.prev_cd[idx][1]) 
+                    # print("    -- handle edited prev var_val (ALL cell types are changed): ",var_name)
+                    # print("    --  update all cell types: ")
                     for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
                         # change var name to be new one
-                        self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+                        self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val   # Beware! Possible bug!
+                        # print("     (2) changing k: ",k,": ",var_name, ", now --> ",var_val)
                     continue
 
                 # otherwise:
                 for k in self.celldef_tab.param_d.keys():   # for each cell type (in Cell Types tab)
-                    print("\n  otherwise:")
-                    print("    -- key in celldef_tab.param_d = ",k)
-                    print("    -- self.prev_val= ",self.prev_val)
+                    # print("\n  otherwise (for each cell def):")
+                    # print("    -- key in celldef_tab.param_d = ",k)
+                    # print("    -- self.prev_cd= ",self.prev_cd)
 
-                    # Is the variable name (in each cell def) already in the prev_val list, and
+                    # Is the variable name (in each cell def) already in the prev_cd list, and
                     #  is its value unchanged?
-                    # if (k in self.prev_val.keys()) and (self.prev_val[k] == var_val):
-                    # if (k in self.prev_val.keys()) and (self.prev_val[k] == var_val):
+                    # if (k in self.prev_cd.keys()) and (self.prev_cd[k] == var_val):
+                    # NO! prev_cd is no longer a dict!
+                    # if (k in self.prev_cd.keys()) and (self.prev_cd[k] == var_val):
                     #     pass
                     # else:
                     #     print("    !!! -- updating celldef_tab.param_d: ",var_name," -> ",var_val)
                     #     self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
-                    self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+
+                    for jdx in range(0,self.max_entries):
+                        # print("jdx = ",jdx)
+                        if jdx+1 > len(self.prev_cd):
+                            break
+                        if (self.prev_cd[jdx][0] == var_name) and (self.prev_cd[jdx][1] != var_val):
+                            # var_name_exists = True
+                            # print(" ~~~~~~   beware: (idx=",idx,") updating celldef_tab.param_d: ",var_name," -> ",var_val)
+                            self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
+
+                    # print(" ~~~~~~   beware: (idx=",idx,") updating celldef_tab.param_d: ",var_name," -> ",var_val)
+                    # self.celldef_tab.param_d[k]['custom_data'][var_name] = var_val
 
             #-------------------------------
             else:   # have 0-length var_name (it was deleted)
-                print("    -- doing else branch (0-length var_name)")
-                print("    -- idx, len(self.prev_val) = ", idx, len(self.prev_val) )
-                if idx >= len(self.prev_val):
+                # print("\n\n  0-length var_name:  doing else branch (0-length var_name)")
+                # print("    -- idx, len(self.prev_cd) = ", idx, len(self.prev_cd) )
+                if idx >= len(self.prev_cd):
                     break
                 else:
-                    print("    -- popping name/key off of each cell type dict. idx=",idx,", var_name=",self.prev_val[idx][0])
+                    # print("    -- del name off each cell type dict: idx=",idx,", (prev)var_name=",self.prev_cd[idx][0])
                     for k in self.celldef_tab.param_d.keys():  # for each cell type
-                        print("    ---> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
-                        # self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_val[0])
-                        del self.celldef_tab.param_d[k]['custom_data'][self.prev_val[idx][0]]
+                        # print("    ---> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
+                        # print("   pre del: ------> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
+                        # self.celldef_tab.param_d[k]['custom_data'].pop(self.prev_cd[0])
+                        del self.celldef_tab.param_d[k]['custom_data'][self.prev_cd[idx][0]]
+                        # print("     post del: ------> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
 
-                    self.prev_val.pop(idx)
-                    print("    -- post popping entry off,  self.prev_val=",self.prev_val)
+                    self.prev_cd.pop(idx)
+                    # print("    -- post popping entry off,  self.prev_cd=",self.prev_cd)
 
 
             # self.value[idx].clear()
@@ -485,9 +533,14 @@ class CellCustomData(QWidget):
             # self.description[idx].clear()
             # self.select[idx].setChecked(False)
 
+        # print("\n======= just before calling  celldef_tab.update_custom_data_params:")
+        # for k in self.celldef_tab.param_d.keys():  # for each cell type
+        #     print("    ---> ", k, ":", self.celldef_tab.param_d[k]['custom_data'])
         self.celldef_tab.update_custom_data_params()
 
-        self.update_prev_val()
+        self.update_prev_cd()
+        # print("\n======= after calling  update_prev_cd():, max_entries=",self.max_entries)
+        # self.name[self.max_entries].setReadOnly(False)
 
         # print("------ update custom vars for each cell def:")
         # for k in self.celldef_tab.param_d.keys():   # for all cell types
@@ -507,7 +560,7 @@ class CellCustomData(QWidget):
     #         if self.select[idx].isChecked():
     #             self.custom_vars_to_delete.append(self.name[idx].text())
 
-    #             # danger: this triggers custom_data_name_changed()
+    #             # crucial/warning: this triggers custom_data_name_changed()
     #             # self.name[idx].clear()
     #             # # self.value[idx].clear()
     #             # self.value[idx].setText("0.0")
@@ -533,7 +586,7 @@ class CellCustomData(QWidget):
     #         if self.select[idx].isChecked():
     #             # self.custom_vars_to_delete.append(self.name[idx].text())
 
-    #             # danger: this triggers custom_data_name_changed()
+    #             # crucial/warning: this triggers custom_data_name_changed()
     #             self.name[idx].clear()
     #             # self.value[idx].clear()
     #             self.value[idx].setText("0.0")
@@ -636,7 +689,7 @@ class CellCustomData(QWidget):
     def fill_gui(self, celldef_tab):   # == populate()
         # pass
         uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[1]//custom_data")
-        # print('fill_gui(): uep_custom_data=',uep_custom_data)
+        print('fill_gui(): uep_custom_data=',uep_custom_data)
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need
@@ -675,11 +728,22 @@ class CellCustomData(QWidget):
                 self.description[idx].setText(var.attrib['description'])
                 self.description[idx].setEnabled(True)
             idx += 1
+
+            self.prev_cd.append([var.tag,var.text])
+
             # print("custom_data:  fill_gui(): idx=",idx,", count=",self.count)
             if idx > self.count:
                 self.append_more_cb()
 
-        self.update_prev_val()
+        self.max_entries = idx
+        print('fill_gui(): self.max_entries=',self.max_entries)
+        # self.update_prev_cd()
+
+        for idx in range(self.max_entries+1,self.count):
+            self.name[idx].setReadOnly(True)  # Crucial/beware...
+            self.value[idx].setReadOnly(True)
+            self.units[idx].setReadOnly(True)
+            self.description[idx].setReadOnly(True)
 
     # doesn't make sense for this tab; custom_data is saved in XML for each cell type
     # def fill_xml(self):

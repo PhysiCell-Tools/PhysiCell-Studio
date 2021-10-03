@@ -84,6 +84,7 @@ class PhysiCellXMLCreator(QWidget):
         model_name = "test-gui"
         model_name = "covid19_v5_flat"
         model_name = "template"
+        # model_name = "test"
         # model_name = "randy_test"  #rwh
         # read_file = "data/" + model_name + ".xml"
 

@@ -3,9 +3,6 @@ Authors:
 Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
-
---- Versions ---
-0.1 - initial version
 """
 
 import sys
@@ -105,7 +102,8 @@ class CellDef(QWidget):
 
         self.splitter = QSplitter()
 
-        tree_widget_width = 160
+        # tree_widget_width = 160
+        tree_widget_width = 190
         tree_widget_height = 400
         # tree_widget_height = 1200
 
@@ -2683,7 +2681,7 @@ class CellDef(QWidget):
         # print("custom_data_value_changed(): vname = ", vname)
         if len(vname) == 0:
             return
-        # print("custom_data_value_changed(): text = ", text)
+        # print("\n THIS! ~~~~~~~~~~~ cell_def_tab.py: custom_data_value_changed(): vname = ",vname,", val = ", text)
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
         # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
         self.param_d[self.current_cell_def]['custom_data'][vname] = text
@@ -3676,15 +3674,23 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_custom_data_params(self):
         cdname = self.current_cell_def
-        print("--------- update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
         # print("num_vals =", num_vals)
         idx = 0
         for key in self.param_d[cdname]['custom_data'].keys():
             # print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
-            self.custom_data_name[idx].setText(key)
-            self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
+            if len(key) > 0:  # probably not necessary anymore
+                self.custom_data_name[idx].setText(key)
+                self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
+                # print("\n THIS~~~~~~~~~ cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
             idx += 1
+
+        # print('idx=',idx)
+        for jdx in range(idx,self.max_custom_data_rows):
+            self.custom_data_name[jdx].setText('')
+            self.custom_data_value[jdx].setText('')
         # jdx = 0
         # for var in uep_custom_data:
         #     print(jdx, ") ",var)
@@ -4241,7 +4247,7 @@ class CellDef(QWidget):
                         params_uep = death_model.find("parameters")
                         # apoptosis_params_path = apoptosis_path + "parameters//"
 
-                        self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        # self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
                         self.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
                         self.param_d[cell_def_name]["apoptosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
                         self.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
@@ -5353,6 +5359,7 @@ class CellDef(QWidget):
 
         # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
         elm = ET.SubElement(taxis, 'substrate')
+        print("\n\n ====================> fill_xml_motility(): self.param_d[cdef]['motility_chemotaxis_substrate'] = ", self.param_d[cdef]['motility_chemotaxis_substrate'], "\n\n")
         elm.text = self.param_d[cdef]['motility_chemotaxis_substrate']
         elm.tail = self.indent16
         # if self.param_d[cdname]["motility_chemotaxis_towards"]:
