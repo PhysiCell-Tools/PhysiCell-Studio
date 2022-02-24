@@ -9,7 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
-import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
+# import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea
 
@@ -21,9 +21,13 @@ class QHLine(QFrame):
 
 
 class Config(QWidget):
+    # def __init__(self, nanohub_flag):
     def __init__(self):
         super().__init__()
         # global self.config_params
+
+        # self.nanohub_flag = nanohub_flag
+        self.nanohub_flag = False
 
         self.xml_root = None
 
@@ -51,6 +55,8 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         self.vbox.addWidget(label)
 
+        domain_enabled = True
+
         hbox = QHBoxLayout()
 
         label = QLabel("Xmin")
@@ -58,6 +64,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.xmin = QLineEdit()
+        self.xmin.setEnabled(domain_enabled)
         self.xmin.setFixedWidth(domain_value_width)
         self.xmin.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.xmin)
@@ -67,6 +74,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.xmax = QLineEdit()
+        self.xmax.setEnabled(domain_enabled)
         self.xmax.setFixedWidth(domain_value_width)
         self.xmax.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.xmax)
@@ -76,6 +84,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.xdel = QLineEdit()
+        self.xdel.setEnabled(domain_enabled)
         self.xdel.setFixedWidth(value_width)
         self.xdel.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.xdel)
@@ -88,6 +97,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.ymin = QLineEdit()
+        self.ymin.setEnabled(domain_enabled)
         self.ymin.setFixedWidth(domain_value_width)
         self.ymin.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.ymin)
@@ -97,6 +107,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.ymax = QLineEdit()
+        self.ymax.setEnabled(domain_enabled)
         self.ymax.setFixedWidth(domain_value_width)
         self.ymax.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.ymax)
@@ -106,6 +117,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.ydel = QLineEdit()
+        self.ydel.setEnabled(domain_enabled)
         self.ydel.setFixedWidth(value_width)
         self.ydel.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.ydel)
@@ -118,6 +130,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.zmin = QLineEdit()
+        self.zmin.setEnabled(domain_enabled)
         self.zmin.setFixedWidth(domain_value_width)
         self.zmin.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.zmin)
@@ -127,6 +140,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.zmax = QLineEdit()
+        self.zmax.setEnabled(domain_enabled)
         self.zmax.setFixedWidth(domain_value_width)
         self.zmax.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.zmax)
@@ -136,6 +150,7 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         self.zdel = QLineEdit()
+        self.zdel.setEnabled(domain_enabled)
         self.zdel.setFixedWidth(value_width)
         self.zdel.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.zdel)
@@ -218,6 +233,8 @@ class Config(QWidget):
         # self.num_threads.setFixedWidth(value_width)
         self.folder.setFixedWidth(domain_value_width)
         # self.folder.setValidator(QtGui.QTex())
+        if self.nanohub_flag:
+            self.folder.setEnabled(False)
         hbox.addWidget(self.folder)
 
         label = QLabel("   ")  # weird, but nicer layout
@@ -252,6 +269,8 @@ class Config(QWidget):
         self.svg_interval = QLineEdit()
         self.svg_interval.setFixedWidth(value_width)
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
+        self.svg_interval.textChanged.connect(self.svg_interval_cb)
+
         hbox.addWidget(self.svg_interval)
 
         label = QLabel("min")
@@ -273,6 +292,7 @@ class Config(QWidget):
         self.full_interval = QLineEdit()
         self.full_interval.setFixedWidth(value_width)
         self.full_interval.setValidator(QtGui.QDoubleValidator())
+        self.full_interval.setEnabled(False)
         hbox.addWidget(self.full_interval)
 
         label = QLabel("min")
@@ -290,6 +310,8 @@ class Config(QWidget):
 
         self.vbox.addWidget(label)
         self.cells_csv = QCheckBox("config/cells.csv")
+        self.cells_csv = QCheckBox("cells.csv")
+
         self.vbox.addWidget(self.cells_csv)
 
         #--------------------------
@@ -322,6 +344,9 @@ class Config(QWidget):
     #     # self.text.setText(random.choice(self.hello))
     #     pass
 
+    def svg_interval_cb(self, text):
+        print("svg_interval_cb: text=",text)
+        self.full_interval.setText(text)
 
     def fill_gui(self):
 
@@ -336,6 +361,11 @@ class Config(QWidget):
         self.zmin.setText(self.xml_root.find(".//z_min").text)
         self.zmax.setText(self.xml_root.find(".//z_max").text)
         self.zdel.setText(self.xml_root.find(".//dz").text)
+
+        if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
+            self.virtual_walls.setChecked(True)
+        else:
+            self.virtual_walls.setChecked(False)
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         
@@ -355,6 +385,14 @@ class Config(QWidget):
             self.save_full.setChecked(True)
         else:
             self.save_full.setChecked(False)
+
+        uep = self.xml_root.find(".//initial_conditions//cell_positions")
+        if uep == None:  # not present
+            return
+        if uep.attrib['enabled'].lower() == 'true':
+            self.cells_csv.setChecked(True)
+        else:
+            self.cells_csv.setChecked(False)
 
 
 
@@ -439,12 +477,22 @@ class Config(QWidget):
             self.xml_root.find(".//full_data//enable").text = 'true'
         else:
             self.xml_root.find(".//full_data//enable").text = 'false'
-        self.xml_root.find(".//full_data//interval").text = self.full_interval.text()
+        # self.xml_root.find(".//full_data//interval").text = self.full_interval.text()
+        self.xml_root.find(".//full_data//interval").text = self.svg_interval.text()
 
         if self.cells_csv.isChecked():
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
         else:
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'false'
+
+        self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
+
+        self.xml_root.find(".//initial_conditions//cell_positions/folder").text = ''
+        # if self.csv_rb1.isChecked():
+        #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
+        # else:
+        #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells_above_y0.csv'
+
 
         # TODO: verify valid type (numeric) and range?
         # xml_root.find(".//x_min").text = str(self.xmin.value)

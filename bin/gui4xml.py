@@ -141,11 +141,11 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.fill_substrates_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.cell_customdata_tab = CellCustomData()
-        self.cell_customdata_tab.xml_root = self.xml_root
-        self.cell_customdata_tab.celldef_tab = self.celldef_tab
-        self.cell_customdata_tab.fill_gui(self.celldef_tab)
-        self.celldef_tab.fill_custom_data_tab()
+        # self.cell_customdata_tab = CellCustomData()
+        # self.cell_customdata_tab.xml_root = self.xml_root
+        # self.cell_customdata_tab.celldef_tab = self.celldef_tab
+        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
+        # self.celldef_tab.fill_custom_data_tab()
         
         self.user_params_tab = UserParams()
         self.user_params_tab.xml_root = self.xml_root
@@ -158,13 +158,13 @@ class PhysiCellXMLCreator(QWidget):
         #------------------
         tabWidget = QTabWidget()
         stylesheet = """ 
-            QTabBar::tab:selected {background: dodgerblue;}
+            QTabBar::tab:selected {background: orange;}  # dodgerblue
             """
         tabWidget.setStyleSheet(stylesheet)
         tabWidget.addTab(self.config_tab,"Config Basics")
         tabWidget.addTab(self.microenv_tab,"Microenvironment")
         tabWidget.addTab(self.celldef_tab,"Cell Types")
-        tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
+        # tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
         tabWidget.addTab(self.user_params_tab,"User Params")
 
         vlayout.addWidget(tabWidget)
@@ -308,7 +308,7 @@ class PhysiCellXMLCreator(QWidget):
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
-        self.cell_customdata_tab.xml_root = self.xml_root
+        # self.cell_customdata_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
 
         self.config_tab.fill_gui()
@@ -319,8 +319,8 @@ class PhysiCellXMLCreator(QWidget):
         # self.microenv_tab.fill_gui()
 
         # Do this before the celldef_tab
-        self.cell_customdata_tab.clear_gui(self.celldef_tab)
-        self.cell_customdata_tab.fill_gui(self.celldef_tab)
+        # self.cell_customdata_tab.clear_gui(self.celldef_tab)
+        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
 
         # self.celldef_tab.clear_gui()
         self.celldef_tab.clear_custom_data_params()

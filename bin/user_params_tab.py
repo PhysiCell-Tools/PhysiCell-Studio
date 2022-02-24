@@ -27,7 +27,7 @@ class UserParams(QtWidgets.QWidget):
         # self.current_param = None
         self.xml_root = None
         self.count = 0
-        self.max_rows = 99  # initially
+        self.max_rows = 100  # initially
 
         #-------------------------------------------
         self.label_width = 150
@@ -44,7 +44,7 @@ class UserParams(QtWidgets.QWidget):
         #------------------
         controls_hbox = QtWidgets.QHBoxLayout()
         # self.new_button = QPushButton("New")
-        self.new_button = QPushButton("Append 5 more rows")
+        self.new_button = QPushButton("Append 10 more rows")
         controls_hbox.addWidget(self.new_button)
         self.new_button.clicked.connect(self.append_more_cb)
 
@@ -99,41 +99,46 @@ class UserParams(QtWidgets.QWidget):
         for idx in range(self.max_rows):
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
-            w = QCheckBox("")
-            self.select.append(w)
-            hbox.addWidget(w)
+            #-----
+            w_check = QCheckBox("")
+            self.select.append(w_check)
+            hbox.addWidget(w_check)
 
-            w = QLineEdit()
-            self.name.append(w)
+            #-----
+            w_varname = QLineEdit()
+            self.name.append(w_varname)
             # self.name.setValidator(QtGui.QDoubleValidator())
             # self.diffusion_coef.enter.connect(self.save_xml)
-            hbox.addWidget(w)
+            hbox.addWidget(w_varname)
             if idx == 0:
-                w.setText("random_seed")
-
+                w_varname.setText("random_seed")   # Why?
+            
+            #-----
             # w = QLineEdit()
-            w = QComboBox()
+            w_cbox = QComboBox()
             # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
-            w.addItem("double")
-            w.addItem("int")
-            w.addItem("bool")
-            w.addItem("string")
+            w_cbox.addItem("double")
+            w_cbox.addItem("int")
+            w_cbox.addItem("bool")
+            w_cbox.addItem("string")
             if idx == 0:
-                w.setCurrentIndex(1)
-            self.type.append(w)
-            hbox.addWidget(w)
+                w_cbox.setCurrentIndex(1)
+            self.type.append(w_cbox)
+            hbox.addWidget(w_cbox)
 
-            w = QLineEdit()
-            self.value.append(w)
+            #-----
+            w_val = QLineEdit()
+            self.value.append(w_val)
             # w.setValidator(QtGui.QDoubleValidator())
             if idx == 0:
-                w.setText("0")
-            hbox.addWidget(w)
+                w_val.setText("0")  # Why?
+            hbox.addWidget(w_val)
 
-            w = QLineEdit()
-            w.setFixedWidth(self.units_width)
-            self.units.append(w)
-            hbox.addWidget(w)
+            #-----
+            w_units = QLineEdit()
+            w_units.setFixedWidth(self.units_width)
+            self.units.append(w_units)
+            hbox.addWidget(w_units)
 
             # units = QtWidgets.QLabel("micron^2/min")
             # units.setFixedWidth(units_width)
@@ -144,12 +149,25 @@ class UserParams(QtWidgets.QWidget):
             #-----
             hbox = QHBoxLayout()
             # w = QLabel("Desc:")
-            w = QLabel("      Description:")
-            hbox.addWidget(w)
+            w_desc = QLabel("      Description:")
+            hbox.addWidget(w_desc)
 
-            w = QLineEdit()
-            self.description.append(w)
-            hbox.addWidget(w)
+            w_desc = QLineEdit()
+            self.description.append(w_desc)
+            hbox.addWidget(w_desc)
+
+            if idx % 2 == 0:
+                w_varname.setStyleSheet("background-color: Tan")  
+                # w_cbox.setStyleSheet("background-color: Tan")   # ugly
+                w_val.setStyleSheet("background-color: Tan")  
+                w_units.setStyleSheet("background-color: Tan")  
+                w_desc.setStyleSheet("background-color: Tan")  
+            else:
+                w_varname.setStyleSheet("background-color: LightGreen")  
+                w_val.setStyleSheet("background-color: LightGreen")  
+                w_units.setStyleSheet("background-color: LightGreen")  
+                w_desc.setStyleSheet("background-color: LightGreen")  
+
             # w.setStyleSheet("background-color: lightgray")
             # w.setStyleSheet("background-color: #e4e4e4")
             self.main_layout.addLayout(hbox)
@@ -189,18 +207,19 @@ class UserParams(QtWidgets.QWidget):
         # print("---- append_more_cb()")
         # self.create_user_param()
         # self.scrollLayout.addRow(NewUserParam(self))
-        for idx in range(5):
+        for idx in range(10):
             # self.main_layout.addLayout(NewUserParam(self))
             hbox = QHBoxLayout()
+
             w = QCheckBox("")
             self.select.append(w)
             hbox.addWidget(w)
 
-            w = QLineEdit()
-            self.name.append(w)
+            w_varname = QLineEdit()
+            self.name.append(w_varname)
             # self.name.setValidator(QtGui.QDoubleValidator())
             # self.diffusion_coef.enter.connect(self.save_xml)
-            hbox.addWidget(w)
+            hbox.addWidget(w_varname)
 
             w = QComboBox()
             # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
@@ -211,15 +230,15 @@ class UserParams(QtWidgets.QWidget):
             self.type.append(w)
             hbox.addWidget(w)
 
-            w = QLineEdit()
-            self.value.append(w)
+            w_val = QLineEdit()
+            self.value.append(w_val)
             # w.setValidator(QtGui.QDoubleValidator())
-            hbox.addWidget(w)
+            hbox.addWidget(w_val)
 
-            w = QLineEdit()
-            w.setFixedWidth(self.units_width)
-            self.units.append(w)
-            hbox.addWidget(w)
+            w_units = QLineEdit()
+            w_units.setFixedWidth(self.units_width)
+            self.units.append(w_units)
+            hbox.addWidget(w_units)
 
             self.main_layout.addLayout(hbox)
 
@@ -227,10 +246,22 @@ class UserParams(QtWidgets.QWidget):
             w = QLabel("Desc:")
             hbox.addWidget(w)
 
-            w = QLineEdit()
-            self.description.append(w)
-            hbox.addWidget(w)
-            w.setStyleSheet("background-color: lightgray")
+            w_desc = QLineEdit()
+            self.description.append(w_desc)
+            hbox.addWidget(w_desc)
+            # w.setStyleSheet("background-color: lightgray")
+
+            if idx % 2 == 0:
+                w_varname.setStyleSheet("background-color: Tan")  
+                # w_cbox.setStyleSheet("background-color: Tan")   # ugly
+                w_val.setStyleSheet("background-color: Tan")  
+                w_units.setStyleSheet("background-color: Tan")  
+                w_desc.setStyleSheet("background-color: Tan")  
+            else:
+                w_varname.setStyleSheet("background-color: LightGreen")  
+                w_val.setStyleSheet("background-color: LightGreen")  
+                w_units.setStyleSheet("background-color: LightGreen")  
+                w_desc.setStyleSheet("background-color: LightGreen")  
 
             self.main_layout.addLayout(hbox)
 
@@ -333,4 +364,5 @@ class UserParams(QtWidgets.QWidget):
                 elm.tail = '\n        '
                 uep.insert(knt,elm)
                 knt += 1
+        elm.tail = '\n    '
         print("found ",knt)

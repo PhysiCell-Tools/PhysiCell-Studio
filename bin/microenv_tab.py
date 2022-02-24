@@ -428,12 +428,39 @@ class SubstrateDef(QWidget):
         self.param_d[self.current_substrate]["decay_rate"] = text
     def init_cond_changed(self, text):
         self.param_d[self.current_substrate]["init_cond"] = text
+
     def dirichlet_bc_changed(self, text):
         self.param_d[self.current_substrate]["dirichlet_bc"] = text
+        if self.dirichlet_bc_enabled.isChecked():
+            self.dirichlet_xmin.setText(text)
+            self.dirichlet_xmax.setText(text)
+            self.dirichlet_ymin.setText(text)
+            self.dirichlet_ymax.setText(text)
+            self.dirichlet_zmin.setText(text)
+            self.dirichlet_zmax.setText(text)
 
     def dirichlet_toggle_cb(self):
-        print("dirichlet_toggle_cb()")
+        # print("dirichlet_toggle_cb()")
         self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
+        if self.dirichlet_bc_enabled.isChecked():
+            options_flag = True
+        else:
+            options_flag = False
+        self.enable_xmin.setChecked(options_flag)
+        self.enable_xmax.setChecked(options_flag)
+        self.enable_ymin.setChecked(options_flag)
+        self.enable_ymax.setChecked(options_flag)
+        self.enable_zmin.setChecked(options_flag)
+        self.enable_zmax.setChecked(options_flag)
+
+        if options_flag:
+            sval = self.dirichlet_bc.text() 
+            self.dirichlet_xmin.setText(sval)
+            self.dirichlet_xmax.setText(sval)
+            self.dirichlet_ymin.setText(sval)
+            self.dirichlet_ymax.setText(sval)
+            self.dirichlet_zmin.setText(sval)
+            self.dirichlet_zmax.setText(sval)
 
     # global to all substrates
     def gradients_cb(self):
