@@ -269,7 +269,7 @@ class Config(QWidget):
         self.svg_interval = QLineEdit()
         self.svg_interval.setFixedWidth(value_width)
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
-        self.svg_interval.textChanged.connect(self.svg_interval_cb)
+        # self.svg_interval.textChanged.connect(self.svg_interval_cb)
 
         hbox.addWidget(self.svg_interval)
 
@@ -292,7 +292,7 @@ class Config(QWidget):
         self.full_interval = QLineEdit()
         self.full_interval.setFixedWidth(value_width)
         self.full_interval.setValidator(QtGui.QDoubleValidator())
-        self.full_interval.setEnabled(False)
+        # self.full_interval.setEnabled(False)
         hbox.addWidget(self.full_interval)
 
         label = QLabel("min")
@@ -344,9 +344,9 @@ class Config(QWidget):
     #     # self.text.setText(random.choice(self.hello))
     #     pass
 
-    def svg_interval_cb(self, text):
-        print("svg_interval_cb: text=",text)
-        self.full_interval.setText(text)
+    # def svg_interval_cb(self, text):
+    #     print("svg_interval_cb: text=",text)
+    #     self.full_interval.setText(text)
 
     def fill_gui(self):
 
@@ -477,15 +477,13 @@ class Config(QWidget):
             self.xml_root.find(".//full_data//enable").text = 'true'
         else:
             self.xml_root.find(".//full_data//enable").text = 'false'
-        # self.xml_root.find(".//full_data//interval").text = self.full_interval.text()
-        self.xml_root.find(".//full_data//interval").text = self.svg_interval.text()
+        self.xml_root.find(".//full_data//interval").text = self.full_interval.text()
+        # self.xml_root.find(".//full_data//interval").text = self.svg_interval.text()
 
         if self.cells_csv.isChecked():
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
         else:
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'false'
-
-        self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
 
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = ''
         # if self.csv_rb1.isChecked():
