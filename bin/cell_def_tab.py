@@ -195,6 +195,7 @@ class CellDef(QWidget):
         cdname = "cell_def%02d" % self.new_cell_def_count
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
+        self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -242,10 +243,11 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def copy_cell_def(self):
         # print('------ copy_cell_def')
-        celldefname = "cell_def%02d" % self.new_cell_def_count
+        cdname = "cell_def%02d" % self.new_cell_def_count
         # print('------ self.current_cell_def = ', self.current_cell_def)
         # Make a new cell_def (that's a copy of the currently selected one)
-        self.param_d[celldefname] = copy.deepcopy(self.param_d[self.current_cell_def])
+        self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
+        self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -254,13 +256,13 @@ class CellDef(QWidget):
 
         self.new_cell_def_count += 1
 
-        self.current_cell_def = celldefname
-        # self.cell_type_name.setText(celldefname)
+        self.current_cell_def = cdname
+        # self.cell_type_name.setText(cdname)
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
-        treeitem = QTreeWidgetItem([celldefname])
+        treeitem = QTreeWidgetItem([cdname])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
@@ -3901,6 +3903,7 @@ class CellDef(QWidget):
             self.tree.clear()
             idx = 0
             for cell_def in uep:
+                self.new_cell_def_count += 1
                 # print(cell_def.attrib['name'])
                 cell_def_name = cell_def.attrib['name']
                 if idx == 0:
@@ -5639,62 +5642,67 @@ class CellDef(QWidget):
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
-    def OLD_fill_xml_custom_data(self, custom_data, cdef):
-        if self.debug_print_fill_xml:
-            print("------------------- fill_xml_custom_data():  self.custom_data_count = ", self.custom_data_count)
-            print("------------------- fill_xml_custom_data():  cdef= ", cdef)
-            print("------------------- fill_xml_custom_data():  original dict:")
-            print(self.param_d[cdef]['custom_data'])
-				# <receptor units="dimensionless">1.0</receptor>
-				# <cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
+    # def OLD_fill_xml_custom_data(self, custom_data, cdef):
+    #     if self.debug_print_fill_xml:
+    #         print("------------------- fill_xml_custom_data():  self.custom_data_count = ", self.custom_data_count)
+    #         print("------------------- fill_xml_custom_data():  cdef= ", cdef)
+    #         print("------------------- fill_xml_custom_data():  original dict:")
+    #         print(self.param_d[cdef]['custom_data'])
+	# 			# <receptor units="dimensionless">1.0</receptor>
+	# 			# <cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
 
-                # --------- update_custom_data_params():  self.param_d[cdname]['custom_data'] =  {'receptor': '1.0', 'cargo_release_o2_threshold': '10', 'damage_rate': '0.03333', 'repair_rate': '0.004167', 'drug_death_rate': '0.004167', 'damage': '0.0'}
+    #             # --------- update_custom_data_params():  self.param_d[cdname]['custom_data'] =  {'receptor': '1.0', 'cargo_release_o2_threshold': '10', 'damage_rate': '0.03333', 'repair_rate': '0.004167', 'drug_death_rate': '0.004167', 'damage': '0.0'}
 
-            print("values from GUI tab:")
-        # for idx in range(self.custom_data_count):
-        for idx in range(len(self.param_d[cdef]['custom_data'])):
-            name = self.custom_data_name[idx].text()
-            value = self.custom_data_value[idx].text()
-            self.param_d[cdef]['custom_data'][name] = value
+    #         print("values from GUI tab:")
+    #     # for idx in range(self.custom_data_count):
+    #     for idx in range(len(self.param_d[cdef]['custom_data'])):
+    #         name = self.custom_data_name[idx].text()
+    #         value = self.custom_data_value[idx].text()
+    #         self.param_d[cdef]['custom_data'][name] = value
 
-            units = self.custom_data_units[idx].text()
-            desc = self.custom_data_description[idx].text()
-            if self.debug_print_fill_xml:
-                print(idx,name,value,units,desc)
+    #         units = self.custom_data_units[idx].text()
+    #         desc = self.custom_data_description[idx].text()
+    #         if self.debug_print_fill_xml:
+    #             print(idx,name,value,units,desc)
 
-            elm = ET.SubElement(custom_data, name,
-                    { "units":units,
-                      "description":desc } )
+    #         elm = ET.SubElement(custom_data, name,
+    #                 { "units":units,
+    #                   "description":desc } )
 
-            elm.text = self.param_d[cdef]['custom_data'][name]  # value for this var for this cell def
-            elm.tail = self.indent10
+    #         elm.text = self.param_d[cdef]['custom_data'][name]  # value for this var for this cell def
+    #         elm.tail = self.indent10
 
-        elm.tail = self.indent8   # back up 2 for the very last one
+    #     elm.tail = self.indent8   # back up 2 for the very last one
 
-        # for key in self.param_d[cdef]['custom_data'].keys():  # get name of custom data var
-        #     print("    key=",key,",  len(key)=",len(key))
-        #     # vname = self.custom_data_name[idx].text()
-        #     # if vname:
-        #     if len(key) > 0:
-        #         idx = self.master_custom_varname.index(key)
-        #         print('idx=',idx)
-        #         units = self.custom_data_units[idx].text()
-        #         desc = self.custom_data_description[idx].text()
-        #         elm = ET.SubElement(custom_data, key,
-        #             { "units":units,
-        #               "description":desc } )
+    #     # for key in self.param_d[cdef]['custom_data'].keys():  # get name of custom data var
+    #     #     print("    key=",key,",  len(key)=",len(key))
+    #     #     # vname = self.custom_data_name[idx].text()
+    #     #     # if vname:
+    #     #     if len(key) > 0:
+    #     #         idx = self.master_custom_varname.index(key)
+    #     #         print('idx=',idx)
+    #     #         units = self.custom_data_units[idx].text()
+    #     #         desc = self.custom_data_description[idx].text()
+    #     #         elm = ET.SubElement(custom_data, key,
+    #     #             { "units":units,
+    #     #               "description":desc } )
 
-        #         elm.text = self.param_d[cdef]['custom_data'][key]
-        #         elm.tail = self.indent10
-        if self.debug_print_fill_xml:
-            print('\n')
+    #     #         elm.text = self.param_d[cdef]['custom_data'][key]
+    #     #         elm.tail = self.indent10
+    #     if self.debug_print_fill_xml:
+    #         print('\n')
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
         # pass
         print("\n\n----------- cell_def_tab.py: fill_xml(): ----------")
-        print("self.param_d.keys() = ",self.param_d.keys())
+        # print("self.param_d.keys() = ",self.param_d.keys())
+        # print()
+        # print("self.param_d['default'] = ",self.param_d['default'])
+        # print()
+        # print("self.param_d['cell_def02'] = ",self.param_d['cell_def02'])
+        print()
         # print("self.param_d['endothelial'] = ",self.param_d['endothelial'])
         # print("\nself.param_d['endothelial']['cell_ID'] = ",self.param_d['endothelial']['cell_ID'])
         # print("\nself.param_d['mesangial_matrix']['cell_ID'] = ",self.param_d['mesangial_matrix']['cell_ID'])
