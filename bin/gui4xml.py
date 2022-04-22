@@ -263,10 +263,11 @@ class PhysiCellXMLCreator(QWidget):
         # # self.models_menu.addAction('Load sample', self.select_current_model_cb)
 
         #--------------
-        tools_menu = menubar.addMenu('&Tools')
-        validate_act = QAction('Validate', self)
-        tools_menu.addAction(validate_act)
-        validate_act.triggered.connect(self.validate_cb)
+        # self.tools_menu = menubar.addMenu('&Tools')
+        # validate_act = QAction('Validate', self)
+        # self.tools_menu.addAction(validate_act)
+        # validate_act.triggered.connect(self.validate_cb)
+        # self.tools_menu.setEnabled(False)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
