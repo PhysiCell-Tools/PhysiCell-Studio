@@ -120,7 +120,7 @@ class CellDef(QWidget):
         self.tree.setFixedHeight(tree_widget_height)
         # self.tree.setColumnCount(1)
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
-        self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a substrate
+        self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
         header = QTreeWidgetItem(["---  Cell Type  ---"])
         self.tree.setHeaderItem(header)
@@ -236,15 +236,17 @@ class CellDef(QWidget):
         self.tree_item_clicked_cb(treeitem, 0)
 
     #----------------------
-    # When a substrate is selected(via double-click) and renamed
+    # When a cell type is selected(via double-click) and renamed
     def tree_item_changed_cb(self, it,col):
-        # print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
+        print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
 
         prev_name = self.current_cell_def
-        # print('prev_name= ',prev_name)
+        print('prev_name= ',prev_name)
         self.current_cell_def = it.text(col)
+        print('new name= ',self.current_cell_def)
         self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
+        self.renamed_celltype(prev_name, self.current_cell_def)
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
@@ -300,6 +302,25 @@ class CellDef(QWidget):
             # QMessageBox.information(self, "Not allowed to delete all substrates")
             self.show_delete_warning()
             return
+
+        print("--- TODO: delete celltype from dropdowns too")
+        item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
+        print('------      item_idx=',item_idx)
+        self.live_phagocytosis_dropdown.removeItem(item_idx)
+        self.attack_rate_dropdown.removeItem(item_idx)
+        self.fusion_rate_dropdown.removeItem(item_idx)
+        self.cell_transformation_dropdown.removeItem(item_idx)
+        # for idx in range(len(self.celltypes_list)):
+        #     # print("idx,old,new = ",idx, old_name,new_name)
+        #     # if old_name in self.motility_substrate_dropdown.itemText(idx):
+        #     if old_name == self.live_phagocytosis_dropdown.itemText(idx):
+        #         self.live_phagocytosis_dropdown.setItemText(idx, new_name)
+        #     if old_name == self.attack_rate_dropdown.itemText(idx):
+        #         self.attack_rate_dropdown.setItemText(idx, new_name)
+        #     if old_name == self.fusion_rate_dropdown.itemText(idx):
+        #         self.fusion_rate_dropdown.setItemText(idx, new_name)
+        #     if old_name == self.cell_transformation_dropdown.itemText(idx):
+        #         self.cell_transformation_dropdown.setItemText(idx, new_name)
 
         # rwh: is this safe?
         del self.param_d[self.current_cell_def]
@@ -3875,6 +3896,43 @@ class CellDef(QWidget):
             self.current_secretion_substrate = new_name
 
     #-----------------------------------------------------------------------------------------
+    # When a user renames a cell type in this tab, we need to update all 
+    # data structures (e.g., QComboBox) that reference it.
+    def renamed_celltype(self, old_name,new_name):
+        # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
+        print("cell_def_tab.py: ------- renamed_celltype")
+        print("       old_name = ",old_name)
+        print("       new_name = ",new_name)
+        self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
+        print("self.celltypes_list= ",self.celltypes_list)
+
+        for idx in range(len(self.celltypes_list)):
+            # print("idx,old,new = ",idx, old_name,new_name)
+            # if old_name in self.motility_substrate_dropdown.itemText(idx):
+            if old_name == self.live_phagocytosis_dropdown.itemText(idx):
+                self.live_phagocytosis_dropdown.setItemText(idx, new_name)
+            if old_name == self.attack_rate_dropdown.itemText(idx):
+                self.attack_rate_dropdown.setItemText(idx, new_name)
+            if old_name == self.fusion_rate_dropdown.itemText(idx):
+                self.fusion_rate_dropdown.setItemText(idx, new_name)
+            if old_name == self.cell_transformation_dropdown.itemText(idx):
+                self.cell_transformation_dropdown.setItemText(idx, new_name)
+
+        # 2) update in the param_d dict
+        # for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
+        #     # print("--- cdname = ",cdname)
+        #     # print("--- old: ",self.param_d[cdname]["secretion"])
+        #     # print("--- new_name: ",new_name)
+        #     self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
+        #     self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
+        #     self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
+
+        #     # print("--- new: ",self.param_d[cdname]["secretion"])
+
+        # if old_name == self.current_secretion_substrate:
+        #     self.current_secretion_substrate = new_name
+
+    #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
         # cdname = self.current_cell_def
         sval = self.default_sval
@@ -4048,6 +4106,12 @@ class CellDef(QWidget):
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+
+    def new_interaction_params(self, cdname):
+        print("new_interaction_params(): ",self.param_d[cdname])
+        sval = self.default_sval
+        self.param_d[cdname]["dead_phagocytosis_rate"] = sval
+        self.param_d[cdname]["damage_rate"] = sval
 
 
     def add_new_substrate(self, sub_name):
@@ -4349,7 +4413,7 @@ class CellDef(QWidget):
         self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
         self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
 
-        # rwh: also update the combobox to select the substrate
+        # rwh: also update the qdropdown to select the substrate
 
     #-----------------------------------------------------------------------------------------
     def update_interaction_params(self):
