@@ -3511,6 +3511,11 @@ class CellDef(QWidget):
 
         subname = self.motility2_substrate_dropdown.currentText()
         print("   text = ",subname)
+        if subname == '':
+            return
+        if subname not in self.param_d[self.current_cell_def]['chemotactic_sensitivity'].keys():
+            return
+
         self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate'] = subname
         # print(self.param_d[self.current_cell_def])
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
@@ -4322,9 +4327,11 @@ class CellDef(QWidget):
         if self.param_d[cdname]['motility_advanced_chemotaxis_substrate'] == 'foobar':
             print('-- motility_advanced_chemotaxis_substrate is foobar')
         else:
-            print('new val = ',self.param_d[cdname]['chemotactic_sensitivity'][self.param_d[cdname]['motility_advanced_chemotaxis_substrate']])
+            if len(self.param_d[cdname]['motility_advanced_chemotaxis_substrate']) > 0:
+                print('new val = ',self.param_d[cdname]['chemotactic_sensitivity'][self.param_d[cdname]['motility_advanced_chemotaxis_substrate']])
         # self.chemo_sensitivity.setText('42')
-            self.chemo_sensitivity.setText(self.param_d[cdname]['chemotactic_sensitivity'][self.param_d[cdname]['motility_advanced_chemotaxis_substrate']])
+            if len(self.param_d[cdname]['motility_advanced_chemotaxis_substrate']) > 0:
+                self.chemo_sensitivity.setText(self.param_d[cdname]['chemotactic_sensitivity'][self.param_d[cdname]['motility_advanced_chemotaxis_substrate']])
 
         # sys.exit(-1)
         print("----- leave update_motility_params()\n")
@@ -5233,6 +5240,7 @@ class CellDef(QWidget):
                 if uep.find(motility_advanced_chemotaxis_path) is None:
                     self.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
                     self.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
+                    self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                 else:
                     if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
                         self.param_d[cell_def_name]["motility_advanced_chemotaxis"] = True
@@ -5248,6 +5256,7 @@ class CellDef(QWidget):
                     else:
                         self.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = False
 
+                    self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                     for substrate in self.substrate_list:
                         # self.chemotactic_sensitivity_dict[substrate] = 0.0
                         self.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = 0.0
@@ -5255,7 +5264,7 @@ class CellDef(QWidget):
                     sensitivity_block = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
             #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
                     if sensitivity_block:
-                        self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+                        # self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                         if debug_print:
                             print("---- found chemotactic_sensitivities: ",uep.find(sensitivity_block))
                         for subelm in uep.find(sensitivity_block).findall('chemotactic_sensitivity'):
@@ -5389,8 +5398,11 @@ class CellDef(QWidget):
                 if cep is None:
                     if debug_print:
                         print("---- no cell_interactions found. Setting to default values")
-                    self.param_d[cell_def_name]["dead_phagocytosis_rate"] = 0.0
-                    self.param_d[cell_def_name]["damage_rate"] = 0.0
+                    self.param_d[cell_def_name]["dead_phagocytosis_rate"] = '0.0'
+                    self.param_d[cell_def_name]["damage_rate"] = '0.0'
+                    self.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
+                    self.param_d[cell_def_name]["attack_rate"] = {}
+                    self.param_d[cell_def_name]["fusion_rate"] = {}
                     # self.param_d[cell_def_name]["live_phagocytosis_rate"] = 0.0
                 else:
                     print("---- found cell_interactions:")
@@ -5443,12 +5455,11 @@ class CellDef(QWidget):
                 if debug_print:
                     print("---- transformation_rates_path = ",transformation_rates_path)
                 trp = uep.find(transformation_rates_path)
+                self.param_d[cell_def_name]['transformation_rate'] = {}
                 if trp is None:
                     if debug_print:
                         print("---- no cell_transformations found.")
-
                 else:
-                    self.param_d[cell_def_name]['transformation_rate'] = {}
                     for tr in trp.findall('transformation_rate'):
                         celltype_name = tr.attrib['name']
                         val = tr.text

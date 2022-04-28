@@ -53,7 +53,7 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(menuWidget)
 
         self.setLayout(vlayout)
-        self.setMinimumSize(950, 700)
+        self.setMinimumSize(1000, 700)
 
         model_name = "template"
         model_name = "interactions"
@@ -103,6 +103,7 @@ class PhysiCellXMLCreator(QWidget):
         print("gui4xml: cd_name=",cd_name)
         self.celldef_tab.populate_tree()
         self.celldef_tab.fill_substrates_comboboxes()
+        self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
         self.user_params_tab = UserParams()
@@ -276,6 +277,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
+        self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
         # self.cell_customdata_tab.clear_gui(self.celldef_tab)
