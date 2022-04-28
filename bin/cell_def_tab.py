@@ -5399,15 +5399,65 @@ class CellDef(QWidget):
 
                     val = cep.find("damage_rate").text
                     self.param_d[cell_def_name]["damage_rate"] = val
+
+                    # <cell_interactions>
+                    #   <dead_phagocytosis_rate units="1/min">91.0</dead_phagocytosis_rate>
+                    #   <live_phagocytosis_rates>
+                    #     <phagocytosis_rate name="bacteria" units="1/min">91.1</phagocytosis_rate>
+                    #     <phagocytosis_rate name="blood vessel" units="1/min">91.2</phagocytosis_rate>
+                    # uep_lpr = cep.find(cell_interactions_path + "//live_phagocytosis_rates")
+                    # uep_lpr = cep.find(cell_interactions_path + "//live_phagocytosis_rates")
+                    uep2 = uep.find(cell_interactions_path + "//live_phagocytosis_rates")
+                    print("uep2= ",uep2)
+                    self.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
+                    for pr in uep2.findall('phagocytosis_rate'):
+                        celltype_name = pr.attrib['name']
+                        val = pr.text
+                        # print(celltype_name,val)
+                        self.param_d[cell_def_name]["live_phagocytosis_rate"][celltype_name] = val
+
+                    uep2 = uep.find(cell_interactions_path + "//attack_rates")
+                    self.param_d[cell_def_name]["attack_rate"] = {}
+                    for ar in uep2.findall('attack_rate'):
+                        celltype_name = ar.attrib['name']
+                        val = ar.text
+                        # print(celltype_name,val)
+                        self.param_d[cell_def_name]["attack_rate"][celltype_name] = val
+
+                    uep2 = uep.find(cell_interactions_path + "//fusion_rates")
+                    self.param_d[cell_def_name]["fusion_rate"] = {}
+                    for ar in uep2.findall('fusion_rate'):
+                        celltype_name = ar.attrib['name']
+                        val = ar.text
+                        # print(celltype_name,val)
+                        self.param_d[cell_def_name]["fusion_rate"][celltype_name] = val
+
+                if debug_print:
+                    # print(self.param_d[cell_def_name])
+                    print(" live_phagocytosis_rate=",self.param_d[cell_def_name]["live_phagocytosis_rate"])
+                    print(" attack_rate=",self.param_d[cell_def_name]["attack_rate"])
+                    print(" fusion_rate=",self.param_d[cell_def_name]["fusion_rate"])
+                    print("------ done parsing cell_interactions:")
+
+                transformation_rates_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_transformations//transformation_rates"
+                if debug_print:
+                    print("---- transformation_rates_path = ",transformation_rates_path)
+                trp = uep.find(transformation_rates_path)
+                if trp is None:
                     if debug_print:
-                        print(self.param_d[cell_def_name])
+                        print("---- no cell_transformations found.")
 
-
-                # self.param_d[cell_def_name]["dead_phagocytosis_rate"] = '42'
+                else:
+                    self.param_d[cell_def_name]['transformation_rate'] = {}
+                    for tr in trp.findall('transformation_rate'):
+                        celltype_name = tr.attrib['name']
+                        val = tr.text
+                        self.param_d[cell_def_name]['transformation_rate'][celltype_name] = val
 
 
                 if debug_print:
-                    print("------ done parsing cell_interactions:")
+                    print(" transformation_rate=",self.param_d[cell_def_name]["transformation_rate"])
+                    print("------ done parsing cell_transformations:")
 
                 # sys.exit(-1)
 
