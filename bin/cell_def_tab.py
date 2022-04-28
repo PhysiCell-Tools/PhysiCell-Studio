@@ -2645,28 +2645,28 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def dead_phagocytosis_rate_changed(self,text):
-        print("dead_phagocytosis_rate_changed:  text=",text)
+        # print("dead_phagocytosis_rate_changed:  text=",text)
         self.param_d[self.current_cell_def]['dead_phagocytosis_rate'] = text
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
-        print("live_phagocytosis_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['live_phagocytosis_rate'] = text
+        # print("live_phagocytosis_rate_changed:  text=",text)
+        self.param_d[self.current_cell_def]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
-        print("attack_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['attack_rate'] = text
+        # print("attack_rate_changed:  text=",text)
+        self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
-        print("damage_rate_changed:  text=",text)
+        # print("damage_rate_changed:  text=",text)
         self.param_d[self.current_cell_def]['damage_rate'] = text
     #--------------------------------------------------------
     def fusion_rate_changed(self,text):
-        print("fusion_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['fusion_rate'] = text
+        # print("fusion_rate_changed:  text=",text)
+        self.param_d[self.current_cell_def]['fusion_rate'][self.fusion_rate_celltype] = text
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
-        print("transformation_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['transformation_rate'] = text
+        # print("transformation_rate_changed:  text=",text)
+        self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
 
 
     #--------------------------------------------------------
@@ -3549,16 +3549,20 @@ class CellDef(QWidget):
             return
 
     def live_phagocytosis_dropdown_changed_cb(self, idx):
-        print('------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
+        print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.live_phagocytosis_dropdown.currentText()
-        print("   celltype_name = ",celltype_name)
-        self.param_d[self.current_cell_def]['live_phagocytosis_celltype'] = celltype_name
+        # self.param_d[self.current_cell_def]['live_phagocytosis_celltype'] = celltype_name
+        self.live_phagocytosis_celltype = celltype_name
+        print("   self.live_phagocytosis_celltype = ",celltype_name)
 
-        # print(self.chemotactic_sensitivity_dict[val])
-        # newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
-        # self.live_phagocytosis_rate.setText(newval)
+        if self.live_phagocytosis_celltype in self.param_d[self.current_cell_def]["live_phagocytosis_rate"].keys():
+            self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
+        else:
+            self.live_phagocytosis_rate.setText(self.default_sval)
+        # self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"]['differentiated'])
+        # print("self.param_d[self.current_cell_def]['live_phagocytosis_rate'] = ",self.param_d[self.current_cell_def]['live_phagocytosis_rate'])
 
         if idx == -1:
             return
@@ -3567,13 +3571,15 @@ class CellDef(QWidget):
         print('------ attack_rate_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
-        celltype_name = self.live_phagocytosis_dropdown.currentText()
-        print("   celltype_name = ",celltype_name)
-        self.param_d[self.current_cell_def]['attack_rate_celltype'] = celltype_name
+        celltype_name = self.attack_rate_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['attack_rate_celltype'] = celltype_name
+        self.attack_rate_celltype = celltype_name
+        print("   self.attack_rate_celltype = ",celltype_name)
 
-        # print(self.chemotactic_sensitivity_dict[val])
-        # newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
-        # self.attack_rate.setText(newval)
+        if self.attack_rate_celltype in self.param_d[self.current_cell_def]["attack_rate"].keys():
+            self.attack_rate.setText(self.param_d[self.current_cell_def]["attack_rate"][self.attack_rate_celltype])
+        else:
+            self.attack_rate.setText(self.default_sval)
 
         if idx == -1:
             return
@@ -3582,13 +3588,15 @@ class CellDef(QWidget):
         print('------ fusion_rate_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
-        celltype_name = self.live_phagocytosis_dropdown.currentText()
-        print("   celltype_name = ",celltype_name)
-        self.param_d[self.current_cell_def]['fusion_rate_celltype'] = celltype_name
+        celltype_name = self.fusion_rate_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['fusion_rate_celltype'] = celltype_name
+        self.fusion_rate_celltype = celltype_name
+        print("   self.fusion_rate_celltype = ",celltype_name)
 
-        # print(self.chemotactic_sensitivity_dict[val])
-        # newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
-        # self.fusion_rate.setText(newval)
+        if self.fusion_rate_celltype in self.param_d[self.current_cell_def]["fusion_rate"].keys():
+            self.fusion_rate.setText(self.param_d[self.current_cell_def]["fusion_rate"][self.fusion_rate_celltype])
+        else:
+            self.fusion_rate.setText(self.default_sval)
 
         if idx == -1:
             return
@@ -3597,13 +3605,15 @@ class CellDef(QWidget):
         print('------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
-        celltype_name = self.live_phagocytosis_dropdown.currentText()
-        print("   celltype_name = ",celltype_name)
-        self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
+        celltype_name = self.cell_transformation_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
+        self.transformation_rate_celltype = celltype_name
+        print("   self.transformation_rate_celltype= ",celltype_name)
 
-        # print(self.chemotactic_sensitivity_dict[val])
-        # newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
-        # self.transformation_rate.setText(newval)
+        if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
+            self.transformation_rate.setText(self.param_d[self.current_cell_def]["transformation_rate"][self.transformation_rate_celltype])
+        else:
+            self.transformation_rate.setText(self.default_sval)
 
         if idx == -1:
             return
@@ -4421,6 +4431,26 @@ class CellDef(QWidget):
         self.dead_phagocytosis_rate.setText(self.param_d[cdname]["dead_phagocytosis_rate"])
         self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
 
+        if self.live_phagocytosis_celltype in self.param_d[cdname]["live_phagocytosis_rate"].keys():
+            self.live_phagocytosis_rate.setText(self.param_d[cdname]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
+        else:
+            self.live_phagocytosis_rate.setText(self.default_sval)
+
+        if self.attack_rate_celltype in self.param_d[cdname]["attack_rate"].keys():
+            self.attack_rate.setText(self.param_d[cdname]["attack_rate"][self.attack_rate_celltype])
+        else:
+            self.attack_rate.setText(self.default_sval)
+
+        if self.fusion_rate_celltype in self.param_d[cdname]["fusion_rate"].keys():
+            self.fusion_rate.setText(self.param_d[cdname]["fusion_rate"][self.fusion_rate_celltype])
+        else:
+            self.fusion_rate.setText(self.default_sval)
+
+        if self.transformation_rate_celltype in self.param_d[cdname]["transformation_rate"].keys():
+            self.transformation_rate.setText(self.param_d[cdname]["transformation_rate"][self.transformation_rate_celltype])
+        else:
+            self.transformation_rate.setText(self.default_sval)
+
     #-----------------------------------------------------------------------------------------
     def clear_custom_data_params(self):
         cdname = self.current_cell_def
@@ -4505,6 +4535,10 @@ class CellDef(QWidget):
                 cell_def_name = cell_def.attrib['name']
                 if idx == 0:
                     cell_def_0th = cell_def_name
+                    self.live_phagocytosis_celltype = cell_def_0th 
+                    self.attack_rate_celltype = cell_def_0th 
+                    self.fusion_rate_celltype = cell_def_0th 
+                    self.transformation_rate_celltype = cell_def_0th 
 
                 self.param_d[cell_def_name] = {}
                 self.param_d[cell_def_name]['ID'] = cell_def.attrib['ID']  # e.g., "0"
@@ -5515,6 +5549,8 @@ class CellDef(QWidget):
                     print(" fusion_rate=",self.param_d[cell_def_name]["fusion_rate"])
                     print("------ done parsing cell_interactions:")
 
+
+                # # --------- cell_transformations  
                 transformation_rates_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_transformations//transformation_rates"
                 if debug_print:
                     print("---- transformation_rates_path = ",transformation_rates_path)

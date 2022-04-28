@@ -281,33 +281,33 @@
               </live_phagocytosis_rates>
               <attack_rates>
                 <attack_rate name="bacteria" units="1/min">92.1</attack_rate>
-                <attack_rate name="blood vessel" units="1/min">92.1</attack_rate>
-                <attack_rate name="stem" units="1/min">92.1</attack_rate>
-                <attack_rate name="differentiated" units="1/min">92.1</attack_rate>
-                <attack_rate name="macrophage" units="1/min">92.1</attack_rate>
-                <attack_rate name="CD8+ T cell" units="1/min">92.1</attack_rate>
-                <attack_rate name="neutrophil" units="1/min">92.1</attack_rate>
+                <attack_rate name="blood vessel" units="1/min">92.2</attack_rate>
+                <attack_rate name="stem" units="1/min">92.3</attack_rate>
+                <attack_rate name="differentiated" units="1/min">92.4</attack_rate>
+                <attack_rate name="macrophage" units="1/min">92.5</attack_rate>
+                <attack_rate name="CD8+ T cell" units="1/min">92.6</attack_rate>
+                <attack_rate name="neutrophil" units="1/min">92.7</attack_rate>
               </attack_rates>
               <damage_rate units="1/min">92.1</damage_rate>
               <fusion_rates>
                 <fusion_rate name="bacteria" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="blood vessel" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="stem" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="differentiated" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="macrophage" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="CD8+ T cell" units="1/min">93.1</fusion_rate>
-                <fusion_rate name="neutrophil" units="1/min">93.1</fusion_rate>
+                <fusion_rate name="blood vessel" units="1/min">93.2</fusion_rate>
+                <fusion_rate name="stem" units="1/min">93.3</fusion_rate>
+                <fusion_rate name="differentiated" units="1/min">93.4</fusion_rate>
+                <fusion_rate name="macrophage" units="1/min">93.5</fusion_rate>
+                <fusion_rate name="CD8+ T cell" units="1/min">93.6</fusion_rate>
+                <fusion_rate name="neutrophil" units="1/min">93.7</fusion_rate>
               </fusion_rates>
             </cell_interactions>
             <cell_transformations>
               <transformation_rates>
                 <transformation_rate name="bacteria" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="blood vessel" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="stem" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="differentiated" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="macrophage" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="CD8+ T cell" units="1/min">94.1</transformation_rate>
-                <transformation_rate name="neutrophil" units="1/min">94.1</transformation_rate>
+                <transformation_rate name="blood vessel" units="1/min">94.2</transformation_rate>
+                <transformation_rate name="stem" units="1/min">94.3</transformation_rate>
+                <transformation_rate name="differentiated" units="1/min">94.4</transformation_rate>
+                <transformation_rate name="macrophage" units="1/min">94.5</transformation_rate>
+                <transformation_rate name="CD8+ T cell" units="1/min">94.6</transformation_rate>
+                <transformation_rate name="neutrophil" units="1/min">94.7</transformation_rate>
               </transformation_rates>
             </cell_transformations>
           </phenotype>
