@@ -1,11 +1,13 @@
 """
+gui4xml.py - a PyQt5 GUI to read in a sample PhysiCell config file (.xml), allow easy editing (e.g.,
+             change parameter values, add/delete more "objects", including substrates and cell types),
+             and then save the new config file. 
+
 Authors:
 Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
 
---- Versions ---
-0.1 - initial version
 """
 # https://doc.qt.io/qtforpython/gettingstarted.html
 
@@ -49,44 +51,12 @@ class PhysiCellXMLCreator(QWidget):
         # vlayout.setContentsMargins(5, 35, 5, 5)
         menuWidget = QWidget(self.menu())
         vlayout.addWidget(menuWidget)
-        # self.setWindowIcon(self.style().standardIcon(getattr(QStyle, 'SP_DialogNoButton')))
-        # self.setWindowIcon(QtGui.QIcon('physicell_logo_25pct.png'))
-        # self.grid = QGridLayout()
-        # lay.addLayout(self.grid)
+
         self.setLayout(vlayout)
-        # self.setMinimumSize(400, 790)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(400, 500)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(800, 620)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(800, 660)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(850, 700)  # works for Zoe; otherwise User Params are scrolled out of sight
-        # self.setMinimumSize(800, 800)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(700, 770)  # width, height (height >= Cell Types|Death params)
-        # self.setMinimumSize(600, 600)  # width, height (height >= Cell Types|Death params)
-        # self.resize(400, 790)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(1000, 700)
 
-        # self.menubar = QtWidgets.QMenuBar(self)
-        # self.file_menu = QtWidgets.QMenu('File')
-        # self.file_menu.insertAction("Open")
-        # self.menubar.addMenu(self.file_menu)
-
-        # GUI tabs
-
-        # By default, let's startup the app with a default of template2D (a copy)
-        # self.new_model_cb()  # default on startup
-        # read_file = "../data/subcellular_flat.xml"
-        # read_file = "../data/cancer_biorobots_flat.xml"
-        # read_file = "../data/pred_prey_flat.xml"
-
-        model_name = "pred_prey_flat"
-        model_name = "biorobots_flat"
-        model_name = "cancer_biorobots_flat"
-        model_name = "test1"
-        model_name = "test-gui"
-        model_name = "covid19_v5_flat"
+        model_name = "interactions"
         model_name = "template"
-        # model_name = "test"
-        # model_name = "randy_test"  #rwh
-        # read_file = "data/" + model_name + ".xml"
 
         # then what??
         # binDirectory = os.path.realpath(os.path.abspath(__file__))
@@ -106,17 +76,11 @@ class PhysiCellXMLCreator(QWidget):
             print("Warning: unable to copy ",read_file," to ",copy_file, "(it may already exist)")
 
         self.setWindowTitle(self.title_prefix + copy_file)
-        # self.add_new_model(copy_file, True)
-        # self.config_file = "config_samples/" + name + ".xml"
         self.config_file = copy_file  # to Save
 
-        # self.config_file = read_file  # nanoHUB... to Save
         self.tree = ET.parse(self.config_file)
-        # tree = ET.parse(read_file)
-        # self.tree = ET.parse(read_file)
         self.xml_root = self.tree.getroot()
 
-        # self.template_cb()
 
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
@@ -138,15 +102,10 @@ class PhysiCellXMLCreator(QWidget):
         cd_name = self.celldef_tab.first_cell_def_name()
         print("gui4xml: cd_name=",cd_name)
         self.celldef_tab.populate_tree()
-        self.celldef_tab.fill_substrates_comboboxes()
+        self.celldef_tab.fill_substrates_comboboxes() # do before populate?
+        self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        # self.cell_customdata_tab = CellCustomData()
-        # self.cell_customdata_tab.xml_root = self.xml_root
-        # self.cell_customdata_tab.celldef_tab = self.celldef_tab
-        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
-        # self.celldef_tab.fill_custom_data_tab()
-        
         self.user_params_tab = UserParams()
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
@@ -182,27 +141,12 @@ class PhysiCellXMLCreator(QWidget):
         #--------------
         file_menu = menubar.addMenu('&File')
 
-        # open_act = QtGui.QAction('Open', self, checkable=True)
-        # open_act = QtGui.QAction('Open', self)
-        # open_act.triggered.connect(self.open_as_cb)
         file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
         file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-        # file_menu.addAction("Save as", self.save_as_cb)
-        # file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
-        # recent_act = QtGui.QAction('Recent', self)
-        # save_act = QtGui.QAction('Save', self)
-        # save_act.triggered.connect(self.save_cb)
-        # saveas_act = QtGui.QAction('Save As my.xml', self)
-
-        # file_menu.setStatusTip('enable/disable Dark mode')
-        # new_model_act = QtGui.QAction('', self)
-        # file_menu.addAction(new_model_act)
-        # new_model_act.triggered.connect(self.new_model_cb)
 
         #--------------
         samples_menu = file_menu.addMenu("Samples (copy of)")
-        # biorobots_act = QtGui.QAction('biorobots', self)
         biorobots_act = QAction('biorobots', self)
         samples_menu.addAction(biorobots_act)
         biorobots_act.triggered.connect(self.biorobots_cb)
@@ -227,6 +171,10 @@ class PhysiCellXMLCreator(QWidget):
         samples_menu.addAction(worm_act)
         worm_act.triggered.connect(self.worm_cb)
 
+        interactions_act = QAction('interactions', self)
+        samples_menu.addAction(interactions_act)
+        interactions_act.triggered.connect(self.interactions_cb)
+
         cancer_immune_act = QAction('cancer immune (3D)', self)
         samples_menu.addAction(cancer_immune_act)
         cancer_immune_act.triggered.connect(self.cancer_immune_cb)
@@ -236,15 +184,15 @@ class PhysiCellXMLCreator(QWidget):
         template_act.triggered.connect(self.template_cb)
 
         subcell_act = QAction('subcellular', self)
-        samples_menu.addAction(subcell_act)
+        # samples_menu.addAction(subcell_act)
         subcell_act.triggered.connect(self.subcell_cb)
 
         covid19_act = QAction('covid19_v5', self)
-        samples_menu.addAction(covid19_act)
+        # samples_menu.addAction(covid19_act)
         covid19_act.triggered.connect(self.covid19_cb)
 
         test_gui_act = QAction('test-gui', self)
-        samples_menu.addAction(test_gui_act)
+        # samples_menu.addAction(test_gui_act)
         test_gui_act.triggered.connect(self.test_gui_cb)
 
         #--------------
@@ -329,6 +277,8 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
+        self.celldef_tab.fill_celltypes_comboboxes()
+
         self.microenv_tab.celldef_tab = self.celldef_tab
 
         # self.cell_customdata_tab.clear_gui(self.celldef_tab)
@@ -532,6 +482,15 @@ class PhysiCellXMLCreator(QWidget):
 
     def worm_cb(self):
         name = "worm"
+        sample_file = Path("data", name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        shutil.copy(sample_file, copy_file)
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        self.show_sample_model()
+
+    def interactions_cb(self):
+        name = "interactions"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         shutil.copy(sample_file, copy_file)
