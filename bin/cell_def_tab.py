@@ -225,6 +225,8 @@ class CellDef(QWidget):
         self.new_cell_def_count += 1
         self.current_cell_def = cdname
 
+        self.add_new_celltype(cdname)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
+
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
@@ -267,6 +269,8 @@ class CellDef(QWidget):
 
         self.current_cell_def = cdname
         # self.cell_type_name.setText(cdname)
+
+        self.add_new_celltype(cdname)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
@@ -3542,20 +3546,22 @@ class CellDef(QWidget):
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
 
         # print(self.chemotactic_sensitivity_dict[val])
+        print("--> ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
         newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
+        print(" .  newval= ",newval)
         self.chemo_sensitivity.setText(newval)
 
         if idx == -1:
             return
 
     def live_phagocytosis_dropdown_changed_cb(self, idx):
-        print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
+        # print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.live_phagocytosis_dropdown.currentText()
         # self.param_d[self.current_cell_def]['live_phagocytosis_celltype'] = celltype_name
         self.live_phagocytosis_celltype = celltype_name
-        print("   self.live_phagocytosis_celltype = ",celltype_name)
+        # print("   self.live_phagocytosis_celltype = ",celltype_name)
 
         if self.live_phagocytosis_celltype in self.param_d[self.current_cell_def]["live_phagocytosis_rate"].keys():
             self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
@@ -3568,13 +3574,13 @@ class CellDef(QWidget):
             return
 
     def attack_rate_dropdown_changed_cb(self, idx):
-        print('------ attack_rate_dropdown_changed_cb(): idx = ',idx)
+        # print('------ attack_rate_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.attack_rate_dropdown.currentText()
         # self.param_d[self.current_cell_def]['attack_rate_celltype'] = celltype_name
         self.attack_rate_celltype = celltype_name
-        print("   self.attack_rate_celltype = ",celltype_name)
+        # print("   self.attack_rate_celltype = ",celltype_name)
 
         if self.attack_rate_celltype in self.param_d[self.current_cell_def]["attack_rate"].keys():
             self.attack_rate.setText(self.param_d[self.current_cell_def]["attack_rate"][self.attack_rate_celltype])
@@ -3585,13 +3591,13 @@ class CellDef(QWidget):
             return
 
     def fusion_rate_dropdown_changed_cb(self, idx):
-        print('------ fusion_rate_dropdown_changed_cb(): idx = ',idx)
+        # print('------ fusion_rate_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.fusion_rate_dropdown.currentText()
         # self.param_d[self.current_cell_def]['fusion_rate_celltype'] = celltype_name
         self.fusion_rate_celltype = celltype_name
-        print("   self.fusion_rate_celltype = ",celltype_name)
+        # print("   self.fusion_rate_celltype = ",celltype_name)
 
         if self.fusion_rate_celltype in self.param_d[self.current_cell_def]["fusion_rate"].keys():
             self.fusion_rate.setText(self.param_d[self.current_cell_def]["fusion_rate"][self.fusion_rate_celltype])
@@ -3602,13 +3608,13 @@ class CellDef(QWidget):
             return
 
     def cell_transformation_dropdown_changed_cb(self, idx):
-        print('------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
+        # print('------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_transformation_dropdown.currentText()
         # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
         self.transformation_rate_celltype = celltype_name
-        print("   self.transformation_rate_celltype= ",celltype_name)
+        # print("   self.transformation_rate_celltype= ",celltype_name)
 
         if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
             self.transformation_rate.setText(self.param_d[self.current_cell_def]["transformation_rate"][self.transformation_rate_celltype])
@@ -3621,7 +3627,7 @@ class CellDef(QWidget):
 
     # @QtCore.Slot()
     def secretion_substrate_changed_cb(self, idx):
-        print('------ secretion_substrate_changed_cb(): idx = ',idx)
+        # print('------ secretion_substrate_changed_cb(): idx = ',idx)
         self.current_secretion_substrate = self.secretion_substrate_dropdown.currentText()
         # print("    self.current_secretion_substrate = ",self.current_secretion_substrate)
         if idx == -1:
@@ -3658,23 +3664,23 @@ class CellDef(QWidget):
     def cycle_phase_transition_cb(self):
         # rb1.toggled.connect(self.updateLabel)(self, idx_choice):
         # print('self.cycle_rows_vbox.count()=', self.cycle_rows_vbox.count())
-        print('cycle_phase_transition_cb: self.stacked_cycle.count()=', self.stacked_cycle.count())
+        # print('cycle_phase_transition_cb: self.stacked_cycle.count()=', self.stacked_cycle.count())
 
         radioBtn = self.sender()
-        if radioBtn.isChecked():
-            print("--------- ",radioBtn.text())
+        # if radioBtn.isChecked():
+        #     print("--------- ",radioBtn.text())
 
-        print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
+        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
         # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
 
         # self.cycle_rows_vbox.clear()
         # if radioBtn.text().find("duration"):
         if "duration" in radioBtn.text():
-            print('cycle_phase_transition_cb: --> duration')
+            # print('cycle_phase_transition_cb: --> duration')
             self.cycle_duration_flag = True
             self.customize_cycle_choices()
         else:  # transition rates
-            print('cycle_phase_transition_cb: NOT duration')
+            # print('cycle_phase_transition_cb: NOT duration')
             self.cycle_duration_flag = False
             self.customize_cycle_choices()
             # pass
@@ -3692,7 +3698,7 @@ class CellDef(QWidget):
     # different cycle model is chosen from the dropdown combobox.
     def customize_cycle_choices(self):
 
-        print("-- customize_cycle_choices(): index= ",self.cycle_dropdown.currentIndex())
+        # print("-- customize_cycle_choices(): index= ",self.cycle_dropdown.currentIndex())
 
         if self.cycle_duration_flag:  # specifying duration times (radio button)
             if self.cycle_dropdown.currentIndex() == 0:
@@ -3725,11 +3731,11 @@ class CellDef(QWidget):
 
 
     def chemotaxis_direction_cb(self):
-        print('chemotaxis_direction_cb: ')
+        # print('chemotaxis_direction_cb: ')
 
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            print("--------- ",radioBtn.text())  # towards, against
+            # print("--------- ",radioBtn.text())  # towards, against
             if "toward" in radioBtn.text():
                 self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = True
             else:
@@ -3773,8 +3779,8 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
     def fill_substrates_comboboxes(self):
-        print("cell_def_tab.py: ------- fill_substrates_comboboxes")
-        print("self.substrate_list = ",self.substrate_list)
+        # print("cell_def_tab.py: ------- fill_substrates_comboboxes")
+        # print("self.substrate_list = ",self.substrate_list)
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.motility_substrate_dropdown.clear()
         self.motility2_substrate_dropdown.clear()
@@ -3791,13 +3797,13 @@ class CellDef(QWidget):
                 self.motility_substrate_dropdown.addItem(name)
                 self.motility2_substrate_dropdown.addItem(name)
                 self.secretion_substrate_dropdown.addItem(name)
-        print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
+        # print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
 
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
     def fill_celltypes_comboboxes(self):
-        print("cell_def_tab.py: ------- fill_celltypes_comboboxes")
-        print("self.celltypes_list = ",self.celltypes_list)
+        # print("cell_def_tab.py: ------- fill_celltypes_comboboxes")
+        # print("self.celltypes_list = ",self.celltypes_list)
         self.celltypes_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.live_phagocytosis_dropdown.clear()
         self.attack_rate_dropdown.clear()
@@ -3809,14 +3815,23 @@ class CellDef(QWidget):
             idx = 0
             for var in uep.findall('cell_definition'):
                 # vp.append(var)
-                print(" --> ",var.attrib['name'])
+                # print(" --> ",var.attrib['name'])
                 name = var.attrib['name']
                 self.celltypes_list.append(name)
                 self.live_phagocytosis_dropdown.addItem(name)
                 self.attack_rate_dropdown.addItem(name)
                 self.fusion_rate_dropdown.addItem(name)
                 self.cell_transformation_dropdown.addItem(name)
-        print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
+        # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
+
+    #-----------------------------------------------------------------------------------------
+    def add_new_celltype_comboboxes(self, name):
+        print("cell_def_tab.py: ------- add_new_celltype_comboboxes",name)
+        self.celltypes_list.append(name)
+        self.live_phagocytosis_dropdown.addItem(name)
+        self.attack_rate_dropdown.addItem(name)
+        self.fusion_rate_dropdown.addItem(name)
+        self.cell_transformation_dropdown.addItem(name)
 
     #-----------------------------------------------------------------------------------------
     # def delete_substrate_from_comboboxes(self, item_idx):
@@ -3910,11 +3925,11 @@ class CellDef(QWidget):
     # data structures (e.g., QComboBox) that reference it.
     def renamed_celltype(self, old_name,new_name):
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
-        print("cell_def_tab.py: ------- renamed_celltype")
-        print("       old_name = ",old_name)
-        print("       new_name = ",new_name)
+        # print("cell_def_tab.py: ------- renamed_celltype")
+        # print("       old_name = ",old_name)
+        # print("       new_name = ",new_name)
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
-        print("self.celltypes_list= ",self.celltypes_list)
+        # print("self.celltypes_list= ",self.celltypes_list)
 
         for idx in range(len(self.celltypes_list)):
             # print("idx,old,new = ",idx, old_name,new_name)
@@ -4127,7 +4142,6 @@ class CellDef(QWidget):
     def add_new_substrate(self, sub_name):
         self.add_new_substrate_comboboxes(sub_name)
 
-
         sval = self.default_sval
         for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
             # print('cdname = ',cdname)
@@ -4137,6 +4151,20 @@ class CellDef(QWidget):
             self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = sval
             self.param_d[cdname]["secretion"][sub_name]["uptake_rate"] = sval
             self.param_d[cdname]["secretion"][sub_name]["net_export_rate"] = sval
+
+
+    def add_new_celltype(self, cdname):
+        self.add_new_celltype_comboboxes(cdname)
+
+        # sval = self.default_sval
+        # for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
+        #     # print('cdname = ',cdname)
+        #     # # print(self.param_d[cdname]["secretion"])
+        #     self.param_d[cdname]["secretion"][sub_name] = {}
+        #     self.param_d[cdname]["secretion"][sub_name]["secretion_rate"] = sval
+        #     self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = sval
+        #     self.param_d[cdname]["secretion"][sub_name]["uptake_rate"] = sval
+        #     self.param_d[cdname]["secretion"][sub_name]["net_export_rate"] = sval
 
 
     def new_custom_data_params(self, cdname):
@@ -4372,7 +4400,7 @@ class CellDef(QWidget):
     def update_motility_params(self):
         cdname = self.current_cell_def
         print("\n----- update_motility_params():")
-        print('motility_advanced_chemotaxis=',self.param_d[cdname]["motility_advanced_chemotaxis"])
+        # print('motility_advanced_chemotaxis=',self.param_d[cdname]["motility_advanced_chemotaxis"])
 
         self.speed.setText(self.param_d[cdname]["speed"])
         self.persistence_time.setText(self.param_d[cdname]["persistence_time"])
@@ -4394,9 +4422,7 @@ class CellDef(QWidget):
         else:
             self.advanced_chemotaxis_enabled.setChecked(False)
 
-        # self.chemo_sensitivity_changed(self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate'])
-        # self.sensitivity.setText(self.param_d[cdname]["speed"])
-        print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
+        # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
         if self.param_d[cdname]['motility_advanced_chemotaxis_substrate'] == 'foobar':
             print('-- motility_advanced_chemotaxis_substrate is foobar')
@@ -4470,8 +4496,8 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_custom_data_params(self):
         cdname = self.current_cell_def
-        print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
-        print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
         # print("num_vals =", num_vals)
         idx = 0
@@ -4497,7 +4523,7 @@ class CellDef(QWidget):
     def tree_item_clicked_cb(self, it,col):
         # print('\n\n------------ tree_item_clicked_cb -----------:', it, col, it.text(col) )
         self.current_cell_def = it.text(col)
-        print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
+        # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
 
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
@@ -5336,9 +5362,14 @@ class CellDef(QWidget):
                 # motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis"
                 print(motility_advanced_chemotaxis_path)
                 if uep.find(motility_advanced_chemotaxis_path) is None:
+                    print("---- no motility_advanced_chemotaxis_path found. Setting to default values")
                     self.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
                     self.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
                     self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+                    print("---- self.substrate_list= ",self.substrate_list)
+                    for substrate in self.substrate_list:
+                        self.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
+                    self.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = False
                 else:
                     if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
                         self.param_d[cell_def_name]["motility_advanced_chemotaxis"] = True
@@ -5357,15 +5388,21 @@ class CellDef(QWidget):
                     self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                     for substrate in self.substrate_list:
                         # self.chemotactic_sensitivity_dict[substrate] = 0.0
-                        self.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = 0.0
+                        self.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
 
-                    sensitivity_block = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
+                    #-----
+                    sensitivity_path = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
+                    print(sensitivity_path)
+                    # sys.exit(-1)
+                    if uep.find(sensitivity_path) is None:
+                        print("---- chemotactic_sensitivities not found ")
+                        sys.exit(-1)
             #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
-                    if sensitivity_block:
+                    else:
                         # self.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                         if debug_print:
-                            print("---- found chemotactic_sensitivities: ",uep.find(sensitivity_block))
-                        for subelm in uep.find(sensitivity_block).findall('chemotactic_sensitivity'):
+                            print("---- found chemotactic_sensitivities: ",uep.find(sensitivity_path))
+                        for subelm in uep.find(sensitivity_path).findall('chemotactic_sensitivity'):
                             subname = subelm.attrib['substrate']
                             subval = subelm.text # float?
                             if debug_print:
@@ -6386,6 +6423,48 @@ class CellDef(QWidget):
         elm.text = direction
         elm.tail = self.indent14
 
+        #--------
+            # <advanced_chemotaxis>
+            #     <enabled>true</enabled>
+            #     <normalize_each_gradient>false</normalize_each_gradient>
+            #     <chemotactic_sensitivities>
+            #       <chemotactic_sensitivity substrate="resource">1</chemotactic_sensitivity> 
+            #       <chemotactic_sensitivity substrate="toxin">0</chemotactic_sensitivity> 
+        adv_taxis = ET.SubElement(options, 'advanced_chemotaxis')
+        adv_taxis.text = self.indent16
+        adv_taxis.tail = self.indent12
+
+        bval = "false"
+        if self.param_d[cdef]['motility_advanced_chemotaxis']:
+            bval = "true"
+        elm = ET.SubElement(adv_taxis, 'enabled')
+        elm.text = bval
+        elm.tail = self.indent16
+
+        bval = "false"
+        if self.param_d[cdef]['motility_advanced_chemotaxis_normalize_grad']:
+            bval = "true"
+        elm = ET.SubElement(adv_taxis, 'normalize_each_gradient')
+        elm.text = bval
+        elm.tail = self.indent16
+
+        chemo_sens = ET.SubElement(adv_taxis, 'chemotactic_sensitivities')
+        chemo_sens.text = self.indent16
+        chemo_sens.tail = self.indent16
+
+                # self.param_d[cell_def_name]['chemotactic_sensitivity'][subname] = subval
+        print(self.param_d[cdef]['chemotactic_sensitivity'])
+        for key in self.param_d[cdef]['chemotactic_sensitivity'].keys():
+            #       <chemotactic_sensitivity substrate="resource">1</chemotactic_sensitivity> 
+        # elm = ET.Element("cell_definition",  {"name":cdef, "ID":self.param_d[cdef]["ID"]}) # retain info
+                        
+            val = self.param_d[cdef]['chemotactic_sensitivity'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(chemo_sens, 'chemotactic_sensitivity', {"substrate":key})
+            elm.text = val
+            elm.tail = self.indent18
+
+
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_secretion(self,pheno,cdef):
@@ -6441,6 +6520,95 @@ class CellDef(QWidget):
         # self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
         # self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
         # self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+
+    #-------------------------------------------------------------------
+    # Read values from the GUI widgets and generate/write a new XML
+    def fill_xml_interactions(self,pheno,cdef):
+        if self.debug_print_fill_xml:
+            print("------------------- fill_xml_interactions()")
+
+        interactions = ET.SubElement(pheno, "cell_interactions")
+        interactions.text = self.indent12  # affects indent of child
+        interactions.tail = "\n" + self.indent10
+
+            #   <dead_phagocytosis_rate units="1/min">91.0</dead_phagocytosis_rate>
+            #   <live_phagocytosis_rates>
+            #     <phagocytosis_rate name="bacteria" units="1/min">91.1</phagocytosis_rate>
+        subelm = ET.SubElement(interactions, "dead_phagocytosis_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdef]["dead_phagocytosis_rate"]
+        subelm.tail = self.indent12
+
+        #-----
+        lpr = ET.SubElement(interactions, "live_phagocytosis_rates")
+        lpr.text = self.indent12
+        lpr.tail = self.indent12
+
+        print("--- live_phagocytosis_rate= ",self.param_d[cdef]['live_phagocytosis_rate'])
+        for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
+            if len(key) == 0:
+                continue
+            val = self.param_d[cdef]['live_phagocytosis_rate'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":"1/min"})
+            elm.text = val
+            elm.tail = self.indent18
+
+        #-----
+        arates = ET.SubElement(interactions, "attack_rates")
+        arates.text = self.indent12
+        arates.tail = self.indent16
+
+        print("--- attack_rate= ",self.param_d[cdef]['attack_rate'])
+        for key in self.param_d[cdef]['attack_rate'].keys():
+            # argh, not sure why this is necessary, but without it, we can get empty entries if we read in a saved mymodel.xml
+            if len(key) == 0:  
+                continue
+            val = self.param_d[cdef]['attack_rate'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(arates, 'attack_rate', {"name":key, "units":"1/min"})
+            elm.text = val
+            elm.tail = self.indent18
+
+        #-----
+        subelm = ET.SubElement(interactions, "damage_rate",{"units":"1/min"})
+        subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm.tail = self.indent12
+
+        #-----
+        frates = ET.SubElement(interactions, "fusion_rates")
+        frates.text = self.indent12
+        frates.tail = self.indent16
+
+        print("--- fusion_rate= ",self.param_d[cdef]['fusion_rate'])
+        for key in self.param_d[cdef]['fusion_rate'].keys():
+            # argh, not sure why this is necessary, but without it, we can get empty entries if we read in a saved mymodel.xml
+            if len(key) == 0:
+                continue
+            val = self.param_d[cdef]['fusion_rate'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(frates, 'fusion_rate', {"name":key, "units":"1/min"})
+            elm.text = val
+            elm.tail = self.indent18
+
+        #---------------------------
+        xforms = ET.SubElement(pheno, "cell_transformations")
+        xforms.text = self.indent12  # affects indent of child
+        xforms.tail = "\n" + self.indent8
+
+        trates = ET.SubElement(xforms, "transformation_rates")
+        trates.text = self.indent12
+        trates.tail = self.indent16
+
+        for key in self.param_d[cdef]['transformation_rate'].keys():
+            # argh, not sure why this is necessary, but without it, we can get empty entries if we read in a saved mymodel.xml
+            if len(key) == 0:
+                continue
+            val = self.param_d[cdef]['transformation_rate'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":"1/min"})
+            elm.text = val
+            elm.tail = self.indent18
+
 
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
@@ -6526,8 +6694,8 @@ class CellDef(QWidget):
 					# </phase_durations>
                 # print("cell_def_tab.py: fill_xml(): --> ",var.attrib['ID'])
                 elm = ET.Element("cell_definition", 
-                        {"name":cdef, "ID":self.param_d[cdef]["ID"]})  # rwh: retain original IDs!
-                        # {"name":cdef, "ID":str(idx)})  # rwh: NO! we need to retain the original IDs!
+                        {"name":cdef, "ID":str(idx)})  # rwh: renumbering IDs; do we need to retain the original IDs?
+                        # {"name":cdef, "ID":self.param_d[cdef]["ID"]})  # rwh: if retaining original IDs.
                 elm.tail = '\n' + self.indent6
                 elm.text = self.indent8
                 pheno = ET.SubElement(elm, 'phenotype')
@@ -6549,17 +6717,12 @@ class CellDef(QWidget):
 
                 # cycle.text = self.param_d[cdef]["diffusion_coef"]
 
-                # ------- death ------- 
                 self.fill_xml_death(pheno,cdef)
-                # ------- volume ------- 
                 self.fill_xml_volume(pheno,cdef)
-                # ------- mechanics ------- 
                 self.fill_xml_mechanics(pheno,cdef)
-                # ------- motility ------- 
                 self.fill_xml_motility(pheno,cdef)
-                # ------- secretion ------- 
                 self.fill_xml_secretion(pheno,cdef)
-
+                self.fill_xml_interactions(pheno,cdef)
 
                 # ------- custom data ------- 
                 customdata = ET.SubElement(elm, 'custom_data')

@@ -55,8 +55,8 @@ class PhysiCellXMLCreator(QWidget):
         self.setLayout(vlayout)
         self.setMinimumSize(1000, 700)
 
-        model_name = "template"
         model_name = "interactions"
+        model_name = "template"
 
         # then what??
         # binDirectory = os.path.realpath(os.path.abspath(__file__))
@@ -102,7 +102,7 @@ class PhysiCellXMLCreator(QWidget):
         cd_name = self.celldef_tab.first_cell_def_name()
         print("gui4xml: cd_name=",cd_name)
         self.celldef_tab.populate_tree()
-        self.celldef_tab.fill_substrates_comboboxes()
+        self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
@@ -184,15 +184,15 @@ class PhysiCellXMLCreator(QWidget):
         template_act.triggered.connect(self.template_cb)
 
         subcell_act = QAction('subcellular', self)
-        samples_menu.addAction(subcell_act)
+        # samples_menu.addAction(subcell_act)
         subcell_act.triggered.connect(self.subcell_cb)
 
         covid19_act = QAction('covid19_v5', self)
-        samples_menu.addAction(covid19_act)
+        # samples_menu.addAction(covid19_act)
         covid19_act.triggered.connect(self.covid19_cb)
 
         test_gui_act = QAction('test-gui', self)
-        samples_menu.addAction(test_gui_act)
+        # samples_menu.addAction(test_gui_act)
         test_gui_act.triggered.connect(self.test_gui_cb)
 
         #--------------
@@ -278,6 +278,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
         self.celldef_tab.fill_celltypes_comboboxes()
+
         self.microenv_tab.celldef_tab = self.celldef_tab
 
         # self.cell_customdata_tab.clear_gui(self.celldef_tab)

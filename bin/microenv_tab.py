@@ -1123,6 +1123,7 @@ class SubstrateDef(QWidget):
 
 #dirichlet_xmin 
                 subelm = ET.SubElement(elm, "Dirichlet_options")
+                subelm.text = indent10
                 subelm.tail = indent8
                 subelm2 = ET.SubElement(subelm, "boundary_value",{"ID":"xmin", 
                     "enabled":str(self.param_d[substrate]["enable_xmin"])} )
