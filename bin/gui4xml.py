@@ -70,6 +70,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # NOTE! We create a *copy* of the .xml sample model and will save to it.
         copy_file = "copy_" + model_name + ".xml"
+        self.current_save_file = copy_file
         try:
             shutil.copy(read_file, copy_file)
         except:
@@ -143,7 +144,9 @@ class PhysiCellXMLCreator(QWidget):
 
         file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-        file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+        # file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+        file_menu.addAction("Save as", self.save_as_cb)
+        file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
 
         #--------------
         samples_menu = file_menu.addMenu("Samples (copy of)")
@@ -273,6 +276,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.celldef_tab.clear_gui()
         self.celldef_tab.clear_custom_data_params()
+        # self.celldef_tab.fill_substrates_comboboxes()
         self.celldef_tab.populate_tree()
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
@@ -348,6 +352,36 @@ class PhysiCellXMLCreator(QWidget):
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
 
+    def save_as_cb(self):
+        print("------ save_as_cb():")
+        # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+        filePath = QFileDialog.getSaveFileName(self,'',".")
+        # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
+        print("\n\n save_as_cb():  filePath=",filePath)
+        full_path_model_name = filePath[0]
+        print("\n\n save_as_cb():  full_path_model_name =",full_path_model_name )
+        if (len(full_path_model_name) > 0) and Path(full_path_model_name):
+            print("save_as_cb():  filePath is valid")
+            print("len(full_path_model_name) = ", len(full_path_model_name) )
+            self.current_save_file = full_path_model_name
+        else:
+            return
+
+        self.config_tab.fill_xml()
+        self.microenv_tab.fill_xml()
+        self.celldef_tab.fill_xml()
+        self.user_params_tab.fill_xml()
+
+        # out_file = "mymodel.xml"
+        # out_file = full_path_model_name 
+        out_file = self.current_save_file
+        self.setWindowTitle(self.title_prefix + out_file)
+
+        print("\n\n ===================================")
+        print("gui4xml:  save_as_cb: writing to: ",out_file)
+
+        self.tree.write(out_file)
+
     def save_cb(self):
         # self.config_file = copy_file
         self.config_tab.fill_xml()
@@ -359,7 +393,8 @@ class PhysiCellXMLCreator(QWidget):
         # print("gui4xml:  save_cb: writing to: ",self.config_file)
 
         # out_file = self.config_file
-        out_file = "mymodel.xml"
+        # out_file = "mymodel.xml"
+        out_file = self.current_save_file
         self.setWindowTitle(self.title_prefix + out_file)
 
         print("\n\n ===================================")
@@ -396,20 +431,20 @@ class PhysiCellXMLCreator(QWidget):
         if returnValue == QMessageBox.Ok:
             print('OK clicked')
 
-    def save_as_cb(self):
-        # save_as_file = QFileDialog.getSaveFileName(self,'',".")
-        # if save_as_file:
-        #     print(save_as_file)
-        #     print(" save_as_file: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
+    # def save_cb(self):
+    #     # save_as_file = QFileDialog.getSaveFileName(self,'',".")
+    #     # if save_as_file:
+    #     #     print(save_as_file)
+    #     #     print(" save_as_file: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
 
-        self.config_tab.fill_xml()
-        self.microenv_tab.fill_xml()
-        self.celldef_tab.fill_xml()
-        self.user_params_tab.fill_xml()
+    #     self.config_tab.fill_xml()
+    #     self.microenv_tab.fill_xml()
+    #     self.celldef_tab.fill_xml()
+    #     self.user_params_tab.fill_xml()
 
-        save_as_file = "mymodel.xml"
-        print("gui4xml:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
-        self.tree.write(save_as_file)
+    #     save_as_file = "mymodel.xml"
+    #     print("gui4xml:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
+    #     self.tree.write(save_as_file)
 
 
     def new_model_cb(self):
@@ -420,6 +455,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "template"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         # self.config_file = "config_samples/" + name + ".xml"
@@ -431,6 +467,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "biorobots_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         # self.config_file = "config_samples/" + name + ".xml"
@@ -448,6 +485,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "cancer_biorobots_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -457,6 +495,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "heterogeneity"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -466,6 +505,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "pred_prey_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -475,6 +515,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "virus_macrophage_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -484,6 +525,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "worm"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -493,6 +535,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "interactions"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -502,6 +545,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "cancer_immune3D_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -511,6 +555,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "template"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -526,6 +571,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "subcellular_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -535,6 +581,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "covid19_v5_flat"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -544,6 +591,7 @@ class PhysiCellXMLCreator(QWidget):
         name = "test-gui"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
         shutil.copy(sample_file, copy_file)
         self.add_new_model(copy_file, True)
         self.config_file = copy_file
