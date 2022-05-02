@@ -258,7 +258,8 @@ class CellDef(QWidget):
         # print('------ self.current_cell_def = ', self.current_cell_def)
         # Make a new cell_def (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
-        self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
+        # self.param_d[cdname]["ID"] = str(self.new_cell_def_count)  # no longer necessary; we auto-generate at 'save'
+        print("--> copy_cell_def():\n ",self.param_d[cdname])
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -4133,11 +4134,30 @@ class CellDef(QWidget):
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
 
     def new_interaction_params(self, cdname):
-        print("new_interaction_params(): ",self.param_d[cdname])
+        print("\n--------new_interaction_params(): cdname= ",cdname)
         sval = self.default_sval
         self.param_d[cdname]["dead_phagocytosis_rate"] = sval
         self.param_d[cdname]["damage_rate"] = sval
 
+        # self.param_d[cdname]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
+        # for cdname2 in self.param_d.keys():  
+        #     print('cdname2= ',cdname2)
+        #     self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+        #     self.param_d[cdname]['attack_rate'][cdname2] = sval
+        #     self.param_d[cdname]['fusion_rate'][cdname2] = sval
+        #     self.param_d[cdname]['transformation_rate'][cdname2] = sval
+
+        for cdname in self.param_d.keys():    # for each cell def
+            # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
+            for cdname2 in self.param_d.keys():    # for each cell def
+                # print('cdname2= ',cdname2)
+                self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+                self.param_d[cdname]['attack_rate'][cdname2] = sval
+                self.param_d[cdname]['fusion_rate'][cdname2] = sval
+                self.param_d[cdname]['transformation_rate'][cdname2] = sval
+
+        # print("\n--------new_interaction_params(): param_d= ",self.param_d)
+        # sys.exit(-1)
 
     def add_new_substrate(self, sub_name):
         self.add_new_substrate_comboboxes(sub_name)
@@ -5399,7 +5419,7 @@ class CellDef(QWidget):
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_interactions(self,pheno,cdef):
         if self.debug_print_fill_xml:
-            print("------------------- fill_xml_interactions()")
+            print("------------------- fill_xml_interactions():  cdef= ",cdef)
 
         interactions = ET.SubElement(pheno, "cell_interactions")
         interactions.text = self.indent12  # affects indent of child
@@ -5414,23 +5434,26 @@ class CellDef(QWidget):
 
         #-----
         lpr = ET.SubElement(interactions, "live_phagocytosis_rates")
-        lpr.text = self.indent12
-        lpr.tail = self.indent12
+        lpr.text = self.indent16
+        lpr.tail = "\n" + self.indent12
 
         print("--- live_phagocytosis_rate= ",self.param_d[cdef]['live_phagocytosis_rate'])
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
+            print("  key in live_phagocytosis_rate= ",key)
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
             print(key," --> ",val)
             elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":"1/min"})
             elm.text = val
-            elm.tail = self.indent18
+            elm.tail = self.indent16
+            
+        # elm.tail = "\n" + self.indent10
 
         #-----
         arates = ET.SubElement(interactions, "attack_rates")
-        arates.text = self.indent12
-        arates.tail = self.indent16
+        arates.text = self.indent18
+        arates.tail = "\n" + self.indent12
 
         print("--- attack_rate= ",self.param_d[cdef]['attack_rate'])
         for key in self.param_d[cdef]['attack_rate'].keys():
@@ -5450,8 +5473,8 @@ class CellDef(QWidget):
 
         #-----
         frates = ET.SubElement(interactions, "fusion_rates")
-        frates.text = self.indent12
-        frates.tail = self.indent16
+        frates.text = self.indent16
+        frates.tail = "\n" + self.indent10
 
         print("--- fusion_rate= ",self.param_d[cdef]['fusion_rate'])
         for key in self.param_d[cdef]['fusion_rate'].keys():
@@ -5470,8 +5493,8 @@ class CellDef(QWidget):
         xforms.tail = "\n" + self.indent8
 
         trates = ET.SubElement(xforms, "transformation_rates")
-        trates.text = self.indent12
-        trates.tail = self.indent16
+        trates.text = self.indent14
+        trates.tail = self.indent12
 
         for key in self.param_d[cdef]['transformation_rate'].keys():
             # argh, not sure why this is necessary, but without it, we can get empty entries if we read in a saved mymodel.xml
@@ -5481,7 +5504,7 @@ class CellDef(QWidget):
             print(key," --> ",val)
             elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":"1/min"})
             elm.text = val
-            elm.tail = self.indent18
+            elm.tail = self.indent16
 
 
     #-------------------------------------------------------------------
