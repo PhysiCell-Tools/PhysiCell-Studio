@@ -189,6 +189,10 @@ class PhysiCellXMLCreator(QWidget):
         samples_menu.addAction(template_act)
         template_act.triggered.connect(self.template_cb)
 
+        physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
+        samples_menu.addAction(physiboss_cell_lines_act)
+        physiboss_cell_lines_act.triggered.connect(self.physiboss_cell_lines_cb)
+
         subcell_act = QAction('subcellular', self)
         # samples_menu.addAction(subcell_act)
         subcell_act.triggered.connect(self.subcell_cb)
@@ -370,7 +374,7 @@ class PhysiCellXMLCreator(QWidget):
             self.current_save_file = full_path_model_name
         else:
             return
-
+        self.celldef_tab.config_path = self.current_save_file
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
         self.celldef_tab.fill_xml()
@@ -387,6 +391,7 @@ class PhysiCellXMLCreator(QWidget):
         self.tree.write(out_file)
 
     def save_cb(self):
+        self.celldef_tab.config_path = self.current_save_file
         # self.config_file = copy_file
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
@@ -574,6 +579,16 @@ class PhysiCellXMLCreator(QWidget):
 
     def template_cb(self):
         name = "template"
+        sample_file = Path("data", name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        self.current_save_file = copy_file
+        shutil.copy(sample_file, copy_file)
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        self.show_sample_model()
+
+    def physiboss_cell_lines_cb(self):
+        name = "physiboss_cell_lines"
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         self.current_save_file = copy_file
