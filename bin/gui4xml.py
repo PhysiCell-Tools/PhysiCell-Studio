@@ -27,6 +27,8 @@ from cell_def_tab import CellDef
 from cell_custom_data_tab import CellCustomData 
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
+from populate_tree_cell_defs import populate_tree_cell_defs
+        
 # from sbml_tab import SBMLParams 
 
 def SingleBrowse(self):
@@ -102,7 +104,8 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.xml_root = self.xml_root
         cd_name = self.celldef_tab.first_cell_def_name()
         print("gui4xml: cd_name=",cd_name)
-        self.celldef_tab.populate_tree()
+        # self.celldef_tab.populate_tree()
+        populate_tree_cell_defs(self.celldef_tab)
         self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
@@ -277,7 +280,8 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.clear_gui()
         self.celldef_tab.clear_custom_data_params()
         # self.celldef_tab.fill_substrates_comboboxes()
-        self.celldef_tab.populate_tree()
+        # self.celldef_tab.populate_tree()
+        populate_tree_cell_defs(self.celldef_tab)
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
