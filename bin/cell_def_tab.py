@@ -33,7 +33,7 @@ class CellDef(QWidget):
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
         self.chemotactic_sensitivity_dict = {}
-        self.default_sval = '0.0'
+        self.default_sval = '0.0'  # default scalar value (as string)
         self.default_bval = False
         self.default_time_units = "min"
         self.default_rate_units = "1/min"
@@ -252,14 +252,28 @@ class CellDef(QWidget):
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
+    # Make a new cell_def (that's a copy of the currently selected one)
     def copy_cell_def(self):
         # print('------ copy_cell_def')
-        cdname = "cell_def%02d" % self.new_cell_def_count
-        # print('------ self.current_cell_def = ', self.current_cell_def)
-        # Make a new cell_def (that's a copy of the currently selected one)
-        self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
-        # self.param_d[cdname]["ID"] = str(self.new_cell_def_count)  # no longer necessary; we auto-generate at 'save'
-        print("--> copy_cell_def():\n ",self.param_d[cdname])
+        cdname_copy = "cell_def%02d" % self.new_cell_def_count
+        cdname_original = self.current_cell_def
+        self.param_d[cdname_copy] = copy.deepcopy(self.param_d[cdname_original])
+        # self.param_d[cdname_copy]["ID"] = str(self.new_cell_def_count)  # no longer necessary; we auto-generate at 'save'
+
+        # we need to add the newly created cell def into each cell def's interaction/transformation dicts, with values of the copy
+        sval = self.default_sval
+        for cdname in self.param_d.keys():    # for each cell def
+            # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
+            for cdname2 in self.param_d.keys():    # for each cell def
+                # print('cdname2= ',cdname2)
+                if (cdname == cdname_copy) or (cdname2 == cdname_copy): # use default if not available
+                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+                    self.param_d[cdname]['attack_rate'][cdname2] = sval
+                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
+                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
+                # else: # use values from copied cell def
+
+        print("--> copy_cell_def():\n ",self.param_d[cdname_copy])
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -268,15 +282,15 @@ class CellDef(QWidget):
 
         self.new_cell_def_count += 1
 
-        self.current_cell_def = cdname
+        self.current_cell_def = cdname_copy
         # self.cell_type_name.setText(cdname)
 
-        self.add_new_celltype(cdname)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
+        self.add_new_celltype(cdname_copy)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
-        treeitem = QTreeWidgetItem([cdname])
+        treeitem = QTreeWidgetItem([cdname_copy])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
@@ -4133,11 +4147,11 @@ class CellDef(QWidget):
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
     #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
 
-    def new_interaction_params(self, cdname):
-        print("\n--------new_interaction_params(): cdname= ",cdname)
+    def new_interaction_params(self, cdname_new):
+        print("\n--------new_interaction_params(): cdname_new= ",cdname_new)
         sval = self.default_sval
-        self.param_d[cdname]["dead_phagocytosis_rate"] = sval
-        self.param_d[cdname]["damage_rate"] = sval
+        self.param_d[cdname_new]["dead_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["damage_rate"] = sval
 
         # self.param_d[cdname]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
         # for cdname2 in self.param_d.keys():  
@@ -4151,10 +4165,11 @@ class CellDef(QWidget):
             # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
             for cdname2 in self.param_d.keys():    # for each cell def
                 # print('cdname2= ',cdname2)
-                self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-                self.param_d[cdname]['attack_rate'][cdname2] = sval
-                self.param_d[cdname]['fusion_rate'][cdname2] = sval
-                self.param_d[cdname]['transformation_rate'][cdname2] = sval
+                if (cdname == cdname_new) or (cdname2 == cdname_new): 
+                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+                    self.param_d[cdname]['attack_rate'][cdname2] = sval
+                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
+                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
         # print("\n--------new_interaction_params(): param_d= ",self.param_d)
         # sys.exit(-1)
