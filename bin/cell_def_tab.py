@@ -4008,6 +4008,8 @@ class CellDef(QWidget):
                 self.fusion_rate_dropdown.setItemText(idx, new_name)
             if old_name == self.cell_transformation_dropdown.itemText(idx):
                 self.cell_transformation_dropdown.setItemText(idx, new_name)
+            if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
+                self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
 
         # 2) update in the param_d dict
         # for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
