@@ -1152,6 +1152,60 @@ def populate_tree_cell_defs(cell_def_tab):
             print("\n===== populate_tree():  molecular")
 
 
+            # # ---------  intracellular 
+            print("\n===== populate_tree():  intracellular")
+            # <intracellular type="maboss">
+            # 	<bnd_filename>./config/model_0.bnd</bnd_filename>
+            # 	<cfg_filename>./config/model.cfg</cfg_filename>
+            # 	<time_step>1</time_step>
+            # 	<initial_values>
+            # 		<initial_value node="A">1</initial_value>
+            # 		<initial_value node="C">0</initial_value>
+            # 	</initial_values>	
+            #   <mutations>
+            #       <mutation node="C">0.0</mutation>
+            #   </mutations>
+            #   <parameters>
+            #       <parameter name="$time_scale">0.2</parameter>
+            #   </parameters>
+            #   <scaling>0.25</scaling>
+            # </intracellular>
+            intracellular_path = ".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//intracellular"
+         
+            uep_intracellular = cell_def_tab.xml_root.find(intracellular_path)
+            cell_def_tab.param_d[cell_def_name]["intracellular"] = None
+
+            if uep_intracellular is not None:
+                cell_def_tab.param_d[cell_def_name]["intracellular"] = {}
+                if uep_intracellular.attrib["type"] == "maboss":
+                    # --------- PhysiBoSS specific code
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "maboss" 
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["bnd_filename"] = uep_intracellular.find("bnd_filename").text if uep_intracellular.find("bnd_filename") is not None else None
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["cfg_filename"] = uep_intracellular.find("cfg_filename").text if uep_intracellular.find("cfg_filename") is not None else None
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_intracellular.find("time_step").text if uep_intracellular.find("time_step") is not None else "12.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_intracellular.find("scaling").text if uep_intracellular.find("scaling") is not None else "1.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_intracellular.find("time_stochasticity").text if uep_intracellular.find("time_stochasticity") is not None else "1.0"
+
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
+                    uep_intracellular_iv = uep_intracellular.find("initial_values")
+                    if uep_intracellular_iv is not None:
+                        for initial_value in uep_intracellular_iv:
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append((initial_value.attrib["node"], initial_value.text))
+                  
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
+                    uep_intracellular_mutants = uep_intracellular.find("mutations")
+                    if uep_intracellular_mutants is not None:
+                        for mutant in uep_intracellular_mutants:
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["node"], mutant.text))
+
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
+                    uep_intracellular_parameters = uep_intracellular.find("parameters")
+                    if uep_intracellular_parameters is not None:
+                        for parameter in uep_intracellular_parameters:
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["name"], parameter.text))                    
+
+            print("------ done parsing intracellular:")
+
             # # ---------  custom data 
             print("\n===== populate_tree():  custom data")
             # <custom_data>  
