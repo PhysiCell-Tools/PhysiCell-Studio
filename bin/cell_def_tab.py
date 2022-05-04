@@ -317,20 +317,23 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def delete_cell_def(self):
         num_items = self.tree.invisibleRootItem().childCount()
-        print('------ delete_cell_def: num_items=',num_items)
+        # print('------ delete_cell_def: num_items=',num_items)
         if num_items == 1:
             # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
             self.show_delete_warning()
             return
 
-        print("--- TODO: delete celltype from dropdowns too")
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-        print('------      item_idx=',item_idx)
+        # print('------      item_idx=',item_idx)
+        # delete celltype from dropdowns
         self.live_phagocytosis_dropdown.removeItem(item_idx)
         self.attack_rate_dropdown.removeItem(item_idx)
         self.fusion_rate_dropdown.removeItem(item_idx)
         self.cell_transformation_dropdown.removeItem(item_idx)
+
+        self.cell_adhesion_affinity_dropdown.removeItem(item_idx)
+
         # for idx in range(len(self.celltypes_list)):
         #     # print("idx,old,new = ",idx, old_name,new_name)
         #     # if old_name in self.motility_substrate_dropdown.itemText(idx):
@@ -3594,7 +3597,7 @@ class CellDef(QWidget):
 
     #---- in mechanics subtab
     def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
-        # print('\n------ cell_adhesion_affinity_dropdown(): idx = ',idx)
+        print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
@@ -3861,7 +3864,7 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
     def fill_celltypes_comboboxes(self):
-        # print("cell_def_tab.py: ------- fill_celltypes_comboboxes")
+        print("cell_def_tab.py: ------- fill_celltypes_comboboxes")
         # print("self.celltypes_list = ",self.celltypes_list)
         self.celltypes_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.live_phagocytosis_dropdown.clear()
