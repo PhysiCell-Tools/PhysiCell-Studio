@@ -856,16 +856,29 @@ def populate_tree_cell_defs(cell_def_tab):
             motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis//"
             # motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis"
             print(motility_advanced_chemotaxis_path)
-            if uep.find(motility_advanced_chemotaxis_path) is None:
+
+            # Just initialize sensitivities to default value (0) for all substrates
+            cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+            uep_microenv = cell_def_tab.xml_root.find(".//microenvironment_setup")
+            for subelm in uep_microenv.findall('variable'):
+                substrate_name = subelm.attrib['name']
+                cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate_name] = '0.0'
+            print("chemotactic_sensitivity= ",cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"])
+            # sys.exit(-1)
+
+            if uep.find(motility_advanced_chemotaxis_path) is None:  # advanced_chemotaxis not present in .xml
                 print("---- no motility_advanced_chemotaxis_path found. Setting to default values")
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
-                cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
-                print("---- cell_def_tab.substrate_list= ",cell_def_tab.substrate_list)
-                for substrate in cell_def_tab.substrate_list:
-                    cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
+                # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+                # print("---- cell_def_tab.substrate_list= ",cell_def_tab.substrate_list)
+                # for substrate in cell_def_tab.substrate_list:
+                #     print("---- setting chemotactic_sensitivity= 0.0 for ",substrate)
+                #     cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = False
-            else:
+                # sys.exit(-1)
+
+            else:    # advanced_chemotaxis IS present in .xml
                 if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
                     cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = True
                 else:
@@ -890,8 +903,8 @@ def populate_tree_cell_defs(cell_def_tab):
                 print(sensitivity_path)
                 # sys.exit(-1)
                 if uep.find(sensitivity_path) is None:
-                    print("---- chemotactic_sensitivities not found. Setting to defaults. ")
-                    sys.exit(-1)
+                    print("---- chemotactic_sensitivities not found. Set to defaults (0). ")
+                    # sys.exit(-1)
         #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
                 else:
                     # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
