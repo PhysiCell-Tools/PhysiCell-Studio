@@ -57,7 +57,7 @@ class PhysiCellXMLCreator(QWidget):
         self.setLayout(vlayout)
         self.setMinimumSize(1000, 700)
 
-        model_name = "interactions"
+        # model_name = "interactions"  # for testing latest xml
         model_name = "template"
 
         # then what??
@@ -417,7 +417,24 @@ class PhysiCellXMLCreator(QWidget):
         # out_str = self.prettify(root)
         # print(out_str)
 
-        self.tree.write(out_file)
+
+        self.tree.write(out_file)  # originally
+
+        # # new: pretty print
+        # root = self.tree.getroot()
+        # # return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
+        # # long_str = ET.tostring(root)
+        # # print("len(long_str)= ",len(long_str))
+        # # # bstr = bytearray(long_str.replace(" ",""))
+        # # # bstr = str.encode(long_str.replace("\n",""))
+        # # bstr = str.encode(long_str)
+        # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent=" ",newl="")
+        # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(newl="")
+        # # xmlstr2 = minidom.parseString(xmlstr).toprettyxml(indent=" ",newl="")
+        # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
+        # # xmlstr = minidom.parseString(bstr).toprettyxml(indent=" ")
+        # with open(out_file, "w") as f:
+        #     f.write(xmlstr)
 
         # rwh NOTE: after saving the .xml, do we need to read it back in to reflect changes.
         # self.tree = ET.parse(self.config_file)

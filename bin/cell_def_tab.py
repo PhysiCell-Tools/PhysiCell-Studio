@@ -271,6 +271,8 @@ class CellDef(QWidget):
                     self.param_d[cdname]['attack_rate'][cdname2] = sval
                     self.param_d[cdname]['fusion_rate'][cdname2] = sval
                     self.param_d[cdname]['transformation_rate'][cdname2] = sval
+
+                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
                 # else: # use values from copied cell def
 
         print("--> copy_cell_def():\n ",self.param_d[cdname_copy])
@@ -2087,6 +2089,22 @@ class CellDef(QWidget):
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("cell adhesion affinity")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.cell_adhesion_affinity_dropdown = QComboBox()
+        glayout.addWidget(self.cell_adhesion_affinity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.cell_adhesion_affinity_dropdown.currentIndexChanged.connect(self.cell_adhesion_affinity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
+
+        self.cell_adhesion_affinity = QLineEdit()
+        self.cell_adhesion_affinity.textChanged.connect(self.cell_adhesion_affinity_changed)
+        self.cell_adhesion_affinity.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
         #---
     # <options>
@@ -2661,6 +2679,11 @@ class CellDef(QWidget):
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         interaction_tab.setLayout(glayout)
         return interaction_tab
+
+    #--------------------------------------------------------
+    def cell_adhesion_affinity_changed(self,text):
+        # print("cell_adhesion_affinity_changed:  text=",text)
+        self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
 
     #--------------------------------------------------------
     def dead_phagocytosis_rate_changed(self,text):
@@ -3569,6 +3592,26 @@ class CellDef(QWidget):
         if idx == -1:
             return
 
+    #---- in mechanics subtab
+    def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
+        # print('\n------ cell_adhesion_affinity_dropdown(): idx = ',idx)
+        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
+
+        celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['cell_adhesion_affinity_celltype'] = celltype_name
+        self.cell_adhesion_affinity_celltype = celltype_name
+        # print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
+
+        print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
+        if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
+            self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+        else:
+            self.cell_adhesion_affinity.setText(self.default_sval)
+
+        if idx == -1:
+            return
+
+    #---- in interactions subtab
     def live_phagocytosis_dropdown_changed_cb(self, idx):
         # print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
@@ -3640,6 +3683,7 @@ class CellDef(QWidget):
             return
 
 
+    #---------------------------
     # @QtCore.Slot()
     def secretion_substrate_changed_cb(self, idx):
         # print('------ secretion_substrate_changed_cb(): idx = ',idx)
@@ -3824,6 +3868,8 @@ class CellDef(QWidget):
         self.attack_rate_dropdown.clear()
         self.fusion_rate_dropdown.clear()
         self.cell_transformation_dropdown.clear()
+
+        self.cell_adhesion_affinity_dropdown.clear()
         uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
         # vp = []   # pointers to <variable> nodes
         if uep:
@@ -3837,6 +3883,9 @@ class CellDef(QWidget):
                 self.attack_rate_dropdown.addItem(name)
                 self.fusion_rate_dropdown.addItem(name)
                 self.cell_transformation_dropdown.addItem(name)
+
+                self.cell_adhesion_affinity_dropdown.addItem(name)
+
         # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
 
     #-----------------------------------------------------------------------------------------
@@ -3847,6 +3896,8 @@ class CellDef(QWidget):
         self.attack_rate_dropdown.addItem(name)
         self.fusion_rate_dropdown.addItem(name)
         self.cell_transformation_dropdown.addItem(name)
+
+        self.cell_adhesion_affinity_dropdown.addItem(name)
 
     #-----------------------------------------------------------------------------------------
     # def delete_substrate_from_comboboxes(self, item_idx):
@@ -4111,17 +4162,28 @@ class CellDef(QWidget):
         self.param_d[cdname]["volume_calcif_rate"] = sval
         self.param_d[cdname]["volume_rel_rupture_vol"] = sval
 
-    def new_mechanics_params(self, cdname):
+    def new_mechanics_params(self, cdname_new):
         sval = self.default_sval
-        self.param_d[cdname]["mechanics_adhesion"] = sval
-        self.param_d[cdname]["mechanics_repulsion"] = sval
-        self.param_d[cdname]["mechanics_adhesion_distance"] = sval
+        self.param_d[cdname_new]["mechanics_adhesion"] = sval
+        self.param_d[cdname_new]["mechanics_repulsion"] = sval
+        self.param_d[cdname_new]["mechanics_adhesion_distance"] = sval
 
-        self.param_d[cdname]["mechanics_relative_equilibrium_distance"] = sval
-        self.param_d[cdname]["mechanics_absolute_equilibrium_distance"] = sval
+        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance"] = sval
+        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance"] = sval
 
-        self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"] = False
-        self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"] = False
+        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance_enabled"] = False
+        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance_enabled"] = False
+
+        for cdname in self.param_d.keys():    # for each cell def
+            for cdname2 in self.param_d.keys():    # for each cell def
+                # print('cdname2= ',cdname2)
+                if (cdname == cdname_new) or (cdname2 == cdname_new): 
+                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+                    self.param_d[cdname]['attack_rate'][cdname2] = sval
+                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
+                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
+
+                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
         sval = self.default_sval
@@ -5129,40 +5191,40 @@ class CellDef(QWidget):
         volume.text = self.indent12  # affects indent of child
         volume.tail = "\n" + self.indent10
 
-        elm = ET.SubElement(volume, 'total')
+        elm = ET.SubElement(volume, 'total',{"units":"micron^3"})
         elm.text = self.param_d[cdef]['volume_total']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'fluid_fraction')
+        elm = ET.SubElement(volume, 'fluid_fraction',{"units":"dimensionless"})
         elm.text = self.param_d[cdef]['volume_fluid_fraction']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'nuclear')
+        elm = ET.SubElement(volume, 'nuclear',{"units":"micron^3"})
         elm.text = self.param_d[cdef]['volume_nuclear']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'fluid_change_rate')
+        elm = ET.SubElement(volume, 'fluid_change_rate',{"units":"1/min"})
         elm.text = self.param_d[cdef]['volume_fluid_change_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'cytoplasmic_biomass_change_rate')
+        elm = ET.SubElement(volume, 'cytoplasmic_biomass_change_rate',{"units":"1/min"})
         # elm.text = self.param_d[cdef]['volume_cytoplasmic_biomass_change_rate']
         elm.text = self.param_d[cdef]['volume_cytoplasmic_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'nuclear_biomass_change_rate')
+        elm = ET.SubElement(volume, 'nuclear_biomass_change_rate',{"units":"1/min"})
         elm.text = self.param_d[cdef]['volume_nuclear_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'calcified_fraction')
+        elm = ET.SubElement(volume, 'calcified_fraction',{"units":"dimensionless"})
         elm.text = self.param_d[cdef]['volume_calcif_fraction']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'calcification_rate')
+        elm = ET.SubElement(volume, 'calcification_rate',{"units":"1/min"})
         elm.text = self.param_d[cdef]['volume_calcif_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'relative_rupture_volume')
+        elm = ET.SubElement(volume, 'relative_rupture_volume',{"units":"dimensionless"})
         elm.text = self.param_d[cdef]['volume_rel_rupture_vol']
         elm.tail = self.indent10
 
@@ -5217,6 +5279,25 @@ class CellDef(QWidget):
         elm.text = self.param_d[cdef]['mechanics_adhesion_distance']
         elm.tail = self.indent12
 
+        #---
+                    # <cell_adhesion_affinities>
+	  				# 	<cell_adhesion_affinity name="bacteria">1</cell_adhesion_affinity> 
+        ca_rates = ET.SubElement(mechanics, "cell_adhesion_affinities")
+        ca_rates.text = self.indent16
+        # ca_rates.tail = "\n" + self.indent8
+        ca_rates.tail = self.indent12
+
+        print("--- cell_adhesion_affinity= ",self.param_d[cdef]['cell_adhesion_affinity'])
+        for key in self.param_d[cdef]['cell_adhesion_affinity'].keys():
+            # argh, not sure why this is necessary, but without it, we can get empty entries if we read in a saved mymodel.xml
+            if len(key) == 0:  
+                continue
+            val = self.param_d[cdef]['cell_adhesion_affinity'][key]
+            print(key," --> ",val)
+            elm = ET.SubElement(ca_rates, 'cell_adhesion_affinity', {"name":key})
+            elm.text = val
+            elm.tail = self.indent16
+
             # 	<options>
             # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.111</set_relative_equilibrium_distance>
             # 		<set_absolute_equilibrium_distance enabled="false" units="micron">11.111</set_absolute_equilibrium_distance>
@@ -5239,7 +5320,9 @@ class CellDef(QWidget):
             bval = "true"
         subelm = ET.SubElement(elm, 'set_absolute_equilibrium_distance',{"enabled":bval, "units":"micron"})
         subelm.text = self.param_d[cdef]['mechanics_absolute_equilibrium_distance'] 
-        subelm.tail = self.indent12
+        subelm.tail = self.indent14
+
+
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -5274,15 +5357,15 @@ class CellDef(QWidget):
         # else:
         #     self.chemotaxis_direction_against.setChecked(True)
 
-        elm = ET.SubElement(motility, 'speed')
+        elm = ET.SubElement(motility, 'speed',{"units":"micron/min"})
         elm.text = self.param_d[cdef]['speed']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(motility, 'persistence_time')
+        elm = ET.SubElement(motility, 'persistence_time',{"units":"min"})
         elm.text = self.param_d[cdef]['persistence_time']
         elm.tail = self.indent12
         
-        elm = ET.SubElement(motility, 'migration_bias')
+        elm = ET.SubElement(motility, 'migration_bias',{"units":"dimensionless"})
         elm.text = self.param_d[cdef]['migration_bias']
         elm.tail = self.indent12
 
@@ -5306,7 +5389,7 @@ class CellDef(QWidget):
 
         taxis = ET.SubElement(options, 'chemotaxis')
         taxis.text = self.indent16
-        taxis.tail = self.indent12
+        taxis.tail = self.indent14
 
         bval = "false"
         if self.param_d[cdef]['motility_chemotaxis']:
@@ -5358,7 +5441,7 @@ class CellDef(QWidget):
         elm.tail = self.indent16
 
         chemo_sens = ET.SubElement(adv_taxis, 'chemotactic_sensitivities')
-        chemo_sens.text = self.indent16
+        chemo_sens.text = self.indent18
         chemo_sens.tail = self.indent16
 
                 # self.param_d[cell_def_name]['chemotactic_sensitivity'][subname] = subval
@@ -5488,7 +5571,7 @@ class CellDef(QWidget):
 
         #-----
         frates = ET.SubElement(interactions, "fusion_rates")
-        frates.text = self.indent16
+        frates.text = self.indent18
         frates.tail = "\n" + self.indent10
 
         print("--- fusion_rate= ",self.param_d[cdef]['fusion_rate'])
@@ -5508,7 +5591,7 @@ class CellDef(QWidget):
         xforms.tail = "\n" + self.indent8
 
         trates = ET.SubElement(xforms, "transformation_rates")
-        trates.text = self.indent14
+        trates.text = self.indent16
         trates.tail = self.indent12
 
         for key in self.param_d[cdef]['transformation_rate'].keys():

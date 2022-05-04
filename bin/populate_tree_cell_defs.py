@@ -1,3 +1,6 @@
+# Parse the .xml config file and create the appropriate data structures that contain the info needed for cell defs.
+#
+import sys
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5 import QtCore
 
@@ -696,6 +699,58 @@ def populate_tree_cell_defs(cell_def_tab):
 
             # cell_def_tab.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
 
+            #----------
+            cell_adhesion_affinities_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//cell_adhesion_affinities"
+            if debug_print:
+                print("---- cell_interactions_path= ",cell_adhesion_affinities_path)
+            # motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
+            # motility_chemotaxis_path = motility_options_path + "chemotaxis//"
+            # if uep.find(motility_chemotaxis_path) is None:
+
+            # if uep.find(motility_advanced_chemotaxis_path) is None:
+            cap = uep.find(cell_adhesion_affinities_path)
+            if cap is None:
+                # print("---- no cell_adhesion_affinities_path found. Setting to default values")
+                print("---- No cell_adhesion_affinities_path found. Setting to default.")
+
+                # for var in cap.findall('cell_adhesion_affinity'):
+                #     print(" --> ",var.attrib['name'])
+                #     name = var.attrib['name']
+
+                cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+                # print("\nFor now, you need to manually enter these into your .xml\n")
+                # sys.exit(-1)
+
+                cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+                if cds_uep is None:
+                    print("---- Error: cell_definitions is not defined.")
+                    sys.exit(-1)
+
+                sval = '1.0'
+                for var in cds_uep.findall('cell_definition'):
+                    print(" --> ",var.attrib['name'])
+                    name = var.attrib['name']
+                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][name] = sval
+
+            else:
+                print("---- found cell_adhesion_affinities_path:")
+                cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+                    # <cell_adhesion_affinities>
+	  				# 	<cell_adhesion_affinity name="bacteria">1</cell_adhesion_affinity> 
+	  				# 	<cell_adhesion_affinity name="blood vessel">1</cell_adhesion_affinity> 
+                for var in cap.findall('cell_adhesion_affinity'):
+                    celltype_name = var.attrib['name']
+                    val = var.text
+                    # print(celltype_name,val)
+                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][celltype_name] = val
+                    print("--> ",cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"])
+
+
+                # cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+
+            # print("---> ",cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"])
+
+            #----------
             mechanics_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//options//"
             # cell_def_tab.set_relative_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text)
 
@@ -835,7 +890,7 @@ def populate_tree_cell_defs(cell_def_tab):
                 print(sensitivity_path)
                 # sys.exit(-1)
                 if uep.find(sensitivity_path) is None:
-                    print("---- chemotactic_sensitivities not found ")
+                    print("---- chemotactic_sensitivities not found. Setting to defaults. ")
                     sys.exit(-1)
         #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
                 else:
@@ -971,22 +1026,30 @@ def populate_tree_cell_defs(cell_def_tab):
             # if uep.find(motility_advanced_chemotaxis_path) is None:
             cep = uep.find(cell_interactions_path)
             if cep is None:
-                if debug_print:
-                    print("---- no cell_interactions found. Setting to default values")
+                print("---- no cell_interactions found. Setting to default values")
+                # print("---- no cell_interactions found.")
+                # print("\nFor now, you need to manually enter these (and cell_transformations) into your .xml \n")
+                # sys.exit(-1)
+
                 cell_def_tab.param_d[cell_def_name]["dead_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
-
-                cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
-                if cds_uep is None:
-                    print("---- Error: microenvironment_setup is not defined; cannot get ")
-                for var in cds_uep.findall('cell_definition'):
-                    print(" --> ",var.attrib['name'])
-                    name = var.attrib['name']
 
                 cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
                 cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
                 cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
-                # cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = 0.0
+
+                cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+                if cds_uep is None:
+                    print("---- Error: cell_definitions is not defined.")
+                    sys.exit(-1)
+
+                sval = '0.0'
+                for var in cds_uep.findall('cell_definition'):
+                    print(" --> ",var.attrib['name'])
+                    name = var.attrib['name']
+                    cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"][name] = sval
+                    cell_def_tab.param_d[cell_def_name]["attack_rate"][name] = sval
+                    cell_def_tab.param_d[cell_def_name]["fusion_rate"][name] = sval
             else:
                 print("---- found cell_interactions:")
                 val = cep.find("dead_phagocytosis_rate").text
@@ -1042,8 +1105,22 @@ def populate_tree_cell_defs(cell_def_tab):
             trp = uep.find(transformation_rates_path)
             cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
             if trp is None:
-                if debug_print:
-                    print("---- no cell_transformations found.")
+                # print("---- No cell_transformations found.")
+                # print("\nFor now, you need to manually enter these into your .xml\n")
+                # sys.exit(-1)
+                print("---- No cell_transformations found. Setting to default values")
+                cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+
+                cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+                if cds_uep is None:
+                    print("---- Error: cell_definitions is not defined.")
+                    sys.exit(-1)
+
+                sval = '0.0'
+                for var in cds_uep.findall('cell_definition'):
+                    print(" --> ",var.attrib['name'])
+                    name = var.attrib['name']
+                    cell_def_tab.param_d[cell_def_name]["transformation_rate"][name] = sval
             else:
                 for tr in trp.findall('transformation_rate'):
                     celltype_name = tr.attrib['name']
