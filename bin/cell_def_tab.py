@@ -2997,12 +2997,26 @@ class CellDef(QWidget):
     def chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_chemotaxis'] = bval
         if bval:
+            self.motility_substrate_dropdown.setEnabled(True)
+            self.chemotaxis_direction_towards.setEnabled(True)
+            self.chemotaxis_direction_against.setEnabled(True)
+
             self.advanced_chemotaxis_enabled.setChecked(False)
+            self.motility2_substrate_dropdown.setEnabled(False)
+            self.chemo_sensitivity.setEnabled(False)
 
     def advanced_chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_advanced_chemotaxis'] = bval
         if bval:
+            self.motility_substrate_dropdown.setEnabled(False)
+            self.chemotaxis_direction_towards.setEnabled(False)
+            self.chemotaxis_direction_against.setEnabled(False)
+
             self.chemotaxis_enabled.setChecked(False)
+            self.motility2_substrate_dropdown.setEnabled(True)
+            self.chemo_sensitivity.setEnabled(True)
+
+
 
     def chemo_sensitivity_changed(self, text):
         print("----- chemo_sensitivity_changed() = ",text)
