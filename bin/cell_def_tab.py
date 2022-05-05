@@ -35,6 +35,7 @@ class CellDef(QWidget):
         self.param_d = {}  # a dict of dicts
         self.chemotactic_sensitivity_dict = {}
         self.default_sval = '0.0'  # default scalar value (as string)
+        self.default_affinity = '1.0'
         self.default_bval = False
         self.default_time_units = "min"
         self.default_rate_units = "1/min"
@@ -4030,7 +4031,7 @@ class CellDef(QWidget):
         if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
             self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
         else:
-            self.cell_adhesion_affinity.setText(self.default_sval)
+            self.cell_adhesion_affinity.setText(self.default_affinity)
 
         if idx == -1:
             return
