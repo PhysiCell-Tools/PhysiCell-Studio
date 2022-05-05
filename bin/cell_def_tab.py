@@ -6078,6 +6078,13 @@ class CellDef(QWidget):
 
                 if self.param_d[cdef]['intracellular']['type'] == "maboss":
                             
+                    # Checking if you should prevent saving because of missing input
+                    if 'bnd_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['bnd_filename'] in [None, ""]:
+                        raise Exception("Missing BND file in the " + cdef + " cell definition ")
+
+                    if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
+                        raise Exception("Missing CFG file in the " + cdef + " cell definition ")
+
                     intracellular = ET.SubElement(pheno, "intracellular", {"type": "maboss"})
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10

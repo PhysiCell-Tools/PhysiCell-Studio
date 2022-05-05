@@ -421,6 +421,14 @@ class PhysiCellXMLCreator(QWidget):
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
 
+    def show_error_message(self, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(message)
+        msg.setWindowTitle("Error")
+        msg.setFixedWidth(500)
+        msg.exec_()
+
     def save_as_cb(self):
         print("------ save_as_cb():")
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
@@ -435,78 +443,84 @@ class PhysiCellXMLCreator(QWidget):
             self.current_save_file = full_path_model_name
         else:
             return
-        self.celldef_tab.config_path = self.current_save_file
-        self.config_tab.fill_xml()
-        self.microenv_tab.fill_xml()
-        self.celldef_tab.fill_xml()
-        self.user_params_tab.fill_xml()
 
-        # out_file = "mymodel.xml"
-        # out_file = full_path_model_name 
-        out_file = self.current_save_file
-        self.setWindowTitle(self.title_prefix + out_file)
+        try:
+            self.celldef_tab.config_path = self.current_save_file
+            self.config_tab.fill_xml()
+            self.microenv_tab.fill_xml()
+            self.celldef_tab.fill_xml()
+            self.user_params_tab.fill_xml()
 
-        print("\n\n ===================================")
-        print("gui4xml:  save_as_cb: writing to: ",out_file)
+            # out_file = "mymodel.xml"
+            # out_file = full_path_model_name 
+            out_file = self.current_save_file
+            self.setWindowTitle(self.title_prefix + out_file)
 
-        self.tree.write(out_file)
+            print("\n\n ===================================")
+            print("gui4xml:  save_as_cb: writing to: ",out_file)
+
+            self.tree.write(out_file)
+        except Exception as e:
+            self.show_error_message(str(e) + " : Please finish the definition before saving.")
 
     def save_cb(self):
-        self.celldef_tab.config_path = self.current_save_file
-        # self.config_file = copy_file
-        self.config_tab.fill_xml()
-        self.microenv_tab.fill_xml()
-        self.celldef_tab.fill_xml()
-        self.user_params_tab.fill_xml()
+        try:
+            self.celldef_tab.config_path = self.current_save_file
+            # self.config_file = copy_file
+            self.config_tab.fill_xml()
+            self.microenv_tab.fill_xml()
+            self.celldef_tab.fill_xml()
+            self.user_params_tab.fill_xml()
 
-        # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
-        # print("gui4xml:  save_cb: writing to: ",self.config_file)
+            # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+            # print("gui4xml:  save_cb: writing to: ",self.config_file)
 
-        # out_file = self.config_file
-        # out_file = "mymodel.xml"
-        out_file = self.current_save_file
-        self.setWindowTitle(self.title_prefix + out_file)
+            # out_file = self.config_file
+            # out_file = "mymodel.xml"
+            out_file = self.current_save_file
+            self.setWindowTitle(self.title_prefix + out_file)
 
-        print("\n\n ===================================")
-        print("gui4xml:  save_cb: writing to: ",out_file)
+            print("\n\n ===================================")
+            print("gui4xml:  save_cb: writing to: ",out_file)
 
-        # self.tree.write(self.config_file)
-        # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
-        # tree = ET.ElementTree(root)
-        # ET.indent(self.tree)  # ugh, only in 3.9
-        # root = ET.tostring(self.tree)
-        # self.indent(self.tree)
-        # self.indent(root)
+            # self.tree.write(self.config_file)
+            # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
+            # tree = ET.ElementTree(root)
+            # ET.indent(self.tree)  # ugh, only in 3.9
+            # root = ET.tostring(self.tree)
+            # self.indent(self.tree)
+            # self.indent(root)
 
-        # rwh: ARGH, doesn't work
-        # root = self.tree.getroot()
-        # out_str = self.prettify(root)
-        # print(out_str)
+            # rwh: ARGH, doesn't work
+            # root = self.tree.getroot()
+            # out_str = self.prettify(root)
+            # print(out_str)
 
 
-        self.tree.write(out_file)  # originally
+            self.tree.write(out_file)  # originally
 
-        # # new: pretty print
-        # root = self.tree.getroot()
-        # # return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
-        # # long_str = ET.tostring(root)
-        # # print("len(long_str)= ",len(long_str))
-        # # # bstr = bytearray(long_str.replace(" ",""))
-        # # # bstr = str.encode(long_str.replace("\n",""))
-        # # bstr = str.encode(long_str)
-        # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent=" ",newl="")
-        # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(newl="")
-        # # xmlstr2 = minidom.parseString(xmlstr).toprettyxml(indent=" ",newl="")
-        # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-        # # xmlstr = minidom.parseString(bstr).toprettyxml(indent=" ")
-        # with open(out_file, "w") as f:
-        #     f.write(xmlstr)
+            # # new: pretty print
+            # root = self.tree.getroot()
+            # # return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
+            # # long_str = ET.tostring(root)
+            # # print("len(long_str)= ",len(long_str))
+            # # # bstr = bytearray(long_str.replace(" ",""))
+            # # # bstr = str.encode(long_str.replace("\n",""))
+            # # bstr = str.encode(long_str)
+            # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent=" ",newl="")
+            # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(newl="")
+            # # xmlstr2 = minidom.parseString(xmlstr).toprettyxml(indent=" ",newl="")
+            # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
+            # # xmlstr = minidom.parseString(bstr).toprettyxml(indent=" ")
+            # with open(out_file, "w") as f:
+            #     f.write(xmlstr)
 
-        # rwh NOTE: after saving the .xml, do we need to read it back in to reflect changes.
-        # self.tree = ET.parse(self.config_file)
-        # self.xml_root = self.tree.getroot()
-        # self.reset_xml_root()
-
+            # rwh NOTE: after saving the .xml, do we need to read it back in to reflect changes.
+            # self.tree = ET.parse(self.config_file)
+            # self.xml_root = self.tree.getroot()
+            # self.reset_xml_root()
+        except Exception as e:
+            self.show_error_message(str(e) + " : Please finish the definition before saving.")
 
     def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
