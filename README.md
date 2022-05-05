@@ -9,5 +9,5 @@ We recommend installing the [Anaconda Python distribution](https://www.anaconda.
 
 Download the latest release, then run this python script from the root folder in your Terminal (or Command Prompt) shell:
 ```
-python bin/gui4xml.py
+python bin/model.py
 ```
