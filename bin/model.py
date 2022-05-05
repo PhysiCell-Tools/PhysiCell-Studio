@@ -27,6 +27,8 @@ from cell_custom_data_tab import CellCustomData
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
 from populate_tree_cell_defs import populate_tree_cell_defs
+from run_tab import RunModel 
+from vis_tab import Vis 
         
 # from sbml_tab import SBMLParams 
 
@@ -40,12 +42,18 @@ def SingleBrowse(self):
   
 #class PhysiCellXMLCreator(QTabWidget):
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, parent = None):
-    # def __init__(self, show_vis_flag, parent = None):
+    # def __init__(self, parent = None):
+    def __init__(self, studio_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
+
+        self.nanohub_flag = False
+        if( 'HOME' in os.environ.keys() ):
+            self.nanohub_flag = "home/nanohub" in os.environ['HOME']
+
+        self.p = None # Necessary to download files!
 
         # Menus
         vlayout = QVBoxLayout(self)
@@ -117,25 +125,68 @@ class PhysiCellXMLCreator(QWidget):
         # self.sbml_tab.xml_root = self.xml_root
         # self.sbml_tab.fill_gui()
 
+        # if studio_flag:
+        #     self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
+        #     self.homedir = os.getcwd()
+        #     print("model.py: self.homedir = ",self.homedir)
+        #     self.run_tab.homedir = self.homedir
+        #     self.run_tab.config_tab = self.config_tab
+        #     self.run_tab.microenv_tab = self.microenv_tab 
+        #     self.run_tab.celldef_tab = self.celldef_tab
+        #     self.run_tab.user_params_tab = self.user_params_tab
+        #     self.run_tab.tree = self.tree
+
         #------------------
-        tabWidget = QTabWidget()
+        self.tabWidget = QTabWidget()
         stylesheet = """ 
             QTabBar::tab:selected {background: orange;}  # dodgerblue
             """
-        tabWidget.setStyleSheet(stylesheet)
-        tabWidget.addTab(self.config_tab,"Config Basics")
-        tabWidget.addTab(self.microenv_tab,"Microenvironment")
-        tabWidget.addTab(self.celldef_tab,"Cell Types")
-        # tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
-        tabWidget.addTab(self.user_params_tab,"User Params")
+        self.tabWidget.setStyleSheet(stylesheet)
+        self.tabWidget.addTab(self.config_tab,"Config Basics")
+        self.tabWidget.addTab(self.microenv_tab,"Microenvironment")
+        self.tabWidget.addTab(self.celldef_tab,"Cell Types")
+        # self.tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
+        self.tabWidget.addTab(self.user_params_tab,"User Params")
 
-        vlayout.addWidget(tabWidget)
+        if studio_flag:
+            print("studio.py: creating Run and Plot tabs")
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
+            self.homedir = os.getcwd()
+            print("model.py: self.homedir = ",self.homedir)
+            self.run_tab.homedir = self.homedir
+            self.run_tab.config_tab = self.config_tab
+            self.run_tab.microenv_tab = self.microenv_tab 
+            self.run_tab.celldef_tab = self.celldef_tab
+            self.run_tab.user_params_tab = self.user_params_tab
+            self.run_tab.tree = self.tree
+            self.tabWidget.addTab(self.run_tab,"Run")
+
+            self.vis_tab = Vis(self.nanohub_flag)
+            self.run_tab.vis_tab = self.vis_tab
+            # self.vis_tab.setEnabled(False)
+            # self.vis_tab.nanohub_flag = self.nanohub_flag
+            # self.vis_tab.xml_root = self.xml_root
+            self.tabWidget.addTab(self.vis_tab,"Plot")
+            # self.tabWidget.setTabEnabled(5, False)
+            self.enablePlotTab(False)
+
+            self.run_tab.vis_tab = self.vis_tab
+            print("studio.py: calling vis_tab.substrates_cbox_changed_cb(2)")
+            self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
+            # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
+            self.vis_tab.init_plot_range(self.config_tab)
+
+
+        vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        tabWidget.setCurrentIndex(0)  # Config (default)
+        self.tabWidget.setCurrentIndex(0)  # Config (default)
 
+
+    def enablePlotTab(self, bval):
+        self.tabWidget.setTabEnabled(5, bval)
 
     def menu(self):
         menubar = QMenuBar(self)
@@ -225,6 +276,17 @@ class PhysiCellXMLCreator(QWidget):
         # self.tools_menu.addAction(validate_act)
         # validate_act.triggered.connect(self.validate_cb)
         # self.tools_menu.setEnabled(False)
+
+        if self.nanohub_flag:
+            self.download_menu = file_menu.addMenu('Download')
+            self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
+            self.download_svg_item = self.download_menu.addAction("Download SVG", self.download_svg_cb)
+            self.download_mat_item = self.download_menu.addAction("Download binary (.mat) data", self.download_full_cb)
+            # self.download_menu_item.setEnabled(False)
+            self.download_menu.setEnabled(False)
+        else:
+            self.download_menu = None
+
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -446,7 +508,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.reset_xml_root()
 
 
-    def validate_cb(self):
+    def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setText("Validation not yet implemented.")
@@ -632,6 +694,88 @@ class PhysiCellXMLCreator(QWidget):
         self.config_file = copy_file
         self.show_sample_model()
 
+    #-----------------------------------------------------------------
+    # Used for downloading config file and output files from nanoHUB
+    def message(self, s):
+        # self.text.appendPlainText(s)
+        print(s)
+
+    def handle_stderr(self):
+        data = self.p.readAllStandardError()
+        stderr = bytes(data).decode("utf8")
+        self.message(stderr)
+
+    def handle_stdout(self):
+        data = self.p.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+        self.message(stdout)
+
+    def handle_state(self, state):
+        states = {
+            QProcess.NotRunning: 'Not running',
+            QProcess.Starting: 'Starting',
+            QProcess.Running: 'Running',
+        }
+        state_name = states[state]
+        self.message(f"State changed: {state_name}")
+
+    def process_finished(self):
+        self.message("Download process finished.")
+        print("-- download finished.")
+        self.p = None
+
+    def download_config_cb(self):
+        if self.nanohub_flag:
+            if self.p is None:  # No process running.
+                self.p = QProcess()
+                self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                self.p.readyReadStandardError.connect(self.handle_stderr)
+                self.p.stateChanged.connect(self.handle_state)
+                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+
+                self.p.start("exportfile config.xml")
+        return
+
+    def download_svg_cb(self):
+        if self.nanohub_flag:
+            if self.p is None:  # No process running.
+                self.p = QProcess()
+                self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                self.p.readyReadStandardError.connect(self.handle_stderr)
+                self.p.stateChanged.connect(self.handle_state)
+                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+
+                # file_str = os.path.join(self.output_dir, '*.svg')
+                file_str = "*.svg"
+                print('-------- download_svg_cb(): zip up all ',file_str)
+                with zipfile.ZipFile('svg.zip', 'w') as myzip:
+                    for f in glob.glob(file_str):
+                        myzip.write(f, os.path.basename(f))   # 2nd arg avoids full filename 
+                self.p.start("exportfile svg.zip")
+        return
+
+    def download_full_cb(self):
+        if self.nanohub_flag:
+            if self.p is None:  # No process running.
+                self.p = QProcess()
+                self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                self.p.readyReadStandardError.connect(self.handle_stderr)
+                self.p.stateChanged.connect(self.handle_state)
+                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+
+                # file_xml = os.path.join(self.output_dir, '*.xml')
+                # file_mat = os.path.join(self.output_dir, '*.mat')
+                file_xml = '*.xml'
+                file_mat = '*.mat'
+                print('-------- download_full_cb(): zip up all .xml and .mat')
+                with zipfile.ZipFile('mcds.zip', 'w') as myzip:
+                    for f in glob.glob(file_xml):
+                        myzip.write(f, os.path.basename(f)) # 2nd arg avoids full filename path in the archive
+                    for f in glob.glob(file_mat):
+                        myzip.write(f, os.path.basename(f))
+                self.p.start("exportfile mcds.zip")
+        return
+    #-----------------------------------------------------------------
 		
 # def main():
 #     app = QApplication(sys.argv)
@@ -642,29 +786,29 @@ class PhysiCellXMLCreator(QWidget):
 
 def main():
     # inputfile = ''
-    # try:
-    #     # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-    #     opts, args = getopt.getopt(sys.argv[1:],"hv:",["vis"])
-    # except getopt.GetoptError:
-    #     # print 'test.py -i <inputfile> -o <outputfile>'
-    #     print('getopt exception')
-    #     sys.exit(2)
-    # for opt, arg in opts:
-    #     if opt == '-h':
-    #     #  print 'test.py -i <inputfile> -o <outputfile>'
-    #         print('bin/gui4xml.py [--vis]')
-    #         sys.exit(1)
-    # #   elif opt in ("-i", "--ifile"):
-    #     elif opt in ("--vis"):
-    #         show_vis_tab = True
+    studio_flag = False
+    try:
+        # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio"])
+    except getopt.GetoptError:
+        # print 'test.py -i <inputfile> -o <outputfile>'
+        print('getopt exception')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('bin/model.py [--studio]')
+            sys.exit(1)
+    #   elif opt in ("-i", "--ifile"):
+        elif opt in ("--studio"):
+            studio_flag = True
 
     # print 'Input file is "', inputfile
     # print("show_vis_tab = ",show_vis_tab)
     # sys.exit()
 
     app = QApplication(sys.argv)
-    ex = PhysiCellXMLCreator()
-    # ex = PhysiCellXMLCreator(show_vis_tab)
+    # ex = PhysiCellXMLCreator()
+    ex = PhysiCellXMLCreator(studio_flag)
     # ex.setGeometry(100,100, 800,600)
     ex.show()
     sys.exit(app.exec_())
