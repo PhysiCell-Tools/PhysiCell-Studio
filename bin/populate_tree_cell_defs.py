@@ -1175,7 +1175,7 @@ def populate_tree_cell_defs(cell_def_tab):
             uep_intracellular = cell_def_tab.xml_root.find(intracellular_path)
             cell_def_tab.param_d[cell_def_name]["intracellular"] = None
 
-            if uep_intracellular is not None:
+            if uep_intracellular is not None and "type" in uep_intracellular.attrib:  # also check for <intracellular />
                 cell_def_tab.param_d[cell_def_name]["intracellular"] = {}
                 if uep_intracellular.attrib["type"] == "maboss":
                     # --------- PhysiBoSS specific code

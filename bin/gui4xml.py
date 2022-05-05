@@ -55,7 +55,7 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(menuWidget)
 
         self.setLayout(vlayout)
-        self.setMinimumSize(1000, 700)
+        self.setMinimumSize(1100, 700)  #width, height of window
 
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
