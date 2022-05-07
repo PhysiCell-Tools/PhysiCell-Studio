@@ -93,7 +93,7 @@ class SubstrateDef(QWidget):
         
         #-------------------------------------------
         label_width = 150
-        units_width = 80
+        units_width = 150
 
         # self.scroll = QScrollArea()
         self.scroll_area = QScrollArea()
@@ -206,7 +206,7 @@ class SubstrateDef(QWidget):
         hbox.addWidget(self.dirichlet_bc)
 
         units = QLabel("mmol")
-        units.setFixedWidth(units_width)
+        units.setFixedWidth(units_width-45)  # decrease for better alignment
         hbox.addWidget(units)
 
 # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
