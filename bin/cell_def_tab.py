@@ -5002,6 +5002,17 @@ class CellDef(QWidget):
             self.transformation_rate.setText(self.default_sval)
 
     #-----------------------------------------------------------------------------------------
+    def missing_boolean_info_popup(self, dups_dict):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Intracellular (boolean) info is missing. ")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
+
+    #-----------------------------------------------------------------------------------------
     def update_intracellular_params(self):
         cdname = self.current_cell_def
         if self.param_d[cdname]["intracellular"] is not None:    
@@ -5096,7 +5107,9 @@ class CellDef(QWidget):
         self.update_motility_params()
         self.update_secretion_params()
         self.update_interaction_params()
-        self.update_intracellular_params()
+        # if "bnd_filename" in self.param_d[self.current_cell_def]["intracellular"].keys():
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
 
