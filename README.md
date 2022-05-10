@@ -9,5 +9,7 @@ We recommend installing the [Anaconda Python distribution](https://www.anaconda.
 
 Download the latest release, then run this python script from the root folder in your Terminal (or Command Prompt) shell:
 ```
-python bin/model.py
+python bin/pmb.py  # run PhysiCell model builder
+
+python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionality (alpha version)
 ```
