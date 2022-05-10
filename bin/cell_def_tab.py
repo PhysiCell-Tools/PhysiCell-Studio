@@ -43,7 +43,7 @@ class CellDef(QWidget):
         self.current_cell_def = None
         self.new_cell_def_count = 1
         self.label_width = 210
-        self.units_width = 70
+        self.units_width = 110
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.config_path = None
@@ -5002,6 +5002,17 @@ class CellDef(QWidget):
             self.transformation_rate.setText(self.default_sval)
 
     #-----------------------------------------------------------------------------------------
+    def missing_boolean_info_popup(self, dups_dict):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Intracellular (boolean) info is missing. ")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            print('OK clicked')
+
+    #-----------------------------------------------------------------------------------------
     def update_intracellular_params(self):
         cdname = self.current_cell_def
         if self.param_d[cdname]["intracellular"] is not None:    
@@ -5096,7 +5107,9 @@ class CellDef(QWidget):
         self.update_motility_params()
         self.update_secretion_params()
         self.update_interaction_params()
-        self.update_intracellular_params()
+        # if "bnd_filename" in self.param_d[self.current_cell_def]["intracellular"].keys():
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
 
@@ -6078,6 +6091,13 @@ class CellDef(QWidget):
 
                 if self.param_d[cdef]['intracellular']['type'] == "maboss":
                             
+                    # Checking if you should prevent saving because of missing input
+                    if 'bnd_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['bnd_filename'] in [None, ""]:
+                        raise Exception("Missing BND file in the " + cdef + " cell definition ")
+
+                    if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
+                        raise Exception("Missing CFG file in the " + cdef + " cell definition ")
+
                     intracellular = ET.SubElement(pheno, "intracellular", {"type": "maboss"})
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10

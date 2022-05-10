@@ -11,7 +11,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 import sys
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout
 
 class QHLine(QFrame):
     def __init__(self):
@@ -39,294 +39,210 @@ class Config(QWidget):
         domain_value_width = 100
         value_width = 60
         label_height = 20
-        units_width = 70
+        units_width = 170
 
         self.scroll = QScrollArea()  # might contain centralWidget
 
         self.config_params = QWidget()
-        self.vbox = QVBoxLayout()
-        self.vbox.addStretch(0)
 
+        self.config_tab_layout = QGridLayout()
+        # self.config_tab_layout.addWidget(self.tab_widget, 0,0,1,1) # w, row, column, rowspan, colspan
 
         #============  Domain ================================
         label = QLabel("Domain (micron)")
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        self.vbox.addWidget(label)
+        idx_row = 0
+        self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
         domain_enabled = True
 
-        hbox = QHBoxLayout()
-
         label = QLabel("Xmin")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
         self.xmin = QLineEdit()
         self.xmin.setEnabled(domain_enabled)
-        self.xmin.setFixedWidth(domain_value_width)
         self.xmin.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.xmin)
+        self.config_tab_layout.addWidget(self.xmin, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("Xmax")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
         self.xmax = QLineEdit()
         self.xmax.setEnabled(domain_enabled)
-        self.xmax.setFixedWidth(domain_value_width)
         self.xmax.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.xmax)
+        self.config_tab_layout.addWidget(self.xmax, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("dx")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,4,1,1) # w, row, column, rowspan, colspan
+
         self.xdel = QLineEdit()
         self.xdel.setEnabled(domain_enabled)
-        self.xdel.setFixedWidth(value_width)
         self.xdel.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.xdel)
+        self.config_tab_layout.addWidget(self.xdel, idx_row,5,1,1) # w, row, column, rowspan, colspan
 
-        self.vbox.addLayout(hbox)
         #----------
-        hbox = QHBoxLayout()
         label = QLabel("Ymin")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
         self.ymin = QLineEdit()
         self.ymin.setEnabled(domain_enabled)
-        self.ymin.setFixedWidth(domain_value_width)
         self.ymin.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.ymin)
+        self.config_tab_layout.addWidget(self.ymin, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("Ymax")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
         self.ymax = QLineEdit()
         self.ymax.setEnabled(domain_enabled)
-        self.ymax.setFixedWidth(domain_value_width)
         self.ymax.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.ymax)
+        self.config_tab_layout.addWidget(self.ymax, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("dy")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,4,1,1) # w, row, column, rowspan, colspan
+
         self.ydel = QLineEdit()
         self.ydel.setEnabled(domain_enabled)
-        self.ydel.setFixedWidth(value_width)
         self.ydel.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.ydel)
+        self.config_tab_layout.addWidget(self.ydel, idx_row,5,1,1) # w, row, column, rowspan, colspan
 
-        self.vbox.addLayout(hbox)
         #----------
-        hbox = QHBoxLayout()
         label = QLabel("Zmin")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
         self.zmin = QLineEdit()
         self.zmin.setEnabled(domain_enabled)
-        self.zmin.setFixedWidth(domain_value_width)
         self.zmin.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.zmin)
+        self.config_tab_layout.addWidget(self.zmin, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("Zmax")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
         self.zmax = QLineEdit()
         self.zmax.setEnabled(domain_enabled)
-        self.zmax.setFixedWidth(domain_value_width)
         self.zmax.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.zmax)
+        self.config_tab_layout.addWidget(self.zmax, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("dz")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,4,1,1) # w, row, column, rowspan, colspan
+
         self.zdel = QLineEdit()
         self.zdel.setEnabled(domain_enabled)
-        self.zdel.setFixedWidth(value_width)
         self.zdel.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.zdel)
+        self.config_tab_layout.addWidget(self.zdel, idx_row,5,1,1) # w, row, column, rowspan, colspan
 
-        self.vbox.addLayout(hbox)
         #----------
-        hbox = QHBoxLayout()
         self.virtual_walls = QCheckBox("Virtual walls")
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(label_width)
-        hbox.addWidget(self.virtual_walls)
-        self.vbox.addLayout(hbox)
-
-        # self.vbox.addWidget(QHLine())
+        idx_row += 1
+        self.config_tab_layout.addWidget(self.virtual_walls, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #============  Misc ================================
         label = QLabel("Misc runtime parameters")
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        self.vbox.addWidget(label)
-
-        hbox = QHBoxLayout()
-        # hbox.setFixedHeight(label_width)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
         label = QLabel("Max Time")
-        # label_width = 210
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.max_time = QLineEdit()
-        # self.max_time.setFixedWidth(200)
-        self.max_time.setFixedWidth(domain_value_width)
         self.max_time.setValidator(QtGui.QDoubleValidator())
-        hbox.addWidget(self.max_time)
+        self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("min")
-        label.setFixedWidth(200)
         label.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel(" ")  # weird, but nicer layout
-        label.setFixedWidth(200)
-        hbox.addWidget(label)
-
-        self.vbox.addLayout(hbox)
         #----------
-        hbox = QHBoxLayout()
-
         label = QLabel("# threads")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.num_threads = QLineEdit()
-        # self.num_threads.setFixedWidth(value_width)
-        self.num_threads.setFixedWidth(domain_value_width)
         self.num_threads.setValidator(QtGui.QIntValidator())
-        hbox.addWidget(self.num_threads)
-
-        label = QLabel("   ")  # weird, but nicer layout
-        label.setFixedWidth(200)  # 70?
-        hbox.addWidget(label)
-
-        label = QLabel(" ")
-        label.setFixedWidth(200)
-        hbox.addWidget(label)
-
-        self.vbox.addLayout(hbox)
+        self.config_tab_layout.addWidget(self.num_threads, idx_row,1,1,1) # w, row, column, rowspan, colspan
         #----------
-        hbox = QHBoxLayout()
 
         label = QLabel("output folder")
-        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.folder = QLineEdit()
-        # self.num_threads.setFixedWidth(value_width)
-        self.folder.setFixedWidth(domain_value_width)
-        # self.folder.setValidator(QtGui.QTex())
         if self.nanohub_flag:
             self.folder.setEnabled(False)
-        hbox.addWidget(self.folder)
-
-        label = QLabel("   ")  # weird, but nicer layout
-        label.setFixedWidth(200)  # 70?
-        hbox.addWidget(label)
-
-        label = QLabel(" ")
-        label.setFixedWidth(200)
-        hbox.addWidget(label)
-
-        self.vbox.addLayout(hbox)
+        self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #------------------
-        hbox = QHBoxLayout()
-
         label = QLabel("Save data:")
-        label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(label)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         #------
         self.save_svg = QCheckBox("SVG")
-        # self.motility_2D.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(self.save_svg)
+        self.config_tab_layout.addWidget(self.save_svg, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("every")
-        # label_width = 210
-        # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        label_width = 110
+        label_width = 60
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         self.svg_interval = QLineEdit()
-        self.svg_interval.setFixedWidth(value_width)
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
-        # self.svg_interval.textChanged.connect(self.svg_interval_cb)
-
-        hbox.addWidget(self.svg_interval)
+        self.config_tab_layout.addWidget(self.svg_interval, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("min")
-        # label.setFixedWidth(units_width)
-        label.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,4,1,2) # w, row, column, rowspan, colspan
 
         #------
         self.save_full = QCheckBox("Full")
-        # self.motility_2D.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(self.save_full)
+        self.config_tab_layout.addWidget(self.save_full, idx_row,6,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("every")
-        # label_width = 210
-        # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
+        self.config_tab_layout.addWidget(label, idx_row,7,1,1) # w, row, column, rowspan, colspan
 
         self.full_interval = QLineEdit()
-        self.full_interval.setFixedWidth(value_width)
         self.full_interval.setValidator(QtGui.QDoubleValidator())
-        # self.full_interval.setEnabled(False)
-        hbox.addWidget(self.full_interval)
+        self.config_tab_layout.addWidget(self.full_interval, idx_row,8,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("min")
-        # label.setFixedWidth(units_width)
-        label.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(label)
-
-        self.vbox.addLayout(hbox)
+        self.config_tab_layout.addWidget(label, idx_row,9,1,1) # w, row, column, rowspan, colspan
 
         #============  Cells IC ================================
         label = QLabel("Initial conditions of cells (x,y,z, type)")
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
-        self.vbox.addWidget(label)
-        self.cells_csv = QCheckBox("config/cells.csv")
         self.cells_csv = QCheckBox("cells.csv")
+        idx_row += 1
+        self.config_tab_layout.addWidget(self.cells_csv, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
-        self.vbox.addWidget(self.cells_csv)
 
-        #--------------------------
-        # Dummy widget for filler??
-        # label = QLabel("")
-        # label.setFixedHeight(1000)
-        # # label.setStyleSheet("background-color: orange")
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-
-        self.vbox.addStretch()
-
+        self.insert_hacky_blank_lines(self.config_tab_layout)
 
         #==================================================================
-        self.config_params.setLayout(self.vbox)
+        self.config_params.setLayout(self.config_tab_layout)
 
         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -334,19 +250,17 @@ class Config(QWidget):
 
         self.scroll.setWidget(self.config_params) # self.config_params = QWidget()
 
-        self.layout = QVBoxLayout(self)
-
+        self.layout = QVBoxLayout(self)  # leave this!
         self.layout.addWidget(self.scroll)
 
 
-    # @QtCore.Slot()
-    # def save_xml(self):
-    #     # self.text.setText(random.choice(self.hello))
-    #     pass
-
-    # def svg_interval_cb(self, text):
-    #     print("svg_interval_cb: text=",text)
-    #     self.full_interval.setText(text)
+        #--------------------------------------------------------
+    def insert_hacky_blank_lines(self, glayout):
+        idr = 4
+        for idx in range(11):  # rwh: hack solution to align rows
+            blank_line = QLabel("")
+            idr += 1
+            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
 
     def fill_gui(self):
 

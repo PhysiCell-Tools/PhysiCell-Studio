@@ -31,7 +31,7 @@ class UserParams(QtWidgets.QWidget):
 
         #-------------------------------------------
         self.label_width = 150
-        self.units_width = 90
+        self.units_width = 190
 
         self.scroll_area = QtWidgets.QScrollArea()
         # splitter.addWidget(self.scroll)
@@ -70,6 +70,7 @@ class UserParams(QtWidgets.QWidget):
         hbox.addWidget(col2)
         col3 = QtWidgets.QLabel("Value")
         col3.setAlignment(QtCore.Qt.AlignCenter)
+        col3.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(col3)
         col4 = QtWidgets.QLabel("Units")
         col4.setFixedWidth(self.units_width)
