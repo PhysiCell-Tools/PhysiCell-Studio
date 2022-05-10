@@ -39,7 +39,7 @@ class Config(QWidget):
         domain_value_width = 100
         value_width = 60
         label_height = 20
-        units_width = 70
+        units_width = 170
 
         self.scroll = QScrollArea()  # might contain centralWidget
 
@@ -190,6 +190,7 @@ class Config(QWidget):
 
         label = QLabel("min")
         label.setFixedWidth(200)
+        # label.setFixedWidth(70)
         label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
 
@@ -257,12 +258,15 @@ class Config(QWidget):
 
         #------
         self.save_svg = QCheckBox("SVG")
+        self.save_svg.setFixedWidth(50)
         # self.motility_2D.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(self.save_svg)
 
         label = QLabel("every")
         # label_width = 210
-        # label.setFixedWidth(label_width)
+        label_width = 110
+        label_width = 60
+        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
@@ -274,18 +278,20 @@ class Config(QWidget):
         hbox.addWidget(self.svg_interval)
 
         label = QLabel("min")
-        # label.setFixedWidth(units_width)
+        label.setFixedWidth(units_width)
         label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
 
         #------
         self.save_full = QCheckBox("Full")
+        self.save_full.setFixedWidth(50)
         # self.motility_2D.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(self.save_full)
 
         label = QLabel("every")
         # label_width = 210
-        # label.setFixedWidth(label_width)
+        label_width = 60
+        label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
@@ -296,7 +302,7 @@ class Config(QWidget):
         hbox.addWidget(self.full_interval)
 
         label = QLabel("min")
-        # label.setFixedWidth(units_width)
+        label.setFixedWidth(units_width)
         label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
 

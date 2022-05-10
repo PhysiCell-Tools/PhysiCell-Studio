@@ -43,7 +43,7 @@ class CellDef(QWidget):
         self.current_cell_def = None
         self.new_cell_def_count = 1
         self.label_width = 210
-        self.units_width = 70
+        self.units_width = 110
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.config_path = None

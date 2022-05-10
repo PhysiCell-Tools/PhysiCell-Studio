@@ -31,7 +31,7 @@ class UserParams(QtWidgets.QWidget):
 
         #-------------------------------------------
         self.label_width = 150
-        self.units_width = 140
+        self.units_width = 190
 
         self.scroll_area = QtWidgets.QScrollArea()
         # splitter.addWidget(self.scroll)
