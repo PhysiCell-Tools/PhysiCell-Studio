@@ -3994,11 +3994,11 @@ class CellDef(QWidget):
             return
 
     def motility2_substrate_changed_cb(self, idx):
-        print('------ motility2_substrate_changed_cb(): idx = ',idx)
+        # print('------ motility2_substrate_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         subname = self.motility2_substrate_dropdown.currentText()
-        print("   text = ",subname)
+        # print("   text = ",subname)
         if subname == '':
             return
         if subname not in self.param_d[self.current_cell_def]['chemotactic_sensitivity'].keys():
@@ -4009,9 +4009,9 @@ class CellDef(QWidget):
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
 
         # print(self.chemotactic_sensitivity_dict[val])
-        print("--> ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
+        # print("--> ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
         newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
-        print(" .  newval= ",newval)
+        # print(" .  newval= ",newval)
         self.chemo_sensitivity.setText(newval)
 
         if idx == -1:
@@ -4019,7 +4019,7 @@ class CellDef(QWidget):
 
     #---- in mechanics subtab
     def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
-        print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
+        # print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
@@ -4027,7 +4027,7 @@ class CellDef(QWidget):
         self.cell_adhesion_affinity_celltype = celltype_name
         # print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
 
-        print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
+        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
             self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
         else:

@@ -43,14 +43,16 @@ class SubstrateDef(QWidget):
 
         splitter = QSplitter()
 
-        tree_widget_width = 160
+        tree_widget_width = 240
         tree_widget_height = 400
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; Meh.
         # self.tree.itemDoubleClicked.connect(self.treeitem_edit_cb)
         # self.tree.setStyleSheet("background-color: lightgray")
-        self.tree.setFixedWidth(tree_widget_width)
+
+        # self.tree.setFixedWidth(tree_widget_width)
         self.tree.setFixedHeight(tree_widget_height)
+
         # self.tree.currentChanged(self.tree_item_changed_cb)
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
         # self.tree.itemSelectionChanged.connect(self.tree_item_changed_cb2)
@@ -80,12 +82,12 @@ class SubstrateDef(QWidget):
         # self.microenv_hbox.addWidget(self.name_list)
 
 
-        self.scroll_cell_def_tree = QScrollArea()
-        self.scroll_cell_def_tree.setWidget(self.tree)
-        # self.scroll_cell_def_tree.setWidget(self.name_list)
+        self.scroll_substrate_tree = QScrollArea()
+        self.scroll_substrate_tree.setWidget(self.tree)
+        # self.scroll_substrate_tree.setWidget(self.name_list)
 
         # splitter.addWidget(self.tree)
-        splitter.addWidget(self.scroll_cell_def_tree)
+        splitter.addWidget(self.scroll_substrate_tree)
 
         #-------------------------------------------
         # self.tab = QWidget()
@@ -102,7 +104,7 @@ class SubstrateDef(QWidget):
 
         self.microenv_params = QWidget()
         self.vbox = QVBoxLayout()
-        self.vbox.addStretch(0)
+        # self.vbox.addStretch(0)
 
         # self.microenv_hbox.addWidget(self.)
 
@@ -420,7 +422,7 @@ class SubstrateDef(QWidget):
 
 
     def diffusion_coef_changed(self, text):
-        print("Text: %s", text)
+        # print("Text: %s", text)
         self.param_d[self.current_substrate]["diffusion_coef"] = text
         # log.info("diffusion_coef changed: %s", text)
 
