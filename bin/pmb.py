@@ -144,7 +144,6 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget.addTab(self.config_tab,"Config Basics")
         self.tabWidget.addTab(self.microenv_tab,"Microenvironment")
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
-        # self.tabWidget.addTab(self.cell_customdata_tab,"Cell Custom Data")
         self.tabWidget.addTab(self.user_params_tab,"User Params")
 
         if studio_flag:
@@ -327,7 +326,6 @@ class PhysiCellXMLCreator(QWidget):
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
-        # self.cell_customdata_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
 
         self.config_tab.fill_gui()
@@ -336,11 +334,6 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab.populate_tree()
         # self.microenv_tab.fill_gui(None)
         # self.microenv_tab.fill_gui()
-
-        # Do this before the celldef_tab
-        # self.cell_customdata_tab.clear_gui(self.celldef_tab)
-        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
-
         # self.celldef_tab.clear_gui()
         self.celldef_tab.clear_custom_data_params()
         # self.celldef_tab.fill_substrates_comboboxes()
@@ -352,9 +345,6 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.fill_celltypes_comboboxes()
 
         self.microenv_tab.celldef_tab = self.celldef_tab
-
-        # self.cell_customdata_tab.clear_gui(self.celldef_tab)
-        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
 
         self.user_params_tab.clear_gui()
         self.user_params_tab.fill_gui()
@@ -791,11 +781,12 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio"])
     except getopt.GetoptError:
         # print 'test.py -i <inputfile> -o <outputfile>'
-        print('getopt exception')
+        print('\ngetopt exception - usage:')
+        print('bin/pmb.py [--studio]')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('bin/model.py [--studio]')
+            print('bin/pmb.py [--studio]')
             sys.exit(1)
     #   elif opt in ("-i", "--ifile"):
         elif opt in ("--studio"):
