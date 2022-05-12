@@ -33,7 +33,7 @@ class CellDef(QWidget):
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
-        self.chemotactic_sensitivity_dict = {}
+        # self.chemotactic_sensitivity_dict = {}   # rwh - bogus/not useful since we need per cell type
         self.default_sval = '0.0'  # default scalar value (as string)
         self.default_affinity = '1.0'
         self.default_bval = False
@@ -3429,9 +3429,13 @@ class CellDef(QWidget):
     def chemo_sensitivity_changed(self, text):
         print("----- chemo_sensitivity_changed() = ",text)
         subname = self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate']
+        if subname == "":
+            print(" ... but motility_advanced_chemotaxis_substrate is empty string, so return!")
+            return
         print("----- chemo_sensitivity_changed(): subname = ",subname)
-        # print("       keys() = ",self.param_d[self.current_cell_def].keys())
+        print("       keys() = ",self.param_d[self.current_cell_def].keys())
         self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname] = text
+        print("     chemotactic_sensitivity (dict)= ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
         # if 'chemo_sensitivity' in self.param_d[self.current_cell_def].keys():
             # self.param_d[self.current_cell_def]['chemo_sensitivity'][subname] = text
 
@@ -3993,23 +3997,25 @@ class CellDef(QWidget):
         if idx == -1:
             return
 
-    def motility2_substrate_changed_cb(self, idx):
-        # print('------ motility2_substrate_changed_cb(): idx = ',idx)
+    def motility2_substrate_changed_cb(self, idx):  # dropdown widget
+        print('------ motility2_substrate_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         subname = self.motility2_substrate_dropdown.currentText()
-        # print("   text = ",subname)
+        print("   text (subname) = ",subname)
         if subname == '':
+            print("   subname is empty, return!")
             return
         if subname not in self.param_d[self.current_cell_def]['chemotactic_sensitivity'].keys():
+            print("   subname is empty, return!")
             return
 
-        self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate'] = subname
-        # print(self.param_d[self.current_cell_def])
+        self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate'] = subname  # rwh - why have this??
+        print("    motility_advanced_chemotaxis_substrate= ",self.param_d[self.current_cell_def]['motility_advanced_chemotaxis_substrate'])
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
 
         # print(self.chemotactic_sensitivity_dict[val])
-        # print("--> ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
+        print("   chemotactic_sensitivity = ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
         newval = self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname]
         # print(" .  newval= ",newval)
         self.chemo_sensitivity.setText(newval)
@@ -4594,12 +4600,13 @@ class CellDef(QWidget):
 
     def new_mechanics_params(self, cdname_new):
         sval = self.default_sval
-        self.param_d[cdname_new]["mechanics_adhesion"] = sval
-        self.param_d[cdname_new]["mechanics_repulsion"] = sval
-        self.param_d[cdname_new]["mechanics_adhesion_distance"] = sval
+        # we're being inconsistent, but use defaults found in phenotype.cpp:Mechanics() instead of 0.0
+        self.param_d[cdname_new]["mechanics_adhesion"] = '0.4'
+        self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
+        self.param_d[cdname_new]["mechanics_adhesion_distance"] = '1.25'
 
-        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance"] = sval
-        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance"] = sval
+        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance"] = '1.25'
+        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance"] = '1.25'
 
         self.param_d[cdname_new]["mechanics_relative_equilibrium_distance_enabled"] = False
         self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance_enabled"] = False
@@ -4624,12 +4631,13 @@ class CellDef(QWidget):
         self.param_d[cdname]["motility_enabled"] = False
         self.param_d[cdname]["motility_use_2D"] = True
         self.param_d[cdname]["motility_chemotaxis"] = False
-        self.param_d[cdname]["motility_advanced_chemotaxis"] = False
+        self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
+        self.param_d[cdname]["motility_advanced_chemotaxis"] = False
         # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
         # self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = sval
-
-        self.param_d[cdname]["motility_chemotaxis_towards"] = True
+        for substrate_name in self.param_d[cdname]["chemotactic_sensitivity"].keys():
+            self.param_d[cdname]["chemotactic_sensitivity"][substrate_name] = '0.0'
 
     def new_secretion_params(self, cdname):
         # print("new_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)
@@ -4637,7 +4645,7 @@ class CellDef(QWidget):
         sval = self.default_sval
         for substrate_name in self.param_d[cdname]["secretion"].keys():
             self.param_d[cdname]["secretion"][substrate_name]["secretion_rate"] = sval
-            self.param_d[cdname]["secretion"][substrate_name]["secretion_target"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["secretion_target"] = '1.0'
             self.param_d[cdname]["secretion"][substrate_name]["uptake_rate"] = sval
             self.param_d[cdname]["secretion"][substrate_name]["net_export_rate"] = sval
 
@@ -4672,14 +4680,21 @@ class CellDef(QWidget):
         self.add_new_substrate_comboboxes(sub_name)
 
         sval = self.default_sval
-        for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
+
+        # for all cell defs: 
+        for cdname in self.param_d.keys():  
             # print('cdname = ',cdname)
-            # # print(self.param_d[cdname]["secretion"])
+            # print(self.param_d[cdname]["secretion"])
+
+            # initialize secretion params
             self.param_d[cdname]["secretion"][sub_name] = {}
             self.param_d[cdname]["secretion"][sub_name]["secretion_rate"] = sval
             self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = sval
             self.param_d[cdname]["secretion"][sub_name]["uptake_rate"] = sval
             self.param_d[cdname]["secretion"][sub_name]["net_export_rate"] = sval
+
+            # initialize motility advanced chemotaxis params
+            self.param_d[cdname]["chemotactic_sensitivity"][sub_name] = sval
 
 
     def add_new_celltype(self, cdname):
@@ -4938,13 +4953,15 @@ class CellDef(QWidget):
         self.motility_enabled.setChecked(self.param_d[cdname]["motility_enabled"])
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
-        self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
-        self.motility2_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis_substrate"])
+        self.motility_substrate_dropdown.setCurrentText(self.param_d[cdname]["motility_chemotaxis_substrate"])
 
         if self.param_d[cdname]["motility_chemotaxis_towards"]:
             self.chemotaxis_direction_towards.setChecked(True)
         else:
             self.chemotaxis_direction_against.setChecked(True)
+
+        # Advanced Chemotaxis
+        self.motility2_substrate_dropdown.setCurrentText(self.param_d[cdname]["motility_advanced_chemotaxis_substrate"])
 
         if self.param_d[cdname]["motility_advanced_chemotaxis"]:
             self.advanced_chemotaxis_enabled.setChecked(True)
@@ -4953,6 +4970,7 @@ class CellDef(QWidget):
 
         # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
+        print(' .  chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         if self.param_d[cdname]['motility_advanced_chemotaxis_substrate'] == 'foobar':
             print('-- motility_advanced_chemotaxis_substrate is foobar')
         else:
