@@ -1045,7 +1045,7 @@ def populate_tree_cell_defs(cell_def_tab):
                 # sys.exit(-1)
 
                 cell_def_tab.param_d[cell_def_name]["dead_phagocytosis_rate"] = '0.0'
-                cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["damage_rate"] = '1.0'
 
                 cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
                 cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}

@@ -4653,7 +4653,7 @@ class CellDef(QWidget):
         print("\n--------new_interaction_params(): cdname_new= ",cdname_new)
         sval = self.default_sval
         self.param_d[cdname_new]["dead_phagocytosis_rate"] = sval
-        self.param_d[cdname_new]["damage_rate"] = sval
+        self.param_d[cdname_new]["damage_rate"] = '1.0'
 
         # self.param_d[cdname]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
         # for cdname2 in self.param_d.keys():  
@@ -4943,7 +4943,7 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_motility_params(self):
         cdname = self.current_cell_def
-        print("\n----- update_motility_params():")
+        print("\n----- update_motility_params():  cdname= ",cdname)
         # print('motility_advanced_chemotaxis=',self.param_d[cdname]["motility_advanced_chemotaxis"])
 
         self.speed.setText(self.param_d[cdname]["speed"])
@@ -4951,6 +4951,28 @@ class CellDef(QWidget):
         self.migration_bias.setText(self.param_d[cdname]["migration_bias"])
 
         self.motility_enabled.setChecked(self.param_d[cdname]["motility_enabled"])
+
+        # if self.param_d[cdname]["motility_enabled"]:
+        if self.param_d[cdname]["motility_chemotaxis"]:
+            print("   (simple) chemotaxis motility is enabled:")
+            self.param_d[cdname]["motility_advanced_chemotaxis"] = False
+            self.chemotaxis_enabled_cb(True)
+            # self.motility_substrate_dropdown.setEnabled(True)
+            # self.chemotaxis_direction_towards.setEnabled(True)
+            # self.chemotaxis_direction_against.setEnabled(True)
+            # self.advanced_chemotaxis_enabled.setChecked(False)
+        else:
+            self.chemotaxis_enabled_cb(False)
+        #     print("   (simple) chemotaxis motility is NOT enabled:")
+        #     print("   motility_enabled=",self.param_d[cdname]["motility_enabled"])
+        #     print("--> ",self.param_d[cdname])
+        #     print()
+        #     self.motility_use_2D.setChecked(False)
+        #     self.motility_substrate_dropdown.setEnabled(False)
+        #     self.chemotaxis_direction_towards.setEnabled(False)
+        #     self.chemotaxis_direction_against.setEnabled(False)
+
+
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
         self.motility_substrate_dropdown.setCurrentText(self.param_d[cdname]["motility_chemotaxis_substrate"])
@@ -4965,8 +4987,10 @@ class CellDef(QWidget):
 
         if self.param_d[cdname]["motility_advanced_chemotaxis"]:
             self.advanced_chemotaxis_enabled.setChecked(True)
+            self.advanced_chemotaxis_enabled_cb(True)
         else:
             self.advanced_chemotaxis_enabled.setChecked(False)
+            self.advanced_chemotaxis_enabled_cb(False)
 
         # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
