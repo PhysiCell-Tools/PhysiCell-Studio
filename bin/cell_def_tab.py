@@ -4422,12 +4422,17 @@ class CellDef(QWidget):
     # data structures (e.g., QComboBox) that reference it.
     def renamed_celltype(self, old_name,new_name):
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
-        # print("cell_def_tab.py: ------- renamed_celltype")
+        print("cell_def_tab.py: ------- renamed_celltype()", old_name," -> ",new_name)
         # print("       old_name = ",old_name)
         # print("       new_name = ",new_name)
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
-        # print("self.celltypes_list= ",self.celltypes_list)
+        print("    self.celltypes_list= ",self.celltypes_list)
+        print()
+        for cdname in self.param_d.keys():
+            print(self.param_d[cdname])
+            print("\n----")
 
+        # 1) update all dropdown widgets containing the cell def names
         for idx in range(len(self.celltypes_list)):
             # print("idx,old,new = ",idx, old_name,new_name)
             # if old_name in self.motility_substrate_dropdown.itemText(idx):
@@ -4442,10 +4447,15 @@ class CellDef(QWidget):
             if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
 
-        # 2) update in the param_d dict
-        # for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
-        #     # print("--- cdname = ",cdname)
-        #     # print("--- old: ",self.param_d[cdname]["secretion"])
+        # 2) OMG, also update all param_d dicts that involve cell def names
+        print("--- renaming all dicts with cell defs")
+        for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
+            print("--- cdname = ",cdname)
+            self.param_d[cdname]["live_phagocytosis_rate"][new_name] = self.param_d[cdname]["live_phagocytosis_rate"].pop(old_name)
+            self.param_d[cdname]["attack_rate"][new_name] = self.param_d[cdname]["attack_rate"].pop(old_name)
+            self.param_d[cdname]["fusion_rate"][new_name] = self.param_d[cdname]["fusion_rate"].pop(old_name)
+            self.param_d[cdname]["transformation_rate"][new_name] = self.param_d[cdname]["transformation_rate"].pop(old_name)
+            self.param_d[cdname]["cell_adhesion_affinity"][new_name] = self.param_d[cdname]["cell_adhesion_affinity"].pop(old_name)
         #     # print("--- new_name: ",new_name)
         #     self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
         #     self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
