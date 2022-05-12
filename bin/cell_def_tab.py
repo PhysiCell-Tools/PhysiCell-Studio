@@ -4410,9 +4410,10 @@ class CellDef(QWidget):
             # print("--- new_name: ",new_name)
             self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
             self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
-            self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
 
-            # print("--- new: ",self.param_d[cdname]["secretion"])
+            # update dicts that use substrates as keys
+            self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
+            self.param_d[cdname]["chemotactic_sensitivity"][new_name] = self.param_d[cdname]["chemotactic_sensitivity"].pop(old_name)
 
         if old_name == self.current_secretion_substrate:
             self.current_secretion_substrate = new_name
@@ -4615,8 +4616,8 @@ class CellDef(QWidget):
         self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
         self.param_d[cdname_new]["mechanics_adhesion_distance"] = '1.25'
 
-        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance"] = '1.25'
-        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance"] = '1.25'
+        self.param_d[cdname_new]["mechanics_relative_equilibrium_distance"] = '1.8'
+        self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance"] = '15.12'
 
         self.param_d[cdname_new]["mechanics_relative_equilibrium_distance_enabled"] = False
         self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance_enabled"] = False
@@ -5004,7 +5005,7 @@ class CellDef(QWidget):
 
         # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
-        print(' .  chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
+        print('    chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         if self.param_d[cdname]['motility_advanced_chemotaxis_substrate'] == 'foobar':
             print('-- motility_advanced_chemotaxis_substrate is foobar')
         else:

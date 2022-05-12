@@ -146,11 +146,13 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
         self.tabWidget.addTab(self.user_params_tab,"User Params")
 
+        self.homedir = os.getcwd()
+        print("model.py: self.homedir = ",self.homedir)
+
         if studio_flag:
             print("studio.py: creating Run and Plot tabs")
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
-            self.homedir = os.getcwd()
-            print("model.py: self.homedir = ",self.homedir)
+            # self.homedir = os.getcwd()
             self.run_tab.homedir = self.homedir
             self.run_tab.config_tab = self.config_tab
             self.run_tab.microenv_tab = self.microenv_tab 
