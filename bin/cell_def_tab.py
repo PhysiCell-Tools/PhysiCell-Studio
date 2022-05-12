@@ -219,8 +219,8 @@ class CellDef(QWidget):
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname)
         self.new_motility_params(cdname)
+        self.new_secretion_params(cdname)
         self.new_interaction_params(cdname)
-        # self.new_secretion_params(cdname)  # todo: fix this method
         # self.new_custom_data_params(cdname)
 
         # print("\n ----- new dict:")
@@ -4631,13 +4631,15 @@ class CellDef(QWidget):
 
         self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
-    # todo: fix this (currently we don't call it because it clears the previously selected cell def's values)
-    # def new_secretion_params(self, cdname):
-    #     sval = self.default_sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+    def new_secretion_params(self, cdname):
+        # print("new_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)
+        # print("        self.param_d[cdname]['secretion'] = ",self.param_d[cdname]["secretion"])
+        sval = self.default_sval
+        for substrate_name in self.param_d[cdname]["secretion"].keys():
+            self.param_d[cdname]["secretion"][substrate_name]["secretion_rate"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["secretion_target"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["uptake_rate"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["net_export_rate"] = sval
 
     def new_interaction_params(self, cdname_new):
         print("\n--------new_interaction_params(): cdname_new= ",cdname_new)
