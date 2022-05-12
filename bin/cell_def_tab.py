@@ -219,8 +219,8 @@ class CellDef(QWidget):
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname)
         self.new_motility_params(cdname)
+        self.new_secretion_params(cdname)
         self.new_interaction_params(cdname)
-        # self.new_secretion_params(cdname)  # todo: fix this method
         # self.new_custom_data_params(cdname)
 
         # print("\n ----- new dict:")
@@ -4478,6 +4478,7 @@ class CellDef(QWidget):
         self.param_d[cdname]['cycle_quiescent_trate10'] = sval
 
         # duration times
+        sval = '1.e9'
         self.param_d[cdname]['cycle_live_duration00'] = sval
 
         self.param_d[cdname]['cycle_Ki67_duration01'] = sval
@@ -4551,9 +4552,10 @@ class CellDef(QWidget):
 
     def new_death_params(self, cdname):
         sval = self.default_sval
+        duration_sval = '1.e9'
         self.param_d[cdname]["death_rate"] = sval
         self.param_d[cdname]["apoptosis_death_rate"] = sval
-        self.param_d[cdname]["apoptosis_phase0_duration"] = sval
+        self.param_d[cdname]["apoptosis_phase0_duration"] = duration_sval
         self.param_d[cdname]["apoptosis_phase0_fixed"] = False
 
         self.param_d[cdname]["apoptosis_unlysed_rate"] = sval
@@ -4565,9 +4567,9 @@ class CellDef(QWidget):
 
         #-----
         self.param_d[cdname]["necrosis_death_rate"] = sval
-        self.param_d[cdname]["necrosis_phase0_duration"] = sval
+        self.param_d[cdname]["necrosis_phase0_duration"] = duration_sval
         self.param_d[cdname]["necrosis_phase0_fixed"] = False
-        self.param_d[cdname]["necrosis_phase1_duration"] = sval
+        self.param_d[cdname]["necrosis_phase1_duration"] = duration_sval
         self.param_d[cdname]["necrosis_phase1_fixed"] = False
 
         self.param_d[cdname]["necrosis_unlysed_rate"] = sval
@@ -4579,9 +4581,10 @@ class CellDef(QWidget):
 
     def new_volume_params(self, cdname):
         sval = self.default_sval
-        self.param_d[cdname]["volume_total"] = sval
-        self.param_d[cdname]["volume_fluid_fraction"] = sval
-        self.param_d[cdname]["volume_nuclear"] = sval
+        # use PhysiCell_phenotype.cpp: Volume::Volume() values
+        self.param_d[cdname]["volume_total"] = '2494'
+        self.param_d[cdname]["volume_fluid_fraction"] = '0.75'
+        self.param_d[cdname]["volume_nuclear"] = '540'
         self.param_d[cdname]["volume_fluid_change_rate"] = sval
         self.param_d[cdname]["volume_cytoplasmic_rate"] = sval
         self.param_d[cdname]["volume_nuclear_rate"] = sval
@@ -4628,13 +4631,15 @@ class CellDef(QWidget):
 
         self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
-    # todo: fix this (currently we don't call it because it clears the previously selected cell def's values)
-    # def new_secretion_params(self, cdname):
-    #     sval = self.default_sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"] = sval
-    #     self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"] = sval
+    def new_secretion_params(self, cdname):
+        # print("new_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)
+        # print("        self.param_d[cdname]['secretion'] = ",self.param_d[cdname]["secretion"])
+        sval = self.default_sval
+        for substrate_name in self.param_d[cdname]["secretion"].keys():
+            self.param_d[cdname]["secretion"][substrate_name]["secretion_rate"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["secretion_target"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["uptake_rate"] = sval
+            self.param_d[cdname]["secretion"][substrate_name]["net_export_rate"] = sval
 
     def new_interaction_params(self, cdname_new):
         print("\n--------new_interaction_params(): cdname_new= ",cdname_new)
