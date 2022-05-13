@@ -875,7 +875,7 @@ def populate_tree_cell_defs(cell_def_tab):
                 # for substrate in cell_def_tab.substrate_list:
                 #     print("---- setting chemotactic_sensitivity= 0.0 for ",substrate)
                 #     cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
-                cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = False
+                cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
                 # sys.exit(-1)
 
             else:    # advanced_chemotaxis IS present in .xml
@@ -884,14 +884,20 @@ def populate_tree_cell_defs(cell_def_tab):
                 else:
                     cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
 
+                if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
+                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
+                else:
+                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
+
                 # val = uep.find(motility_chemotaxis_path +'substrate').text
+                # rwh: todo - why am I doing this? Is it necessary?
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = "foobar"
                 # cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = None
 
                 if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = True
+                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
                 else:
-                    cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_normalize_grad"] = False
+                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
 
                 cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                 for substrate in cell_def_tab.substrate_list:

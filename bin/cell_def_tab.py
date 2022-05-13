@@ -2334,6 +2334,10 @@ class CellDef(QWidget):
         self.advanced_chemotaxis_enabled.clicked.connect(self.advanced_chemotaxis_enabled_cb)
         glayout.addWidget(self.advanced_chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
 
+        self.normalize_each_gradient = QCheckBox("normalize gradient")
+        self.normalize_each_gradient.clicked.connect(self.normalize_each_gradient_cb)
+        glayout.addWidget(self.normalize_each_gradient, idr,2, 1,1) # w, row, column, rowspan, colspan
+
         self.motility2_substrate_dropdown = QComboBox()
         # self.motility_substrate_dropdown.setFixedWidth(240)
         idr += 1
@@ -3412,6 +3416,7 @@ class CellDef(QWidget):
             self.advanced_chemotaxis_enabled.setChecked(False)
             self.motility2_substrate_dropdown.setEnabled(False)
             self.chemo_sensitivity.setEnabled(False)
+            self.normalize_each_gradient.setEnabled(False)
 
     def advanced_chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_advanced_chemotaxis'] = bval
@@ -3423,7 +3428,10 @@ class CellDef(QWidget):
             self.chemotaxis_enabled.setChecked(False)
             self.motility2_substrate_dropdown.setEnabled(True)
             self.chemo_sensitivity.setEnabled(True)
+            self.normalize_each_gradient.setEnabled(True)
 
+    def normalize_each_gradient_cb(self,bval):
+        self.param_d[self.current_cell_def]['normalize_each_gradient'] = bval
 
 
     def chemo_sensitivity_changed(self, text):
@@ -4645,6 +4653,7 @@ class CellDef(QWidget):
         self.param_d[cdname]["motility_chemotaxis_towards"] = True
 
         self.param_d[cdname]["motility_advanced_chemotaxis"] = False
+        self.param_d[cdname]["normalize_each_gradient"] = False
         # self.motility_substrate_dropdown.setCurrentText(self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"])
         # self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = sval
         for substrate_name in self.param_d[cdname]["chemotactic_sensitivity"].keys():
@@ -5002,6 +5011,13 @@ class CellDef(QWidget):
         else:
             self.advanced_chemotaxis_enabled.setChecked(False)
             self.advanced_chemotaxis_enabled_cb(False)
+
+        if self.param_d[cdname]["normalize_each_gradient"]:
+            self.normalize_each_gradient.setChecked(True)
+            self.normalize_each_gradient_cb(True)
+        else:
+            self.normalize_each_gradient.setChecked(False)
+            self.normalize_each_gradient_cb(False)
 
         # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
@@ -5967,7 +5983,7 @@ class CellDef(QWidget):
         elm.tail = self.indent16
 
         bval = "false"
-        if self.param_d[cdef]['motility_advanced_chemotaxis_normalize_grad']:
+        if self.param_d[cdef]['normalize_each_gradient']:
             bval = "true"
         elm = ET.SubElement(adv_taxis, 'normalize_each_gradient')
         elm.text = bval
