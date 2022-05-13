@@ -20,7 +20,7 @@ python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionali
 ```
 
 ## Release 2.1.0
-* update data/interaction.xml to match PhysiCell v1.10
+* update data/interactions.xml to match PhysiCell v1.10
 * provide normalize_each_gradient in motility | advanced_chemotaxis
 
 ## Release 2.0.0
