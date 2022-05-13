@@ -21,5 +21,5 @@ python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionali
 
 ## Release 2.0.0
 
-This release captures most of the functionality provided in PhysiCell 1.10.0 (https://github.com/MathCancer/PhysiCell/releases/tag/1.10.0)
+This release captures most of the functionality provided in [PhysiCell 1.10.0](https://github.com/MathCancer/PhysiCell/releases/tag/1.10.0)
 
