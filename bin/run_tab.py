@@ -33,17 +33,19 @@ class RunModel(QWidget):
         #-------------------------------------------
         # used with nanoHUB app
         # self.nanohub = True
-        # following set in studio.py
+        # following set in pmb.py
         self.homedir = ''   
         # self.config_file = None
         self.tree = None
 
-        # these get set in studio.py
+        # these get set in pmb.py
         self.config_tab = None
         self.microenv_tab = None
         self.celldef_tab = None
         self.user_params_tab = None
         self.vis_tab = None
+
+        self.output_dir = 'output'
 
         #-----
         self.sim_output = QWidget()
@@ -152,17 +154,32 @@ class RunModel(QWidget):
 
             # remove any previous data
             # NOTE: this dir name needs to match the <folder>  in /data/<config_file.xml>
-            os.system('rm -rf tmpdir*')
+            if self.nanohub_flag:
+                os.system('rm -rf tmpdir*')
+            # else:
+                # os.system('rm -rf output*')
             time.sleep(1)
-            if os.path.isdir('tmpdir'):
+            if self.nanohub_flag and s.path.isdir('tmpdir'):
                 # something on NFS causing issues...
                 tname = tempfile.mkdtemp(suffix='.bak', prefix='tmpdir_', dir='.')
                 shutil.move('tmpdir', tname)
-            os.makedirs('tmpdir')
+            if self.nanohub_flag:
+                os.makedirs('tmpdir')
+            else:
+                # os.makedirs('output')
+                self.output_dir = self.config_tab.folder.text()
+                # os.system('rm -rf tmpdir*')
+                os.system('rm -rf ' + self.output_dir)
+                print("run_tab.py:  doing: mkdir ",self.output_dir)
+                os.makedirs(self.output_dir)  # do 'mkdir output_dir'
+                time.sleep(1)
 
             # write the default config file to tmpdir
             # new_config_file = "tmpdir/config.xml"  # use Path; work on Windows?
-            tdir = os.path.abspath('tmpdir')
+            if self.nanohub_flag:
+                tdir = os.path.abspath('tmpdir')
+            else:
+                tdir = os.path.abspath('.')
             new_config_file = Path(tdir,"config.xml")
 
             self.update_xml_from_gui()
@@ -178,8 +195,9 @@ class RunModel(QWidget):
             self.tree.write(new_config_file)  # saves modified XML to tmpdir/config.xml 
 
             # Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
-            tdir = os.path.abspath('tmpdir')
-            os.chdir(tdir)   # run exec from here on nanoHUB
+            if self.nanohub_flag:
+                tdir = os.path.abspath('tmpdir')
+                os.chdir(tdir)   # run exec from here on nanoHUB
             # sub.update(tdir)
             # subprocess.Popen(["../bin/myproj", "config.xml"])
 

@@ -45,6 +45,8 @@ class PhysiCellXMLCreator(QWidget):
     def __init__(self, studio_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
+        self.studio_flag = studio_flag 
+
         self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
 
@@ -149,7 +151,7 @@ class PhysiCellXMLCreator(QWidget):
         self.homedir = os.getcwd()
         print("model.py: self.homedir = ",self.homedir)
 
-        if studio_flag:
+        if self.studio_flag:
             print("studio.py: creating Run and Plot tabs")
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
             # self.homedir = os.getcwd()
@@ -175,6 +177,9 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
             self.vis_tab.init_plot_range(self.config_tab)
+
+            self.vis_tab.output_dir = self.config_tab.folder.text()
+            
 
 
         vlayout.addWidget(self.tabWidget)
@@ -537,39 +542,64 @@ class PhysiCellXMLCreator(QWidget):
         # self.add_new_model(copy_file, True)
         self.config_file = copy_file
         self.show_sample_model()
+        if self.nanohub_flag:  # rwh - test if works on nanoHUB
+            self.config_tab.folder.setText('.')
         
     def new_model_cb(self):
+        print("new_model_cb():  self.studio_flag= ",self.studio_flag)
         self.load_model("template")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./project')
 
     def biorobots_cb(self):
         self.load_model("biorobots_flat")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./biorobots')
 
     def cancer_biorobots_cb(self):
         self.load_model("cancer_biorobots_flat")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./cancer_biorobots')
 
     def hetero_cb(self):
         self.load_model("heterogeneity")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./heterogeneity')
 
     def pred_prey_cb(self):
         self.load_model("pred_prey_flat")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./pred_prey')
 
     def virus_mac_cb(self):
         self.load_model("virus_macrophage_flat")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./virus-sample')
 
     def worm_cb(self):
         self.load_model("worm")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./worm')
 
     def interactions_cb(self):
         self.load_model("interactions")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./interaction_demo')
 
     def cancer_immune_cb(self):
         self.load_model("cancer_immune3D_flat")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./cancer_immune_3D')
 
     def template_cb(self):
         self.load_model("template")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./project')
 
     def physiboss_cell_lines_cb(self):
         self.load_model("physiboss_cell_lines")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
 
     # def template3D_cb(self):
     #     name = "template3D_flat"
