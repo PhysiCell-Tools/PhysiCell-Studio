@@ -4339,15 +4339,15 @@ class CellDef(QWidget):
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
     #-----------------------------------------------------------------------------------------
-    # def delete_substrate_from_comboboxes(self, item_idx):
-    def delete_substrate(self, item_idx):
+    # def delete_substrate(self, item_idx):
+    def delete_substrate(self, item_idx, new_substrate):
 
         # 1) delete it from the comboboxes
-        # print("------- delete_substrate_from_comboboxes: name=",name)
+        # print("------- delete_substrate: name=",name)
         # print("------- delete_substrate: index=",item_idx)
         subname = self.motility_substrate_dropdown.itemText(item_idx)
         subname = self.motility2_substrate_dropdown.itemText(item_idx)
-        print("        name = ", subname)
+        print("cell_def_tab.py: delete_substrate():    subname = ", subname)
         self.substrate_list.remove(subname)
         # print("self.substrate_list = ",self.substrate_list)
         self.motility_substrate_dropdown.removeItem(item_idx)
@@ -4368,8 +4368,22 @@ class CellDef(QWidget):
             # print("--- old: ",self.param_d[cdname]["secretion"])
             # print(" keys= ",self.param_d[cdname]["secretion"].keys() )
             # if self.param_d[cdname]["secretion"].has_key(subname):
+            if subname == self.param_d[cdname]["motility_chemotaxis_substrate"]:
+                self.param_d[cdname]["motility_chemotaxis_substrate"] = new_substrate
+
+            if subname == self.param_d[cdname]["motility_advanced_chemotaxis_substrate"]:
+                self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_substrate
+
             if subname in self.param_d[cdname]["secretion"]:
                 del_key = self.param_d[cdname]["secretion"].pop(subname)
+
+            if subname in self.param_d[cdname]["chemotactic_sensitivity"]:
+                del_key = self.param_d[cdname]["chemotactic_sensitivity"].pop(subname)
+            # rwh: hmm, what about these?
+            # self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
+            # self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
+
+            # print("--- cell_def_tab.py: delete_substrate(), after deletion, param_d=  ",self.param_d[cdname])
         # print("--- after deletion, param_d=  ",self.param_d[cdname]["secretion"])
         # print("\n--- after deletion, self.current_secretion_substrate=  ",self.current_secretion_substrate)
 
@@ -4416,8 +4430,11 @@ class CellDef(QWidget):
             # print("--- cdname = ",cdname)
             # print("--- old: ",self.param_d[cdname]["secretion"])
             # print("--- new_name: ",new_name)
-            self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
-            self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
+            if self.param_d[cdname]["motility_chemotaxis_substrate"] == old_name:
+                self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
+
+            if self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] == old_name:
+                self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
 
             # update dicts that use substrates as keys
             self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)

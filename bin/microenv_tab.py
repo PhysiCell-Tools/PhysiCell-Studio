@@ -650,9 +650,12 @@ class SubstrateDef(QWidget):
         # print('------      item_idx=',item_idx)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
-        self.celldef_tab.delete_substrate(item_idx)
+        # self.celldef_tab.delete_substrate(item_idx)
         # print('------      new name=',self.tree.currentItem().text(0))
         self.current_substrate = self.tree.currentItem().text(0)
+
+        # do this last
+        self.celldef_tab.delete_substrate(item_idx, self.current_substrate)
 
 
     #----------------------------------------------------------------------
@@ -669,6 +672,7 @@ class SubstrateDef(QWidget):
         # print('prev_name= ',prev_name)
         self.current_substrate = it.text(col)
         self.param_d[self.current_substrate] = self.param_d.pop(prev_name)  # sweet
+
         # print('self.current_substrate= ',self.current_substrate )
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
