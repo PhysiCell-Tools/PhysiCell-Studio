@@ -181,7 +181,7 @@ class RunModel(QWidget):
             else:
                 tdir = os.path.abspath('.')
             new_config_file = Path(tdir,"config.xml")
-
+            self.celldef_tab.config_path = new_config_file
             self.update_xml_from_gui()
 
             # write_config_file(new_config_file)  
