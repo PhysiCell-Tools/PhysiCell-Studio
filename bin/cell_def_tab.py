@@ -7,6 +7,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import os
 import sys
+import shutil
 import copy
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
@@ -6193,14 +6194,16 @@ class CellDef(QWidget):
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10
 
+                    shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])))
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
-                    bnd_filename.text = "./" + os.path.relpath(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.dirname(self.config_path))
+                    bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
                     bnd_filename.tail = self.indent12
 
+                    shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])))
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
-                    cfg_filename.text = "./" + os.path.relpath(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.dirname(self.config_path))
+                    cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
                     cfg_filename.tail = self.indent12
-                    
+
                     if len(self.param_d[cdef]['intracellular']['initial_values']) > 0:
                         initial_values = ET.SubElement(intracellular, "initial_values")
                         initial_values.text = self.indent14
