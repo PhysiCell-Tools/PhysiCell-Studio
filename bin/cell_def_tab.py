@@ -2953,7 +2953,7 @@ class CellDef(QWidget):
                 self.physiboss_time_step.setText("12.0")
 
             if self.physiboss_time_stochasticity.text() == "":
-                self.physiboss_time_stochasticity.setText("1.0")
+                self.physiboss_time_stochasticity.setText("0.0")
 
             if self.physiboss_scaling.text() == "":
                 self.physiboss_scaling.setText("1.0")
@@ -6216,17 +6216,17 @@ class CellDef(QWidget):
                                 initial_value.tail = self.indent14
                     
                     if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
-                        mutants = ET.SubElement(intracellular, "mutants")
+                        mutants = ET.SubElement(intracellular, "mutations")
                         mutants.text = self.indent14
                         mutants.tail = "\n" + self.indent14
                         
                         for node, value in self.param_d[cdef]['intracellular']['mutants']:
                             if node != "" and value != "":
-                                mutant = ET.SubElement(mutants, "mutant", {"node": node})
+                                mutant = ET.SubElement(mutants, "mutation", {"node": node})
                                 mutant.text = value
                                 mutant.tail = self.indent14
 
-                    if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
+                    if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
                         parameters = ET.SubElement(intracellular, "parameters")
                         parameters.text = self.indent14
                         parameters.tail = "\n" + self.indent14

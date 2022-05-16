@@ -226,7 +226,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -239,14 +239,8 @@
 						<uptake_rate units="1/min">10</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
 				</secretion>
+				
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
@@ -339,7 +333,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -352,14 +346,8 @@
 						<uptake_rate units="1/min">10</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
 				</secretion>
+
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_1.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
@@ -452,7 +440,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -465,14 +453,8 @@
 						<uptake_rate units="1/min">10</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
 				</secretion>
+
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
@@ -568,7 +550,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -581,14 +563,8 @@
 						<uptake_rate units="1/min">10</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
 				</secretion>
+
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
@@ -684,7 +660,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -695,13 +671,6 @@
 						<secretion_rate units="1/min">0</secretion_rate>
 						<secretion_target units="substrate density">38</secretion_target>
 						<uptake_rate units="1/min">10</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
 				</secretion>
@@ -798,7 +767,7 @@
 						<use_2D>false</use_2D>
 						<chemotaxis>
 							<enabled>false</enabled>
-							<substrate>immunostimulatory factor</substrate>
+							<substrate>oxygen</substrate>
 							<direction>1</direction>
 						</chemotaxis>
 					</options>
@@ -809,13 +778,6 @@
 						<secretion_rate units="1/min">0</secretion_rate>
 						<secretion_target units="substrate density">38</secretion_target>
 						<uptake_rate units="1/min">10</uptake_rate>
-						<net_export_rate units="total substrate/min">0</net_export_rate> 
-					</substrate> 
-
-					<substrate name="immunostimulatory factor">
-						<secretion_rate units="1/min">0</secretion_rate>
-						<secretion_target units="substrate density">1</secretion_target>
-						<uptake_rate units="1/min">0</uptake_rate>
 						<net_export_rate units="total substrate/min">0</net_export_rate> 
 					</substrate> 
 				</secretion>

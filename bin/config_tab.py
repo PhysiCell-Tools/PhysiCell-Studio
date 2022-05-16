@@ -150,7 +150,7 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(self.virtual_walls, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #============  Misc ================================
-        label = QLabel("Misc runtime parameters")
+        label = QLabel("Times")
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -169,6 +169,66 @@ class Config(QWidget):
         label = QLabel("min")
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("Diffusion dt")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.diffusion_dt = QLineEdit()
+        self.diffusion_dt.setValidator(QtGui.QDoubleValidator())
+        self.config_tab_layout.addWidget(self.diffusion_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("Mechanics dt")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.mechanics_dt = QLineEdit()
+        self.mechanics_dt.setValidator(QtGui.QDoubleValidator())
+        self.config_tab_layout.addWidget(self.mechanics_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("Phenotype dt")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.phenotype_dt = QLineEdit()
+        self.phenotype_dt.setValidator(QtGui.QDoubleValidator())
+        self.config_tab_layout.addWidget(self.phenotype_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+        #============  Misc ================================
+        label = QLabel("Misc runtime parameters")
+        label.setFixedHeight(label_height)
+        label.setStyleSheet("background-color: orange")
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
+
+        # label = QLabel("Max Time")
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # idx_row += 1
+        # self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        # self.max_time = QLineEdit()
+        # self.max_time.setValidator(QtGui.QDoubleValidator())
+        # self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        # label = QLabel("min")
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        # self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #----------
         label = QLabel("# threads")
@@ -282,6 +342,9 @@ class Config(QWidget):
             self.virtual_walls.setChecked(False)
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
+        self.diffusion_dt.setText(self.xml_root.find(".//dt_diffusion").text)
+        self.mechanics_dt.setText(self.xml_root.find(".//dt_mechanics").text)
+        self.phenotype_dt.setText(self.xml_root.find(".//dt_phenotype").text)
         
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
@@ -378,6 +441,9 @@ class Config(QWidget):
         #     opts.insert(0,subelm)
 
         self.xml_root.find(".//max_time").text = self.max_time.text()
+        self.xml_root.find(".//dt_diffusion").text = self.diffusion_dt.text()
+        self.xml_root.find(".//dt_mechanics").text = self.mechanics_dt.text()
+        self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
 
