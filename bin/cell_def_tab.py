@@ -7,6 +7,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import os
 import sys
+import shutil
 import copy
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
@@ -5106,11 +5107,13 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_intracellular_params(self):
         cdname = self.current_cell_def
-        if self.param_d[cdname]["intracellular"] is not None:    
+        if self.param_d[cdname]["intracellular"] is not None:
             if self.param_d[cdname]["intracellular"]["type"] == "maboss":
                 self.intracellular_type_dropdown.setCurrentIndex(1)
-                self.physiboss_bnd_file.setText(self.param_d[cdname]["intracellular"]["bnd_filename"])
-                self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
+                if "bnd_filename" in self.param_d[cdname]["intracellular"].keys(): 
+                    self.physiboss_bnd_file.setText(self.param_d[cdname]["intracellular"]["bnd_filename"])
+                if "cfg_filename" in self.param_d[cdname]["intracellular"].keys():
+                    self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
                 self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
 
@@ -5198,9 +5201,7 @@ class CellDef(QWidget):
         self.update_motility_params()
         self.update_secretion_params()
         self.update_interaction_params()
-        # if "bnd_filename" in self.param_d[self.current_cell_def]["intracellular"].keys():
-        if self.param_d[self.current_cell_def]["intracellular"] is not None:
-            self.update_intracellular_params()
+        self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
 
@@ -6193,14 +6194,16 @@ class CellDef(QWidget):
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10
 
+                    shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])))
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
-                    bnd_filename.text = "./" + os.path.relpath(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.dirname(self.config_path))
+                    bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
                     bnd_filename.tail = self.indent12
 
+                    shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])))
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
-                    cfg_filename.text = "./" + os.path.relpath(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.dirname(self.config_path))
+                    cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
                     cfg_filename.tail = self.indent12
-                    
+
                     if len(self.param_d[cdef]['intracellular']['initial_values']) > 0:
                         initial_values = ET.SubElement(intracellular, "initial_values")
                         initial_values.text = self.indent14
