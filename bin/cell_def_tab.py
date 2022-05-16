@@ -2953,7 +2953,7 @@ class CellDef(QWidget):
                 self.physiboss_time_step.setText("12.0")
 
             if self.physiboss_time_stochasticity.text() == "":
-                self.physiboss_time_stochasticity.setText("1.0")
+                self.physiboss_time_stochasticity.setText("0.0")
 
             if self.physiboss_scaling.text() == "":
                 self.physiboss_scaling.setText("1.0")

@@ -1190,7 +1190,7 @@ def populate_tree_cell_defs(cell_def_tab):
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["cfg_filename"] = uep_intracellular.find("cfg_filename").text if uep_intracellular.find("cfg_filename") is not None else None
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_intracellular.find("time_step").text if uep_intracellular.find("time_step") is not None else "12.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_intracellular.find("scaling").text if uep_intracellular.find("scaling") is not None else "1.0"
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_intracellular.find("time_stochasticity").text if uep_intracellular.find("time_stochasticity") is not None else "1.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_intracellular.find("time_stochasticity").text if uep_intracellular.find("time_stochasticity") is not None else "0.0"
 
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
