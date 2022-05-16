@@ -176,7 +176,7 @@ class Vis(QWidget):
         self.controls1.setLayout(self.glayout1)
 
         arrow_button_width = 50
-        self.first_button = QPushButton("<<")
+        self.first_button = QPushButton("|<")
         self.first_button.setFixedWidth(arrow_button_width)
         self.first_button.clicked.connect(self.first_plot_cb)
         # controls_hbox.addWidget(self.first_button)
@@ -194,7 +194,7 @@ class Vis(QWidget):
         # controls_hbox.addWidget(self.forward_button)
         self.glayout1.addWidget(self.forward_button, 0,2,1,1) # w, row, column, rowspan, colspan
 
-        self.last_button = QPushButton(">>")
+        self.last_button = QPushButton(">|")
         self.last_button.setFixedWidth(arrow_button_width)
         self.last_button.clicked.connect(self.last_plot_cb)
         # controls_hbox.addWidget(self.last_button)
