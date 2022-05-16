@@ -6226,7 +6226,7 @@ class CellDef(QWidget):
                                 mutant.text = value
                                 mutant.tail = self.indent14
 
-                    if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
+                    if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
                         parameters = ET.SubElement(intracellular, "parameters")
                         parameters.text = self.indent14
                         parameters.tail = "\n" + self.indent14
