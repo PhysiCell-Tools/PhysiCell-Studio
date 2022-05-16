@@ -5106,11 +5106,13 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_intracellular_params(self):
         cdname = self.current_cell_def
-        if self.param_d[cdname]["intracellular"] is not None:    
+        if self.param_d[cdname]["intracellular"] is not None:
             if self.param_d[cdname]["intracellular"]["type"] == "maboss":
                 self.intracellular_type_dropdown.setCurrentIndex(1)
-                self.physiboss_bnd_file.setText(self.param_d[cdname]["intracellular"]["bnd_filename"])
-                self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
+                if "bnd_filename" in self.param_d[cdname]["intracellular"].keys(): 
+                    self.physiboss_bnd_file.setText(self.param_d[cdname]["intracellular"]["bnd_filename"])
+                if "cfg_filename" in self.param_d[cdname]["intracellular"].keys():
+                    self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
                 self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
 
@@ -5198,9 +5200,7 @@ class CellDef(QWidget):
         self.update_motility_params()
         self.update_secretion_params()
         self.update_interaction_params()
-        # if "bnd_filename" in self.param_d[self.current_cell_def]["intracellular"].keys():
-        if self.param_d[self.current_cell_def]["intracellular"] is not None:
-            self.update_intracellular_params()
+        self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
 
