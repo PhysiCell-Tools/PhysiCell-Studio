@@ -2947,7 +2947,20 @@ class CellDef(QWidget):
     def intracellular_type_changed(self, index):
 
         self.physiboss_boolean_frame.hide()
-        if index == 1:
+        if index == 0 and self.current_cell_def is not None:
+            print(self.current_cell_def)
+            if "intracellular" in self.param_d[self.current_cell_def].keys():
+                self.physiboss_bnd_file.setText("")
+                self.physiboss_cfg_file.setText("")
+                self.physiboss_clear_initial_values()
+                self.physiboss_clear_mutants()
+                self.physiboss_clear_parameters()
+                self.physiboss_time_step.setText("12.0")
+                self.physiboss_time_stochasticity.setText("0.0")
+                self.physiboss_scaling.setText("1.0")
+                self.param_d[self.current_cell_def]["intracellular"] = None
+                
+        elif index == 1:
             # print("PhysiBoSS")
             if self.param_d[self.current_cell_def]["intracellular"] is None:
                 self.param_d[self.current_cell_def]["intracellular"] = {"type": "maboss"}
@@ -6138,12 +6151,18 @@ class CellDef(QWidget):
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10
 
-                    shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])))
+                    new_bnd_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename']))
+                    if self.param_d[cdef]['intracellular']['bnd_filename'] != new_bnd_filename:
+                        shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], new_bnd_filename)
+
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
                     bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
                     bnd_filename.tail = self.indent12
 
-                    shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])))
+                    new_cfg_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename']))
+                    if self.param_d[cdef]['intracellular']['cfg_filename'] != new_cfg_filename:
+                        shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], new_cfg_filename)
+    
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
                     cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
                     cfg_filename.tail = self.indent12
