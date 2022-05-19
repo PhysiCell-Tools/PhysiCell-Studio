@@ -6151,12 +6151,18 @@ class CellDef(QWidget):
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10
 
-                    shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])))
+                    new_bnd_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename']))
+                    if self.param_d[cdef]['intracellular']['bnd_filename'] != new_bnd_filename:
+                        shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], new_bnd_filename)
+
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
                     bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
                     bnd_filename.tail = self.indent12
 
-                    shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])))
+                    new_cfg_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename']))
+                    if self.param_d[cdef]['intracellular']['cfg_filename'] != new_cfg_filename:
+                        shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], new_cfg_filename)
+    
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
                     cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
                     cfg_filename.tail = self.indent12
