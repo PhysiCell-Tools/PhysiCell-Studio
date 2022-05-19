@@ -2947,7 +2947,20 @@ class CellDef(QWidget):
     def intracellular_type_changed(self, index):
 
         self.physiboss_boolean_frame.hide()
-        if index == 1:
+        if index == 0 and self.current_cell_def is not None:
+            print(self.current_cell_def)
+            if "intracellular" in self.param_d[self.current_cell_def].keys():
+                self.physiboss_bnd_file.setText("")
+                self.physiboss_cfg_file.setText("")
+                self.physiboss_clear_initial_values()
+                self.physiboss_clear_mutants()
+                self.physiboss_clear_parameters()
+                self.physiboss_time_step.setText("12.0")
+                self.physiboss_time_stochasticity.setText("0.0")
+                self.physiboss_scaling.setText("1.0")
+                self.param_d[self.current_cell_def]["intracellular"] = None
+                
+        elif index == 1:
             # print("PhysiBoSS")
             if self.param_d[self.current_cell_def]["intracellular"] is None:
                 self.param_d[self.current_cell_def]["intracellular"] = {"type": "maboss"}
