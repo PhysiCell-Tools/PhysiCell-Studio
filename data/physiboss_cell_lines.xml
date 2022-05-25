@@ -248,7 +248,11 @@
 					<initial_values>
 						<initial_value node="A">1</initial_value>
 						<initial_value node="C">0</initial_value>
-					</initial_values>	
+					</initial_values>
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
@@ -356,6 +360,10 @@
 						<initial_value node="A">1</initial_value>
 						<initial_value node="C">0</initial_value>
 					</initial_values>	
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
@@ -466,6 +474,10 @@
 					<mutations>
 						<mutation node="C">0.0</mutation>
 					</mutations>
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
@@ -576,6 +588,10 @@
 					<parameters>
 						<parameter name="$time_scale">0.2</parameter>
 					</parameters>
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
@@ -683,6 +699,10 @@
 						<initial_value node="C">0</initial_value>
 					</initial_values>	
 					<scaling>0.25</scaling>
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
@@ -792,6 +812,10 @@
 					<parameters>
 						<parameter name="$time_scale">0.0</parameter>
 					</parameters>
+					<mapping>
+						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
+						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+					</mapping>
 				</intracellular>
 			</phenotype>
 			<custom_data>  
