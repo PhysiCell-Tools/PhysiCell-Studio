@@ -6524,42 +6524,46 @@ class CellDef(QWidget):
                         mapping.text = self.indent14
                         mapping.tail = self.indent12
 
+                        tag_input = None
                         for input in self.param_d[cdef]['intracellular']['inputs']:
+                            
+                            if input['name'] != '' and input['node'] != '' and input['threshold'] != '':
+                                attribs = {
+                                    'name': input['name'], 'node': input['node'], 
+                                    'action': input['action'], 'threshold': input['threshold'], 
+                                }
 
-                            attribs = {
-                                'name': input['name'], 'node': input['node'], 
-                                'action': input['action'], 'threshold': input['threshold'], 
-                            }
+                                if input["inact_threshold"] != input["threshold"]:
+                                    attribs["inact_threshold"] = input["inact_threshold"]
 
-                            if input["inact_threshold"] != input["threshold"]:
-                                attribs["inact_threshold"] = input["inact_threshold"]
+                                if input["smoothing"] != input["smoothing"]:
+                                    attribs["smoothing"] = input["smoothing"]
 
-                            if input["smoothing"] != input["smoothing"]:
-                                attribs["smoothing"] = input["smoothing"]
-
-                            tag_input = ET.SubElement(mapping, 'input', attribs)
-                            tag_input.tail = self.indent14
+                                tag_input = ET.SubElement(mapping, 'input', attribs)
+                                tag_input.tail = self.indent14
                         
-                        
+                        tag_output = None
                         for output in self.param_d[cdef]['intracellular']['outputs']:
-                            attribs = {
-                                'name': output['name'], 'node': output['node'], 
-                                'action': output['action'], 'value': output['value'], 
-                            }
 
-                            if output["basal_value"] != output["value"]:
-                                attribs["basal_value"] = output["basal_value"]
+                            if output['name'] != '' and output['node'] != '' and output['value'] != '':
+                                attribs = {
+                                    'name': output['name'], 'node': output['node'], 
+                                    'action': output['action'], 'value': output['value'], 
+                                }
 
-                            if output["smoothing"] != output["smoothing"]:
-                                attribs["smoothing"] = output["smoothing"]
+                                if output["basal_value"] != output["value"]:
+                                    attribs["basal_value"] = output["basal_value"]
 
-                            tag_output = ET.SubElement(mapping, 'output', attribs)
-                            tag_output.tail = self.indent14
+                                if output["smoothing"] != output["smoothing"]:
+                                    attribs["smoothing"] = output["smoothing"]
+
+                                tag_output = ET.SubElement(mapping, 'output', attribs)
+                                tag_output.tail = self.indent14
                             
                         
-                        if len(self.param_d[cdef]['intracellular']['outputs']) == 0:
+                        if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
                             tag_input.tail = self.indent12
-                        else:
+                        elif tag_output is not None:
                             tag_output.tail = self.indent12
 
 
