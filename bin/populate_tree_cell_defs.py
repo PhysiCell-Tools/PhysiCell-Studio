@@ -1210,6 +1210,33 @@ def populate_tree_cell_defs(cell_def_tab):
                         for parameter in uep_intracellular_parameters:
                             cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["name"], parameter.text))                    
 
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"] = []
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"] = []
+                    uep_intracellular_mappings = uep_intracellular.find("mapping")
+                    if uep_intracellular_mappings is not None:
+                        for mapping in uep_intracellular_mappings:
+                            if mapping.tag == "input":
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"].append({
+                                    'name': mapping.attrib["name"],
+                                    'node': mapping.attrib["node"],
+                                    'action': mapping.attrib["action"],
+                                    'threshold': mapping.attrib["threshold"],
+                                    'inact_threshold': mapping.attrib["inact_threshold"] if 'inact_threshold' in mapping.attrib.keys() else mapping.attrib["threshold"],
+                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
+                                })
+                                
+
+                            elif mapping.tag == "output":
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"].append({
+                                    'name': mapping.attrib["name"],
+                                    'node': mapping.attrib["node"],
+                                    'action': mapping.attrib["action"],
+                                    'value': mapping.attrib["value"],
+                                    'basal_value': mapping.attrib["basal_value"] if 'basal_value' in mapping.attrib.keys() else mapping.attrib["value"],
+                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
+                                })
+                                print(cell_def_tab.param_d[cell_def_name]['intracellular']['outputs'][-1])
+
             print("------ done parsing intracellular:")
 
             # # ---------  custom data 
