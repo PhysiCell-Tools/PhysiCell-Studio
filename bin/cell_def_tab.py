@@ -2098,6 +2098,40 @@ class CellDef(QWidget):
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #-----
+        label = QLabel("cell-BM adhesion strength")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.cell_bm_adhesion_strength = QLineEdit()
+        self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
+        self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("micron/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #---
+        label = QLabel("cell-BM repulsion strength")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.cell_bm_repulsion_strength = QLineEdit()
+        self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
+        self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("micron/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
         #---
         label = QLabel("relative max adhesion distance")
         label.setFixedWidth(self.label_width)
@@ -2186,8 +2220,63 @@ class CellDef(QWidget):
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        #--------------------------------
+        # ------ horiz separator -----
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        label = QLabel("elastic constant")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.elastic_constant = QLineEdit()
+        self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
+        self.elastic_constant.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+
+        label = QLabel("attachment rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.attachment_rate = QLineEdit()
+        self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
+        self.attachment_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #--
+        label = QLabel("detachment rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.detachment_rate = QLineEdit()
+        self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
+        self.detachment_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel("1/min")
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignCenter)
+        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
         #------
-        for idx in range(11):  # rwh: hack solution to align rows
+        for idx in range(5):  # rwh: hack solution to align rows
             blank_line = QLabel("")
             idr += 1
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -3706,12 +3795,23 @@ class CellDef(QWidget):
         self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
     def cell_cell_repulsion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_repulsion'] = text
+    def cell_bm_adhesion_strength_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_BM_adhesion'] = text
+    def cell_bm_repulsion_strength_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_BM_repulsion'] = text
     def relative_maximum_adhesion_distance_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_adhesion_distance'] = text
     def set_relative_equilibrium_distance_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_relative_equilibrium_distance'] = text
     def set_absolute_equilibrium_distance_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance'] = text
+
+    def elastic_constant_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_elastic_constant'] = text
+    def attachment_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_attachment_rate'] = text
+    def detachment_rate_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_detachment_rate'] = text
 
     # insert callbacks for QCheckBoxes
     def set_relative_equilibrium_distance_enabled_cb(self,bval):
