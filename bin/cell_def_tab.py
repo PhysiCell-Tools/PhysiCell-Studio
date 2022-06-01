@@ -2099,7 +2099,9 @@ class CellDef(QWidget):
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #-----
+        self.new_stuff = False
         label = QLabel("cell-BM adhesion strength")
+        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2109,6 +2111,7 @@ class CellDef(QWidget):
         self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
         self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.cell_bm_adhesion_strength.setEnabled(self.new_stuff)
 
         units = QLabel("micron/min")
         units.setFixedWidth(self.units_width)
@@ -2117,6 +2120,7 @@ class CellDef(QWidget):
 
         #---
         label = QLabel("cell-BM repulsion strength")
+        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2126,6 +2130,7 @@ class CellDef(QWidget):
         self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
         self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.cell_bm_repulsion_strength.setEnabled(self.new_stuff)
 
         units = QLabel("micron/min")
         units.setFixedWidth(self.units_width)
@@ -2226,6 +2231,7 @@ class CellDef(QWidget):
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         label = QLabel("elastic constant")
+        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2235,6 +2241,7 @@ class CellDef(QWidget):
         self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.elastic_constant.setEnabled(self.new_stuff)
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
@@ -2243,6 +2250,7 @@ class CellDef(QWidget):
 
 
         label = QLabel("attachment rate")
+        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2252,6 +2260,7 @@ class CellDef(QWidget):
         self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.attachment_rate.setEnabled(self.new_stuff)
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
@@ -2260,6 +2269,7 @@ class CellDef(QWidget):
 
         #--
         label = QLabel("detachment rate")
+        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2269,6 +2279,7 @@ class CellDef(QWidget):
         self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.detachment_rate.setEnabled(self.new_stuff)
 
         units = QLabel("1/min")
         units.setFixedWidth(self.units_width)
@@ -3795,6 +3806,7 @@ class CellDef(QWidget):
         self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
     def cell_cell_repulsion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_repulsion'] = text
+
     def cell_bm_adhesion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_BM_adhesion'] = text
     def cell_bm_repulsion_strength_changed(self, text):
@@ -5325,6 +5337,13 @@ class CellDef(QWidget):
 
         self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
         self.set_absolute_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"])
+
+        # new_stuff (June 2022) mechanics params
+        self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
+        self.cell_bm_repulsion_strength.setText(self.param_d[cdname]["mechanics_BM_repulsion"])
+        self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
+        self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
+        self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
 
 
     #-----------------------------------------------------------------------------------------

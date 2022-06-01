@@ -697,13 +697,19 @@ def populate_tree_cell_defs(cell_def_tab):
             val =  uep.find(mechanics_path+"relative_maximum_adhesion_distance").text
             cell_def_tab.param_d[cell_def_name]["mechanics_adhesion_distance"] = val
 
+            # <<< new (June 2022) mechanics params
             mypath =  uep.find(mechanics_path+"cell_BM_adhesion_strength")
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = '4.0'
 
             mypath =  uep.find(mechanics_path+"cell_BM_repulsion_strength")
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = '10.0'
+            # >>>
 
             # cell_def_tab.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
 
@@ -781,18 +787,25 @@ def populate_tree_cell_defs(cell_def_tab):
                 cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = False
 
 
-            # and the attachment elastic params
+            # <<< new (June 2022) mechanics params
             mypath =  uep.find(mechanics_path+"attachment_elastic_constant")
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = '0.01'
 
             mypath =  uep.find(mechanics_path+"attachment_rate")
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = '10.0'
 
             mypath =  uep.find(mechanics_path+"detachment_rate")
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = '0.0'
+            # >>>
 
 
             # # ---------  motility 
