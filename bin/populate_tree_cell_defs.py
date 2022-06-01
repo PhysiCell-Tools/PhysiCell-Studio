@@ -697,6 +697,14 @@ def populate_tree_cell_defs(cell_def_tab):
             val =  uep.find(mechanics_path+"relative_maximum_adhesion_distance").text
             cell_def_tab.param_d[cell_def_name]["mechanics_adhesion_distance"] = val
 
+            mypath =  uep.find(mechanics_path+"cell_BM_adhesion_strength")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = mypath.text
+
+            mypath =  uep.find(mechanics_path+"cell_BM_repulsion_strength")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = mypath.text
+
             # cell_def_tab.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
 
             #----------
@@ -771,6 +779,20 @@ def populate_tree_cell_defs(cell_def_tab):
                 cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = True
             else:
                 cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = False
+
+
+            # and the attachment elastic params
+            mypath =  uep.find(mechanics_path+"attachment_elastic_constant")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = mypath.text
+
+            mypath =  uep.find(mechanics_path+"attachment_rate")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = mypath.text
+
+            mypath =  uep.find(mechanics_path+"detachment_rate")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = mypath.text
 
 
             # # ---------  motility 
@@ -1209,33 +1231,6 @@ def populate_tree_cell_defs(cell_def_tab):
                     if uep_intracellular_parameters is not None:
                         for parameter in uep_intracellular_parameters:
                             cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["name"], parameter.text))                    
-
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"] = []
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"] = []
-                    uep_intracellular_mappings = uep_intracellular.find("mapping")
-                    if uep_intracellular_mappings is not None:
-                        for mapping in uep_intracellular_mappings:
-                            if mapping.tag == "input":
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"].append({
-                                    'name': mapping.attrib["name"],
-                                    'node': mapping.attrib["node"],
-                                    'action': mapping.attrib["action"],
-                                    'threshold': mapping.attrib["threshold"],
-                                    'inact_threshold': mapping.attrib["inact_threshold"] if 'inact_threshold' in mapping.attrib.keys() else mapping.attrib["threshold"],
-                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
-                                })
-                                
-
-                            elif mapping.tag == "output":
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"].append({
-                                    'name': mapping.attrib["name"],
-                                    'node': mapping.attrib["node"],
-                                    'action': mapping.attrib["action"],
-                                    'value': mapping.attrib["value"],
-                                    'basal_value': mapping.attrib["basal_value"] if 'basal_value' in mapping.attrib.keys() else mapping.attrib["value"],
-                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
-                                })
-                                print(cell_def_tab.param_d[cell_def_name]['intracellular']['outputs'][-1])
 
             print("------ done parsing intracellular:")
 
