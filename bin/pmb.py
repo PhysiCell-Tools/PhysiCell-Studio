@@ -379,17 +379,15 @@ class PhysiCellXMLCreator(QWidget):
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
             print("open_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
-            # sample_file = Path("data", name + ".xml")
-            # copy_file = "copy_" + name + ".xml"
-            copy_file = "mymodel.xml"
+            # copy_file = "mymodel.xml"
+            fname = os.path.basename(full_path_model_name)
+            copy_file = "copy_" + fname 
             self.current_save_file = copy_file
-
-            # shutil.copy(sample_file, copy_file)
             try:
                 shutil.copy(full_path_model_name, copy_file)
             except:
                 print("\n-------- Warning: unable to copy: ",full_path_model_name, copy_file)
-                sys.exit(1)
+                # sys.exit(1)
 
             self.add_new_model(copy_file, True)
             # self.config_file = "config_samples/" + name + ".xml"
