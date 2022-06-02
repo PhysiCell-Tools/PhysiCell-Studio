@@ -1,11 +1,11 @@
 """
-model.py - a PhysiCell model builder GUI to read in a sample PhysiCell config file (.xml), allow easy editing 
+pmb.py - a PhysiCell Model Builder GUI to read in a sample PhysiCell config file (.xml), allow easy editing 
             (e.g., change parameter values, add/delete more "objects", including substrates and cell types),
              and then save the new config file. 
 
 Authors:
 Randy Heiland (heiland@iu.edu)
-Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
+Students: Michael Siler, Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
 
 """
@@ -382,12 +382,15 @@ class PhysiCellXMLCreator(QWidget):
             # sample_file = Path("data", name + ".xml")
             # copy_file = "copy_" + name + ".xml"
             copy_file = "mymodel.xml"
+            self.current_save_file = copy_file
 
             # shutil.copy(sample_file, copy_file)
             try:
                 shutil.copy(full_path_model_name, copy_file)
             except:
-                print("Warning: unable to copy: ",full_path_model_name, copy_file)
+                print("\n-------- Warning: unable to copy: ",full_path_model_name, copy_file)
+                sys.exit(1)
+
             self.add_new_model(copy_file, True)
             # self.config_file = "config_samples/" + name + ".xml"
             self.config_file = copy_file
