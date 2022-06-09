@@ -565,13 +565,15 @@ class PhysiCellXMLCreator(QWidget):
 
     def load_model(self,name):
         # name = "template"
-        self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
+        if self.studio_flag:
+            self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
 
         os.chdir(self.homedir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         self.current_save_file = copy_file
-        self.run_tab.config_xml_name.setText(copy_file)
+        if self.studio_flag:
+            self.run_tab.config_xml_name.setText(copy_file)
 
         shutil.copy(sample_file, copy_file)
         # self.add_new_model(copy_file, True)
