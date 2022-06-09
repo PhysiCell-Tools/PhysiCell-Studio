@@ -180,25 +180,39 @@ class Vis(QWidget):
         self.first_button.setFixedWidth(arrow_button_width)
         self.first_button.clicked.connect(self.first_plot_cb)
         # controls_hbox.addWidget(self.first_button)
-        self.glayout1.addWidget(self.first_button, 0,0,1,1) # w, row, column, rowspan, colspan
+        icol = 0
+        self.glayout1.addWidget(self.first_button, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.back_button = QPushButton("<")
         self.back_button.setFixedWidth(arrow_button_width)
         self.back_button.clicked.connect(self.back_plot_cb)
         # controls_hbox.addWidget(self.back_button)
-        self.glayout1.addWidget(self.back_button, 0,1,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.back_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+
+        frame_count_width = 40
+        self.frame_count = QLineEdit()
+        # self.frame_count.textChanged.connect(self.change_frame_count_cb)  # do later to appease the callback gods
+        self.frame_count.setFixedWidth(frame_count_width)
+        self.frame_count.setValidator(QtGui.QIntValidator(0,10000000))
+        self.frame_count.setText('0')
+        icol += 1
+        self.glayout1.addWidget(self.frame_count, 0,icol,1,1) # w, row, column, rowspan, colspan
+
 
         self.forward_button = QPushButton(">")
         self.forward_button.setFixedWidth(arrow_button_width)
         self.forward_button.clicked.connect(self.forward_plot_cb)
         # controls_hbox.addWidget(self.forward_button)
-        self.glayout1.addWidget(self.forward_button, 0,2,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.forward_button, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.last_button = QPushButton(">|")
         self.last_button.setFixedWidth(arrow_button_width)
         self.last_button.clicked.connect(self.last_plot_cb)
         # controls_hbox.addWidget(self.last_button)
-        self.glayout1.addWidget(self.last_button, 0,3,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.last_button, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
@@ -206,7 +220,8 @@ class Vis(QWidget):
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         # controls_hbox.addWidget(self.play_button)
-        self.glayout1.addWidget(self.play_button, 0,4,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.play_button, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         # self.prepare_button = QPushButton("Prepare")
         # self.prepare_button.clicked.connect(self.prepare_plot_cb)
@@ -216,24 +231,33 @@ class Vis(QWidget):
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
         self.cells_checked_flag = True
-        self.glayout1.addWidget(self.cells_checkbox, 0,5,1,2) # w, row, column, rowspan, colspan
+        # self.glayout1.addWidget(self.cells_checkbox, 0,5,1,2) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.cells_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+
+        self.cells_edge_checkbox = QCheckBox('edge')
+        self.cells_edge_checkbox.setChecked(True)
+        self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
+        self.cells_edge_checked_flag = True
+        icol += 1
+        self.glayout1.addWidget(self.cells_edge_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.substrates_checkbox = QCheckBox('Substrates')
         self.substrates_checkbox.setChecked(False)
         # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
         self.substrates_checked_flag = False
-        self.glayout1.addWidget(self.substrates_checkbox, 0,7,1,2) # w, row, column, rowspan, colspan
+        icol += 1
+        self.glayout1.addWidget(self.substrates_checkbox, 0,icol,1,2) # w, row, column, rowspan, colspan
 
         self.fix_cmap_checkbox = QCheckBox('fix')
         self.fix_cmap_flag = False
         self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
-        icol = 9
+        icol += 2
         self.glayout1.addWidget(self.fix_cmap_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
 
-        icol += 1
         cvalue_width = 70
         label = QLabel("cmin")
         # label.setFixedWidth(label_width)
@@ -246,6 +270,7 @@ class Vis(QWidget):
         self.cmin.setFixedWidth(cvalue_width)
         self.cmin.setValidator(QtGui.QDoubleValidator())
         self.cmin.setEnabled(False)
+        icol += 1
         self.glayout1.addWidget(label, 0,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
         self.glayout1.addWidget(self.cmin, 0,icol,1,1) # w, row, column, rowspan, colspan
@@ -268,6 +293,9 @@ class Vis(QWidget):
         icol += 1
         self.glayout1.addWidget(self.substrates_combobox, 0,icol,1,2) # w, row, column, rowspan, colspan
         
+        #-----------
+        self.frame_count.textChanged.connect(self.change_frame_count_cb)
+
         # self.controls1.setGeometry(QRect(20, 40, 601, 501))
         # self.controls1.resize(500,30)
         # self.stackw.addWidget(self.controls1)  # rwh: crap, just doing this causes it to disappear, even though we never add the stackw below!
@@ -459,6 +487,13 @@ class Vis(QWidget):
             #         self.layout.removeWidget(widget)
             #         widget.deleteLater()
 
+    def change_frame_count_cb(self):
+        try:  # due to the initial callback
+            self.current_svg_frame = int(self.frame_count.text())
+        except:
+            pass
+        self.update_plots()
+
     def cmin_cmax_cb(self):
         print("----- cmin_cmax_cb:")
         try:  # due to the initial callback
@@ -500,6 +535,8 @@ class Vis(QWidget):
             self.plot_substrate(self.current_svg_frame)
         if self.cells_checked_flag:
             self.plot_svg(self.current_svg_frame)
+
+        self.frame_count.setText(str(self.current_svg_frame))
 
         self.canvas.update()
         self.canvas.draw()
@@ -754,7 +791,10 @@ class Vis(QWidget):
 
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval
+        self.update_plots()
 
+    def cells_edge_toggle_cb(self,bval):
+        self.cells_edge_checked_flag = bval
         self.update_plots()
 
 
@@ -797,7 +837,7 @@ class Vis(QWidget):
     def animate(self):
         if not self.animating_flag:
             self.animating_flag = True
-            self.play_button.setText("Halt")
+            self.play_button.setText("Pause")
             self.play_button.setStyleSheet("background-color : red")
 
             if self.reset_model_flag:
@@ -1291,7 +1331,8 @@ class Vis(QWidget):
         # print('max=',markers_size.max())
 
         #rwh - temp fix - Ah, error only occurs when "edges" is toggled on
-        if (self.show_edge):
+        # if (self.show_edge):
+        if (self.cells_edge_checked_flag):
             try:
                 # plt.scatter(xvals,yvals, s=markers_size, c=rgbs, edgecolor='black', linewidth=0.5)
                 # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha, edgecolor='black', linewidth=0.5)
@@ -1346,7 +1387,8 @@ class Vis(QWidget):
         # fsub = M[self.field_index,:]   # 
         # print("substrate min,max=",fsub.min(), fsub.max())
 
-        print("M.shape = ",M.shape)  # e.g.,  (6, 421875)  (where 421875=75*75*75)
+        # print("M.shape = ",M.shape)  # e.g.,  (6, 421875)  (where 421875=75*75*75)
+
         # numx = int(M.shape[1] ** (1./3) + 1)
         # numy = numx
         # self.numx = 50  # for template model
@@ -1368,32 +1410,8 @@ class Vis(QWidget):
             return
 
         zvals = M[self.field_index,:].reshape(self.numy,self.numx)
-        print("zvals.min() = ",zvals.min())
-        print("zvals.max() = ",zvals.max())
-
-        # self.num_contours = 15
-
-        # if (self.colormap_fixed_toggle.value):
-        #     try:
-        #         # vmin = 0
-        #         # vmax = 10
-        #         # levels = MaxNLocator(nbins=30).tick_values(vmin, vmax)
-        #         num_contours = 15
-        #         levels = MaxNLocator(nbins=num_contours).tick_values(self.colormap_min.value, self.colormap_max.value)
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-        #     except:
-        #         contour_ok = False
-        #         # print('got error on contourf 1.')
-        # else:    
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap=self.colormap_dd.value)
-        #     except:
-        #         contour_ok = False
-        #             # print('got error on contourf 2.')
 
         contour_ok = True
-        # if (self.colormap_fixed_toggle.value):
-        # self.field_index = 4
 
         if (self.fix_cmap_flag):
             try:
@@ -1419,11 +1437,11 @@ class Vis(QWidget):
         print("# axes = ",len(self.figure.axes))
         if len(self.figure.axes) > 1: 
             pts = self.figure.axes[-1].get_position().get_points()
-            print("type(pts) = ",type(pts))
+            # print("type(pts) = ",type(pts))
             # pts = [[0.78375, 0.11][0.81037234, 0.88]]
             pts = np.array([[0.78375, 0.11],[0.81037234, 0.88]])
 
-            print("figure.axes pts = ",pts)
+            # print("figure.axes pts = ",pts)
             label = self.figure.axes[-1].get_ylabel()
             self.figure.axes[-1].remove()  # replace/update the colorbar
             cax = self.figure.add_axes([pts[0][0],pts[0][1],pts[1][0]-pts[0][0],pts[1][1]-pts[0][1]  ])
@@ -1438,207 +1456,9 @@ class Vis(QWidget):
             # plt.colorbar(im)
             self.figure.colorbar(substrate_plot)
 
-        # if (False):
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-        #     except:
-        #         contour_ok = False
-        #         print('---------got error on contourf 1.')
-        # else:    
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap='viridis')  # self.colormap_dd.value)
-        #     except:
-        #         contour_ok = False
-        #         print('---------got error on contourf 2.')
-
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
 
-        # if (contour_ok):
-        # if (True):
-        #     self.fontsize = 20
-        #     self.ax0.set_title(self.title_str, fontsize=self.fontsize)
-        #     cbar = self.figure.colorbar(substrate_plot, ax=self.ax0)
-        #     cbar.ax.tick_params(labelsize=self.fontsize)
-
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        # self.ax0.set_xlim(-450, self.xmax)
 
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        # self.ax0.set_ylim(0.0, self.ymax)
-        # self.ax0.clf()
-        # self.aspect_ratio = 1.2
-        # ratio_default=(self.ax0.get_xlim()[1]-self.ax0.get_xlim()[0])/(self.ax0.get_ylim()[1]-self.ax0.get_ylim()[0])
-        # ratio_default = (self.plot_xmax - self.plot_xmin) / (self.plot_ymax - self.plot_ymin)
-        # print("ratio_default = ",ratio_default)
-        # self.ax0.set_aspect(ratio_default * self.aspect_ratio)
         self.ax0.set_aspect(1.0)
-
-        # self.ax0.set_aspect(self.plot_ymin, self.plot_ymax)
-
-    #------------------------------------------------------------
-    def plot_substrate_old(self, frame):
-        # global current_idx, axes_max
-        # global current_frame
-
-        xml_file_root = "output%08d.xml" % frame
-        xml_file = os.path.join(self.output_dir, xml_file_root)
-        if not Path(xml_file).is_file():
-            print("ERROR: file not found",xml_file)
-            return
-
-        # xml_file = os.path.join(self.output_dir, xml_file_root)
-        tree = ET.parse(xml_file)
-        root = tree.getroot()
-    #    print('time=' + root.find(".//current_time").text)
-        mins = float(root.find(".//current_time").text)
-        hrs = int(mins/60)
-        days = int(hrs/24)
-        self.title_str = '%d days, %d hrs, %d mins' % (days,hrs-days*24, mins-hrs*60)
-        print(self.title_str)
-
-        fname = "output%08d_microenvironment0.mat" % frame
-        full_fname = os.path.join(self.output_dir, fname)
-        print("\n    ==>>>>> plot_substrate(): full_fname=",full_fname)
-        if not Path(full_fname).is_file():
-            print("ERROR: file not found",full_fname)
-            return
-
-        info_dict = {}
-        scipy.io.loadmat(full_fname, info_dict)
-        M = info_dict['multiscale_microenvironment']
-        print('plot_substrate: self.field_index=',self.field_index)
-
-        # debug
-        # fsub = M[self.field_index,:]   # 
-        # print("substrate min,max=",fsub.min(), fsub.max())
-
-        print("M.shape = ",M.shape)  # e.g.,  (6, 421875)  (where 421875=75*75*75)
-        # numx = int(M.shape[1] ** (1./3) + 1)
-        # numy = numx
-        # self.numx = 50  # for template model
-        # self.numy = 50
-        # self.numx = 88  # for kidney model
-        # self.numy = 75
-        try:
-            print("self.numx, self.numy = ",self.numx, self.numy )
-        except:
-            print("Error: self.numx, self.numy not defined.")
-            return
-        # nxny = numx * numy
-
-        try:
-            xgrid = M[0, :].reshape(self.numy, self.numx)
-            ygrid = M[1, :].reshape(self.numy, self.numx)
-        except:
-            print("error: cannot reshape ",self.numy, self.numx," for array ",M.shape)
-            return
-
-        zvals = M[self.field_index,:].reshape(self.numy,self.numx)
-        print("zvals.min() = ",zvals.min())
-        print("zvals.max() = ",zvals.max())
-
-        # self.num_contours = 15
-
-        # if (self.colormap_fixed_toggle.value):
-        #     try:
-        #         # vmin = 0
-        #         # vmax = 10
-        #         # levels = MaxNLocator(nbins=30).tick_values(vmin, vmax)
-        #         num_contours = 15
-        #         levels = MaxNLocator(nbins=num_contours).tick_values(self.colormap_min.value, self.colormap_max.value)
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-        #     except:
-        #         contour_ok = False
-        #         # print('got error on contourf 1.')
-        # else:    
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap=self.colormap_dd.value)
-        #     except:
-        #         contour_ok = False
-        #             # print('got error on contourf 2.')
-
-        contour_ok = True
-        # if (self.colormap_fixed_toggle.value):
-        # self.field_index = 4
-
-        if (self.fix_cmap_flag):
-            try:
-                # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
-                # substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-                substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, levels=self.fixed_contour_levels, extend='both', cmap='viridis')
-            except:
-                contour_ok = False
-                print('got error on contourf with fixed cmap range.')
-        else:    
-            try:
-                substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap='viridis')  # self.colormap_dd.value)
-            except:
-                contour_ok = False
-                print('got error on contourf with dynamic cmap range.')
-
-        # in case we want to plot a "0.0" contour line
-        # if self.field_index > 4:
-        #     self.ax0.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0], linewidths=0.5)
-
-        # Do this funky stuff to prevent the colorbar from shrinking in height with each redraw.
-        # Except it doesn't seem to work when we use fixed ranges on the colorbar?!
-        print("# axes = ",len(self.figure.axes))
-        if len(self.figure.axes) > 1: 
-            pts = self.figure.axes[-1].get_position().get_points()
-            print("type(pts) = ",type(pts))
-            # pts = [[0.78375, 0.11][0.81037234, 0.88]]
-            pts = np.array([[0.78375, 0.11],[0.81037234, 0.88]])
-
-            print("figure.axes pts = ",pts)
-            label = self.figure.axes[-1].get_ylabel()
-            self.figure.axes[-1].remove()  # replace/update the colorbar
-            cax = self.figure.add_axes([pts[0][0],pts[0][1],pts[1][0]-pts[0][0],pts[1][1]-pts[0][1]  ])
-            
-            #rwh
-            # self.cbar = self.figure.colorbar(substrate_plot, cax=cax)
-            # self.cbar.ax.set_ylabel(label)
-            # self.cbar.ax.tick_params(labelsize=self.fontsize)
-
-            # unfortunately the aspect is different between the initial call to colorbar 
-            #   without cax argument. Try to reset it (but still it's somehow different)
-            # self.cbar.ax.set_aspect(20)
-        else:
-            # plt.colorbar(im)
-            self.figure.colorbar(substrate_plot)
-
-        # if (False):
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-        #     except:
-        #         contour_ok = False
-        #         print('---------got error on contourf 1.')
-        # else:    
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap='viridis')  # self.colormap_dd.value)
-        #     except:
-        #         contour_ok = False
-        #         print('---------got error on contourf 2.')
-
-        self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
-
-        # if (contour_ok):
-        # if (True):
-        #     self.fontsize = 20
-        #     self.ax0.set_title(self.title_str, fontsize=self.fontsize)
-        #     cbar = self.figure.colorbar(substrate_plot, ax=self.ax0)
-        #     cbar.ax.tick_params(labelsize=self.fontsize)
-
-        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        # self.ax0.set_xlim(-450, self.xmax)
-
-        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        # self.ax0.set_ylim(0.0, self.ymax)
-        # self.ax0.clf()
-        # self.aspect_ratio = 1.2
-        # ratio_default=(self.ax0.get_xlim()[1]-self.ax0.get_xlim()[0])/(self.ax0.get_ylim()[1]-self.ax0.get_ylim()[0])
-        # ratio_default = (self.plot_xmax - self.plot_xmin) / (self.plot_ymax - self.plot_ymin)
-        # print("ratio_default = ",ratio_default)
-        # self.ax0.set_aspect(ratio_default * self.aspect_ratio)
-        self.ax0.set_aspect(1.0)
-
-        # self.ax0.set_aspect(self.plot_ymin, self.plot_ymax)

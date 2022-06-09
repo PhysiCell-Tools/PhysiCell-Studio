@@ -22,12 +22,15 @@ class QHLine(QFrame):
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
-    def __init__(self):
+    def __init__(self, studio_flag):
         super().__init__()
         # global self.config_params
 
         # self.nanohub_flag = nanohub_flag
         self.nanohub_flag = False
+
+        self.studio_flag = studio_flag
+        self.vis_tab = None
 
         self.xml_root = None
 
@@ -250,6 +253,16 @@ class Config(QWidget):
         if self.nanohub_flag:
             self.folder.setEnabled(False)
         self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
+        self.folder.textChanged.connect(self.folder_name_cb)
+
+        if self.studio_flag:
+            label = QLabel("Plot/Legend folder")
+            label.setAlignment(QtCore.Qt.AlignRight)
+            self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+            self.plot_folder = QLineEdit()
+            self.config_tab_layout.addWidget(self.plot_folder, idx_row,3,1,1) # w, row, column, rowspan, colspan
+            self.plot_folder.textChanged.connect(self.plot_folder_name_cb)
 
         #------------------
         label = QLabel("Save data:")
@@ -314,6 +327,18 @@ class Config(QWidget):
         self.layout.addWidget(self.scroll)
 
 
+    def folder_name_cb(self):
+        try:  # due to the initial callback
+            self.plot_folder.setText(self.folder.text())
+        except:
+            pass
+
+    def plot_folder_name_cb(self):   # allow plotting data from *any* output dir
+        try:  # due to the initial callback
+            self.vis_tab.output_dir = self.plot_folder.text()
+        except:
+            pass
+
         #--------------------------------------------------------
     def insert_hacky_blank_lines(self, glayout):
         idr = 4
@@ -349,6 +374,8 @@ class Config(QWidget):
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
         self.folder.setText(self.xml_root.find(".//folder").text)
+        if self.studio_flag:
+            self.plot_folder.setText(self.xml_root.find(".//folder").text)
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
@@ -446,6 +473,7 @@ class Config(QWidget):
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
+        print("------- config_tab.py: fill_xml(): setting folder = ",self.folder.text())
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'

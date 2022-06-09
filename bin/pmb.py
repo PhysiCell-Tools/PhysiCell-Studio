@@ -28,6 +28,7 @@ from user_params_tab import UserParams
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
 from vis_tab import Vis 
+from legend_tab import Legend 
         
 # from sbml_tab import SBMLParams 
 
@@ -63,7 +64,8 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(menuWidget)
 
         self.setLayout(vlayout)
-        self.setMinimumSize(1100, 700)  #width, height of window
+        self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(1100, 770)  #width, height of window
 
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
@@ -96,7 +98,7 @@ class PhysiCellXMLCreator(QWidget):
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
 
-        self.config_tab = Config()
+        self.config_tab = Config(self.studio_flag)
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
 
@@ -154,6 +156,7 @@ class PhysiCellXMLCreator(QWidget):
         if self.studio_flag:
             print("studio.py: creating Run and Plot tabs")
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
+            self.run_tab.config_xml_name.setText(copy_file)
             # self.homedir = os.getcwd()
             self.run_tab.homedir = self.homedir
             self.run_tab.config_tab = self.config_tab
@@ -164,6 +167,9 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.run_tab,"Run")
 
             self.vis_tab = Vis(self.nanohub_flag)
+            self.config_tab.vis_tab = self.vis_tab
+
+            self.legend_tab = Legend(self.nanohub_flag)
             self.run_tab.vis_tab = self.vis_tab
             # self.vis_tab.setEnabled(False)
             # self.vis_tab.nanohub_flag = self.nanohub_flag
@@ -172,13 +178,17 @@ class PhysiCellXMLCreator(QWidget):
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
 
+            self.tabWidget.addTab(self.legend_tab,"Legend")
+            self.enableLegendTab(False)
             self.run_tab.vis_tab = self.vis_tab
+            self.run_tab.legend_tab = self.legend_tab
             print("studio.py: calling vis_tab.substrates_cbox_changed_cb(2)")
             self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
             self.vis_tab.init_plot_range(self.config_tab)
 
             self.vis_tab.output_dir = self.config_tab.folder.text()
+            self.legend_tab.output_dir = self.config_tab.folder.text()
             
 
 
@@ -193,6 +203,10 @@ class PhysiCellXMLCreator(QWidget):
     def enablePlotTab(self, bval):
         self.tabWidget.setTabEnabled(5, bval)
 
+    def enableLegendTab(self, bval):
+        self.tabWidget.setTabEnabled(6, bval)   
+
+
     def menu(self):
         menubar = QMenuBar(self)
         menubar.setNativeMenuBar(False)
@@ -200,7 +214,7 @@ class PhysiCellXMLCreator(QWidget):
         #--------------
         file_menu = menubar.addMenu('&File')
 
-        file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
+        # file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
         file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
         # file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
         file_menu.addAction("Save as", self.save_as_cb)
@@ -208,6 +222,11 @@ class PhysiCellXMLCreator(QWidget):
 
         #--------------
         samples_menu = file_menu.addMenu("Samples (copy of)")
+
+        template_act = QAction('template', self)
+        samples_menu.addAction(template_act)
+        template_act.triggered.connect(self.template_cb)
+
         biorobots_act = QAction('biorobots', self)
         samples_menu.addAction(biorobots_act)
         biorobots_act.triggered.connect(self.biorobots_cb)
@@ -239,10 +258,6 @@ class PhysiCellXMLCreator(QWidget):
         cancer_immune_act = QAction('cancer immune (3D)', self)
         samples_menu.addAction(cancer_immune_act)
         cancer_immune_act.triggered.connect(self.cancer_immune_cb)
-
-        template_act = QAction('template', self)
-        samples_menu.addAction(template_act)
-        template_act.triggered.connect(self.template_cb)
 
         physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
         samples_menu.addAction(physiboss_cell_lines_act)
@@ -390,7 +405,6 @@ class PhysiCellXMLCreator(QWidget):
                 # sys.exit(1)
 
             self.add_new_model(copy_file, True)
-            # self.config_file = "config_samples/" + name + ".xml"
             self.config_file = copy_file
             self.show_sample_model()
 
@@ -551,10 +565,14 @@ class PhysiCellXMLCreator(QWidget):
 
     def load_model(self,name):
         # name = "template"
+        self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
+
         os.chdir(self.homedir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
         sample_file = Path("data", name + ".xml")
         copy_file = "copy_" + name + ".xml"
         self.current_save_file = copy_file
+        self.run_tab.config_xml_name.setText(copy_file)
+
         shutil.copy(sample_file, copy_file)
         # self.add_new_model(copy_file, True)
         self.config_file = copy_file
@@ -562,11 +580,16 @@ class PhysiCellXMLCreator(QWidget):
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
             self.config_tab.folder.setText('.')
         
-    def new_model_cb(self):
-        print("new_model_cb():  self.studio_flag= ",self.studio_flag)
+    # def new_model_cb(self):
+    #     print("new_model_cb():  self.studio_flag= ",self.studio_flag)
+    #     self.load_model("template")
+    #     if self.studio_flag:
+    #         self.run_tab.exec_name.setText('./project')
+
+    def template_cb(self):
         self.load_model("template")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./project')
+            self.run_tab.exec_name.setText('./template')
 
     def biorobots_cb(self):
         self.load_model("biorobots_flat")
@@ -607,11 +630,6 @@ class PhysiCellXMLCreator(QWidget):
         self.load_model("cancer_immune3D_flat")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./cancer_immune_3D')
-
-    def template_cb(self):
-        self.load_model("template")
-        if self.studio_flag:
-            self.run_tab.exec_name.setText('./project')
 
     def physiboss_cell_lines_cb(self):
         self.load_model("physiboss_cell_lines")

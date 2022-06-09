@@ -13,6 +13,7 @@ from pathlib import Path
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea, QPushButton,QPlainTextEdit
+from PyQt5.QtWidgets import QMessageBox
 
 from PyQt5.QtCore import QProcess
 
@@ -44,6 +45,7 @@ class RunModel(QWidget):
         self.celldef_tab = None
         self.user_params_tab = None
         self.vis_tab = None
+        self.legend_tab = None
 
         self.output_dir = 'output'
 
@@ -88,7 +90,8 @@ class RunModel(QWidget):
             self.exec_name.setText('myproj')
             self.exec_name.setEnabled(False)
         else:
-            self.exec_name.setText('../myproj')
+            # self.exec_name.setText('../myproj')
+            self.exec_name.setText('template')
         hbox.addWidget(self.exec_name)
 
         hbox.addWidget(QLabel("Config:"))
@@ -127,6 +130,7 @@ class RunModel(QWidget):
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
+        # sys.exit(1)
 
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
@@ -146,10 +150,20 @@ class RunModel(QWidget):
     def run_model_cb(self):
         print("===========  run_model_cb():  ============")
 
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Warning")
+        msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
+        msg.setWindowTitle("Warning")
+        msg.exec_()
+
+        self.run_button.setEnabled(False)
+
         # if self.nanohub_flag: # copy normal workflow of an app, strange as it is
         if True: # copy normal workflow of an app, strange as it is
 
             # make sure we are where we started (app's root dir)
+            print("\n\n------>>>> doing os.chdir to ", self.homedir)
             os.chdir(self.homedir)
 
             # remove any previous data
@@ -179,7 +193,9 @@ class RunModel(QWidget):
             if self.nanohub_flag:
                 tdir = os.path.abspath('tmpdir')
             else:
-                tdir = os.path.abspath('.')
+                # tdir = os.path.abspath('.')
+                tdir = os.path.abspath(self.output_dir)
+
             new_config_file = Path(tdir,"config.xml")
             self.celldef_tab.config_path = new_config_file
             self.update_xml_from_gui()
@@ -193,6 +209,7 @@ class RunModel(QWidget):
             print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             print("run_tab.py: ----> writing modified model to ",new_config_file)
             self.tree.write(new_config_file)  # saves modified XML to tmpdir/config.xml 
+            # sys.exit(1)
 
             # Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
             if self.nanohub_flag:
@@ -233,6 +250,7 @@ class RunModel(QWidget):
             # self.pStudio.enablePlotTab(True)
             # self.tab_widget.enablePlotTab(True)
             self.tab_widget.setTabEnabled(5, True)   # enable (allow to be selected) the Plot tab
+            self.tab_widget.setTabEnabled(6, True)   # enable Legend tab
             self.message("Executing process")
             self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
             self.p.readyReadStandardOutput.connect(self.handle_stdout)
@@ -245,9 +263,11 @@ class RunModel(QWidget):
             if self.nanohub_flag:
                 self.p.start("submit",["--local",exec_str,xml_str])
             else:
-                print("run_tab.py: running: ",exec_str,xml_str)
+                print("\n\nrun_tab.py: running: ",exec_str,xml_str)
                 self.p.start(exec_str, [xml_str])
             # self.p = None  # No, don't do this
+
+            self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
             print("self.p is not None???")
 
@@ -256,6 +276,7 @@ class RunModel(QWidget):
         if self.p:  # process running.
             # self.p.kill()
             self.p.terminate()
+            self.run_button.setEnabled(True)
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
@@ -284,3 +305,4 @@ class RunModel(QWidget):
         if self.nanohub_flag:
             self.download_menu.setEnabled(True)
         self.p = None
+        self.run_button.setEnabled(True)
