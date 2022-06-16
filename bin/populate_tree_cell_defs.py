@@ -1,5 +1,14 @@
-# Parse the .xml config file and create the appropriate data structures that contain the info needed for cell defs.
-#
+"""
+
+Parse the .xml config file and create the appropriate data structures that contain the info needed for cell defs.
+
+Authors:
+Randy Heiland (heiland@iu.edu)
+Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
+Dr. Paul Macklin (macklinp@iu.edu)
+
+"""
+
 import sys
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5 import QtCore

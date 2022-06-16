@@ -150,12 +150,13 @@ class RunModel(QWidget):
     def run_model_cb(self):
         print("===========  run_model_cb():  ============")
 
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText("Warning")
-        msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
-        msg.setWindowTitle("Warning")
-        msg.exec_()
+        if int(self.config_tab.svg_interval.text()) != int(self.config_tab.full_interval.text()):
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Warning")
+            msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
+            msg.setWindowTitle("Warning")
+            msg.exec_()
 
         self.run_button.setEnabled(False)
 

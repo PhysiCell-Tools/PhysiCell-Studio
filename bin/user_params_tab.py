@@ -4,8 +4,6 @@ Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
 
---- Versions ---
-0.1 - initial version
 """
 
 import sys

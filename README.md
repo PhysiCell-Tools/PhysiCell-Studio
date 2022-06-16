@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.4
+VERSION: 2.4.1
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,11 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionality (alpha version)
 ```
+## Release 2.4.1
+* check for 3D model: (zmax-zmin)>dz ; set <domain><use_2D> accordingly
+* bug fixes for Studio modules
+
+
 ## Release 2.4
 * mostly improvements related to the Studio version, e.g.
 * allow for Plotting from different output folders (rf. Config Basics)

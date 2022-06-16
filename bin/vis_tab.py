@@ -1,3 +1,11 @@
+"""
+Authors:
+Randy Heiland (heiland@iu.edu)
+Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
+Dr. Paul Macklin (macklinp@iu.edu)
+
+"""
+
 import sys
 import os
 import time
@@ -714,15 +722,20 @@ class Vis(QWidget):
             self.reset_model()
             self.reset_model_flag = False
 
-        print('cwd = ',os.getcwd())
-        print('self.output_dir = ',self.output_dir)
+        print('last_plot_cb(): cwd = ',os.getcwd())
+        print('last_plot_cb(): self.output_dir = ',self.output_dir)
         # xml_file = Path(self.output_dir, "initial.xml")
         # xml_files = glob.glob('tmpdir/output*.xml')
-        xml_files = glob.glob('output*.xml')
+
+        # full_fname = os.path.join(self.output_dir, fname)
+        xml_files = glob.glob(self.output_dir + '/output*.xml')
+        print("xml_files = ",xml_files)
         if len(xml_files) == 0:
+            print('last_plot_cb(): no xml_files, returning')
             return
         xml_files.sort()
-        svg_files = glob.glob('snapshot*.svg')   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
+        # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
+        svg_files = glob.glob(self.output_dir + '/snapshot*.svg')
         svg_files.sort()
         # print('xml_files = ',xml_files)
         num_xml = len(xml_files)
