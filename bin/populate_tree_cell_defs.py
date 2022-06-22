@@ -346,6 +346,7 @@ def populate_tree_cell_defs(cell_def_tab):
                         print(pd)
                     # print("index=",pd.attrib["index"])
                     sval = pd.text
+                    print("------------ sval for phase duration= ",sval)
 
                     if (pd.attrib['index'] == "0"): 
                         if cycle_code == 0: #'advanced Ki67'
@@ -361,6 +362,7 @@ def populate_tree_cell_defs(cell_def_tab):
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
                                 cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = True
                         elif cycle_code == 5: # 'live'
+                            print("------------ for live: sval for phase duration= ",sval)
                             cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = sval
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
                                 cell_def_tab.param_d[cell_def_name]['cycle_live_duration00_fixed'] = True
@@ -423,7 +425,7 @@ def populate_tree_cell_defs(cell_def_tab):
             # ---------  cycle (live)
             # cell_def_tab.float0.value = float(uep.find('.//cell_definition[1]//phenotype//cycle//phase_transition_rates//rate[1]').text)
 
-            cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = default_sval  # rwh - WHY?!
 
             # ---------  death 
             if debug_print:
