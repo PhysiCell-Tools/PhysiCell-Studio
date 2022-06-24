@@ -3,13 +3,15 @@ Authors:
 Randy Heiland (heiland@iu.edu)
 Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
+
+--- Versions ---
+0.1 - initial version
 """
 
 import sys
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout
-from PyQt5.QtWidgets import QMessageBox
 
 class QHLine(QFrame):
     def __init__(self):
@@ -305,6 +307,16 @@ class Config(QWidget):
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
+        label = QLabel("csv folder")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idx_row += 1
+        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.csv_folder = QLineEdit()
+        if self.nanohub_flag:
+            self.folder.setEnabled(False)
+        self.config_tab_layout.addWidget(self.csv_folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
         self.cells_csv = QCheckBox("cells.csv")
         idx_row += 1
         self.config_tab_layout.addWidget(self.cells_csv, idx_row,1,1,1) # w, row, column, rowspan, colspan
@@ -391,6 +403,7 @@ class Config(QWidget):
         uep = self.xml_root.find(".//initial_conditions//cell_positions")
         if uep == None:  # not present
             return
+        self.csv_folder.setText(self.xml_root.find(".//initial_conditions//cell_positions//folder").text)
         if uep.attrib['enabled'].lower() == 'true':
             self.cells_csv.setChecked(True)
         else:
@@ -417,24 +430,6 @@ class Config(QWidget):
         self.xml_root.find(".//z_min").text = self.zmin.text()
         self.xml_root.find(".//z_max").text = self.zmax.text()
         self.xml_root.find(".//dz").text = self.zdel.text()
-
-        # is this model 2D or 3D?
-        zmax = float(self.zmax.text())
-        zmin = float(self.zmin.text())
-        zdel = float(self.zdel.text())
-        if (zmax-zmin) > zdel:
-            self.xml_root.find(".//domain//use_2D").text = 'false'
-        else:
-            self.xml_root.find(".//domain//use_2D").text = 'true'
-        
-        # may want to check for (max-min) being an integer multiple of delta spacings:
-            # msg = QMessageBox()
-            # msg.setIcon(QMessageBox.Critical)
-            # msg.setText("Warning")
-            # msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
-            # msg.setWindowTitle("Warning")
-            # msg.exec_()
-
 
         # if not self.xml_root.find(".//virtual_wall_at_domain_edge"):
         # opts = self.xml_root.find(".//options")
@@ -509,7 +504,10 @@ class Config(QWidget):
         else:
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'false'
 
-        self.xml_root.find(".//initial_conditions//cell_positions/folder").text = ''
+        # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = ''
+        # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
+        self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
+        print("------- config_tab.py: fill_xml(): setting csv folder = ",self.csv_folder.text())
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:
