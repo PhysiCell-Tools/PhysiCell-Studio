@@ -36,7 +36,7 @@ class RunModel(QWidget):
         # self.nanohub = True
         # following set in pmb.py
         self.homedir = ''   
-        # self.config_file = None
+        self.config_file = None
         self.tree = None
 
         # these get set in pmb.py
@@ -207,9 +207,11 @@ class RunModel(QWidget):
             # self.microenv_tab.fill_xml()
             # self.celldef_tab.fill_xml()
             # self.user_params_tab.fill_xml()
-            print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            print("run_tab.py: ----> writing modified model to ",new_config_file)
-            self.tree.write(new_config_file)  # saves modified XML to tmpdir/config.xml 
+            # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            print("run_tab.py: ----> writing modified model to ",self.config_file)
+            # print("run_tab.py: ----> writing modified model to ",new_config_file)
+            self.tree.write(self.config_file)
+            # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
             # sys.exit(1)
 
             # Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
@@ -266,9 +268,12 @@ class RunModel(QWidget):
             else:
                 print("\n\nrun_tab.py: running: ",exec_str,xml_str)
                 self.p.start(exec_str, [xml_str])
+
+                # print("\n\nrun_tab.py: running: ",exec_str," output/config.xml")
+                # self.p.start(exec_str, ["output/config.xml"])
             # self.p = None  # No, don't do this
 
-            self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
+            # self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
             print("self.p is not None???")
 

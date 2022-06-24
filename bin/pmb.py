@@ -164,6 +164,10 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.celldef_tab = self.celldef_tab
             self.run_tab.user_params_tab = self.user_params_tab
             self.run_tab.tree = self.tree
+
+            self.run_tab.config_file = copy_file
+            self.run_tab.config_xml_name.setText(copy_file)
+
             self.tabWidget.addTab(self.run_tab,"Run")
 
             self.vis_tab = Vis(self.nanohub_flag)
@@ -406,6 +410,9 @@ class PhysiCellXMLCreator(QWidget):
 
             self.add_new_model(copy_file, True)
             self.config_file = copy_file
+            if self.studio_flag:
+                self.run_tab.config_file = copy_file
+                self.run_tab.config_xml_name.setText(copy_file)
             self.show_sample_model()
 
         else:
