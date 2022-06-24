@@ -48,6 +48,8 @@ class PhysiCellXMLCreator(QWidget):
 
         self.studio_flag = studio_flag 
 
+        self.dark_mode = True
+
         self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
 
@@ -110,17 +112,18 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef()
+        self.celldef_tab = CellDef(self.dark_mode)
         self.celldef_tab.xml_root = self.xml_root
+
         cd_name = self.celldef_tab.first_cell_def_name()
-        print("gui4xml: cd_name=",cd_name)
+        print("pmb.py: cd_name=",cd_name)
         # self.celldef_tab.populate_tree()
         populate_tree_cell_defs(self.celldef_tab)
         self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.user_params_tab = UserParams()
+        self.user_params_tab = UserParams(self.dark_mode)
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
@@ -143,7 +146,17 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget = QTabWidget()
         stylesheet = """ 
             QTabBar::tab:selected {background: orange;}  # dodgerblue
+
+            QLabel {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            QPushButton {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
             """
+
         self.tabWidget.setStyleSheet(stylesheet)
         self.tabWidget.addTab(self.config_tab,"Config Basics")
         self.tabWidget.addTab(self.microenv_tab,"Microenvironment")

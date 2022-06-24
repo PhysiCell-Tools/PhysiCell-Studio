@@ -27,7 +27,7 @@ class MyQLineEdit(QLineEdit):
     idx = None  # index
 
 class CellDef(QWidget):
-    def __init__(self):
+    def __init__(self, dark_mode):
         super().__init__()
         # global self.params_cell_def
 
@@ -40,6 +40,13 @@ class CellDef(QWidget):
         self.default_bval = False
         self.default_time_units = "min"
         self.default_rate_units = "1/min"
+
+        # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
+        self.row_color1 = "background-color: Tan"
+        self.row_color2 =  "background-color: LightGreen"
+        if dark_mode:
+            self.row_color1 = "background-color: darkslategray"
+            self.row_color2 =  "background-color: olive"
 
         self.current_cell_def = None
         self.new_cell_def_count = 1
@@ -1285,7 +1292,7 @@ class CellDef(QWidget):
         label = QLabel("Apoptosis")
         label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet('background-color: yellow')
+        label.setStyleSheet('background-color: orange')  # yellow?
         idr = 0
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
@@ -1492,7 +1499,7 @@ class CellDef(QWidget):
         label = QLabel("Necrosis")
         label.setFixedSize(100,20)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet('background-color: yellow')
+        label.setStyleSheet('background-color: orange')
         idr += 1
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
@@ -2177,7 +2184,7 @@ class CellDef(QWidget):
     # </options>
         label = QLabel("Options:")
         label.setFixedSize(80,20)
-        label.setStyleSheet("background-color: yellow")
+        label.setStyleSheet("background-color: orange")
         # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignLeft)
         idr += 1
@@ -2393,7 +2400,7 @@ class CellDef(QWidget):
         label = QLabel("Chemotaxis")
         label.setFixedWidth(200)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet('background-color: yellow')
+        label.setStyleSheet('background-color: orange')
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -2442,7 +2449,7 @@ class CellDef(QWidget):
         label = QLabel("Advanced Chemotaxis")
         label.setFixedWidth(200)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        label.setStyleSheet('background-color: yellow')
+        label.setStyleSheet('background-color: orange')
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -4040,15 +4047,15 @@ class CellDef(QWidget):
             glayout.addWidget(w_desc, idr,1, 1,2) # w, row, column, rowspan, colspan
 
             if idx % 2 == 0:
-                w_varname.setStyleSheet("background-color: Tan")
-                w_varval.setStyleSheet("background-color: Tan")
-                w_units.setStyleSheet("background-color: Tan")
-                w_desc.setStyleSheet("background-color: Tan")
+                w_varname.setStyleSheet(self.row_color1)
+                w_varval.setStyleSheet(self.row_color1)
+                w_units.setStyleSheet(self.row_color1)
+                w_desc.setStyleSheet(self.row_color1)
             else:
-                w_varname.setStyleSheet("background-color: LightGreen")
-                w_varval.setStyleSheet("background-color: LightGreen")
-                w_units.setStyleSheet("background-color: LightGreen")  
-                w_desc.setStyleSheet("background-color: LightGreen")  
+                w_varname.setStyleSheet(self.row_color2)
+                w_varval.setStyleSheet(self.row_color2)
+                w_units.setStyleSheet(self.row_color2)  
+                w_desc.setStyleSheet(self.row_color2)  
 
             self.custom_data_count = self.custom_data_count + 1
 

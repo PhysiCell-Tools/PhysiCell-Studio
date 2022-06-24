@@ -224,7 +224,7 @@ class Vis(QWidget):
 
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
-        self.play_button.setStyleSheet("background-color : lightgreen")
+        self.play_button.setStyleSheet("background-color : green")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         # controls_hbox.addWidget(self.play_button)
@@ -863,7 +863,7 @@ class Vis(QWidget):
         else:
             self.animating_flag = False
             self.play_button.setText("Play")
-            self.play_button.setStyleSheet("background-color : lightgreen")
+            self.play_button.setStyleSheet("background-color : green")
             self.timer.stop()
 
 

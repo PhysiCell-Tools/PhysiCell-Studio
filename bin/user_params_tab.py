@@ -19,13 +19,20 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class UserParams(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, dark_mode):
         super().__init__()
 
         # self.current_param = None
         self.xml_root = None
         self.count = 0
         self.max_rows = 100  # initially
+
+        # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
+        self.row_color1 = "background-color: Tan"
+        self.row_color2 =  "background-color: LightGreen"
+        if dark_mode:
+            self.row_color1 = "background-color: darkslategray"
+            self.row_color2 =  "background-color: olive"
 
         #-------------------------------------------
         self.label_width = 150
@@ -156,16 +163,15 @@ class UserParams(QtWidgets.QWidget):
             hbox.addWidget(w_desc)
 
             if idx % 2 == 0:
-                w_varname.setStyleSheet("background-color: Tan")  
-                # w_cbox.setStyleSheet("background-color: Tan")   # ugly
-                w_val.setStyleSheet("background-color: Tan")  
-                w_units.setStyleSheet("background-color: Tan")  
-                w_desc.setStyleSheet("background-color: Tan")  
+                w_varname.setStyleSheet(self.row_color1)  
+                w_val.setStyleSheet(self.row_color1)  
+                w_units.setStyleSheet(self.row_color1)
+                w_desc.setStyleSheet(self.row_color1)
             else:
-                w_varname.setStyleSheet("background-color: LightGreen")  
-                w_val.setStyleSheet("background-color: LightGreen")  
-                w_units.setStyleSheet("background-color: LightGreen")  
-                w_desc.setStyleSheet("background-color: LightGreen")  
+                w_varname.setStyleSheet(self.row_color2)  
+                w_val.setStyleSheet(self.row_color2)  
+                w_units.setStyleSheet(self.row_color2)
+                w_desc.setStyleSheet(self.row_color2)
 
             # w.setStyleSheet("background-color: lightgray")
             # w.setStyleSheet("background-color: #e4e4e4")
@@ -188,6 +194,21 @@ class UserParams(QtWidgets.QWidget):
 
         self.layout.addLayout(controls_hbox)
         self.layout.addWidget(self.scroll_area)
+
+    def set_colors(self, color1, color2):
+        self.row_color1 = color1 
+        self.row_color2 = color2 
+        for idx in range(self.max_rows):
+            if idx % 2 == 0:
+                w_varname.setStyleSheet(self.row_color1)  
+                w_val.setStyleSheet(self.row_color1)  
+                w_units.setStyleSheet(self.row_color1)
+                w_desc.setStyleSheet(self.row_color1)
+            else:
+                w_varname.setStyleSheet(self.row_color2)  
+                w_val.setStyleSheet(self.row_color2)  
+                w_units.setStyleSheet(self.row_color2)
+                w_desc.setStyleSheet(self.row_color2)
 
     # @QtCore.Slot()
     def clear_rows_cb(self):
@@ -251,16 +272,15 @@ class UserParams(QtWidgets.QWidget):
             # w.setStyleSheet("background-color: lightgray")
 
             if idx % 2 == 0:
-                w_varname.setStyleSheet("background-color: Tan")  
-                # w_cbox.setStyleSheet("background-color: Tan")   # ugly
-                w_val.setStyleSheet("background-color: Tan")  
-                w_units.setStyleSheet("background-color: Tan")  
-                w_desc.setStyleSheet("background-color: Tan")  
+                w_varname.setStyleSheet(self.color1)  
+                w_val.setStyleSheet(self.color1)  
+                w_units.setStyleSheet(self.color1)  
+                w_desc.setStyleSheet(self.color1)  
             else:
-                w_varname.setStyleSheet("background-color: LightGreen")  
-                w_val.setStyleSheet("background-color: LightGreen")  
-                w_units.setStyleSheet("background-color: LightGreen")  
-                w_desc.setStyleSheet("background-color: LightGreen")  
+                w_varname.setStyleSheet(self.color2)  
+                w_val.setStyleSheet(self.color2)  
+                w_units.setStyleSheet(self.color2)  
+                w_desc.setStyleSheet(self.color2)  
 
             self.main_layout.addLayout(hbox)
 
