@@ -48,7 +48,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.studio_flag = studio_flag 
 
-        self.dark_mode = True
+        self.dark_mode = False
 
         self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
