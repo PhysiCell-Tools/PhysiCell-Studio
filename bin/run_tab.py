@@ -273,7 +273,7 @@ class RunModel(QWidget):
                 # self.p.start(exec_str, ["output/config.xml"])
             # self.p = None  # No, don't do this
 
-            # self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
+            self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
             print("self.p is not None???")
 
