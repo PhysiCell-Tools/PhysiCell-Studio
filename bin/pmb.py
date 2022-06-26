@@ -51,7 +51,8 @@ class PhysiCellXMLCreator(QWidget):
         self.studio_flag = studio_flag 
 
         self.dark_mode = False
-        if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
+        # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
+        if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):
             self.dark_mode = True
 
         self.title_prefix = "PhysiCell Model Builder: "
