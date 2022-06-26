@@ -45,8 +45,8 @@ class CellDef(QWidget):
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
         if dark_mode:
-            self.row_color1 = "background-color: darkslategray"
-            self.row_color2 =  "background-color: olive"
+            self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
+            self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
         self.current_cell_def = None
         self.new_cell_def_count = 1
@@ -174,6 +174,7 @@ class CellDef(QWidget):
         # self.interaction_tab = QWidget()
 
         self.custom_data_tab = QWidget()
+        self.custom_data_conserved = []
         self.custom_data_name = []
         self.custom_data_value = []
         self.custom_data_units = []
@@ -3937,12 +3938,17 @@ class CellDef(QWidget):
         #-------------------------
         # Fixed names for columns:
         hbox = QHBoxLayout()
+
+        w = QLabel("Conserved")
+        w.setAlignment(QtCore.Qt.AlignCenter)
+        idr = 0
+        glayout.addWidget(w, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         w = QLabel("Name")
         w.setAlignment(QtCore.Qt.AlignCenter)
         # w.setStyleSheet("color: Salmon")  # PaleVioletRed")
         # hbox.addWidget(w)
-        idr = 0
-        glayout.addWidget(w, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         # col2 = QtWidgets.QLabel("Type")
         # col2.setAlignment(QtCore.Qt.AlignCenter)
@@ -3950,12 +3956,12 @@ class CellDef(QWidget):
         w = QLabel("Value (numeric)")
         w.setAlignment(QtCore.Qt.AlignCenter)
         # hbox.addWidget(w)
-        glayout.addWidget(w, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
         
         w = QLabel("Units")
         w.setAlignment(QtCore.Qt.AlignCenter)
         # w.setStyleSheet("color: Salmon")  # PaleVioletRed")
-        glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(w, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         # glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
         # idx = 0
@@ -3970,6 +3976,7 @@ class CellDef(QWidget):
         # Create lists for the various input boxes
         # TODO! Need lists for each cell type too.
         # self.custom_data_select = []
+        self.custom_data_conserved.clear()
         self.custom_data_name.clear()
         self.custom_data_value.clear()
         self.custom_data_units.clear()
@@ -3984,6 +3991,12 @@ class CellDef(QWidget):
             # hbox.addWidget(w)
 
             #---------------------- 
+
+            # custom variable conserved flag
+            w_check = QCheckBox("")
+            # self.select.append(w_check)
+            w_check.clicked.connect(self.check_clicked)
+
             # custom variable name
             w_varname = MyQLineEdit()
             # rx_valid_varname = QtCore.QRegExp("^[a-zA-Z0-9_]+$")
@@ -3998,10 +4011,12 @@ class CellDef(QWidget):
             # crucial/warning: this "connect" callback can be tricky
             w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
 
+            idr += 1
+            glayout.addWidget(w_check, idr,0, 1,1,QtCore.Qt.AlignCenter) # w, row, column, rowspan, colspan
+
             # w_varname.setReadOnly(True)
             # self.custom_data_name.append(w_varname)
-            idr += 1
-            glayout.addWidget(w_varname, idr,0, 1,1) # w, row, column, rowspan, colspan
+            glayout.addWidget(w_varname, idr,1, 1,1) # w, row, column, rowspan, colspan
 
             #---------------------- 
             # custom variable value
@@ -4011,7 +4026,7 @@ class CellDef(QWidget):
             w_varval.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
             self.custom_data_value.append(w_varval)
             # idr += 1
-            glayout.addWidget(w_varval, idr,1, 1,1) # w, row, column, rowspan, colspan
+            glayout.addWidget(w_varval, idr,2, 1,1) # w, row, column, rowspan, colspan
 
             #---------------------- 
             w_units = MyQLineEdit()
@@ -4020,7 +4035,7 @@ class CellDef(QWidget):
             self.custom_data_units.append(w_units)
             # hbox.addWidget(w)
             # idr += 1
-            glayout.addWidget(w_units, idr,2, 1,1) # w, row, column, rowspan, colspan
+            glayout.addWidget(w_units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
 
             # w = QLineEdit()
@@ -4043,8 +4058,8 @@ class CellDef(QWidget):
             self.custom_data_description.append(w_desc)
 
             # glayout.addWidget(QLabel("Description (optional) --------->"), idr,0, 1,1) # w, row, column, rowspan, colspan
-            glayout.addWidget(desc_label, idr,0, 1,1) # w, row, column, rowspan, colspan
-            glayout.addWidget(w_desc, idr,1, 1,2) # w, row, column, rowspan, colspan
+            glayout.addWidget(desc_label, idr,1, 1,1) # w, row, column, rowspan, colspan
+            glayout.addWidget(w_desc, idr,2, 1,2) # w, row, column, rowspan, colspan
 
             if idx % 2 == 0:
                 w_varname.setStyleSheet(self.row_color1)
@@ -4079,6 +4094,8 @@ class CellDef(QWidget):
         return custom_data_tab_scroll
 
 
+    def check_clicked(self, checked):
+        print("checked = ",checked)
 
     def custom_data_name_changed(self, text):
         print("\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------")

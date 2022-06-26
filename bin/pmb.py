@@ -11,6 +11,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import os
+import platform
 import sys
 import getopt
 import shutil
@@ -20,6 +21,9 @@ from xml.dom import minidom
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QStyleFactory
 
 from config_tab import Config
 from cell_def_tab import CellDef 
@@ -40,15 +44,15 @@ def SingleBrowse(self):
         #         self.csv.append(filePath)
         # print(self.csv)
   
-#class PhysiCellXMLCreator(QTabWidget):
 class PhysiCellXMLCreator(QWidget):
-    # def __init__(self, parent = None):
     def __init__(self, studio_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.studio_flag = studio_flag 
 
         self.dark_mode = False
+        if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
+            self.dark_mode = True
 
         self.title_prefix = "PhysiCell Model Builder: "
         self.setWindowTitle(self.title_prefix)
@@ -786,12 +790,59 @@ def main():
     # print("show_vis_tab = ",show_vis_tab)
     # sys.exit()
 
-    app = QApplication(sys.argv)
-    # ex = PhysiCellXMLCreator()
+    pmb_app = QApplication(sys.argv)
+#    pmb_app.setStyleSheet("")  # affect dark mode?
+    # pmb_app.setStyleSheet("Fusion")  # affect dark mode?
+
+    print("---> ",QStyleFactory.keys())
+
+    # pmb_app.setStyleSheet(open("pyqt5-dark-theme.stylesheet").read())
+    # pmb_app.setStyleSheet(open("darkorange.stylesheet").read())
+    # pmb_app.setStyleSheet(open("pmb_dark.stylesheet").read())
+
+    # Now use a palette to switch to dark colors:
+    # palette = QPalette()
+
+    # # dark mode
+    # palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    # palette.setColor(QPalette.WindowText, Qt.white)
+    # palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    # palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    # palette.setColor(QPalette.ToolTipBase, Qt.black)
+    # palette.setColor(QPalette.ToolTipText, Qt.white)
+    # palette.setColor(QPalette.Text, Qt.white)
+    # palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    # palette.setColor(QPalette.ButtonText, Qt.white)
+    # palette.setColor(QPalette.BrightText, Qt.red)
+    # palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    # palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    # palette.setColor(QPalette.HighlightedText, Qt.black)
+
+    # # non dark mode
+    # rgb = 250
+    # palette.setColor(QPalette.Window, QColor(rgb, rgb, rgb))
+    # palette.setColor(QPalette.WindowText, Qt.black)
+    # palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    # palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    # palette.setColor(QPalette.ToolTipBase, Qt.black)
+    # palette.setColor(QPalette.ToolTipText, Qt.white)
+    # palette.setColor(QPalette.Text, Qt.white)
+    # palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    # palette.setColor(QPalette.ButtonText, Qt.white)
+    # palette.setColor(QPalette.BrightText, Qt.red)
+    # palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    # palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    # palette.setColor(QPalette.HighlightedText, Qt.black)
+
+    # pmb_app.setPalette(palette)
+    # palette = QtGui.QPalette()
+    # print(palette.)
+
+    # pmb_app.setPalette(QtGui.QGuiApplication.palette())
+
     ex = PhysiCellXMLCreator(studio_flag)
-    # ex.setGeometry(100,100, 800,600)
     ex.show()
-    sys.exit(app.exec_())
+    sys.exit(pmb_app.exec_())
 	
 if __name__ == '__main__':
     main()

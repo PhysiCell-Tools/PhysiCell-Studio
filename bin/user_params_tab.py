@@ -27,12 +27,12 @@ class UserParams(QtWidgets.QWidget):
         self.count = 0
         self.max_rows = 100  # initially
 
-        # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
+        # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
         if dark_mode:
-            self.row_color1 = "background-color: darkslategray"
-            self.row_color2 =  "background-color: olive"
+            self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
+            self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
         #-------------------------------------------
         self.label_width = 150
