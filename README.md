@@ -7,7 +7,7 @@ A graphical user interface (GUI) application to make it easier to create and edi
 
 ## Usage
 We recommend installing the [Anaconda Python distribution](https://www.anaconda.com/products/individual) to have the necessary Qt modules (used by the GUI). 
-This Python distribution will also provide plotting modules that are used by the experimental Studio version of the GUI. NOTE: for
+This Python distribution will also provide plotting modules that are used by the experimental Studio version of the GUI.
 
 Download the latest release and run the following command in your Terminal (or Command Prompt) shell:
 ```
