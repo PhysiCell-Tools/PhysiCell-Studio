@@ -18,6 +18,11 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionality (alpha version)
 ```
+## Release 2.5.0
+* handle `conserved` attribute on custom data (if true, daughter cells split quantity evenly)
+* allow CSV vector of values for custom data; drop validation (of numeric value)
+* resolve headache of default dark-mode on macOS/arm64 (from `conda install -c anaconda pyqt`)
+
 ## Release 2.4.1
 * check for 3D model: (zmax-zmin)>dz ; set <domain><use_2D> accordingly
 * bug fixes for Studio modules
