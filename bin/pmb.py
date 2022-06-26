@@ -75,6 +75,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
+        # model_name = "test1"
 
         # then what??
         # binDirectory = os.path.realpath(os.path.abspath(__file__))
@@ -111,7 +112,7 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab = SubstrateDef()
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
-        print("gui4xml: substrate_name=",substrate_name)
+        print("pmb.py: substrate_name=",substrate_name)
         self.microenv_tab.populate_tree()  # rwh: both fill_gui and populate_tree??
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
@@ -486,7 +487,7 @@ class PhysiCellXMLCreator(QWidget):
             self.setWindowTitle(self.title_prefix + out_file)
 
             print("\n\n ===================================")
-            print("gui4xml:  save_as_cb: writing to: ",out_file)
+            print("pmb.py:  save_as_cb: writing to: ",out_file)
 
             self.tree.write(out_file)
 
@@ -504,7 +505,7 @@ class PhysiCellXMLCreator(QWidget):
             self.user_params_tab.fill_xml()
 
             # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
-            # print("gui4xml:  save_cb: writing to: ",self.config_file)
+            # print("pmb.py:  save_cb: writing to: ",self.config_file)
 
             # out_file = self.config_file
             # out_file = "mymodel.xml"
@@ -512,7 +513,7 @@ class PhysiCellXMLCreator(QWidget):
             self.setWindowTitle(self.title_prefix + out_file)
 
             print("\n\n ===================================")
-            print("gui4xml:  save_cb: writing to: ",out_file)
+            print("pmb.py:  save_cb: writing to: ",out_file)
 
             # self.tree.write(self.config_file)
             # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
@@ -583,7 +584,7 @@ class PhysiCellXMLCreator(QWidget):
     #     self.user_params_tab.fill_xml()
 
     #     save_as_file = "mymodel.xml"
-    #     print("gui4xml:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
+    #     print("pmb.py:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
     #     self.tree.write(save_as_file)
 
 

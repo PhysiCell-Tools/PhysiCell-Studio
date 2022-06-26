@@ -174,9 +174,9 @@ class CellDef(QWidget):
         # self.interaction_tab = QWidget()
 
         self.custom_data_tab = QWidget()
-        self.custom_data_conserved = []
+        self.custom_data_conserved = []  # rwh: do I use this?
         self.custom_data_name = []
-        self.custom_data_value = []
+        self.custom_data_value = []   # rwh: [text, conserved_flag] or [text, conserved_flag, units]?
         self.custom_data_units = []
         self.custom_data_description = []
 
@@ -3922,10 +3922,20 @@ class CellDef(QWidget):
         # print("custom_data_value_changed(): vname = ", vname)
         if len(vname) == 0:
             return
-        # print("\n THIS! ~~~~~~~~~~~ cell_def_tab.py: custom_data_value_changed(): vname = ",vname,", val = ", text)
+        print("\n THIS! ~~~~~~~~~~~ cell_def_tab.py: custom_data_value_changed(): vname = ",vname,", val = ", text)
         # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
         # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
-        self.param_d[self.current_cell_def]['custom_data'][vname] = text
+        print("       before:")  # rwh
+        print(self.param_d[self.current_cell_def]['custom_data'][vname])
+
+        # conserved_flag = False
+        # units_val = "dimensionless"
+        conserved_flag = self.param_d[self.current_cell_def]['custom_data'][vname][1]
+        units_val = self.param_d[self.current_cell_def]['custom_data'][vname][2]
+
+        self.param_d[self.current_cell_def]['custom_data'][vname] = [text, conserved_flag, units_val]  # rwh- FIX
+        print("       after:")
+        print(self.param_d[self.current_cell_def]['custom_data'][vname])
         # print(self.param_d[self.current_cell_def]['custom_data'])
 
     #--------------------------------------------------------
@@ -3953,7 +3963,7 @@ class CellDef(QWidget):
         # col2 = QtWidgets.QLabel("Type")
         # col2.setAlignment(QtCore.Qt.AlignCenter)
         # hbox.addWidget(col2)
-        w = QLabel("Value (numeric)")
+        w = QLabel("Value (CSV vector allowed)")
         w.setAlignment(QtCore.Qt.AlignCenter)
         # hbox.addWidget(w)
         glayout.addWidget(w, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -3995,7 +4005,11 @@ class CellDef(QWidget):
             # custom variable conserved flag
             w_check = QCheckBox("")
             # self.select.append(w_check)
-            w_check.clicked.connect(self.check_clicked)
+            # w_check.clicked.connect(self.custom_conserved_check_clicked)
+            w_check.clicked.connect(lambda checked, row=idx: self.custom_conserved_check_clicked(checked, row))
+
+            # w_check.clicked[str].connect(self.custom_conserved_check_clicked)
+            self.custom_data_conserved.append(w_check)
 
             # custom variable name
             w_varname = MyQLineEdit()
@@ -4012,21 +4026,27 @@ class CellDef(QWidget):
             w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
 
             idr += 1
-            glayout.addWidget(w_check, idr,0, 1,1,QtCore.Qt.AlignCenter) # w, row, column, rowspan, colspan
+            idc = 0
+            glayout.addWidget(w_check, idr,idc, 1,1,QtCore.Qt.AlignCenter) # w, row, column, rowspan, colspan
 
             # w_varname.setReadOnly(True)
             # self.custom_data_name.append(w_varname)
-            glayout.addWidget(w_varname, idr,1, 1,1) # w, row, column, rowspan, colspan
+            idc += 1
+            # idc = 0
+            glayout.addWidget(w_varname, idr,idc, 1,1) # w, row, column, rowspan, colspan
 
             #---------------------- 
             # custom variable value
             w_varval = MyQLineEdit()  # using an overloaded class to allow the connection to the custom data variable name!!!
-            w_varval.setValidator(QtGui.QDoubleValidator())
+            # w_varval.setValidator(QtGui.QDoubleValidator())
             w_varval.vname = w_varname
             w_varval.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
             self.custom_data_value.append(w_varval)
+            # conserved_flag = False
+            # self.custom_data_value.append([w_varval, conserved_flag])
             # idr += 1
-            glayout.addWidget(w_varval, idr,2, 1,1) # w, row, column, rowspan, colspan
+            idc += 1
+            glayout.addWidget(w_varval, idr,idc, 1,1) # w, row, column, rowspan, colspan
 
             #---------------------- 
             w_units = MyQLineEdit()
@@ -4035,7 +4055,8 @@ class CellDef(QWidget):
             self.custom_data_units.append(w_units)
             # hbox.addWidget(w)
             # idr += 1
-            glayout.addWidget(w_units, idr,3, 1,1) # w, row, column, rowspan, colspan
+            idc += 1
+            glayout.addWidget(w_units, idr,idc, 1,1) # w, row, column, rowspan, colspan
 
 
             # w = QLineEdit()
@@ -4093,9 +4114,29 @@ class CellDef(QWidget):
         custom_data_tab.setLayout(glayout)
         return custom_data_tab_scroll
 
-
-    def check_clicked(self, checked):
+    def custom_conserved_check_clicked(self,checked,row):
+        print("\n--- custom_conserved_check_clicked()")
+        ch = self.sender()
+        print("type(ch) = ",type(ch))
+        print("ch = ",ch)
         print("checked = ",checked)
+        print("row = ",row)
+        vname = self.master_custom_varname[row]
+        print("vname = ",vname)
+        print("\n--- updating cell def: ",self.current_cell_def)
+        print("before: ", self.param_d[self.current_cell_def]['custom_data'])  # rwh: FIX/TODO
+        self.param_d[self.current_cell_def]['custom_data'][vname][1] = checked  # [vname, conserved_flag, units]
+        print("after: ", self.param_d[self.current_cell_def]['custom_data'])  
+        # print("dir(ch) = ",dir(ch))
+            # print(ch.parent())
+            # ix = self.table.indexAt(ch.pos())
+            # print(ix.row(), ix.column(), ch.isChecked())
+
+    # def custom_conserved_check_clicked(self, checked):
+    #     print("--- custom_conserved_check_clicked(),  checked = ",checked)
+    #     idx = self.sender().idx
+    #     print(" .   idx=",idx)
+    #     print(self.param_d[self.current_cell_def]['custom_data'])  # rwh: FIX/TODO
 
     def custom_data_name_changed(self, text):
         print("\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------")
@@ -4113,7 +4154,8 @@ class CellDef(QWidget):
             self.master_custom_varname.append(vname)
             for cdname in self.param_d.keys():
                 print("----- cdname = ",cdname)
-                self.param_d[cdname]['custom_data'][vname] = '0.0'
+                # self.param_d[cdname]['custom_data'][vname] = '0.0' #rwh: [value, conserved_flag, units]
+                self.param_d[cdname]['custom_data'][vname] = ['0.0',False,""] #rwh: [value, conserved_flag, units]
                 print(self.param_d[cdname]['custom_data'])
             return
 
@@ -4180,6 +4222,13 @@ class CellDef(QWidget):
     def append_more_custom_data(self):
         print("---- append_more_custom_data()")
         for idx in range(5):
+            # w_varname = QLineEdit()
+            # w_varname.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
+            # w_varname.setReadOnly(True)
+            # self.custom_data_name.append(w_varname)
+            # idr += 1
+            # glayout.addWidget(w_varname, idr,0, 1,1) # w, row, column, rowspan, colspan
+
             w_varname = QLineEdit()
             w_varname.setStyleSheet("background-color: Salmon")  # PaleVioletRed")
             w_varname.setReadOnly(True)
@@ -4209,6 +4258,7 @@ class CellDef(QWidget):
             # self.custom_data_name[idx].setReadOnly(True)
 
             self.custom_data_value[idx].setText("") # BEWARE! triggers a callback
+            self.custom_data_conserved[idx].setChecked(False)  # rwh: 
 
             # self.custom_data_units[idx].setReadOnly(False)
             # self.custom_data_units[idx].setText("")
@@ -5568,6 +5618,7 @@ class CellDef(QWidget):
             # print(key,self.param_d[cdname]['custom_data'][key])
             self.custom_data_name[idx].setText('')
             self.custom_data_value[idx].setText('')
+            self.custom_data_conserved[idx].setChecked(False)
             # idx += 1
 
     #-----------------------------------------------------------------------------------------
@@ -5579,10 +5630,27 @@ class CellDef(QWidget):
         # print("num_vals =", num_vals)
         idx = 0
         for key in self.param_d[cdname]['custom_data'].keys():
+            print("['custom_data']keys() = ",self.param_d[cdname]['custom_data'].keys())
             # print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
             if len(key) > 0:  # probably not necessary anymore
+                print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
+
                 self.custom_data_name[idx].setText(key)
-                self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
+                # self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key])
+                # Now (6-26-22) we have a tuple: [value, conserved_flag]
+                self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key][0])
+
+                print("custom_data_conserved[idx]---> ",self.custom_data_conserved[idx])
+                print("['custom_data'][key])       ---> ",self.param_d[cdname]['custom_data'][key])
+                print("['custom_data'][key][0])       ---> ",self.param_d[cdname]['custom_data'][key][0])
+                print("['custom_data'][key][1])       ---> ",self.param_d[cdname]['custom_data'][key][1])
+                print("['custom_data'][key][2])       ---> ",self.param_d[cdname]['custom_data'][key][2])
+
+                self.custom_data_conserved[idx].setChecked(self.param_d[cdname]['custom_data'][key][1])
+                self.custom_data_units[idx].setText(self.param_d[cdname]['custom_data'][key][2])
+
+                # sys.exit(1) # rwh
+
                 # print("\n THIS~~~~~~~~~ cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
             idx += 1
 
@@ -5590,6 +5658,8 @@ class CellDef(QWidget):
         for jdx in range(idx,self.max_custom_data_rows):
             self.custom_data_name[jdx].setText('')
             self.custom_data_value[jdx].setText('')
+            self.custom_data_units[jdx].setText('')
+            self.custom_data_conserved[jdx].setChecked(False)
         # jdx = 0
         # for var in uep_custom_data:
         #     print(jdx, ") ",var)
@@ -6548,12 +6618,18 @@ class CellDef(QWidget):
         for key_name in self.param_d[cdef]['custom_data'].keys():
             units = self.custom_data_units[idx].text()
             desc = self.custom_data_description[idx].text()
+            conserved = "false"
+            if self.param_d[cdef]['custom_data'][key_name][1]:
+            # if self.custom_data_conserved[idx].checkState():
+                conserved = "true"
             idx += 1
             elm = ET.SubElement(custom_data, key_name, 
                     { "units":units,
+                      "conserved":conserved,
                       "description":desc } )
 
-            elm.text = self.param_d[cdef]['custom_data'][key_name]  # value for this var for this cell def
+            # elm.text = self.param_d[cdef]['custom_data'][key_name]  # value for this var for this cell def
+            elm.text = self.param_d[cdef]['custom_data'][key_name][0]  # value for this var for this cell def
             elm.tail = self.indent10
 
         # print("\n------ updated cell_def custom_data:")

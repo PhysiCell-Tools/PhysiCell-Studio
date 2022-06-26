@@ -1314,9 +1314,29 @@ def populate_tree_cell_defs(cell_def_tab):
                     # print("tag= ",var.tag)
                     # print("val= ",val)
                     # cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
-                    cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = val
+
+                    # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = val
                     if var.tag not in cell_def_tab.master_custom_varname:
                         cell_def_tab.master_custom_varname.append(var.tag)
+
+                    conserved_flag = False
+                    print("var.attrib.keys() = ",var.attrib.keys())
+                    if 'conserved' in var.attrib.keys() and var.attrib['conserved'].lower() == 'true':
+                        # self.cells_csv.setChecked(True)
+                        print("-------- conserved is true for ",var)
+                        conserved_flag = True
+
+                    units_val = "dimensionless"
+                    if 'units' in var.attrib.keys():
+                        units_val = var.attrib['units']
+                        print("--------- units_val= ",units_val)
+
+                        # no can do: RuntimeError: dictionary changed size during iteration
+                        # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag+'__conserved'] = True
+
+                    cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag, units_val]
+                    print("populate: cell_def_name= ",cell_def_name," --> custom_data: ",cell_def_tab.param_d[cell_def_name]['custom_data'])
+
                     cell_def_tab.custom_data_count += 1
             #     cell_def_tab.custom_data_name[jdx].setText(var.tag)
             #     print("tag=",var.tag)
@@ -1328,6 +1348,7 @@ def populate_tree_cell_defs(cell_def_tab):
 
                 # print("--------- populate_tree: cell_def_tab.param_d[cell_def_name]['custom_data'] = ",cell_def_tab.param_d[cell_def_name]['custom_data'])
 
+    # sys.exit(1)
 
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
