@@ -16,7 +16,7 @@ python bin/pmb.py  # run PhysiCell model builder
 
 To run the experimental Studio version, use:
 ```
-python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" funtionality (alpha version)
+python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
 ## Release 2.5.0
 * handle `conserved` attribute on custom data (if true, daughter cells split quantity evenly)
