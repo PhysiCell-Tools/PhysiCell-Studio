@@ -233,6 +233,7 @@ class CellDef(QWidget):
         self.new_motility_params(cdname)
         self.new_secretion_params(cdname)
         self.new_interaction_params(cdname)
+        self.new_intracellular_params(cdname)
         # self.new_custom_data_params(cdname)
 
         # print("\n ----- new dict:")
@@ -2869,19 +2870,24 @@ class CellDef(QWidget):
             self.physiboss_cfg_file.setText(file)
 
     def physiboss_bnd_filename_changed(self, text):
-        self.param_d[self.current_cell_def]["intracellular"]['bnd_filename'] = text
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['bnd_filename'] = text
     
     def physiboss_cfg_filename_changed(self, text):
-        self.param_d[self.current_cell_def]["intracellular"]['cfg_filename'] = text
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['cfg_filename'] = text
     
     def physiboss_time_step_changed(self, text):
-        self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
     
     def physiboss_scaling_changed(self, text):
-        self.param_d[self.current_cell_def]["intracellular"]['scaling'] = text
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['scaling'] = text
     
     def physiboss_time_stochasticity_changed(self, text):
-        self.param_d[self.current_cell_def]["intracellular"]['time_stochasticity'] = text
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['time_stochasticity'] = text
     
     def physiboss_clicked_add_initial_value(self):
         self.physiboss_add_initial_values()
@@ -5148,6 +5154,12 @@ class CellDef(QWidget):
 
         # print("\n--------new_interaction_params(): param_d= ",self.param_d)
         # sys.exit(-1)
+
+    def new_intracellular_params(self, cdname):
+
+        print("\n--------new_intracellular_params(): cdname_new= ",cdname)
+        self.param_d[cdname]["intracellular"] = None
+
 
     def add_new_substrate(self, sub_name):
         self.add_new_substrate_comboboxes(sub_name)
