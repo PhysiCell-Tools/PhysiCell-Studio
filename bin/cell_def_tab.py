@@ -3328,13 +3328,13 @@ class CellDef(QWidget):
                 self.param_d[self.current_cell_def]["intracellular"]["outputs"] = []
                 self.physiboss_clear_outputs()
 
-            if self.physiboss_time_step.text() == "":
+            if 'time_step' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_time_step.setText("12.0")
 
-            if self.physiboss_time_stochasticity.text() == "":
+            if 'time_stochasticity' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_time_stochasticity.setText("0.0")
-
-            if self.physiboss_scaling.text() == "":
+            
+            if 'scaling' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_scaling.setText("1.0")
                 
             self.physiboss_boolean_frame.show()
@@ -3544,7 +3544,7 @@ class CellDef(QWidget):
         outputs_node_label = QLabel("Node")
         outputs_action_label = QLabel("Action")
         outputs_value_label = QLabel("Value")
-        outputs_basal_value_label = QLabel("Basal_value")
+        outputs_basal_value_label = QLabel("Base_value")
         outputs_smoothing_label = QLabel("Smoothing")
         outputs_labels.addWidget(outputs_signal_label)
         outputs_labels.addWidget(outputs_action_label)
@@ -6525,37 +6525,55 @@ class CellDef(QWidget):
                         
                         for node, value in self.param_d[cdef]['intracellular']['initial_values']:
                             if node != "" and value != "":
-                                initial_value = ET.SubElement(initial_values, "initial_value", {"node": node})
+                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": node})
                                 initial_value.text = value
                                 initial_value.tail = self.indent14
                         initial_value.tail = self.indent12
                         
+                    # Settings
+                    settings = ET.SubElement(intracellular, "settings")
+                    settings.text = self.indent14
+                    settings.tail = self.indent12
+                
+                    time_step = ET.SubElement(settings, "intracellular_dt")
+                    time_step.text = self.param_d[cdef]['intracellular']['time_step']
+                    time_step.tail = self.indent14
+                    
+                    time_stochasticity = ET.SubElement(settings, "time_stochasticity")
+                    time_stochasticity.text = self.param_d[cdef]['intracellular']['time_stochasticity']
+                    time_stochasticity.tail = self.indent14
+                    
+                    scaling = ET.SubElement(settings, "scaling")
+                    scaling.text = self.param_d[cdef]['intracellular']['scaling']
+                    scaling.tail = self.indent14
+
                     if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
-                        mutants = ET.SubElement(intracellular, "mutations")
-                        mutants.text = self.indent14
-                        mutants.tail = self.indent12
+                        mutants = ET.SubElement(settings, "mutations")
+                        mutants.text = self.indent16
+                        mutants.tail = self.indent14
                         
                         for node, value in self.param_d[cdef]['intracellular']['mutants']:
                             if node != "" and value != "":
-                                mutant = ET.SubElement(mutants, "mutation", {"node": node})
+                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": node})
                                 mutant.text = value
-                                mutant.tail = self.indent14
+                                mutant.tail = self.indent16
 
                         mutant.tail = self.indent12
 
                     if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
-                        parameters = ET.SubElement(intracellular, "parameters")
-                        parameters.text = self.indent14
-                        parameters.tail = self.indent12
+                        parameters = ET.SubElement(settings, "parameters")
+                        parameters.text = self.indent16
+                        parameters.tail = self.indent14
                         
                         for name, value in self.param_d[cdef]['intracellular']['parameters']:
                             if name != "" and value != "":
-                                parameter = ET.SubElement(parameters, "parameter", {"name": name})
+                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": name})
                                 parameter.text = value
-                                parameter.tail = self.indent14
+                                parameter.tail = self.indent16
 
                         parameter.tail = self.indent12
 
+                    # Mapping
                     if len(self.param_d[cdef]['intracellular']['inputs']) > 0 or len(self.param_d[cdef]['intracellular']['outputs']) > 0:
                         mapping = ET.SubElement(intracellular, "mapping")
                         mapping.text = self.indent14
@@ -6564,39 +6582,78 @@ class CellDef(QWidget):
                         tag_input = None
                         for input in self.param_d[cdef]['intracellular']['inputs']:
                             
-                            if input['name'] != '' and input['node'] != '' and input['threshold'] != '':
+                            if input['name'] != '' and input['node'] != '' and input['threshold'] != '' and input['action'] != '':
                                 attribs = {
-                                    'name': input['name'], 'node': input['node'], 
-                                    'action': input['action'], 'threshold': input['threshold'], 
+                                    'physicell_name': input['name'], 'intracellular_name': input['node'], 
+                                    # 'action': input['action'], 'threshold': input['threshold'], 
                                 }
 
-                                if input["inact_threshold"] != input["threshold"]:
-                                    attribs["inact_threshold"] = input["inact_threshold"]
+                                # if input["inact_threshold"] != input["threshold"]:
+                                #     attribs["inact_threshold"] = input["inact_threshold"]
 
-                                if input["smoothing"] != input["smoothing"]:
-                                    attribs["smoothing"] = input["smoothing"]
+                                # if input["smoothing"] != input["smoothing"]:
+                                #     attribs["smoothing"] = input["smoothing"]
 
                                 tag_input = ET.SubElement(mapping, 'input', attribs)
                                 tag_input.tail = self.indent14
-                        
+
+                                tag_input_settings = ET.SubElement(tag_input, "settings")
+                                tag_input_action = ET.SubElement(tag_input_settings, "action")
+                                tag_input_action.text = input["action"]
+                                tag_input_action.tail = self.indent14
+
+                                tag_input_threshold = ET.SubElement(tag_input_settings, "threshold")
+                                tag_input_threshold.text = input["threshold"]
+                                tag_input_threshold.tail = self.indent14
+
+                                if input["inact_threshold"] != input["threshold"]:
+                                    tag_input_inact_threshold = ET.SubElement(tag_input_settings, "inact_threshold")
+                                    tag_input_inact_threshold.text = input["inact_threshold"]
+                                    tag_input_inact_threshold.tail = self.indent14
+                                
+                                if input["smoothing"] != "":
+                                    tag_input_smoothing = ET.SubElement(tag_input_settings, "smoothing")
+                                    tag_input_smoothing.text = input["smoothing"]
+                                    tag_input_smoothing.tail = self.indent14
+                                
                         tag_output = None
                         for output in self.param_d[cdef]['intracellular']['outputs']:
 
-                            if output['name'] != '' and output['node'] != '' and output['value'] != '':
+                            if output['name'] != '' and output['node'] != '' and output['value'] != '' and output['action'] != '':
                                 attribs = {
                                     'name': output['name'], 'node': output['node'], 
-                                    'action': output['action'], 'value': output['value'], 
+                                    # 'action': output['action'], 'value': output['value'], 
                                 }
 
-                                if output["basal_value"] != output["value"]:
-                                    attribs["basal_value"] = output["basal_value"]
+                                # if output["basal_value"] != output["value"]:
+                                #     attribs["basal_value"] = output["basal_value"]
 
-                                if output["smoothing"] != output["smoothing"]:
-                                    attribs["smoothing"] = output["smoothing"]
+                                # if output["smoothing"] != output["smoothing"]:
+                                #     attribs["smoothing"] = output["smoothing"]
 
                                 tag_output = ET.SubElement(mapping, 'output', attribs)
                                 tag_output.tail = self.indent14
-                            
+                                
+                                tag_output_settings = ET.SubElement(tag_output, "settings")
+                                
+                                tag_output_action = ET.SubElement(tag_output_settings, "action")
+                                tag_output_action.text = output["action"]
+                                tag_output_action.tail = self.indent14
+
+                                tag_output_value = ET.SubElement(tag_output_settings, "value")
+                                tag_output_value.text = output["value"]
+                                tag_output_value.tail = self.indent14
+
+                                if output["basal_value"] != output["value"]:
+                                    tag_output_base_value = ET.SubElement(tag_output_settings, "base_value")
+                                    tag_output_base_value.text = output["basal_value"]
+                                    tag_output_base_value.tail = self.indent14
+                                
+                                if output["smoothing"] != "":
+                                    tag_output_smoothing = ET.SubElement(tag_output_settings, "smoothing")
+                                    tag_output_smoothing.text = output["smoothing"]
+                                    tag_output_smoothing.tail = self.indent14
+                                
                         
                         if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
                             tag_input.tail = self.indent12
@@ -6604,17 +6661,6 @@ class CellDef(QWidget):
                             tag_output.tail = self.indent12
 
 
-                    time_step = ET.SubElement(intracellular, "time_step")
-                    time_step.text = self.param_d[cdef]['intracellular']['time_step']
-                    time_step.tail = self.indent12
-                    
-                    time_stochasticity = ET.SubElement(intracellular, "time_stochasticity")
-                    time_stochasticity.text = self.param_d[cdef]['intracellular']['time_stochasticity']
-                    time_stochasticity.tail = self.indent12
-                    
-                    scaling = ET.SubElement(intracellular, "scaling")
-                    scaling.text = self.param_d[cdef]['intracellular']['scaling']
-                    scaling.tail = self.indent10
                     
 
         if self.debug_print_fill_xml:

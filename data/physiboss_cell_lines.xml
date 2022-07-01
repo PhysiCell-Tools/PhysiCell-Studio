@@ -130,7 +130,7 @@
 				<decay_rate units="1/min">.1</decay_rate> 
 			</physical_parameter_set>
 			<initial_condition units="mmHg">38.0</initial_condition>
-			<Dirichlet_boundary_condition units="mmHg" enabled="true">38.0</Dirichlet_boundary_condition>
+			<Dirichlet_boundary_condition units="mmHg" enabled="false">38.0</Dirichlet_boundary_condition>
 		</variable>
 
 		<options>
@@ -244,14 +244,29 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threshold>10</inact_threshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						 </output>
 					</mapping>
 				</intracellular>
 			</phenotype>
@@ -355,14 +370,29 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_1.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>	
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threadshold>10</inact_threadshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						</output>
 					</mapping>
 				</intracellular>
 			</phenotype>
@@ -466,17 +496,32 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+						<mutations>
+							<mutation intracellular_name="C">0.0</mutation>
+						</mutations>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>	
-					<mutations>
-						<mutation node="C">0.0</mutation>
-					</mutations>
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threshold>10</inact_threshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						 </output>
 					</mapping>
 				</intracellular>
 			</phenotype>
@@ -580,17 +625,32 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+						<parameters>
+							<parameter intracellular_name="$time_scale">0.2</parameter>
+						</parameters>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>	
-					<parameters>
-						<parameter name="$time_scale">0.2</parameter>
-					</parameters>
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threshold>10</inact_threshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						</output>
 					</mapping>
 				</intracellular>
 			</phenotype>
@@ -693,15 +753,30 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+						<scaling>0.25</scaling>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>	
-					<scaling>0.25</scaling>
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threshold>10</inact_threshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						</output>
 					</mapping>
 				</intracellular>
 			</phenotype>
@@ -804,17 +879,32 @@
 				<intracellular type="maboss">
 					<bnd_filename>./data/model_0.bnd</bnd_filename>
 					<cfg_filename>./data/model.cfg</cfg_filename>
-					<time_step>1</time_step>
+					<settings>
+						<intracellular_dt>1</intracellular_dt>
+						<parameters>
+							<parameter intracellular_name="$time_scale">0.0</parameter>
+						</parameters>
+					</settings>
 					<initial_values>
-						<initial_value node="A">1</initial_value>
-						<initial_value node="C">0</initial_value>
+						<initial_value intracellular_name="A">1</initial_value>
+						<initial_value intracellular_name="C">0</initial_value>
 					</initial_values>	
-					<parameters>
-						<parameter name="$time_scale">0.0</parameter>
-					</parameters>
 					<mapping>
-						<input name="oxygen" node="A" action="inhibition" threshold="5" inact_threadshold="5"/>
-						<output name="apoptosis" node="C" action="activation" value="5" basal_value="0" smoothing="5"/>
+						<input physicell_name="oxygen" intracellular_name="A">
+							<settings>
+								<action>inhibition</action>
+								<threshold>10</threshold>
+								<inact_threshold>10</inact_threshold>
+							</settings>
+						</input>
+						<output physicell_name="apoptosis" intracellular_name="C">
+							<settings>
+								<action>activation</action>
+								<value>5</value>
+								<base_value>0</base_value>
+								<smoothing>5</smoothing>
+							</settings>
+						</output>
 					</mapping>
 				</intracellular>
 			</phenotype>
