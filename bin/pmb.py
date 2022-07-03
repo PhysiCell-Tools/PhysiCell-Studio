@@ -29,6 +29,7 @@ from config_tab import Config
 from cell_def_tab import CellDef 
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
+from rules_tab import Rules
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
 from vis_tab import Vis 
@@ -45,10 +46,17 @@ def SingleBrowse(self):
         # print(self.csv)
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, studio_flag, parent = None):
+    def __init__(self, studio_flag, rules_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.studio_flag = studio_flag 
+        self.rules_flag = rules_flag 
+
+        self.plot_tab_index = 5
+        self.legend_tab_index = 6
+        if self.rules_flag:
+            self.plot_tab_index = 6
+            self.legend_tab_index = 7
 
         self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
@@ -77,6 +85,7 @@ class PhysiCellXMLCreator(QWidget):
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
         # model_name = "test1"
+        model_name = "interactions"
 
         # then what??
         # binDirectory = os.path.realpath(os.path.abspath(__file__))
@@ -172,6 +181,11 @@ class PhysiCellXMLCreator(QWidget):
         self.homedir = os.getcwd()
         print("model.py: self.homedir = ",self.homedir)
 
+        if self.rules_flag:
+            self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
+            self.rules_tab.fill_gui()
+            self.tabWidget.addTab(self.rules_tab,"Rules")
+
         if self.studio_flag:
             print("studio.py: creating Run and Plot tabs")
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
@@ -224,10 +238,13 @@ class PhysiCellXMLCreator(QWidget):
 
 
     def enablePlotTab(self, bval):
-        self.tabWidget.setTabEnabled(5, bval)
+        # self.tabWidget.setTabEnabled(5, bval)
+        self.tabWidget.setTabEnabled(self.plot_tab_index, bval)
 
     def enableLegendTab(self, bval):
-        self.tabWidget.setTabEnabled(6, bval)   
+        # self.tabWidget.setTabEnabled(6, bval)   
+        # self.tabWidget.setTabEnabled(6, bval)   
+        self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
 
     def menu(self):
@@ -772,9 +789,10 @@ class PhysiCellXMLCreator(QWidget):
 def main():
     # inputfile = ''
     studio_flag = False
+    rules_flag = False
     try:
         # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio"])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "rules"])
     except getopt.GetoptError:
         # print 'test.py -i <inputfile> -o <outputfile>'
         print('\ngetopt exception - usage:')
@@ -787,6 +805,8 @@ def main():
     #   elif opt in ("-i", "--ifile"):
         elif opt in ("--studio"):
             studio_flag = True
+        elif opt in ("--rules"):
+            rules_flag = True
 
     # print 'Input file is "', inputfile
     # print("show_vis_tab = ",show_vis_tab)
@@ -842,7 +862,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
-    ex = PhysiCellXMLCreator(studio_flag)
+    ex = PhysiCellXMLCreator(studio_flag, rules_flag)
     ex.show()
     sys.exit(pmb_app.exec_())
 	
