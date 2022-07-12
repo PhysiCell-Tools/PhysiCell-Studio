@@ -102,6 +102,90 @@ class CellDef(QWidget):
         self.indent18 = '\n                  '
         self.indent20 = '\n                    '
 
+        self.mysignals = {
+            0 : "oxygen",
+            1 : "intracellular oxygen",
+            2 : "oxygen gradient",
+            3 : "pressure",
+            4 : "volume",
+            5 : "contact with default",
+            6 : "contact with other",
+            7 : "contact with another",
+            8 : "contact with yet_another",
+            9 : "contact with yet_yet_another",
+            10 : "contact with last_one",
+            11 : "contact with live cell",
+            12 : "contact with dead cell",
+            13 : "contact with basement membrane",
+            14 : "damage",
+            15 : "dead",
+            16 : "total attack time",
+            17 : "time",
+            18 : "custom:C",
+        }
+
+        self.id_by_signal = {signal: id for id, signal in self.mysignals.items()}
+
+        self.mybehaviours = {
+            0 : "oxygen secretion",
+            1 : "oxygen secretion target",
+            2 : "oxygen uptake",
+            3 : "oxygen export",
+            4 : "cycle entry",
+            5 : "exit from cycle phase 1",
+            6 : "exit from cycle phase 2",
+            7 : "exit from cycle phase 3",
+            8 : "exit from cycle phase 4",
+            9 : "exit from cycle phase 5",
+            10 : "apoptosis",
+            11 : "necrosis",
+            12 : "migration speed",
+            13 : "migration bias",
+            14 : "migration persistence time",
+            15 : "chemotactic response to oxygen",
+            16 : "cell-cell adhesion",
+            17 : "cell-cell adhesion elastic constant",
+            18 : "adhesive affinity to default",
+            19 : "adhesive affinity to other",
+            20 : "adhesive affinity to another",
+            21 : "adhesive affinity to yet_another",
+            22 : "adhesive affinity to yet_yet_another",
+            23 : "adhesive affinity to last_one",
+            24 : "relative maximum adhesion distance",
+            25 : "cell-cell repulsion",
+            26 : "cell-BM adhesion",
+            27 : "cell-BM repulsion",
+            28 : "phagocytose dead cell",
+            29 : "phagocytose default",
+            30 : "phagocytose other",
+            31 : "phagocytose another",
+            32 : "phagocytose yet_another",
+            33 : "phagocytose yet_yet_another",
+            34 : "phagocytose last_one",
+            35 : "attack default",
+            36 : "attack other",
+            37 : "attack another",
+            38 : "attack yet_another",
+            39 : "attack yet_yet_another",
+            40 : "attack last_one",
+            41 : "fuse to default",
+            42 : "fuse to other",
+            43 : "fuse to another",
+            44 : "fuse to yet_another",
+            45 : "fuse to yet_yet_another",
+            46 : "fuse to last_one",
+            47 : "transform to default",
+            48 : "transform to other",
+            49 : "transform to another",
+            50 : "transform to yet_another",
+            51 : "transform to yet_yet_another",
+            52 : "transform to last_one",
+            53 : "custom:C"
+        }
+
+        self.id_by_behaviour = {behaviour: id for id, behaviour in self.mybehaviours.items()}
+
+
         # <substrate name="virus">
         #     <secretion_rate units="1/min">0</secretion_rate>
         #     <secretion_target units="substrate density">1</secretion_target>
@@ -3071,10 +3155,15 @@ class CellDef(QWidget):
     def physiboss_add_input(self):
 
         inputs_editor = QHBoxLayout()
-        inputs_name = QLineEdit()
+                
+        inputs_signal_dropdown = QComboBox()
+        inputs_signal_dropdown.setFixedWidth(200)
+        for _, signal in self.mysignals.items():
+            inputs_signal_dropdown.addItem(signal)
+        
         inputs_node = QLineEdit()
         inputs_action = QComboBox()
-        inputs_action.setFixedWidth(200)
+        inputs_action.setFixedWidth(100)
         inputs_action.addItem("activation")
         inputs_action.addItem("inhibition")
         inputs_remove = QPushButton("Delete")
@@ -3082,15 +3171,14 @@ class CellDef(QWidget):
 
         id = len(self.physiboss_inputs)
         inputs_node.textChanged.connect(lambda text: self.physiboss_inputs_node_changed(id, text))
-        inputs_name.textChanged.connect(lambda text: self.physiboss_inputs_name_changed(id, text))
+        inputs_signal_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_inputs_signal_changed(id, text))
         inputs_action.currentIndexChanged.connect(lambda index: self.physiboss_inputs_action_changed(id, index))
         inputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_input(id))
 
-        inputs_editor.addWidget(inputs_name)
+        inputs_editor.addWidget(inputs_signal_dropdown)
         inputs_editor.addWidget(inputs_action)
         inputs_editor.addWidget(inputs_node)
         
-        # inputs_editor_2 = QHBoxLayout()
         inputs_threshold = QLineEdit()
         inputs_inact_threshold = QLineEdit()
         inputs_smoothing = QLineEdit()        
@@ -3105,12 +3193,13 @@ class CellDef(QWidget):
         inputs_editor.addWidget(inputs_remove)
 
         self.physiboss_inputs_layout.addLayout(inputs_editor)
-        # self.physiboss_inputs_layout.addLayout(inputs_editor_2)
-        self.physiboss_inputs.append((inputs_name, inputs_node, inputs_action, inputs_threshold, inputs_inact_threshold, inputs_smoothing, inputs_remove, inputs_editor))#, inputs_editor_2))
+        self.physiboss_inputs.append((inputs_signal_dropdown, inputs_node, inputs_action, inputs_threshold, inputs_inact_threshold, inputs_smoothing, inputs_remove, inputs_editor))#, inputs_editor_2))
     
     def physiboss_inputs_name_changed(self, i, text):
-        # print()
         self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] = text
+
+    def physiboss_inputs_signal_changed(self, i, index):
+        self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] = self.mysignals[index]
 
     def physiboss_inputs_node_changed(self, i, text):
         self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] = text
@@ -3132,7 +3221,7 @@ class CellDef(QWidget):
         del self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]
 
     def physiboss_remove_input(self, i):
-        self.physiboss_inputs[i][0].textChanged.disconnect()
+        self.physiboss_inputs[i][0].currentIndexChanged.disconnect()
         self.physiboss_inputs[i][0].deleteLater()
         self.physiboss_inputs[i][1].textChanged.disconnect()
         self.physiboss_inputs[i][1].deleteLater()
@@ -3150,9 +3239,9 @@ class CellDef(QWidget):
 
         # Here we should remap the clicked method to have the proper id
         for i, input in enumerate(self.physiboss_inputs):
-            name, node, action, threshold, inact_threshold, smoothing, button, _ = input
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_inputs_name_changed(i, text))
+            signal, node, action, threshold, inact_threshold, smoothing, button, _ = input
+            signal.currentIndexChanged.disconnect()
+            signal.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(i, index))
             node.textChanged.disconnect()
             node.textChanged.connect(lambda text: self.physiboss_inputs_node_changed(i, text))
             node.textChanged.disconnect()
@@ -3185,10 +3274,13 @@ class CellDef(QWidget):
     def physiboss_add_output(self):
 
         outputs_editor = QHBoxLayout()
-        outputs_name = QLineEdit()
+        outputs_behaviour_dropdown = QComboBox()
+        outputs_behaviour_dropdown.setFixedWidth(200)
+        for _, behaviour in self.mybehaviours.items():
+            outputs_behaviour_dropdown.addItem(behaviour)
         outputs_node = QLineEdit()
         outputs_action = QComboBox()
-        outputs_action.setFixedWidth(200)
+        outputs_action.setFixedWidth(100)
         outputs_action.addItem("activation")
         outputs_action.addItem("inhibition")
         outputs_remove = QPushButton("Delete")
@@ -3196,15 +3288,14 @@ class CellDef(QWidget):
 
         id = len(self.physiboss_outputs)
         outputs_node.textChanged.connect(lambda text: self.physiboss_outputs_node_changed(id, text))
-        outputs_name.textChanged.connect(lambda text: self.physiboss_outputs_name_changed(id, text))
+        outputs_behaviour_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_outputs_behaviour_changed(id, text))
         outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
         outputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_output(id))
 
-        outputs_editor.addWidget(outputs_name)
+        outputs_editor.addWidget(outputs_behaviour_dropdown)
         outputs_editor.addWidget(outputs_action)
         outputs_editor.addWidget(outputs_node)
         
-        # outputs_editor_2 = QHBoxLayout()
         outputs_value = QLineEdit()
         outputs_basal_value = QLineEdit()
         outputs_smoothing = QLineEdit()        
@@ -3219,12 +3310,13 @@ class CellDef(QWidget):
         outputs_editor.addWidget(outputs_remove)
 
         self.physiboss_outputs_layout.addLayout(outputs_editor)
-        # self.physiboss_outputs_layout.addLayout(outputs_editor_2)
-        self.physiboss_outputs.append((outputs_name, outputs_node, outputs_action, outputs_value, outputs_basal_value, outputs_smoothing, outputs_remove, outputs_editor))#, outputs_editor_2))
+        self.physiboss_outputs.append((outputs_behaviour_dropdown, outputs_node, outputs_action, outputs_value, outputs_basal_value, outputs_smoothing, outputs_remove, outputs_editor))#, outputs_editor_2))
     
     def physiboss_outputs_name_changed(self, i, text):
-        # print()
         self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] = text
+    
+    def physiboss_outputs_behaviour_changed(self, i, index):
+        self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] = self.mybehaviours[index]
 
     def physiboss_outputs_node_changed(self, i, text):
         self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] = text
@@ -3246,7 +3338,7 @@ class CellDef(QWidget):
         del self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]
 
     def physiboss_remove_output(self, i):
-        self.physiboss_outputs[i][0].textChanged.disconnect()
+        self.physiboss_outputs[i][0].currentIndexChanged.disconnect()
         self.physiboss_outputs[i][0].deleteLater()
         self.physiboss_outputs[i][1].textChanged.disconnect()
         self.physiboss_outputs[i][1].deleteLater()
@@ -3265,8 +3357,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, output in enumerate(self.physiboss_outputs):
             name, node, action, value, basal_value, smoothing, button, _ = output
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_outputs_name_changed(i, text))
+            name.currentIndexChanged.disconnect()
+            name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(i, index))
             node.textChanged.disconnect()
             node.textChanged.connect(lambda text: self.physiboss_outputs_node_changed(i, text))
             action.currentIndexChanged.disconnect()
@@ -5596,7 +5688,7 @@ class CellDef(QWidget):
                 for i, input in enumerate(self.param_d[cdname]["intracellular"]["inputs"]):
                     self.physiboss_add_input()
                     name, node, action, threshold, inact_threshold, smoothing, _, _ = self.physiboss_inputs[i]
-                    name.setText(input["name"])
+                    name.setCurrentIndex(self.id_by_signal[input["name"]])
                     node.setText(input["node"])
                     action.setCurrentIndex(1 if input["action"] == "inhibition" else 0)
                     threshold.setText(input["threshold"])
@@ -5607,7 +5699,7 @@ class CellDef(QWidget):
                 for i, output in enumerate(self.param_d[cdname]["intracellular"]["outputs"]):
                     self.physiboss_add_output()
                     name, node, action, value, basal_value, smoothing, _, _ = self.physiboss_outputs[i]
-                    name.setText(output["name"])
+                    name.setCurrentIndex(self.id_by_behaviour[output["name"]])
                     node.setText(output["node"])
                     action.setCurrentIndex(1 if output["action"] == "inhibition" else 0)
                     value.setText(output["value"])
