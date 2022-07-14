@@ -102,90 +102,6 @@ class CellDef(QWidget):
         self.indent18 = '\n                  '
         self.indent20 = '\n                    '
 
-        self.mysignals = {
-            0 : "oxygen",
-            1 : "intracellular oxygen",
-            2 : "oxygen gradient",
-            3 : "pressure",
-            4 : "volume",
-            5 : "contact with default",
-            6 : "contact with other",
-            7 : "contact with another",
-            8 : "contact with yet_another",
-            9 : "contact with yet_yet_another",
-            10 : "contact with last_one",
-            11 : "contact with live cell",
-            12 : "contact with dead cell",
-            13 : "contact with basement membrane",
-            14 : "damage",
-            15 : "dead",
-            16 : "total attack time",
-            17 : "time",
-            18 : "custom:C",
-        }
-
-        self.id_by_signal = {signal: id for id, signal in self.mysignals.items()}
-
-        self.mybehaviours = {
-            0 : "oxygen secretion",
-            1 : "oxygen secretion target",
-            2 : "oxygen uptake",
-            3 : "oxygen export",
-            4 : "cycle entry",
-            5 : "exit from cycle phase 1",
-            6 : "exit from cycle phase 2",
-            7 : "exit from cycle phase 3",
-            8 : "exit from cycle phase 4",
-            9 : "exit from cycle phase 5",
-            10 : "apoptosis",
-            11 : "necrosis",
-            12 : "migration speed",
-            13 : "migration bias",
-            14 : "migration persistence time",
-            15 : "chemotactic response to oxygen",
-            16 : "cell-cell adhesion",
-            17 : "cell-cell adhesion elastic constant",
-            18 : "adhesive affinity to default",
-            19 : "adhesive affinity to other",
-            20 : "adhesive affinity to another",
-            21 : "adhesive affinity to yet_another",
-            22 : "adhesive affinity to yet_yet_another",
-            23 : "adhesive affinity to last_one",
-            24 : "relative maximum adhesion distance",
-            25 : "cell-cell repulsion",
-            26 : "cell-BM adhesion",
-            27 : "cell-BM repulsion",
-            28 : "phagocytose dead cell",
-            29 : "phagocytose default",
-            30 : "phagocytose other",
-            31 : "phagocytose another",
-            32 : "phagocytose yet_another",
-            33 : "phagocytose yet_yet_another",
-            34 : "phagocytose last_one",
-            35 : "attack default",
-            36 : "attack other",
-            37 : "attack another",
-            38 : "attack yet_another",
-            39 : "attack yet_yet_another",
-            40 : "attack last_one",
-            41 : "fuse to default",
-            42 : "fuse to other",
-            43 : "fuse to another",
-            44 : "fuse to yet_another",
-            45 : "fuse to yet_yet_another",
-            46 : "fuse to last_one",
-            47 : "transform to default",
-            48 : "transform to other",
-            49 : "transform to another",
-            50 : "transform to yet_another",
-            51 : "transform to yet_yet_another",
-            52 : "transform to last_one",
-            53 : "custom:C"
-        }
-
-        self.id_by_behaviour = {behaviour: id for id, behaviour in self.mybehaviours.items()}
-
-
         # <substrate name="virus">
         #     <secretion_rate units="1/min">0</secretion_rate>
         #     <secretion_target units="substrate density">1</secretion_target>
@@ -2956,11 +2872,163 @@ class CellDef(QWidget):
     def physiboss_bnd_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['bnd_filename'] = text
+            self.physiboss_update_list_nodes()
     
     def physiboss_cfg_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['cfg_filename'] = text
     
+    def physiboss_update_list_signals(self):
+
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+
+            self.physiboss_signals = []
+            for substrate in self.substrate_list:
+                self.physiboss_signals.append(substrate)
+
+            for substrate in self.substrate_list:
+                self.physiboss_signals.append("intracellular " + substrate)
+        
+            for substrate in self.substrate_list:
+                self.physiboss_signals.append(substrate + " gradient")
+        
+            self.physiboss_signals += ["pressure", "volume"]
+
+            for celltype in self.celltypes_list:
+                self.physiboss_signals.append("contact with " + celltype)
+
+            self.physiboss_signals += ["contact with live cell", "contact with dead cell", "contact with basement membrane", "damage", "dead", "total attack time", "time"]
+
+            for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
+                name.currentIndexChanged.disconnect()
+                name.clear()
+                for signal in self.physiboss_signals:
+                    name.addItem(signal)
+            
+                if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] is not None
+                    and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] in self.physiboss_signals
+                ):
+                    name.setCurrentIndex(self.physiboss_signals.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"]))
+                else:
+                    name.setCurrentIndex(-1)
+        
+                name.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(id, index))
+
+
+    def physiboss_update_list_behaviours(self):
+
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+
+            self.physiboss_behaviours = []
+            for substrate in self.substrate_list:
+                self.physiboss_behaviours.append(substrate + " secretion")
+
+            for substrate in self.substrate_list:
+                self.physiboss_behaviours.append(substrate + " secretion target")
+        
+            for substrate in self.substrate_list:
+                self.physiboss_behaviours.append(substrate + " uptake")
+
+            for substrate in self.substrate_list:
+                self.physiboss_behaviours.append(substrate + " export")
+        
+            self.physiboss_behaviours += [
+                "cycle entry", "exit from cycle phase 1", "exit from cycle phase 2", "exit from cycle phase 3", "exit from cycle phase 4", "exit from cycle phase 5", 
+                "apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time", "chemotactic response to oxygen", 
+                "cell-cell adhesion", "cell-cell adhesion elastic constant"
+            ]
+
+            for celltype in self.celltypes_list:
+                self.physiboss_behaviours.append("adhesive affinity to " + celltype)
+
+            self.physiboss_behaviours += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+
+            for celltype in self.celltypes_list:
+                self.physiboss_behaviours.append("phagocytose " + celltype)
+
+            for celltype in self.celltypes_list:
+                self.physiboss_behaviours.append("attack " + celltype)
+
+            for celltype in self.celltypes_list:
+                self.physiboss_behaviours.append("fuse " + celltype)
+
+            for celltype in self.celltypes_list:
+                self.physiboss_behaviours.append("transform " + celltype)
+
+
+            for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
+                name.currentIndexChanged.disconnect()
+                name.clear()
+                for behaviour in self.physiboss_behaviours:
+                    name.addItem(behaviour)
+
+                if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] is not None
+                    and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] in self.physiboss_behaviours
+                ):
+                    name.setCurrentIndex(self.physiboss_behaviours.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"]))
+                else:
+                    name.setCurrentIndex(-1)
+
+                name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(id, index))
+
+
+    def physiboss_update_list_nodes(self):
+
+        t_intracellular = self.param_d[self.current_cell_def]["intracellular"]        
+        if t_intracellular is not None:
+
+            # Here I started by looking at both the bnd and the cfg
+            if (
+                t_intracellular is not None 
+                and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(t_intracellular["bnd_filename"]) 
+                # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
+                ):
+                list_nodes = []
+                with open(t_intracellular["bnd_filename"], 'r') as bnd_file:
+                    list_nodes = [node.split(" ")[1] for node in bnd_file.readlines() if node.strip().startswith("Node")]
+            
+                list_output_nodes = []
+                # with open(t_intracellular["cfg_filename"], 'r') as cfg_file:
+                #     list_output_nodes = [(node.split(".")[0], node.split("=")[1].split(";")[0]) for node in cfg_file.readlines() if ".is_internal" in node]
+                # list_internal_nodes = [node for node, value in list_output_nodes if value.lower() in [1, "true"]]
+            
+                list_model_nodes = list(set(list_nodes).difference(set(list_output_nodes)))
+                self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_model_nodes
+
+                for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_model_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_model_nodes
+                    ):
+                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+        
+                for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_model_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(id, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_model_nodes
+                    ):
+                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+            # else:
+            #     for _, node, _, _, _, _, _, _ in self.physiboss_inputs:
+            #         node.clear()
+                
+            #     for _, node, _, _, _, _, _, _ in self.physiboss_outputs:
+            #         node.clear()
+                
     def physiboss_time_step_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
@@ -3158,10 +3226,15 @@ class CellDef(QWidget):
                 
         inputs_signal_dropdown = QComboBox()
         inputs_signal_dropdown.setFixedWidth(200)
-        for _, signal in self.mysignals.items():
+        for signal in self.physiboss_signals:
             inputs_signal_dropdown.addItem(signal)
         
-        inputs_node = QLineEdit()
+        inputs_node_dropdown = QComboBox()
+        inputs_node_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                inputs_node_dropdown.addItem(node)
+        
         inputs_action = QComboBox()
         inputs_action.setFixedWidth(100)
         inputs_action.addItem("activation")
@@ -3170,14 +3243,14 @@ class CellDef(QWidget):
 
 
         id = len(self.physiboss_inputs)
-        inputs_node.textChanged.connect(lambda text: self.physiboss_inputs_node_changed(id, text))
+        inputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
         inputs_signal_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_inputs_signal_changed(id, text))
         inputs_action.currentIndexChanged.connect(lambda index: self.physiboss_inputs_action_changed(id, index))
         inputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_input(id))
 
         inputs_editor.addWidget(inputs_signal_dropdown)
         inputs_editor.addWidget(inputs_action)
-        inputs_editor.addWidget(inputs_node)
+        inputs_editor.addWidget(inputs_node_dropdown)
         
         inputs_threshold = QLineEdit()
         inputs_inact_threshold = QLineEdit()
@@ -3193,17 +3266,16 @@ class CellDef(QWidget):
         inputs_editor.addWidget(inputs_remove)
 
         self.physiboss_inputs_layout.addLayout(inputs_editor)
-        self.physiboss_inputs.append((inputs_signal_dropdown, inputs_node, inputs_action, inputs_threshold, inputs_inact_threshold, inputs_smoothing, inputs_remove, inputs_editor))#, inputs_editor_2))
+        self.physiboss_inputs.append((inputs_signal_dropdown, inputs_node_dropdown, inputs_action, inputs_threshold, inputs_inact_threshold, inputs_smoothing, inputs_remove, inputs_editor))#, inputs_editor_2))
     
-    def physiboss_inputs_name_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] = text
-
     def physiboss_inputs_signal_changed(self, i, index):
-        self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] = self.mysignals[index]
-
-    def physiboss_inputs_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] = text
-
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["name"] = self.physiboss_signals[index]
+        
+    def physiboss_inputs_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
+        
     def physiboss_inputs_action_changed(self, i, index):
         self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["action"] = "activation" if index == 0 else "inhibition"
 
@@ -3223,7 +3295,7 @@ class CellDef(QWidget):
     def physiboss_remove_input(self, i):
         self.physiboss_inputs[i][0].currentIndexChanged.disconnect()
         self.physiboss_inputs[i][0].deleteLater()
-        self.physiboss_inputs[i][1].textChanged.disconnect()
+        self.physiboss_inputs[i][1].currentIndexChanged.disconnect()
         self.physiboss_inputs[i][1].deleteLater()
         self.physiboss_inputs[i][2].currentIndexChanged.disconnect()
         self.physiboss_inputs[i][2].deleteLater()
@@ -3242,9 +3314,8 @@ class CellDef(QWidget):
             signal, node, action, threshold, inact_threshold, smoothing, button, _ = input
             signal.currentIndexChanged.disconnect()
             signal.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(i, index))
-            node.textChanged.disconnect()
-            node.textChanged.connect(lambda text: self.physiboss_inputs_node_changed(i, text))
-            node.textChanged.disconnect()
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
             action.currentIndexChanged.disconnect()
             action.currentIndexChanged.connect(lambda index: self.physiboss_inputs_action_changed(i, index))
             threshold.textChanged.disconnect()
@@ -3276,9 +3347,15 @@ class CellDef(QWidget):
         outputs_editor = QHBoxLayout()
         outputs_behaviour_dropdown = QComboBox()
         outputs_behaviour_dropdown.setFixedWidth(200)
-        for _, behaviour in self.mybehaviours.items():
+        for behaviour in self.physiboss_behaviours:
             outputs_behaviour_dropdown.addItem(behaviour)
-        outputs_node = QLineEdit()
+        
+        outputs_node_dropdown = QComboBox()
+        outputs_node_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                outputs_node_dropdown.addItem(node)
+        
         outputs_action = QComboBox()
         outputs_action.setFixedWidth(100)
         outputs_action.addItem("activation")
@@ -3287,14 +3364,14 @@ class CellDef(QWidget):
 
 
         id = len(self.physiboss_outputs)
-        outputs_node.textChanged.connect(lambda text: self.physiboss_outputs_node_changed(id, text))
+        outputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(id, index))
         outputs_behaviour_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_outputs_behaviour_changed(id, text))
         outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
         outputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_output(id))
 
         outputs_editor.addWidget(outputs_behaviour_dropdown)
         outputs_editor.addWidget(outputs_action)
-        outputs_editor.addWidget(outputs_node)
+        outputs_editor.addWidget(outputs_node_dropdown)
         
         outputs_value = QLineEdit()
         outputs_basal_value = QLineEdit()
@@ -3310,16 +3387,15 @@ class CellDef(QWidget):
         outputs_editor.addWidget(outputs_remove)
 
         self.physiboss_outputs_layout.addLayout(outputs_editor)
-        self.physiboss_outputs.append((outputs_behaviour_dropdown, outputs_node, outputs_action, outputs_value, outputs_basal_value, outputs_smoothing, outputs_remove, outputs_editor))#, outputs_editor_2))
-    
-    def physiboss_outputs_name_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] = text
+        self.physiboss_outputs.append((outputs_behaviour_dropdown, outputs_node_dropdown, outputs_action, outputs_value, outputs_basal_value, outputs_smoothing, outputs_remove, outputs_editor))#, outputs_editor_2))
     
     def physiboss_outputs_behaviour_changed(self, i, index):
-        self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] = self.mybehaviours[index]
-
-    def physiboss_outputs_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] = text
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["name"] = self.physiboss_behaviours[index]
+        
+    def physiboss_outputs_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
 
     def physiboss_outputs_action_changed(self, i, index):
         self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["action"] = "activation" if index == 0 else "inhibition"
@@ -3340,7 +3416,7 @@ class CellDef(QWidget):
     def physiboss_remove_output(self, i):
         self.physiboss_outputs[i][0].currentIndexChanged.disconnect()
         self.physiboss_outputs[i][0].deleteLater()
-        self.physiboss_outputs[i][1].textChanged.disconnect()
+        self.physiboss_outputs[i][1].currentIndexChanged.disconnect()
         self.physiboss_outputs[i][1].deleteLater()
         self.physiboss_outputs[i][2].currentIndexChanged.disconnect()
         self.physiboss_outputs[i][2].deleteLater()
@@ -3359,8 +3435,8 @@ class CellDef(QWidget):
             name, node, action, value, basal_value, smoothing, button, _ = output
             name.currentIndexChanged.disconnect()
             name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(i, index))
-            node.textChanged.disconnect()
-            node.textChanged.connect(lambda text: self.physiboss_outputs_node_changed(i, text))
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
             action.currentIndexChanged.disconnect()
             action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(i, index))
             value.textChanged.disconnect()
@@ -3606,8 +3682,11 @@ class CellDef(QWidget):
         inputs_labels = QHBoxLayout()
 
         inputs_signal_label = QLabel("Signal")
+        inputs_signal_label.setFixedWidth(200)
         inputs_node_label = QLabel("Node")
+        inputs_node_label.setFixedWidth(150)
         inputs_action_label = QLabel("Action")
+        inputs_node_label.setFixedWidth(100)
         inputs_threshold_label = QLabel("Threshold")
         inputs_inact_threshold_label = QLabel("Inact. Threshold")
         inputs_smoothing_label = QLabel("Smoothing")
@@ -3633,8 +3712,12 @@ class CellDef(QWidget):
         outputs_labels = QHBoxLayout()
 
         outputs_signal_label = QLabel("Signal")
+        outputs_signal_label.setFixedWidth(200)
         outputs_node_label = QLabel("Node")
+        outputs_node_label.setFixedWidth(150)
+
         outputs_action_label = QLabel("Action")
+        outputs_action_label.setFixedWidth(100)
         outputs_value_label = QLabel("Value")
         outputs_basal_value_label = QLabel("Base_value")
         outputs_smoothing_label = QLabel("Smoothing")
@@ -4830,6 +4913,8 @@ class CellDef(QWidget):
                 self.motility2_substrate_dropdown.addItem(name)
                 self.secretion_substrate_dropdown.addItem(name)
         # print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
@@ -4860,6 +4945,8 @@ class CellDef(QWidget):
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
         # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     def add_new_celltype_comboboxes(self, name):
@@ -4923,6 +5010,8 @@ class CellDef(QWidget):
 
         # if old_name == self.current_secretion_substrate:
         #     self.current_secretion_substrate = new_name
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     def add_new_substrate_comboboxes(self, substrate_name):
@@ -4936,6 +5025,8 @@ class CellDef(QWidget):
         self.motility_substrate_dropdown.addItem(substrate_name)
         self.motility2_substrate_dropdown.addItem(substrate_name)
         self.secretion_substrate_dropdown.addItem(substrate_name)
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a substrate in the Microenv tab, we need to update all 
@@ -4976,6 +5067,8 @@ class CellDef(QWidget):
 
         if old_name == self.current_secretion_substrate:
             self.current_secretion_substrate = new_name
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a cell type in this tab, we need to update all 
@@ -5025,7 +5118,8 @@ class CellDef(QWidget):
 
         # if old_name == self.current_secretion_substrate:
         #     self.current_secretion_substrate = new_name
-
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
     #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
         # cdname = self.current_cell_def
@@ -5272,11 +5366,14 @@ class CellDef(QWidget):
 
             # initialize motility advanced chemotaxis params
             self.param_d[cdname]["chemotactic_sensitivity"][sub_name] = sval
-
+        
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
 
     def add_new_celltype(self, cdname):
         self.add_new_celltype_comboboxes(cdname)
-
+        self.physiboss_update_list_signals()
+        self.physiboss_update_list_behaviours()
         # sval = self.default_sval
         # for cdname in self.param_d.keys():  # for all cell defs, initialize secretion params
         #     # print('cdname = ',cdname)
@@ -5685,22 +5782,28 @@ class CellDef(QWidget):
                     value.setText(parameter[1])
 
                 self.physiboss_clear_inputs()
+                self.physiboss_clear_outputs()      
+                self.fill_substrates_comboboxes()
+                self.fill_celltypes_comboboxes()
+                self.physiboss_update_list_signals()
+                self.physiboss_update_list_behaviours()
+                self.physiboss_update_list_nodes()
+                
                 for i, input in enumerate(self.param_d[cdname]["intracellular"]["inputs"]):
                     self.physiboss_add_input()
                     name, node, action, threshold, inact_threshold, smoothing, _, _ = self.physiboss_inputs[i]
-                    name.setCurrentIndex(self.id_by_signal[input["name"]])
-                    node.setText(input["node"])
+                    name.setCurrentIndex(self.physiboss_signals.index(input["name"]))
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(input["node"]))
                     action.setCurrentIndex(1 if input["action"] == "inhibition" else 0)
                     threshold.setText(input["threshold"])
                     inact_threshold.setText(input["inact_threshold"])
                     smoothing.setText(input["smoothing"])
 
-                self.physiboss_clear_outputs()
                 for i, output in enumerate(self.param_d[cdname]["intracellular"]["outputs"]):
                     self.physiboss_add_output()
                     name, node, action, value, basal_value, smoothing, _, _ = self.physiboss_outputs[i]
-                    name.setCurrentIndex(self.id_by_behaviour[output["name"]])
-                    node.setText(output["node"])
+                    name.setCurrentIndex(self.physiboss_behaviours.index(output["name"]))
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(output["node"]))
                     action.setCurrentIndex(1 if output["action"] == "inhibition" else 0)
                     value.setText(output["value"])
                     basal_value.setText(output["basal_value"])
@@ -6596,7 +6699,10 @@ class CellDef(QWidget):
 
                     new_bnd_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename']))
                     if self.param_d[cdef]['intracellular']['bnd_filename'] != new_bnd_filename:
-                        shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], new_bnd_filename)
+                        try:
+                            shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], new_bnd_filename)
+                        except shutil.SameFileError as e:
+                            pass
 
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
                     bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
@@ -6604,8 +6710,11 @@ class CellDef(QWidget):
 
                     new_cfg_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename']))
                     if self.param_d[cdef]['intracellular']['cfg_filename'] != new_cfg_filename:
-                        shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], new_cfg_filename)
-    
+                        try:
+                            shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], new_cfg_filename)
+                        except shutil.SameFileError as e:
+                            pass
+
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
                     cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
                     cfg_filename.tail = self.indent12
@@ -6637,9 +6746,10 @@ class CellDef(QWidget):
                     
                     scaling = ET.SubElement(settings, "scaling")
                     scaling.text = self.param_d[cdef]['intracellular']['scaling']
-                    scaling.tail = self.indent14
+                    scaling.tail = self.indent12
 
                     if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
+                        scaling.tail = self.indent14
                         mutants = ET.SubElement(settings, "mutations")
                         mutants.text = self.indent16
                         mutants.tail = self.indent14
@@ -6653,6 +6763,8 @@ class CellDef(QWidget):
                         mutant.tail = self.indent12
 
                     if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
+                        scaling.tail = self.indent14
+
                         parameters = ET.SubElement(settings, "parameters")
                         parameters.text = self.indent16
                         parameters.tail = self.indent14
@@ -6677,36 +6789,36 @@ class CellDef(QWidget):
                             if input['name'] != '' and input['node'] != '' and input['threshold'] != '' and input['action'] != '':
                                 attribs = {
                                     'physicell_name': input['name'], 'intracellular_name': input['node'], 
-                                    # 'action': input['action'], 'threshold': input['threshold'], 
                                 }
 
-                                # if input["inact_threshold"] != input["threshold"]:
-                                #     attribs["inact_threshold"] = input["inact_threshold"]
-
-                                # if input["smoothing"] != input["smoothing"]:
-                                #     attribs["smoothing"] = input["smoothing"]
-
                                 tag_input = ET.SubElement(mapping, 'input', attribs)
+                                tag_input.text = self.indent16
                                 tag_input.tail = self.indent14
 
                                 tag_input_settings = ET.SubElement(tag_input, "settings")
+                                tag_input_settings.text = self.indent18
+                                tag_input_settings.tail = self.indent16
                                 tag_input_action = ET.SubElement(tag_input_settings, "action")
                                 tag_input_action.text = input["action"]
-                                tag_input_action.tail = self.indent14
+                                tag_input_action.tail = self.indent18
 
                                 tag_input_threshold = ET.SubElement(tag_input_settings, "threshold")
                                 tag_input_threshold.text = input["threshold"]
-                                tag_input_threshold.tail = self.indent14
+                                tag_input_threshold.tail = self.indent18
 
+                                t_last_tag = tag_input_threshold
                                 if input["inact_threshold"] != input["threshold"]:
                                     tag_input_inact_threshold = ET.SubElement(tag_input_settings, "inact_threshold")
                                     tag_input_inact_threshold.text = input["inact_threshold"]
-                                    tag_input_inact_threshold.tail = self.indent14
-                                
+                                    tag_input_inact_threshold.tail = self.indent18
+                                    t_last_tag = tag_input_inact_threshold
                                 if input["smoothing"] != "":
                                     tag_input_smoothing = ET.SubElement(tag_input_settings, "smoothing")
                                     tag_input_smoothing.text = input["smoothing"]
-                                    tag_input_smoothing.tail = self.indent14
+                                    tag_input_smoothing.tail = self.indent18
+                                    t_last_tag = tag_input_smoothing
+
+                                t_last_tag.tail = self.indent14
                                 
                         tag_output = None
                         for output in self.param_d[cdef]['intracellular']['outputs']:
@@ -6714,37 +6826,39 @@ class CellDef(QWidget):
                             if output['name'] != '' and output['node'] != '' and output['value'] != '' and output['action'] != '':
                                 attribs = {
                                     'name': output['name'], 'node': output['node'], 
-                                    # 'action': output['action'], 'value': output['value'], 
                                 }
 
-                                # if output["basal_value"] != output["value"]:
-                                #     attribs["basal_value"] = output["basal_value"]
-
-                                # if output["smoothing"] != output["smoothing"]:
-                                #     attribs["smoothing"] = output["smoothing"]
-
                                 tag_output = ET.SubElement(mapping, 'output', attribs)
-                                tag_output.tail = self.indent14
+                                tag_output.text = self.indent16
+                                tag_output.tail = self.indent12
                                 
                                 tag_output_settings = ET.SubElement(tag_output, "settings")
-                                
+                                tag_output_settings.text = self.indent18
+                                tag_output_settings.tail = self.indent14
+
                                 tag_output_action = ET.SubElement(tag_output_settings, "action")
                                 tag_output_action.text = output["action"]
-                                tag_output_action.tail = self.indent14
+                                tag_output_action.tail = self.indent18
 
                                 tag_output_value = ET.SubElement(tag_output_settings, "value")
                                 tag_output_value.text = output["value"]
-                                tag_output_value.tail = self.indent14
+                                tag_output_value.tail = self.indent18
+
+                                t_last_tag = tag_output_value
 
                                 if output["basal_value"] != output["value"]:
                                     tag_output_base_value = ET.SubElement(tag_output_settings, "base_value")
                                     tag_output_base_value.text = output["basal_value"]
-                                    tag_output_base_value.tail = self.indent14
+                                    tag_output_base_value.tail = self.indent18
+                                    t_last_tag = tag_output_base_value
                                 
                                 if output["smoothing"] != "":
                                     tag_output_smoothing = ET.SubElement(tag_output_settings, "smoothing")
                                     tag_output_smoothing.text = output["smoothing"]
-                                    tag_output_smoothing.tail = self.indent14
+                                    tag_output_smoothing.tail = self.indent18
+                                    t_last_tag = tag_output_smoothing
+
+                                t_last_tag.tail = self.indent14
                                 
                         
                         if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
