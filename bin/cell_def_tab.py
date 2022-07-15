@@ -3505,6 +3505,8 @@ class CellDef(QWidget):
             if 'scaling' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_scaling.setText("1.0")
                 
+            self.physiboss_update_list_signals()
+            self.physiboss_update_list_behaviours()
             self.physiboss_boolean_frame.show()
         elif index == 2:
             print("SBML ODEs")
