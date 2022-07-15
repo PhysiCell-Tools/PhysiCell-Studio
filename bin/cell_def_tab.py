@@ -6827,7 +6827,7 @@ class CellDef(QWidget):
 
                             if output['name'] != '' and output['node'] != '' and output['value'] != '' and output['action'] != '':
                                 attribs = {
-                                    'name': output['name'], 'node': output['node'], 
+                                    'physicell_name': output['name'], 'intracellular_name': output['node'], 
                                 }
 
                                 tag_output = ET.SubElement(mapping, 'output', attribs)
