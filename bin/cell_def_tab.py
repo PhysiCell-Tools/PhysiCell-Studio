@@ -2985,7 +2985,7 @@ class CellDef(QWidget):
                 ):
                 list_nodes = []
                 with open(t_intracellular["bnd_filename"], 'r') as bnd_file:
-                    list_nodes = [node.split(" ")[1] for node in bnd_file.readlines() if node.strip().startswith("Node")]
+                    list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
             
                 list_output_nodes = []
                 # with open(t_intracellular["cfg_filename"], 'r') as cfg_file:
