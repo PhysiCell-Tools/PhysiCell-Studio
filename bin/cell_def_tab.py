@@ -2912,7 +2912,7 @@ class CellDef(QWidget):
                 else:
                     name.setCurrentIndex(-1)
         
-                name.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(id, index))
+                name.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(i, index))
 
 
     def physiboss_update_list_behaviours(self):
@@ -2969,7 +2969,7 @@ class CellDef(QWidget):
                 else:
                     name.setCurrentIndex(-1)
 
-                name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(id, index))
+                name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(i, index))
 
 
     def physiboss_update_list_nodes(self):
