@@ -137,7 +137,8 @@ class CellDef(QWidget):
         self.tree.setHeaderItem(header)
 
         self.physiboss_boolean_frame = QFrame()
-        
+        self.physiboss_signals = []
+        self.physiboss_behaviours = []
         items = []
         model = QtCore.QStringListModel()
         model.setStringList(["aaa","bbb"])
