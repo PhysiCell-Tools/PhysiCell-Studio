@@ -632,7 +632,7 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.exec_name.setText('./cancer_immune_3D')
 
     def physiboss_cell_lines_cb(self):
-        self.load_model("physiboss_cell_lines")
+        self.load_model("physiboss_cell_lines_flat")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
 
