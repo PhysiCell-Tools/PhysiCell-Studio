@@ -1250,13 +1250,13 @@ def populate_tree_cell_defs(cell_def_tab):
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_settings.find("time_stochasticity").text if uep_settings.find("time_stochasticity") is not None else "0.0"
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
-                        uep_intracellular_mutants = uep_intracellular.find("mutations")
+                        uep_intracellular_mutants = uep_settings.find("mutations")
                         if uep_intracellular_mutants is not None:
                             for mutant in uep_intracellular_mutants:
                                 cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["intracellular_name"], mutant.text))
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
-                        uep_intracellular_parameters = uep_intracellular.find("parameters")
+                        uep_intracellular_parameters = uep_settings.find("parameters")
                         if uep_intracellular_parameters is not None:
                             for parameter in uep_intracellular_parameters:
                                 cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["intracellular_name"], parameter.text))                    
