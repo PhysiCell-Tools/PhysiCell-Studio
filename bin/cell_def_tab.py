@@ -5761,6 +5761,7 @@ class CellDef(QWidget):
                 if "cfg_filename" in self.param_d[cdname]["intracellular"].keys():
                     self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
                 self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
+                self.physiboss_time_stochasticity.setText(self.param_d[cdname]["intracellular"]["time_stochasticity"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
 
                 self.physiboss_clear_initial_values()
