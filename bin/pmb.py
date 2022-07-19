@@ -127,6 +127,7 @@ class PhysiCellXMLCreator(QWidget):
         cd_name = self.celldef_tab.first_cell_def_name()
         print("pmb.py: cd_name=",cd_name)
         # self.celldef_tab.populate_tree()
+        self.celldef_tab.config_path = self.current_xml_file
         populate_tree_cell_defs(self.celldef_tab)
         self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
@@ -375,6 +376,7 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.clear_custom_data_params()
         # self.celldef_tab.fill_substrates_comboboxes()
         # self.celldef_tab.populate_tree()
+        self.celldef_tab.config_path = self.current_xml_file
         populate_tree_cell_defs(self.celldef_tab)
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
