@@ -3001,7 +3001,7 @@ class CellDef(QWidget):
                     node.clear()
                     for name in list_model_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_model_nodes
@@ -3015,7 +3015,7 @@ class CellDef(QWidget):
                     node.clear()
                     for name in list_model_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(id, index))
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_model_nodes
