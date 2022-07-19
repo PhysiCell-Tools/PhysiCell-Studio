@@ -70,13 +70,13 @@ class RunModel(QWidget):
         hbox = QHBoxLayout()
 
         self.run_button = QPushButton("Run Simulation")
-        self.run_button.setStyleSheet("background-color: green")
+        self.run_button.setStyleSheet("background-color: lightgreen")
         hbox.addWidget(self.run_button)
         self.run_button.clicked.connect(self.run_model_cb)
 
         self.cancel_button = QPushButton("Cancel")
-        # self.cancel_button.setStyleSheet("background-color: red")
-        self.cancel_button.setStyleSheet("background-color: rgb(250,50,50)")
+        self.cancel_button.setStyleSheet("background-color: red")
+        # self.cancel_button.setStyleSheet("background-color: rgb(250,50,50)")
         hbox.addWidget(self.cancel_button)
         self.cancel_button.clicked.connect(self.cancel_model_cb)
 

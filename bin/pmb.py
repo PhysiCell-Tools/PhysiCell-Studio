@@ -14,7 +14,7 @@ import os
 import platform
 import sys
 import getopt
-import shutil
+# import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from xml.dom import minidom
@@ -82,31 +82,25 @@ class PhysiCellXMLCreator(QWidget):
         self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
         self.setMinimumSize(1100, 770)  #width, height of window
 
+        self.homedir = os.getcwd()
+        print("model.py: self.homedir = ",self.homedir)
+
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
         # model_name = "test1"
-        model_name = "interactions"
+        # model_name = "interactions"
 
-        # then what??
-        # binDirectory = os.path.realpath(os.path.abspath(__file__))
-        binDirectory = os.path.dirname(os.path.abspath(__file__))
-        dataDirectory = os.path.join(binDirectory,'..','data')
+        # bin_dir = os.path.dirname(os.path.abspath(__file__))
+        # data_dir = os.path.join(bin_dir,'..','data')
+        # data_dir = os.path.normpath(data_dir)
+        data_dir = os.path.join(self.homedir,'data')
 
-        # read_file = model_name + ".xml"
-        read_file = os.path.join(dataDirectory, model_name + ".xml")
-        # self.setWindowTitle(self.title_prefix + model_name)
+        self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
 
+        # NOTE! We operate *directly* on a default .xml file, not a copy.
 
-        # NOTE! We create a *copy* of the .xml sample model and will save to it.
-        copy_file = "copy_" + model_name + ".xml"
-        self.current_save_file = copy_file
-        try:
-            shutil.copy(read_file, copy_file)
-        except:
-            print("Warning: unable to copy ",read_file," to ",copy_file, "(it may already exist)")
-
-        self.setWindowTitle(self.title_prefix + copy_file)
-        self.config_file = copy_file  # to Save
+        self.setWindowTitle(self.title_prefix + self.current_xml_file)
+        self.config_file = self.current_xml_file  # to Save
 
         self.tree = ET.parse(self.config_file)
         self.xml_root = self.tree.getroot()
@@ -189,7 +183,8 @@ class PhysiCellXMLCreator(QWidget):
         if self.studio_flag:
             print("studio.py: creating Run and Plot tabs")
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
-            self.run_tab.config_xml_name.setText(copy_file)
+            # self.run_tab.config_xml_name.setText(current_xml_file)
+            self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.homedir = os.getcwd()
             self.run_tab.homedir = self.homedir
             self.run_tab.config_tab = self.config_tab
@@ -198,8 +193,8 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.user_params_tab = self.user_params_tab
             self.run_tab.tree = self.tree
 
-            self.run_tab.config_file = copy_file
-            self.run_tab.config_xml_name.setText(copy_file)
+            self.run_tab.config_file = self.current_xml_file
+            self.run_tab.config_xml_name.setText(self.current_xml_file)
 
             self.tabWidget.addTab(self.run_tab,"Run")
 
@@ -315,28 +310,6 @@ class PhysiCellXMLCreator(QWidget):
         # samples_menu.addAction(test_gui_act)
         test_gui_act.triggered.connect(self.test_gui_cb)
 
-        #--------------
-        # file_menu.addAction(open_act)
-        # file_menu.addAction(recent_act)
-        # file_menu.addAction(save_act)
-        # file_menu.addAction(save_act, self.save_act, QtGui.QKeySequence("Ctrl+s"))
-        # file_menu.addAction(saveas_act)
-
-
-        #--------------
-        # self.models_menu = menubar.addMenu('&Models')
-        # models_menu_act = QAction('-----', self)
-        # self.models_menu.addAction(models_menu_act)
-        # models_menu_act.triggered.connect(self.select_current_model_cb)
-        # # self.models_menu.addAction('Load sample', self.select_current_model_cb)
-
-        #--------------
-        # self.tools_menu = menubar.addMenu('&Tools')
-        # validate_act = QAction('Validate', self)
-        # self.tools_menu.addAction(validate_act)
-        # validate_act.triggered.connect(self.validate_cb)
-        # self.tools_menu.setEnabled(False)
-
         if self.nanohub_flag:
             self.download_menu = file_menu.addMenu('Download')
             self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
@@ -352,21 +325,21 @@ class PhysiCellXMLCreator(QWidget):
 
     #-----------------------------------------------------------------
     # Not currently used
-    def add_new_model(self, name, read_only):
-        # does it already exist? If so, return
-        if name in self.model.keys():
-            print("add_new_model: model already exists, just return (dict)= ",self.model)
-            return
-        self.model[name] = read_only
-        self.num_models += 1
-        print("add_new_model: self.model (dict)= ",self.model)
+    # def add_new_model(self, name, read_only):
+    #     # does it already exist? If so, return
+    #     if name in self.model.keys():
+    #         print("add_new_model: model already exists, just return (dict)= ",self.model)
+    #         return
+    #     self.model[name] = read_only
+    #     self.num_models += 1
+    #     print("add_new_model: self.model (dict)= ",self.model)
 
-        # models_menu_act = QAction(name, self)
-        # self.models_menu.addAction(models_menu_act)
-        # models_menu_act.triggered.connect(self.select_current_model_cb)
+    #     # models_menu_act = QAction(name, self)
+    #     # self.models_menu.addAction(models_menu_act)
+    #     # models_menu_act.triggered.connect(self.select_current_model_cb)
 
-        print("add_new_model: title suffix= ",name)
-        self.setWindowTitle(self.title_prefix + name)
+    #     print("add_new_model: title suffix= ",name)
+    #     self.setWindowTitle(self.title_prefix + name)
 
     # Probably not used unless we later implement it
     # def select_current_model_cb(self):
@@ -434,21 +407,14 @@ class PhysiCellXMLCreator(QWidget):
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
             print("open_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
-            # copy_file = "mymodel.xml"
-            fname = os.path.basename(full_path_model_name)
-            copy_file = "copy_" + fname 
-            self.current_save_file = copy_file
-            try:
-                shutil.copy(full_path_model_name, copy_file)
-            except:
-                print("\n-------- Warning: unable to copy: ",full_path_model_name, copy_file)
-                # sys.exit(1)
+            # fname = os.path.basename(full_path_model_name)
+            self.current_xml_file = full_path_model_name
 
-            self.add_new_model(copy_file, True)
-            self.config_file = copy_file
+            # self.add_new_model(self.current_xml_file, True)
+            self.config_file = self.current_xml_file
             if self.studio_flag:
-                self.run_tab.config_file = copy_file
-                self.run_tab.config_xml_name.setText(copy_file)
+                self.run_tab.config_file = self.current_xml_file
+                self.run_tab.config_xml_name.setText(self.current_xml_file)
             self.show_sample_model()
 
         else:
@@ -488,12 +454,14 @@ class PhysiCellXMLCreator(QWidget):
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
             print("save_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
-            self.current_save_file = full_path_model_name
+            # self.current_save_file = full_path_model_name
+            self.current_xml_file = full_path_model_name
         else:
             return
 
         try:
-            self.celldef_tab.config_path = self.current_save_file
+            # self.celldef_tab.config_path = self.current_save_file
+            self.celldef_tab.config_path = self.current_xml_file
             self.config_tab.fill_xml()
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
@@ -501,7 +469,8 @@ class PhysiCellXMLCreator(QWidget):
 
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
-            out_file = self.current_save_file
+            # out_file = self.current_save_file
+            out_file = self.current_xml_file
             self.setWindowTitle(self.title_prefix + out_file)
 
             print("\n\n ===================================")
@@ -515,8 +484,9 @@ class PhysiCellXMLCreator(QWidget):
     def save_cb(self):
         
         try:
-            self.celldef_tab.config_path = self.current_save_file
-            # self.config_file = copy_file
+            # self.celldef_tab.config_path = self.current_save_file
+            self.celldef_tab.config_path = self.current_xml_file
+            self.config_file = self.current_xml_file
             self.config_tab.fill_xml()
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
@@ -527,7 +497,8 @@ class PhysiCellXMLCreator(QWidget):
 
             # out_file = self.config_file
             # out_file = "mymodel.xml"
-            out_file = self.current_save_file
+            # out_file = self.current_save_file
+            out_file = self.current_xml_file
             self.setWindowTitle(self.title_prefix + out_file)
 
             print("\n\n ===================================")
@@ -590,46 +561,28 @@ class PhysiCellXMLCreator(QWidget):
         msg.setWindowTitle("Error")
         msg.setFixedWidth(500)
         msg.exec_()
-    # def save_cb(self):
-    #     # save_as_file = QFileDialog.getSaveFileName(self,'',".")
-    #     # if save_as_file:
-    #     #     print(save_as_file)
-    #     #     print(" save_as_file: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
-
-    #     self.config_tab.fill_xml()
-    #     self.microenv_tab.fill_xml()
-    #     self.celldef_tab.fill_xml()
-    #     self.user_params_tab.fill_xml()
-
-    #     save_as_file = "mymodel.xml"
-    #     print("pmb.py:  save_as_cb: writing to: ",save_as_file) # writing to:  ('/Users/heiland/git/PhysiCell-model-builder/rwh.xml', 'All Files (*)')
-    #     self.tree.write(save_as_file)
 
 
     def load_model(self,name):
-        # name = "template"
         if self.studio_flag:
             self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
 
         os.chdir(self.homedir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
-        sample_file = Path("data", name + ".xml")
-        copy_file = "copy_" + name + ".xml"
-        self.current_save_file = copy_file
-        if self.studio_flag:
-            self.run_tab.config_xml_name.setText(copy_file)
 
-        shutil.copy(sample_file, copy_file)
-        # self.add_new_model(copy_file, True)
-        self.config_file = copy_file
+        data_dir = os.path.join(self.homedir,'data')
+        self.current_xml_file = os.path.join(data_dir, name + ".xml")
+        print("load_model: self.current_xml_file= ",self.current_xml_file)
+
+        # self.current_save_file = current_xml_file
+        if self.studio_flag:
+            self.run_tab.config_xml_name.setText(self.current_xml_file)
+            self.run_tab.config_file = self.current_xml_file
+
+        self.config_file = self.current_xml_file
         self.show_sample_model()
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
             self.config_tab.folder.setText('.')
-        
-    # def new_model_cb(self):
-    #     print("new_model_cb():  self.studio_flag= ",self.studio_flag)
-    #     self.load_model("template")
-    #     if self.studio_flag:
-    #         self.run_tab.exec_name.setText('./project')
+
 
     def template_cb(self):
         self.load_model("template")
