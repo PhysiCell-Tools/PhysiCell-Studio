@@ -1,0 +1,2251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PhysiCell_settings version="devel-version">
+	<domain>
+		<x_min>-400</x_min>
+		<x_max>400</x_max>
+		<y_min>-400</y_min>
+		<y_max>400</y_max>
+		<z_min>-10</z_min>
+		<z_max>10</z_max>
+		<dx>20</dx>
+		<dy>20</dy>
+		<dz>20</dz>
+		<use_2D>true</use_2D>
+	</domain>
+	
+	<overall>
+		<max_time units="min">14400</max_time> 
+		<time_units>min</time_units>
+		<space_units>micron</space_units>
+	
+		<dt_diffusion units="min">0.01</dt_diffusion>
+		<dt_mechanics units="min">0.1</dt_mechanics>
+		<dt_phenotype units="min">6</dt_phenotype>	
+	</overall>
+	
+	<parallel>
+		<omp_num_threads>6</omp_num_threads>
+	</parallel> 
+
+	<options>
+		<legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
+	</options>	
+	
+	<save>
+		<folder>output</folder>  
+
+		<full_data>
+			<interval units="min">60</interval>
+			<enable>true</enable>
+		</full_data>
+		
+		<SVG>
+			<interval units="min">60</interval>
+			<enable>true</enable>
+		</SVG>
+		
+		<legacy_data>
+			<enable>false</enable>
+		</legacy_data>
+	</save>
+	
+	<microenvironment_setup>
+		<variable name="virion" units="virion/micron^3" ID="0">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">2.5</diffusion_coefficient>  
+				<decay_rate units="1/min">0</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="virion/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="virion/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<variable name="assembled virion" units="virion/micron^3" ID="1">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">2.5</diffusion_coefficient>  
+				<decay_rate units="1/min">0</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="virion/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="virion/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<variable name="interferon 1" units="mol/micron^3" ID="2">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">25</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<variable name="pro-inflammatory cytokine" units="mol/micron^3" ID="3">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">555.56</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<variable name="chemokine" units="mol/micron^3" ID="4">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">555.56</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+		
+		<variable name="debris" units="mol/micron^3" ID="5">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">555.56</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+		
+		
+        
+
+		<variable name="pro-pyroptosis cytokine" units="mol/micron^3" ID="6">
+			<physical_parameter_set>
+			 
+				<diffusion_coefficient units="micron^2/min">5.56</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+		
+		
+		<variable name="anti-inflammatory cytokine" units="mol/micron^3" ID="7">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">555.56</diffusion_coefficient>
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<variable name="collagen" units="mol/micron^3" ID="8">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">1e-6</diffusion_coefficient>  
+				<decay_rate units="1/min">1.02e-2</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+		
+		<variable name="Ig" units="mol/micron^3" ID="9">
+			<physical_parameter_set>
+				<diffusion_coefficient units="micron^2/min">6</diffusion_coefficient>  
+				<decay_rate units="1/min">0.00139</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+		
+		<variable name="ROS" units="mol/micron^3" ID="10">
+			<physical_parameter_set> 
+				<diffusion_coefficient units="micron^2/min">1e-6</diffusion_coefficient>  
+				<decay_rate units="1/min">60</decay_rate>  
+			</physical_parameter_set>
+			<initial_condition units="mol/micron^3">0</initial_condition>
+			<Dirichlet_boundary_condition units="mol/micron^3" enabled="false">0</Dirichlet_boundary_condition>
+		</variable>
+
+		<options>
+			<calculate_gradients>true</calculate_gradients>
+			<track_internalized_substrates_in_each_agent>true</track_internalized_substrates_in_each_agent>
+			 
+			<initial_condition type="matlab" enabled="false">
+				<filename>./config/initial.mat</filename>
+			</initial_condition>
+			 
+			<dirichlet_nodes type="matlab" enabled="false">
+				<filename>./config/dirichlet.mat</filename>
+			</dirichlet_nodes>
+		</options>
+	</microenvironment_setup>	
+	
+	<cell_definitions>
+		
+		<cell_definition name="lung epithelium" ID="1" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">0</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">2494</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">540</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">4</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.7</migration_bias>
+					
+					<options>
+						<enabled>false</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>false</enabled>
+							<substrate>chemokine</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="CD8 Tcell" ID="3" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">2.8e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">478</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">47.8</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">4</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.70</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>chemokine</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0.2</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">8.5</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="macrophage" ID="4" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">2.1e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">4849</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">485</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.01</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">4</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.7</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>debris</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="neutrophil" ID="5" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">8.9e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">1437</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">143.7</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">19</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.91</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>debris</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.1</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.117</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">0</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="DC" ID="6" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">8.9e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">1767</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">176.7</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">2</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.7</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>chemokine</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.1</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="CD4 Tcell" ID="7" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">2.8e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">478</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">47.8</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">4</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.70</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>chemokine</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		<cell_definition name="fibroblast" ID="8" parent="default">
+			<phenotype>
+				<cycle code="6" name="flow_cytometry_separated_cycle_model">  
+					
+					<phase_transition_rates units="1/min"> 
+						
+						<rate start_index="0" end_index="1" fixed_duration="false">0</rate>
+						 
+						
+						<rate start_index="1" end_index="2" fixed_duration="true">0.00208333</rate>
+						
+						<rate start_index="2" end_index="3" fixed_duration="true">0.00416667</rate>
+						
+						<rate start_index="3" end_index="0" fixed_duration="true">0.0166667</rate>
+					</phase_transition_rates>
+				</cycle>
+				
+				<death>  
+					<model code="100" name="apoptosis"> 
+						<death_rate units="1/min">2.8e-4</death_rate>  
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+
+					<model code="101" name="necrosis">
+						<death_rate units="1/min">0.0</death_rate>
+						<phase_transition_rates units="1/min">
+							<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+							<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+						</phase_transition_rates>
+						<parameters>
+							<unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
+							<lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
+							<cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
+							<nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+							<calcification_rate units="1/min">0</calcification_rate>
+							<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+						</parameters>
+					</model> 
+				</death>					
+
+				<volume>  
+					<total units="micron^3">2494</total>
+					<fluid_fraction units="dimensionless">0.75</fluid_fraction>
+					<nuclear units="micron^3">540</nuclear>
+					
+					<fluid_change_rate units="1/min">0.05</fluid_change_rate>
+					<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
+					<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
+					
+					<calcified_fraction units="dimensionless">0</calcified_fraction>
+					<calcification_rate units="1/min">0</calcification_rate>
+					
+					<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
+				</volume> 				
+				
+				<mechanics> 
+					<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
+					<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
+					<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
+					
+					<options>
+						<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
+						<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
+					</options>
+				</mechanics>
+				
+				<motility>  
+					<speed units="micron/min">4</speed>
+					<persistence_time units="min">5</persistence_time>
+					<migration_bias units="dimensionless">0.70</migration_bias>
+					
+					<options>
+						<enabled>true</enabled>
+						<use_2D>true</use_2D>
+						<chemotaxis>
+							<enabled>true</enabled>
+							<substrate>anti-inflammatory cytokine</substrate>
+							<direction>1</direction>
+						</chemotaxis>
+					</options>
+				</motility>
+
+				<secretion>
+					<substrate name="virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0</uptake_rate> 
+					</substrate> 	
+					<substrate name="assembled virion">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+						<uptake_rate units="1/min">0.0</uptake_rate> 
+					</substrate> 	
+					<substrate name="interferon 1">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="pro-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="chemokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.01</uptake_rate>
+					</substrate> 	
+					<substrate name="debris">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.1</uptake_rate>
+					</substrate>
+					<substrate name="pro-pyroptosis cytokine">
+						<secretion_target units="dimensionless substrate concentration">0</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate>
+                    <substrate name="anti-inflammatory cytokine">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 
+						<substrate name="collagen">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="ROS">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+					<substrate name="Ig">
+						<secretion_target units="dimensionless substrate concentration">1</secretion_target>
+                        <uptake_rate units="1/min">0.0</uptake_rate>
+					</substrate> 	
+						
+				</secretion>
+
+				<molecular />
+			</phenotype>
+			<custom_data>  
+				 
+				<virion units="virions" type="double" description="endocytosed virions">0</virion>
+				<uncoated_virion units="virions" type="double" description="uncoated endocytosed virions">0</uncoated_virion>
+				<viral_RNA units="RNA" type="double" description="total (functional) viral RNA copies">0</viral_RNA>
+				<viral_protein units="protein" type="double" description="total assembled sets of viral protein">0</viral_protein>
+				<export_virion units="virions" type="double" description="ready to export virion">0</export_virion>
+				<assembled_virion units="virions" type="double" description="total assembled virions">0</assembled_virion>
+				
+				<virion_uncoating_rate type="double" units="1/min" description="rate at which an internalized virion is uncoated">0.01</virion_uncoating_rate>
+				<uncoated_to_RNA_rate type="double" units="1/min" description="rate at which uncoated virion makes its mRNA available">0.01</uncoated_to_RNA_rate> 
+				<max_RNA_replication_rate type="double" units="1/min" description="mRNA self replication max rate">3</max_RNA_replication_rate> 
+				<RNA_replication_half type="double" units="virions" description="mRNA self replication half max">200</RNA_replication_half> 
+				<basal_RNA_degradation_rate type="double" units="1/min" description="mRNA degradation rate">0.01</basal_RNA_degradation_rate> 
+				<protein_synthesis_rate type="double" units="1/min" description="rate at mRNA creates complete set of proteins">0.01</protein_synthesis_rate>
+				<virion_assembly_rate type="double" units="1/min" description="rate at which viral proteins are assembled into complete virion">0.01</virion_assembly_rate>
+ 
+				
+				<virion_export_rate type="double" units="1/min" description="rate at which a virion is exported from a live cell">0.01</virion_export_rate> 
+
+				 
+				<unbound_external_ACE2 type="double" units="receptors" description="initial number of unbound ACE2 receptors on surface">1000</unbound_external_ACE2>
+				<bound_external_ACE2 type="double" units="receptors" description="initial number of bound ACE2 receptors on surface">0</bound_external_ACE2>
+				<unbound_internal_ACE2 type="double" units="receptors" description="initial number of internalized unbound ACE2 receptors">0</unbound_internal_ACE2>
+				<bound_internal_ACE2 type="double" units="receptors" description="initial number of internalized bound ACE2 receptors">0</bound_internal_ACE2>
+	
+				<ACE2_binding_rate type="double" units="1/min" description="ACE2 receptor-virus binding rate">0.0001</ACE2_binding_rate> 
+				<ACE2_endocytosis_rate type="double" units="1/min" description="ACE2 receptor-virus endocytosis rate">0.01</ACE2_endocytosis_rate> 
+				<ACE2_cargo_release_rate type="double" units="1/min" description="ACE2 receptor-virus cargo release rate">0.01</ACE2_cargo_release_rate> 
+				<ACE2_recycling_rate type="double" units="1/min" description="ACE2 receptor recycling rate">0.01</ACE2_recycling_rate> 
+				
+				 
+				<max_infected_apoptosis_rate type="double" units="1/min" description="maximum rate of cell apoptosis due to viral infection">0.002</max_infected_apoptosis_rate>
+				<max_apoptosis_half_max type="double" units="virion" description="viral load at which cells reach half max apoptosis rate">250</max_apoptosis_half_max> 
+				<apoptosis_hill_power type="double" units="none" description="Hill power for viral load apoptosis response">1</apoptosis_hill_power> 
+				<virus_fraction_released_at_death type="double" units="none" description="fraction of internal virus released at cell death">0</virus_fraction_released_at_death>
+				<infected_cell_chemokine_secretion_rate units="1/min" type="double" description="max rate that infected cells secrete chemokine">1</infected_cell_chemokine_secretion_rate>
+				<debris_secretion_rate units="1/min" type="double" description="rate that dead cells release debris">1</debris_secretion_rate>
+				
+				<infected_cell_chemokine_secretion_activated units="none" type="double" description="used internally to track activation of chemokine secretion">0</infected_cell_chemokine_secretion_activated>
+					
+				
+				<nuclear_NFkB type="double" units="a.u. of concentration" description="initial nuclear NFkB concentration">0.25</nuclear_NFkB>
+
+				<inactive_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inactive NLRP3">0</inactive_NLRP3>					
+
+				<active_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of active NLRP3">0</active_NLRP3>
+					
+				<bound_NLRP3 type="double" units="a.u. of concentration" description="initial concentration of inflammasone bound">0</bound_NLRP3>					
+
+				<bound_ASC type="double" units="a.u. of concentration" description="initial concentration of bound ASC">0</bound_ASC>					
+
+				<bound_caspase1 type="double" units="a.u. of concentration" description="initial concentration of bound caspase1">0</bound_caspase1>
+
+				<cleaved_gasderminD type="double" units="a.u. of concentration" description="initial concentration cleaved gasderminD">0</cleaved_gasderminD>	
+
+				<pro_IL_1b type="double" units="a.u. of concentration" description="initial concentration pro-IL-1b">0</pro_IL_1b>	
+
+				<cytoplasmic_IL_1b type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-1b">0</cytoplasmic_IL_1b>	
+
+				<external_IL_1b type="double" units="a.u. of concentration" description="initial concentration external IL-1b">0</external_IL_1b>	
+
+				<cytoplasmic_IL_18 type="double" units="a.u. of concentration" description="initial concentration cytoplasmic IL-18">0</cytoplasmic_IL_18>	
+
+				<external_IL_18 type="double" units="a.u. of concentration" description="initial concentration external IL-18">0</external_IL_18>	
+
+				<cytoplasmic_volume type="double" units="a.u. of volume" description="cytoplasmic cell volume">2494</cytoplasmic_volume>
+				
+				<cell_pyroptosis_flag type="int" units="dimensionless" description="bool for pyropotosis">0</cell_pyroptosis_flag>
+				<cell_bystander_pyroptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_bystander_pyroptosis_flag>
+				<cell_virus_induced_apoptosis_flag type="int" units="dimensionless" description="bool for bystander pyropotosis">0</cell_virus_induced_apoptosis_flag>
+		
+				<internalised_pro_pyroptosis_cytokine units="none" type="double" description="used internally to track pro-pyroptotic cytokine concentration">0</internalised_pro_pyroptosis_cytokine>			
+					
+				
+				<interferon_secretion_rate_via_infection type="double" units="1/min" description="Type-1 interferon secretion rate for infected cells">0.1</interferon_secretion_rate_via_infection>
+ 					
+				<max_interferon_secretion_rate_via_paracrine type="double" units="1/min" description="Type-1 interferon secretion rate after activation by Type-1 interferon">1</max_interferon_secretion_rate_via_paracrine>
+ 					
+				<interferon_max_response_threshold type="double" units="dimensionless" description="Interferon response scales linearly until Int-1 exceeds this threshold">1</interferon_max_response_threshold>
+				<interferon_activation type="double" units="dimensionless" description="Current interferon signaling activation state (between 0 and 1)">0</interferon_activation>
+				<interferon_max_virus_inhibition type="double" units="dimensionless" description="At max interferon activation, max inhibition of viral replication (between 0 and 1)">0.95</interferon_max_virus_inhibition>
+				<interferon_viral_RNA_threshold type="double" units="dimensionless" description="infected cell interferon secretion saturates at this viral RNA level">100</interferon_viral_RNA_threshold>
+				<interferon_viral_RNA_detection type="double" units="dimensionless" description="infected cell interferon secretion starts at this viral RNA level">1</interferon_viral_RNA_detection>
+				
+				 
+				<TCell_detection type="double" units="protein" description="protein value at which a T Cell can detect an infected cell">10</TCell_detection>
+				<TCell_contact_time type="double" units="min" description="tracks total contact time with CD8 T cells">0.0</TCell_contact_time>
+				<cell_attachment_rate units="1/min" type="double" description="the rate at which the cell attaches to cells in contact">0</cell_attachment_rate>
+				<cell_attachment_lifetime units="min" type="double" description="the mean duration of a cell-cell attachment">0</cell_attachment_lifetime>
+				
+				<TCell_contact_death_threshold units="min" type="double" description="threshold CD8 T cell contact time to trigger apoptosis">50</TCell_contact_death_threshold> 
+				<max_attachment_distance units="micron" type="double" desription="max distance at which to form a cell-cell attachment">15</max_attachment_distance>
+				<elastic_attachment_coefficient units="1/min" type="double" description="elastic coefficient for cell-cell attachment">0.01</elastic_attachment_coefficient>
+		
+				
+				<time_to_next_phagocytosis units="min" type="double" description="time it takes for the apoptotic material to be phagocytosed">0</time_to_next_phagocytosis>
+				
+				<material_internalisation_rate units="micron/min" type="double" desription="rate material is ingested by phagocyte">1</material_internalisation_rate>
+				
+				<threshold_macrophage_volume units="micron" type="double" desription="Threshold volume for macrophage exhaustion">6500</threshold_macrophage_volume>
+				
+				<threshold_neutrophil_volume units="micron" type="double" desription="Threshold volume for neutrophil exhaustion">1581</threshold_neutrophil_volume>
+				 
+				<exhausted_macrophage_death_rate units="1/min" type="double" desription="Threshold volume for neutrophil exhaustion">0.01</exhausted_macrophage_death_rate>
+				 
+				<ability_to_phagocytose_infected_cell units="dimensionless" type="int" description="Boolean for whether macrophages can phagocytose infected cells">0</ability_to_phagocytose_infected_cell>
+				 
+				<time_of_DC_departure units="min" type="double" description="Time DC leaves tissue after activation">0</time_of_DC_departure>
+ 
+
+				
+				<phagocytosis_rate units="1/min" type="double" desription="rate of phagocytosing a nearby target">0.167</phagocytosis_rate>
+				
+				
+				
+				
+					
+				<phagocytosis_relative_target_cutoff_size unit="dimensionless" type="double" desription="do not phagocytose anything over this size (relative to cell's volume)">1.1</phagocytosis_relative_target_cutoff_size>
+
+				<sensitivity_to_debris_chemotaxis units="dimensionless" type="double" description="relative sensitivity to debris in chemotaxis">1.0</sensitivity_to_debris_chemotaxis>
+				<sensitivity_to_chemokine_chemotaxis units="dimensionless" type="double" description="relative sensitivity to chemokine in chemotaxis">10.0</sensitivity_to_chemokine_chemotaxis> 
+
+				<activated_speed units="micron/min" type="double" description="speed after activation">0.4</activated_speed>
+				<activated_cytokine_secretion_rate units="1/min" type="double" description="rate of secreting pro-inflamatory cytokine after activation">3</activated_cytokine_secretion_rate>
+
+				<activated_immune_cell units="dimensionless" type="double" description="used internally to track activation state">0.0</activated_immune_cell>
+					
+				
+				<antiinflammatory_cytokine_secretion_rate units="1/min" type="double" description="secretion rate of anti-inflammatory from infected epithelium cell">15</antiinflammatory_cytokine_secretion_rate>
+				<collagen_secretion_rate units="1/min" type="double" description="secretion rate of collagen from fibroblast">1</collagen_secretion_rate>
+
+				 
+				
+				<generation units="dimensionless" type="int" description="cell proliferation generation">3</generation>
+			
+			</custom_data>
+		</cell_definition>
+		
+		</cell_definitions>
+	
+	
+	
+	<user_parameters>
+		<random_seed type="int" units="dimensionless">0</random_seed> 
+		 
+		
+		<ignore_smoothing_flag type="int" units="dimensionless">1</ignore_smoothing_flag> 
+		
+		<div_immune type="divider" description="--Immune activation parameters--" />
+			<immune_dt type="double" units="min" description="how often we check to introduce immune cells">10</immune_dt> 
+			
+			<immune_z_offset type="double" units="micron" description="immune cell position over the epithelium">0</immune_z_offset>
+
+			<macrophage_max_recruitment_rate type="double" units="cells/min/micron^3" description="max macrophage recruitment rate (for saturated signal)">4e-9</macrophage_max_recruitment_rate> 
+			<macrophage_recruitment_min_signal type="double" units="substrate/micron^3" description="min concentration to attract macrophages">0.1</macrophage_recruitment_min_signal> 
+			<macrophage_recruitment_saturation_signal type="double" units="substrate/micron^3" description="saturating concentration to attract macrophages">0.3</macrophage_recruitment_saturation_signal> 
+
+			<neutrophil_max_recruitment_rate type="double" units="cells/min/micron^3" description="max neutrophil recruitment rate (for saturated signal)">4e-9</neutrophil_max_recruitment_rate> 
+			<neutrophil_recruitment_min_signal type="double" units="substrate/micron^3" description="min concentration to attract neutrophils">0.1</neutrophil_recruitment_min_signal> 
+			<neutrophil_recruitment_saturation_signal type="double" units="substrate/micron^3" description="saturating concentration to attract neutrophils">0.3</neutrophil_recruitment_saturation_signal> 
+				
+			<DC_max_recruitment_rate type="double" units="cells/min/micron^3" description="max macrophage recruitment rate (for saturated signal)">1e-9</DC_max_recruitment_rate> 
+			<DC_recruitment_min_signal type="double" units="substrate/micron^3" description="min concentration to attract macrophages">0.1</DC_recruitment_min_signal> 
+			<DC_recruitment_saturation_signal type="double" units="substrate/micron^3" description="saturating concentration to attract macrophages">0.3</DC_recruitment_saturation_signal> 
+
+			
+			<TC_death_rate type="double" units="cells/min" description="TC death rate">0.0000014</TC_death_rate>
+			<max_activation_TC type="double" units="cells/min" description="max activation TC">0.003</max_activation_TC>
+			<half_max_activation_TC type="double" units="cells" description="half max activation TC">2000</half_max_activation_TC>
+			<max_clearance_TC type="double" units="cells/min" description="max clearance TC">0.0007</max_clearance_TC>
+			<half_max_clearance_TC type="double" units="cells" description="half max clearance TC">200</half_max_clearance_TC>
+			<TC_population_threshold type="double" units="cells" description="TC population threshold">10</TC_population_threshold>
+			<T_Cell_Recruitment type="double" units="cells/min" description="T cell recruitment rate to tissue">0.00011</T_Cell_Recruitment>
+			<DM_decay type="double" units="cells/min" description="DM decay rate">0.00035</DM_decay>
+			
+			
+			<fibroblast_max_recruitment_rate type="double" units="cells/min/micron^3" description="max fibroblast cell recruitment rate (for saturated signal)">4e-9</fibroblast_max_recruitment_rate> 
+			<fibroblast_recruitment_min_signal type="double" units="substrate/micron^3" description="min concentration to attract fibroblast cells">0.1</fibroblast_recruitment_min_signal> 
+			<fibroblast_recruitment_saturation_signal type="double" units="substrate/micron^3" description="saturating concentration to attract fibroblast cells">0.4</fibroblast_recruitment_saturation_signal> 
+		
+		<div_initialization type="divider" description="---Initialization Options--" />
+			<multiplicity_of_infection type="double" units="none" description="multiplicity of infection: virions/cells at t=0">0.1</multiplicity_of_infection> 
+			<use_single_infected_cell type="bool" units="none" description="Infect center cell with one virion (overrides MOI)">false</use_single_infected_cell>
+			
+			<number_of_CD8_Tcells type="int" units="none" description="initial number of CD8 T cells in tissue">0</number_of_CD8_Tcells>
+			<number_of_macrophages type="int" units="none" description="initial number of macrophages">50</number_of_macrophages>
+			<number_of_neutrophils type="int" units="none" description="initial number of neutrophils">0</number_of_neutrophils>
+			<number_of_fibroblast type="int" units="none" description="initial number of fibroblast cells">0</number_of_fibroblast>	
+		
+			<number_of_DCs type="int" units="none" description="initial number of Dendritic Cells">28</number_of_DCs> 
+		
+			<number_of_CD4_Tcells type="int" units="none" description="initial number of CD4 Tcells in tissue">0</number_of_CD4_Tcells> 
+			
+			<DC_induced_CD8_proliferation type="double" units="cells/min/micron^3" description="DC induced CD8 proliferation rate">0.00208</DC_induced_CD8_proliferation> 
+			
+			<DC_induced_CD8_attachment type="double" units="cells/min/micron^3" description="DC induced CD8 attachement rate">0.6</DC_induced_CD8_attachment>
+		
+			<departure_rate_of_DCs type="double" units="cells/min/micron^3" description="Departure rate of activated DCs">0.001</departure_rate_of_DCs>
+		
+			<virions_needed_for_DC_activation type="int" units="virions" descriptions="Number of virions needed to activate DC">10</virions_needed_for_DC_activation>
+				
+		<epsilon_distance type="double" units="dimensionless" descriptions="Multiple of interaction distance for immune cells">1.75</epsilon_distance>
+				
+			<perecentage_tissue_vascularized units="percentage" type="double" description="percentage of tissue sitting above blood vessels">8.8</perecentage_tissue_vascularized>			
+
+		<div_colors type="divider" description="---Cell Color Options--" />
+			<color_variable type="string" description="color cells based on this variable">assembled_virion</color_variable>
+			
+			<epithelial_opacity type="double" description="opacity of epithelial cells">0.65</epithelial_opacity>
+			<non_epithelial_opacity type="double" description="opacity of non-epithelial cells">0.8</non_epithelial_opacity>
+			
+			<apoptotic_epithelium_color type="string" description="apoptotic epithelial cell color">black</apoptotic_epithelium_color>
+			<apoptotic_immune_color type="string" description="apoptotic immune cell color">rosybrown</apoptotic_immune_color>
+				
+		
+			<pyroptotic_epithelium_color type="string" description="pyroptotic epithelial cell color">darkorange</pyroptotic_epithelium_color>
+			<pyroptotic_bystander_epithelium_color type="string" description="pyroptotic epithelial cell color">darkred</pyroptotic_bystander_epithelium_color>
+			<vi_apoptotic_epithelium_color type="string" description="pyroptotic epithelial cell color">forestgreen</vi_apoptotic_epithelium_color>
+				
+
+			<CD8_Tcell_color type="string" description="CD8 T cell color">red</CD8_Tcell_color>
+			<CD4_Tcell_color type="string" description="CD4 T cell color">orange</CD4_Tcell_color>
+			<Macrophage_color type="string" description="macrophage color">rgb(35,139,69)</Macrophage_color>
+			<activated_macrophage_color type="string" description="color of activated macrophage">lime</activated_macrophage_color> 
+		
+			<exhausted_macrophage_color type="string" description="color of exhausted macrophage">rgb(116,196,118)</exhausted_macrophage_color>
+		
+			<hyperactivated_macrophage_color type="string" description="color of hyperactivated macrophage">rgb(168,221,181)</hyperactivated_macrophage_color>
+			<Neutrophil_color type="string" description="neutrophil color">cyan</Neutrophil_color>
+		
+			<DC_color type="string" description="DC color">rgb(129,15,124)</DC_color>
+			<activated_DC_color type="string" description="DC color">deeppink</activated_DC_color>
+			<fibroblast_color type="string" description="fibroblast cell color">blueviolet</fibroblast_color>
+				
+		
+			<phagocytes_virus_uptake_rate type="double" units="none" description="Rate that phagocytes uptake virus after activation">0.0001</phagocytes_virus_uptake_rate>
+		
+		
+			<ROS_secretion_rate type="double" units="none" description="Rate that neutrophils secrete ROS">0.01</ROS_secretion_rate>
+		
+			<epsilon_ROS type="double" units="none" description="ROS half-effect">10</epsilon_ROS>
+				
+		
+			<Antibody_binding_rate type="double" units="none" description="Binding rate of antibody to infected cells">0.1</Antibody_binding_rate>
+		
+			<antibody_half_effect type="double" units="none" description="Half effect of antibody on macrophage phagocytosis">0.1</antibody_half_effect>
+		
+	</user_parameters>
+	
+</PhysiCell_settings>
