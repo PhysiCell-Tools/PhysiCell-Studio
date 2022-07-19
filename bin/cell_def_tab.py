@@ -2862,13 +2862,13 @@ class CellDef(QWidget):
         file , check = QFileDialog.getOpenFileName(None, "Please select a MaBoSS BND file",
                                                "", "MaBoSS BND Files (*.bnd)")
         if check:
-            self.physiboss_bnd_file.setText(file)
+            self.physiboss_bnd_file.setText(os.path.relpath(file, os.getcwd()))
             
     def choose_cfg_file(self):
         file , check = QFileDialog.getOpenFileName(None, "Please select a MaBoSS CFG file",
                                                "", "MaBoSS CFG Files (*.cfg)")
         if check:
-            self.physiboss_cfg_file.setText(file)
+            self.physiboss_cfg_file.setText(os.path.relpath(file, os.getcwd()))
 
     def physiboss_bnd_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
@@ -2981,11 +2981,11 @@ class CellDef(QWidget):
             # Here I started by looking at both the bnd and the cfg
             if (
                 t_intracellular is not None 
-                and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(t_intracellular["bnd_filename"]) 
+                and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
                 # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
                 ):
                 list_nodes = []
-                with open(t_intracellular["bnd_filename"], 'r') as bnd_file:
+                with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
                     list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
             
                 list_output_nodes = []
@@ -6701,26 +6701,12 @@ class CellDef(QWidget):
                     intracellular.text = self.indent12  # affects indent of child
                     intracellular.tail = "\n" + self.indent10
 
-                    new_bnd_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename']))
-                    if self.param_d[cdef]['intracellular']['bnd_filename'] != new_bnd_filename:
-                        try:
-                            shutil.copyfile(self.param_d[cdef]['intracellular']['bnd_filename'], new_bnd_filename)
-                        except shutil.SameFileError as e:
-                            pass
-
                     bnd_filename = ET.SubElement(intracellular, "bnd_filename")
-                    bnd_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['bnd_filename'])
+                    bnd_filename.text = os.path.relpath(os.path.join(os.getcwd(), self.param_d[cdef]['intracellular']['bnd_filename']), os.path.dirname(self.config_path))
                     bnd_filename.tail = self.indent12
 
-                    new_cfg_filename = os.path.join(os.path.dirname(self.config_path), os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename']))
-                    if self.param_d[cdef]['intracellular']['cfg_filename'] != new_cfg_filename:
-                        try:
-                            shutil.copyfile(self.param_d[cdef]['intracellular']['cfg_filename'], new_cfg_filename)
-                        except shutil.SameFileError as e:
-                            pass
-
                     cfg_filename = ET.SubElement(intracellular, "cfg_filename")
-                    cfg_filename.text = os.path.basename(self.param_d[cdef]['intracellular']['cfg_filename'])
+                    cfg_filename.text = os.path.relpath(os.path.join(os.getcwd(), self.param_d[cdef]['intracellular']['cfg_filename']), os.path.dirname(self.config_path))
                     cfg_filename.tail = self.indent12
 
                     if len(self.param_d[cdef]['intracellular']['initial_values']) > 0:
