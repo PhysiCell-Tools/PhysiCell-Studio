@@ -175,11 +175,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -239,8 +234,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_0.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_0.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
@@ -368,11 +363,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -432,8 +422,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_1.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_1.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
@@ -561,11 +551,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -625,8 +610,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_0.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_0.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
@@ -757,11 +742,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -821,8 +801,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_0.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_0.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
@@ -953,11 +933,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -1017,8 +992,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_0.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_0.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
@@ -1146,11 +1121,6 @@
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="resource">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="toxin">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="quorum">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="pro-inflammatory">0.0</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="debris">0.0</chemotactic_sensitivity>
                   <chemotactic_sensitivity substrate="oxygen">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
@@ -1210,8 +1180,8 @@
             </cell_transformations>
 
           <intracellular type="maboss">
-            <bnd_filename>model_0.bnd</bnd_filename>
-            <cfg_filename>model.cfg</cfg_filename>
+            <bnd_filename>data/model_0.bnd</bnd_filename>
+            <cfg_filename>data/model.cfg</cfg_filename>
             <initial_values>
               <initial_value intracellular_name="A">1</initial_value>
               <initial_value intracellular_name="C">0</initial_value>
