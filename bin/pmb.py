@@ -44,6 +44,19 @@ def SingleBrowse(self):
         #     if filePath != "" and not filePath in self.csv:
         #         self.csv.append(filePath)
         # print(self.csv)
+
+def startup_notice():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Information)
+    msgBox.setText("Editing the template config file from the PMB /data. If you want to edit another, use File->Open")
+    #    msgBox.setWindowTitle("Example")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    # msgBox.buttonClicked.connect(msgButtonClick)
+
+    returnValue = msgBox.exec()
+    if returnValue == QMessageBox.Ok:
+        print('OK clicked')
+
   
 class PhysiCellXMLCreator(QWidget):
     def __init__(self, studio_flag, rules_flag, parent = None):
@@ -82,8 +95,8 @@ class PhysiCellXMLCreator(QWidget):
         self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
         self.setMinimumSize(1100, 770)  #width, height of window
 
-        self.homedir = os.getcwd()
-        print("model.py: self.homedir = ",self.homedir)
+        self.current_dir = os.getcwd()
+        print("model.py: self.current_dir = ",self.current_dir)
 
         # model_name = "interactions"  # for testing latest xml
         model_name = "template"
@@ -93,9 +106,10 @@ class PhysiCellXMLCreator(QWidget):
         # bin_dir = os.path.dirname(os.path.abspath(__file__))
         # data_dir = os.path.join(bin_dir,'..','data')
         # data_dir = os.path.normpath(data_dir)
-        data_dir = os.path.join(self.homedir,'data')
+        data_dir = os.path.join(self.current_dir,'data')
 
-        self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
+        # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
+        self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
 
@@ -143,9 +157,9 @@ class PhysiCellXMLCreator(QWidget):
 
         # if studio_flag:
         #     self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
-        #     self.homedir = os.getcwd()
-        #     print("model.py: self.homedir = ",self.homedir)
-        #     self.run_tab.homedir = self.homedir
+        #     self.current_dir = os.getcwd()
+        #     print("model.py: self.current_dir = ",self.current_dir)
+        #     self.run_tab.current_dir = self.current_dir
         #     self.run_tab.config_tab = self.config_tab
         #     self.run_tab.microenv_tab = self.microenv_tab 
         #     self.run_tab.celldef_tab = self.celldef_tab
@@ -173,8 +187,8 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
         self.tabWidget.addTab(self.user_params_tab,"User Params")
 
-        self.homedir = os.getcwd()
-        print("model.py: self.homedir = ",self.homedir)
+        self.current_dir = os.getcwd()
+        print("model.py: self.current_dir = ",self.current_dir)
 
         if self.rules_flag:
             self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
@@ -186,8 +200,8 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
             # self.run_tab.config_xml_name.setText(current_xml_file)
             self.run_tab.config_xml_name.setText(self.current_xml_file)
-            # self.homedir = os.getcwd()
-            self.run_tab.homedir = self.homedir
+            # self.current_dir = os.getcwd()
+            self.run_tab.current_dir = self.current_dir
             self.run_tab.config_tab = self.config_tab
             self.run_tab.microenv_tab = self.microenv_tab 
             self.run_tab.celldef_tab = self.celldef_tab
@@ -569,9 +583,9 @@ class PhysiCellXMLCreator(QWidget):
         if self.studio_flag:
             self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
 
-        os.chdir(self.homedir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
+        os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
 
-        data_dir = os.path.join(self.homedir,'data')
+        data_dir = os.path.join(self.current_dir,'data')
         self.current_xml_file = os.path.join(data_dir, name + ".xml")
         print("load_model: self.current_xml_file= ",self.current_xml_file)
 
@@ -819,6 +833,7 @@ def main():
 
     ex = PhysiCellXMLCreator(studio_flag, rules_flag)
     ex.show()
+    startup_notice()
     sys.exit(pmb_app.exec_())
 	
 if __name__ == '__main__':

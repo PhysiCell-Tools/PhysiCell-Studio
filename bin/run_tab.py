@@ -35,7 +35,7 @@ class RunModel(QWidget):
         # used with nanoHUB app
         # self.nanohub = True
         # following set in pmb.py
-        self.homedir = ''   
+        self.current_dir = ''   
         self.config_file = None
         self.tree = None
 
@@ -164,8 +164,8 @@ class RunModel(QWidget):
         if True: # copy normal workflow of an app, strange as it is
 
             # make sure we are where we started (app's root dir)
-            print("\n\n------>>>> doing os.chdir to ", self.homedir)
-            os.chdir(self.homedir)
+            print("\n\n------>>>> doing os.chdir to ", self.current_dir)
+            os.chdir(self.current_dir)
 
             # remove any previous data
             # NOTE: this dir name needs to match the <folder>  in /data/<config_file.xml>
