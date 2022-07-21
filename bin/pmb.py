@@ -48,7 +48,7 @@ def SingleBrowse(self):
 def startup_notice():
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
-    msgBox.setText("Editing the template config file from the PMB /data. If you want to edit another, use File->Open")
+    msgBox.setText("Editing the template config file from the PMB /data directory. If you want to edit another, use File->Open or File->Samples")
     #    msgBox.setWindowTitle("Example")
     msgBox.setStandardButtons(QMessageBox.Ok)
     # msgBox.buttonClicked.connect(msgButtonClick)
@@ -106,10 +106,13 @@ class PhysiCellXMLCreator(QWidget):
         # bin_dir = os.path.dirname(os.path.abspath(__file__))
         # data_dir = os.path.join(bin_dir,'..','data')
         # data_dir = os.path.normpath(data_dir)
-        data_dir = os.path.join(self.current_dir,'data')
+        # data_dir = os.path.join(self.current_dir,'data')
 
         # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
-        self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+        self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+        self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
 
@@ -585,8 +588,9 @@ class PhysiCellXMLCreator(QWidget):
 
         os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
 
-        data_dir = os.path.join(self.current_dir,'data')
-        self.current_xml_file = os.path.join(data_dir, name + ".xml")
+        # data_dir = os.path.join(self.current_dir,'data')
+        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+        self.current_xml_file = os.path.join(self.data_dir, name + ".xml")
         print("load_model: self.current_xml_file= ",self.current_xml_file)
 
         # self.current_save_file = current_xml_file
