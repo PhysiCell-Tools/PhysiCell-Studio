@@ -35,7 +35,7 @@ class RunModel(QWidget):
         # used with nanoHUB app
         # self.nanohub = True
         # following set in pmb.py
-        self.homedir = ''   
+        self.current_dir = ''   
         self.config_file = None
         self.tree = None
 
@@ -70,13 +70,13 @@ class RunModel(QWidget):
         hbox = QHBoxLayout()
 
         self.run_button = QPushButton("Run Simulation")
-        self.run_button.setStyleSheet("background-color: green")
+        self.run_button.setStyleSheet("background-color: lightgreen")
         hbox.addWidget(self.run_button)
         self.run_button.clicked.connect(self.run_model_cb)
 
         self.cancel_button = QPushButton("Cancel")
-        # self.cancel_button.setStyleSheet("background-color: red")
-        self.cancel_button.setStyleSheet("background-color: rgb(250,50,50)")
+        self.cancel_button.setStyleSheet("background-color: red")
+        # self.cancel_button.setStyleSheet("background-color: rgb(250,50,50)")
         hbox.addWidget(self.cancel_button)
         self.cancel_button.clicked.connect(self.cancel_model_cb)
 
@@ -164,8 +164,8 @@ class RunModel(QWidget):
         if True: # copy normal workflow of an app, strange as it is
 
             # make sure we are where we started (app's root dir)
-            print("\n\n------>>>> doing os.chdir to ", self.homedir)
-            os.chdir(self.homedir)
+            print("\n\n------>>>> doing os.chdir to ", self.current_dir)
+            os.chdir(self.current_dir)
 
             # remove any previous data
             # NOTE: this dir name needs to match the <folder>  in /data/<config_file.xml>

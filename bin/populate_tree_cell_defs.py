@@ -1234,54 +1234,75 @@ def populate_tree_cell_defs(cell_def_tab):
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "maboss" 
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["bnd_filename"] = uep_intracellular.find("bnd_filename").text if uep_intracellular.find("bnd_filename") is not None else None
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["cfg_filename"] = uep_intracellular.find("cfg_filename").text if uep_intracellular.find("cfg_filename") is not None else None
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_intracellular.find("time_step").text if uep_intracellular.find("time_step") is not None else "12.0"
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_intracellular.find("scaling").text if uep_intracellular.find("scaling") is not None else "1.0"
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_intracellular.find("time_stochasticity").text if uep_intracellular.find("time_stochasticity") is not None else "0.0"
 
+                    # default values
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = "12.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = "1.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
+
+                    uep_settings = uep_intracellular.find("settings")
+                    if uep_settings is not None:
+                        # print("cell def : " + cell_def_name + " : dt = " + uep_settings.find("intracellular_dt").text)
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_settings.find("intracellular_dt").text if uep_settings.find("intracellular_dt") is not None else "12.0"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_settings.find("scaling").text if uep_settings.find("scaling") is not None else "1.0"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_settings.find("time_stochasticity").text if uep_settings.find("time_stochasticity") is not None else "0.0"
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
+                        uep_intracellular_mutants = uep_settings.find("mutations")
+                        if uep_intracellular_mutants is not None:
+                            for mutant in uep_intracellular_mutants:
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["intracellular_name"], mutant.text))
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
+                        uep_intracellular_parameters = uep_settings.find("parameters")
+                        if uep_intracellular_parameters is not None:
+                            for parameter in uep_intracellular_parameters:
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["intracellular_name"], parameter.text))                    
+
+                    # print("cell def : " + cell_def_name + " : dt = " + cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"])
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
                     if uep_intracellular_iv is not None:
                         for initial_value in uep_intracellular_iv:
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append((initial_value.attrib["node"], initial_value.text))
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append((initial_value.attrib["intracellular_name"], initial_value.text))
                   
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
-                    uep_intracellular_mutants = uep_intracellular.find("mutations")
-                    if uep_intracellular_mutants is not None:
-                        for mutant in uep_intracellular_mutants:
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["node"], mutant.text))
-
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
-                    uep_intracellular_parameters = uep_intracellular.find("parameters")
-                    if uep_intracellular_parameters is not None:
-                        for parameter in uep_intracellular_parameters:
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["name"], parameter.text))                    
-
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"] = []
                     uep_intracellular_mappings = uep_intracellular.find("mapping")
                     if uep_intracellular_mappings is not None:
                         for mapping in uep_intracellular_mappings:
                             if mapping.tag == "input":
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"].append({
-                                    'name': mapping.attrib["name"],
-                                    'node': mapping.attrib["node"],
-                                    'action': mapping.attrib["action"],
-                                    'threshold': mapping.attrib["threshold"],
-                                    'inact_threshold': mapping.attrib["inact_threshold"] if 'inact_threshold' in mapping.attrib.keys() else mapping.attrib["threshold"],
-                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
-                                })
+
+                                input_settings = mapping.find("settings")
+                                if input_settings is not None and input_settings.find("action") is not None and input_settings.find("threshold") is not None:
+
+
+                                    cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"].append({
+                                        'name': mapping.attrib["physicell_name"],
+                                        'node': mapping.attrib["intracellular_name"],
+                                        'action': input_settings.find("action").text,
+                                        'threshold': input_settings.find("threshold").text,
+                                        'inact_threshold': input_settings.find("inact_threshold").text if input_settings.find("inact_threshold") is not None else input_settings.find("threshold").text,
+                                        'smoothing': input_settings.find("smoothing").text if input_settings.find("smoothing") is not None else "0",
+                                    })
                                 
 
                             elif mapping.tag == "output":
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"].append({
-                                    'name': mapping.attrib["name"],
-                                    'node': mapping.attrib["node"],
-                                    'action': mapping.attrib["action"],
-                                    'value': mapping.attrib["value"],
-                                    'basal_value': mapping.attrib["basal_value"] if 'basal_value' in mapping.attrib.keys() else mapping.attrib["value"],
-                                    'smoothing': mapping.attrib["smoothing"] if 'smoothing' in mapping.attrib else "0",
-                                })
-                                print(cell_def_tab.param_d[cell_def_name]['intracellular']['outputs'][-1])
+                                output_settings = mapping.find("settings")
+                                if output_settings is not None and output_settings.find("action") is not None and output_settings.find("value") is not None:
+                                    
+                                    
+                                    cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"].append({
+                                        'name': mapping.attrib["physicell_name"],
+                                        'node': mapping.attrib["intracellular_name"],
+                                        'action': output_settings.find("action").text,
+                                        'value': output_settings.find("value").text,
+                                        'basal_value': output_settings.find("base_value").text if output_settings.find("base_value") is not None else output_settings.find("value").text,
+                                        'smoothing': output_settings.find("smoothing").text if output_settings.find("smoothing") is not None else "0",
+                                    })
+                                    
 
             print("------ done parsing intracellular:")
 
