@@ -347,12 +347,24 @@ class CellDef(QWidget):
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         # print('------      item_idx=',item_idx)
         # delete celltype from dropdowns
+
+        # remove from the dropdown widgets:
+        # Mechanics
+        self.cell_adhesion_affinity_dropdown.removeItem(item_idx)
+        # Interactions
         self.live_phagocytosis_dropdown.removeItem(item_idx)
         self.attack_rate_dropdown.removeItem(item_idx)
         self.fusion_rate_dropdown.removeItem(item_idx)
         self.cell_transformation_dropdown.removeItem(item_idx)
 
-        self.cell_adhesion_affinity_dropdown.removeItem(item_idx)
+        # But ALSO remove from the dicts:
+        print("Also delete ",self.param_d[self.current_cell_def], "from dicts")
+        # print("--- cell_adhesion_affinity= ",self.param_d[cdef]['cell_adhesion_affinity'])
+        print("--- cell_adhesion_affinity= ",self.param_d[self.current_cell_def]['cell_adhesion_affinity'])
+
+
+
+        # remove from the widgets
 
         # for idx in range(len(self.celltypes_list)):
         #     # print("idx,old,new = ",idx, old_name,new_name)
@@ -372,6 +384,19 @@ class CellDef(QWidget):
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
         #     print()
+
+        # For the remaining cell defs, if any, remove the deleted cell def from certain dicts
+        for cdef in self.param_d.keys():
+            # print(" ===>>> ",cdef, " : ", self.param_d[cdef])
+            # Mechanics
+            self.param_d[cdef]['cell_adhesion_affinity'].pop(self.current_cell_def,0)  
+
+            # Interactions
+            self.param_d[cdef]['live_phagocytosis_rate'].pop(self.current_cell_def,0)
+            self.param_d[cdef]['attack_rate'].pop(self.current_cell_def,0)
+            self.param_d[cdef]['fusion_rate'].pop(self.current_cell_def,0)
+            self.param_d[cdef]['transformation_rate'].pop(self.current_cell_def,0)
+
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         print('------      item_idx=',item_idx)
@@ -6420,6 +6445,8 @@ class CellDef(QWidget):
             elm = ET.SubElement(ca_rates, 'cell_adhesion_affinity', {"name":key})
             elm.text = val
             elm.tail = self.indent16
+
+        # sys.exit(1)  #rwh
 
         elm = ET.SubElement(mechanics, 'options')
         elm.text = self.indent14
