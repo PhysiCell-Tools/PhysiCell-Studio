@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">   -->
+   <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+         <!-- XML Schema Generated from XML Document on Wed Jul 27 2022 05:43:44 GMT-0400 (Eastern Daylight Time) -->
+         <!-- with XmlGrid.net Free Online Service http://xmlgrid.net -->
+         <xs:element name="PhysiCell_settings">
+               <xs:complexType>
+                     <xs:sequence>
+                           <xs:element name="domain">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="x_min" type="xs:int"></xs:element>
+                                             <xs:element name="x_max" type="xs:int"></xs:element>
+                                             <xs:element name="y_min" type="xs:int"></xs:element>
+                                             <xs:element name="y_max" type="xs:int"></xs:element>
+                                             <xs:element name="z_min" type="xs:int"></xs:element>
+                                             <xs:element name="z_max" type="xs:int"></xs:element>
+                                             <xs:element name="dx" type="xs:int"></xs:element>
+                                             <xs:element name="dy" type="xs:int"></xs:element>
+                                             <xs:element name="dz" type="xs:int"></xs:element>
+                                             <xs:element name="use_2D" type="xs:string"></xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="overall">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="max_time" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="time_units" type="xs:string"></xs:element>
+                                             <xs:element name="space_units" type="xs:string"></xs:element>
+                                             <xs:element name="dt_diffusion" type="xs:double">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="dt_mechanics" type="xs:double">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="dt_phenotype" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="parallel">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="omp_num_threads" type="xs:int"></xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="save">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="folder" type="xs:string"></xs:element>
+                                             <xs:element name="full_data">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="interval" type="xs:int">
+                                                                     <xs:complexType>
+                                                                           <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="enable" type="xs:string"></xs:element>
+                                                         </xs:sequence>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="SVG">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="interval" type="xs:int">
+                                                                     <xs:complexType>
+                                                                           <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="enable" type="xs:string"></xs:element>
+                                                         </xs:sequence>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="legacy_data">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="enable" type="xs:string"></xs:element>
+                                                         </xs:sequence>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="options">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="legacy_random_points_on_sphere_in_divide" type="xs:string"></xs:element>
+                                             <xs:element name="virtual_wall_at_domain_edge" type="xs:string"></xs:element>
+                                             <xs:element name="legacy_cell_defaults_copy" type="xs:string"></xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="microenvironment_setup">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="variable" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="physical_parameter_set">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="diffusion_coefficient" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="decay_rate" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="initial_condition" type="xs:int">
+                                                                     <xs:complexType>
+                                                                           <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="Dirichlet_boundary_condition" type="xs:int">
+                                                                     <xs:complexType>
+                                                                           <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                           <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="Dirichlet_options">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="boundary_value" maxOccurs="unbounded" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="ID" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                         </xs:sequence>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="ID" type="xs:int"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="options">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="calculate_gradients" type="xs:string"></xs:element>
+                                                               <xs:element name="track_internalized_substrates_in_each_agent" type="xs:string"></xs:element>
+                                                               <xs:element name="initial_condition">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="filename" type="xs:string"></xs:element>
+                                                                           </xs:sequence>
+                                                                           <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                           <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="dirichlet_nodes">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="filename" type="xs:string"></xs:element>
+                                                                           </xs:sequence>
+                                                                           <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                           <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                         </xs:sequence>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="cell_definitions">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="cell_definition" maxOccurs="unbounded">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="phenotype">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="cycle">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="phase_transition_rates">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="rate" type="xs:double">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="start_index" type="xs:int"></xs:attribute>
+                                                                                                                                 <xs:attribute name="end_index" type="xs:int"></xs:attribute>
+                                                                                                                                 <xs:attribute name="fixed_duration" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                             <xs:attribute name="code" type="xs:int"></xs:attribute>
+                                                                                             <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="death">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="model" maxOccurs="unbounded">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="death_rate" type="xs:double">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="phase_durations">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:sequence>
+                                                                                                                                       <xs:element name="duration" type="xs:int">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="index" type="xs:int"></xs:attribute>
+                                                                                                                                                   <xs:attribute name="fixed_duration" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                 </xs:sequence>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="parameters">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:sequence>
+                                                                                                                                       <xs:element name="unlysed_fluid_change_rate" type="xs:double">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                       <xs:element name="lysed_fluid_change_rate" type="xs:int">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                       <xs:element name="cytoplasmic_biomass_change_rate" type="xs:double">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                       <xs:element name="nuclear_biomass_change_rate" type="xs:double">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                       <xs:element name="calcification_rate" type="xs:int">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                       <xs:element name="relative_rupture_volume" type="xs:int">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                 </xs:sequence>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                               <xs:attribute name="code" type="xs:int"></xs:attribute>
+                                                                                                               <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="volume">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="total" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="fluid_fraction" type="xs:double"></xs:element>
+                                                                                                   <xs:element name="nuclear" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="fluid_change_rate" type="xs:double"></xs:element>
+                                                                                                   <xs:element name="cytoplasmic_biomass_change_rate" type="xs:double"></xs:element>
+                                                                                                   <xs:element name="nuclear_biomass_change_rate" type="xs:double"></xs:element>
+                                                                                                   <xs:element name="calcified_fraction" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="calcification_rate" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="relative_rupture_volume" type="xs:int"></xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="mechanics">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="cell_cell_adhesion_strength" type="xs:double">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="cell_cell_repulsion_strength" type="xs:int">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="relative_maximum_adhesion_distance" type="xs:double">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="cell_adhesion_affinities">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="cell_adhesion_affinity" maxOccurs="unbounded" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="options">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="set_relative_equilibrium_distance" type="xs:double">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="set_absolute_equilibrium_distance" type="xs:double">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="motility">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="speed" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="persistence_time" type="xs:int"></xs:element>
+                                                                                                   <xs:element name="migration_bias" type="xs:double"></xs:element>
+                                                                                                   <xs:element name="options">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="enabled" type="xs:string"></xs:element>
+                                                                                                                     <xs:element name="use_2D" type="xs:string"></xs:element>
+                                                                                                                     <xs:element name="chemotaxis">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:sequence>
+                                                                                                                                       <xs:element name="enabled" type="xs:string"></xs:element>
+                                                                                                                                       <xs:element name="substrate" type="xs:string"></xs:element>
+                                                                                                                                       <xs:element name="direction" type="xs:int"></xs:element>
+                                                                                                                                 </xs:sequence>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="advanced_chemotaxis">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:sequence>
+                                                                                                                                       <xs:element name="enabled" type="xs:string"></xs:element>
+                                                                                                                                       <xs:element name="normalize_each_gradient" type="xs:string"></xs:element>
+                                                                                                                                       <xs:element name="chemotactic_sensitivities">
+                                                                                                                                             <xs:complexType>
+                                                                                                                                                   <xs:sequence>
+                                                                                                                                                         <xs:element name="chemotactic_sensitivity" maxOccurs="unbounded" type="xs:int">
+                                                                                                                                                               <xs:complexType>
+                                                                                                                                                                     <xs:attribute name="substrate" type="xs:string"></xs:attribute>
+                                                                                                                                                               </xs:complexType>
+                                                                                                                                                         </xs:element>
+                                                                                                                                                   </xs:sequence>
+                                                                                                                                             </xs:complexType>
+                                                                                                                                       </xs:element>
+                                                                                                                                 </xs:sequence>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="secretion">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="substrate" maxOccurs="unbounded">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="secretion_rate" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="secretion_target" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="uptake_rate" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                                     <xs:element name="net_export_rate" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                               <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="cell_interactions">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="dead_phagocytosis_rate" type="xs:int">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="live_phagocytosis_rates">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="phagocytosis_rate" maxOccurs="unbounded" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="attack_rates">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="attack_rate" maxOccurs="unbounded" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="damage_rate" type="xs:int">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                                   <xs:element name="fusion_rates">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="fusion_rate" maxOccurs="unbounded" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="cell_transformations">
+                                                                                       <xs:complexType>
+                                                                                             <xs:sequence>
+                                                                                                   <xs:element name="transformation_rates">
+                                                                                                         <xs:complexType>
+                                                                                                               <xs:sequence>
+                                                                                                                     <xs:element name="transformation_rate" maxOccurs="unbounded" type="xs:int">
+                                                                                                                           <xs:complexType>
+                                                                                                                                 <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                                                                                                 <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                                                           </xs:complexType>
+                                                                                                                     </xs:element>
+                                                                                                               </xs:sequence>
+                                                                                                         </xs:complexType>
+                                                                                                   </xs:element>
+                                                                                             </xs:sequence>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                               <xs:element name="custom_data">
+                                                                     <xs:complexType>
+                                                                           <xs:sequence>
+                                                                                 <xs:element name="cycling_entry_threshold_resource" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="necrosis_saturation_resource" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="necrosis_threshold_resource" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="migration_speed_halfmax" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="migration_bias_halfmax" type="xs:double">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="toxicity_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="relative_max_toxicity" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="cycling_contact_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="differentiation_contact_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="damage_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="relative_max_damage_death" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="cycling_pressure_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="secretion_halfmax" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="debris_sensitivity" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="quorum_sensitivity" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                                 <xs:element name="inflammation_sensitivity" type="xs:int">
+                                                                                       <xs:complexType>
+                                                                                             <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                                                             <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                                                       </xs:complexType>
+                                                                                 </xs:element>
+                                                                           </xs:sequence>
+                                                                     </xs:complexType>
+                                                               </xs:element>
+                                                         </xs:sequence>
+                                                         <xs:attribute name="name" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="ID" type="xs:int"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="initial_conditions">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="cell_positions">
+                                                   <xs:complexType>
+                                                         <xs:sequence>
+                                                               <xs:element name="folder"></xs:element>
+                                                               <xs:element name="filename" type="xs:string"></xs:element>
+                                                         </xs:sequence>
+                                                         <xs:attribute name="enabled" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                           <xs:element name="user_parameters">
+                                 <xs:complexType>
+                                       <xs:sequence>
+                                             <xs:element name="random_seed" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_stem_cells" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_differentiated_cells" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_blood_vessels" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_bacteria" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_macrophages" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_CD8T_cells" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="number_of_neutrophils" type="xs:int">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                             <xs:element name="max_stem_differentiation" type="xs:double">
+                                                   <xs:complexType>
+                                                         <xs:attribute name="type" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="units" type="xs:string"></xs:attribute>
+                                                         <xs:attribute name="description" type="xs:string"></xs:attribute>
+                                                   </xs:complexType>
+                                             </xs:element>
+                                       </xs:sequence>
+                                 </xs:complexType>
+                           </xs:element>
+                     </xs:sequence>
+                     <xs:attribute name="version" type="xs:string"></xs:attribute>
+               </xs:complexType>
+         </xs:element>
+   </xs:schema>
