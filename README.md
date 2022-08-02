@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.7.3
+VERSION: 2.7.4
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,9 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
+## Release 2.7.4
+* Provide at least minimal validation of the config file being loaded. It cannot use the legacy hierarchical syntax; it needs to provide explicit parameters for each <cell_definition>.
+
 ## Release 2.7.3
 * When a cell type is deleted, also delete it in the dicts associated with mechanics:cell adhesion affinities and interactions:*
 
