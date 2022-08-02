@@ -13,12 +13,46 @@ import sys
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5 import QtCore
 
-def populate_tree_cell_defs(cell_def_tab):
+def validate_cell_defs(cell_defs_elm, skip_validate):
+    print("\n\n=======================  validate_cell_defs(): ======================= ")
+
+    pheno_names = ['cycle','death','volume','mechanics','motility','secretion','cell_interactions','cell_transformations']
+    valid = True
+    for cd in cell_defs_elm.findall('cell_definition'):  # for each cell def
+        print("Checking ",cd.attrib['name'])
+        for pn in pheno_names:
+            phenotype = "phenotype//" + pn
+            if cd.find(phenotype) == None:
+                valid = False
+                print("Validation Error: Missing ",phenotype)
+    if not valid:
+        if skip_validate:
+            print("Continuing in spite of these missing elements.")
+        else:
+            # print("\n A configuration file (.xml) for the PMB needs to explicitly \nprovide all required parameters for each <cell_definition>.\nIt cannot use the legacy hierarchical format where only\n partial parameters are provided and the rest are inherited from a parent.")
+            warn_user = """
+            A configuration file (.xml) for the PMB needs to explicitly 
+            provide all required parameters for each <cell_definition>.
+            It cannot use the legacy hierarchical format where only 
+            partial parameters are provided and the rest are inherited from a parent.
+
+            Please fix your .xml config file to provide the missing information.
+
+            """
+            print(warn_user)
+            sys.exit(-1)
+    print("=======================  end validate_cell_defs(): =======================\n\n")
+
+
+def populate_tree_cell_defs(cell_def_tab, skip_validate):
     print("=======================  populate_tree_cell_defs(): ======================= ")
     print("    cell_def_tab.param_d = ",cell_def_tab.param_d)
     cell_def_tab.master_custom_varname.clear()
 
     debug_print = True
+
+    uep = cell_def_tab.xml_root.find(".//cell_definitions")
+    validate_cell_defs(uep, skip_validate)
 
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
     if uep:

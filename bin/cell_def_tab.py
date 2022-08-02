@@ -4100,7 +4100,7 @@ class CellDef(QWidget):
             print(" ... but motility_advanced_chemotaxis_substrate is empty string, so return!")
             return
         print("----- chemo_sensitivity_changed(): subname = ",subname)
-        print("       keys() = ",self.param_d[self.current_cell_def].keys())
+        # print("       keys() = ",self.param_d[self.current_cell_def].keys())
         self.param_d[self.current_cell_def]['chemotactic_sensitivity'][subname] = text
         print("     chemotactic_sensitivity (dict)= ",self.param_d[self.current_cell_def]['chemotactic_sensitivity'])
         # if 'chemo_sensitivity' in self.param_d[self.current_cell_def].keys():

@@ -59,10 +59,11 @@ def startup_notice():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, studio_flag, rules_flag, parent = None):
+    def __init__(self, studio_flag, skip_validate_flag, rules_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.studio_flag = studio_flag 
+        self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
 
         self.plot_tab_index = 5
@@ -145,7 +146,7 @@ class PhysiCellXMLCreator(QWidget):
         print("pmb.py: cd_name=",cd_name)
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
-        populate_tree_cell_defs(self.celldef_tab)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
         self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
         self.microenv_tab.celldef_tab = self.celldef_tab
@@ -394,7 +395,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.fill_substrates_comboboxes()
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
-        populate_tree_cell_defs(self.celldef_tab)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
@@ -762,22 +763,25 @@ class PhysiCellXMLCreator(QWidget):
 def main():
     # inputfile = ''
     studio_flag = False
+    skip_validate_flag = False
     rules_flag = False
     try:
         # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "rules"])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules"])
     except getopt.GetoptError:
         # print 'test.py -i <inputfile> -o <outputfile>'
         print('\ngetopt exception - usage:')
-        print('bin/pmb.py [--studio]')
+        print('bin/pmb.py [--studio] [--skip-validate]')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('bin/pmb.py [--studio]')
+            print('bin/pmb.py [--studio] [--skip-validate]')
             sys.exit(1)
     #   elif opt in ("-i", "--ifile"):
         elif opt in ("--studio"):
             studio_flag = True
+        elif opt in ("--skip-validate"):
+            skip_validate_flag = True
         elif opt in ("--rules"):
             rules_flag = True
 
@@ -835,7 +839,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
-    ex = PhysiCellXMLCreator(studio_flag, rules_flag)
+    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag)
     ex.show()
     startup_notice()
     sys.exit(pmb_app.exec_())
