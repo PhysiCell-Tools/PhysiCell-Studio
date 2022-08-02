@@ -16,7 +16,10 @@ from PyQt5 import QtCore
 def validate_cell_defs(cell_defs_elm, skip_validate):
     print("\n\n=======================  validate_cell_defs(): ======================= ")
 
-    pheno_names = ['cycle','death','volume','mechanics','motility','secretion','cell_interactions','cell_transformations']
+    # pheno_names = ['cycle','death','volume','mechanics','motility','secretion','cell_interactions','cell_transformations']
+
+    # Since we provide default values for interactions & transformations, let's skip them.
+    pheno_names = ['cycle','death','volume','mechanics','motility','secretion']
     valid = True
     for cd in cell_defs_elm.findall('cell_definition'):  # for each cell def
         print("Checking ",cd.attrib['name'])
