@@ -49,6 +49,8 @@ class CellDef(QWidget):
             self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
         self.current_cell_def = None
+        self.cell_adhesion_affinity_celltype = None
+
         self.new_cell_def_count = 1
         self.label_width = 210
         self.units_width = 110
@@ -5633,17 +5635,20 @@ class CellDef(QWidget):
         cdname = self.current_cell_def
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
-        self.relative_maximum_adhesion_distance.setText(self.param_d[cdname]["mechanics_adhesion_distance"])
-
-        self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
-        self.set_absolute_equilibrium_distance.setText(self.param_d[cdname]["mechanics_absolute_equilibrium_distance"])
-
-        self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
-        self.set_absolute_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"])
-
-        # new_stuff (June 2022) mechanics params
         self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
         self.cell_bm_repulsion_strength.setText(self.param_d[cdname]["mechanics_BM_repulsion"])
+        self.relative_maximum_adhesion_distance.setText(self.param_d[cdname]["mechanics_adhesion_distance"])
+
+        # self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
+        if self.cell_adhesion_affinity_celltype:
+            self.cell_adhesion_affinity.setText(self.param_d[cdname]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+
+        self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
+        self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
+
+        self.set_absolute_equilibrium_distance.setText(self.param_d[cdname]["mechanics_absolute_equilibrium_distance"])
+        self.set_absolute_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"])
+
         self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
         self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
         self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
