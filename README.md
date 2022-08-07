@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.7.5
+VERSION: 2.7.8
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,15 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
+## Release 2.7.8
+* update VERSION.txt
+ 
+## Release 2.7.7
+* Disable keyboard navigation through items in the QTreeWidget
+
+## Release 2.7.6
+* When we load a new model, part of the reset needs to reset cell_adhesion_affinity_celltype to None (thanks to Joel Eliason for catching and reporting this!)
+
 ## Release 2.7.5
 * Fix bug on maintaining cell def state of mechanics cell adhesion affinity
 
