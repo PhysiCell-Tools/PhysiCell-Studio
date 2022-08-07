@@ -376,6 +376,8 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.clear_custom_data_tab()
         self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
         self.celldef_tab.current_cell_def = None
+        self.celldef_tab.cell_adhesion_affinity_celltype = None
+
         # self.microenv_tab.param_d.clear()
 
         self.xml_root = self.tree.getroot()
