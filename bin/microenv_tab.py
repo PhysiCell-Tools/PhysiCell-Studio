@@ -47,6 +47,7 @@ class SubstrateDef(QWidget):
         tree_widget_height = 400
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; Meh.
+        self.tree.setFocusPolicy(QtCore.Qt.NoFocus)  # don't allow arrow keys to select
         # self.tree.itemDoubleClicked.connect(self.treeitem_edit_cb)
         # self.tree.setStyleSheet("background-color: lightgray")
 

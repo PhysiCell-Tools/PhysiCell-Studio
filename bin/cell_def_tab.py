@@ -128,6 +128,7 @@ class CellDef(QWidget):
         # tree_widget_height = 1200
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; meh.
+        self.tree.setFocusPolicy(QtCore.Qt.NoFocus)  # don't allow arrow keys to select
         # self.tree.setStyleSheet("background-color: lightgray")
         self.tree.setFixedWidth(tree_widget_width)
         self.tree.setFixedHeight(tree_widget_height)
@@ -136,6 +137,7 @@ class CellDef(QWidget):
         self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
         header = QTreeWidgetItem(["---  Cell Type  ---"])
+
         self.tree.setHeaderItem(header)
 
         self.physiboss_boolean_frame = QFrame()
