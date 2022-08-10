@@ -4077,6 +4077,7 @@ class CellDef(QWidget):
             self.chemotaxis_direction_against.setEnabled(True)
 
             self.advanced_chemotaxis_enabled.setChecked(False)
+            self.param_d[self.current_cell_def]['motility_advanced_chemotaxis'] = False
             self.motility2_substrate_dropdown.setEnabled(False)
             self.chemo_sensitivity.setEnabled(False)
             self.normalize_each_gradient.setEnabled(False)
@@ -4089,6 +4090,7 @@ class CellDef(QWidget):
             self.chemotaxis_direction_against.setEnabled(False)
 
             self.chemotaxis_enabled.setChecked(False)
+            self.param_d[self.current_cell_def]['motility_chemotaxis'] = False
             self.motility2_substrate_dropdown.setEnabled(True)
             self.chemo_sensitivity.setEnabled(True)
             self.normalize_each_gradient.setEnabled(True)
