@@ -21,7 +21,7 @@ from xml.dom import minidom
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor, QIcon
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
 
@@ -792,6 +792,10 @@ def main():
     # sys.exit()
 
     pmb_app = QApplication(sys.argv)
+
+    icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
+    pmb_app.setWindowIcon(QIcon(icon_path))
+
 #    pmb_app.setStyleSheet("")  # affect dark mode?
     # pmb_app.setStyleSheet("Fusion")  # affect dark mode?
 

@@ -62,6 +62,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
         cell_def_tab.tree.clear()
         idx = 0
         for cell_def in uep:
+            # <cell_definition name="default" ID="0">
+            print("----- cell_def.tag= ", cell_def.tag)
+            if cell_def.tag == "cell_rules":
+                print("-------- found cell_rules child; break out on ",cell_def)
+                break
             cell_def_tab.new_cell_def_count += 1
             # print(cell_def.attrib['name'])
             cell_def_name = cell_def.attrib['name']
@@ -1366,6 +1371,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 # print("--------------- populate_tree: custom_dat for cell_def_name= ",cell_def_name)
                 cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
                 for var in uep_custom_data:
+                    # print("-------- var in uep_",var)
                     # print(jdx, ") ",var)
                     # val = sub.find("secretion_rate").text
                     val = var.text
@@ -1411,6 +1417,21 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
     cell_def_tab.tree_item_clicked_cb(cell_def_tab.tree.topLevelItem(0), 0)  # and have its params shown
+
+
+    #----------------------------------
+    # at the end of <cell_definitions>
+        # <cell_rules type="csv" enabled="true">
+		# 	<folder>./config</folder>
+		# 	<filename>cell_rules.csv</filename>
+		# </cell_rules> 
+
+    uep_cell_rules = cell_def_tab.xml_root.find(".//cell_definitions//cell_rules")
+    if uep_cell_rules:
+        rules_folder = uep_cell_rules.find(".//folder").text 
+        rules_file = uep_cell_rules.find(".//filename").text 
+        print("------- populate_tree_cell_defs.py: setting rules.csv folder = ",rules_folder)
+        print("------- populate_tree_cell_defs.py: setting rules.csv file = ",rules_file)
 
     # print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
     # print()
