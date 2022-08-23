@@ -30,6 +30,7 @@ from cell_def_tab import CellDef
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
 from rules_tab import Rules
+from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
 from vis_tab import Vis 
@@ -59,18 +60,25 @@ def startup_notice():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, studio_flag, skip_validate_flag, rules_flag, parent = None):
+    def __init__(self, studio_flag, skip_validate_flag, rules_flag, ics_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
 
         self.studio_flag = studio_flag 
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
+        self.ics_flag = ics_flag 
 
         self.plot_tab_index = 5
         self.legend_tab_index = 6
         if self.rules_flag:
-            self.plot_tab_index = 6
-            self.legend_tab_index = 7
+            self.plot_tab_index += 1
+            self.legend_tab_index += 1
+            if self.ics_flag:
+                self.plot_tab_index += 1
+                self.legend_tab_index += 1
+        elif self.ics_flag:
+            self.plot_tab_index += 1
+            self.legend_tab_index += 1
 
         self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
@@ -198,6 +206,11 @@ class PhysiCellXMLCreator(QWidget):
             self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
             self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
+
+        if self.ics_flag:
+            self.ics_tab = ICs(self.celldef_tab)
+            # self.rules_tab.fill_gui()
+            self.tabWidget.addTab(self.ics_tab,"ICs")
 
         if self.studio_flag:
             print("studio.py: creating Run and Plot tabs")
@@ -769,7 +782,7 @@ def main():
     rules_flag = False
     try:
         # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules"])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules", "ics"])
     except getopt.GetoptError:
         # print 'test.py -i <inputfile> -o <outputfile>'
         print('\ngetopt exception - usage:')
@@ -786,6 +799,8 @@ def main():
             skip_validate_flag = True
         elif opt in ("--rules"):
             rules_flag = True
+        elif opt in ("--ics"):
+            ics_flag = True
 
     # print 'Input file is "', inputfile
     # print("show_vis_tab = ",show_vis_tab)
@@ -845,7 +860,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
-    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag)
+    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag, ics_flag)
     ex.show()
     startup_notice()
     sys.exit(pmb_app.exec_())
