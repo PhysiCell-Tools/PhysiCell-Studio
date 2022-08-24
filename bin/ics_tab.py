@@ -148,8 +148,8 @@ class ICs(QWidget):
         icol += 1
         self.fill_combobox = QComboBox()
         self.glayout1.addWidget(self.fill_combobox, idr,icol, 1,1) # w, row, column, rowspan, colspan
-        self.fill_combobox.addItem("hex fill")
         self.fill_combobox.addItem("random fill")
+        self.fill_combobox.addItem("hex fill")
         self.fill_combobox.currentIndexChanged.connect(self.fill_combobox_changed_cb)
 
         icol += 1
