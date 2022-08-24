@@ -154,24 +154,35 @@ class ICs(QWidget):
 
         icol += 1
         self.num_cells = QLineEdit()
-        self.num_cells.setFixedWidth(70)
+        # self.num_cells.setFixedWidth(70)
         self.num_cells.setValidator(QtGui.QIntValidator(1,100000))
         self.num_cells.setEnabled(True)
         self.num_cells.setText('100')
         self.glayout1.addWidget(self.num_cells, idr,icol,1,1) 
 
+        btn_width = 80
+        icol += 1
+        self.clear_button = QPushButton("Clear")
+        # self.clear_button.setFixedWidth(btn_width)
+        self.clear_button.setStyleSheet("background-color: yellow")
+        self.clear_button.clicked.connect(self.clear_cb)
+        self.glayout1.addWidget(self.clear_button, idr,icol,1,1) 
+
         icol += 1
         self.plot_button = QPushButton("Plot")
+        # self.plot_button.setFixedWidth(btn_width)
         self.plot_button.setStyleSheet("background-color: lightgreen")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.plot_button.clicked.connect(self.plot_cb)
         self.glayout1.addWidget(self.plot_button, idr,icol,1,1) 
 
         icol += 1
-        self.clear_button = QPushButton("Clear")
-        self.clear_button.setStyleSheet("background-color: yellow")
-        self.clear_button.clicked.connect(self.clear_cells)
-        self.glayout1.addWidget(self.clear_button, idr,icol,1,1) 
+        self.csv_button = QPushButton("->cells.csv")
+        # self.csv_button.setFixedWidth(btn_width)
+        self.csv_button.setStyleSheet("background-color: cyan")
+        # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
+        self.csv_button.clicked.connect(self.csv_cb)
+        self.glayout1.addWidget(self.csv_button, idr,icol,1,1) 
 
 
         cvalue_width = 70
@@ -184,7 +195,7 @@ class ICs(QWidget):
         # self.cmin.textChanged.connect(self.change_plot_range)
         # self.l1val.returnPressed.connect(self.l1_l2_cb)
         self.l1val.textChanged.connect(self.l1_l2_cb)
-        self.l1val.setFixedWidth(cvalue_width)
+        # self.l1val.setFixedWidth(cvalue_width)
         self.l1val.setValidator(QtGui.QDoubleValidator())
         icol += 1
         self.glayout1.addWidget(label, idr,icol,1,1) # w, row, column, rowspan, colspan
@@ -199,7 +210,7 @@ class ICs(QWidget):
         self.l2val.setText(str(self.l2_value))
         # self.l2val.returnPressed.connect(self.l1_l2_cb)
         self.l2val.textChanged.connect(self.l1_l2_cb)
-        self.l2val.setFixedWidth(cvalue_width)
+        # self.l2val.setFixedWidth(cvalue_width)
         self.l2val.setValidator(QtGui.QDoubleValidator())
         icol += 1
         self.glayout1.addWidget(label, idr,icol,1,1) # w, row, column, rowspan, colspan
@@ -215,7 +226,7 @@ class ICs(QWidget):
         visible_flag = True
 
         label = QLabel("xmin")
-        label.setFixedWidth(label_width)
+        # label.setFixedWidth(label_width)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         # controls_hbox2.addWidget(label)
@@ -1055,15 +1066,110 @@ class ICs(QWidget):
             if self.l2_value <= self.l1_value:
                 self.annulus_error()
                 return
-
             if "random" in self.fill_combobox.currentText():
                 self.uniform_random_pts_annulus()
             elif "hex" in self.fill_combobox.currentText():
                 pass
-        else:
+
+        else:  # rectangle
             if "random" in self.fill_combobox.currentText():
                 self.uniform_random_pts_rect()
+            elif "hex" in self.fill_combobox.currentText():
+                self.hex_pts_rect()
 
+    #----------------------------------
+    def hex_pts_rect(self):
+        xlist = deque()
+        ylist = deque()
+        rlist = deque()
+        rgba_list = deque()
+
+        cell_radius = 8.0
+        rval = cell_radius
+
+        colors = np.empty((0,4))
+        count = 0
+        zval = 0.0
+        ncells = int(self.num_cells.text())
+        print("self.l1_value= ", self.l1_value)
+
+        x_min = -self.l1_value
+        x_max =  self.l1_value
+        y_min = -self.l2_value
+        y_max =  self.l2_value
+        y_idx = -1
+        # hex packing constants
+        x_spacing = cell_radius * 2
+        y_spacing = cell_radius * np.sqrt(3)
+
+        cells_x = np.array([])
+        cells_y = np.array([])
+
+        cells_x2 = np.array([])
+        cells_y2 = np.array([])
+
+        # xctr = 0.0
+        # yctr = 40.0
+        #big_radius = 20.0
+
+        y_idx = 0
+        for yval in np.arange(y_min,y_max, y_spacing):
+            y_idx += 1
+            for xval in np.arange(x_min,x_max, x_spacing):
+                xval_offset = xval + (y_idx%2) * cell_radius
+                # ixval = int(xval_offset)
+                # print(ixval)
+                # idx = np.where(x_values == ixval)
+                # xdist = xval_offset - xctr
+                # ydist = yval - yctr
+                # dist = np.sqrt(xdist*xdist + ydist*ydist)
+                # if dist < big_radius:
+                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
+                #     xv = xval_offset - big_radius
+                #     cells_x = np.append(cells_x, xv)
+                #     cells_y = np.append(cells_y, yval)
+                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
+                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
+
+                xlist.append(xval_offset)
+                ylist.append(yval)
+                rlist.append(rval)
+                count+=1
+
+        xvals = np.array(xlist)
+        yvals = np.array(ylist)
+        rvals = np.array(rlist)
+        # rgbas = np.array(rgba_list)
+
+        if (self.cells_edge_checked_flag):
+            try:
+                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+            except (ValueError):
+                pass
+        else:
+            # self.circles(xvals,yvals, s=rvals, color=rgbas)
+            self.circles(xvals,yvals, s=rvals, color='gray')
+
+        self.ax0.set_aspect(1.0)
+
+        # self.plot_xmin = float(self.xmin)
+        # self.plot_xmax = float(self.xmax)
+        # self.plot_ymin = float(self.ymin)
+        # self.plot_ymax = float(self.ymax)
+
+        self.plot_xmin = -500
+        self.plot_xmax = 500
+        self.plot_ymin = -500
+        self.plot_ymax = 500
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
+
+    #----------------------------------
     def uniform_random_pts_rect(self):
         xlist = deque()
         ylist = deque()
@@ -1276,7 +1382,7 @@ class ICs(QWidget):
         self.canvas.draw()
 
 
-    def clear_cells(self):
+    def clear_cb(self):
         # self.ax0.clear()
         self.ax0.cla()
         self.plot_xmin = -500
@@ -1287,3 +1393,8 @@ class ICs(QWidget):
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.canvas.update()
         self.canvas.draw()
+
+    def csv_cb(self):
+        print("\n------- NOT WORKING YET -------")
+        # x = y = z = np.arange(0.0,5.0,1.0)
+        # np.savetxt('cells.csv', (x,y,z), delimiter=',')
