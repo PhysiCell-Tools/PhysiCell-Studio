@@ -33,7 +33,6 @@ from rules_tab import Rules
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
-from vis_tab import Vis 
 from legend_tab import Legend 
         
 # from sbml_tab import SBMLParams 
@@ -60,14 +59,18 @@ def startup_notice():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, studio_flag, skip_validate_flag, rules_flag, parent = None):
+    def __init__(self, studio_flag, skip_validate_flag, rules_flag, model3D_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
+        if model3D_flag:
+            from vis3D_tab import Vis 
+        else:
+            from vis_tab import Vis 
 
         self.studio_flag = studio_flag 
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
 
-        self.ics_tab_index = 5
+        self.ics_tab_index = 4
         self.plot_tab_index = 6
         self.legend_tab_index = 7
         if self.rules_flag:
@@ -205,6 +208,8 @@ class PhysiCellXMLCreator(QWidget):
         if self.studio_flag:
             print("studio.py: creating ICs, Run, and Plot tabs")
             self.ics_tab = ICs(self.celldef_tab)
+            self.ics_tab.fill_celltype_combobox()
+            self.celldef_tab.ics_tab = self.ics_tab
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
@@ -409,6 +414,9 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
         self.celldef_tab.fill_substrates_comboboxes()
         self.celldef_tab.fill_celltypes_comboboxes()
+
+        if self.studio_flag:
+            self.ics_tab.reset_info()
 
         self.microenv_tab.celldef_tab = self.celldef_tab
 
@@ -774,10 +782,11 @@ def main():
     studio_flag = False
     skip_validate_flag = False
     rules_flag = False
+    model3D_flag = False
     try:
         # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
         # opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules", "ics"])
-        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules"])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules", "3D"])
     except getopt.GetoptError:
         # print 'test.py -i <inputfile> -o <outputfile>'
         print('\ngetopt exception - usage:')
@@ -794,6 +803,8 @@ def main():
             skip_validate_flag = True
         elif opt in ("--rules"):
             rules_flag = True
+        elif opt in ("--3D"):
+            model3D_flag = True
         # elif opt in ("--ics"):
             # ics_flag = True
 
@@ -855,7 +866,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
-    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag)
+    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag, model3D_flag)
     ex.show()
     startup_notice()
     sys.exit(pmb_app.exec_())

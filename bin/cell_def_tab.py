@@ -48,6 +48,8 @@ class CellDef(QWidget):
             self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
             self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
+        self.ics_tab = None
+
         self.current_cell_def = None
         self.cell_adhesion_affinity_celltype = None
 
@@ -360,6 +362,9 @@ class CellDef(QWidget):
         self.attack_rate_dropdown.removeItem(item_idx)
         self.fusion_rate_dropdown.removeItem(item_idx)
         self.cell_transformation_dropdown.removeItem(item_idx)
+
+        # ICs
+        self.ics_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
         print("Also delete ",self.param_d[self.current_cell_def], "from dicts")
@@ -4978,6 +4983,8 @@ class CellDef(QWidget):
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
+                # self.ics_tab.celltype_combobox.addItem(name)
+
         # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
@@ -4993,6 +5000,8 @@ class CellDef(QWidget):
 
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
+        self.ics_tab.celltype_combobox.addItem(name)
+
     #-----------------------------------------------------------------------------------------
     # def delete_substrate(self, item_idx):
     def delete_substrate(self, item_idx, new_substrate):
@@ -5000,11 +5009,14 @@ class CellDef(QWidget):
         # 1) delete it from the comboboxes
         # print("------- delete_substrate: name=",name)
         # print("------- delete_substrate: index=",item_idx)
-        subname = self.motility_substrate_dropdown.itemText(item_idx)
+
+        # subname = self.motility_substrate_dropdown.itemText(item_idx)
         subname = self.motility2_substrate_dropdown.itemText(item_idx)
-        print("cell_def_tab.py: delete_substrate():    subname = ", subname)
+        # print("cell_def_tab.py: delete_substrate():    subname = ", subname)
         self.substrate_list.remove(subname)
         # print("self.substrate_list = ",self.substrate_list)
+
+        # update all dropdown/comboboxes
         self.motility_substrate_dropdown.removeItem(item_idx)
         self.motility2_substrate_dropdown.removeItem(item_idx)
         self.secretion_substrate_dropdown.removeItem(item_idx)
@@ -5108,6 +5120,9 @@ class CellDef(QWidget):
     # When a user renames a cell type in this tab, we need to update all 
     # data structures (e.g., QComboBox) that reference it.
     def renamed_celltype(self, old_name,new_name):
+
+        self.cell_adhesion_affinity_celltype = new_name
+
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         print("cell_def_tab.py: ------- renamed_celltype()", old_name," -> ",new_name)
         # print("       old_name = ",old_name)
@@ -5133,6 +5148,8 @@ class CellDef(QWidget):
                 self.cell_transformation_dropdown.setItemText(idx, new_name)
             if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
+            if old_name == self.ics_tab.celltype_combobox.itemText(idx):
+                self.ics_tab.celltype_combobox.setItemText(idx, new_name)
 
         # 2) OMG, also update all param_d dicts that involve cell def names
         print("--- renaming all dicts with cell defs")
@@ -5645,6 +5662,9 @@ class CellDef(QWidget):
 
         # self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
         if self.cell_adhesion_affinity_celltype:
+            print("key 0= ",self.cell_adhesion_affinity_celltype)
+            print("keys 1= ",self.param_d.keys())
+            print("keys 2= ",self.param_d[cdname]["cell_adhesion_affinity"].keys())
             self.cell_adhesion_affinity.setText(self.param_d[cdname]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
 
         self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])

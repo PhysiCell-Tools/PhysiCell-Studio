@@ -39,19 +39,24 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 class ICs(QWidget):
 
-    def __init__(self, nanohub_flag):
+    def __init__(self, celldef_tab):
         super().__init__()
         # global self.config_params
 
+        self.celldef_tab = celldef_tab
+
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
-        self.mech_voxel_size = 30
+        # self.mech_voxel_size = 30
+
+        self.csv_array = np.empty([1,4])  # default floats
+        # print("--------------- csv_array= ",self.csv_array)
 
         self.plot_xmin = -200
         self.plot_xmax = 200
         self.plot_ymin = -200
         self.plot_ymax = 200
 
-        self.nanohub_flag = nanohub_flag
+        # self.nanohub_flag = nanohub_flag
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -101,7 +106,7 @@ class ICs(QWidget):
         self.figsize_width_svg = basic_length
         self.figsize_height_svg = basic_length
 
-        self.output_dir = "."   # for nanoHUB
+        # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
         label_width = 110
@@ -134,8 +139,8 @@ class ICs(QWidget):
         # for var in uep.findall('cell_definition'):
         #     self.celltypes_list.append(name)
         #     self.live_phagocytosis_dropdown.addItem(name)
-        self.celltype_combobox.addItem("default")
-        self.celltype_combobox.addItem("celltype 2")
+        # self.celltype_combobox.addItem("default")
+        # self.celltype_combobox.addItem("celltype 2")
         # self.celltype_dropdown.currentIndexChanged.connect(self.celltype_dropdown_changed_cb)  # later
 
         icol += 1
@@ -351,6 +356,11 @@ class ICs(QWidget):
         # self.create_figure()
 
 
+    def fill_celltype_combobox(self):
+        print("fill_celltype_combobox(): ",self.celldef_tab.celltypes_list)
+        for cdef in self.celldef_tab.celltypes_list:
+            self.celltype_combobox.addItem(cdef)
+
     def reset_plot_range(self):
         try:  # due to the initial callback
             self.my_xmin.setText(str(self.xmin))
@@ -469,6 +479,10 @@ class ICs(QWidget):
 
     def geom_combobox_changed_cb(self,idx):
         print("----- geom_combobox_changed_cb: idx = ",idx)
+        if "rect" in self.geom_combobox.currentText():
+            self.num_cells.setEnabled(False)
+        else:
+            self.num_cells.setEnabled(True)
         # if idx == 0:
         #     self.l2val.setEnabled(False)
         # else:
@@ -492,89 +506,94 @@ class ICs(QWidget):
         self.output_dir_w.setText(self.output_dir)
         self.reset_model()
 
-    def reset_model(self):
-        # print("\n--------- vis_tab: reset_model ----------")
-        # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
-        # tree = ET.parse(self.output_dir + "/" + "initial.xml")
-        xml_file = Path(self.output_dir, "initial.xml")
-        if not os.path.isfile(xml_file):
-            print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
-            # msgBox = QMessageBox()
-            # msgBox.setIcon(QMessageBox.Information)
-            # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
-            # msgBox.setStandardButtons(QMessageBox.Ok)
-            # msgBox.exec()
-            return
+    def reset_info(self):
+        self.celltype_combobox.clear()
+        self.fill_celltype_combobox()
+        self.csv_array = np.empty([1,4])
 
-        tree = ET.parse(Path(self.output_dir, "initial.xml"))
-        xml_root = tree.getroot()
+    # def reset_model(self):
+    #     # print("\n--------- vis_tab: reset_model ----------")
+    #     # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
+    #     # tree = ET.parse(self.output_dir + "/" + "initial.xml")
+    #     xml_file = Path(self.output_dir, "initial.xml")
+    #     if not os.path.isfile(xml_file):
+    #         print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
+    #         # msgBox = QMessageBox()
+    #         # msgBox.setIcon(QMessageBox.Information)
+    #         # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
+    #         # msgBox.setStandardButtons(QMessageBox.Ok)
+    #         # msgBox.exec()
+    #         return
 
-        bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
-        bds = bds_str.split()
-        # print('bds=',bds)
-        self.xmin = float(bds[0])
-        self.xmax = float(bds[3])
-        print('ICs: reset_model(): self.xmin, xmax=',self.xmin, self.xmax)
-        self.x_range = self.xmax - self.xmin
-        self.plot_xmin = self.xmin
-        self.plot_xmax = self.xmax
-        # print("--------- self.plot_xmax = ",self.plot_xmax)
+    #     tree = ET.parse(Path(self.output_dir, "initial.xml"))
+    #     xml_root = tree.getroot()
 
-        try:
-            self.my_xmin.setText(str(self.plot_xmin))
-            self.my_xmax.setText(str(self.plot_xmax))
-            self.my_ymin.setText(str(self.plot_ymin))
-            self.my_ymax.setText(str(self.plot_ymax))
-        except:
-            pass
+    #     bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
+    #     bds = bds_str.split()
+    #     # print('bds=',bds)
+    #     self.xmin = float(bds[0])
+    #     self.xmax = float(bds[3])
+    #     print('ICs: reset_model(): self.xmin, xmax=',self.xmin, self.xmax)
+    #     self.x_range = self.xmax - self.xmin
+    #     self.plot_xmin = self.xmin
+    #     self.plot_xmax = self.xmax
+    #     # print("--------- self.plot_xmax = ",self.plot_xmax)
 
-        self.ymin = float(bds[1])
-        self.ymax = float(bds[4])
-        self.y_range = self.ymax - self.ymin
-        # print('reset_model(): self.ymin, ymax=',self.ymin, self.ymax)
-        self.plot_ymin = self.ymin
-        self.plot_ymax = self.ymax
+    #     try:
+    #         self.my_xmin.setText(str(self.plot_xmin))
+    #         self.my_xmax.setText(str(self.plot_xmax))
+    #         self.my_ymin.setText(str(self.plot_ymin))
+    #         self.my_ymax.setText(str(self.plot_ymax))
+    #     except:
+    #         pass
 
-        xcoords_str = xml_root.find(".//microenvironment//domain//mesh//x_coordinates").text
-        xcoords = xcoords_str.split()
-        # print('reset_model(): xcoords=',xcoords)
-        # print('reset_model(): len(xcoords)=',len(xcoords))
-        self.numx =  len(xcoords)
+    #     self.ymin = float(bds[1])
+    #     self.ymax = float(bds[4])
+    #     self.y_range = self.ymax - self.ymin
+    #     # print('reset_model(): self.ymin, ymax=',self.ymin, self.ymax)
+    #     self.plot_ymin = self.ymin
+    #     self.plot_ymax = self.ymax
 
-        ycoords_str = xml_root.find(".//microenvironment//domain//mesh//y_coordinates").text
-        ycoords = ycoords_str.split()
-        # print('reset_model(): ycoords=',ycoords)
-        # print('reset_model(): len(ycoords)=',len(ycoords))
-        self.numy =  len(ycoords)
-        # print("-------------- vis_tab.py: reset_model() -------------------")
-        # print("reset_model(): self.numx, numy = ",self.numx,self.numy)
+    #     xcoords_str = xml_root.find(".//microenvironment//domain//mesh//x_coordinates").text
+    #     xcoords = xcoords_str.split()
+    #     # print('reset_model(): xcoords=',xcoords)
+    #     # print('reset_model(): len(xcoords)=',len(xcoords))
+    #     self.numx =  len(xcoords)
 
-        #-------------------
-        vars_uep = xml_root.find(".//microenvironment//domain//variables")
-        if vars_uep:
-            sub_names = []
-            for var in vars_uep:
-            # self.substrate.clear()
-            # self.param[substrate_name] = {}  # a dict of dicts
+    #     ycoords_str = xml_root.find(".//microenvironment//domain//mesh//y_coordinates").text
+    #     ycoords = ycoords_str.split()
+    #     # print('reset_model(): ycoords=',ycoords)
+    #     # print('reset_model(): len(ycoords)=',len(ycoords))
+    #     self.numy =  len(ycoords)
+    #     # print("-------------- vis_tab.py: reset_model() -------------------")
+    #     # print("reset_model(): self.numx, numy = ",self.numx,self.numy)
 
-            # self.tree.clear()
-                idx = 0
-            # <microenvironment_setup>
-		    #   <variable name="food" units="dimensionless" ID="0">
-                # print(cell_def.attrib['name'])
-                if var.tag == 'variable':
-                    substrate_name = var.attrib['name']
-                    # print("substrate: ",substrate_name )
-                    sub_names.append(substrate_name)
-                self.cell_types_combobox.clear()
-                # print("sub_names = ",sub_names)
-                self.cell_types_combobox.addItems(sub_names)
+    #     #-------------------
+    #     vars_uep = xml_root.find(".//microenvironment//domain//variables")
+    #     if vars_uep:
+    #         sub_names = []
+    #         for var in vars_uep:
+    #         # self.substrate.clear()
+    #         # self.param[substrate_name] = {}  # a dict of dicts
+
+    #         # self.tree.clear()
+    #             idx = 0
+    #         # <microenvironment_setup>
+	# 	    #   <variable name="food" units="dimensionless" ID="0">
+    #             # print(cell_def.attrib['name'])
+    #             if var.tag == 'variable':
+    #                 substrate_name = var.attrib['name']
+    #                 # print("substrate: ",substrate_name )
+    #                 sub_names.append(substrate_name)
+    #             self.cell_types_combobox.clear()
+    #             # print("sub_names = ",sub_names)
+    #             self.cell_types_combobox.addItems(sub_names)
 
 
-        # and plot 1st frame (.svg)
-        self.current_svg_frame = 0
+    #     # and plot 1st frame (.svg)
+    #     self.current_svg_frame = 0
 
-        self.fill_cell_types_combobox(sub_names)
+    #     self.fill_cell_types_combobox(sub_names)
 
 
     def reset_axes(self):
@@ -609,13 +628,6 @@ class ICs(QWidget):
         self.current_svg_frame = 0
 
 
-    def prepare_plot_cb(self, text):
-        self.current_svg_frame += 1
-        print('\n\n   ====>     prepare_plot_cb(): svg # ',self.current_svg_frame)
-
-        self.update_plots()
-
-
     def create_figure(self):
         print("\n--------- create_figure(): ------- creating figure, canvas, ax0")
         self.figure = plt.figure()
@@ -624,7 +636,7 @@ class ICs(QWidget):
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
 
-        self.reset_model()
+        # self.reset_model()
 
         print("create_figure(): ------- creating dummy contourf")
         xlist = np.linspace(-3.0, 3.0, 50)
@@ -759,22 +771,6 @@ class ICs(QWidget):
         except:
             print("plot_vecs(): ERROR")
             pass
-
-    #------------------------------------------------------------
-    def plot_mechanics_grid(self):
-        numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
-        numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
-        xs = np.linspace(self.xmin,self.xmax, numx)
-        ys = np.linspace(self.ymin,self.ymax, numy)
-        hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
-        vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
-        grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
-        line_collection = LineCollection(grid_lines, color="gray", linewidths=0.5)
-        # ax = plt.gca()
-        # ax.add_collection(line_collection)
-        self.ax0.add_collection(line_collection)
-        # ax.set_xlim(xs[0], xs[-1])
-        # ax.set_ylim(ys[0], ys[-1])
 
     #------------------------------------------------------------
     # def plot_svg(self, frame, rdel=''):
@@ -1251,6 +1247,7 @@ class ICs(QWidget):
         # R2 = 400
         count = 0
         zval = 0.0
+        cell_type_index = 0
 
         ncells = int(self.num_cells.text())
         R1 = float(self.l1val.text())
@@ -1273,6 +1270,7 @@ class ICs(QWidget):
                 xlist.append(xval)
                 ylist.append(yval)
                 rlist.append(rval)
+                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
                 # print(count,xval,yval)
                 count+=1
                 if count == ncells:
@@ -1394,7 +1392,11 @@ class ICs(QWidget):
         self.canvas.update()
         self.canvas.draw()
 
+        self.csv_array = np.empty([1,4])  # should probably np.delete, but meh
+
     def csv_cb(self):
-        print("\n------- NOT WORKING YET -------")
+        # print("\n------- NOT WORKING YET -------")
         # x = y = z = np.arange(0.0,5.0,1.0)
         # np.savetxt('cells.csv', (x,y,z), delimiter=',')
+        # print(self.csv_array)
+        np.savetxt('cells.csv', self.csv_array, delimiter=',')

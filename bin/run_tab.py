@@ -251,9 +251,9 @@ class RunModel(QWidget):
         if self.p is None:  # No process running.
             # self.vis_tab.setEnabled(True)
             # self.pStudio.enablePlotTab(True)
-            # self.tab_widget.enablePlotTab(True)
-            self.tab_widget.setTabEnabled(5, True)   # enable (allow to be selected) the Plot tab
-            self.tab_widget.setTabEnabled(6, True)   # enable Legend tab
+            # self.pStudio.enableLegendTab(True)
+            self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
+            self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
             self.message("Executing process")
             self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
             self.p.readyReadStandardOutput.connect(self.handle_stdout)
