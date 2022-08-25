@@ -207,8 +207,9 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             print("studio.py: creating ICs, Run, and Plot tabs")
-            self.ics_tab = ICs(self.celldef_tab)
+            self.ics_tab = ICs(self.config_tab, self.celldef_tab)
             self.ics_tab.fill_celltype_combobox()
+            self.ics_tab.reset_info()
             self.celldef_tab.ics_tab = self.ics_tab
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")

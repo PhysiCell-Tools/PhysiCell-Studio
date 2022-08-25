@@ -39,22 +39,24 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 class ICs(QWidget):
 
-    def __init__(self, celldef_tab):
+    def __init__(self, config_tab, celldef_tab):
         super().__init__()
         # global self.config_params
 
         self.celldef_tab = celldef_tab
+        self.config_tab = config_tab
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
 
         self.csv_array = np.empty([1,4])  # default floats
+        self.csv_array = np.delete(self.csv_array,0,0)
         # print("--------------- csv_array= ",self.csv_array)
 
-        self.plot_xmin = -200
-        self.plot_xmax = 200
-        self.plot_ymin = -200
-        self.plot_ymax = 200
+        self.plot_xmin = -500
+        self.plot_xmax = 500
+        self.plot_ymin = -500
+        self.plot_ymax = 500
 
         # self.nanohub_flag = nanohub_flag
 
@@ -70,20 +72,20 @@ class ICs(QWidget):
 
         self.show_plot_range = False
 
-        self.l1_value = 200.
-        self.l2_value = 300.
+        self.l1_value = 10.
+        self.l2_value = 30.
 
         # self.config_file = "mymodel.xml"
-        self.reset_model_flag = True
-        self.xmin = -80
-        self.xmax = 80
-        self.x_range = self.xmax - self.xmin
+        # self.reset_model_flag = True
+        # self.xmin = -80
+        # self.xmax = 80
+        # self.x_range = self.xmax - self.xmin
 
-        self.ymin = -50
-        self.ymax = 100
-        self.y_range = self.ymax - self.ymin
+        # self.ymin = -50
+        # self.ymax = 100
+        # self.y_range = self.ymax - self.ymin
 
-        self.aspect_ratio = 0.7
+        # self.aspect_ratio = 0.7
 
         self.show_grid = False
         self.show_vectors = False
@@ -115,7 +117,7 @@ class ICs(QWidget):
         units_width = 70
 
         self.myscroll = QScrollArea()  # might contain centralWidget
-        self.create_figure()
+        # self.create_figure()
 
         self.config_params = QWidget()
 
@@ -201,7 +203,7 @@ class ICs(QWidget):
         # self.l1val.returnPressed.connect(self.l1_l2_cb)
         self.l1val.textChanged.connect(self.l1_l2_cb)
         # self.l1val.setFixedWidth(cvalue_width)
-        self.l1val.setValidator(QtGui.QDoubleValidator())
+        self.l1val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
         icol += 1
         self.glayout1.addWidget(label, idr,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
@@ -216,7 +218,7 @@ class ICs(QWidget):
         # self.l2val.returnPressed.connect(self.l1_l2_cb)
         self.l2val.textChanged.connect(self.l1_l2_cb)
         # self.l2val.setFixedWidth(cvalue_width)
-        self.l2val.setValidator(QtGui.QDoubleValidator())
+        self.l2val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
         icol += 1
         self.glayout1.addWidget(label, idr,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
@@ -224,78 +226,79 @@ class ICs(QWidget):
 
 
         #-------------------
-        self.controls2 = QWidget()
-        self.glayout2 = QGridLayout()
-        self.controls2.setLayout(self.glayout2)
-        # controls_hbox2 = QHBoxLayout()
-        visible_flag = True
+        # Create the "hidden" controls that are part of the stacked widget
+        # self.controls2 = QWidget()
+        # self.glayout2 = QGridLayout()
+        # self.controls2.setLayout(self.glayout2)
+        # # controls_hbox2 = QHBoxLayout()
+        # visible_flag = True
 
-        label = QLabel("xmin")
+        # label = QLabel("xmin")
+        # # label.setFixedWidth(label_width)
+        # # label.setAlignment(QtCore.Qt.AlignRight)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # # controls_hbox2.addWidget(label)
+
+
+        # domain_value_width = 60
+        # self.my_xmin = QLineEdit()
+        # self.my_xmin.textChanged.connect(self.change_plot_range)
+        # self.my_xmin.setFixedWidth(domain_value_width)
+        # self.my_xmin.setValidator(QtGui.QDoubleValidator())
+        # # controls_hbox2.addWidget(self.my_xmin)
+        # self.my_xmin.setVisible(visible_flag)
+        # # controls_hbox2.addWidget(label)
+        # self.glayout2.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
+        # self.glayout2.addWidget(self.my_xmin, 0,1,1,1) # w, row, column, rowspan, colspan
+
+        # label = QLabel("xmax")
         # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        # controls_hbox2.addWidget(label)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # # controls_hbox2.addWidget(label)
+        # self.my_xmax = QLineEdit()
+        # self.my_xmax.textChanged.connect(self.change_plot_range)
+        # self.my_xmax.setFixedWidth(domain_value_width)
+        # self.my_xmax.setValidator(QtGui.QDoubleValidator())
+        # # controls_hbox2.addWidget(self.my_xmax)
+        # self.my_xmax.setVisible(visible_flag)
+        # self.glayout2.addWidget(label, 0,2,1,1) # w, row, column, rowspan, colspan
+        # self.glayout2.addWidget(self.my_xmax, 0,3,1,1) # w, row, column, rowspan, colspan
 
+        # label = QLabel("ymin")
+        # label.setFixedWidth(label_width)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # # controls_hbox2.addWidget(label)
+        # self.my_ymin = QLineEdit()
+        # self.my_ymin.textChanged.connect(self.change_plot_range)
+        # self.my_ymin.setFixedWidth(domain_value_width)
+        # self.my_ymin.setValidator(QtGui.QDoubleValidator())
+        # # controls_hbox2.addWidget(self.my_ymin)
+        # self.my_ymin.setVisible(visible_flag)
+        # self.glayout2.addWidget(label, 0,4,1,1) # w, row, column, rowspan, colspan
+        # self.glayout2.addWidget(self.my_ymin, 0,5,1,1) # w, row, column, rowspan, colspan
 
-        domain_value_width = 60
-        self.my_xmin = QLineEdit()
-        self.my_xmin.textChanged.connect(self.change_plot_range)
-        self.my_xmin.setFixedWidth(domain_value_width)
-        self.my_xmin.setValidator(QtGui.QDoubleValidator())
-        # controls_hbox2.addWidget(self.my_xmin)
-        self.my_xmin.setVisible(visible_flag)
-        # controls_hbox2.addWidget(label)
-        self.glayout2.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-        self.glayout2.addWidget(self.my_xmin, 0,1,1,1) # w, row, column, rowspan, colspan
+        # label = QLabel("ymax")
+        # label.setFixedWidth(label_width)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # # controls_hbox2.addWidget(label)
+        # self.my_ymax = QLineEdit()
+        # self.my_ymax.textChanged.connect(self.change_plot_range)
+        # self.my_ymax.setFixedWidth(domain_value_width)
+        # self.my_ymax.setValidator(QtGui.QDoubleValidator())
+        # # controls_hbox2.addWidget(self.my_ymax)
+        # self.my_ymax.setVisible(visible_flag)
+        # self.glayout2.addWidget(label, 0,6,1,1) # w, row, column, rowspan, colspan
+        # self.glayout2.addWidget(self.my_ymax, 0,7,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("xmax")
-        label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        # controls_hbox2.addWidget(label)
-        self.my_xmax = QLineEdit()
-        self.my_xmax.textChanged.connect(self.change_plot_range)
-        self.my_xmax.setFixedWidth(domain_value_width)
-        self.my_xmax.setValidator(QtGui.QDoubleValidator())
-        # controls_hbox2.addWidget(self.my_xmax)
-        self.my_xmax.setVisible(visible_flag)
-        self.glayout2.addWidget(label, 0,2,1,1) # w, row, column, rowspan, colspan
-        self.glayout2.addWidget(self.my_xmax, 0,3,1,1) # w, row, column, rowspan, colspan
+        # w = QPushButton("Reset")
+        # # w.clicked.connect(self.reset_plot_range)
+        # self.glayout2.addWidget(w, 0,8,1,1) # w, row, column, rowspan, colspan
+        # # controls_hbox2.addWidget(w)
 
-        label = QLabel("ymin")
-        label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        # controls_hbox2.addWidget(label)
-        self.my_ymin = QLineEdit()
-        self.my_ymin.textChanged.connect(self.change_plot_range)
-        self.my_ymin.setFixedWidth(domain_value_width)
-        self.my_ymin.setValidator(QtGui.QDoubleValidator())
-        # controls_hbox2.addWidget(self.my_ymin)
-        self.my_ymin.setVisible(visible_flag)
-        self.glayout2.addWidget(label, 0,4,1,1) # w, row, column, rowspan, colspan
-        self.glayout2.addWidget(self.my_ymin, 0,5,1,1) # w, row, column, rowspan, colspan
-
-        label = QLabel("ymax")
-        label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        # controls_hbox2.addWidget(label)
-        self.my_ymax = QLineEdit()
-        self.my_ymax.textChanged.connect(self.change_plot_range)
-        self.my_ymax.setFixedWidth(domain_value_width)
-        self.my_ymax.setValidator(QtGui.QDoubleValidator())
-        # controls_hbox2.addWidget(self.my_ymax)
-        self.my_ymax.setVisible(visible_flag)
-        self.glayout2.addWidget(label, 0,6,1,1) # w, row, column, rowspan, colspan
-        self.glayout2.addWidget(self.my_ymax, 0,7,1,1) # w, row, column, rowspan, colspan
-
-        w = QPushButton("Reset")
-        # w.clicked.connect(self.reset_plot_range)
-        self.glayout2.addWidget(w, 0,8,1,1) # w, row, column, rowspan, colspan
-        # controls_hbox2.addWidget(w)
-
-        self.my_xmin.setText(str(self.xmin))
-        self.my_xmax.setText(str(self.xmax))
-        self.my_ymin.setText(str(self.ymin))
-        self.my_ymax.setText(str(self.ymax))
+        # self.my_xmin.setText(str(self.xmin))
+        # self.my_xmax.setText(str(self.xmax))
+        # self.my_ymin.setText(str(self.ymin))
+        # self.my_ymax.setText(str(self.ymax))
 
         #-------------------
         # arg, Qt layouts drive me insane. This doesn't work - trying to combine both rows of controls!
@@ -329,6 +332,7 @@ class ICs(QWidget):
         self.myscroll.setWidgetResizable(True)
 
         # self.myscroll.setWidget(self.config_params) # self.config_params = QWidget()
+        self.create_figure()
         self.myscroll.setWidget(self.canvas) # self.config_params = QWidget()
         self.layout = QVBoxLayout(self)
         # self.layout.addLayout(controls_hbox)
@@ -339,7 +343,7 @@ class ICs(QWidget):
         # self.layout.addWidget(self.controls1)
 
         self.stackw.addWidget(self.controls1)
-        self.stackw.addWidget(self.controls2)
+        # self.stackw.addWidget(self.controls2)
         # self.stackw.addWidget(self.controls3)
 
         self.stackw.setCurrentIndex(0)
@@ -372,7 +376,7 @@ class ICs(QWidget):
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
             self.plot_ymax = float(self.ymax)
-            print("-------- ICs: reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            print("ics_tab: -------- ICs: reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
         except:
             pass
 
@@ -416,7 +420,7 @@ class ICs(QWidget):
         try:  # due to the initial callback
             self.l1_value = float(self.l1val.text())
             self.l2_value = float(self.l2val.text())
-            print(self.l1_value, self.l2_value)
+            # print(self.l1_value, self.l2_value)
         except:
             pass
         # self.update_plots()
@@ -441,10 +445,11 @@ class ICs(QWidget):
             self.plot_xmax = float(self.my_xmax.text())
             self.plot_ymin = float(self.my_ymin.text())
             self.plot_ymax = float(self.my_ymax.text())
+            self.update_plots()
         except:
             pass
 
-        self.update_plots()
+        # self.update_plots()
 
     def update_plots(self):
         self.ax0.cla()
@@ -479,7 +484,8 @@ class ICs(QWidget):
 
     def geom_combobox_changed_cb(self,idx):
         print("----- geom_combobox_changed_cb: idx = ",idx)
-        if "rect" in self.geom_combobox.currentText():
+        # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
+        if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
@@ -491,6 +497,11 @@ class ICs(QWidget):
 
     def fill_combobox_changed_cb(self,idx):
         print("----- fill_combobox_changed_cb: idx = ",idx)
+        # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
+        if "hex" in self.fill_combobox.currentText():
+            self.num_cells.setEnabled(False)
+        else:
+            self.num_cells.setEnabled(True)
         # self.update_plots()
 
 
@@ -507,129 +518,25 @@ class ICs(QWidget):
         self.reset_model()
 
     def reset_info(self):
+        print("\nics_tab:  --- reset_info()")
         self.celltype_combobox.clear()
         self.fill_celltype_combobox()
         self.csv_array = np.empty([1,4])
+        self.csv_array = np.delete(self.csv_array,0,0)
 
-    # def reset_model(self):
-    #     # print("\n--------- vis_tab: reset_model ----------")
-    #     # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
-    #     # tree = ET.parse(self.output_dir + "/" + "initial.xml")
-    #     xml_file = Path(self.output_dir, "initial.xml")
-    #     if not os.path.isfile(xml_file):
-    #         print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
-    #         # msgBox = QMessageBox()
-    #         # msgBox.setIcon(QMessageBox.Information)
-    #         # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
-    #         # msgBox.setStandardButtons(QMessageBox.Ok)
-    #         # msgBox.exec()
-    #         return
-
-    #     tree = ET.parse(Path(self.output_dir, "initial.xml"))
-    #     xml_root = tree.getroot()
-
-    #     bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
-    #     bds = bds_str.split()
-    #     # print('bds=',bds)
-    #     self.xmin = float(bds[0])
-    #     self.xmax = float(bds[3])
-    #     print('ICs: reset_model(): self.xmin, xmax=',self.xmin, self.xmax)
-    #     self.x_range = self.xmax - self.xmin
-    #     self.plot_xmin = self.xmin
-    #     self.plot_xmax = self.xmax
-    #     # print("--------- self.plot_xmax = ",self.plot_xmax)
-
-    #     try:
-    #         self.my_xmin.setText(str(self.plot_xmin))
-    #         self.my_xmax.setText(str(self.plot_xmax))
-    #         self.my_ymin.setText(str(self.plot_ymin))
-    #         self.my_ymax.setText(str(self.plot_ymax))
-    #     except:
-    #         pass
-
-    #     self.ymin = float(bds[1])
-    #     self.ymax = float(bds[4])
-    #     self.y_range = self.ymax - self.ymin
-    #     # print('reset_model(): self.ymin, ymax=',self.ymin, self.ymax)
-    #     self.plot_ymin = self.ymin
-    #     self.plot_ymax = self.ymax
-
-    #     xcoords_str = xml_root.find(".//microenvironment//domain//mesh//x_coordinates").text
-    #     xcoords = xcoords_str.split()
-    #     # print('reset_model(): xcoords=',xcoords)
-    #     # print('reset_model(): len(xcoords)=',len(xcoords))
-    #     self.numx =  len(xcoords)
-
-    #     ycoords_str = xml_root.find(".//microenvironment//domain//mesh//y_coordinates").text
-    #     ycoords = ycoords_str.split()
-    #     # print('reset_model(): ycoords=',ycoords)
-    #     # print('reset_model(): len(ycoords)=',len(ycoords))
-    #     self.numy =  len(ycoords)
-    #     # print("-------------- vis_tab.py: reset_model() -------------------")
-    #     # print("reset_model(): self.numx, numy = ",self.numx,self.numy)
-
-    #     #-------------------
-    #     vars_uep = xml_root.find(".//microenvironment//domain//variables")
-    #     if vars_uep:
-    #         sub_names = []
-    #         for var in vars_uep:
-    #         # self.substrate.clear()
-    #         # self.param[substrate_name] = {}  # a dict of dicts
-
-    #         # self.tree.clear()
-    #             idx = 0
-    #         # <microenvironment_setup>
-	# 	    #   <variable name="food" units="dimensionless" ID="0">
-    #             # print(cell_def.attrib['name'])
-    #             if var.tag == 'variable':
-    #                 substrate_name = var.attrib['name']
-    #                 # print("substrate: ",substrate_name )
-    #                 sub_names.append(substrate_name)
-    #             self.cell_types_combobox.clear()
-    #             # print("sub_names = ",sub_names)
-    #             self.cell_types_combobox.addItems(sub_names)
-
-
-    #     # and plot 1st frame (.svg)
-    #     self.current_svg_frame = 0
-
-    #     self.fill_cell_types_combobox(sub_names)
-
-
-    def reset_axes(self):
-        # print("--------- vis_tab: reset_axes ----------")
-        # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
-        # tree = ET.parse(self.output_dir + "/" + "initial.xml")
-        xml_file = Path(self.output_dir, "initial.xml")
-        if not os.path.isfile(xml_file):
-            print("Expecting initial.xml, but does not exist.")
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Did not find 'initial.xml' in this directory.")
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
-
-        tree = ET.parse(Path(self.output_dir, "initial.xml"))
-        xml_root = tree.getroot()
-
-        bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
-        bds = bds_str.split()
-        # print('bds=',bds)
-        self.xmin = float(bds[0])
-        self.xmax = float(bds[3])
-        self.x_range = self.xmax - self.xmin
-
-        self.ymin = float(bds[1])
-        self.ymax = float(bds[4])
-        self.y_range = self.ymax - self.ymin
-
-        # and plot 1st frame (.svg)
-        self.current_svg_frame = 0
+        self.plot_xmin = float(self.config_tab.xmin.text())
+        self.plot_xmax = float(self.config_tab.xmax.text())
+        self.plot_ymin = float(self.config_tab.ymin.text())
+        self.plot_ymax = float(self.config_tab.ymax.text())
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
 
 
     def create_figure(self):
-        print("\n--------- create_figure(): ------- creating figure, canvas, ax0")
+        print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.setStyleSheet("background-color:transparent;")
@@ -638,17 +545,27 @@ class ICs(QWidget):
 
         # self.reset_model()
 
-        print("create_figure(): ------- creating dummy contourf")
-        xlist = np.linspace(-3.0, 3.0, 50)
-        print("len(xlist)=",len(xlist))
-        ylist = np.linspace(-3.0, 3.0, 50)
-        X, Y = np.meshgrid(xlist, ylist)
-        Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
+        # print("ics_tab:  create_figure(): ------- creating dummy contourf")
+        # xlist = np.linspace(-3.0, 3.0, 50)
+        # print("len(xlist)=",len(xlist))
+        # ylist = np.linspace(-3.0, 3.0, 50)
+        # X, Y = np.meshgrid(xlist, ylist)
+        # Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
 
-        self.cmap = plt.cm.get_cmap("viridis")
-        self.mysubstrate = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
+        # self.cmap = plt.cm.get_cmap("viridis")
+        # self.mysubstrate = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
 
-        print("------------create_figure():  # axes = ",len(self.figure.axes))
+        # print("ics_tab:  ------------create_figure():  # axes = ",len(self.figure.axes))
+
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        self.ax0.set_aspect(1.0)
+
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
+
+        # self.plot_cb()
 
         # self.plot_svg(self.current_svg_frame)
 
@@ -1065,7 +982,7 @@ class ICs(QWidget):
             if "random" in self.fill_combobox.currentText():
                 self.uniform_random_pts_annulus()
             elif "hex" in self.fill_combobox.currentText():
-                pass
+                self.hex_pts_annulus()
 
         else:  # rectangle
             if "random" in self.fill_combobox.currentText():
@@ -1080,14 +997,16 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 8.0
+        cell_radius = 5.0
         rval = cell_radius
 
         colors = np.empty((0,4))
         count = 0
         zval = 0.0
+        cell_type_index = self.celltype_combobox.currentIndex()
+        
         ncells = int(self.num_cells.text())
-        print("self.l1_value= ", self.l1_value)
+        # print("self.l1_value= ", self.l1_value)
 
         x_min = -self.l1_value
         x_max =  self.l1_value
@@ -1104,31 +1023,15 @@ class ICs(QWidget):
         cells_x2 = np.array([])
         cells_y2 = np.array([])
 
-        # xctr = 0.0
-        # yctr = 40.0
-        #big_radius = 20.0
-
         y_idx = 0
         for yval in np.arange(y_min,y_max, y_spacing):
             y_idx += 1
             for xval in np.arange(x_min,x_max, x_spacing):
                 xval_offset = xval + (y_idx%2) * cell_radius
-                # ixval = int(xval_offset)
-                # print(ixval)
-                # idx = np.where(x_values == ixval)
-                # xdist = xval_offset - xctr
-                # ydist = yval - yctr
-                # dist = np.sqrt(xdist*xdist + ydist*ydist)
-                # if dist < big_radius:
-                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
-                #     xv = xval_offset - big_radius
-                #     cells_x = np.append(cells_x, xv)
-                #     cells_y = np.append(cells_y, yval)
-                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
-                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
 
                 xlist.append(xval_offset)
                 ylist.append(yval)
+                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
                 rlist.append(rval)
                 count+=1
 
@@ -1149,15 +1052,97 @@ class ICs(QWidget):
 
         self.ax0.set_aspect(1.0)
 
-        # self.plot_xmin = float(self.xmin)
-        # self.plot_xmax = float(self.xmax)
-        # self.plot_ymin = float(self.ymin)
-        # self.plot_ymax = float(self.ymax)
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
-        self.plot_xmin = -500
-        self.plot_xmax = 500
-        self.plot_ymin = -500
-        self.plot_ymax = 500
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
+
+    #----------------------------------
+    def hex_pts_annulus(self):
+        xlist = deque()
+        ylist = deque()
+        rlist = deque()
+        rgba_list = deque()
+
+        cell_radius = 5.0
+        cell_radius = 1.0
+        rval = cell_radius
+
+        colors = np.empty((0,4))
+        count = 0
+        zval = 0.0
+        cell_type_index = self.celltype_combobox.currentIndex()
+        ncells = int(self.num_cells.text())
+        # print("self.l1_value= ", self.l1_value)
+
+        # x_min = -self.l1_value
+        # x_max =  self.l1_value
+        x_min = -self.l2_value
+        x_max =  self.l2_value
+        y_min = -self.l2_value
+        y_max =  self.l2_value
+        y_idx = -1
+        # hex packing constants
+        x_spacing = cell_radius * 2
+        y_spacing = cell_radius * np.sqrt(3)
+
+        cells_x = np.array([])
+        cells_y = np.array([])
+
+        cells_x2 = np.array([])
+        cells_y2 = np.array([])
+
+        # xctr = 0.0
+        # yctr = 40.0
+        xctr = 0.0
+        yctr = 0.0
+        #big_radius = 20.0
+
+        y_idx = 0
+        for yval in np.arange(y_min,y_max, y_spacing):
+            y_idx += 1
+            for xval in np.arange(x_min,x_max, x_spacing):
+                xval_offset = xval + (y_idx%2) * cell_radius
+
+                # ixval = int(xval_offset)
+                # print(ixval)
+                # idx = np.where(x_values == ixval)
+                xdist = xval_offset - xctr
+                ydist = yval - yctr
+                dist = np.sqrt(xdist*xdist + ydist*ydist)
+                if (dist >= self.l1_value) and (dist <= self.l2_value):
+                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
+                #     xv = xval_offset - big_radius
+                #     cells_x = np.append(cells_x, xv)
+                #     cells_y = np.append(cells_y, yval)
+                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
+                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
+
+                    xlist.append(xval_offset)
+                    ylist.append(yval)
+                    self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                    rlist.append(rval)
+                    count+=1
+
+        xvals = np.array(xlist)
+        yvals = np.array(ylist)
+        rvals = np.array(rlist)
+        # rgbas = np.array(rgba_list)
+
+        if (self.cells_edge_checked_flag):
+            try:
+                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+            except (ValueError):
+                pass
+        else:
+            # self.circles(xvals,yvals, s=rvals, color=rgbas)
+            self.circles(xvals,yvals, s=rvals, color='gray')
+
+        self.ax0.set_aspect(1.0)
+
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
@@ -1172,15 +1157,15 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 8.0
+        cell_radius = 5.0
         rval = cell_radius
 
-        cell_radius = 8.0
         colors = np.empty((0,4))
         count = 0
         zval = 0.0
+        cell_type_index = self.celltype_combobox.currentIndex()
         ncells = int(self.num_cells.text())
-        print("self.l1_value= ", self.l1_value)
+        # print("self.l1_value= ", self.l1_value)
         while True:
             sign1 = 1
             if np.random.uniform() > 0.5:
@@ -1193,6 +1178,7 @@ class ICs(QWidget):
 
             xlist.append(xval)
             ylist.append(yval)
+            self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
             rlist.append(rval)
             count+=1
             if count == ncells:
@@ -1220,10 +1206,10 @@ class ICs(QWidget):
         # self.plot_ymin = float(self.ymin)
         # self.plot_ymax = float(self.ymax)
 
-        self.plot_xmin = -500
-        self.plot_xmax = 500
-        self.plot_ymin = -500
-        self.plot_ymax = 500
+        # self.plot_xmin = -500
+        # self.plot_xmax = 500
+        # self.plot_ymin = -500
+        # self.plot_ymax = 500
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
@@ -1238,7 +1224,10 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 8.0
+        # V = 4/3 * pi * r^3
+        # r = (V * 3/4 / pi) ** 0.3333
+
+        cell_radius = 5.0
         rval = cell_radius
         # xyz = np.empty((0,3))
         colors = np.empty((0,4))
@@ -1247,7 +1236,7 @@ class ICs(QWidget):
         # R2 = 400
         count = 0
         zval = 0.0
-        cell_type_index = 0
+        cell_type_index = self.celltype_combobox.currentIndex()
 
         ncells = int(self.num_cells.text())
         R1 = float(self.l1val.text())
@@ -1293,85 +1282,6 @@ class ICs(QWidget):
 
         self.ax0.set_aspect(1.0)
 
-        # self.plot_xmin = float(self.xmin)
-        # self.plot_xmax = float(self.xmax)
-        # self.plot_ymin = float(self.ymin)
-        # self.plot_ymax = float(self.ymax)
-
-        self.plot_xmin = -500
-        self.plot_xmax = 500
-        self.plot_ymin = -500
-        self.plot_ymax = 500
-        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-
-        # self.update_plots()
-        self.canvas.update()
-        self.canvas.draw()
-    #------------------------------------------------------------
-    def uniform_random_pts_annulus_old(self):
-        xlist = deque()
-        ylist = deque()
-        rlist = deque()
-        rgba_list = deque()
-
-        cell_radius = 8.0
-        rval = cell_radius
-        # xyz = np.empty((0,3))
-        colors = np.empty((0,4))
-        # R1 = 300
-        # R1_cbrt = np.cbrt(R1)
-        # R2 = 400
-        count = 0
-        zval = 0.0
-
-        ncells = int(self.num_cells.text())
-        R1 = float(self.l1val.text())
-        R1_sq = R1*R1
-        R2 = float(self.l2val.text())
-        while True:
-            theta = np.random.uniform() * 2.0 * np.pi
-            r = np.random.uniform() * R2
-            xval = r * np.cos(theta)
-            yval = r * np.sin(theta)
-            # print("xval,yval= ",xval,yval)
-            d2 = xval*xval + yval*yval
-            # print("d2= ",d2)
-            if d2 >= R1_sq:
-                xlist.append(xval)
-                ylist.append(yval)
-                rlist.append(rval)
-                # print(count,xval,yval)
-                count+=1
-                if count == ncells:
-                    break
-
-        xvals = np.array(xlist)
-        yvals = np.array(ylist)
-        rvals = np.array(rlist)
-        # rgbas = np.array(rgba_list)
-
-        if (self.cells_edge_checked_flag):
-            try:
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
-            except (ValueError):
-                pass
-        else:
-            # self.circles(xvals,yvals, s=rvals, color=rgbas)
-            self.circles(xvals,yvals, s=rvals, color='gray')
-
-        self.ax0.set_aspect(1.0)
-
-        # self.plot_xmin = float(self.xmin)
-        # self.plot_xmax = float(self.xmax)
-        # self.plot_ymin = float(self.ymin)
-        # self.plot_ymax = float(self.ymax)
-
-        self.plot_xmin = -500
-        self.plot_xmax = 500
-        self.plot_ymin = -500
-        self.plot_ymax = 500
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
@@ -1379,20 +1289,17 @@ class ICs(QWidget):
         self.canvas.update()
         self.canvas.draw()
 
-
+    #------------------------------------------------
     def clear_cb(self):
         # self.ax0.clear()
         self.ax0.cla()
-        self.plot_xmin = -500
-        self.plot_xmax = 500
-        self.plot_ymin = -500
-        self.plot_ymax = 500
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.canvas.update()
         self.canvas.draw()
 
-        self.csv_array = np.empty([1,4])  # should probably np.delete, but meh
+        self.csv_array = np.empty([1,4])  # should probably *just* np.delete, but meh
+        self.csv_array = np.delete(self.csv_array,0,0)
 
     def csv_cb(self):
         # print("\n------- NOT WORKING YET -------")
