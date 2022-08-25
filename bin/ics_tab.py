@@ -1067,7 +1067,6 @@ class ICs(QWidget):
         rgba_list = deque()
 
         cell_radius = 5.0
-        cell_radius = 1.0
         rval = cell_radius
 
         colors = np.empty((0,4))
