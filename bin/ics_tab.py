@@ -49,6 +49,10 @@ class ICs(QWidget):
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
 
+        self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
+        self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+        self.alpha_value = 0.6
+
         self.csv_array = np.empty([1,4])  # default floats
         self.csv_array = np.delete(self.csv_array,0,0)
         # print("--------------- csv_array= ",self.csv_array)
@@ -944,19 +948,11 @@ class ICs(QWidget):
         # if (self.show_edge):
         if (self.cells_edge_checked_flag):
             try:
-                # plt.scatter(xvals,yvals, s=markers_size, c=rgbs, edgecolor='black', linewidth=0.5)
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha, edgecolor='black', linewidth=0.5)
-                # print("--- plotting circles with edges!!")
-                self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                # cell_circles = self.circles(xvals,yvals, s=rvals, color=rgbs, edgecolor='black', linewidth=0.5)
-                # plt.sci(cell_circles)
+                self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', alpha=self.alpha_value, linewidth=0.5)
             except (ValueError):
                 pass
         else:
-            # plt.scatter(xvals,yvals, s=markers_size, c=rgbs)
-            # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha)
-            # print("--- plotting circles without edges!!")
-            self.circles(xvals,yvals, s=rvals, color=rgbas)
+            self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -997,8 +993,7 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 5.0
-        rval = cell_radius
+        rval = self.cell_radius
 
         colors = np.empty((0,4))
         count = 0
@@ -1014,8 +1009,8 @@ class ICs(QWidget):
         y_max =  self.l2_value
         y_idx = -1
         # hex packing constants
-        x_spacing = cell_radius * 2
-        y_spacing = cell_radius * np.sqrt(3)
+        x_spacing = self.cell_radius * 2
+        y_spacing = self.cell_radius * np.sqrt(3)
 
         cells_x = np.array([])
         cells_y = np.array([])
@@ -1027,7 +1022,7 @@ class ICs(QWidget):
         for yval in np.arange(y_min,y_max, y_spacing):
             y_idx += 1
             for xval in np.arange(x_min,x_max, x_spacing):
-                xval_offset = xval + (y_idx%2) * cell_radius
+                xval_offset = xval + (y_idx%2) * self.cell_radius
 
                 xlist.append(xval_offset)
                 ylist.append(yval)
@@ -1042,13 +1037,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            # self.circles(xvals,yvals, s=rvals, color=rgbas)
-            self.circles(xvals,yvals, s=rvals, color='gray')
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1066,8 +1059,7 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 5.0
-        rval = cell_radius
+        rval = self.cell_radius
 
         colors = np.empty((0,4))
         count = 0
@@ -1084,8 +1076,8 @@ class ICs(QWidget):
         y_max =  self.l2_value
         y_idx = -1
         # hex packing constants
-        x_spacing = cell_radius * 2
-        y_spacing = cell_radius * np.sqrt(3)
+        x_spacing = self.cell_radius * 2
+        y_spacing = self.cell_radius * np.sqrt(3)
 
         cells_x = np.array([])
         cells_y = np.array([])
@@ -1103,7 +1095,7 @@ class ICs(QWidget):
         for yval in np.arange(y_min,y_max, y_spacing):
             y_idx += 1
             for xval in np.arange(x_min,x_max, x_spacing):
-                xval_offset = xval + (y_idx%2) * cell_radius
+                xval_offset = xval + (y_idx%2) * self.cell_radius
 
                 # ixval = int(xval_offset)
                 # print(ixval)
@@ -1132,13 +1124,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            # self.circles(xvals,yvals, s=rvals, color=rgbas)
-            self.circles(xvals,yvals, s=rvals, color='gray')
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1156,8 +1146,7 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        cell_radius = 5.0
-        rval = cell_radius
+        rval = self.cell_radius
 
         colors = np.empty((0,4))
         count = 0
@@ -1190,13 +1179,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            # self.circles(xvals,yvals, s=rvals, color=rgbas)
-            self.circles(xvals,yvals, s=rvals, color='gray')
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1226,8 +1213,7 @@ class ICs(QWidget):
         # V = 4/3 * pi * r^3
         # r = (V * 3/4 / pi) ** 0.3333
 
-        cell_radius = 5.0
-        rval = cell_radius
+        rval = self.cell_radius
         # xyz = np.empty((0,3))
         colors = np.empty((0,4))
         # R1 = 300
@@ -1271,13 +1257,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
-                self.circles(xvals,yvals, s=rvals, color='gray', edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            # self.circles(xvals,yvals, s=rvals, color=rgbas)
-            self.circles(xvals,yvals, s=rvals, color='gray')
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
