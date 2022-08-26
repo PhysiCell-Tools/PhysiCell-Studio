@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.8.0
+VERSION: 2.8.1
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,9 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
+## Release 2.8.1
+* ICs: Compute radius from celltype volume. Improve widgets layout.
+
 ## Release 2.8.0
 * Provide a tab to create common setup_tissue patterns (cells.csv)
 
