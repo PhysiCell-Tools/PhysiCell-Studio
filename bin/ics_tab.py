@@ -51,7 +51,7 @@ class ICs(QWidget):
 
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
         self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
-        self.alpha_value = 0.6
+        self.alpha_value = 1.0
 
         self.csv_array = np.empty([1,4])  # default floats
         self.csv_array = np.delete(self.csv_array,0,0)
@@ -141,7 +141,8 @@ class ICs(QWidget):
         idr = 0
         icol = 0
         self.celltype_combobox = QComboBox()
-        self.glayout1.addWidget(self.celltype_combobox, idr,icol, 1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.celltype_combobox, idr,icol, 1,2) # w, row, column, rowspan, colspan
+        # self.celltype_combobox.addItem("dummy celltype")
         # for var in uep.findall('cell_definition'):
         #     self.celltypes_list.append(name)
         #     self.live_phagocytosis_dropdown.addItem(name)
@@ -149,7 +150,7 @@ class ICs(QWidget):
         # self.celltype_combobox.addItem("celltype 2")
         # self.celltype_dropdown.currentIndexChanged.connect(self.celltype_dropdown_changed_cb)  # later
 
-        icol += 1
+        icol += 2
         self.geom_combobox = QComboBox()
         self.glayout1.addWidget(self.geom_combobox, idr,icol, 1,1) # w, row, column, rowspan, colspan
         self.geom_combobox.addItem("annulus/disk")
@@ -165,7 +166,8 @@ class ICs(QWidget):
 
         icol += 1
         self.num_cells = QLineEdit()
-        # self.num_cells.setFixedWidth(70)
+        fixed_width_value = 80
+        self.num_cells.setFixedWidth(fixed_width_value)
         self.num_cells.setValidator(QtGui.QIntValidator(1,100000))
         self.num_cells.setEnabled(True)
         self.num_cells.setText('100')
@@ -198,9 +200,11 @@ class ICs(QWidget):
 
         cvalue_width = 70
         label = QLabel("L1")
+        label.setFixedWidth(30)
         # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setAlignment(QtCore.Qt.AlignRight)
         self.l1val = QLineEdit()
+        self.l1val.setFixedWidth(fixed_width_value)
         self.l1val.setEnabled(True)
         self.l1val.setText(str(self.l1_value))
         # self.cmin.textChanged.connect(self.change_plot_range)
@@ -214,9 +218,10 @@ class ICs(QWidget):
         self.glayout1.addWidget(self.l1val, idr,icol,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("L2")
-        # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setFixedWidth(30)
+        label.setAlignment(QtCore.Qt.AlignRight)
         self.l2val = QLineEdit()
+        self.l2val.setFixedWidth(fixed_width_value)
         self.l2val.setEnabled(True)
         self.l2val.setText(str(self.l2_value))
         # self.l2val.returnPressed.connect(self.l1_l2_cb)
@@ -227,99 +232,6 @@ class ICs(QWidget):
         self.glayout1.addWidget(label, idr,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
         self.glayout1.addWidget(self.l2val, idr,icol,1,1) # w, row, column, rowspan, colspan
-
-
-        #-------------------
-        # Create the "hidden" controls that are part of the stacked widget
-        # self.controls2 = QWidget()
-        # self.glayout2 = QGridLayout()
-        # self.controls2.setLayout(self.glayout2)
-        # # controls_hbox2 = QHBoxLayout()
-        # visible_flag = True
-
-        # label = QLabel("xmin")
-        # # label.setFixedWidth(label_width)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-
-
-        # domain_value_width = 60
-        # self.my_xmin = QLineEdit()
-        # self.my_xmin.textChanged.connect(self.change_plot_range)
-        # self.my_xmin.setFixedWidth(domain_value_width)
-        # self.my_xmin.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_xmin)
-        # self.my_xmin.setVisible(visible_flag)
-        # # controls_hbox2.addWidget(label)
-        # self.glayout2.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-        # self.glayout2.addWidget(self.my_xmin, 0,1,1,1) # w, row, column, rowspan, colspan
-
-        # label = QLabel("xmax")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_xmax = QLineEdit()
-        # self.my_xmax.textChanged.connect(self.change_plot_range)
-        # self.my_xmax.setFixedWidth(domain_value_width)
-        # self.my_xmax.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_xmax)
-        # self.my_xmax.setVisible(visible_flag)
-        # self.glayout2.addWidget(label, 0,2,1,1) # w, row, column, rowspan, colspan
-        # self.glayout2.addWidget(self.my_xmax, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        # label = QLabel("ymin")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_ymin = QLineEdit()
-        # self.my_ymin.textChanged.connect(self.change_plot_range)
-        # self.my_ymin.setFixedWidth(domain_value_width)
-        # self.my_ymin.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_ymin)
-        # self.my_ymin.setVisible(visible_flag)
-        # self.glayout2.addWidget(label, 0,4,1,1) # w, row, column, rowspan, colspan
-        # self.glayout2.addWidget(self.my_ymin, 0,5,1,1) # w, row, column, rowspan, colspan
-
-        # label = QLabel("ymax")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_ymax = QLineEdit()
-        # self.my_ymax.textChanged.connect(self.change_plot_range)
-        # self.my_ymax.setFixedWidth(domain_value_width)
-        # self.my_ymax.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_ymax)
-        # self.my_ymax.setVisible(visible_flag)
-        # self.glayout2.addWidget(label, 0,6,1,1) # w, row, column, rowspan, colspan
-        # self.glayout2.addWidget(self.my_ymax, 0,7,1,1) # w, row, column, rowspan, colspan
-
-        # w = QPushButton("Reset")
-        # # w.clicked.connect(self.reset_plot_range)
-        # self.glayout2.addWidget(w, 0,8,1,1) # w, row, column, rowspan, colspan
-        # # controls_hbox2.addWidget(w)
-
-        # self.my_xmin.setText(str(self.xmin))
-        # self.my_xmax.setText(str(self.xmax))
-        # self.my_ymin.setText(str(self.ymin))
-        # self.my_ymax.setText(str(self.ymax))
-
-        #-------------------
-        # arg, Qt layouts drive me insane. This doesn't work - trying to combine both rows of controls!
-        # self.controls3 = QWidget()
-        # self.controls3_layout = QVBoxLayout()
-        # # self.controls3_layout = QGridLayout()
-        # # doing this shows nothing!
-        # # self.controls3_layout.addLayout(self.glayout2)
-        # # self.controls3_layout.addLayout(self.glayout1)
-        # # self.controls3_layout.addWidget(self.controls1, 0,0,1,8) # w, row, column, rowspan, colspan
-        # # self.controls3_layout.addWidget(self.controls2, 1,0,1,8) # w, row, column, rowspan, colspan
-
-        # # doing this shows only the controls2!
-        # self.controls3_layout.addWidget(self.controls2, alignment=QtCore.Qt.AlignCenter) 
-        # self.controls3_layout.addWidget(self.controls1, alignment=QtCore.Qt.AlignCenter)
-
-        # self.controls3.setLayout(self.controls3_layout)
 
         #-------------------
         self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)
@@ -351,7 +263,7 @@ class ICs(QWidget):
         # self.stackw.addWidget(self.controls3)
 
         self.stackw.setCurrentIndex(0)
-        self.stackw.setFixedHeight(40)
+        self.stackw.setFixedHeight(50)
         # self.stackw.resize(700,100)
         self.layout.addWidget(self.stackw)
         self.show_plot_range = False
@@ -971,6 +883,11 @@ class ICs(QWidget):
 
     #------------------------------------------------------------
     def plot_cb(self):
+        cdef = self.celltype_combobox.currentText()
+        volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+        self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
+        print("volume, radius= ",volume, self.cell_radius)
+
         if "annulus" in self.geom_combobox.currentText():
             if self.l2_value <= self.l1_value:
                 self.annulus_error()
