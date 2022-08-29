@@ -13,7 +13,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 import os
 import platform
 import sys
-import getopt
+import argparse
 # import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -59,7 +59,7 @@ def startup_notice():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, studio_flag, skip_validate_flag, rules_flag, model3D_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
             from vis3D_tab import Vis 
@@ -104,24 +104,29 @@ class PhysiCellXMLCreator(QWidget):
         self.current_dir = os.getcwd()
         print("model.py: self.current_dir = ",self.current_dir)
 
-        # model_name = "interactions"  # for testing latest xml
-        model_name = "template"
-        # model_name = "test1"
-        # model_name = "interactions"
+        if config_file:
+            self.current_xml_file = config_file
+            print("got config_file=",config_file)
+            # sys.exit()
+        else:
+            # model_name = "interactions"  # for testing latest xml
+            model_name = "template"
+            # model_name = "test1"
+            # model_name = "interactions"
 
-        # bin_dir = os.path.dirname(os.path.abspath(__file__))
-        # data_dir = os.path.join(bin_dir,'..','data')
-        # data_dir = os.path.normpath(data_dir)
-        # data_dir = os.path.join(self.current_dir,'data')
+            # bin_dir = os.path.dirname(os.path.abspath(__file__))
+            # data_dir = os.path.join(bin_dir,'..','data')
+            # data_dir = os.path.normpath(data_dir)
+            # data_dir = os.path.join(self.current_dir,'data')
 
-        # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
-        self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-        self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
+            # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
+            self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+            # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
+            self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
+
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
-
         self.setWindowTitle(self.title_prefix + self.current_xml_file)
         self.config_file = self.current_xml_file  # to Save
 
@@ -216,6 +221,7 @@ class PhysiCellXMLCreator(QWidget):
 
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
             # self.run_tab.config_xml_name.setText(current_xml_file)
+            self.run_tab.exec_name.setText(exec_file)
             self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.current_dir = os.getcwd()
             self.run_tab.current_dir = self.current_dir
@@ -442,7 +448,8 @@ class PhysiCellXMLCreator(QWidget):
         # print("\n\nopen_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
         print("\n\nopen_as_cb():  full_path_model_name =",full_path_model_name )
-        if (len(full_path_model_name) > 0) and Path(full_path_model_name):
+        # if (len(full_path_model_name) > 0) and Path(full_path_model_name):
+        if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_file():
             print("open_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
             # fname = os.path.basename(full_path_model_name)
@@ -780,38 +787,65 @@ class PhysiCellXMLCreator(QWidget):
 
 def main():
     # inputfile = ''
+    config_file = None
     studio_flag = False
-    skip_validate_flag = False
-    rules_flag = False
     model3D_flag = False
+    rules_flag = False
+    skip_validate_flag = False
     try:
-        # opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-        # opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules", "ics"])
-        opts, args = getopt.getopt(sys.argv[1:],"hv:",["studio", "skip-validate", "rules", "3D"])
-    except getopt.GetoptError:
-        # print 'test.py -i <inputfile> -o <outputfile>'
-        print('\ngetopt exception - usage:')
-        print('bin/pmb.py [--studio] [--skip-validate]')
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt == '-h':
-            print('bin/pmb.py [--studio] [--skip-validate]')
-            sys.exit(1)
-    #   elif opt in ("-i", "--ifile"):
-        elif opt in ("--studio"):
-            studio_flag = True
-        elif opt in ("--skip-validate"):
-            skip_validate_flag = True
-        elif opt in ("--rules"):
-            rules_flag = True
-        elif opt in ("--3D"):
-            model3D_flag = True
-        # elif opt in ("--ics"):
-            # ics_flag = True
+        parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
 
-    # print 'Input file is "', inputfile
-    # print("show_vis_tab = ",show_vis_tab)
-    # sys.exit()
+        parser.add_argument("-s", "--studio", "--Studio", help="include Studio tabs", action="store_true")
+        parser.add_argument("-3", "--three", "--3D", help="assume a 3D model" , action="store_true")
+        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
+        parser.add_argument("-c", "--config",  type=str, help="config file (.xml)")
+        parser.add_argument("-e", "--exec",  type=str, help="executable model")
+
+        # args = parser.parse_args()
+        args, unknown = parser.parse_known_args()
+        if unknown:
+            print("invalid argument: ",unknown)
+            sys.exit(-1)
+
+        if args.studio:
+            print("Studio mode: Run,Plot,Legend tabs")
+            studio_flag = True
+            # print("done with args.studio")
+        if args.three:
+            print("Assume a 3D model")
+            model3D_flag = True
+            print("done with args.three")
+        if args.rules:
+            print("Show Rules tab")
+            rules_flag = True
+        if args.skip_validate:
+            print("Do not validate the config file (.xml)")
+            skip_validate_flag = True
+        # print("args.config= ",args.config)
+        if args.config:
+            print(f"config file is {args.config}")
+            # sys.exit()
+            config_file = args.config
+            if (len(config_file) > 0) and Path(config_file).is_file():
+                print("open_as_cb():  filePath is valid")
+                print("len(config_file) = ", len(config_file) )
+                print("done with args.config")
+            else:
+                print("config_file is NOT valid: ", args.config)
+                sys.exit()
+        if args.exec:
+            print(f"exec pgm is {args.exec}")
+            # sys.exit()
+            exec_file = args.exec
+            if (len(exec_file) > 0) and Path(exec_file).is_file():
+                print("exec_file exists")
+            else:
+                print("exec_file is NOT valid: ", args.exec)
+                sys.exit()
+    except:
+        # print("Error parsing command line args.")
+        sys.exit(-1)
 
     pmb_app = QApplication(sys.argv)
 
@@ -867,7 +901,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
-    ex = PhysiCellXMLCreator(studio_flag, skip_validate_flag, rules_flag, model3D_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
     ex.show()
     startup_notice()
     sys.exit(pmb_app.exec_())
