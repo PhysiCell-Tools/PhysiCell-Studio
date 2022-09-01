@@ -32,6 +32,9 @@ class SubstrateDef(QWidget):
         self.celldef_tab = None
         self.new_substrate_count = 1
 
+        self.default_rate_units = "1/min"
+        self.dirichlet_units = "mmHG"
+
         # self.stacked_w = QStackedWidget()
         # self.stack_w = []
         # self.stack_w.append(QStackedWidget())
@@ -172,7 +175,7 @@ class SubstrateDef(QWidget):
         # self.decay_rate.enter.connect(self.save_xml)
         hbox.addWidget(self.decay_rate)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(units_width)
         hbox.addWidget(units)
         self.vbox.addLayout(hbox)
@@ -190,9 +193,11 @@ class SubstrateDef(QWidget):
         # self.init_cond.enter.connect(self.save_xml)
         hbox.addWidget(self.init_cond)
 
-        units = QLabel("mmol")
-        units.setFixedWidth(units_width)
-        hbox.addWidget(units)
+        # self.dirchlet_units_w = QLabel(self.dirichlet_units)
+        self.init_cond_units = QLabel(self.dirichlet_units)
+        # self.dirchlet_units_w.setText("foobar")
+        self.init_cond_units.setFixedWidth(units_width)
+        hbox.addWidget(self.init_cond_units)
         self.vbox.addLayout(hbox)
         #----------
 
@@ -208,9 +213,10 @@ class SubstrateDef(QWidget):
         # self.bdy_cond.enter.connect(self.save_xml)
         hbox.addWidget(self.dirichlet_bc)
 
-        units = QLabel("mmol")
-        units.setFixedWidth(units_width-45)  # decrease for better alignment
-        hbox.addWidget(units)
+        self.dirichlet_bc_units = QLabel(self.dirichlet_units)
+        self.dirichlet_bc_units.setFixedWidth(units_width-45)  # decrease for better alignment
+        self.dirichlet_bc_units.setFixedWidth(units_width)  # decrease for better alignment
+        hbox.addWidget(self.dirichlet_bc_units)
 
 # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
         self.dirichlet_bc_enabled = QCheckBox("on")
@@ -519,7 +525,9 @@ class SubstrateDef(QWidget):
         self.param_d[subname]["diffusion_coef"] = text
         self.param_d[subname]["decay_rate"] = text
         self.param_d[subname]["init_cond"] = text
+        self.param_d[subname]["init_cond_units"] = "dimensionless"
         self.param_d[subname]["dirichlet_bc"] = text
+        self.param_d[subname]["dirichlet_bc_units"] = "dimensionless"
         bval = False
         self.param_d[subname]["dirichlet_enabled"] = bval
 
@@ -717,7 +725,9 @@ class SubstrateDef(QWidget):
         self.diffusion_coef.setText(self.param_d[self.current_substrate]["diffusion_coef"])
         self.decay_rate.setText(self.param_d[self.current_substrate]["decay_rate"])
         self.init_cond.setText(self.param_d[self.current_substrate]["init_cond"])
+        self.init_cond_units.setText(self.param_d[self.current_substrate]["init_cond_units"])
         self.dirichlet_bc.setText(self.param_d[self.current_substrate]["dirichlet_bc"])
+        self.dirichlet_bc_units.setText(self.param_d[self.current_substrate]["dirichlet_bc_units"])
         self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
 
         # xmin = self.param_d[self.current_substrate]["dirichlet_xmin"]
@@ -822,6 +832,11 @@ class SubstrateDef(QWidget):
                     self.param_d[substrate_name]["init_cond"] = init_cond
                     if idx == 1:
                         self.init_cond.setText(init_cond)
+                    
+                    dc_ic_units = var_path.find('.//initial_condition').attrib['units']  # omg
+                    print("dc_ic_units = ", dc_ic_units)
+                    self.param_d[substrate_name]["init_cond_units"] = dc_ic_units
+                    # sys.exit(1)
 
 			# <Dirichlet_boundary_condition units="dimensionless" enabled="false">1</Dirichlet_boundary_condition>
                     dirichlet_bc_path = var_path.find('.//Dirichlet_boundary_condition')
@@ -830,6 +845,10 @@ class SubstrateDef(QWidget):
                     self.param_d[substrate_name]["dirichlet_bc"] = dirichlet_bc
                     # if idx == 1:
                     #     self.dirichlet_bc.setText(dirichlet_bc)
+
+                    dc_bc_units = dirichlet_bc_path.attrib['units']  # omg
+                    print("dc_bc_units = ", dc_bc_units)
+                    self.param_d[substrate_name]["dirichlet_bc_units"] = dc_bc_units
 
                     if dirichlet_bc_path.attrib['enabled'].lower() == "false":
                         self.param_d[substrate_name]["dirichlet_enabled"] = False
@@ -1116,7 +1135,7 @@ class SubstrateDef(QWidget):
                 subelm2 = ET.SubElement(subelm, "diffusion_coefficient",{"units":"micron^2/min"})
                 subelm2.text = self.param_d[substrate]["diffusion_coef"]
                 subelm2.tail = indent10
-                subelm2 = ET.SubElement(subelm, "decay_rate",{"units":"1/min"})
+                subelm2 = ET.SubElement(subelm, "decay_rate",{"units":self.default_rate_units})
                 subelm2.text = self.param_d[substrate]["decay_rate"]
                 subelm2.tail = indent8
 

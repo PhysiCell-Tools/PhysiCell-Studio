@@ -104,6 +104,7 @@ class PhysiCellXMLCreator(QWidget):
         self.current_dir = os.getcwd()
         print("model.py: self.current_dir = ",self.current_dir)
 
+        self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         if config_file:
             self.current_xml_file = config_file
             print("got config_file=",config_file)
@@ -120,7 +121,7 @@ class PhysiCellXMLCreator(QWidget):
             # data_dir = os.path.join(self.current_dir,'data')
 
             # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
-            self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            # self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
             self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
@@ -247,9 +248,11 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.vis_tab,"Plot")
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
+            self.enablePlotTab(True)
 
             self.tabWidget.addTab(self.legend_tab,"Legend")
             self.enableLegendTab(False)
+            self.enableLegendTab(True)
             self.run_tab.vis_tab = self.vis_tab
             self.run_tab.legend_tab = self.legend_tab
             print("studio.py: calling vis_tab.substrates_cbox_changed_cb(2)")

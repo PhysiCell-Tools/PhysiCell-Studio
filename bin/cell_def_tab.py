@@ -534,7 +534,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_live_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_live_trate00_fixed.clicked.connect(self.cycle_live_trate00_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -575,7 +575,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_Ki67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_Ki67_trate01_fixed.clicked.connect(self.cycle_Ki67_trate01_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -595,7 +595,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_Ki67_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_Ki67_trate10_fixed.clicked.connect(self.cycle_Ki67_trate10_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -630,7 +630,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_advancedKi67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate01_fixed.clicked.connect(self.cycle_advancedKi67_trate01_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -650,7 +650,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_advancedKi67_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate12_fixed.clicked.connect(self.cycle_advancedKi67_trate12_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -670,7 +670,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_advancedKi67_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate20_fixed.clicked.connect(self.cycle_advancedKi67_trate20_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -704,7 +704,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcyto_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate01_fixed.clicked.connect(self.cycle_flowcyto_trate01_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -724,7 +724,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcyto_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate12_fixed.clicked.connect(self.cycle_flowcyto_trate12_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -744,7 +744,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcyto_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate20_fixed.clicked.connect(self.cycle_flowcyto_trate20_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -779,7 +779,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcytosep_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate01_fixed.clicked.connect(self.cycle_flowcytosep_trate01_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -799,7 +799,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcytosep_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate12_fixed.clicked.connect(self.cycle_flowcytosep_trate12_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -819,7 +819,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcytosep_trate23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate23_fixed.clicked.connect(self.cycle_flowcytosep_trate23_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
@@ -839,7 +839,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_flowcytosep_trate30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate30_fixed.clicked.connect(self.cycle_flowcytosep_trate30_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
@@ -874,7 +874,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_quiescent_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_quiescent_trate01_fixed.clicked.connect(self.cycle_quiescent_trate01_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
@@ -894,7 +894,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.cycle_quiescent_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_quiescent_trate10_fixed.clicked.connect(self.cycle_quiescent_trate10_fixed_clicked)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setAlignment(QtCore.Qt.AlignCenter)
         units.setFixedWidth(self.units_width)
         glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
@@ -1344,7 +1344,7 @@ class CellDef(QWidget):
         self.apoptosis_death_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1393,7 +1393,7 @@ class CellDef(QWidget):
         self.apoptosis_trate01_fixed.toggled.connect(self.apoptosis_trate01_fixed_toggled)
         glayout.addWidget(self.apoptosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel(self.default_time_units)
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -1442,7 +1442,7 @@ class CellDef(QWidget):
         self.apoptosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1457,7 +1457,7 @@ class CellDef(QWidget):
         self.apoptosis_lysed_rate.textChanged.connect(self.apoptosis_lysed_rate_changed)
         self.apoptosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1473,7 +1473,7 @@ class CellDef(QWidget):
         self.apoptosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1495,7 +1495,7 @@ class CellDef(QWidget):
         self.apoptosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1511,7 +1511,7 @@ class CellDef(QWidget):
         self.apoptosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1551,7 +1551,7 @@ class CellDef(QWidget):
         self.necrosis_death_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1600,7 +1600,7 @@ class CellDef(QWidget):
         self.necrosis_trate01_fixed.toggled.connect(self.necrosis_trate01_fixed_toggled)
         glayout.addWidget(self.necrosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -1621,7 +1621,7 @@ class CellDef(QWidget):
         self.necrosis_trate12_fixed.toggled.connect(self.necrosis_trate12_fixed_toggled)
         glayout.addWidget(self.necrosis_trate12_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -1693,7 +1693,7 @@ class CellDef(QWidget):
         self.necrosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1708,7 +1708,7 @@ class CellDef(QWidget):
         self.necrosis_lysed_rate.textChanged.connect(self.necrosis_lysed_rate_changed)
         self.necrosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1724,7 +1724,7 @@ class CellDef(QWidget):
         self.necrosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1744,7 +1744,7 @@ class CellDef(QWidget):
         self.necrosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1760,7 +1760,7 @@ class CellDef(QWidget):
         self.necrosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -1992,7 +1992,7 @@ class CellDef(QWidget):
         self.volume_fluid_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2009,7 +2009,7 @@ class CellDef(QWidget):
         self.volume_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2026,7 +2026,7 @@ class CellDef(QWidget):
         self.volume_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2062,7 +2062,7 @@ class CellDef(QWidget):
         self.volume_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2287,7 +2287,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.elastic_constant.setEnabled(self.new_stuff)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2306,7 +2306,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.attachment_rate.setEnabled(self.new_stuff)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2325,7 +2325,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.detachment_rate.setEnabled(self.new_stuff)
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2595,7 +2595,7 @@ class CellDef(QWidget):
         self.secretion_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         # units.setStyleSheet("border: 1px solid black;")
@@ -2634,7 +2634,7 @@ class CellDef(QWidget):
         self.uptake_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.uptake_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2735,7 +2735,7 @@ class CellDef(QWidget):
         self.dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         # units.setStyleSheet("border: 1px solid black;")
@@ -2757,7 +2757,7 @@ class CellDef(QWidget):
         self.live_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.live_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -2778,7 +2778,7 @@ class CellDef(QWidget):
         self.attack_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -2795,7 +2795,7 @@ class CellDef(QWidget):
         self.damage_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -2816,7 +2816,7 @@ class CellDef(QWidget):
         self.fusion_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.fusion_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -2837,7 +2837,7 @@ class CellDef(QWidget):
         self.transformation_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.transformation_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        units = QLabel("1/min")
+        units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -6132,7 +6132,7 @@ class CellDef(QWidget):
 
         #-- transition rates
         else:
-            subelm = ET.SubElement(cycle, "phase_transition_rates",{"units":"1/min"})
+            subelm = ET.SubElement(cycle, "phase_transition_rates",{"units":self.default_rate_units})
             subelm.text = self.indent14  # affects </cycle>, i.e., its parent
             subelm.tail = self.indent12
 
@@ -6268,7 +6268,7 @@ class CellDef(QWidget):
         model.text = self.indent14  # affects indent of child
         model.tail = self.indent12
 
-        subelm = ET.SubElement(model, "death_rate",{"units":"1/min"})
+        subelm = ET.SubElement(model, "death_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_death_rate"]
         subelm.tail = self.indent14
 
@@ -6299,23 +6299,23 @@ class CellDef(QWidget):
         elm.text = self.indent16  # affects indent of child
         elm.tail = self.indent12
 
-        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_unlysed_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_lysed_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_cyto_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_nuclear_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "calcification_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "calcification_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["apoptosis_calcif_rate"]
         subelm.tail = self.indent16
 
@@ -6328,7 +6328,7 @@ class CellDef(QWidget):
         model.text = self.indent14  # affects indent of child
         model.tail = self.indent10
 
-        subelm = ET.SubElement(model, "death_rate",{"units":"1/min"})
+        subelm = ET.SubElement(model, "death_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_death_rate"]
         subelm.tail = self.indent14
 
@@ -6373,23 +6373,23 @@ class CellDef(QWidget):
         elm.text = self.indent16  # affects indent of child
         elm.tail = self.indent12
 
-        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "unlysed_fluid_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_unlysed_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "lysed_fluid_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_lysed_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "cytoplasmic_biomass_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_cyto_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "nuclear_biomass_change_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_nuclear_rate"]
         subelm.tail = self.indent16
 
-        subelm = ET.SubElement(elm, "calcification_rate",{"units":"1/min"})
+        subelm = ET.SubElement(elm, "calcification_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdname]["necrosis_calcif_rate"]
         subelm.tail = self.indent16
 
@@ -6416,16 +6416,16 @@ class CellDef(QWidget):
         elm.text = self.param_d[cdef]['volume_nuclear']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'fluid_change_rate',{"units":"1/min"})
+        elm = ET.SubElement(volume, 'fluid_change_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]['volume_fluid_change_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'cytoplasmic_biomass_change_rate',{"units":"1/min"})
+        elm = ET.SubElement(volume, 'cytoplasmic_biomass_change_rate',{"units":self.default_rate_units})
         # elm.text = self.param_d[cdef]['volume_cytoplasmic_biomass_change_rate']
         elm.text = self.param_d[cdef]['volume_cytoplasmic_rate']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'nuclear_biomass_change_rate',{"units":"1/min"})
+        elm = ET.SubElement(volume, 'nuclear_biomass_change_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]['volume_nuclear_rate']
         elm.tail = self.indent12
 
@@ -6433,7 +6433,7 @@ class CellDef(QWidget):
         elm.text = self.param_d[cdef]['volume_calcif_fraction']
         elm.tail = self.indent12
 
-        elm = ET.SubElement(volume, 'calcification_rate',{"units":"1/min"})
+        elm = ET.SubElement(volume, 'calcification_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]['volume_calcif_rate']
         elm.tail = self.indent12
 
@@ -6504,15 +6504,15 @@ class CellDef(QWidget):
         elm.text = self.param_d[cdef]["mechanics_BM_repulsion"]
         elm.tail = self.indent12
 
-        elm = ET.SubElement(mechanics, 'attachment_elastic_constant',{"units":"1/min"})
+        elm = ET.SubElement(mechanics, 'attachment_elastic_constant',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_elastic_constant"]
         elm.tail = self.indent12
 
-        elm = ET.SubElement(mechanics, 'attachment_rate',{"units":"1/min"})
+        elm = ET.SubElement(mechanics, 'attachment_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_attachment_rate"]
         elm.tail = self.indent12
 
-        elm = ET.SubElement(mechanics, 'detachment_rate',{"units":"1/min"})
+        elm = ET.SubElement(mechanics, 'detachment_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_detachment_rate"]
         elm.tail = self.indent10
 
@@ -6630,7 +6630,7 @@ class CellDef(QWidget):
             elm.text = self.indent14
             elm.tail = self.indent12
 
-            subelm = ET.SubElement(elm, "secretion_rate",{"units":"1/min"})
+            subelm = ET.SubElement(elm, "secretion_rate",{"units":self.default_rate_units})
             subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
             subelm.tail = self.indent14
 
@@ -6638,7 +6638,7 @@ class CellDef(QWidget):
             subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
             subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "uptake_rate",{"units":"1/min"})
+            subelm = ET.SubElement(elm, "uptake_rate",{"units":self.default_rate_units})
             subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
             subelm.tail = self.indent14
 
@@ -6656,7 +6656,7 @@ class CellDef(QWidget):
         interactions.text = self.indent12  # affects indent of child
         interactions.tail = "\n" + self.indent10
 
-        subelm = ET.SubElement(interactions, "dead_phagocytosis_rate",{"units":"1/min"})
+        subelm = ET.SubElement(interactions, "dead_phagocytosis_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdef]["dead_phagocytosis_rate"]
         subelm.tail = self.indent12
 
@@ -6672,7 +6672,7 @@ class CellDef(QWidget):
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
             print(key," --> ",val)
-            elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":"1/min"})
+            elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
             
@@ -6690,12 +6690,12 @@ class CellDef(QWidget):
                 continue
             val = self.param_d[cdef]['attack_rate'][key]
             print(key," --> ",val)
-            elm = ET.SubElement(arates, 'attack_rate', {"name":key, "units":"1/min"})
+            elm = ET.SubElement(arates, 'attack_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent18
 
         #-----
-        subelm = ET.SubElement(interactions, "damage_rate",{"units":"1/min"})
+        subelm = ET.SubElement(interactions, "damage_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdef]["damage_rate"]
         subelm.tail = self.indent12
 
@@ -6711,7 +6711,7 @@ class CellDef(QWidget):
                 continue
             val = self.param_d[cdef]['fusion_rate'][key]
             print(key," --> ",val)
-            elm = ET.SubElement(frates, 'fusion_rate', {"name":key, "units":"1/min"})
+            elm = ET.SubElement(frates, 'fusion_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent18
 
@@ -6730,7 +6730,7 @@ class CellDef(QWidget):
                 continue
             val = self.param_d[cdef]['transformation_rate'][key]
             print(key," --> ",val)
-            elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":"1/min"})
+            elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
 
