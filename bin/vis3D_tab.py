@@ -960,6 +960,7 @@ class Vis(QWidget):
         # self.resize(640, 480)
 
         self.ren = vtkRenderer()
+        # self.ren.GetActiveCamera().ParallelProjectionOn()
         self.ren.SetBackground(255,255,255)
         # self.ren.SetBackground(0,0,0)
         # vtk_widget = QVTKRenderWindowInteractor(rw=render_window)
@@ -1357,6 +1358,8 @@ class Vis(QWidget):
             # self.ren.AddActor(self.substrate_actor)
 
             print("vmin,vmax= ",vmin,vmax)
+            print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
+
             self.cutterZ.SetInputData(self.substrate_data)
             self.planeZ.SetOrigin(x0,y0,0)
             self.cutterZ.SetCutFunction(self.planeZ)
