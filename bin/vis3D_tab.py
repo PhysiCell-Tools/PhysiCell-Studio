@@ -113,6 +113,7 @@ class Vis(QWidget):
 
         #------
         self.substrate_data = vtkStructuredPoints()
+        self.field_index = 0 
         # self.substrate_voxel_scalars = vtkFloatArray()
         # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
         # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
@@ -268,7 +269,7 @@ class Vis(QWidget):
         units_width = 70
 
         self.substrates_cbox = QComboBox(self)
-        self.substrates_cbox.setEnabled(False)
+        # self.substrates_cbox.setEnabled(self.substrates_checked_flag)
 
         self.myscroll = QScrollArea()  # might contain centralWidget
         self.create_figure()
@@ -427,6 +428,7 @@ class Vis(QWidget):
 
         self.fix_cmap_checkbox = QCheckBox('fix')
         self.fix_cmap_flag = False
+        self.fix_cmap_checkbox.setEnabled(self.substrates_checked_flag)
         self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
@@ -438,6 +440,7 @@ class Vis(QWidget):
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
         self.cmin = QLineEdit()
+        self.cmin.setEnabled(self.substrates_checked_flag)
         self.cmin.setEnabled(False)
         self.cmin.setText('0.0')
         # self.cmin.textChanged.connect(self.change_plot_range)
@@ -454,7 +457,8 @@ class Vis(QWidget):
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
         self.cmax = QLineEdit()
-        self.cmin.setEnabled(False)
+        self.cmax.setEnabled(self.substrates_checked_flag)
+        self.cmax.setEnabled(False)
         self.cmax.setText('1.0')
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
@@ -534,6 +538,7 @@ class Vis(QWidget):
   
         # self.substrates_cbox.addItem("substrate1")
         # self.substrates_cbox.addItem("substrate2")
+        self.substrates_cbox.setEnabled(self.substrates_checked_flag)
         self.substrates_cbox.currentIndexChanged.connect(self.substrates_cbox_changed_cb)
 
         # controls_hbox.addWidget(self.substrates_cbox)
@@ -639,8 +644,8 @@ class Vis(QWidget):
 
     def substrates_cbox_changed_cb(self,idx):
         print("----- vis_tab.py: substrates_cbox_changed_cb: idx = ",idx)
-        self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
-        # self.update_plots()
+        self.field_index = idx 
+        self.update_plots()
 
 
     def open_directory_cb(self):
@@ -880,7 +885,7 @@ class Vis(QWidget):
         try:  # due to the initial callback
             self.cmin_value = float(self.cmin.text())
             self.cmax_value = float(self.cmax.text())
-            self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
+            # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
         except:
             pass
         self.update_plots()
@@ -1126,6 +1131,7 @@ class Vis(QWidget):
     def plot_cells3D(self, frame):
         print("plot_cells3D:  self.output_dir= ",self.output_dir)
         print("plot_cells3D:  frame= ",frame)
+        self.frame_count.setText(str(frame))
         # xml_file = Path(self.output_dir, "output00000000.xml")
         # xml_file = "output00000000.xml"
         xml_file = "output%08d.xml" % frame
@@ -1294,7 +1300,9 @@ class Vis(QWidget):
             self.ren.RemoveActor(self.cutterZActor)
 
             print("substrate names= ",mcds.get_substrate_names())
-            sub_name = mcds.get_substrate_names()[0]
+            # sub_name = mcds.get_substrate_names()[0]
+            sub_name = mcds.get_substrate_names()[self.field_index]
+            self.scalarBar.SetTitle(sub_name)
             sub_dict = mcds.data['continuum_variables'][sub_name]
             sub_concentration = sub_dict['data']
             print("sub_concentration.shape= ",sub_concentration.shape)
@@ -1316,10 +1324,10 @@ class Vis(QWidget):
             nx,ny,nz = sub_concentration.shape
             self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
             # self.substrate_data.SetDimensions( nx, ny, nz )
-            voxel_size = 20
+            voxel_size = 20   # rwh: fix
             x0 = -(voxel_size * nx) / 2.0
-            y0 = x0
-            z0 = x0
+            y0 = -(voxel_size * ny) / 2.0
+            z0 = -(voxel_size * nz) / 2.0
             print("x0,y0,z0 = ",x0,y0,z0)
             self.substrate_data.SetOrigin( x0, y0, z0 )
             self.substrate_data.SetSpacing( voxel_size, voxel_size, voxel_size )
@@ -1331,9 +1339,9 @@ class Vis(QWidget):
                 for y in range( 0, ny ) :
                     for x in range( 0, nx ) :
                         # val = x+y+z + frame    # dummy test
-                        # val = sub_concentration[z,y,x] + np.random.uniform()*10
-                        # val = sub_concentration[z,y,x] + x
-                        val = sub_concentration[z,y,x]
+                        # val = sub_concentration[x,y,z] + np.random.uniform()*10
+                        # val = sub_concentration[x,y,z] + x
+                        val = sub_concentration[x,y,z]
                         # print(kount,x,y,z,val)
                         # if z==1:
                             # val = 0.0
@@ -1358,7 +1366,8 @@ class Vis(QWidget):
             # self.ren.AddActor(self.substrate_actor)
 
             print("vmin,vmax= ",vmin,vmax)
-            print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
+            if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
+                print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
             self.cutterZ.SetInputData(self.substrate_data)
             self.planeZ.SetOrigin(x0,y0,0)
@@ -1415,6 +1424,7 @@ class Vis(QWidget):
             # self.ren.RemoveActor(self.substrate_actor)
             self.ren.RemoveActor(self.cutterZActor)
             self.ren.RemoveActor(self.domain_outline_actor)
+            self.ren.RemoveActor(self.scalarBar)
 
 
         self.vtkWidget.GetRenderWindow().Render()
