@@ -150,7 +150,7 @@ class RunModel(QWidget):
     def run_model_cb(self):
         print("===========  run_model_cb():  ============")
 
-        if int(self.config_tab.svg_interval.text()) != int(self.config_tab.full_interval.text()):
+        if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText("Warning")
