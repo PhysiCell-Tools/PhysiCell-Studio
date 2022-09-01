@@ -878,7 +878,7 @@ class Vis(QWidget):
             self.current_svg_frame = int(self.frame_count.text())
         except:
             pass
-        self.update_plots()
+        # self.update_plots()
 
     def cmin_cmax_cb(self):
         print("----- cmin_cmax_cb:")
