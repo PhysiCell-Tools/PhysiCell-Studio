@@ -14,7 +14,8 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 
 import numpy as np
 import scipy.io
-from pyMCDS_cells import pyMCDS_cells
+# from pyMCDS_cells import pyMCDS_cells
+from pyMCDS import pyMCDS
 
 class Vis(QWidget):
 
@@ -89,46 +90,101 @@ class Vis(QWidget):
 
         self.cells_mapper = vtkPolyDataMapper()
         self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
+        # self.cells_mapper.ScalarVisibilityOff()
         self.cells_mapper.ScalarVisibilityOn()
         self.cells_mapper.ColorByArrayComponent("cell_data", 1)
 
         self.cells_actor = vtkActor()
         self.cells_actor.SetMapper(self.cells_mapper)
-        # actor.GetProperty().SetInterpolationToPBR()
+        # self.cells_actor.GetProperty().SetColor(178, 190, 181)  # gray
+        # self.cells_actor.GetProperty().SetColor( 255, 0, 0)
+        # self.cells_actor.GetProperty().SetColor(178, 190, 181)
+        # self.cells_actor.GetProperty().SetInterpolationToPBR()
         # actor.GetProperty().SetColor(colors.GetColor3d('Salmon'))
         print("-- actor defaults:")
+        print("-- ambient:",self.cells_actor.GetProperty().GetAmbient())  # 
         print("-- diffuse:",self.cells_actor.GetProperty().GetDiffuse())  # 1.0
         print("-- specular:",self.cells_actor.GetProperty().GetSpecular())  # 0.0
         print("-- roughness:",self.cells_actor.GetProperty().GetCoatRoughness ())  # 0.0
-        self.cells_actor.GetProperty().SetAmbient(0.3)
-        self.cells_actor.GetProperty().SetDiffuse(0.5)
-        self.cells_actor.GetProperty().SetSpecular(0.2)
+        # self.cells_actor.GetProperty().SetAmbient(0.5)
+        # self.cells_actor.GetProperty().SetDiffuse(0.5)
+        # self.cells_actor.GetProperty().SetSpecular(0.2)
 
 
         #------
         self.substrate_data = vtkStructuredPoints()
-        self.substrate_scalars = vtkFloatArray()
-        self.substrate_data.GetPointData().SetScalars( self.substrate_scalars )
+        # self.substrate_voxel_scalars = vtkFloatArray()
+        # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
+        # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
-        self.substrate_mapper = vtkDataSetMapper()
-        self.substrate_mapper.SetInputData(self.substrate_data)
+        # self.substrate_mapper = vtkDataSetMapper()
+        # self.substrate_mapper.SetInputData(self.substrate_data)
+        # self.substrate_mapper.SetScalarModeToUseCellData()
         # self.substrate_mapper.SetScalarRange(0, 33)
 
-        self.substrate_actor = vtkActor()
-        self.substrate_actor.SetMapper(self.substrate_mapper)
-        self.substrate_actor.GetProperty().SetAmbient(1.)
+        # self.substrate_actor = vtkActor()
+        # self.substrate_actor.SetMapper(self.substrate_mapper)
+        # self.substrate_actor.GetProperty().SetAmbient(1.)
+
 
         #-----
-        # self.domain_outline = vtkOutlineFilter()
-        # # self.domain_outline.SetInputConnection(self.substrate_data.GetOutputPort())
-        # self.domain_outline.SetInputConnection(self.substrate_data)
+        self.planeZ = vtkPlane()
+        # plane.SetOrigin(input.GetCenter())
+        # plane.SetOrigin(0,0,10)
+        self.planeZ.SetOrigin(0,0,0)
+        # self.planeZ.SetOrigin(-30,-30,0)
+        self.planeZ.SetNormal(0, 0, 1)
 
-        # self.domain_outline_mapper = vtkPolyDataMapper()
-        # self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
+        # First create the usual cutter
+        self.cutterZ = vtkCutter()
+        # self.cutterZ.SetInputData(self.substrate_data)
+        # self.cutterZ.SetCutFunction(self.planeZ)
+        # self.cutterZ.GeneratePolygons = 1
 
-        # self.domain_outline_actor = vtkActor()
-        # self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
-        # self.domain_outline_actor.GetProperty().SetColor(1,1,1)
+        self.cutterZMapper = vtkPolyDataMapper()
+        self.cutterZMapper.SetInputConnection(self.cutterZ.GetOutputPort())
+        self.cutterZMapper.ScalarVisibilityOn()
+        self.cutterZMapper.SetScalarModeToUseCellData()
+        # self.cutterZMapper.SetScalarModeToUsePointData()
+        #self.cutterMapper.SetScalarRange(0, vmax)
+
+        self.cutterZActor = vtkActor()
+        self.cutterZActor.SetMapper(self.cutterZMapper)
+
+        #-----
+        # self.cutterZEdges = vtkFeatureEdges()
+        # self.cutterZEdgesMapper= vtkPolyDataMapper()
+        # self.cutterZEdgesMapper.SetInputConnection(self.cutterZ.GetOutputPort())
+        # self.cutterZEdges.BoundaryEdgesOn()
+        # self.cutterZEdges.FeatureEdgesOn()
+        # self.cutterZEdges.ManifoldEdgesOff()
+        # self.cutterZEdges.NonManifoldEdgesOff()
+        # self.cutterZEdges.ColoringOn()
+
+        # self.cutterZEdgesActor = vtkActor()
+        # self.cutterZEdgesActor.SetMapper(self.cutterZEdgesMapper)
+
+        #-----
+        self.scalarBar = vtkScalarBarActor()
+        self.scalarBar.SetTitle("oxygen")
+        self.scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.scalarBar.GetPositionCoordinate().SetValue(0.1,0.01)
+        self.scalarBar.UnconstrainedFontSizeOn()
+        self.scalarBar.SetOrientationToHorizontal()
+        self.scalarBar.SetWidth(0.8)
+        self.scalarBar.SetHeight(0.1)
+        # Test the Get/Set Position
+        # self.scalarBar.SetPosition(self.scalarBar.GetPosition())
+        self.scalarBar.GetProperty().SetColor(0,0,0)
+        self.scalarBar.GetTitleTextProperty().SetColor(0,0,0)
+
+        #-----
+        self.domain_outline = vtkOutlineFilter()
+        self.domain_outline_mapper = vtkPolyDataMapper()
+        self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
+        self.domain_outline_actor = vtkActor()
+        self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
+
 
         #-----------------------------
         self.nanohub_flag = nanohub_flag
@@ -362,10 +418,10 @@ class Vis(QWidget):
         # self.glayout1.addWidget(self.cells_edge_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.substrates_checkbox = QCheckBox('Substrates')
-        self.substrates_checkbox.setChecked(False)
+        self.substrates_checked_flag = True
+        self.substrates_checkbox.setChecked(self.substrates_checked_flag)
         # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
-        self.substrates_checked_flag = False
         icol += 1
         self.glayout1.addWidget(self.substrates_checkbox, 0,icol,1,2) # w, row, column, rowspan, colspan
 
@@ -904,6 +960,8 @@ class Vis(QWidget):
         # self.resize(640, 480)
 
         self.ren = vtkRenderer()
+        self.ren.SetBackground(255,255,255)
+        # self.ren.SetBackground(0,0,0)
         # vtk_widget = QVTKRenderWindowInteractor(rw=render_window)
         # self.vtkWidget = QVTKRenderWindowInteractor(self.ren)
         self.vtkWidget = QVTKRenderWindowInteractor(self.canvas)
@@ -912,7 +970,25 @@ class Vis(QWidget):
         # self.vtkWidget.Start()
 
         self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
+
         self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
+
+        self.text_actor = vtkTextActor()
+        self.text_actor.SetInput('Dummy title')
+        self.text_actor.GetTextProperty().SetColor(0,0,0)
+        self.text_actor.GetTextProperty().SetFontSize(10)
+
+        self.text_representation = vtkTextRepresentation()
+        self.text_representation.GetPositionCoordinate().SetValue(0.25, 0.94)
+        self.text_representation.GetPosition2Coordinate().SetValue(0.5, 0.03)
+        self.text_widget = vtkTextWidget()
+        self.text_widget.SetRepresentation(self.text_representation)
+
+        self.text_widget.SetInteractor(self.iren)
+        self.text_widget.SetTextActor(self.text_actor)
+        self.text_widget.SelectableOff()
+        self.text_widget.On()
+
 
         # Create source
         source = vtkSphereSource()
@@ -932,6 +1008,7 @@ class Vis(QWidget):
         # self.setCentralWidget(self.frame)
         self.show()
         self.iren.Initialize()
+        self.vtkWidget.GetRenderWindow().Render()
         self.iren.Start()
 
         # self.figure = plt.figure()
@@ -948,7 +1025,7 @@ class Vis(QWidget):
         # self.ax0.get_yaxis().set_visible(False)
         # plt.tight_layout()
 
-        self.reset_model()
+        self.reset_model()   # rwh - is this necessary??
 
         # np.random.seed(19680801)  # for reproducibility
         # N = 50
@@ -1005,6 +1082,45 @@ class Vis(QWidget):
         # # self.canvas.draw()
 
     #------------------------------------------------------------
+    # rf. https://kitware.github.io/vtk-examples/site/Python/PolyData/CurvaturesDemo/
+    def get_diverging_lut1(self):
+        colors = vtkNamedColors()
+        # Colour transfer function.
+        ctf = vtkColorTransferFunction()
+        ctf.SetColorSpaceToDiverging()
+        p1 = [0.0] + list(colors.GetColor3d('MidnightBlue'))
+        p2 = [0.5] + list(colors.GetColor3d('Gainsboro'))
+        p3 = [1.0] + list(colors.GetColor3d('DarkOrange'))
+        ctf.AddRGBPoint(*p1)
+        ctf.AddRGBPoint(*p2)
+        ctf.AddRGBPoint(*p3)
+
+        table_size = 256
+        lut = vtkLookupTable()
+        lut.SetNumberOfTableValues(table_size)
+        lut.Build()
+
+        for i in range(0, table_size):
+            rgba = list(ctf.GetColor(float(i) / table_size))
+            rgba.append(1)
+            lut.SetTableValue(i, rgba)
+
+        return lut
+
+    def get_cell_type_colors_lut(self, num_cell_types):
+        num_colors = 1
+        lut = vtkLookupTable()
+        lut.SetNumberOfTableValues(num_colors)
+        lut.Build()
+        # lut.SetTableValue(0, 178, 190, 181, 1)  # darker gray
+        lut.SetTableValue(0, 128, 128, 128, 1)  # darker gray
+
+        # for i in range(0, table_size):
+            # lut.SetTableValue(i, 178, 190, 181, 1)  # gray
+
+        return lut
+
+    #------------------------------------------------------------
     # def plot_svg(self, frame, rdel=''):
     def plot_cells3D(self, frame):
         print("plot_cells3D:  self.output_dir= ",self.output_dir)
@@ -1019,10 +1135,18 @@ class Vis(QWidget):
         if not os.path.exists("output/" + xml_file):
             return
 
+        print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
+        mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
+        current_time = mcds.get_time()
+        print('time=', current_time )
+
+        self.text_actor.SetInput('time = '+ str(current_time) + ' min')
+
+        #-----------
         if self.cells_checked_flag:
             # mcds = pyMCDS_cells(xml_file, 'tmpdir')  
-            mcds = pyMCDS_cells(xml_file, 'output')  
-            print('time=', mcds.get_time())
+            # mcds = pyMCDS_cells(xml_file, 'output')  
+            # mcds = pyMCDS(xml_file, 'output')  
 
             # print("mcds.data dict_keys= ",mcds.data['discrete_cells'].keys())   # dict_keys(...)
 
@@ -1056,6 +1180,12 @@ class Vis(QWidget):
             # print(cell_type)
             unique_cell_type = np.unique(cell_type)
             print("\nunique_cell_type = ",unique_cell_type )
+
+            # lut = self.get_diverging_lut1()
+            lut = self.get_cell_type_colors_lut(len(unique_cell_type))
+            self.cells_mapper.SetLookupTable(lut)
+            # mapper_POINT_CLOUD.SetLookupTable(lookupTable)
+            # scalarBar.SetLookupTable(lookupTable)
 
             #------------
             # colors = vtkNamedColors()
@@ -1152,41 +1282,136 @@ class Vis(QWidget):
             # renderWindowInteractor.SetRenderWindow(renderWindow)
 
             # renderer.AddActor(actor)
+            # self.cells_actor.GetProperty().SetColor(80, 20, 20)
             self.ren.AddActor(self.cells_actor)
         else:
             self.ren.RemoveActor(self.cells_actor)
 
         #-------------------
         if self.substrates_checked_flag:
-            # print("\n\n---------  doing 3D substrate as vtkStructuredPoints\n")
-            self.substrate_data.SetDimensions( 13, 13, 13 )
-            self.substrate_data.SetOrigin( -120, -120, -120 )
-            self.substrate_data.SetSpacing( 20, 20, 20 )
-            for z in range( 0, 13 ) :
-                for y in range( 0, 13 ) :
-                    for x in range( 0, 13 ) :
-                        val = x+y+z 
-                        self.substrate_scalars.InsertNextValue( val )
-            self.substrate_data.GetPointData().SetScalars( self.substrate_scalars )
-            self.substrate_mapper.SetScalarRange(0, 39)
+            # self.ren.RemoveActor(self.substrate_actor)
+            self.ren.RemoveActor(self.cutterZActor)
 
-            self.ren.AddActor(self.substrate_actor)
+            print("substrate names= ",mcds.get_substrate_names())
+            sub_name = mcds.get_substrate_names()[0]
+            sub_dict = mcds.data['continuum_variables'][sub_name]
+            sub_concentration = sub_dict['data']
+            print("sub_concentration.shape= ",sub_concentration.shape)
+            # print("sub_concentration = ",sub_concentration)
+
+            # update VTK pipeline
+            # self.points.Reset()
+            # self.cellID.Reset()
+
+            # self.substrate_voxel_scalars.Reset()  # rwh: OMG, why didn't this work? Optimize.
+            self.substrate_voxel_scalars = vtkFloatArray()
+
+            # self.cell_data.Reset()
+            # self.tags.Reset()
+
+            # print("\n\n---------  doing 3D substrate as vtkStructuredPoints\n")
+            # nx,ny,nz = 12,12,12
+            # nx,ny,nz = 3,3,3
+            nx,ny,nz = sub_concentration.shape
+            self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
+            # self.substrate_data.SetDimensions( nx, ny, nz )
+            voxel_size = 20
+            x0 = -(voxel_size * nx) / 2.0
+            y0 = x0
+            z0 = x0
+            print("x0,y0,z0 = ",x0,y0,z0)
+            self.substrate_data.SetOrigin( x0, y0, z0 )
+            self.substrate_data.SetSpacing( voxel_size, voxel_size, voxel_size )
+            vmin = 1.e30
+            vmax = -vmin
+            # for z in range( 0, nz+1 ) :  # if point data, not cell data
+            kount = 0
+            for z in range( 0, nz ) :   # NOTE: using cell data, not point data
+                for y in range( 0, ny ) :
+                    for x in range( 0, nx ) :
+                        # val = x+y+z + frame    # dummy test
+                        # val = sub_concentration[z,y,x] + np.random.uniform()*10
+                        # val = sub_concentration[z,y,x] + x
+                        val = sub_concentration[z,y,x]
+                        # print(kount,x,y,z,val)
+                        # if z==1:
+                            # val = 0.0
+                        # if z==0:
+                        #     val = 1.0
+                        if val > vmax:
+                            vmax = val
+                        if val < vmin:
+                            vmin = val
+                        self.substrate_voxel_scalars.InsertNextValue( val )
+                        kount += 1
+            # # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
+            # vmin = 10.
+            self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
+            # print("vmax= ",vmax)
+            # self.substrate_mapper.SetScalarRange(vmin, vmax)
+            # self.substrate_mapper.Update()
+            # self.substrate_mapper.SetScalarRange(0, vmax)
+            # self.substrate_data.Update()
+            # self.substrate_mapper.SetScalarModeToUseCellData()
+            # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
+            # self.ren.AddActor(self.substrate_actor)
+
+            print("vmin,vmax= ",vmin,vmax)
+            self.cutterZ.SetInputData(self.substrate_data)
+            self.planeZ.SetOrigin(x0,y0,0)
+            self.cutterZ.SetCutFunction(self.planeZ)
+            # self.cutterZ.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
+            self.cutterZ.Update()
+
+            # self.cutterZMapper.SetScalarRange(vmin, vmax)
+            self.cutterZMapper.SetScalarRange(0, vmax)
+            self.cutterZMapper.Update()
+            # cutMapper.SetInputConnection(planeCut.GetOutputPort())
+            # cutMapper.SetScalarRange(sg.GetPointData().GetScalars().GetRange())
+
+            # self.cutterZMapper.SetScalarRange(0, vmax)
+            # self.cutterZMapper.SetScalarModeToUseCellData()
+            # self.cutterZActor.SetMapper(self.cutterZMapper)
+
+            self.cutterZActor.GetProperty().EdgeVisibilityOn()
+            self.cutterZActor.GetProperty().EdgeVisibilityOff()
+            # self.cutterZActor.GetProperty().SetEdgeColor(0,0,0)
+
+            self.ren.AddActor(self.cutterZActor)
+
+            # self.cutterZEdges = vtkFeatureEdges()
+            # self.cutterZEdges.SetInputConnection(self.cutterZ.GetOutputPort())
+            # self.cutterZEdges.SetInput(self.cutterZ.GetOutputPort())
+            # self.cutterZEdges.Update()
+            # self.ren.AddActor(self.cutterZEdgesActor)
+
+
+
+            #-------------------
+            self.scalarBar.SetLookupTable(self.cutterZMapper.GetLookupTable())
+            # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
+            self.ren.AddActor2D(self.scalarBar)
 
             #-------------------
             # self.domain_outline = vtkOutlineFilter()
+            self.domain_outline.SetInputData(self.substrate_data)
+            self.domain_outline.Update()
             # self.domain_outline.SetInputConnection(sample.GetOutputPort())
             # self.domain_outline.SetInputConnection(self.substrate_data.GetOutputPort())
 
+            # self.domain_outline_mapper.Update()
             # # self.domain_outline_mapper = vtkPolyDataMapper()
             # self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
 
             # # self.domain_outline_actor = vtkActor()
             # self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
-            # self.domain_outline_actor.GetProperty().SetColor(1,1,1)
-            # self.ren.AddActor(self.domain_outline_actor)
+            # self.domain_outline_actor.GetProperty().SetColor(0,0,0)
+            self.domain_outline_actor.GetProperty().SetColor(0, 0, 255)
+            self.ren.AddActor(self.domain_outline_actor)
         else:
-            self.ren.RemoveActor(self.substrate_actor)
-            # self.ren.RemoveActor(self.domain_outline_actor)
+            # self.ren.RemoveActor(self.substrate_actor)
+            self.ren.RemoveActor(self.cutterZActor)
+            self.ren.RemoveActor(self.domain_outline_actor)
 
 
         self.vtkWidget.GetRenderWindow().Render()
