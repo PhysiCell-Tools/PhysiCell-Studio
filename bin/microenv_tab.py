@@ -193,9 +193,7 @@ class SubstrateDef(QWidget):
         # self.init_cond.enter.connect(self.save_xml)
         hbox.addWidget(self.init_cond)
 
-        # self.dirchlet_units_w = QLabel(self.dirichlet_units)
         self.init_cond_units = QLabel(self.dirichlet_units)
-        # self.dirchlet_units_w.setText("foobar")
         self.init_cond_units.setFixedWidth(units_width)
         hbox.addWidget(self.init_cond_units)
         self.vbox.addLayout(hbox)
@@ -214,8 +212,7 @@ class SubstrateDef(QWidget):
         hbox.addWidget(self.dirichlet_bc)
 
         self.dirichlet_bc_units = QLabel(self.dirichlet_units)
-        self.dirichlet_bc_units.setFixedWidth(units_width-45)  # decrease for better alignment
-        self.dirichlet_bc_units.setFixedWidth(units_width)  # decrease for better alignment
+        self.dirichlet_bc_units.setFixedWidth(units_width)
         hbox.addWidget(self.dirichlet_bc_units)
 
 # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
