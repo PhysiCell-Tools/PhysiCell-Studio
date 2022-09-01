@@ -1136,11 +1136,16 @@ class SubstrateDef(QWidget):
                 subelm2.text = self.param_d[substrate]["decay_rate"]
                 subelm2.tail = indent8
 
-                subelm = ET.SubElement(elm, 'initial_condition', {"units":"mmHg"})
+                    # self.param_d[substrate_name]["init_cond_units"] = dc_ic_units
+                # subelm = ET.SubElement(elm, 'initial_condition', {"units":"mmHg"})
+                subelm = ET.SubElement(elm, 'initial_condition', {"units":self.param_d[substrate]["init_cond_units"]})
                 subelm.text = self.param_d[substrate]["init_cond"]
                 subelm.tail = indent8
+                    # self.param_d[substrate_name]["dirichlet_bc_units"] = dc_bc_units
                 subelm = ET.SubElement(elm, "Dirichlet_boundary_condition",
-                        {"units":"mmHg", "enabled":str(self.param_d[substrate]["dirichlet_enabled"])})
+                        {"units":self.param_d[substrate]["dirichlet_bc_units"], 
+                         "enabled":str(self.param_d[substrate]["dirichlet_enabled"]) })
+                        # {"units":"mmHg", "enabled":str(self.param_d[substrate]["dirichlet_enabled"])})
                 subelm.text = self.param_d[substrate]["dirichlet_bc"]
                 subelm.tail = indent8
 

@@ -1114,12 +1114,19 @@ class Vis(QWidget):
         return lut
 
     def get_cell_type_colors_lut(self, num_cell_types):
-        num_colors = 1
+        print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
         lut = vtkLookupTable()
-        lut.SetNumberOfTableValues(num_colors)
+        lut.SetNumberOfTableValues(num_cell_types)
         lut.Build()
+
+        # ics_tab.py uses:
+        # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+
         # lut.SetTableValue(0, 178, 190, 181, 1)  # darker gray
         lut.SetTableValue(0, 128, 128, 128, 1)  # darker gray
+        np.random.seed(42)
+        for idx in range(1,num_cell_types):
+            lut.SetTableValue(idx, 255*np.random.uniform(), 255*np.random.uniform(), 255*np.random.uniform(), 1)  # darker gray
 
         # for i in range(0, table_size):
             # lut.SetTableValue(i, 178, 190, 181, 1)  # gray
@@ -1186,10 +1193,11 @@ class Vis(QWidget):
             # print(type(cell_type))
             # print(cell_type)
             unique_cell_type = np.unique(cell_type)
+            num_cell_types = len(unique_cell_type)
             print("\nunique_cell_type = ",unique_cell_type )
 
             # lut = self.get_diverging_lut1()
-            lut = self.get_cell_type_colors_lut(len(unique_cell_type))
+            lut = self.get_cell_type_colors_lut(num_cell_types)
             self.cells_mapper.SetLookupTable(lut)
             # mapper_POINT_CLOUD.SetLookupTable(lookupTable)
             # scalarBar.SetLookupTable(lookupTable)
@@ -1227,7 +1235,9 @@ class Vis(QWidget):
                 # self.cellID.InsertNextValue(id)
                 self.radii.InsertNextValue(rval)
                 # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; heatmap across all cells
-                self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
+
+                # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
+                self.tags.InsertNextValue(cell_type[idx])
 
             self.cell_data.CopyComponent(0, self.radii, 0)
             self.cell_data.CopyComponent(1, self.tags, 0)
@@ -1267,10 +1277,12 @@ class Vis(QWidget):
             # self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
             print("glyph range= ",self.glyph.GetRange())
+            self.cells_mapper.SetScalarRange(0,num_cell_types)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
 
             # glyph.ScalingOn()
+            # self.glyph.SetScalarRange(0, vmax)
             self.glyph.Update()
 
             # actor.GetProperty().SetCoatRoughness (0.5)
