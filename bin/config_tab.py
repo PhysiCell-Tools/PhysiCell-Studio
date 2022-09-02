@@ -24,6 +24,8 @@ class Config(QWidget):
         super().__init__()
         # global self.config_params
 
+        self.default_time_units = "min"
+
         # self.nanohub_flag = nanohub_flag
         self.nanohub_flag = False
 
@@ -167,7 +169,7 @@ class Config(QWidget):
         self.max_time.setValidator(QtGui.QDoubleValidator())
         self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
+        label = QLabel(self.default_time_units)
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
@@ -180,7 +182,7 @@ class Config(QWidget):
         self.diffusion_dt.setValidator(QtGui.QDoubleValidator())
         self.config_tab_layout.addWidget(self.diffusion_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
+        label = QLabel(self.default_time_units)
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
@@ -193,7 +195,7 @@ class Config(QWidget):
         self.mechanics_dt.setValidator(QtGui.QDoubleValidator())
         self.config_tab_layout.addWidget(self.mechanics_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
+        label = QLabel(self.default_time_units)
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
@@ -206,7 +208,7 @@ class Config(QWidget):
         self.phenotype_dt.setValidator(QtGui.QDoubleValidator())
         self.config_tab_layout.addWidget(self.phenotype_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
+        label = QLabel(self.default_time_units)
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
@@ -263,39 +265,52 @@ class Config(QWidget):
             self.plot_folder.textChanged.connect(self.plot_folder_name_cb)
 
         #------------------
-        label = QLabel("Save data:")
+        label = QLabel("Save data (intervals):")
         idx_row += 1
-        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+        icol = 0
+        self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         #------
         self.save_svg = QCheckBox("SVG")
-        self.config_tab_layout.addWidget(self.save_svg, idx_row,1,1,1) # w, row, column, rowspan, colspan
+        icol += 2
+        self.config_tab_layout.addWidget(self.save_svg, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("every")
-        label_width = 110
-        label_width = 60
-        self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        # label = QLabel("every")
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        # label_width = 110
+        # label_width = 60
+        # icol += 1
+        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         self.svg_interval = QLineEdit()
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
-        self.config_tab_layout.addWidget(self.svg_interval, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.config_tab_layout.addWidget(self.svg_interval, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
-        self.config_tab_layout.addWidget(label, idx_row,4,1,2) # w, row, column, rowspan, colspan
+        label = QLabel(self.default_time_units)
+        # self.config_tab_layout.addWidget(label, idx_row,4,1,2) # w, row, column, rowspan, colspan
+        icol += 1
+        self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         #------
         self.save_full = QCheckBox("Full")
-        self.config_tab_layout.addWidget(self.save_full, idx_row,6,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.config_tab_layout.addWidget(self.save_full, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("every")
-        self.config_tab_layout.addWidget(label, idx_row,7,1,1) # w, row, column, rowspan, colspan
+        # label = QLabel("every")
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # icol += 1
+        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         self.full_interval = QLineEdit()
         self.full_interval.setValidator(QtGui.QDoubleValidator())
-        self.config_tab_layout.addWidget(self.full_interval, idx_row,8,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.config_tab_layout.addWidget(self.full_interval, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("min")
-        self.config_tab_layout.addWidget(label, idx_row,9,1,1) # w, row, column, rowspan, colspan
+        label = QLabel(self.default_time_units)
+        icol += 1
+        self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         #============  Cells IC ================================
         label = QLabel("Initial conditions of cells (x,y,z, type)")
@@ -305,19 +320,30 @@ class Config(QWidget):
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
-        label = QLabel("csv folder")
-        label.setAlignment(QtCore.Qt.AlignRight)
         idx_row += 1
-        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+        self.cells_csv = QCheckBox("enable")
+        icol = 0
+        self.config_tab_layout.addWidget(self.cells_csv, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("folder")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        icol += 1
+        self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         self.csv_folder = QLineEdit()
         if self.nanohub_flag:
             self.folder.setEnabled(False)
-        self.config_tab_layout.addWidget(self.csv_folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
+        icol += 1
+        self.config_tab_layout.addWidget(self.csv_folder, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
-        self.cells_csv = QCheckBox("cells.csv")
-        idx_row += 1
-        self.config_tab_layout.addWidget(self.cells_csv, idx_row,1,1,1) # w, row, column, rowspan, colspan
+        label = QLabel("file")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        icol += 1
+        self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+
+        self.csv_file = QLineEdit()
+        icol += 1
+        self.config_tab_layout.addWidget(self.csv_file, idx_row,icol,1,2) # w, row, column, rowspan, colspan
 
 
         self.insert_hacky_blank_lines(self.config_tab_layout)
@@ -402,6 +428,7 @@ class Config(QWidget):
         if uep == None:  # not present
             return
         self.csv_folder.setText(self.xml_root.find(".//initial_conditions//cell_positions//folder").text)
+        self.csv_file.setText(self.xml_root.find(".//initial_conditions//cell_positions//filename").text)
         if uep.attrib['enabled'].lower() == 'true':
             self.cells_csv.setChecked(True)
         else:
@@ -523,6 +550,9 @@ class Config(QWidget):
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
         print("------- config_tab.py: fill_xml(): setting csv folder = ",self.csv_folder.text())
+
+        self.xml_root.find(".//initial_conditions//cell_positions/filename").text = self.csv_file.text()
+        print("------- config_tab.py: fill_xml(): setting csv filename = ",self.csv_file.text())
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:

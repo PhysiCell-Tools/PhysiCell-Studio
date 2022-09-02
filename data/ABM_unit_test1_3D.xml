@@ -217,7 +217,7 @@
 	<initial_conditions>
 		<cell_positions type="csv" enabled="true">
 			<folder>./data</folder>
-			<filename>cells.csv</filename>
+			<filename>cells1.csv</filename>
 		</cell_positions>
 	</initial_conditions>	
 	

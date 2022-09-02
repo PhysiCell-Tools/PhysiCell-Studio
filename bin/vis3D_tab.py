@@ -145,6 +145,8 @@ class Vis(QWidget):
         self.cutterZMapper = vtkPolyDataMapper()
         self.cutterZMapper.SetInputConnection(self.cutterZ.GetOutputPort())
         self.cutterZMapper.ScalarVisibilityOn()
+        lut = self.get_heat_map()
+        self.cutterZMapper.SetLookupTable(lut)
         self.cutterZMapper.SetScalarModeToUseCellData()
         # self.cutterZMapper.SetScalarModeToUsePointData()
         #self.cutterMapper.SetScalarRange(0, vmax)
@@ -1088,6 +1090,15 @@ class Vis(QWidget):
         # # self.canvas.draw()
 
     #------------------------------------------------------------
+    def get_heat_map(self):
+        table_size = 512
+        lut = vtkLookupTable()
+        lut.SetNumberOfTableValues(table_size)
+        # lut.SetHueRange(0.0, 0.667)  # red-to-blue
+        lut.SetHueRange( 0.667, 0.)  # blue-to-red
+        lut.Build()
+        return lut
+
     # rf. https://kitware.github.io/vtk-examples/site/Python/PolyData/CurvaturesDemo/
     def get_diverging_lut1(self):
         colors = vtkNamedColors()
