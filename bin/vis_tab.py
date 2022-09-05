@@ -11,9 +11,6 @@ import os
 import time
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
-# from ipywidgets import Layout, Label, Text, Checkbox, Button, BoundedIntText, HBox, VBox, Box, \
-    # FloatText, Dropdown, SelectMultiple, RadioButtons, interactive
-# import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 from matplotlib.collections import LineCollection
@@ -151,7 +148,7 @@ class Vis(QWidget):
 
         self.config_params = QWidget()
 
-        self.main_layout = QVBoxLayout()
+        # self.main_layout = QVBoxLayout()
 
         self.vbox = QVBoxLayout()
         self.vbox.addStretch(0)
@@ -249,6 +246,12 @@ class Vis(QWidget):
         self.cells_edge_checked_flag = True
         icol += 1
         self.glayout1.addWidget(self.cells_edge_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+
+        self.cells_nucleus_checkbox = QCheckBox('nuclei')
+        self.cells_nucleus_checkbox.setChecked(self.show_nucleus)
+        self.cells_nucleus_checkbox.clicked.connect(self.cells_nucleus_toggle_cb)
+        icol += 1
+        self.glayout1.addWidget(self.cells_nucleus_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.substrates_checkbox = QCheckBox('Substrates')
         self.substrates_checkbox.setChecked(False)
@@ -804,10 +807,16 @@ class Vis(QWidget):
 
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval
+        self.cells_edge_checkbox.setEnabled(bval)
+        self.cells_nucleus_checkbox.setEnabled(bval)
         self.update_plots()
 
     def cells_edge_toggle_cb(self,bval):
         self.cells_edge_checked_flag = bval
+        self.update_plots()
+
+    def cells_nucleus_toggle_cb(self,bval):
+        self.show_nucleus = bval
         self.update_plots()
 
 
@@ -1263,9 +1272,8 @@ class Vis(QWidget):
                 rlist.append(rval)
                 rgba_list.append(rgba)
 
-                # For .svg files with cells that *have* a nucleus, there will be a 2nd
+                # For .svg files with cells that *have* a nucleus, there will be a 2nd pass
                 if (not self.show_nucleus):
-                #if (not self.show_nucleus):
                     break
 
             num_cells += 1
@@ -1350,7 +1358,7 @@ class Vis(QWidget):
                 # plt.scatter(xvals,yvals, s=markers_size, c=rgbs, edgecolor='black', linewidth=0.5)
                 # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha, edgecolor='black', linewidth=0.5)
                 # print("--- plotting circles with edges!!")
-                self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)
+                self.circles(xvals,yvals, s=rvals, color=rgbas, edgecolor='black', linewidth=0.5)  # alpha=0.5
                 # cell_circles = self.circles(xvals,yvals, s=rvals, color=rgbs, edgecolor='black', linewidth=0.5)
                 # plt.sci(cell_circles)
             except (ValueError):
