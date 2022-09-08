@@ -1030,7 +1030,7 @@ class ICs(QWidget):
 
                     xlist.append(xval_offset)
                     ylist.append(yval)
-                    self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
                     rlist.append(rval)
                     count+=1
 
