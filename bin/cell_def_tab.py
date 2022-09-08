@@ -2915,6 +2915,8 @@ class CellDef(QWidget):
     
     def physiboss_update_list_signals(self):
 
+        if self.current_cell_def == None:
+            return
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
 
             self.physiboss_signals = []
@@ -2952,6 +2954,8 @@ class CellDef(QWidget):
 
     def physiboss_update_list_behaviours(self):
 
+        if self.current_cell_def == None:
+            return
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
 
             self.physiboss_behaviours = []
@@ -4652,9 +4656,13 @@ class CellDef(QWidget):
 
     # @QtCore.Slot()
     def motility_substrate_changed_cb(self, idx):
-        # print('------ motility_substrate_changed_cb(): idx = ',idx)
+        print('------ motility_substrate_changed_cb(): idx = ',idx)
+        print('       motility_substrate_changed_cb(): self.current_cell_def = ',self.current_cell_def)
+        if self.current_cell_def == None:
+            return
         val = self.motility_substrate_dropdown.currentText()
-        # print("   text = ",val)
+        print("                         text = ",val)
+        # print(self.param_d[self.current_cell_def])
         self.param_d[self.current_cell_def]["motility_chemotaxis_substrate"] = val
         # self.param_d[cell_def_name]["motility_chemotaxis_idx"] = idx
 
@@ -4669,6 +4677,8 @@ class CellDef(QWidget):
         print("   text (subname) = ",subname)
         if subname == '':
             print("   subname is empty, return!")
+            return
+        if self.current_cell_def == None:
             return
         if subname not in self.param_d[self.current_cell_def]['chemotactic_sensitivity'].keys():
             print("   subname is empty, return!")
@@ -4933,7 +4943,7 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
     def fill_substrates_comboboxes(self):
-        # print("cell_def_tab.py: ------- fill_substrates_comboboxes")
+        print("cell_def_tab.py: ------- fill_substrates_comboboxes")
         # print("self.substrate_list = ",self.substrate_list)
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.motility_substrate_dropdown.clear()
@@ -4948,7 +4958,7 @@ class CellDef(QWidget):
                 print(" --> ",var.attrib['name'])
                 name = var.attrib['name']
                 self.substrate_list.append(name)
-                self.motility_substrate_dropdown.addItem(name)
+                self.motility_substrate_dropdown.addItem(name)   # beware - triggers a callback! motility_substrate_changed_cb
                 self.motility2_substrate_dropdown.addItem(name)
                 self.secretion_substrate_dropdown.addItem(name)
         # print("cell_def_tab.py: ------- fill_substrates_comboboxes:  self.substrate_list = ",self.substrate_list)
@@ -5714,6 +5724,7 @@ class CellDef(QWidget):
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
         self.motility_substrate_dropdown.setCurrentText(self.param_d[cdname]["motility_chemotaxis_substrate"])
+        print("     setting motility_substrate_dropdown (for cdname= ",cdname, ") = ",self.param_d[cdname]["motility_chemotaxis_substrate"])
 
         if self.param_d[cdname]["motility_chemotaxis_towards"]:
             self.chemotaxis_direction_towards.setChecked(True)
@@ -5722,6 +5733,7 @@ class CellDef(QWidget):
 
         # Advanced Chemotaxis
         self.motility2_substrate_dropdown.setCurrentText(self.param_d[cdname]["motility_advanced_chemotaxis_substrate"])
+        print("     setting motility2_substrate_dropdown (for cdname= ",cdname, ") = ",self.param_d[cdname]["motility_advanced_chemotaxis_substrate"])
 
         if self.param_d[cdname]["motility_advanced_chemotaxis"]:
             self.advanced_chemotaxis_enabled.setChecked(True)
@@ -5755,6 +5767,8 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_secretion_params(self):
         cdname = self.current_cell_def
+        if cdname == None:
+            return
 
         print("update_secretion_params(): cdname = ",cdname)
         print("update_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)

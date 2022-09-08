@@ -923,6 +923,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                 val = uep.find(motility_chemotaxis_path +'substrate').text
                 cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
+                print("\n----------- populate_tree_cell_defs.py: cell_def_name=",cell_def_name,", cell_def_tab.param_d[cell_def_name]['motility_chemotaxis_substrate'] = ",cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"])
 
                 val = uep.find(motility_chemotaxis_path +'direction').text
                 if val == '1':
@@ -944,6 +945,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis//"
             # motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis"
             print(motility_advanced_chemotaxis_path)
+
 
             # Just initialize sensitivities to default value (0) for all substrates
             cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
@@ -981,6 +983,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 # rwh: todo - why am I doing this? Is it necessary?
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = "foobar"
                 # cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = None
+
+                # val = uep.find(motility_advanced_chemotaxis_path +'substrate').text  # NO! now substrate is an attribute!
+                # cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = val
 
                 if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
                     cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True

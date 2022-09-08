@@ -157,9 +157,15 @@ class PhysiCellXMLCreator(QWidget):
         print("pmb.py: cd_name=",cd_name)
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
+
+        self.celldef_tab.fill_substrates_comboboxes() # do before populate? Yes, assuming we check for cell_def != None
+
+        # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
-        self.celldef_tab.fill_substrates_comboboxes() # do before populate?
+
+        # self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()
+
         self.microenv_tab.celldef_tab = self.celldef_tab
 
         self.user_params_tab = UserParams(self.dark_mode)
@@ -239,6 +245,8 @@ class PhysiCellXMLCreator(QWidget):
 
             self.vis_tab = Vis(self.nanohub_flag)
             self.config_tab.vis_tab = self.vis_tab
+            self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
 
             self.legend_tab = Legend(self.nanohub_flag)
             self.run_tab.vis_tab = self.vis_tab
@@ -419,10 +427,11 @@ class PhysiCellXMLCreator(QWidget):
         # self.celldef_tab.fill_substrates_comboboxes()
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
+        self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
         # self.celldef_tab.fill_gui(None)
         # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
-        self.celldef_tab.fill_substrates_comboboxes()
+        # self.celldef_tab.fill_substrates_comboboxes()
         self.celldef_tab.fill_celltypes_comboboxes()
 
         if self.studio_flag:
