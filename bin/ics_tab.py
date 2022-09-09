@@ -282,16 +282,21 @@ class ICs(QWidget):
             self.celltype_combobox.addItem(cdef)
 
     def reset_plot_range(self):
+        self.plot_xmin = float(self.config_tab.xmin.text())
+        self.plot_xmax = float(self.config_tab.xmax.text())
+        self.plot_ymin = float(self.config_tab.ymin.text())
+        self.plot_ymax = float(self.config_tab.ymax.text())
         try:  # due to the initial callback
-            self.my_xmin.setText(str(self.xmin))
-            self.my_xmax.setText(str(self.xmax))
-            self.my_ymin.setText(str(self.ymin))
-            self.my_ymax.setText(str(self.ymax))
+            # self.my_xmin.setText(str(self.xmin))
+            # self.my_xmax.setText(str(self.xmax))
+            # self.my_ymin.setText(str(self.ymin))
+            # self.my_ymax.setText(str(self.ymax))
 
-            self.plot_xmin = float(self.xmin)
-            self.plot_xmax = float(self.xmax)
-            self.plot_ymin = float(self.ymin)
-            self.plot_ymax = float(self.ymax)
+            # self.plot_xmin = float(self.xmin)
+            # self.plot_xmax = float(self.xmax)
+            # self.plot_ymin = float(self.ymin)
+            # self.plot_ymax = float(self.ymax)
+            print("ics_tab: -------- ICs: reset_plot_range(): plot_xmin,xmax=  ",self.plot_xmin,self.plot_xmax)
             print("ics_tab: -------- ICs: reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
         except:
             pass
@@ -883,6 +888,8 @@ class ICs(QWidget):
 
     #------------------------------------------------------------
     def plot_cb(self):
+        self.reset_plot_range()
+
         cdef = self.celltype_combobox.currentText()
         volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
         self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
@@ -1192,6 +1199,9 @@ class ICs(QWidget):
     #------------------------------------------------
     def clear_cb(self):
         # self.ax0.clear()
+        # update range with whatever is in config_tab
+        self.reset_plot_range()
+
         self.ax0.cla()
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
