@@ -814,6 +814,8 @@ def main():
         parser.add_argument("-c", "--config",  type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec",  type=str, help="executable model")
 
+        exec_file = 'project'  # for template sample
+
         # args = parser.parse_args()
         args, unknown = parser.parse_known_args()
         if unknown:
