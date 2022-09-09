@@ -1021,6 +1021,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # print("sensitivity_dict = ",cell_def_tab.chemotactic_sensitivity_dict)
                     print(cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'])
 
+                cell_def_tab.motility2_substrate_changed_cb(0)  # update the sensitivity value in the widget
+
                 # val = uep.find(motility_chemotaxis_path +'substrate').text
                 # cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
 
@@ -1350,6 +1352,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                         'smoothing': output_settings.find("smoothing").text if output_settings.find("smoothing") is not None else "0",
                                     })
                                     
+                # Update widget values
+                cell_def_tab.physiboss_update_list_signals()
+                cell_def_tab.physiboss_update_list_behaviours()
+                cell_def_tab.physiboss_update_list_nodes()
+            
 
             print("------ done parsing intracellular:")
 
