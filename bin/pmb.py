@@ -642,7 +642,8 @@ class PhysiCellXMLCreator(QWidget):
         # data_dir = os.path.join(self.current_dir,'data')
         # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
         # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
-        self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
+        # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
+        self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
         print("load_model: self.current_xml_file= ",self.current_xml_file)
 
         # self.current_save_file = current_xml_file
