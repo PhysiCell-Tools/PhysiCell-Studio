@@ -1441,13 +1441,15 @@ class Vis(QWidget):
                 substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, levels=self.fixed_contour_levels, extend='both', cmap='viridis')
             except:
                 contour_ok = False
-                print('got error on contourf with fixed cmap range.')
+                print('\nWARNING: got error on contourf with fixed cmap range. Will not update plot.')
+                return
         else:    
             try:
                 substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap='viridis')  # self.colormap_dd.value)
             except:
                 contour_ok = False
-                print('got error on contourf with dynamic cmap range.')
+                print('\nWARNING: got error on contourf with dynamic cmap range. Will not update plot.')
+                return
 
         # in case we want to plot a "0.0" contour line
         # if self.field_index > 4:
