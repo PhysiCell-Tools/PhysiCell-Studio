@@ -597,6 +597,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # apoptosis_params_path = apoptosis_path + "parameters//"
 
                     # cell_def_tab.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                    if params_uep is None:
+                        print("\npopulate_tree_cell_defs.py: Error: missing death params.\nIt is possible your .xml is the old hierarchical format\nand not the flattened, explicit format.  \nExiting.\n")
+                        sys.exit(1)
                     cell_def_tab.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
                     cell_def_tab.param_d[cell_def_name]["apoptosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
                     cell_def_tab.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text

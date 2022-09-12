@@ -1,12 +1,11 @@
 """
-pmb.py - a PhysiCell Model Builder GUI to read in a sample PhysiCell config file (.xml), allow easy editing 
-            (e.g., change parameter values, add/delete more "objects", including substrates and cell types),
-             and then save the new config file. 
+pmb.py - driving module for the PhysiCell Model Builder GUI to read in a sample PhysiCell config file (.xml), easily edit (e.g., change parameter values, add/delete more "objects", including substrates and cell types), and save the updated config file. In addition, the "Studio" feature adds additional GUI tabs for creating initial conditions for cells (.csv), running a simulation, and visualizing output.
 
 Authors:
-Randy Heiland (heiland@iu.edu)
-Students: Michael Siler, Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
-Dr. Paul Macklin (macklinp@iu.edu)
+Randy Heiland (heiland@iu.edu): lead designer and developer
+Vincent Noel, Institut Curie: Cell Types|Intracellular|boolean
+IU Students: Michael Siler, Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur: early design, testing
+Dr. Paul Macklin (macklinp@iu.edu): PI, funding and testing
 
 """
 
@@ -102,9 +101,22 @@ class PhysiCellXMLCreator(QWidget):
         self.setMinimumSize(1100, 770)  #width, height of window
 
         self.current_dir = os.getcwd()
-        print("model.py: self.current_dir = ",self.current_dir)
+        print("self.current_dir = ",self.current_dir)
+        self.pmb_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+        self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        print("self.pmb_root_dir = ",self.pmb_root_dir)
 
-        self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # assume running from a PhysiCell root dir, but change if not
+        self.config_dir = os.path.realpath(os.path.join('.', 'config'))
+
+        if self.current_dir == self.pmb_root_dir:  # are we running from PMB root dir?
+            self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        print("self.config_dir = ",self.config_dir)
+
+        # self.pmb_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # print("pmb.py: self.pmb_config_dir = ",self.pmb_config_dir)
+        # sys.exit(1)
+
         if config_file:
             self.current_xml_file = config_file
             print("got config_file=",config_file)
@@ -124,7 +136,8 @@ class PhysiCellXMLCreator(QWidget):
             # self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
+            # self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
+            self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
@@ -628,7 +641,9 @@ class PhysiCellXMLCreator(QWidget):
 
         # data_dir = os.path.join(self.current_dir,'data')
         # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-        self.current_xml_file = os.path.join(self.data_dir, name + ".xml")
+        # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
+        # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
+        self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
         print("load_model: self.current_xml_file= ",self.current_xml_file)
 
         # self.current_save_file = current_xml_file

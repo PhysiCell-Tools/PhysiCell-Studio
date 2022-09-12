@@ -280,8 +280,8 @@ class RunModel(QWidget):
     def cancel_model_cb(self):
         print("===========  cancel_model_cb():  ============")
         if self.p:  # process running.
-            # self.p.kill()
-            self.p.terminate()
+            self.p.kill()
+            # self.p.terminate()
             self.run_button.setEnabled(True)
 
     def handle_stderr(self):
