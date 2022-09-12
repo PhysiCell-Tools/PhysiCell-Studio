@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.8.3
+VERSION: 2.8.4
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,13 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
+## Release 2.8.4
+* awareness of where it's being run from and behaving appropriately
+* use latest pyMCDS.py
+* try to properly Cancel a Run (studio mode) on Windows
+* check for bogus colormap ranges
+* add couple checks for "old" config file syntax: missing virtual walls, missing death params
+
 ## Release 2.8.3
 * fix undefined exec_file bug
 * add nuclei checkbox/plotting for 2D
