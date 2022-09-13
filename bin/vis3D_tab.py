@@ -981,10 +981,10 @@ class Vis(QWidget):
 
         self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
 
-        self.text_actor = vtkTextActor()
-        self.text_actor.SetInput('Dummy title')
-        self.text_actor.GetTextProperty().SetColor(0,0,0)
-        self.text_actor.GetTextProperty().SetFontSize(10)
+        self.text_title_actor = vtkTextActor()
+        self.text_title_actor.SetInput('Dummy title')
+        self.text_title_actor.GetTextProperty().SetColor(0,0,0)
+        self.text_title_actor.GetTextProperty().SetFontSize(10)
 
         self.text_representation = vtkTextRepresentation()
         self.text_representation.GetPositionCoordinate().SetValue(0.25, 0.94)
@@ -993,7 +993,7 @@ class Vis(QWidget):
         self.text_widget.SetRepresentation(self.text_representation)
 
         self.text_widget.SetInteractor(self.iren)
-        self.text_widget.SetTextActor(self.text_actor)
+        self.text_widget.SetTextActor(self.text_title_actor)
         self.text_widget.SelectableOff()
         self.text_widget.On()
 
@@ -1165,7 +1165,8 @@ class Vis(QWidget):
         current_time = mcds.get_time()
         print('time=', current_time )
 
-        self.text_actor.SetInput('time = '+ str(current_time) + ' min')
+        self.title_str = 'time '+ str(current_time) + ' min'
+        # self.text_title_actor.SetInput(self.title_str)
 
         #-----------
         if self.cells_checked_flag:
@@ -1177,6 +1178,7 @@ class Vis(QWidget):
 
             ncells = len(mcds.data['discrete_cells']['ID'])
             print('ncells=', ncells)
+            self.title_str += ", # cells=" + str(ncells)
 
             global xyz
             xyz = np.zeros((ncells, 3))
@@ -1317,6 +1319,7 @@ class Vis(QWidget):
         else:
             self.ren.RemoveActor(self.cells_actor)
 
+        self.text_title_actor.SetInput(self.title_str)
         #-------------------
         if self.substrates_checked_flag:
             # self.ren.RemoveActor(self.substrate_actor)
