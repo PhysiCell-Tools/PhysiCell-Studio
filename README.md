@@ -1,6 +1,6 @@
 # PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.8.4
+VERSION: 2.8.5
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -18,6 +18,19 @@ To run the experimental Studio version, use:
 ```
 python bin/pmb.py --studio   # run PhysiCell model builder + "Studio" functionality (alpha version)
 ```
+
+To see all possible arguments:
+```
+python bin/pmb.py --help
+```
+
+NOTE: a model's configuration file (.xml) needs to have a "flattened" format, as opposed to the traditional "hierarchical" format, for the cell_definitions. That is to say, each cell_definition needs to explicitly provide *all* parameters, not just those that differ from a parent cell_definition. All of the config files in the `/data` directory have the flattened format.
+
+## Release 2.8.5
+* gracefully handle deprecated cycle "transition_rates" in config file
+* fix bug related to specified output dir in 3D vis
+* add some ABM benchmark data files
+
 ## Release 2.8.4
 * awareness of where it's being run from and behaving appropriately
 * use latest pyMCDS.py

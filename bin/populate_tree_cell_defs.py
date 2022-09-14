@@ -202,10 +202,20 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = default_bval
             cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = default_bval
 
-            phase_transition_path = cycle_path + "//phase_transition_rates"
-            if debug_print:
-                print(' >> phase_transition_path ')
-            pt_uep = uep.find(phase_transition_path)
+
+            old_cycle_transition_path = cycle_path + "//transition_rates"
+            pt_uep = uep.find(old_cycle_transition_path)
+            if pt_uep:
+                print("\n\n--------------------- NOTE -----------------------------")
+                print("populate_tree_cell_defs():\nFound deprecated cycle 'transition_rates'")
+                print("Update to use 'phase_transition_rates'\n\n")
+                print("-------------------------------------------------------\n\n")
+                # sys.exit(1)
+            else:
+                phase_transition_path = cycle_path + "//phase_transition_rates"
+                if debug_print:
+                    print(' >> phase_transition_path ')
+                pt_uep = uep.find(phase_transition_path)
             if pt_uep:
                 cell_def_tab.cycle_rb1.setChecked(True)
                 cell_def_tab.param_d[cell_def_name]['cycle_duration_flag'] = False

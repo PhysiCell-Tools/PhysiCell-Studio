@@ -4,12 +4,12 @@
 		<x_max>200</x_max>
 		<y_min>-200</y_min>
 		<y_max>200</y_max>
-		<z_min>-10</z_min>
-		<z_max>10</z_max>
+		<z_min>-200</z_min>
+		<z_max>200</z_max>
 		<dx>20</dx>
 		<dy>20</dy>
 		<dz>20</dz>
-		<use_2D>true</use_2D>
+		<use_2D>false</use_2D>
 	</domain>
 	
 	<overall>
@@ -27,7 +27,7 @@
 	</parallel> 
 	
 	<save>
-		<folder>output_usecase5</folder>  
+		<folder>output</folder>  
 
 		<full_data>
 			<interval units="min">10</interval>
@@ -52,24 +52,7 @@
 	<microenvironment_setup>
 		<variable name="oxygen" units="dimensionless" ID="0">
         <physical_parameter_set>
-          <diffusion_coefficient units="micron^2/min">5.0</diffusion_coefficient>
-          <decay_rate units="1/min">0</decay_rate>
-        </physical_parameter_set>
-        <initial_condition units="particles/micron^3">0</initial_condition>
-        <Dirichlet_boundary_condition units="particles/micron^3" enabled="True">6022</Dirichlet_boundary_condition>
-        <Dirichlet_options>
-          <boundary_value ID="xmin" enabled="True">6022</boundary_value>
-          <boundary_value ID="xmax" enabled="True">6022</boundary_value>
-          <boundary_value ID="ymin" enabled="True">6022</boundary_value>
-          <boundary_value ID="ymax" enabled="True">6022</boundary_value>
-          <boundary_value ID="zmin" enabled="True">6022</boundary_value>
-          <boundary_value ID="zmax" enabled="True">6022</boundary_value>
-        </Dirichlet_options>
-        </variable>
-
-      <variable name="Chemoattractant" units="dimensionless" ID="1">
-        <physical_parameter_set>
-          <diffusion_coefficient units="micron^2/min">5.0</diffusion_coefficient>
+          <diffusion_coefficient units="micron^2/min">0.0</diffusion_coefficient>
           <decay_rate units="1/min">0</decay_rate>
         </physical_parameter_set>
         <initial_condition units="particles/micron^3">0</initial_condition>
@@ -99,12 +82,15 @@
 	</microenvironment_setup>	
 	
 	<cell_definitions>
-		<cell_definition name="agent" ID="0">
+		<cell_definition name="cancer" ID="0">
         <phenotype>
-          <cycle code="5" name="live">
-            <phase_transition_rates units="1/min">
-              <rate start_index="0" end_index="0" fixed_duration="false">0.00072</rate>
-            </phase_transition_rates>
+          <cycle code="6" name="Flow cytometry model (separated)">
+            <phase_durations units="min">
+              <duration index="0" fixed_duration="true">7</duration>
+              <duration index="1" fixed_duration="true">6</duration>
+              <duration index="2" fixed_duration="true">3</duration>
+              <duration index="3" fixed_duration="true">2</duration>
+            </phase_durations>
             </cycle>
 
           <death>
@@ -140,7 +126,7 @@
           </death>
 
           <volume>
-            <total units="micron^3">4188.8</total>
+            <total units="micron^3">523.6</total>
             <fluid_fraction units="dimensionless">0.75</fluid_fraction>
             <nuclear units="micron^3">540</nuclear>
             <fluid_change_rate units="1/min">0.05</fluid_change_rate>
@@ -156,7 +142,7 @@
             <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
             <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
             <cell_adhesion_affinities>
-                <cell_adhesion_affinity name="agent">1.0</cell_adhesion_affinity>
+                <cell_adhesion_affinity name="cancer">1.0</cell_adhesion_affinity>
                 </cell_adhesion_affinities>
             <options>
               <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
@@ -170,15 +156,15 @@
           </mechanics>
 
           <motility>
-            <speed units="micron/min">0.1</speed>
+            <speed units="micron/min">1</speed>
             <persistence_time units="min">1</persistence_time>
-            <migration_bias units="dimensionless">0.5</migration_bias>
+            <migration_bias units="dimensionless">0</migration_bias>
             <options>
               <enabled>true</enabled>
-              <use_2D>true</use_2D>
+              <use_2D>false</use_2D>
               <chemotaxis>
-                <enabled>true</enabled>
-                <substrate>Chemoattractant</substrate>
+                <enabled>false</enabled>
+                <substrate>oxygen</substrate>
                 <direction>1</direction>
               </chemotaxis>
               <advanced_chemotaxis>
@@ -186,7 +172,6 @@
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
                   <chemotactic_sensitivity substrate="oxygen">0.01</chemotactic_sensitivity>
-                  <chemotactic_sensitivity substrate="Chemoattractant">0.0</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
             </options>
@@ -196,37 +181,31 @@
             <substrate name="oxygen">
               <secretion_rate units="1/min">0</secretion_rate>
               <secretion_target units="substrate density">1</secretion_target>
-              <uptake_rate units="1/min">0.0000617</uptake_rate>
-              <net_export_rate units="total substrate/min">0</net_export_rate>
-            </substrate>
-            <substrate name="Chemoattractant">
-              <secretion_rate units="1/min">0.0</secretion_rate>
-              <secretion_target units="substrate density">0.0</secretion_target>
               <uptake_rate units="1/min">0.0</uptake_rate>
-              <net_export_rate units="total substrate/min">0.0</net_export_rate>
+              <net_export_rate units="total substrate/min">0</net_export_rate>
             </substrate>
             </secretion>
 
           <cell_interactions>
             <dead_phagocytosis_rate units="1/min">0.0</dead_phagocytosis_rate>
             <live_phagocytosis_rates>
-                <phagocytosis_rate name="agent" units="1/min">0.0</phagocytosis_rate>
+                <phagocytosis_rate name="cancer" units="1/min">0.0</phagocytosis_rate>
                 </live_phagocytosis_rates>
 
             <attack_rates>
-                  <attack_rate name="agent" units="1/min">0.0</attack_rate>
+                  <attack_rate name="cancer" units="1/min">0.0</attack_rate>
                   </attack_rates>
 
             <damage_rate units="1/min">1.0</damage_rate>
             <fusion_rates>
-                  <fusion_rate name="agent" units="1/min">0.0</fusion_rate>
+                  <fusion_rate name="cancer" units="1/min">0.0</fusion_rate>
                   </fusion_rates>
 
           </cell_interactions>
 
           <cell_transformations>
             <transformation_rates>
-                <transformation_rate name="agent" units="1/min">0.0</transformation_rate>
+                <transformation_rate name="cancer" units="1/min">0.0</transformation_rate>
                 </transformation_rates>
             </cell_transformations>
 
@@ -241,7 +220,7 @@
 	<initial_conditions>
 		<cell_positions type="csv" enabled="true">
 			<folder>./data</folder>
-			<filename>cells_usecase5.csv</filename>
+			<filename>spheroid_100cells.csv</filename>
 		</cell_positions>
 	</initial_conditions>	
 	
