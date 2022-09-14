@@ -1125,6 +1125,7 @@ class Vis(QWidget):
         return lut
 
     def get_cell_type_colors_lut(self, num_cell_types):
+        # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
         print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
         lut = vtkLookupTable()
         lut.SetNumberOfTableValues(num_cell_types)
@@ -1133,14 +1134,11 @@ class Vis(QWidget):
         # ics_tab.py uses:
         # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
 
-        # lut.SetTableValue(0, 178, 190, 181, 1)  # darker gray
-        lut.SetTableValue(0, 128, 128, 128, 1)  # darker gray
+        lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        lut.SetTableValue(1, 1, 0, 0, 1)  # red
         np.random.seed(42)
-        for idx in range(1,num_cell_types):
-            lut.SetTableValue(idx, 255*np.random.uniform(), 255*np.random.uniform(), 255*np.random.uniform(), 1)  # darker gray
-
-        # for i in range(0, table_size):
-            # lut.SetTableValue(i, 178, 190, 181, 1)  # gray
+        for idx in range(2,num_cell_types):  # random beyond those hard-coded
+            lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
 
         return lut
 
@@ -1157,11 +1155,14 @@ class Vis(QWidget):
         # mcds = pyMCDS_cells(xml_file, '.')  
 
         # if not os.path.exists("tmpdir/" + xml_file):
-        if not os.path.exists("output/" + xml_file):
+        # if not os.path.exists("output/" + xml_file):
+        full_fname = os.path.join(self.output_dir, xml_file)
+        if not os.path.exists(full_fname):
             return
 
         print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
-        mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
+        # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
+        mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
         current_time = mcds.get_time()
         print('time=', current_time )
 
@@ -1208,6 +1209,7 @@ class Vis(QWidget):
             unique_cell_type = np.unique(cell_type)
             num_cell_types = len(unique_cell_type)
             print("\nunique_cell_type = ",unique_cell_type )
+            print("num_cell_types= ",num_cell_types)
 
             # lut = self.get_diverging_lut1()
             lut = self.get_cell_type_colors_lut(num_cell_types)
@@ -1250,6 +1252,7 @@ class Vis(QWidget):
                 # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; heatmap across all cells
 
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
+                print("idx, cell_type[idx]= ",idx,cell_type[idx])
                 self.tags.InsertNextValue(cell_type[idx])
 
             self.cell_data.CopyComponent(0, self.radii, 0)
@@ -1290,6 +1293,7 @@ class Vis(QWidget):
             # self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
             print("glyph range= ",self.glyph.GetRange())
+            print("num_cell_types= ",num_cell_types)
             self.cells_mapper.SetScalarRange(0,num_cell_types)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
@@ -1427,6 +1431,8 @@ class Vis(QWidget):
 
             #-------------------
             self.scalarBar.SetLookupTable(self.cutterZMapper.GetLookupTable())
+            # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
+
             # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
             self.ren.AddActor2D(self.scalarBar)
 
