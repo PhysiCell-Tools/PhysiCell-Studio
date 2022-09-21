@@ -402,6 +402,10 @@ class PhysiCellXMLCreator(QWidget):
             xz_act.setCheckable(True)
             xz_act.setChecked(True)
 
+            voxels_act = view3D_menu.addAction("All voxels")
+            voxels_act.setCheckable(True)
+            voxels_act.setChecked(False)
+
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
             # contour_act.setChecked(False)
@@ -657,6 +661,8 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.yz_plane_toggle_cb(action.isChecked())
         elif "XZ" in action.text():
             self.vis_tab.xz_plane_toggle_cb(action.isChecked())
+        elif "voxels" in action.text():
+            self.vis_tab.voxels_toggle_cb(action.isChecked())
         elif "axes" in action.text():
             pass
         elif "contour" in action.text():

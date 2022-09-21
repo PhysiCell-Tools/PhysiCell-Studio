@@ -26,6 +26,7 @@ class Vis(QWidget):
         self.show_xy_plane = True
         self.show_yz_plane = True
         self.show_xz_plane = True
+        self.show_voxels = False
 
         # VTK pipeline
         self.points = vtkPoints()
@@ -122,14 +123,16 @@ class Vis(QWidget):
         # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
         # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
-        # self.substrate_mapper = vtkDataSetMapper()
-        # self.substrate_mapper.SetInputData(self.substrate_data)
-        # self.substrate_mapper.SetScalarModeToUseCellData()
+        lut_heat = self.get_heat_map()
+        self.substrate_mapper = vtkDataSetMapper()
+        self.substrate_mapper.SetInputData(self.substrate_data)
+        self.substrate_mapper.SetLookupTable(lut_heat)
+        self.substrate_mapper.SetScalarModeToUseCellData()
         # self.substrate_mapper.SetScalarRange(0, 33)
 
-        # self.substrate_actor = vtkActor()
-        # self.substrate_actor.SetMapper(self.substrate_mapper)
-        # self.substrate_actor.GetProperty().SetAmbient(1.)
+        self.substrate_actor = vtkActor()
+        self.substrate_actor.SetMapper(self.substrate_mapper)
+        self.substrate_actor.GetProperty().SetAmbient(1.)
 
 
         #-----
@@ -149,8 +152,7 @@ class Vis(QWidget):
         self.cutterXYMapper = vtkPolyDataMapper()
         self.cutterXYMapper.SetInputConnection(self.cutterXY.GetOutputPort())
         self.cutterXYMapper.ScalarVisibilityOn()
-        lut = self.get_heat_map()
-        self.cutterXYMapper.SetLookupTable(lut)
+        self.cutterXYMapper.SetLookupTable(lut_heat)
         self.cutterXYMapper.SetScalarModeToUseCellData()
         # self.cutterXYMapper.SetScalarModeToUsePointData()
         #self.cutterMapper.SetScalarRange(0, vmax)
@@ -169,7 +171,7 @@ class Vis(QWidget):
         self.cutterYZMapper.SetInputConnection(self.cutterYZ.GetOutputPort())
         self.cutterYZMapper.ScalarVisibilityOn()
         # lut = self.get_heat_map()
-        self.cutterYZMapper.SetLookupTable(lut)
+        self.cutterYZMapper.SetLookupTable(lut_heat)
         self.cutterYZMapper.SetScalarModeToUseCellData()
 
         self.cutterYZActor = vtkActor()
@@ -186,7 +188,7 @@ class Vis(QWidget):
         self.cutterXZMapper.SetInputConnection(self.cutterXZ.GetOutputPort())
         self.cutterXZMapper.ScalarVisibilityOn()
         # lut = self.get_heat_map()
-        self.cutterXZMapper.SetLookupTable(lut)
+        self.cutterXZMapper.SetLookupTable(lut_heat)
         self.cutterXZMapper.SetScalarModeToUseCellData()
 
         self.cutterXZActor = vtkActor()
@@ -711,6 +713,13 @@ class Vis(QWidget):
             self.ren.AddActor(self.cutterXZActor)
         else:
             self.ren.RemoveActor(self.cutterXZActor)
+
+    def voxels_toggle_cb(self,flag):
+        self.show_voxels = flag
+        if flag:
+            self.ren.AddActor(self.substrate_actor)
+        else:
+            self.ren.RemoveActor(self.substrate_actor)
 
 
     def substrates_cbox_changed_cb(self,idx):
@@ -1438,7 +1447,9 @@ class Vis(QWidget):
                         # val = x+y+z + frame    # dummy test
                         # val = sub_concentration[x,y,z] + np.random.uniform()*10
                         # val = sub_concentration[x,y,z] + x
-                        val = sub_concentration[x,y,z]
+
+                        # val = sub_concentration[x,y,z]
+                        val = sub_concentration[y,x,z]
                         # print(kount,x,y,z,val)
                         # if z==1:
                             # val = 0.0
@@ -1469,17 +1480,20 @@ class Vis(QWidget):
             # self.contActor.Update()
 
             # print("vmax= ",vmax)
-            # self.substrate_mapper.SetScalarRange(vmin, vmax)
-            # self.substrate_mapper.Update()
-            # self.substrate_mapper.SetScalarRange(0, vmax)
-            # self.substrate_data.Update()
-            # self.substrate_mapper.SetScalarModeToUseCellData()
-            # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
-            # self.ren.AddActor(self.substrate_actor)
-
             print("vmin,vmax= ",vmin,vmax)
             if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
                 print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
+
+            if self.show_voxels:
+                self.ren.RemoveActor(self.substrate_actor)
+
+                self.substrate_mapper.SetScalarRange(vmin, vmax)
+                self.substrate_mapper.Update()
+                # self.substrate_mapper.SetScalarRange(vmin, vmax)
+                # self.substrate_data.Update()
+                self.substrate_mapper.SetScalarModeToUseCellData()
+                # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
+                self.ren.AddActor(self.substrate_actor)
 
 
             if self.show_xy_plane:
@@ -1578,7 +1592,7 @@ class Vis(QWidget):
             self.ren.AddActor(self.domain_outline_actor)
 
         else:
-            # self.ren.RemoveActor(self.substrate_actor)
+            self.ren.RemoveActor(self.substrate_actor)
             self.ren.RemoveActor(self.cutterXYActor)
             self.ren.RemoveActor(self.cutterYZActor)
             self.ren.RemoveActor(self.cutterXZActor)
