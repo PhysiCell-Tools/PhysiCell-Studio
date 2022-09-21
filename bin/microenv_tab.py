@@ -446,27 +446,30 @@ class SubstrateDef(QWidget):
             self.dirichlet_zmax.setText(text)
 
     def dirichlet_toggle_cb(self):
-        # print("dirichlet_toggle_cb()")
-        self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
-        if self.dirichlet_bc_enabled.isChecked():
-            options_flag = True
-        else:
-            options_flag = False
-        self.enable_xmin.setChecked(options_flag)
-        self.enable_xmax.setChecked(options_flag)
-        self.enable_ymin.setChecked(options_flag)
-        self.enable_ymax.setChecked(options_flag)
-        self.enable_zmin.setChecked(options_flag)
-        self.enable_zmax.setChecked(options_flag)
+        return  # until we determine a more logical way to deal with this
 
-        if options_flag:
-            sval = self.dirichlet_bc.text() 
-            self.dirichlet_xmin.setText(sval)
-            self.dirichlet_xmax.setText(sval)
-            self.dirichlet_ymin.setText(sval)
-            self.dirichlet_ymax.setText(sval)
-            self.dirichlet_zmin.setText(sval)
-            self.dirichlet_zmax.setText(sval)
+        # print("dirichlet_toggle_cb()")
+        # self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
+        # if self.dirichlet_bc_enabled.isChecked():
+        #     options_flag = True
+        # else:
+        #     options_flag = False
+        # self.enable_xmin.setChecked(options_flag)
+        # self.enable_xmax.setChecked(options_flag)
+        # self.enable_ymin.setChecked(options_flag)
+        # self.enable_ymax.setChecked(options_flag)
+        # self.enable_zmin.setChecked(options_flag)
+        # self.enable_zmax.setChecked(options_flag)
+
+        # if options_flag:
+        #     sval = self.dirichlet_bc.text() 
+        #     self.dirichlet_xmin.setText(sval)
+        #     self.dirichlet_xmax.setText(sval)
+        #     self.dirichlet_ymin.setText(sval)
+        #     self.dirichlet_ymax.setText(sval)
+        #     self.dirichlet_zmin.setText(sval)
+        #     self.dirichlet_zmax.setText(sval)
+
 
     # global to all substrates
     def gradients_cb(self):
@@ -906,7 +909,7 @@ class SubstrateDef(QWidget):
                                     self.param_d[substrate_name]["enable_ymin"] = True
                             elif "ymax" in bv.attrib['ID']:
                                 self.param_d[substrate_name]["dirichlet_ymax"] = bv.text
-                                self.dirichlet_ymax.setText(bv.text)
+                                # self.dirichlet_ymax.setText(bv.text)
                                 if "true" in bv.attrib['enabled'].lower():
                                     self.param_d[substrate_name]["enable_ymax"] = True
                             elif "zmin" in bv.attrib['ID']:
