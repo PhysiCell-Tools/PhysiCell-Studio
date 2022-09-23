@@ -13,7 +13,7 @@
 	</domain>
 	
 	<overall>
-		<max_time units="min">50</max_time> 
+		<max_time units="min">120</max_time> 
 		<time_units>min</time_units>
 		<space_units>micron</space_units>
 	
@@ -50,7 +50,7 @@
 	</options>	
 
 	<microenvironment_setup>
-		<variable name="oxy" units="dimensionless" ID="0">
+		<variable name="oxygen" units="dimensionless" ID="0">
         <physical_parameter_set>
           <diffusion_coefficient units="micron^2/min">0</diffusion_coefficient>
           <decay_rate units="1/min">0</decay_rate>
@@ -153,32 +153,32 @@
           </mechanics>
 
           <motility>
-            <speed units="micron/min">1</speed>
+            <speed units="micron/min">0.2</speed>
             <persistence_time units="min">1</persistence_time>
-            <migration_bias units="dimensionless">0.0</migration_bias>
+            <migration_bias units="dimensionless">1</migration_bias>
             <options>
               <enabled>true</enabled>
-              <use_2D>true</use_2D>
+              <use_2D>false</use_2D>
               <chemotaxis>
                 <enabled>false</enabled>
-                <substrate>oxy</substrate>
+                <substrate>oxygen</substrate>
                 <direction>1</direction>
               </chemotaxis>
               <advanced_chemotaxis>
                 <enabled>false</enabled>
                 <normalize_each_gradient>false</normalize_each_gradient>
                 <chemotactic_sensitivities>
-                  <chemotactic_sensitivity substrate="oxy">0.01</chemotactic_sensitivity>
+                  <chemotactic_sensitivity substrate="oxygen">0.01</chemotactic_sensitivity>
                   </chemotactic_sensitivities>
                 </advanced_chemotaxis>
             </options>
           </motility>
 
           <secretion>
-            <substrate name="oxy">
+            <substrate name="oxygen">
               <secretion_rate units="1/min">0</secretion_rate>
               <secretion_target units="substrate density">1</secretion_target>
-              <uptake_rate units="1/min">0.0000617</uptake_rate>
+              <uptake_rate units="1/min">0</uptake_rate>
               <net_export_rate units="total substrate/min">0</net_export_rate>
             </substrate>
             </secretion>

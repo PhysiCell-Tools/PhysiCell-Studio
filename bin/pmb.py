@@ -68,6 +68,7 @@ class PhysiCellXMLCreator(QWidget):
         self.studio_flag = studio_flag 
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
+        self.model3D_flag = model3D_flag 
 
         self.ics_tab_index = 4
         self.plot_tab_index = 6
@@ -382,6 +383,33 @@ class PhysiCellXMLCreator(QWidget):
         else:
             self.download_menu = None
 
+        #-------------------------
+        if self.model3D_flag:
+            view3D_menu = menubar.addMenu('&View')
+            view3D_menu.triggered.connect(self.view3D_cb)
+
+        # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
+            # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
+            xy_act = view3D_menu.addAction("XY plane")
+            xy_act.setCheckable(True)
+            xy_act.setChecked(True)
+
+            yz_act = view3D_menu.addAction("YZ plane")
+            yz_act.setCheckable(True)
+            yz_act.setChecked(True)
+
+            xz_act = view3D_menu.addAction("XZ plane")
+            xz_act.setCheckable(True)
+            xz_act.setChecked(True)
+
+            voxels_act = view3D_menu.addAction("All voxels")
+            voxels_act.setCheckable(True)
+            voxels_act.setChecked(False)
+
+            # contour_act = view3D_menu.addAction("contour")
+            # contour_act.setCheckable(True)
+            # contour_act.setChecked(False)
+
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -549,7 +577,7 @@ class PhysiCellXMLCreator(QWidget):
             self.tree.write(out_file)
 
         except Exception as e:
-            self.show_error_message(str(e) + " : Please finish the definition before saving.")
+            self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
         
@@ -612,7 +640,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.reset_xml_root()
     
         except Exception as e:
-            self.show_error_message(str(e) + " : Please finish the definition before saving.")
+            self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
 
     def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
@@ -623,6 +651,23 @@ class PhysiCellXMLCreator(QWidget):
         returnValue = msgBox.exec()
         if returnValue == QMessageBox.Ok:
             print('OK clicked')
+
+    # -------- relevant to vis3D -----------
+    def view3D_cb(self, action):
+        print('view3D_cb: ',action.text(), action.isChecked())
+        if "XY" in action.text():
+            self.vis_tab.xy_plane_toggle_cb(action.isChecked())
+        elif "YZ" in action.text():
+            self.vis_tab.yz_plane_toggle_cb(action.isChecked())
+        elif "XZ" in action.text():
+            self.vis_tab.xz_plane_toggle_cb(action.isChecked())
+        elif "voxels" in action.text():
+            self.vis_tab.voxels_toggle_cb(action.isChecked())
+        elif "axes" in action.text():
+            pass
+        elif "contour" in action.text():
+            pass
+        return
 
     def show_error_message(self, message):
         msg = QMessageBox()

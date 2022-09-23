@@ -23,6 +23,11 @@ class Vis(QWidget):
         super().__init__()
         # global self.config_params
 
+        self.show_xy_plane = True
+        self.show_yz_plane = True
+        self.show_xz_plane = True
+        self.show_voxels = False
+
         # VTK pipeline
         self.points = vtkPoints()
 
@@ -118,54 +123,98 @@ class Vis(QWidget):
         # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
         # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
-        # self.substrate_mapper = vtkDataSetMapper()
-        # self.substrate_mapper.SetInputData(self.substrate_data)
-        # self.substrate_mapper.SetScalarModeToUseCellData()
+        lut_heat = self.get_heat_map()
+        self.substrate_mapper = vtkDataSetMapper()
+        self.substrate_mapper.SetInputData(self.substrate_data)
+        self.substrate_mapper.SetLookupTable(lut_heat)
+        self.substrate_mapper.SetScalarModeToUseCellData()
         # self.substrate_mapper.SetScalarRange(0, 33)
 
-        # self.substrate_actor = vtkActor()
-        # self.substrate_actor.SetMapper(self.substrate_mapper)
-        # self.substrate_actor.GetProperty().SetAmbient(1.)
+        self.substrate_actor = vtkActor()
+        self.substrate_actor.SetMapper(self.substrate_mapper)
+        self.substrate_actor.GetProperty().SetAmbient(1.)
 
 
         #-----
-        self.planeZ = vtkPlane()
+        self.planeXY = vtkPlane()
         # plane.SetOrigin(input.GetCenter())
         # plane.SetOrigin(0,0,10)
-        self.planeZ.SetOrigin(0,0,0)
-        # self.planeZ.SetOrigin(-30,-30,0)
-        self.planeZ.SetNormal(0, 0, 1)
+        self.planeXY.SetOrigin(0,0,0)
+        # self.planeXY.SetOrigin(-30,-30,0)
+        self.planeXY.SetNormal(0, 0, 1)
 
         # First create the usual cutter
-        self.cutterZ = vtkCutter()
-        # self.cutterZ.SetInputData(self.substrate_data)
-        # self.cutterZ.SetCutFunction(self.planeZ)
-        # self.cutterZ.GeneratePolygons = 1
+        self.cutterXY = vtkCutter()
+        # self.cutterXY.SetInputData(self.substrate_data)
+        # self.cutterXY.SetCutFunction(self.planeXY)
+        # self.cutterXY.GeneratePolygons = 1
 
-        self.cutterZMapper = vtkPolyDataMapper()
-        self.cutterZMapper.SetInputConnection(self.cutterZ.GetOutputPort())
-        self.cutterZMapper.ScalarVisibilityOn()
-        lut = self.get_heat_map()
-        self.cutterZMapper.SetLookupTable(lut)
-        self.cutterZMapper.SetScalarModeToUseCellData()
-        # self.cutterZMapper.SetScalarModeToUsePointData()
+        self.cutterXYMapper = vtkPolyDataMapper()
+        self.cutterXYMapper.SetInputConnection(self.cutterXY.GetOutputPort())
+        self.cutterXYMapper.ScalarVisibilityOn()
+        self.cutterXYMapper.SetLookupTable(lut_heat)
+        self.cutterXYMapper.SetScalarModeToUseCellData()
+        # self.cutterXYMapper.SetScalarModeToUsePointData()
         #self.cutterMapper.SetScalarRange(0, vmax)
 
-        self.cutterZActor = vtkActor()
-        self.cutterZActor.SetMapper(self.cutterZMapper)
+        self.cutterXYActor = vtkActor()
+        self.cutterXYActor.SetMapper(self.cutterXYMapper)
 
         #-----
-        # self.cutterZEdges = vtkFeatureEdges()
-        # self.cutterZEdgesMapper= vtkPolyDataMapper()
-        # self.cutterZEdgesMapper.SetInputConnection(self.cutterZ.GetOutputPort())
-        # self.cutterZEdges.BoundaryEdgesOn()
-        # self.cutterZEdges.FeatureEdgesOn()
-        # self.cutterZEdges.ManifoldEdgesOff()
-        # self.cutterZEdges.NonManifoldEdgesOff()
-        # self.cutterZEdges.ColoringOn()
+        self.planeYZ = vtkPlane()
+        self.planeYZ.SetOrigin(0,0,0)
+        self.planeYZ.SetNormal(1, 0, 0)
 
-        # self.cutterZEdgesActor = vtkActor()
-        # self.cutterZEdgesActor.SetMapper(self.cutterZEdgesMapper)
+        self.cutterYZ = vtkCutter()
+
+        self.cutterYZMapper = vtkPolyDataMapper()
+        self.cutterYZMapper.SetInputConnection(self.cutterYZ.GetOutputPort())
+        self.cutterYZMapper.ScalarVisibilityOn()
+        # lut = self.get_heat_map()
+        self.cutterYZMapper.SetLookupTable(lut_heat)
+        self.cutterYZMapper.SetScalarModeToUseCellData()
+
+        self.cutterYZActor = vtkActor()
+        self.cutterYZActor.SetMapper(self.cutterYZMapper)
+
+        #-----
+        self.planeXZ = vtkPlane()
+        self.planeXZ.SetOrigin(0,0,0)
+        self.planeXZ.SetNormal(0, 1, 0)
+
+        self.cutterXZ = vtkCutter()
+
+        self.cutterXZMapper = vtkPolyDataMapper()
+        self.cutterXZMapper.SetInputConnection(self.cutterXZ.GetOutputPort())
+        self.cutterXZMapper.ScalarVisibilityOn()
+        # lut = self.get_heat_map()
+        self.cutterXZMapper.SetLookupTable(lut_heat)
+        self.cutterXZMapper.SetScalarModeToUseCellData()
+
+        self.cutterXZActor = vtkActor()
+        self.cutterXZActor.SetMapper(self.cutterXZMapper)
+
+        #-----
+        # self.cutterXYEdges = vtkFeatureEdges()
+        # self.cutterXYEdgesMapper= vtkPolyDataMapper()
+        # self.cutterXYEdgesMapper.SetInputConnection(self.cutterXY.GetOutputPort())
+        # self.cutterXYEdges.BoundaryEdgesOn()
+        # self.cutterXYEdges.FeatureEdgesOn()
+        # self.cutterXYEdges.ManifoldEdgesOff()
+        # self.cutterXYEdges.NonManifoldEdgesOff()
+        # self.cutterXYEdges.ColoringOn()
+
+        # self.cutterXYEdgesActor = vtkActor()
+        # self.cutterXYEdgesActor.SetMapper(self.cutterXYEdgesMapper)
+
+        #------------
+        # self.contour = vtkContourFilter()
+        # self.contMapper = vtkPolyDataMapper()
+        # self.contMapper.SetInputConnection(self.contour.GetOutputPort())
+        # # self.contMapper.SetScalarRange(0.0, 1.0)
+        # self.contMapper.ScalarVisibilityOff()
+        # self.contActor = vtkActor()
+        # self.contActor.SetMapper(self.contMapper)
 
         #-----
         self.scalarBar = vtkScalarBarActor()
@@ -643,6 +692,35 @@ class Vis(QWidget):
             # print(" --> ",s)
             self.substrates_cbox.addItem(s)
         # self.substrates_cbox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
+
+    def xy_plane_toggle_cb(self,flag):
+        self.show_xy_plane = flag
+        if flag:
+            self.ren.AddActor(self.cutterXYActor)
+        else:
+            self.ren.RemoveActor(self.cutterXYActor)
+
+    def yz_plane_toggle_cb(self,flag):
+        self.show_yz_plane = flag
+        if flag:
+            self.ren.AddActor(self.cutterYZActor)
+        else:
+            self.ren.RemoveActor(self.cutterYZActor)
+
+    def xz_plane_toggle_cb(self,flag):
+        self.show_xz_plane = flag
+        if flag:
+            self.ren.AddActor(self.cutterXZActor)
+        else:
+            self.ren.RemoveActor(self.cutterXZActor)
+
+    def voxels_toggle_cb(self,flag):
+        self.show_voxels = flag
+        if flag:
+            self.ren.AddActor(self.substrate_actor)
+        else:
+            self.ren.RemoveActor(self.substrate_actor)
+
 
     def substrates_cbox_changed_cb(self,idx):
         print("----- vis_tab.py: substrates_cbox_changed_cb: idx = ",idx)
@@ -1326,8 +1404,6 @@ class Vis(QWidget):
         self.text_title_actor.SetInput(self.title_str)
         #-------------------
         if self.substrates_checked_flag:
-            # self.ren.RemoveActor(self.substrate_actor)
-            self.ren.RemoveActor(self.cutterZActor)
 
             print("substrate names= ",mcds.get_substrate_names())
             # sub_name = mcds.get_substrate_names()[0]
@@ -1371,7 +1447,9 @@ class Vis(QWidget):
                         # val = x+y+z + frame    # dummy test
                         # val = sub_concentration[x,y,z] + np.random.uniform()*10
                         # val = sub_concentration[x,y,z] + x
-                        val = sub_concentration[x,y,z]
+
+                        # val = sub_concentration[x,y,z]
+                        val = sub_concentration[y,x,z]
                         # print(kount,x,y,z,val)
                         # if z==1:
                             # val = 0.0
@@ -1385,56 +1463,116 @@ class Vis(QWidget):
                         kount += 1
             # # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
             # vmin = 10.
-            self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
-            # print("vmax= ",vmax)
-            # self.substrate_mapper.SetScalarRange(vmin, vmax)
-            # self.substrate_mapper.Update()
-            # self.substrate_mapper.SetScalarRange(0, vmax)
-            # self.substrate_data.Update()
-            # self.substrate_mapper.SetScalarModeToUseCellData()
-            # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
-            # self.ren.AddActor(self.substrate_actor)
 
+            # rwh - so which is correct?
+            self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
+
+            # apparently, for a contour, we need this:
+            # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
+
+            # self.contour.SetInputConnection(self.substrate_data.GetOutputPort())
+            # self.contour.SetInputData(self.substrate_data)   # vtkStructuredPoints()
+            # cval = 0.9
+            # self.contour.SetValue(0, cval)
+            # self.contour.Update()
+            # self.contMapper.SetScalarModeToUseCellData()
+            # self.contMapper.Update()
+            # self.contActor.Update()
+
+            # print("vmax= ",vmax)
             print("vmin,vmax= ",vmin,vmax)
             if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
                 print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
-            self.cutterZ.SetInputData(self.substrate_data)
-            self.planeZ.SetOrigin(x0,y0,0)
-            self.cutterZ.SetCutFunction(self.planeZ)
-            # self.cutterZ.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
-            self.cutterZ.Update()
+            if self.show_voxels:
+                self.ren.RemoveActor(self.substrate_actor)
 
-            # self.cutterZMapper.SetScalarRange(vmin, vmax)
-            self.cutterZMapper.SetScalarRange(0, vmax)
-            self.cutterZMapper.Update()
-            # cutMapper.SetInputConnection(planeCut.GetOutputPort())
-            # cutMapper.SetScalarRange(sg.GetPointData().GetScalars().GetRange())
-
-            # self.cutterZMapper.SetScalarRange(0, vmax)
-            # self.cutterZMapper.SetScalarModeToUseCellData()
-            # self.cutterZActor.SetMapper(self.cutterZMapper)
-
-            self.cutterZActor.GetProperty().EdgeVisibilityOn()
-            self.cutterZActor.GetProperty().EdgeVisibilityOff()
-            # self.cutterZActor.GetProperty().SetEdgeColor(0,0,0)
-
-            self.ren.AddActor(self.cutterZActor)
-
-            # self.cutterZEdges = vtkFeatureEdges()
-            # self.cutterZEdges.SetInputConnection(self.cutterZ.GetOutputPort())
-            # self.cutterZEdges.SetInput(self.cutterZ.GetOutputPort())
-            # self.cutterZEdges.Update()
-            # self.ren.AddActor(self.cutterZEdgesActor)
+                self.substrate_mapper.SetScalarRange(vmin, vmax)
+                self.substrate_mapper.Update()
+                # self.substrate_mapper.SetScalarRange(vmin, vmax)
+                # self.substrate_data.Update()
+                self.substrate_mapper.SetScalarModeToUseCellData()
+                # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
+                self.ren.AddActor(self.substrate_actor)
 
 
+            if self.show_xy_plane:
+                # self.ren.RemoveActor(self.substrate_actor)
+                self.ren.RemoveActor(self.cutterXYActor)
 
-            #-------------------
-            self.scalarBar.SetLookupTable(self.cutterZMapper.GetLookupTable())
-            # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
+                self.cutterXY.SetInputData(self.substrate_data)
+                self.planeXY.SetOrigin(x0,y0,0)
+                self.cutterXY.SetCutFunction(self.planeXY)
+                # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
+                self.cutterXY.Update()
 
-            # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
-            self.ren.AddActor2D(self.scalarBar)
+                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
+                self.cutterXYMapper.SetScalarRange(0, vmax)
+                self.cutterXYMapper.Update()
+                # cutMapper.SetInputConnection(planeCut.GetOutputPort())
+                # cutMapper.SetScalarRange(sg.GetPointData().GetScalars().GetRange())
+
+                # self.cutterXYMapper.SetScalarRange(0, vmax)
+                # self.cutterXYMapper.SetScalarModeToUseCellData()
+                # self.cutterXYActor.SetMapper(self.cutterXYMapper)
+
+                self.cutterXYActor.GetProperty().EdgeVisibilityOn()
+                self.cutterXYActor.GetProperty().EdgeVisibilityOff()
+                # self.cutterXYActor.GetProperty().SetEdgeColor(0,0,0)
+
+                self.ren.AddActor(self.cutterXYActor)
+
+                # self.ren.AddActor(self.contActor)
+
+                # self.cutterXYEdges = vtkFeatureEdges()
+                # self.cutterXYEdges.SetInputConnection(self.cutterXY.GetOutputPort())
+                # self.cutterXYEdges.SetInput(self.cutterXY.GetOutputPort())
+                # self.cutterXYEdges.Update()
+                # self.ren.AddActor(self.cutterXYEdgesActor)
+
+                #-------------------
+                self.scalarBar.SetLookupTable(self.cutterXYMapper.GetLookupTable())
+                # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
+
+                # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
+                self.ren.AddActor2D(self.scalarBar)
+
+
+            if self.show_yz_plane:
+                self.ren.RemoveActor(self.cutterYZActor)
+                self.cutterYZ.SetInputData(self.substrate_data)
+                self.planeYZ.SetOrigin(0,y0,z0)
+                self.cutterYZ.SetCutFunction(self.planeYZ)
+                # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
+                self.cutterYZ.Update()
+
+                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
+                self.cutterYZMapper.SetScalarRange(0, vmax)
+                self.cutterYZMapper.Update()
+
+                self.cutterYZActor.GetProperty().EdgeVisibilityOn()
+                self.cutterYZActor.GetProperty().EdgeVisibilityOff()
+                # self.cutterYZActor.GetProperty().SetEdgeColor(0,0,0)
+
+                self.ren.AddActor(self.cutterYZActor)
+
+            if self.show_xz_plane:
+                self.ren.RemoveActor(self.cutterXZActor)
+                self.cutterXZ.SetInputData(self.substrate_data)
+                self.planeXZ.SetOrigin(x0,0,z0)
+                self.cutterXZ.SetCutFunction(self.planeXZ)
+                # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
+                self.cutterXZ.Update()
+
+                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
+                self.cutterXZMapper.SetScalarRange(0, vmax)
+                self.cutterXZMapper.Update()
+
+                self.cutterXZActor.GetProperty().EdgeVisibilityOn()
+                self.cutterXZActor.GetProperty().EdgeVisibilityOff()
+                # self.cutterXZActor.GetProperty().SetEdgeColor(0,0,0)
+
+                self.ren.AddActor(self.cutterXZActor)
 
             #-------------------
             # self.domain_outline = vtkOutlineFilter()
@@ -1452,9 +1590,12 @@ class Vis(QWidget):
             # self.domain_outline_actor.GetProperty().SetColor(0,0,0)
             self.domain_outline_actor.GetProperty().SetColor(0, 0, 255)
             self.ren.AddActor(self.domain_outline_actor)
+
         else:
-            # self.ren.RemoveActor(self.substrate_actor)
-            self.ren.RemoveActor(self.cutterZActor)
+            self.ren.RemoveActor(self.substrate_actor)
+            self.ren.RemoveActor(self.cutterXYActor)
+            self.ren.RemoveActor(self.cutterYZActor)
+            self.ren.RemoveActor(self.cutterXZActor)
             self.ren.RemoveActor(self.domain_outline_actor)
             self.ren.RemoveActor(self.scalarBar)
 
