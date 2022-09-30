@@ -1159,9 +1159,18 @@ class Vis(QWidget):
 #        tree = ET.parse(fname)
         try:
             tree = ET.parse(full_fname)
-        except:
-            print("------ plot_svg(): error trying to parse ",full_name)
-            return
+        except:  # might arrive here if user cancels a Run then tries to go to last frame (>|) in Plot tab
+            print("------ plot_svg(): error trying to parse ",fname,". Will try previous file.")
+            if frame > 0:
+                frame -= 1
+                fname = "snapshot%08d.svg" % frame
+                full_fname = os.path.join(self.output_dir, fname)
+                try:
+                    tree = ET.parse(full_fname)
+                except:  # might arrive here if user cancels a Run then tries to go to last frame (>|) in Plot tab
+                    print("------ plot_svg(): error trying to parse ",fname)
+                    return
+            # return
         root = tree.getroot()
         #  print('--- root.tag ---')
         #  print(root.tag)
