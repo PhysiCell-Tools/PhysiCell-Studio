@@ -132,7 +132,7 @@ class Vis(QWidget):
 
         self.substrate_actor = vtkActor()
         self.substrate_actor.SetMapper(self.substrate_mapper)
-        self.substrate_actor.GetProperty().SetAmbient(1.)
+        # self.substrate_actor.GetProperty().SetAmbient(1.)
 
 
         #-----
@@ -1488,7 +1488,7 @@ class Vis(QWidget):
             # self.contActor.Update()
 
             # print("vmax= ",vmax)
-            print("vmin,vmax= ",vmin,vmax)
+            print("---vmin,vmax= ",vmin,vmax)
             if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
                 print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
@@ -1501,13 +1501,14 @@ class Vis(QWidget):
             if self.show_voxels:
                 self.ren.RemoveActor(self.substrate_actor)
 
+                print("----- show_voxels: vmin,vmax= ",vmin,vmax)
                 self.substrate_mapper.SetScalarRange(vmin, vmax)
+                # self.substrate_mapper.SetScalarModeToUseCellData()
                 self.substrate_mapper.Update()
-                # self.substrate_mapper.SetScalarRange(vmin, vmax)
-                # self.substrate_data.Update()
-                self.substrate_mapper.SetScalarModeToUseCellData()
+
                 # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
                 self.ren.AddActor(self.substrate_actor)
+                self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
             if self.show_xy_plane:
