@@ -132,7 +132,7 @@ class Vis(QWidget):
 
         self.substrate_actor = vtkActor()
         self.substrate_actor.SetMapper(self.substrate_mapper)
-        self.substrate_actor.GetProperty().SetAmbient(1.)
+        # self.substrate_actor.GetProperty().SetAmbient(1.)
 
 
         #-----
@@ -480,7 +480,7 @@ class Vis(QWidget):
         self.fix_cmap_checkbox = QCheckBox('fix')
         self.fix_cmap_flag = False
         self.fix_cmap_checkbox.setEnabled(self.substrates_checked_flag)
-        self.fix_cmap_checkbox.setEnabled(False)
+        # self.fix_cmap_checkbox.setEnabled(True)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
         icol += 2
@@ -978,24 +978,24 @@ class Vis(QWidget):
 
             # self.substrates_combobox.addItem(s)
         # field_name = self.field_dict[self.substrate_choice.value]
-        print("self.field_dict= ",self.field_dict)
         # field_name = self.field_dict[self.substrates_combobox.currentText()]
         field_name = self.substrates_cbox.currentText()
         print("field_name= ",field_name)
         # print(self.cmap_fixed_toggle.value)
         # if (self.colormap_fixed_toggle.value):  # toggle on fixed range
-        if (bval):  # toggle on fixed range
-            # self.colormap_min.disabled = False
-            # self.colormap_max.disabled = False
-            self.field_min_max[field_name][0] = self.cmin.text
-            self.field_min_max[field_name][1] = self.cmax.text
-            self.field_min_max[field_name][2] = True
-            # self.save_min_max.disabled = False
-        else:  # toggle off fixed range
-            # self.colormap_min.disabled = True
-            # self.colormap_max.disabled = True
-            self.field_min_max[field_name][2] = False
+        # if (bval):  # toggle on fixed range
+        #     # self.colormap_min.disabled = False
+        #     # self.colormap_max.disabled = False
+        #     self.field_min_max[field_name][0] = self.cmin.text
+        #     self.field_min_max[field_name][1] = self.cmax.text
+        #     self.field_min_max[field_name][2] = True
+        #     # self.save_min_max.disabled = False
+        # else:  # toggle off fixed range
+        #     # self.colormap_min.disabled = True
+        #     # self.colormap_max.disabled = True
+        #     self.field_min_max[field_name][2] = False
 
+        # print("self.field_dict= ",self.field_dict)
         self.update_plots()
 
 
@@ -1463,6 +1463,14 @@ class Vis(QWidget):
                         kount += 1
             # # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
             # vmin = 10.
+            if self.fix_cmap_flag:
+                # vmin =  self.field_min_max[field_name][0]
+                # vmax =  self.field_min_max[field_name][1]
+                # vmin = self.cmin_value
+                # vmax = self.cmax_value
+                vmin = float(self.cmin.text())
+                vmax = float(self.cmax.text())
+                print("fixed cmap vmin,vmax = ",vmin,vmax)
 
             # rwh - so which is correct?
             self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
@@ -1480,25 +1488,33 @@ class Vis(QWidget):
             # self.contActor.Update()
 
             # print("vmax= ",vmax)
-            print("vmin,vmax= ",vmin,vmax)
+            print("---vmin,vmax= ",vmin,vmax)
             if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
                 print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
+
+            # if self.show_voxels or self.show_xy_plane or self.show_yz_plane or self.show_xz_plane:
+            #     self.ren.RemoveActor2D(self.scalarBar)
+            #     self.ren.AddActor2D(self.scalarBar)
+            # else:
+            #     self.ren.RemoveActor2D(self.scalarBar)
 
             if self.show_voxels:
                 self.ren.RemoveActor(self.substrate_actor)
 
+                print("----- show_voxels: vmin,vmax= ",vmin,vmax)
                 self.substrate_mapper.SetScalarRange(vmin, vmax)
+                # self.substrate_mapper.SetScalarModeToUseCellData()
                 self.substrate_mapper.Update()
-                # self.substrate_mapper.SetScalarRange(vmin, vmax)
-                # self.substrate_data.Update()
-                self.substrate_mapper.SetScalarModeToUseCellData()
+
                 # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
                 self.ren.AddActor(self.substrate_actor)
+                self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
             if self.show_xy_plane:
                 # self.ren.RemoveActor(self.substrate_actor)
                 self.ren.RemoveActor(self.cutterXYActor)
+                # self.ren.RemoveActor2D(self.scalarBar)
 
                 self.cutterXY.SetInputData(self.substrate_data)
                 self.planeXY.SetOrigin(x0,y0,0)
@@ -1506,8 +1522,8 @@ class Vis(QWidget):
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterXY.Update()
 
-                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
-                self.cutterXYMapper.SetScalarRange(0, vmax)
+                self.cutterXYMapper.SetScalarRange(vmin, vmax)
+                # self.cutterXYMapper.SetScalarRange(0, vmax)
                 self.cutterXYMapper.Update()
                 # cutMapper.SetInputConnection(planeCut.GetOutputPort())
                 # cutMapper.SetScalarRange(sg.GetPointData().GetScalars().GetRange())
@@ -1535,19 +1551,21 @@ class Vis(QWidget):
                 # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
 
                 # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
-                self.ren.AddActor2D(self.scalarBar)
+                # self.ren.AddActor2D(self.scalarBar)
 
 
             if self.show_yz_plane:
                 self.ren.RemoveActor(self.cutterYZActor)
+                # self.ren.RemoveActor2D(self.scalarBar)
+
                 self.cutterYZ.SetInputData(self.substrate_data)
                 self.planeYZ.SetOrigin(0,y0,z0)
                 self.cutterYZ.SetCutFunction(self.planeYZ)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterYZ.Update()
 
-                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
-                self.cutterYZMapper.SetScalarRange(0, vmax)
+                self.cutterYZMapper.SetScalarRange(vmin, vmax)
+                # self.cutterYZMapper.SetScalarRange(0, vmax)
                 self.cutterYZMapper.Update()
 
                 self.cutterYZActor.GetProperty().EdgeVisibilityOn()
@@ -1555,17 +1573,21 @@ class Vis(QWidget):
                 # self.cutterYZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterYZActor)
+                self.scalarBar.SetLookupTable(self.cutterYZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalarBar)
 
             if self.show_xz_plane:
                 self.ren.RemoveActor(self.cutterXZActor)
+                # self.ren.RemoveActor2D(self.scalarBar)
+
                 self.cutterXZ.SetInputData(self.substrate_data)
                 self.planeXZ.SetOrigin(x0,0,z0)
                 self.cutterXZ.SetCutFunction(self.planeXZ)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterXZ.Update()
 
-                # self.cutterXYMapper.SetScalarRange(vmin, vmax)
-                self.cutterXZMapper.SetScalarRange(0, vmax)
+                self.cutterXZMapper.SetScalarRange(vmin, vmax)
+                # self.cutterXZMapper.SetScalarRange(0, vmax)
                 self.cutterXZMapper.Update()
 
                 self.cutterXZActor.GetProperty().EdgeVisibilityOn()
@@ -1573,6 +1595,8 @@ class Vis(QWidget):
                 # self.cutterXZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterXZActor)
+                self.scalarBar.SetLookupTable(self.cutterXZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalarBar)
 
             #-------------------
             # self.domain_outline = vtkOutlineFilter()
@@ -1588,8 +1612,17 @@ class Vis(QWidget):
             # # self.domain_outline_actor = vtkActor()
             # self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
             # self.domain_outline_actor.GetProperty().SetColor(0,0,0)
-            self.domain_outline_actor.GetProperty().SetColor(0, 0, 255)
+            self.domain_outline_actor.GetProperty().SetColor(0, 0, 0)
             self.ren.AddActor(self.domain_outline_actor)
+
+
+            self.ren.RemoveActor2D(self.scalarBar)
+            if self.show_voxels or self.show_xy_plane or self.show_yz_plane or self.show_xz_plane:
+                # self.ren.RemoveActor2D(self.scalarBar)
+                self.ren.AddActor2D(self.scalarBar)
+            # else:
+            #     self.ren.RemoveActor2D(self.scalarBar)
+            # self.ren.AddActor2D(self.scalarBar)
 
         else:
             self.ren.RemoveActor(self.substrate_actor)
@@ -1597,7 +1630,7 @@ class Vis(QWidget):
             self.ren.RemoveActor(self.cutterYZActor)
             self.ren.RemoveActor(self.cutterXZActor)
             self.ren.RemoveActor(self.domain_outline_actor)
-            self.ren.RemoveActor(self.scalarBar)
+            self.ren.RemoveActor2D(self.scalarBar)
 
 
         self.vtkWidget.GetRenderWindow().Render()
