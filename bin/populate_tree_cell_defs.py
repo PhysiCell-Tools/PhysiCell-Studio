@@ -1392,9 +1392,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # rwh/TODO: if we have more vars than we initially created rows for, we'll need
             # to call 'append_more_cb' for the excess.
             cell_def_tab.custom_data_count = 0
+            cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
             if uep_custom_data:
                 # print("--------------- populate_tree: custom_dat for cell_def_name= ",cell_def_name)
-                cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
+                # cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
+                print("--------------- populate_tree: (empty)custom_data = ",cell_def_tab.param_d[cell_def_name]['custom_data'])
                 for var in uep_custom_data:
                     # print("-------- var in uep_",var)
                     # print(jdx, ") ",var)

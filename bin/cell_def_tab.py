@@ -4378,9 +4378,12 @@ class CellDef(QWidget):
             self.master_custom_varname.append(vname)
             for cdname in self.param_d.keys():
                 print("----- cdname = ",cdname)
+                print("----- cdname keys()= ",self.param_d[cdname].keys())
                 # self.param_d[cdname]['custom_data'][vname] = '0.0' #rwh: [value, conserved_flag, units]
                 self.param_d[cdname]['custom_data'][vname] = ['0.0',False,""] #rwh: [value, conserved_flag, units]
                 print(self.param_d[cdname]['custom_data'])
+                self.custom_data_count = len(self.param_d[cdname]['custom_data'])
+                print("self.custom_data_count = ",self.custom_data_count)
             return
 
         # prev_vname = self.celldef_tab.custom_data_name[idx].text()
@@ -4491,7 +4494,7 @@ class CellDef(QWidget):
         self.custom_data_count = 0
 
     #--------------------------------------------------------
-    # No longer used.
+    # No longer used.  Rf fill_xml_custom_data
     # def fill_custom_data_tab(self):
     # #     pass
     #     # uep_custom_data = self.xml_root.find(".//cell_definitions//cell_definition[1]//custom_data")
@@ -5864,6 +5867,8 @@ class CellDef(QWidget):
                 for i, input in enumerate(self.param_d[cdname]["intracellular"]["inputs"]):
                     self.physiboss_add_input()
                     name, node, action, threshold, inact_threshold, smoothing, _, _ = self.physiboss_inputs[i]
+                    print("rwh:update_intracellular_params(): cdname=",cdname, ", input['name']=",input['name'])
+                    print("  param_d= ",self.param_d[cdname]["intracellular"])
                     name.setCurrentIndex(self.physiboss_signals.index(input["name"]))
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(input["node"]))
                     action.setCurrentIndex(1 if input["action"] == "inhibition" else 0)
@@ -5905,6 +5910,9 @@ class CellDef(QWidget):
         cdname = self.current_cell_def
         # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
         # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        if 'custom_data' not in self.param_d[cdname].keys():
+            return
+
         num_vals = len(self.param_d[cdname]['custom_data'].keys())
         # print("num_vals =", num_vals)
         idx = 0
@@ -6937,7 +6945,12 @@ class CellDef(QWidget):
         if self.debug_print_fill_xml:
             print("------------------- fill_xml_custom_data():  self.custom_data_count = ", self.custom_data_count)
             print("------ ['custom_data']: for ",cdef)
-            print(self.param_d[cdef]['custom_data'])
+            # print(self.param_d[cdef]['custom_data'])
+
+        if self.custom_data_count == 0:
+            print(" fill_xml_custom_data():  leaving due to count=0")
+            return
+
         idx = 0
         for key_name in self.param_d[cdef]['custom_data'].keys():
             units = self.custom_data_units[idx].text()
