@@ -39,6 +39,13 @@ python bin/pmb.py --help
 
 NOTE: a model's configuration file (.xml) needs to have a "flattened" format, as opposed to the traditional "hierarchical" format, for the cell_definitions. That is to say, each cell_definition needs to explicitly provide *all* parameters, not just those that differ from a parent cell_definition. All of the config files in the `/data` directory have the flattened format.
 
+## Release 2.9.0
+* fix bugs related to allowing for empty <custom_data> (thanks Issy Cowlishaw)
+* fix show voxels (for 3D)
+* vtk 3D viewer cmds
+* fix cmap and min,max (3D)
+* detect incomplete final .svg
+
 ## Release 2.8.6
 * more cutting planes for 3D vis
 * option to plot all voxels in 3D vis
