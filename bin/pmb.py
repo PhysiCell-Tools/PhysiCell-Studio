@@ -1008,7 +1008,7 @@ def main():
 
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
     ex.show()
-    startup_notice()
+    # startup_notice()
     sys.exit(pmb_app.exec_())
 	
 if __name__ == '__main__':
