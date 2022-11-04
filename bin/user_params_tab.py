@@ -8,6 +8,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import sys
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
+import logging
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
@@ -308,11 +309,11 @@ class UserParams(QtWidgets.QWidget):
 
     # populate the GUI tab with what is in the .xml
     def fill_gui(self):
-        print("\n\n------------  user_params_tab: fill_gui --------------")
+        logging.debug(f'\n\n------------  user_params_tab: fill_gui --------------')
         # pass
         uep_user_params = self.xml_root.find(".//user_parameters")
         # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
-        print('uep_user_params=',uep_user_params)
+        logging.debug(f'uep_user_params= {uep_user_params}')
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need

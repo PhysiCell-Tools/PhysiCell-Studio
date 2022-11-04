@@ -6,10 +6,12 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import logging
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton, QPlainTextEdit
 from PyQt5.QtWidgets import QMessageBox
+# from PyQt5.QtGui import QTextEdit
 
 class QHLine(QFrame):
     def __init__(self):
@@ -98,11 +100,40 @@ class Rules(QWidget):
         # ----- rules
         self.add_rule_button = QPushButton("Add rule")
         # self.add_rule_button.setStyleSheet("background-color: rgb(250,100,100)")
-        self.add_rule_button.setStyleSheet("background-color: green")
+        self.add_rule_button.setStyleSheet("background-color: lightgreen")
         idr += 1
         self.rules_tab_layout.addWidget(self.add_rule_button, idr,1,1,2) 
         # self.add_rule_button.clicked.connect(self.add_rule_cb)
 
+        self.rules_text = QPlainTextEdit()  # config/cell_rules.csv
+        self.rules_text.setReadOnly(False)
+        try:
+            # with open("config/cell_rules.csv", 'rU') as f:
+            with open("config/rules.csv", 'rU') as f:
+                text = f.read()
+            self.rules_text.setPlainText(text)
+        except Exception as e:
+            # self.dialog_critical(str(e))
+            # print("error opening config/cells_rules.csv")
+            print("rules_tab.py: error opening config/rules.csv")
+            logging.error(f'rules_tab.py: Error opening config/rules.csv')
+            # sys.exit(1)
+        # else
+        # else:
+            # update path value
+            # self.path = path
+
+            # update the text
+        # self.rules_text.setPlainText(text)
+            # self.update_title()
+
+        idr += 1
+        self.rules_tab_layout.addWidget(self.rules_text, idr,1,1,6)  # w, row, col, rowspan, colspan
+        # self.text.resize(400,900)  # nope
+
+        # self.vbox.addWidget(self.text)
+
+        #---------
         self.insert_hacky_blank_lines(self.rules_tab_layout)
 
         #==================================================================
@@ -141,14 +172,14 @@ class Rules(QWidget):
 
 
     def fill_gui(self):
-        print("\n\n------------\nrules_tab.py: fill_gui():")
+        logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
         for key in self.microenv_tab.param_d.keys():
-            print("substrate type ---> ",key)
+            logging.debug(f'substrate type ---> {key}')
             self.substrate_dropdown.addItem(key)
             # break
         # self.substrate_dropdown.addItem("aaaaaaaabbbbbbbbbbccccccccccdddddddddd")
         for key in self.celldef_tab.param_d.keys():
-            print("cell type ---> ",key)
+            logging.debug(f'cell type ---> {key}')
             self.celltype_dropdown.addItem(key)
             # self.substrate_dropdown.addItem(key)
             # break

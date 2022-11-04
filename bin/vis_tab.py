@@ -8,6 +8,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import sys
 import os
+import logging
 import time
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
@@ -506,7 +507,7 @@ class Vis(QWidget):
         self.update_plots()
 
     def cmin_cmax_cb(self):
-        print("----- cmin_cmax_cb:")
+        # print("----- cmin_cmax_cb:")
         try:  # due to the initial callback
             self.cmin_value = float(self.cmin.text())
             self.cmax_value = float(self.cmax.text())
@@ -516,7 +517,7 @@ class Vis(QWidget):
         self.update_plots()
 
     def init_plot_range(self, config_tab):
-        print("----- init_plot_range:")
+        # print("----- init_plot_range:")
         try:
             # beware of widget callback 
             self.my_xmin.setText(config_tab.xmin.text())
@@ -579,7 +580,7 @@ class Vis(QWidget):
         dialog = QFileDialog()
         # self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
         tmp_dir = dialog.getExistingDirectory(self, 'Select an output directory')
-        print("open_directory_cb:  tmp_dir=",tmp_dir)
+        # print("open_directory_cb:  tmp_dir=",tmp_dir)
         if tmp_dir == "":
             return
 
@@ -593,7 +594,7 @@ class Vis(QWidget):
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            logging.debug(f'vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.')
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
@@ -609,7 +610,7 @@ class Vis(QWidget):
         # print('bds=',bds)
         self.xmin = float(bds[0])
         self.xmax = float(bds[3])
-        print('reset_model(): self.xmin, xmax=',self.xmin, self.xmax)
+        logging.debug(f'vis_tab.py: reset_model(): self.xmin, xmax= {self.xmin}, {self.xmax}')
         self.x_range = self.xmax - self.xmin
         self.plot_xmin = self.xmin
         self.plot_xmax = self.xmax
@@ -895,7 +896,7 @@ class Vis(QWidget):
 
 
     def create_figure(self):
-        print("\n--------- create_figure(): ------- creating figure, canvas, ax0")
+        logging.debug(f'vis_tab.py: --------- create_figure(): ------- creating figure, canvas, ax0')
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.setStyleSheet("background-color:transparent;")
@@ -926,9 +927,9 @@ class Vis(QWidget):
         # else:
         #     self.plot_substrate(self.current_svg_frame)
 
-        print("create_figure(): ------- creating dummy contourf")
+        logging.debug(f'vis_tab.py: create_figure(): ------- creating dummy contourf')
         xlist = np.linspace(-3.0, 3.0, 50)
-        print("len(xlist)=",len(xlist))
+        logging.debug(f'vis_tab.py: len(xlist)= {len(xlist)}')
         ylist = np.linspace(-3.0, 3.0, 50)
         X, Y = np.meshgrid(xlist, ylist)
         Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
@@ -947,7 +948,7 @@ class Vis(QWidget):
 
         # substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap='viridis')  # self.colormap_dd.value)
 
-        print("------------create_figure():  # axes = ",len(self.figure.axes))
+        logging.debug(f'vis_tab.py: ------------create_figure():  # axes = {len(self.figure.axes)}')
 
         # self.imageInit = [[255] * 320 for i in range(240)]
         # self.imageInit[0][0] = 0
@@ -1082,7 +1083,7 @@ class Vis(QWidget):
             self.line_collection = LineCollection(vlines, color="black", linewidths=0.5)
             self.ax0.add_collection(self.line_collection)
         except:
-            print("plot_vecs(): ERROR")
+            logging.debug(f'vis_tab.py: plot_vecs(): ERROR')
             pass
 
     #------------------------------------------------------------
@@ -1129,7 +1130,7 @@ class Vis(QWidget):
         # print("-- plot_svg:", full_fname) 
         if not os.path.isfile(full_fname):
             # print("Once output files are generated, click the slider.")   
-            print("plot_svg(): Warning: filename not found: ",full_fname)
+            logging.debug(f'vis_tab.py: plot_svg(): Warning: filename not found: {full_fname}')
             return
 
         # self.ax0.cla()
@@ -1160,7 +1161,7 @@ class Vis(QWidget):
         try:
             tree = ET.parse(full_fname)
         except:  # might arrive here if user cancels a Run then tries to go to last frame (>|) in Plot tab
-            print("------ plot_svg(): error trying to parse ",fname,". Will try previous file.")
+            logging.debug(f'vis_tab.py: ------ plot_svg(): error trying to parse {fname}. Will try previous file.')
             if frame > 0:
                 frame -= 1
                 fname = "snapshot%08d.svg" % frame
@@ -1168,7 +1169,7 @@ class Vis(QWidget):
                 try:
                     tree = ET.parse(full_fname)
                 except:  # might arrive here if user cancels a Run then tries to go to last frame (>|) in Plot tab
-                    print("------ plot_svg(): error trying to parse ",fname)
+                    logging.debug(f'vis_tab.py: ------ plot_svg(): error trying to parse {fname}')
                     return
             # return
         root = tree.getroot()
@@ -1264,13 +1265,13 @@ class Vis(QWidget):
                 # test for bogus x,y locations (rwh TODO: use max of domain?)
                 too_large_val = 10000.
                 if (np.fabs(xval) > too_large_val):
-                    print("bogus xval=", xval)
+                    logging.debug(f'bogus xval= {xval}')
                     break
                 yval = float(circle.attrib['cy'])
                 # yval = (yval - self.svg_xmin)/self.svg_xrange * self.y_range + self.ymin
                 yval = yval/self.y_range * self.y_range + self.ymin
                 if (np.fabs(yval) > too_large_val):
-                    print("bogus yval=", yval)
+                    logging.debug(f'bogus yval= {yval}')
                     break
 
                 rval = float(circle.attrib['r'])
@@ -1388,7 +1389,7 @@ class Vis(QWidget):
         xml_file_root = "output%08d.xml" % frame
         xml_file = os.path.join(self.output_dir, xml_file_root)
         if not Path(xml_file).is_file():
-            print("ERROR: file not found",xml_file)
+            logging.debug(f'vis_tab.py: ERROR: file not found {xml_file}')
             return
 
         # xml_file = os.path.join(self.output_dir, xml_file_root)
@@ -1399,19 +1400,20 @@ class Vis(QWidget):
         hrs = int(mins/60)
         days = int(hrs/24)
         self.title_str = '%d days, %d hrs, %d mins' % (days,hrs-days*24, mins-hrs*60)
-        print(self.title_str)
+        # print(self.title_str)
 
         fname = "output%08d_microenvironment0.mat" % frame
         full_fname = os.path.join(self.output_dir, fname)
-        print("\n    ==>>>>> plot_substrate(): full_fname=",full_fname)
+        # print("vis_tab.py:    ==>>>>> plot_substrate(): full_fname=",full_fname)
         if not Path(full_fname).is_file():
-            print("ERROR: file not found",full_fname)
+            print("vis_tab.py: ERROR: file not found",full_fname)
+            logging.debug(f'vis_tab.py: ERROR: file not found {full_fname}')
             return
 
         info_dict = {}
         scipy.io.loadmat(full_fname, info_dict)
         M = info_dict['multiscale_microenvironment']
-        print('plot_substrate: self.field_index=',self.field_index)
+        logging.debug(f'vis_tab.py: plot_substrate: self.field_index= {self.field_index}')
 
         # debug
         # fsub = M[self.field_index,:]   # 
