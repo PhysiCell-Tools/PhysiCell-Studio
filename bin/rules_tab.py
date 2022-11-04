@@ -64,49 +64,124 @@ class Rules(QWidget):
         # -- total attack time
         # -- time
 
-        self.check1 = QCheckBox("")
-        idr = 0
-        self.rules_tab_layout.addWidget(self.check1, idr,1,1,1)
+        idx_row = 0
+        # self.check1 = QCheckBox("")
+        # self.rules_tab_layout.addWidget(self.check1, idx_row,1,1,1)
+        icol = 0
+        self.celltype_dropdown = QComboBox()
+        self.rules_tab_layout.addWidget(self.celltype_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
 
+        # label = QLabel("")
+        # # label.setFixedHeight(label_height)
+        # # label.setStyleSheet("background-color: orange")
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # self.rules_tab_layout.addWidget(label, idx_row,3,1,5) 
+
+        icol += 1
+        self.action_dropdown = QComboBox()
+        self.action_dropdown.addItem("cycle entry")
+        self.rules_tab_layout.addWidget(self.action_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
+        # self.action_dropdown.currentIndexChanged.connect(self.substrate_dropdown_changed_cb)  
+
+        self.rule_val1 = QLineEdit()
+        self.rule_val1.setValidator(QtGui.QDoubleValidator())
+        icol += 1
+        self.rules_tab_layout.addWidget(self.rule_val1, idx_row,icol,1,1) # w, row, column, rowspan, 
+
+        self.rule_val2 = QLineEdit()
+        self.rule_val2.setValidator(QtGui.QDoubleValidator())
+        icol += 1
+        self.rules_tab_layout.addWidget(self.rule_val2, idx_row,icol,1,1) # w, row, column, rowspan, 
+
+        self.rule_val3 = QLineEdit()
+        self.rule_val3.setValidator(QtGui.QDoubleValidator())
+        icol += 1
+        self.rules_tab_layout.addWidget(self.rule_val3, idx_row,icol,1,1) # w, row, column, rowspan, 
+
+        # idx_row += 1
+        # self.check2 = QCheckBox("")
+        # self.rules_tab_layout.addWidget(self.check2, idx_row,1,1,1)
+
+        icol += 1
         self.substrate_dropdown = QComboBox()
-        self.rules_tab_layout.addWidget(self.substrate_dropdown, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.rules_tab_layout.addWidget(self.substrate_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
         self.substrate_dropdown.currentIndexChanged.connect(self.substrate_dropdown_changed_cb)  
 
-        label = QLabel("")
-        # label.setFixedHeight(label_height)
-        # label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        self.rules_tab_layout.addWidget(label, idr,3,1,5) 
-
-        #----------
-        self.check2 = QCheckBox("")
-        idr += 1
-        self.rules_tab_layout.addWidget(self.check2, idr,1,1,1)
-
-        self.celltype_dropdown = QComboBox()
-        self.rules_tab_layout.addWidget(self.celltype_dropdown, idr,2, 1,1) # w, row, column, rowspan, colspan
         # self.celltype_dropdown.currentIndexChanged.connect(self.celltype_dropdown_changed_cb)  
 
+        icol += 1
+        self.up_down_dropdown = QComboBox()
+        self.up_down_dropdown.addItem("increases")
+        self.up_down_dropdown.addItem("decreases")
+        self.rules_tab_layout.addWidget(self.up_down_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
+
+        self.rule_val4 = QLineEdit()
+        self.rule_val4.setValidator(QtGui.QDoubleValidator())
+        icol += 1
+        self.rules_tab_layout.addWidget(self.rule_val4, idx_row,icol,1,1) # w, row, column, rowspan, 
+
+        self.rule_val5 = QLineEdit()
+        self.rule_val5.setValidator(QtGui.QDoubleValidator())
+        icol += 1
+        self.rules_tab_layout.addWidget(self.rule_val5, idx_row,icol,1,1) # w, row, column, rowspan, 
+
         label = QLabel("")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        self.rules_tab_layout.addWidget(label, idr,3,1,5) 
+        # self.rules_tab_layout.addWidget(label, idx_row,3,1,5) 
 
-        # self.rules_tab_layout.addWidget(self.substrate_dropdown, idr,2, 1,1) # w, row, column, rowspan, colspan
+        # self.rules_tab_layout.addWidget(self.substrate_dropdown, idx_row,2, 1,1) # w, row, column, rowspan, colspan
         # self.signals_dropdown.currentIndexChanged.connect(self.live_phagocytosis_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
-
-
         # ----- behaviors
 
         # ----- rules
         self.add_rule_button = QPushButton("Add rule")
         # self.add_rule_button.setStyleSheet("background-color: rgb(250,100,100)")
         self.add_rule_button.setStyleSheet("background-color: lightgreen")
-        idr += 1
-        self.rules_tab_layout.addWidget(self.add_rule_button, idr,1,1,2) 
+        idx_row += 1
+        self.rules_tab_layout.addWidget(self.add_rule_button, idx_row,0,1,1) 
         # self.add_rule_button.clicked.connect(self.add_rule_cb)
 
+        #----------------------
         self.rules_text = QPlainTextEdit()  # config/cell_rules.csv
         self.rules_text.setReadOnly(False)
+
+        idx_row += 1
+        self.rules_tab_layout.addWidget(self.rules_text, idx_row,0,1,9)  # w, row, col, rowspan, colspan
+        # self.text.resize(400,900)  # nope
+
+        #----------------------
+        idx_row += 1
+        icol = 0
+        self.load_rules_button = QPushButton("Load")
+        print("Load button.size= ",self.load_rules_button.size())
+        self.load_rules_button.setStyleSheet("background-color: lightgreen")
+        self.rules_tab_layout.addWidget(self.load_rules_button, idx_row,icol,1,1) 
+
+        icol += 1
+        self.load_rules_button = QPushButton("Save")
+        self.load_rules_button.setStyleSheet("background-color: lightgreen")
+        self.rules_tab_layout.addWidget(self.load_rules_button, idx_row,icol,1,1) 
+
+        icol += 1
+        label = QLabel("folder")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.rules_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+
+        self.csv_folder = QLineEdit()
+        # self.csv_folder.setEnabled(False)
+        icol += 1
+        self.rules_tab_layout.addWidget(self.csv_folder, idx_row,icol,1,2) # w, row, column, rowspan, colspan
+
+        icol += 2
+        label = QLabel("file")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        self.rules_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+
+        self.csv_file = QLineEdit()
+        icol += 1
+        self.rules_tab_layout.addWidget(self.csv_file, idx_row,icol,1,2) # w, row, column, rowspan, colspan
+
+        #----------------------
         try:
             # with open("config/cell_rules.csv", 'rU') as f:
             with open("config/rules.csv", 'rU') as f:
@@ -127,9 +202,6 @@ class Rules(QWidget):
         # self.rules_text.setPlainText(text)
             # self.update_title()
 
-        idr += 1
-        self.rules_tab_layout.addWidget(self.rules_text, idr,1,1,6)  # w, row, col, rowspan, colspan
-        # self.text.resize(400,900)  # nope
 
         # self.vbox.addWidget(self.text)
 
@@ -151,11 +223,11 @@ class Rules(QWidget):
 
         #--------------------------------------------------------
     def insert_hacky_blank_lines(self, glayout):
-        idr = 4
+        idx_row = 4
         for idx in range(11):  # rwh: hack solution to align rows
             blank_line = QLabel("")
-            idr += 1
-            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
+            idx_row += 1
+            glayout.addWidget(blank_line, idx_row,0, 1,1) # w, row, column, rowspan, colspan
 
     def substrate_dropdown_changed_cb(self, idx):
         celltype_name = self.substrate_dropdown.currentText()
