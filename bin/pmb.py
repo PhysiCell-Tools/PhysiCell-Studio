@@ -1014,5 +1014,6 @@ def main():
 if __name__ == '__main__':
     # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     # logging.basicConfig(filename="pmb_debug.log", level=logging.INFO)
-    logging.basicConfig(filename="pmb_debug.log", level=logging.DEBUG)
+    logfile = "pmb_debug.log"
+    logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
     main()
