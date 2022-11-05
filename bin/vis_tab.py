@@ -461,7 +461,7 @@ class Vis(QWidget):
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
             self.plot_ymax = float(self.ymax)
-            print("-------- reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            logging.debug(f'------ reset_plot_range(): plot_ymin,ymax=  {self.plot_ymin},{self.plot_ymax}')
         except:
             pass
 
@@ -470,7 +470,7 @@ class Vis(QWidget):
 
     def show_hide_plot_range(self):
         # print("vis_tab: show_hide_plot_range()")
-        print('self.stackw.count()=', self.stackw.count())
+        logging.debug(f'show_hide_plot_range(): self.stackw.count()= {self.stackw.count()}')
         # print('self.show_plot_range= ',self.show_plot_range)
         # print(" # items = ",self.layout.num_items())
         # item = self.layout.itemAt(1)
@@ -682,7 +682,8 @@ class Vis(QWidget):
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("Expecting initial.xml, but does not exist.")
+            print("vis_tab.py: reset_axes(): Expecting initial.xml, but does not exist.")
+            logging.debug(f'vis_tab.py: reset_axes(): Expecting initial.xml, but does not exist.')
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
             msgBox.setText("Did not find 'initial.xml' in this directory.")
@@ -726,16 +727,16 @@ class Vis(QWidget):
             self.reset_model()
             self.reset_model_flag = False
 
-        print('last_plot_cb(): cwd = ',os.getcwd())
-        print('last_plot_cb(): self.output_dir = ',self.output_dir)
+        logging.debug(f'last_plot_cb(): cwd = {os.getcwd()}')
+        logging.debug(f'last_plot_cb(): self.output_dir = {self.output_dir}')
         # xml_file = Path(self.output_dir, "initial.xml")
         # xml_files = glob.glob('tmpdir/output*.xml')
 
         # full_fname = os.path.join(self.output_dir, fname)
         xml_files = glob.glob(self.output_dir + '/output*.xml')
-        print("xml_files = ",xml_files)
+        logging.debug(f'xml_files = {xml_files}')
         if len(xml_files) == 0:
-            print('last_plot_cb(): no xml_files, returning')
+            logging.debug(f'last_plot_cb(): no xml_files, returning')
             return
         xml_files.sort()
         # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
@@ -745,10 +746,10 @@ class Vis(QWidget):
         num_xml = len(xml_files)
         # print('svg_files = ',svg_files)
         num_svg = len(svg_files)
-        print('num_xml, num_svg = ',num_xml, num_svg)
+        logging.debug(f'num_xml, num_svg = {num_xml}, {num_svg}')
         last_xml = int(xml_files[-1][-12:-4])
         last_svg = int(svg_files[-1][-12:-4])
-        print('last_xml, _svg = ',last_xml,last_svg)
+        logging.debug(f'last_xml, _svg = {last_xml}, {last_svg}')
         self.current_svg_frame = last_xml
         if last_svg < last_xml:
             self.current_svg_frame = last_svg
@@ -762,7 +763,7 @@ class Vis(QWidget):
         self.current_svg_frame -= 1
         if self.current_svg_frame < 0:
             self.current_svg_frame = 0
-        print('back_plot_cb(): svg # ',self.current_svg_frame)
+        logging.debug(f'back_plot_cb(): svg # {self.current_svg_frame}')
 
         self.update_plots()
 
@@ -795,7 +796,7 @@ class Vis(QWidget):
             # print("-- plot_svg:", full_fname) 
             if not os.path.isfile(full_fname):
                 # print("Once output files are generated, click the slider.")   
-                print("play_plot_cb():  Reached the end (or no output files found).")
+                logging.debug(f'play_plot_cb():  Reached the end (or no output files found).')
                 # self.timer.stop()
                 self.current_svg_frame -= 1
                 self.animating_flag = True
@@ -829,17 +830,17 @@ class Vis(QWidget):
         self.update_plots()
 
     def fix_cmap_toggle_cb(self,bval):
-        print("fix_cmap_toggle_cb():")
+        logging.debug(f'fix_cmap_toggle_cb():')
         self.fix_cmap_flag = bval
         self.cmin.setEnabled(bval)
         self.cmax.setEnabled(bval)
 
             # self.substrates_combobox.addItem(s)
         # field_name = self.field_dict[self.substrate_choice.value]
-        print("self.field_dict= ",self.field_dict)
+        logging.debug(f'self.field_dict= {self.field_dict}')
         # field_name = self.field_dict[self.substrates_combobox.currentText()]
         field_name = self.substrates_combobox.currentText()
-        print("field_name= ",field_name)
+        logging.debug(f'field_name= {field_name}')
         # print(self.cmap_fixed_toggle.value)
         # if (self.colormap_fixed_toggle.value):  # toggle on fixed range
         if (bval):  # toggle on fixed range
@@ -890,8 +891,7 @@ class Vis(QWidget):
 
     def prepare_plot_cb(self, text):
         self.current_svg_frame += 1
-        print('\n\n   ====>     prepare_plot_cb(): svg # ',self.current_svg_frame)
-
+        logging.debug(f'\n   ====>     prepare_plot_cb(): svg # {self.current_svg_frame}')
         self.update_plots()
 
 
@@ -1428,9 +1428,9 @@ class Vis(QWidget):
         # self.numx = 88  # for kidney model
         # self.numy = 75
         try:
-            print("self.numx, self.numy = ",self.numx, self.numy )
+            logging.debug(f'self.numx, self.numy = {self.numx}, {self.numy}')
         except:
-            print("Error: self.numx, self.numy not defined.")
+            logging.debug(f'Error: self.numx, self.numy not defined.')
             return
         # nxny = numx * numy
 
@@ -1439,6 +1439,7 @@ class Vis(QWidget):
             ygrid = M[1, :].reshape(self.numy, self.numx)
         except:
             print("error: cannot reshape ",self.numy, self.numx," for array ",M.shape)
+            logging.debug(f'error: cannot reshape {self.numy}, {self.numx} for array {M.shape}')
             return
 
         zvals = M[self.field_index,:].reshape(self.numy,self.numx)
@@ -1468,7 +1469,7 @@ class Vis(QWidget):
 
         # Do this funky stuff to prevent the colorbar from shrinking in height with each redraw.
         # Except it doesn't seem to work when we use fixed ranges on the colorbar?!
-        print("# axes = ",len(self.figure.axes))
+        logging.debug(f'# axes = {len(self.figure.axes)}')
         if len(self.figure.axes) > 1: 
             pts = self.figure.axes[-1].get_position().get_points()
             # print("type(pts) = ",type(pts))

@@ -307,7 +307,7 @@ class ICs(QWidget):
 
     def show_hide_plot_range(self):
         # print("vis_tab: show_hide_plot_range()")
-        print(f'ics_tab.py: self.stackw.count()= {self.stackw.count()}')
+        logging.debug(f'ics_tab.py: self.stackw.count()= {self.stackw.count()}')
         # print('self.show_plot_range= ',self.show_plot_range)
         # print(" # items = ",self.layout.num_items())
         # item = self.layout.itemAt(1)

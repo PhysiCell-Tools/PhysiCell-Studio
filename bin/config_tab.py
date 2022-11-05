@@ -6,6 +6,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import logging
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout
@@ -395,10 +396,10 @@ class Config(QWidget):
         self.zmax.setText(self.xml_root.find(".//z_max").text)
         self.zdel.setText(self.xml_root.find(".//dz").text)
 
-        if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
-            self.virtual_walls.setChecked(True)
-        else:
-            self.virtual_walls.setChecked(False)
+        self.virtual_walls.setChecked(False)
+        if self.xml_root.find(".//virtual_wall_at_domain_edge") is not None:
+            if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
+                self.virtual_walls.setChecked(True)
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         self.diffusion_dt.setText(self.xml_root.find(".//dt_diffusion").text)
@@ -527,7 +528,7 @@ class Config(QWidget):
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
-        print("------- config_tab.py: fill_xml(): setting folder = ",self.folder.text())
+        logging.debug(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'
@@ -549,10 +550,10 @@ class Config(QWidget):
 
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
-        print("------- config_tab.py: fill_xml(): setting csv folder = ",self.csv_folder.text())
+        logging.debug(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
 
         self.xml_root.find(".//initial_conditions//cell_positions/filename").text = self.csv_file.text()
-        print("------- config_tab.py: fill_xml(): setting csv filename = ",self.csv_file.text())
+        logging.debug(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:

@@ -631,14 +631,14 @@ class SubstrateDef(QWidget):
         # msgBox.buttonClicked.connect(msgButtonClick)
 
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def delete_substrate(self):
         num_items = self.tree.invisibleRootItem().childCount()
-        print('------ delete_substrate: num_items=',num_items)
+        logging.debug(f'------ delete_substrate: num_items= {num_items}')
         if num_items == 1:
             # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
@@ -952,8 +952,6 @@ class SubstrateDef(QWidget):
                                 # self.track_in_agents.setChecked(True)
                                 self.param_d["track_in_agents"] = True
 
-                    
-
             # options_path = uep.find(".//options")
             # print(" ---- options_path = ", options_path)
             # gradients_path = options_path.find(".//calculate_gradients")
@@ -1093,7 +1091,7 @@ class SubstrateDef(QWidget):
         # Obtain a list of all substrates in self.tree (QTreeWidget()). Used below.
         substrates_in_tree = []
         num_subs = self.tree.invisibleRootItem().childCount()  # rwh: get number of items in tree
-        print('num subtrates = ',num_subs)
+        logging.debug(f'microenv_tab.py: fill_xml(): num subtrates = {num_subs}')
         self.iterate_tree(self.tree.invisibleRootItem(), num_subs, substrates_in_tree)
         logging.debug(f'substrates_in_tree ={substrates_in_tree}')
 
@@ -1105,7 +1103,7 @@ class SubstrateDef(QWidget):
 
         idx = 0
         for substrate in self.param_d.keys():
-            print('key in param_d.keys() = ',substrate)
+            logging.debug(f'microrenv_tab.py: key in param_d.keys() = {substrate}')
             if substrate in substrates_in_tree:
                 logging.debug(f'matched! {substrate}')
 	# 	<variable name="glue" units="dimensionless" ID="1">

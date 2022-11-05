@@ -267,12 +267,12 @@ class CellDef(QWidget):
     #----------------------
     # When a cell type is selected(via double-click) and renamed
     def tree_item_changed_cb(self, it,col):
-        print('--------- tree_item_changed_cb():', it, col, it.text(col) )  # col=0 always
+        logging.debug(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  # col=0 always
 
         prev_name = self.current_cell_def
-        print('prev_name= ',prev_name)
+        logging.debug(f'prev_name= {prev_name}')
         self.current_cell_def = it.text(col)
-        print('new name= ',self.current_cell_def)
+        logging.debug(f'new name= {self.current_cell_def}')
         self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
         self.renamed_celltype(prev_name, self.current_cell_def)
@@ -337,8 +337,8 @@ class CellDef(QWidget):
         # msgBox.buttonClicked.connect(msgButtonClick)
 
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
 
     # @QtCore.Slot()
@@ -371,8 +371,6 @@ class CellDef(QWidget):
         logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
         # print("--- cell_adhesion_affinity= ",self.param_d[cdef]['cell_adhesion_affinity'])
         logging.debug(f'--- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
-
-
 
         # remove from the widgets
 
@@ -409,11 +407,11 @@ class CellDef(QWidget):
 
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-        print('------      item_idx=',item_idx)
+        # print('------      item_idx=',item_idx)
         # self.tree.removeItemWidget(self.tree.currentItem(), 0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
-        print('------      new name=',self.tree.currentItem().text(0))
+        # print('------      new name=',self.tree.currentItem().text(0))
         self.current_cell_def = self.tree.currentItem().text(0)
 
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
@@ -3497,7 +3495,7 @@ class CellDef(QWidget):
 
         self.physiboss_boolean_frame.hide()
         if index == 0 and self.current_cell_def is not None:
-            print(self.current_cell_def)
+            logging.debug(f'intracellular_type_changed(): {self.current_cell_def}')
             if "intracellular" in self.param_d[self.current_cell_def].keys():
                 self.physiboss_bnd_file.setText("")
                 self.physiboss_cfg_file.setText("")
@@ -4341,18 +4339,22 @@ class CellDef(QWidget):
         return custom_data_tab_scroll
 
     def custom_conserved_check_clicked(self,checked,row):
-        print("\n--- custom_conserved_check_clicked()")
+        logging.debug(f'\n--- custom_conserved_check_clicked()')
         ch = self.sender()
-        print("type(ch) = ",type(ch))
-        print("ch = ",ch)
-        print("checked = ",checked)
-        print("row = ",row)
-        vname = self.master_custom_varname[row]
-        print("vname = ",vname)
-        print("\n--- updating cell def: ",self.current_cell_def)
-        print("before: ", self.param_d[self.current_cell_def]['custom_data'])  # rwh: FIX/TODO
+        logging.debug(f'type(ch) = {type(ch)}')
+        logging.debug(f'ch = "{ch}')
+        logging.debug(f'checked = {checked}')
+        logging.debug(f'row = {row}')
+        try:
+            vname = self.master_custom_varname[row]
+        except:
+            logging.debug(f'custom_conserved_check_clicked(): but got an error; no var probably')
+            return
+        logging.debug(f'vname = {vname}')
+        logging.debug(f'\n--- updating cell def: {self.current_cell_def}')
+        logging.debug(f'before:  {self.param_d[self.current_cell_def]["custom_data"]}')  # rwh: FIX/TODO
         self.param_d[self.current_cell_def]['custom_data'][vname][1] = checked  # [vname, conserved_flag, units]
-        print("after: ", self.param_d[self.current_cell_def]['custom_data'])  
+        logging.debug(f'after: {self.param_d[self.current_cell_def]["custom_data"]}')  
         # print("dir(ch) = ",dir(ch))
             # print(ch.parent())
             # ix = self.table.indexAt(ch.pos())
@@ -4383,7 +4385,7 @@ class CellDef(QWidget):
                 logging.debug(f'----- cdname keys()= {self.param_d[cdname].keys()}')
                 # self.param_d[cdname]['custom_data'][vname] = '0.0' #rwh: [value, conserved_flag, units]
                 self.param_d[cdname]['custom_data'][vname] = ['0.0',False,""] #rwh: [value, conserved_flag, units]
-                print(self.param_d[cdname]['custom_data'])
+                logging.debug(self.param_d[cdname]['custom_data'])
                 self.custom_data_count = len(self.param_d[cdname]['custom_data'])
                 logging.debug(f'self.custom_data_count = {self.custom_data_count}')
             return
@@ -4401,7 +4403,7 @@ class CellDef(QWidget):
             for cdname in self.param_d.keys():
                 logging.debug(f'----- cdname = {cdname}')
                 self.param_d[cdname]['custom_data'][vname] = self.param_d[cdname]['custom_data'].pop(old_varname)
-                print(self.param_d[cdname]['custom_data'])
+                logging.debug(self.param_d[cdname]['custom_data'])
                 self.master_custom_varname = [vname if x==old_varname else x for x in self.master_custom_varname]
 
             # self.param_d[cell_def_name]['custom_data'][var.tag] = val   # TODO: rename this dict key (var.tag)
@@ -6495,7 +6497,7 @@ class CellDef(QWidget):
             if len(key) == 0:  
                 continue
             val = self.param_d[cdef]['cell_adhesion_affinity'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(ca_rates, 'cell_adhesion_affinity', {"name":key})
             elm.text = val
             elm.tail = self.indent16
@@ -6625,10 +6627,10 @@ class CellDef(QWidget):
         chemo_sens.text = self.indent18
         chemo_sens.tail = self.indent16
 
-        print(self.param_d[cdef]['chemotactic_sensitivity'])
+        logging.debug(f'fill_xml_motility(): {self.param_d[cdef]["chemotactic_sensitivity"]}')
         for key in self.param_d[cdef]['chemotactic_sensitivity'].keys():
             val = self.param_d[cdef]['chemotactic_sensitivity'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(chemo_sens, 'chemotactic_sensitivity', {"substrate":key})
             elm.text = val
             elm.tail = self.indent18
@@ -6696,7 +6698,7 @@ class CellDef(QWidget):
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
@@ -6714,7 +6716,7 @@ class CellDef(QWidget):
             if len(key) == 0:  
                 continue
             val = self.param_d[cdef]['attack_rate'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(arates, 'attack_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent18
@@ -6735,7 +6737,7 @@ class CellDef(QWidget):
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['fusion_rate'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(frates, 'fusion_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent18
@@ -6754,7 +6756,7 @@ class CellDef(QWidget):
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['transformation_rate'][key]
-            print(key," --> ",val)
+            logging.debug(f'{key}  --> {val}')
             elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
@@ -6941,7 +6943,7 @@ class CellDef(QWidget):
                     
 
         if self.debug_print_fill_xml:
-            print('\n')
+            logging.debug(f'\n')
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
     def fill_xml_custom_data(self, custom_data, cdef):
@@ -6978,7 +6980,7 @@ class CellDef(QWidget):
         elm.tail = self.indent8   # back up 2 for the very last one
 
         if self.debug_print_fill_xml:
-            print('\n')
+            logging.debug(f'\n')
 
 
     #-------------------------------------------------------------------
@@ -6991,7 +6993,7 @@ class CellDef(QWidget):
         # print("self.param_d['default'] = ",self.param_d['default'])
         # print()
         # print("self.param_d['cell_def02'] = ",self.param_d['cell_def02'])
-        print()
+        # print()
         # print("self.param_d['endothelial'] = ",self.param_d['endothelial'])
         # print("\nself.param_d['endothelial']['cell_ID'] = ",self.param_d['endothelial']['cell_ID'])
         # print("\nself.param_d['mesangial_matrix']['cell_ID'] = ",self.param_d['mesangial_matrix']['cell_ID'])
@@ -7005,7 +7007,7 @@ class CellDef(QWidget):
         # Obtain a list of all cell defs in self.tree (QTreeWidget()). Used below.
         cdefs_in_tree = []
         num_cdefs = self.tree.invisibleRootItem().childCount()  # rwh: get number of items in tree
-        print('num cell defs = ',num_cdefs)
+        logging.debug(f'num cell defs = {num_cdefs}')
         self.iterate_tree(self.tree.invisibleRootItem(), num_cdefs, cdefs_in_tree)
         logging.debug(f'cdefs_in_tree ={cdefs_in_tree}')
 
@@ -7014,7 +7016,7 @@ class CellDef(QWidget):
 
         idx = 0
         for cdef in self.param_d.keys():
-            print('\n--- key in param_d.keys() = ',cdef)
+            logging.debug(f'\n--- key in param_d.keys() = {cdef}')
             if cdef in cdefs_in_tree:
                 logging.debug(f'matched! {cdef}')
 

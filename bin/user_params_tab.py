@@ -213,7 +213,7 @@ class UserParams(QtWidgets.QWidget):
 
     # @QtCore.Slot()
     def clear_rows_cb(self):
-        print("----- clearing all selected rows")
+        # print("----- clearing all selected rows")
         for idx in range(self.count):
             if self.select[idx].isChecked():
                 self.name[idx].clear()
@@ -286,7 +286,7 @@ class UserParams(QtWidgets.QWidget):
             self.main_layout.addLayout(hbox)
 
             self.count = self.count + 1
-            print(self.count)
+            # print(self.count)
     #     # self.text.setText(random.choice(self.hello))
     #     pass
 

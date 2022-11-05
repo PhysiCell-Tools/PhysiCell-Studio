@@ -561,13 +561,13 @@ class PhysiCellXMLCreator(QWidget):
         return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
 
     def save_as_cb(self):
-        print("------ save_as_cb():")
+        # print("------ save_as_cb():")
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getSaveFileName(self,'',".")
         # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
-        print("\n\n save_as_cb():  filePath=",filePath)
+        print("save_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
-        print("\n\n save_as_cb():  full_path_model_name =",full_path_model_name )
+        print("save_as_cb():  full_path_model_name =",full_path_model_name )
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
             print("save_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
@@ -590,7 +590,7 @@ class PhysiCellXMLCreator(QWidget):
             out_file = self.current_xml_file
             self.setWindowTitle(self.title_prefix + out_file)
 
-            print("\n\n ===================================")
+            # print("\n\n ===================================")
             print("pmb.py:  save_as_cb: writing to: ",out_file)
 
             self.tree.write(out_file)
@@ -599,7 +599,6 @@ class PhysiCellXMLCreator(QWidget):
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
-        
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
@@ -618,7 +617,7 @@ class PhysiCellXMLCreator(QWidget):
             out_file = self.current_xml_file
             self.setWindowTitle(self.title_prefix + out_file)
 
-            print("\n\n ===================================")
+            # print("\n\n ===================================")
             print("pmb.py:  save_cb: writing to: ",out_file)
 
             # self.tree.write(self.config_file)
@@ -802,7 +801,7 @@ class PhysiCellXMLCreator(QWidget):
     # Used for downloading config file and output files from nanoHUB
     def message(self, s):
         # self.text.appendPlainText(s)
-        print(s)
+        print('pmb.py: message(): ',s)
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()

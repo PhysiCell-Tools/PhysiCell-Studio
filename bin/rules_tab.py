@@ -153,7 +153,7 @@ class Rules(QWidget):
         idx_row += 1
         icol = 0
         self.load_rules_button = QPushButton("Load")
-        print("Load button.size= ",self.load_rules_button.size())
+        # print("Load button.size= ",self.load_rules_button.size())
         self.load_rules_button.setStyleSheet("background-color: lightgreen")
         self.rules_tab_layout.addWidget(self.load_rules_button, idx_row,icol,1,1) 
 
