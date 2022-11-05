@@ -668,12 +668,12 @@ class PhysiCellXMLCreator(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
-        print('view3D_cb: ',action.text(), action.isChecked())
+        logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
         if "XY" in action.text():
             self.vis_tab.xy_plane_toggle_cb(action.isChecked())
         elif "YZ" in action.text():
@@ -727,8 +727,8 @@ class PhysiCellXMLCreator(QWidget):
         msgBox.setText("Simularium export coming soon.")
         msgBox.setStandardButtons(QMessageBox.Ok)
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
         print("---- Simularium export coming soon...")
 
