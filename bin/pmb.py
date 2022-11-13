@@ -49,7 +49,6 @@ def startup_notice():
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setText("Editing the template config file from the PMB /data directory. If you want to edit another, use File->Open or File->Samples")
-    #    msgBox.setWindowTitle("Example")
     msgBox.setStandardButtons(QMessageBox.Ok)
     # msgBox.buttonClicked.connect(msgButtonClick)
 
@@ -84,7 +83,8 @@ class PhysiCellXMLCreator(QWidget):
             self.dark_mode = True
 
         self.title_prefix = "PhysiCell Model Builder: "
-        self.setWindowTitle(self.title_prefix)
+        if studio_flag:
+            self.title_prefix = "PhysiCell Studio: "
 
         self.nanohub_flag = False
         if( 'HOME' in os.environ.keys() ):
@@ -123,7 +123,7 @@ class PhysiCellXMLCreator(QWidget):
         # sys.exit(1)
 
         if config_file:
-            self.current_xml_file = config_file
+            self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
             # sys.exit()
         else:
@@ -137,11 +137,7 @@ class PhysiCellXMLCreator(QWidget):
             # data_dir = os.path.normpath(data_dir)
             # data_dir = os.path.join(self.current_dir,'data')
 
-            # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
-            # self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            # self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
             self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
 
 
@@ -590,8 +586,8 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
             # out_file = self.current_save_file
-            out_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + out_file)
+            xml_file = self.current_xml_file
+            self.setWindowTitle(self.title_prefix + xml_file)
 
             # print("\n\n ===================================")
             print("pmb.py:  save_as_cb: writing to: ",out_file)
@@ -617,8 +613,8 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = self.config_file
             # out_file = "mymodel.xml"
             # out_file = self.current_save_file
-            out_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + out_file)
+            xml_file = self.current_xml_file
+            self.setWindowTitle(self.title_prefix + xml_file)
 
             # print("\n\n ===================================")
             print("pmb.py:  save_cb: writing to: ",out_file)
