@@ -291,6 +291,9 @@ class PhysiCellXMLCreator(QWidget):
 
             self.vis_tab.output_dir = self.config_tab.folder.text()
             self.legend_tab.output_dir = self.config_tab.folder.text()
+            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+            if Path(legend_file).is_file():
+                self.legend_tab.reload_legend()
 
             self.vis_tab.reset_model()
             
@@ -919,7 +922,7 @@ def main():
         if args.three:
             logging.debug(f'pmb.py: Assume a 3D model')
             model3D_flag = True
-            print("done with args.three")
+            # print("done with args.three")
         if args.rules:
             logging.debug(f'pmb.py: Show Rules tab')
             rules_flag = True
@@ -936,6 +939,7 @@ def main():
                 logging.debug(f'len(config_file) = {len(config_file)}')
                 logging.debug(f'done with args.config')
             else:
+                print(f'config_file is NOT valid: {args.config}')
                 logging.error(f'config_file is NOT valid: {args.config}')
                 sys.exit()
         if args.exec:
