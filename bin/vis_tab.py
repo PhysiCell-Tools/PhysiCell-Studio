@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 import numpy as np
 import scipy.io
 from pyMCDS_cells import pyMCDS_cells 
+# from pyMCDS_rwh import pyMCDS
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -45,7 +46,10 @@ class Vis(QWidget):
         # global self.config_params
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
-        self.mech_voxel_size = 30
+        self.mech_voxel_size = 30 # kinda weird this is essentially hard-coded in PhysiCell
+
+        self.voxel_dx = 20 # updated based on Config params of domain
+        self.voxel_dy = 20 
 
         self.nanohub_flag = nanohub_flag
 
@@ -62,9 +66,9 @@ class Vis(QWidget):
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
         
-        self.num_contours = 15
-        self.num_contours = 25
         self.num_contours = 50
+        self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+
         self.fontsize = 9
         self.title_fontsize = 10
 
@@ -81,10 +85,12 @@ class Vis(QWidget):
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
+        self.xdel = 20
         self.x_range = self.xmax - self.xmin
 
         self.ymin = -50
         self.ymax = 100
+        self.ydel = 20
         self.y_range = self.ymax - self.ymin
 
         self.aspect_ratio = 0.7
@@ -524,6 +530,8 @@ class Vis(QWidget):
             self.my_xmax.setText(config_tab.xmax.text())
             self.my_ymin.setText(config_tab.ymin.text())
             self.my_ymax.setText(config_tab.ymax.text())
+            self.my_dx.setText(config_tab.xdel.text())
+            self.my_dy.setText(config_tab.ydel.text())
         except:
             pass
 
@@ -610,6 +618,7 @@ class Vis(QWidget):
         # print('bds=',bds)
         self.xmin = float(bds[0])
         self.xmax = float(bds[3])
+        # self.xdel = 
         logging.debug(f'vis_tab.py: reset_model(): self.xmin, xmax= {self.xmin}, {self.xmax}')
         self.x_range = self.xmax - self.xmin
         self.plot_xmin = self.xmin
@@ -626,6 +635,7 @@ class Vis(QWidget):
 
         self.ymin = float(bds[1])
         self.ymax = float(bds[4])
+        # self.ydel = 
         self.y_range = self.ymax - self.ymin
         # print('reset_model(): self.ymin, ymax=',self.ymin, self.ymax)
         self.plot_ymin = self.ymin
@@ -1055,7 +1065,10 @@ class Vis(QWidget):
         try:
             # mcds = pyMCDS_cells(fname)
             # print("plot_vecs(): self.output_dir= ",self.output_dir)
-            mcds = pyMCDS_cells(fname, self.output_dir)
+
+            # mcds = pyMCDS_cells(fname, self.output_dir)
+            mcds = pyMCDS(fname, self.output_dir)
+
             # print(mcds.get_cell_variables())
 
             xpos = mcds.data['discrete_cells']['position_x']
@@ -1087,6 +1100,7 @@ class Vis(QWidget):
             pass
 
     #------------------------------------------------------------
+    # This is primarily used for debugging tricky mechanics dynamics; probably hardly ever used.
     def plot_mechanics_grid(self):
         numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
         numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
@@ -1101,6 +1115,21 @@ class Vis(QWidget):
         self.ax0.add_collection(line_collection)
         # ax.set_xlim(xs[0], xs[-1])
         # ax.set_ylim(ys[0], ys[-1])
+
+    #------------------------------------------------------------
+    # For debugging.
+    def plot_voxel_grid(self):
+        numx = int((self.xmax - self.xmin)/self.xdel)
+        numy = int((self.ymax - self.ymin)/self.ydel)
+        xs = np.linspace(self.xmin,self.xmax, numx)
+        ys = np.linspace(self.ymin,self.ymax, numy)
+        hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
+        vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
+        grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
+        line_collection = LineCollection(grid_lines, color="gray", linewidths=0.5)
+        # ax = plt.gca()
+        # ax.add_collection(line_collection)
+        self.ax0.add_collection(line_collection)
 
     #------------------------------------------------------------
     # def plot_svg(self, frame, rdel=''):
@@ -1450,17 +1479,26 @@ class Vis(QWidget):
             try:
                 # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
                 # substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-                substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, levels=self.fixed_contour_levels, extend='both', cmap='viridis')
+
+                # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, levels=self.fixed_contour_levels, extend='both', cmap='viridis')
+
+                substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap='viridis', vmin=self.cmin_value, vmax=self.cmax_value)
             except:
                 contour_ok = False
-                print('\nWARNING: got error on contourf with fixed cmap range. Will not update plot.')
+                print('\nWARNING: exception with fixed colormap range. Will not update plot.')
                 return
         else:    
             try:
-                substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap='viridis')  # self.colormap_dd.value)
+                # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap='viridis')  # self.colormap_dd.value)
+                # substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading='gouraud', cmap='viridis') #, vmin=Z.min(), vmax=Z.max())
+                # substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, cmap='viridis') #, vmin=Z.min(), vmax=Z.max())
+
+                # substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading='flat', cmap='viridis') #, vmin=Z.min(), vmax=Z.max())
+                substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap='viridis') #, vmin=Z.min(), vmax=Z.max())
+
             except:
                 contour_ok = False
-                print('\nWARNING: got error on contourf with dynamic cmap range. Will not update plot.')
+                print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
                 return
 
         # in case we want to plot a "0.0" contour line
