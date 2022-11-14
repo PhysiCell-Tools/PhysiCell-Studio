@@ -187,6 +187,9 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
+        print("pmb.py: ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        # if self.xml_root.find(".//cell_definitions//cell_rules"):
+
         # self.sbml_tab = SBMLParams()
         # self.sbml_tab.xml_root = self.xml_root
         # self.sbml_tab.fill_gui()
@@ -229,8 +232,10 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.rules_flag:
             self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
-            self.rules_tab.fill_gui()
+            # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.fill_gui()
 
 
         if self.studio_flag:
@@ -471,6 +476,9 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.fill_gui()
 
         self.config_tab.fill_gui()
 
@@ -500,6 +508,7 @@ class PhysiCellXMLCreator(QWidget):
 
     def show_sample_model(self):
         logging.debug(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
+        print(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
         # self.config_file = "config_samples/biorobots.xml"
         self.tree = ET.parse(self.config_file)
         # self.xml_root = self.tree.getroot()
@@ -708,6 +717,10 @@ class PhysiCellXMLCreator(QWidget):
         self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
         logging.debug(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
+        logging.debug(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
+        print(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
+
+        # if self.xml_root.find(".//cell_definitions//cell_rules"):
         # self.current_save_file = current_xml_file
         if self.studio_flag:
             self.run_tab.config_xml_name.setText(self.current_xml_file)
@@ -1014,5 +1027,6 @@ if __name__ == '__main__':
     # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     # logging.basicConfig(filename="pmb_debug.log", level=logging.INFO)
     logfile = "pmb_debug.log"
-    logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
+    # logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
+    logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
     main()

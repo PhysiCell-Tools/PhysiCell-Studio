@@ -1330,7 +1330,7 @@ class Vis(QWidget):
                 # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; heatmap across all cells
 
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
-                print("idx, cell_type[idx]= ",idx,cell_type[idx])
+                # print("idx, cell_type[idx]= ",idx,cell_type[idx])
                 self.tags.InsertNextValue(cell_type[idx])
 
             self.cell_data.CopyComponent(0, self.radii, 0)
@@ -1489,8 +1489,8 @@ class Vis(QWidget):
 
             # print("vmax= ",vmax)
             print("---vmin,vmax= ",vmin,vmax)
-            if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
-                print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
+            # if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
+            #     print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
             # if self.show_voxels or self.show_xy_plane or self.show_yz_plane or self.show_xz_plane:
             #     self.ren.RemoveActor2D(self.scalarBar)

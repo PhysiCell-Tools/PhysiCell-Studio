@@ -6,10 +6,12 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import os
 import logging
+from pathlib import Path
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton, QPlainTextEdit
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton, QPlainTextEdit, QFileDialog
 from PyQt5.QtWidgets import QMessageBox
 # from PyQt5.QtGui import QTextEdit
 
@@ -155,6 +157,7 @@ class Rules(QWidget):
         self.load_rules_button = QPushButton("Load")
         # print("Load button.size= ",self.load_rules_button.size())
         self.load_rules_button.setStyleSheet("background-color: lightgreen")
+        self.load_rules_button.clicked.connect(self.load_rules_cb)
         self.rules_tab_layout.addWidget(self.load_rules_button, idx_row,icol,1,1) 
 
         icol += 1
@@ -182,17 +185,17 @@ class Rules(QWidget):
         self.rules_tab_layout.addWidget(self.csv_file, idx_row,icol,1,2) # w, row, column, rowspan, colspan
 
         #----------------------
-        try:
-            # with open("config/cell_rules.csv", 'rU') as f:
-            with open("config/rules.csv", 'rU') as f:
-                text = f.read()
-            self.rules_text.setPlainText(text)
-        except Exception as e:
-            # self.dialog_critical(str(e))
-            # print("error opening config/cells_rules.csv")
-            print("rules_tab.py: error opening config/rules.csv")
-            logging.error(f'rules_tab.py: Error opening config/rules.csv')
-            # sys.exit(1)
+        # try:
+        #     # with open("config/cell_rules.csv", 'rU') as f:
+        #     with open("config/rules.csv", 'rU') as f:
+        #         text = f.read()
+        #     self.rules_text.setPlainText(text)
+        # except Exception as e:
+        #     # self.dialog_critical(str(e))
+        #     # print("error opening config/cells_rules.csv")
+        #     print("rules_tab.py: error opening config/rules.csv")
+        #     logging.error(f'rules_tab.py: Error opening config/rules.csv')
+        #     # sys.exit(1)
         # else
         # else:
             # update path value
@@ -242,22 +245,115 @@ class Rules(QWidget):
         # if idx == -1:
         #     return
 
+    def fill_rules(self, full_rules_fname):
+        if os.path.isfile(full_rules_fname):
+            try:
+                # with open("config/rules.csv", 'rU') as f:
+                with open(full_rules_fname, 'rU') as f:
+                    text = f.read()
+                    self.rules_text.setPlainText(text)
+            except Exception as e:
+            # self.dialog_critical(str(e))
+            # print("error opening config/cells_rules.csv")
+                print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+                logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+                # sys.exit(1)
+        else:
+            print(f'{full_rules_fname} is not a valid file')
+            logging.error(f'{full_rules_fname} is not a valid file')
+
+    # else:  # should empty the Rules tab
+    #     self.rules_text.setPlainText("")
+    #     self.csv_folder.setText("")
+    #     self.csv_file.setText("")
+        return
 
     def fill_gui(self):
         logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
+        print("rules_tab.py: fill_gui(): self.microenv_tab.param_d.keys()= ",self.microenv_tab.param_d.keys())
         for key in self.microenv_tab.param_d.keys():
             logging.debug(f'substrate type ---> {key}')
-            self.substrate_dropdown.addItem(key)
+            if key == 'gradients' or key == 'track_in_agents':
+                pass
+            else:
+                self.substrate_dropdown.addItem(key)
             # break
         # self.substrate_dropdown.addItem("aaaaaaaabbbbbbbbbbccccccccccdddddddddd")
+
+        print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
         for key in self.celldef_tab.param_d.keys():
             logging.debug(f'cell type ---> {key}')
             self.celltype_dropdown.addItem(key)
             # self.substrate_dropdown.addItem(key)
             # break
         # print("\n\n------------\nrules_tab.py: fill_gui(): self.celldef_tab.param_d = ",self.cell_def_tab.param_d)
+
+
+    #   <cell_rules type="csv" enabled="true">
+    #     <folder>./config</folder>
+    #     <filename>dicty_rules.csv</filename>
+    # </cell_rules>      
+    # </cell_definitions>
+        logging.debug(f'rules_tab.py: fill_gui(): <cell_rules> = {self.xml_root.find(".//cell_definitions//cell_rules")}')
+        print(f'rules_tab.py: fill_gui(): <cell_rules> =  {self.xml_root.find(".//cell_definitions//cell_rules")}')
+        if self.xml_root.find(".//cell_definitions//cell_rules"):
+            folder_name = self.xml_root.find(".//cell_definitions//cell_rules//folder").text
+            self.csv_folder.setText(folder_name)
+            file_name = self.xml_root.find(".//cell_definitions//cell_rules//filename").text
+            self.csv_file.setText(file_name)
+            full_rules_fname = os.path.join(folder_name, file_name)
+
+            self.fill_rules(full_rules_fname)
+
+            # if os.path.isfile(full_rules_fname):
+            #     try:
+            #         # with open("config/rules.csv", 'rU') as f:
+            #         with open(full_rules_fname, 'rU') as f:
+            #             text = f.read()
+            #             self.rules_text.setPlainText(text)
+            #     except Exception as e:
+            #     # self.dialog_critical(str(e))
+            #     # print("error opening config/cells_rules.csv")
+            #         print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+            #         logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+            #         # sys.exit(1)
+            # else:
+            #     print(f'{full_rules_fname} is not a valid file')
+            #     logging.error(f'{full_rules_fname} is not a valid file')
+
+        else:  # should empty the Rules tab
+            self.rules_text.setPlainText("")
+            self.csv_folder.setText("")
+            self.csv_file.setText("")
         return
 
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
         return
+    
+    def load_rules_cb(self):
+        # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+        filePath = QFileDialog.getOpenFileName(self,'',".")
+        full_path_rules_name = filePath[0]
+        logging.debug(f'\nload_rules_cb():  full_path_rules_name ={full_path_rules_name}')
+        print(f'\nload_rules_cb():  full_path_rules_name ={full_path_rules_name}')
+        # if (len(full_path_rules_name) > 0) and Path(full_path_rules_name):
+        if (len(full_path_rules_name) > 0) and Path(full_path_rules_name).is_file():
+            print("load_rules_cb():  filePath is valid")
+            logging.debug(f'     filePath is valid')
+            print("len(full_path_rules_name) = ", len(full_path_rules_name) )
+            logging.debug(f'     len(full_path_rules_name) = {len(full_path_rules_name)}' )
+            # fname = os.path.basename(full_path_rules_name)
+            # self.current_xml_file = full_path_rules_name
+
+            # self.add_new_model(self.current_xml_file, True)
+            # self.config_file = self.current_xml_file
+            # if self.studio_flag:
+            #     self.run_tab.config_file = self.current_xml_file
+            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+            # self.show_sample_model()
+            # self.fill_gui()
+            self.fill_rules(full_path_rules_name)
+
+        else:
+            print("load_rules_cb():  full_path_model_name is NOT valid")
