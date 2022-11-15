@@ -13,6 +13,7 @@ import os
 import platform
 import sys
 import argparse
+import logging
 # import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -48,13 +49,12 @@ def startup_notice():
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setText("Editing the template config file from the PMB /data directory. If you want to edit another, use File->Open or File->Samples")
-    #    msgBox.setWindowTitle("Example")
     msgBox.setStandardButtons(QMessageBox.Ok)
     # msgBox.buttonClicked.connect(msgButtonClick)
 
     returnValue = msgBox.exec()
-    if returnValue == QMessageBox.Ok:
-        print('OK clicked')
+    # if returnValue == QMessageBox.Ok:
+    #     print('OK clicked')
 
   
 class PhysiCellXMLCreator(QWidget):
@@ -83,7 +83,10 @@ class PhysiCellXMLCreator(QWidget):
             self.dark_mode = True
 
         self.title_prefix = "PhysiCell Model Builder: "
-        self.setWindowTitle(self.title_prefix)
+        if studio_flag:
+            self.title_prefix = "PhysiCell Studio: "
+
+        self.vis2D_gouraud = False
 
         self.nanohub_flag = False
         if( 'HOME' in os.environ.keys() ):
@@ -103,23 +106,26 @@ class PhysiCellXMLCreator(QWidget):
 
         self.current_dir = os.getcwd()
         print("self.current_dir = ",self.current_dir)
+        logging.debug(f'self.current_dir = {self.current_dir}')
         self.pmb_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
         self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         print("self.pmb_root_dir = ",self.pmb_root_dir)
+        logging.debug(f'self.pmb_root_dir = {self.pmb_root_dir}')
 
         # assume running from a PhysiCell root dir, but change if not
         self.config_dir = os.path.realpath(os.path.join('.', 'config'))
 
         if self.current_dir == self.pmb_root_dir:  # are we running from PMB root dir?
             self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-        print("self.config_dir = ",self.config_dir)
+        print(f'self.config_dir =  {self.config_dir}')
+        logging.debug(f'self.config_dir = {self.config_dir}')
 
         # self.pmb_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         # print("pmb.py: self.pmb_config_dir = ",self.pmb_config_dir)
         # sys.exit(1)
 
         if config_file:
-            self.current_xml_file = config_file
+            self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
             # sys.exit()
         else:
@@ -133,11 +139,7 @@ class PhysiCellXMLCreator(QWidget):
             # data_dir = os.path.normpath(data_dir)
             # data_dir = os.path.join(self.current_dir,'data')
 
-            # self.current_xml_file = os.path.join(data_dir, model_name + ".xml")
-            # self.data_dir = self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            # self.current_xml_file = os.path.join(self.data_dir, model_name + ".xml")
             self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
 
 
@@ -159,7 +161,7 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab = SubstrateDef()
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
-        print("pmb.py: substrate_name=",substrate_name)
+        # print("pmb.py: first_substrate_name=",substrate_name)
         self.microenv_tab.populate_tree()  # rwh: both fill_gui and populate_tree??
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
@@ -168,7 +170,8 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.xml_root = self.xml_root
 
         cd_name = self.celldef_tab.first_cell_def_name()
-        print("pmb.py: cd_name=",cd_name)
+        # print("pmb.py: first_cell_def_name=",cd_name)
+        logging.debug(f'pmb.py: first_cell_def_name= {cd_name}')
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
 
@@ -185,6 +188,9 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab = UserParams(self.dark_mode)
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
+
+        print("pmb.py: ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        # if self.xml_root.find(".//cell_definitions//cell_rules"):
 
         # self.sbml_tab = SBMLParams()
         # self.sbml_tab.xml_root = self.xml_root
@@ -223,16 +229,19 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget.addTab(self.user_params_tab,"User Params")
 
         self.current_dir = os.getcwd()
-        print("model.py: self.current_dir = ",self.current_dir)
+        # print("pmb.py: self.current_dir = ",self.current_dir)
+        logging.debug(f'pmb.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
             self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
-            self.rules_tab.fill_gui()
+            # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.fill_gui()
 
 
         if self.studio_flag:
-            print("studio.py: creating ICs, Run, and Plot tabs")
+            logging.debug(f'pmb.py: creating ICs, Run, and Plot tabs')
             self.ics_tab = ICs(self.config_tab, self.celldef_tab)
             self.ics_tab.fill_celltype_combobox()
             self.ics_tab.reset_info()
@@ -263,6 +272,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
 
             self.legend_tab = Legend(self.nanohub_flag)
+            self.legend_tab.current_dir = self.current_dir
             self.run_tab.vis_tab = self.vis_tab
             # self.vis_tab.setEnabled(False)
             # self.vis_tab.nanohub_flag = self.nanohub_flag
@@ -277,13 +287,18 @@ class PhysiCellXMLCreator(QWidget):
             self.enableLegendTab(True)
             self.run_tab.vis_tab = self.vis_tab
             self.run_tab.legend_tab = self.legend_tab
-            print("studio.py: calling vis_tab.substrates_cbox_changed_cb(2)")
+            logging.debug(f'pmb.py: calling vis_tab.substrates_cbox_changed_cb(2)')
             self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
             self.vis_tab.init_plot_range(self.config_tab)
 
             self.vis_tab.output_dir = self.config_tab.folder.text()
             self.legend_tab.output_dir = self.config_tab.folder.text()
+            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+            if Path(legend_file).is_file():
+                self.legend_tab.reload_legend()
+
+            self.vis_tab.reset_model()
             
 
 
@@ -319,7 +334,14 @@ class PhysiCellXMLCreator(QWidget):
         file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
 
         #--------------
-        samples_menu = file_menu.addMenu("Samples (copy of)")
+        export_menu = file_menu.addMenu("Export")
+
+        simularium_act = QAction('Simularium', self)
+        export_menu.addAction(simularium_act)
+        simularium_act.triggered.connect(self.simularium_cb)
+
+        #--------------
+        samples_menu = file_menu.addMenu("Samples")
 
         template_act = QAction('template', self)
         samples_menu.addAction(template_act)
@@ -384,9 +406,11 @@ class PhysiCellXMLCreator(QWidget):
             self.download_menu = None
 
         #-------------------------
+        view_menu = menubar.addMenu('&View')
         if self.model3D_flag:
-            view3D_menu = menubar.addMenu('&View')
-            view3D_menu.triggered.connect(self.view3D_cb)
+            # view3D_menu = menubar.addMenu('&View')
+            # view3D_menu.triggered.connect(self.view3D_cb)
+            view_menu.triggered.connect(self.view3D_cb)
 
         # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
             # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
@@ -409,6 +433,9 @@ class PhysiCellXMLCreator(QWidget):
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
             # contour_act.setChecked(False)
+
+        else:  # just 2D view
+            view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
 
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
@@ -456,6 +483,9 @@ class PhysiCellXMLCreator(QWidget):
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.fill_gui()
 
         self.config_tab.fill_gui()
 
@@ -484,7 +514,8 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab.fill_gui()
 
     def show_sample_model(self):
-        print("show_sample_model: self.config_file = ", self.config_file)
+        logging.debug(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
+        print(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
         # self.config_file = "config_samples/biorobots.xml"
         self.tree = ET.parse(self.config_file)
         # self.xml_root = self.tree.getroot()
@@ -501,10 +532,13 @@ class PhysiCellXMLCreator(QWidget):
         # print("\n\nopen_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
         print("\n\nopen_as_cb():  full_path_model_name =",full_path_model_name )
+        logging.debug(f'\npmb.py: open_as_cb():  full_path_model_name ={full_path_model_name}')
         # if (len(full_path_model_name) > 0) and Path(full_path_model_name):
         if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_file():
             print("open_as_cb():  filePath is valid")
+            logging.debug(f'     filePath is valid')
             print("len(full_path_model_name) = ", len(full_path_model_name) )
+            logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
             # fname = os.path.basename(full_path_model_name)
             self.current_xml_file = full_path_model_name
 
@@ -542,13 +576,13 @@ class PhysiCellXMLCreator(QWidget):
         return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
 
     def save_as_cb(self):
-        print("------ save_as_cb():")
+        # print("------ save_as_cb():")
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getSaveFileName(self,'',".")
         # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
-        print("\n\n save_as_cb():  filePath=",filePath)
+        print("save_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
-        print("\n\n save_as_cb():  full_path_model_name =",full_path_model_name )
+        print("save_as_cb():  full_path_model_name =",full_path_model_name )
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
             print("save_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
@@ -564,14 +598,16 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
             self.user_params_tab.fill_xml()
+            if self.rules_flag:
+                self.rules_tab.fill_xml()
 
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
             # out_file = self.current_save_file
-            out_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + out_file)
+            xml_file = self.current_xml_file
+            self.setWindowTitle(self.title_prefix + xml_file)
 
-            print("\n\n ===================================")
+            # print("\n\n ===================================")
             print("pmb.py:  save_as_cb: writing to: ",out_file)
 
             self.tree.write(out_file)
@@ -580,7 +616,6 @@ class PhysiCellXMLCreator(QWidget):
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
-        
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
@@ -589,6 +624,8 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
             self.user_params_tab.fill_xml()
+            if self.rules_flag:
+                self.rules_tab.fill_xml()
 
             # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
             # print("pmb.py:  save_cb: writing to: ",self.config_file)
@@ -596,11 +633,12 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = self.config_file
             # out_file = "mymodel.xml"
             # out_file = self.current_save_file
-            out_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + out_file)
+            # xml_file = self.current_xml_file
+            self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
-            print("\n\n ===================================")
-            print("pmb.py:  save_cb: writing to: ",out_file)
+            # print("\n\n ===================================")
+            # print("pmb.py:  save_cb: writing to: ",out_file)
+            print("pmb.py:  save_cb: writing to: ",self.current_xml_file)
 
             # self.tree.write(self.config_file)
             # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
@@ -616,7 +654,8 @@ class PhysiCellXMLCreator(QWidget):
             # print(out_str)
 
 
-            self.tree.write(out_file)  # originally
+            # self.tree.write(out_file)  # originally
+            self.tree.write(self.current_xml_file)
 
             # # new: pretty print
             # root = self.tree.getroot()
@@ -649,12 +688,20 @@ class PhysiCellXMLCreator(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
+
+    def toggle_2D_shading_cb(self):
+        self.vis2D_gouraud = not self.vis2D_gouraud
+        if self.vis2D_gouraud:
+            self.vis_tab.shading_choice = 'gouraud'
+        else:
+            self.vis_tab.shading_choice = 'auto'
+        self.vis_tab.update_plots()
 
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
-        print('view3D_cb: ',action.text(), action.isChecked())
+        logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
         if "XY" in action.text():
             self.vis_tab.xy_plane_toggle_cb(action.isChecked())
         elif "YZ" in action.text():
@@ -689,8 +736,12 @@ class PhysiCellXMLCreator(QWidget):
         # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
         self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
-        print("load_model: self.current_xml_file= ",self.current_xml_file)
+        logging.debug(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
+        logging.debug(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
+        print(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
+
+        # if self.xml_root.find(".//cell_definitions//cell_rules"):
         # self.current_save_file = current_xml_file
         if self.studio_flag:
             self.run_tab.config_xml_name.setText(self.current_xml_file)
@@ -701,7 +752,19 @@ class PhysiCellXMLCreator(QWidget):
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
             self.config_tab.folder.setText('.')
 
+    #----------------------
+    def simularium_cb(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Simularium export coming soon.")
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        returnValue = msgBox.exec()
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
+        print("---- Simularium export coming soon...")
+
+    #----------------------
     def template_cb(self):
         self.load_model("template")
         if self.studio_flag:
@@ -771,7 +834,7 @@ class PhysiCellXMLCreator(QWidget):
     # Used for downloading config file and output files from nanoHUB
     def message(self, s):
         # self.text.appendPlainText(s)
-        print(s)
+        print('pmb.py: message(): ',s)
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
@@ -883,33 +946,34 @@ def main():
             sys.exit(-1)
 
         if args.studio:
-            print("Studio mode: Run,Plot,Legend tabs")
+            logging.debug(f'pmb.py: Studio mode: Run,Plot,Legend tabs')
             studio_flag = True
             # print("done with args.studio")
         if args.three:
-            print("Assume a 3D model")
+            logging.debug(f'pmb.py: Assume a 3D model')
             model3D_flag = True
-            print("done with args.three")
+            # print("done with args.three")
         if args.rules:
-            print("Show Rules tab")
+            logging.debug(f'pmb.py: Show Rules tab')
             rules_flag = True
         if args.skip_validate:
-            print("Do not validate the config file (.xml)")
+            logging.debug(f'pmb.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
         # print("args.config= ",args.config)
         if args.config:
-            print(f"config file is {args.config}")
+            logging.debug(f'pmb.py: config file is {args.config}')
             # sys.exit()
             config_file = args.config
             if (len(config_file) > 0) and Path(config_file).is_file():
-                print("open_as_cb():  filePath is valid")
-                print("len(config_file) = ", len(config_file) )
-                print("done with args.config")
+                logging.debug(f'pmb.py: open_as_cb():  filePath is valid')
+                logging.debug(f'len(config_file) = {len(config_file)}')
+                logging.debug(f'done with args.config')
             else:
-                print("config_file is NOT valid: ", args.config)
+                print(f'config_file is NOT valid: {args.config}')
+                logging.error(f'config_file is NOT valid: {args.config}')
                 sys.exit()
         if args.exec:
-            print(f"exec pgm is {args.exec}")
+            logging.debug(f'exec pgm is {args.exec}')
             # sys.exit()
             exec_file = args.exec
             if (len(exec_file) > 0) and Path(exec_file).is_file():
@@ -929,7 +993,7 @@ def main():
 #    pmb_app.setStyleSheet("")  # affect dark mode?
     # pmb_app.setStyleSheet("Fusion")  # affect dark mode?
 
-    print("---> ",QStyleFactory.keys())
+    logging.debug(f'QStyleFactory.keys() = {QStyleFactory.keys()}')
 
     # pmb_app.setStyleSheet(open("pyqt5-dark-theme.stylesheet").read())
     # pmb_app.setStyleSheet(open("darkorange.stylesheet").read())
@@ -977,8 +1041,13 @@ def main():
 
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
     ex.show()
-    startup_notice()
+    # startup_notice()
     sys.exit(pmb_app.exec_())
 	
 if __name__ == '__main__':
+    # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(filename="pmb_debug.log", level=logging.INFO)
+    logfile = "pmb_debug.log"
+    # logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
+    logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
     main()

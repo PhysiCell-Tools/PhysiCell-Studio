@@ -7,6 +7,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 
 import sys
 import os
+import logging
 import time
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
@@ -234,7 +235,7 @@ class ICs(QWidget):
         self.glayout1.addWidget(self.l2val, idr,icol,1,1) # w, row, column, rowspan, colspan
 
         #-------------------
-        self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)
+        # self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)
 
         # controls_vbox = QVBoxLayout()
         # controls_vbox.addLayout(controls_hbox)
@@ -277,7 +278,7 @@ class ICs(QWidget):
 
 
     def fill_celltype_combobox(self):
-        print("fill_celltype_combobox(): ",self.celldef_tab.celltypes_list)
+        logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.celldef_tab.celltypes_list}')
         for cdef in self.celldef_tab.celltypes_list:
             self.celltype_combobox.addItem(cdef)
 
@@ -296,17 +297,17 @@ class ICs(QWidget):
             # self.plot_xmax = float(self.xmax)
             # self.plot_ymin = float(self.ymin)
             # self.plot_ymax = float(self.ymax)
-            print("ics_tab: -------- ICs: reset_plot_range(): plot_xmin,xmax=  ",self.plot_xmin,self.plot_xmax)
-            print("ics_tab: -------- ICs: reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            logging.debug(f'ics_tab.py: -------- ICs: reset_plot_range(): plot_xmin,xmax=  {self.plot_xmin,self.plot_xmax}')
+            logging.debug(f'ics_tab.py: -------- ICs: reset_plot_range(): plot_ymin,ymax=  {self.plot_ymin,self.plot_ymax}')
         except:
             pass
 
-        self.update_plots()
+        # self.update_plots()
 
 
     def show_hide_plot_range(self):
         # print("vis_tab: show_hide_plot_range()")
-        print('self.stackw.count()=', self.stackw.count())
+        logging.debug(f'ics_tab.py: self.stackw.count()= {self.stackw.count()}')
         # print('self.show_plot_range= ',self.show_plot_range)
         # print(" # items = ",self.layout.num_items())
         # item = self.layout.itemAt(1)
@@ -337,7 +338,7 @@ class ICs(QWidget):
 
 
     def l1_l2_cb(self):
-        print("----- l1_l2_cb:")
+        # print("----- l1_l2_cb:")
         try:  # due to the initial callback
             self.l1_value = float(self.l1val.text())
             self.l2_value = float(self.l2val.text())
@@ -347,7 +348,7 @@ class ICs(QWidget):
         # self.update_plots()
 
     def init_plot_range(self, config_tab):
-        print("----- init_plot_range:")
+        # print("----- init_plot_range:")
         try:
             # beware of widget callback 
             self.my_xmin.setText(config_tab.xmin.text())
@@ -399,12 +400,12 @@ class ICs(QWidget):
         # print('field_min_max= ',self.field_min_max)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
 
-    def celltype_combobox_changed_cb(self,idx):
-        print("----- celltype_combobox_changed_cb: idx = ",idx)
+    # def celltype_combobox_changed_cb(self,idx):
+        # print("----- celltype_combobox_changed_cb: idx = ",idx)
         # self.update_plots()
 
     def geom_combobox_changed_cb(self,idx):
-        print("----- geom_combobox_changed_cb: idx = ",idx)
+        # print("----- geom_combobox_changed_cb: idx = ",idx)
         # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
@@ -417,7 +418,7 @@ class ICs(QWidget):
         # self.update_plots()
 
     def fill_combobox_changed_cb(self,idx):
-        print("----- fill_combobox_changed_cb: idx = ",idx)
+        # print("----- fill_combobox_changed_cb: idx = ",idx)
         # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
@@ -430,7 +431,7 @@ class ICs(QWidget):
         dialog = QFileDialog()
         # self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
         tmp_dir = dialog.getExistingDirectory(self, 'Select an output directory')
-        print("open_directory_cb:  tmp_dir=",tmp_dir)
+        # print("open_directory_cb:  tmp_dir=",tmp_dir)
         if tmp_dir == "":
             return
 
@@ -439,7 +440,7 @@ class ICs(QWidget):
         self.reset_model()
 
     def reset_info(self):
-        print("\nics_tab:  --- reset_info()")
+        # print("\nics_tab:  --- reset_info()")
         self.celltype_combobox.clear()
         self.fill_celltype_combobox()
         self.csv_array = np.empty([1,4])
@@ -457,7 +458,7 @@ class ICs(QWidget):
 
 
     def create_figure(self):
-        print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
+        # print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.setStyleSheet("background-color:transparent;")
@@ -607,7 +608,7 @@ class ICs(QWidget):
             self.line_collection = LineCollection(vlines, color="black", linewidths=0.5)
             self.ax0.add_collection(self.line_collection)
         except:
-            print("plot_vecs(): ERROR")
+            logging.debug(f'ics_tab.py: plot_vecs(): ERROR')
             pass
 
     #------------------------------------------------------------
@@ -638,7 +639,7 @@ class ICs(QWidget):
         # print("-- plot_svg:", full_fname) 
         if not os.path.isfile(full_fname):
             # print("Once output files are generated, click the slider.")   
-            print("plot_svg(): Warning: filename not found: ",full_fname)
+            logging.debug(f'ics_tab.py: plot_svg(): Warning: filename not found: {full_fname}')
             return
 
         # self.ax0.cla()
@@ -669,7 +670,7 @@ class ICs(QWidget):
         try:
             tree = ET.parse(full_fname)
         except:
-            print("------ plot_svg(): error trying to parse ",full_name)
+            logging.debug(f'------ plot_svg(): error trying to parse {full_name}')
             return
         root = tree.getroot()
         #  print('--- root.tag ---')
@@ -764,13 +765,13 @@ class ICs(QWidget):
                 # test for bogus x,y locations (rwh TODO: use max of domain?)
                 too_large_val = 10000.
                 if (np.fabs(xval) > too_large_val):
-                    print("bogus xval=", xval)
+                    logging.debug(f'ics_tab.py: bogus xval= {xval}')
                     break
                 yval = float(circle.attrib['cy'])
                 # yval = (yval - self.svg_xmin)/self.svg_xrange * self.y_range + self.ymin
                 yval = yval/self.y_range * self.y_range + self.ymin
                 if (np.fabs(yval) > too_large_val):
-                    print("bogus yval=", yval)
+                    logging.debug(f'ics_tab.py: bogus yval= {yval}')
                     break
 
                 rval = float(circle.attrib['r'])
@@ -883,8 +884,8 @@ class ICs(QWidget):
         # msgBox.buttonClicked.connect(msgButtonClick)
 
         returnValue = msgBox.exec()
-        if returnValue == QMessageBox.Ok:
-            print('OK clicked')
+        # if returnValue == QMessageBox.Ok:
+            # print('OK clicked')
 
     #------------------------------------------------------------
     def plot_cb(self):
@@ -893,7 +894,7 @@ class ICs(QWidget):
         cdef = self.celltype_combobox.currentText()
         volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
         self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
-        print("volume, radius= ",volume, self.cell_radius)
+        logging.debug(f'ics_tab.py: volume= {volume}, radius= {self.cell_radius}')
 
         if "annulus" in self.geom_combobox.currentText():
             if self.l2_value <= self.l1_value:

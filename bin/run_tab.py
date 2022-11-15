@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 import sys
 import os
 import time
+import logging
 from pathlib import Path
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtWidgets import *
@@ -125,7 +126,7 @@ class RunModel(QWidget):
 #------------------------------
     def update_xml_from_gui(self):
         self.xml_root = self.tree.getroot()
-        print("\n\n =================================== run_tab.py: update_xml_from_gui(): self.xml_root = ",self.xml_root)
+        logging.debug(f'\n ========================== run_tab.py: update_xml_from_gui(): self.xml_root = {self.xml_root}')
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
@@ -148,7 +149,7 @@ class RunModel(QWidget):
         self.text.appendPlainText(s)
 
     def run_model_cb(self):
-        print("===========  run_model_cb():  ============")
+        logging.debug(f'===========  run_model_cb():  ============')
 
         if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
             msg = QMessageBox()
@@ -164,7 +165,7 @@ class RunModel(QWidget):
         if True: # copy normal workflow of an app, strange as it is
 
             # make sure we are where we started (app's root dir)
-            print("\n\n------>>>> doing os.chdir to ", self.current_dir)
+            logging.debug(f'\n------>>>> doing os.chdir to {self.current_dir}')
             os.chdir(self.current_dir)
 
             # remove any previous data
@@ -185,7 +186,7 @@ class RunModel(QWidget):
                 self.output_dir = self.config_tab.folder.text()
                 # os.system('rm -rf tmpdir*')
                 os.system('rm -rf ' + self.output_dir)
-                print("run_tab.py:  doing: mkdir ",self.output_dir)
+                logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
                 os.makedirs(self.output_dir)  # do 'mkdir output_dir'
                 time.sleep(1)
 
@@ -208,7 +209,7 @@ class RunModel(QWidget):
             # self.celldef_tab.fill_xml()
             # self.user_params_tab.fill_xml()
             # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            print("run_tab.py: ----> writing modified model to ",self.config_file)
+            logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
             # print("run_tab.py: ----> writing modified model to ",new_config_file)
             self.tree.write(self.config_file)
             # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
@@ -266,7 +267,7 @@ class RunModel(QWidget):
             if self.nanohub_flag:
                 self.p.start("submit",["--local",exec_str,xml_str])
             else:
-                print("\n\nrun_tab.py: running: ",exec_str,xml_str)
+                logging.debug(f'\nrun_tab.py: running: {exec_str}, {xml_str}')
                 self.p.start(exec_str, [xml_str])
 
                 # print("\n\nrun_tab.py: running: ",exec_str," output/config.xml")
@@ -275,10 +276,10 @@ class RunModel(QWidget):
 
             self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
-            print("self.p is not None???")
+            logging.debug(f'self.p is not None???')
 
     def cancel_model_cb(self):
-        print("===========  cancel_model_cb():  ============")
+        logging.debug(f'===========  cancel_model_cb():  ============')
         if self.p:  # process running.
             self.p.kill()
             # self.p.terminate()
@@ -306,7 +307,7 @@ class RunModel(QWidget):
 
     def process_finished(self):
         self.message("Process finished.")
-        print("-- process finished.")
+        # print("-- process finished.")
         self.vis_tab.first_plot_cb("foo")
         if self.nanohub_flag:
             self.download_menu.setEnabled(True)
