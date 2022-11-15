@@ -86,6 +86,8 @@ class PhysiCellXMLCreator(QWidget):
         if studio_flag:
             self.title_prefix = "PhysiCell Studio: "
 
+        self.vis2D_gouraud = False
+
         self.nanohub_flag = False
         if( 'HOME' in os.environ.keys() ):
             self.nanohub_flag = "home/nanohub" in os.environ['HOME']
@@ -404,9 +406,11 @@ class PhysiCellXMLCreator(QWidget):
             self.download_menu = None
 
         #-------------------------
+        view_menu = menubar.addMenu('&View')
         if self.model3D_flag:
-            view3D_menu = menubar.addMenu('&View')
-            view3D_menu.triggered.connect(self.view3D_cb)
+            # view3D_menu = menubar.addMenu('&View')
+            # view3D_menu.triggered.connect(self.view3D_cb)
+            view_menu.triggered.connect(self.view3D_cb)
 
         # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
             # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
@@ -429,6 +433,9 @@ class PhysiCellXMLCreator(QWidget):
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
             # contour_act.setChecked(False)
+
+        else:  # just 2D view
+            view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
 
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
@@ -683,6 +690,14 @@ class PhysiCellXMLCreator(QWidget):
         returnValue = msgBox.exec()
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
+
+    def toggle_2D_shading_cb(self):
+        self.vis2D_gouraud = not self.vis2D_gouraud
+        if self.vis2D_gouraud:
+            self.vis_tab.shading_choice = 'gouraud'
+        else:
+            self.vis_tab.shading_choice = 'auto'
+        self.vis_tab.update_plots()
 
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
