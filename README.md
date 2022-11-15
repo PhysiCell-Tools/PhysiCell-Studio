@@ -1,6 +1,6 @@
-# PhysiCell model builder: graphical user interface (GUI) for a PhysiCell model
+# PhysiCell model builder/Studio: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.9.0
+VERSION: 2.9.1
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -38,6 +38,15 @@ python bin/pmb.py --help
 ```
 
 NOTE: a model's configuration file (.xml) needs to have a "flattened" format, as opposed to the traditional "hierarchical" format, for the cell_definitions. That is to say, each cell_definition needs to explicitly provide *all* parameters, not just those that differ from a parent cell_definition. All of the config files in the `/data` directory have the flattened format.
+
+## Release 2.9.1
+* fix bugs related to not having ICs tab created in cell_def_tab.py (thanks Grant Maxey)
+* switch to pcolormesh instead of contourf for 2D substrates
+* View menu: allow Gouraud shading for pcolormesh
+* logging for debugging
+* full config path in title
+* plot legend if already exists in output dir
+* improved Rules tab: Load, Save, etc.
 
 ## Release 2.9.0
 * fix bugs related to allowing for empty <custom_data> (thanks Issy Cowlishaw)
