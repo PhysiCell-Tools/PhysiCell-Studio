@@ -365,7 +365,8 @@ class CellDef(QWidget):
         self.cell_transformation_dropdown.removeItem(item_idx)
 
         # ICs
-        self.ics_tab.celltype_combobox.removeItem(item_idx)
+        if self.ics_tab:
+            self.ics_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
         logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
@@ -5017,7 +5018,8 @@ class CellDef(QWidget):
 
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
-        self.ics_tab.celltype_combobox.addItem(name)
+        if self.ics_tab:
+            self.ics_tab.celltype_combobox.addItem(name)
 
     #-----------------------------------------------------------------------------------------
     # def delete_substrate(self, item_idx):
@@ -5166,7 +5168,7 @@ class CellDef(QWidget):
                 self.cell_transformation_dropdown.setItemText(idx, new_name)
             if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
-            if old_name == self.ics_tab.celltype_combobox.itemText(idx):
+            if self.ics_tab and (old_name == self.ics_tab.celltype_combobox.itemText(idx)):
                 self.ics_tab.celltype_combobox.setItemText(idx, new_name)
 
         # 2) OMG, also update all param_d dicts that involve cell def names
