@@ -591,6 +591,8 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
             self.user_params_tab.fill_xml()
+            if self.rules_flag:
+                self.rules_tab.fill_xml()
 
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
@@ -615,6 +617,8 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.fill_xml()
             self.celldef_tab.fill_xml()
             self.user_params_tab.fill_xml()
+            if self.rules_flag:
+                self.rules_tab.fill_xml()
 
             # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
             # print("pmb.py:  save_cb: writing to: ",self.config_file)
@@ -622,11 +626,12 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = self.config_file
             # out_file = "mymodel.xml"
             # out_file = self.current_save_file
-            xml_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + xml_file)
+            # xml_file = self.current_xml_file
+            self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
             # print("\n\n ===================================")
-            print("pmb.py:  save_cb: writing to: ",out_file)
+            # print("pmb.py:  save_cb: writing to: ",out_file)
+            print("pmb.py:  save_cb: writing to: ",self.current_xml_file)
 
             # self.tree.write(self.config_file)
             # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
@@ -642,7 +647,8 @@ class PhysiCellXMLCreator(QWidget):
             # print(out_str)
 
 
-            self.tree.write(out_file)  # originally
+            # self.tree.write(out_file)  # originally
+            self.tree.write(self.current_xml_file)
 
             # # new: pretty print
             # root = self.tree.getroot()
