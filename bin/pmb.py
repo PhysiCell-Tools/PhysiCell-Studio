@@ -604,13 +604,15 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
             # out_file = self.current_save_file
-            xml_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + xml_file)
+            # xml_file = self.current_xml_file
+            # print("--- xml_file =",xml_file )
+            
+            self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
             # print("\n\n ===================================")
-            print("pmb.py:  save_as_cb: writing to: ",out_file)
+            print("pmb.py:  save_as_cb: writing to: ",self.current_xml_file)
 
-            self.tree.write(out_file)
+            self.tree.write(self.current_xml_file)
 
         except Exception as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
