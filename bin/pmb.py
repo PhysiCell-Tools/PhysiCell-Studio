@@ -269,6 +269,7 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab = Vis(self.nanohub_flag)
             self.config_tab.vis_tab = self.vis_tab
             self.vis_tab.output_dir = self.config_tab.folder.text()
+            self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
 
             self.legend_tab = Legend(self.nanohub_flag)
@@ -406,11 +407,9 @@ class PhysiCellXMLCreator(QWidget):
             self.download_menu = None
 
         #-------------------------
-        view_menu = menubar.addMenu('&View')
         if self.model3D_flag:
-            # view3D_menu = menubar.addMenu('&View')
-            # view3D_menu.triggered.connect(self.view3D_cb)
-            view_menu.triggered.connect(self.view3D_cb)
+            view3D_menu = menubar.addMenu('&View')
+            view3D_menu.triggered.connect(self.view3D_cb)
 
         # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
             # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
@@ -435,6 +434,7 @@ class PhysiCellXMLCreator(QWidget):
             # contour_act.setChecked(False)
 
         else:  # just 2D view
+            view_menu = menubar.addMenu('&View')
             view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
 
 
@@ -1048,6 +1048,6 @@ if __name__ == '__main__':
     # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     # logging.basicConfig(filename="pmb_debug.log", level=logging.INFO)
     logfile = "pmb_debug.log"
-    # logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
-    logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
+    logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
+    # logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
     main()

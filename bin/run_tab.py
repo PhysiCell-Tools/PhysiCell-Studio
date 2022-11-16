@@ -277,6 +277,7 @@ class RunModel(QWidget):
             self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
             logging.debug(f'self.p is not None???')
+            print(f'self.p is not None???')
 
     def cancel_model_cb(self):
         logging.debug(f'===========  cancel_model_cb():  ============')
