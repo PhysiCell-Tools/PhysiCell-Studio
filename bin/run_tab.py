@@ -25,11 +25,12 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class RunModel(QWidget):
-    def __init__(self, nanohub_flag, tab_widget, download_menu):
+    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu):
         super().__init__()
 
         self.nanohub_flag = nanohub_flag
         self.tab_widget = tab_widget
+        self.rules_flag = rules_flag
         self.download_menu = download_menu
 
         #-------------------------------------------
@@ -45,6 +46,7 @@ class RunModel(QWidget):
         self.microenv_tab = None
         self.celldef_tab = None
         self.user_params_tab = None
+        self.rules_tab = None
         self.vis_tab = None
         self.legend_tab = None
 
@@ -131,12 +133,16 @@ class RunModel(QWidget):
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
         # sys.exit(1)
 
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
         self.celldef_tab.fill_xml()
         self.user_params_tab.fill_xml()
+        if self.rules_flag:
+            self.rules_tab.fill_xml()
 
         # self.vis_tab.circle_radius = ET.parse(self.xml_root)
         # tree = ET.parse(xml_file)

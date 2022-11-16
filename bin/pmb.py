@@ -233,7 +233,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'pmb.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
+            self.rules_tab = Rules(self.microenv_tab, self.celldef_tab)
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
@@ -249,7 +249,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
             # self.run_tab.config_xml_name.setText(current_xml_file)
             self.run_tab.exec_name.setText(exec_file)
             self.run_tab.config_xml_name.setText(self.current_xml_file)
@@ -259,6 +259,8 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.microenv_tab = self.microenv_tab 
             self.run_tab.celldef_tab = self.celldef_tab
             self.run_tab.user_params_tab = self.user_params_tab
+            if self.rules_flag:
+                self.run_tab.rules_tab = self.rules_tab
             self.run_tab.tree = self.tree
 
             self.run_tab.config_file = self.current_xml_file
