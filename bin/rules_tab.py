@@ -8,6 +8,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 import sys
 import os
 import logging
+import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
@@ -430,21 +431,36 @@ class Rules(QWidget):
     def fill_xml(self):
         indent8 = '\n        '
         indent10 = '\n          '
-        # self.xml_root.find(".//x_min").text = self.xmin.text()
 
         # <cell_rules type="csv" enabled="true">
         #     <folder>.</folder>
         #     <filename>test_rules.csv</filename>
         # </cell_rules>      
         # </cell_definitions>
+        uep = self.xml_root.find(".//cell_definitions")
 
-        self.xml_root.find(".//cell_rules//folder").text = self.rules_folder.text()
-        self.xml_root.find(".//cell_rules//filename").text = self.rules_file.text()
+        if not self.xml_root.find(".//cell_definitions//cell_rules"):
+            elm = ET.Element("cell_rules", 
+                        {"type":"csv", "enabled":"false" })
+            elm.tail = '\n' + indent8
+            elm.text = indent8
 
-        if self.rules_enabled.isChecked():
-            self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'true'
+            subelm = ET.SubElement(elm, 'folder')
+            subelm.text = self.rules_folder.text()
+            subelm.tail = indent8
+
+            subelm = ET.SubElement(elm, 'filename')
+            subelm.text = self.rules_file.text()
+            subelm.tail = indent8
+            uep.insert(0,elm)
         else:
-            self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'false'
+            self.xml_root.find(".//cell_rules//folder").text = self.rules_folder.text()
+            self.xml_root.find(".//cell_rules//filename").text = self.rules_file.text()
+
+            if self.rules_enabled.isChecked():
+                self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'true'
+            else:
+                self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'false'
 
         return
     
