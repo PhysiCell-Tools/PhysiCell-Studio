@@ -23,6 +23,8 @@ class Vis(QWidget):
         super().__init__()
         # global self.config_params
 
+        self.config_tab = None
+
         self.show_xy_plane = True
         self.show_yz_plane = True
         self.show_xz_plane = True
@@ -685,7 +687,7 @@ class Vis(QWidget):
         return
 
     def fill_substrates_combobox(self, substrate_list):
-        print("vis_tab.py: ------- fill_substrates_combobox")
+        print("vis3D_tab.py: ------- fill_substrates_combobox")
         print("substrate_list = ",substrate_list )
         self.substrates_cbox.clear()
         for s in substrate_list:
@@ -723,7 +725,7 @@ class Vis(QWidget):
 
 
     def substrates_cbox_changed_cb(self,idx):
-        print("----- vis_tab.py: substrates_cbox_changed_cb: idx = ",idx)
+        print("----- vis3D_tab.py: substrates_cbox_changed_cb: idx = ",idx)
         self.field_index = idx 
         self.update_plots()
 
@@ -741,12 +743,12 @@ class Vis(QWidget):
         self.reset_model()
 
     def reset_model(self):
-        print("\n--------- vis_tab: reset_model ----------")
+        print("\n--------- vis3D_tab: reset_model ----------")
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_tab: Warning: Expecting initial.xml, but does not exist.")
+            print("vis3D_tab: Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
@@ -816,7 +818,7 @@ class Vis(QWidget):
         # self.forward_plot_cb("")  
 
     def reset_axes(self):
-        print("--------- vis_tab: reset_axes ----------")
+        print("--------- vis3D_tab: reset_axes ----------")
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
@@ -1428,6 +1430,7 @@ class Vis(QWidget):
             # nx,ny,nz = 12,12,12
             # nx,ny,nz = 3,3,3
             nx,ny,nz = sub_concentration.shape
+            print("nx,ny,nz = ",nx,ny,nz)
             self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
             # self.substrate_data.SetDimensions( nx, ny, nz )
             voxel_size = 20   # rwh: fix
@@ -1435,6 +1438,19 @@ class Vis(QWidget):
             y0 = -(voxel_size * ny) / 2.0
             z0 = -(voxel_size * nz) / 2.0
             print("x0,y0,z0 = ",x0,y0,z0)
+
+            # Check to see if the (possible) files in the output dir match that of the Config tab specs
+            # rwh: more tests to do though (put all these in a function)
+            if x0 != float(self.config_tab.xmin.text()):
+                print(f'vis3D_tab.py: Error: x0 {x0} is different than the Config tab {self.config_tab.xmin.text()}.')
+                return
+            if y0 != float(self.config_tab.ymin.text()):
+                print(f'vis3D_tab.py: Error: y0 {y0} is different than the Config tab {self.config_tab.ymin.text()}.')
+                return
+            if z0 != float(self.config_tab.zmin.text()):
+                print(f'vis3D_tab.py: Error: z0 {z0} is different than the Config tab {self.config_tab.zmin.text()}.')
+                return
+
             self.substrate_data.SetOrigin( x0, y0, z0 )
             self.substrate_data.SetSpacing( voxel_size, voxel_size, voxel_size )
             vmin = 1.e30

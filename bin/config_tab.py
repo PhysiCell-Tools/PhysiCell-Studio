@@ -323,7 +323,8 @@ class Config(QWidget):
 
         idx_row += 1
         self.cells_csv = QCheckBox("enable")
-        icol = 0
+        self.cells_csv.setEnabled(True)
+        icol = 1
         self.config_tab_layout.addWidget(self.cells_csv, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("folder")

@@ -52,6 +52,7 @@ class Vis(QWidget):
         self.voxel_dy = 20 
 
         self.nanohub_flag = nanohub_flag
+        self.config_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
