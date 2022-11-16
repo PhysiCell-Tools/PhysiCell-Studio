@@ -1,6 +1,6 @@
 # PhysiCell model builder/Studio: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.9.1
+VERSION: 2.9.2
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
@@ -38,6 +38,11 @@ python bin/pmb.py --help
 ```
 
 NOTE: a model's configuration file (.xml) needs to have a "flattened" format, as opposed to the traditional "hierarchical" format, for the cell_definitions. That is to say, each cell_definition needs to explicitly provide *all* parameters, not just those that differ from a parent cell_definition. All of the config files in the `/data` directory have the flattened format.
+
+## Release 2.9.2
+* logging for debugging (not just errors)
+* sanity checks for vis3D with existing output
+* fix crazy Config checkbox for csv (move to non-zeroth column)
 
 ## Release 2.9.1
 * fix bugs related to not having ICs tab created in cell_def_tab.py (thanks Grant Maxey)
