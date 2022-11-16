@@ -144,6 +144,11 @@ class Rules(QWidget):
         self.rules_tab_layout.addWidget(self.add_rule_button, idx_row,0,1,1) 
         # self.add_rule_button.clicked.connect(self.add_rule_cb)
 
+        self.dead_cells_rule = False
+        self.dead_cells_checkbox = QCheckBox("applies to dead cells")
+        icol = 2
+        self.rules_tab_layout.addWidget(self.dead_cells_checkbox, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+
         #----------------------
         self.rules_text = QPlainTextEdit()  # config/cell_rules.csv
         self.rules_text.setReadOnly(False)
