@@ -96,7 +96,8 @@ class Vis(QWidget):
 
         self.aspect_ratio = 0.7
 
-        self.show_grid = False
+        self.show_voxel_grid = False
+        self.show_mech_grid = False
         self.show_vectors = False
 
         self.show_nucleus = False
@@ -556,6 +557,13 @@ class Vis(QWidget):
             self.plot_substrate(self.current_svg_frame)
         if self.cells_checked_flag:
             self.plot_svg(self.current_svg_frame)
+
+        if self.show_voxel_grid:
+            self.plot_voxel_grid()
+        if self.show_mech_grid:
+            self.plot_mechanics_grid()
+        # if self.show_vectors:
+            # self.plot_vecs()
 
         self.frame_count.setText(str(self.current_svg_frame))
 
@@ -1101,16 +1109,41 @@ class Vis(QWidget):
             pass
 
     #------------------------------------------------------------
-    # This is primarily used for debugging tricky mechanics dynamics; probably hardly ever used.
-    def plot_mechanics_grid(self):
-        numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
-        numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
-        xs = np.linspace(self.xmin,self.xmax, numx)
-        ys = np.linspace(self.ymin,self.ymax, numy)
+    # This is primarily used for debugging.
+    def plot_voxel_grid(self):
+        #  Should we actually parse/use coords in initial.xml, e.g.:
+        #      <x_coordinates delimiter=" ">-490.000000 -470.000000
+        # xoffset = self.xdel / 2.0
+        # yoffset = self.ydel / 2.0
+        # xmax = self.xmax - xoffset
+        # xmin = self.xmin + xoffset
+        # ymax = self.ymax - yoffset
+        # ymin = self.ymin + yoffset
+
+        xs = np.arange(self.xmin,self.xmax+1,self.xdel)  # DON'T try to use np.linspace!
+        # print("xs= ",xs)
+        ys = np.arange(self.ymin,self.ymax+1,self.ydel)
+        # print("ys= ",ys)
         hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
         vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
         grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
         line_collection = LineCollection(grid_lines, color="gray", linewidths=0.5)
+        self.ax0.add_collection(line_collection)
+
+    #------------------------------------------------------------
+    # This is primarily used for debugging tricky mechanics dynamics; probably hardly ever used.
+    def plot_mechanics_grid(self):
+        # numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
+        # numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
+        # xs = np.linspace(self.xmin,self.xmax, numx)
+        # ys = np.linspace(self.ymin,self.ymax, numy)
+        xs = np.arange(self.xmin,self.xmax+1,self.mech_voxel_size)  # DON'T try to use np.linspace!
+        # print("xs= ",xs)
+        ys = np.arange(self.ymin,self.ymax+1,self.mech_voxel_size)
+        hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
+        vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
+        grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
+        line_collection = LineCollection(grid_lines, color="red", linewidths=0.7)
         # ax = plt.gca()
         # ax.add_collection(line_collection)
         self.ax0.add_collection(line_collection)
@@ -1119,18 +1152,18 @@ class Vis(QWidget):
 
     #------------------------------------------------------------
     # For debugging.
-    def plot_voxel_grid(self):
-        numx = int((self.xmax - self.xmin)/self.xdel)
-        numy = int((self.ymax - self.ymin)/self.ydel)
-        xs = np.linspace(self.xmin,self.xmax, numx)
-        ys = np.linspace(self.ymin,self.ymax, numy)
-        hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
-        vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
-        grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
-        line_collection = LineCollection(grid_lines, color="gray", linewidths=0.5)
-        # ax = plt.gca()
-        # ax.add_collection(line_collection)
-        self.ax0.add_collection(line_collection)
+    # def plot_voxel_grid(self):
+    #     numx = int((self.xmax - self.xmin)/self.xdel)
+    #     numy = int((self.ymax - self.ymin)/self.ydel)
+    #     xs = np.linspace(self.xmin,self.xmax, numx)
+    #     ys = np.linspace(self.ymin,self.ymax, numy)
+    #     hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
+    #     vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
+    #     grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
+    #     line_collection = LineCollection(grid_lines, color="gray", linewidths=0.5)
+    #     # ax = plt.gca()
+    #     # ax.add_collection(line_collection)
+    #     self.ax0.add_collection(line_collection)
 
     #------------------------------------------------------------
     # def plot_svg(self, frame, rdel=''):
@@ -1140,11 +1173,13 @@ class Vis(QWidget):
 
         # return
 
-        if self.show_grid:
-            self.plot_mechanics_grid()
+        # if self.show_voxel_grid:
+        #     self.plot_voxel_grid()
+        # if self.show_mech_grid:
+        #     self.plot_mechanics_grid()
 
-        if self.show_vectors:
-            self.plot_vecs()
+        # if self.show_vectors:
+        #     self.plot_vecs()
 
         # current_frame = frame
         # self.current_frame = frame
@@ -1455,13 +1490,13 @@ class Vis(QWidget):
         # numy = numx
         # self.numx = 50  # for template model
         # self.numy = 50
-        # self.numx = 88  # for kidney model
-        # self.numy = 75
-        try:
-            logging.debug(f'self.numx, self.numy = {self.numx}, {self.numy}')
-        except:
-            logging.debug(f'Error: self.numx, self.numy not defined.')
-            return
+
+        # try:
+        #     logging.debug(f'self.numx, self.numy = {self.numx}, {self.numy}')
+        #     # print(f'vis_tab.py: self.numx, self.numy = {self.numx}, {self.numy}')
+        # except:
+        #     logging.debug(f'Error: self.numx, self.numy not defined.')
+        #     return
         # nxny = numx * numy
 
         try:
