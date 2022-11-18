@@ -81,10 +81,10 @@ class Rules(QWidget):
         # self.rules_tab_layout.addWidget(label, idx_row,3,1,5) 
 
         icol += 1
-        self.action_dropdown = QComboBox()
-        self.action_dropdown.addItem("cycle entry")
-        self.rules_tab_layout.addWidget(self.action_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
-        # self.action_dropdown.currentIndexChanged.connect(self.signal_dropdown_changed_cb)  
+        self.behavior_dropdown = QComboBox()
+        # self.behavior_dropdown.addItem("cycle entry")
+        self.rules_tab_layout.addWidget(self.behavior_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
+        # self.behavior_dropdown.currentIndexChanged.connect(self.signal_dropdown_changed_cb)  
 
         self.rule_val1 = QLineEdit()
         self.rule_val1.setValidator(QtGui.QDoubleValidator())
@@ -283,7 +283,7 @@ class Rules(QWidget):
     def add_rule_cb(self):
         rule_str = self.celltype_dropdown.currentText()
         rule_str += ','
-        rule_str += self.action_dropdown.currentText()
+        rule_str += self.behavior_dropdown.currentText()
         rule_str += ','
         rule_str += self.rule_val1.text()
         rule_str += ','
@@ -363,7 +363,16 @@ class Rules(QWidget):
 
     def fill_gui(self):
         logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
-        print("rules_tab.py: fill_gui(): self.microenv_tab.param_d.keys()= ",self.microenv_tab.param_d.keys())
+
+        # print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
+        for key in self.celldef_tab.param_d.keys():
+            logging.debug(f'cell type ---> {key}')
+            self.celltype_dropdown.addItem(key)
+            # self.signal_dropdown.addItem(key)
+            # break
+        # print("\n\n------------\nrules_tab.py: fill_gui(): self.celldef_tab.param_d = ",self.cell_def_tab.param_d)
+
+        # print("rules_tab.py: fill_gui(): self.microenv_tab.param_d.keys()= ",self.microenv_tab.param_d.keys())
         substrates = []
         for key in self.microenv_tab.param_d.keys():
             logging.debug(f'substrate type ---> {key}')
@@ -372,6 +381,43 @@ class Rules(QWidget):
             else:
                 substrates.append(key)
 
+        #----- behaviors
+        for s in substrates:
+            self.behavior_dropdown.addItem(s + " secretion")
+        for s in substrates:
+            self.behavior_dropdown.addItem(s + " secretion target")
+        for s in substrates:
+            self.behavior_dropdown.addItem(s + " uptake")
+        for s in substrates:
+            self.behavior_dropdown.addItem(s + " export")
+        self.behavior_dropdown.addItem("cycle entry")
+        for idx in range(6):
+            self.behavior_dropdown.addItem("exit from cycle phase " + str(idx))
+        self.behavior_dropdown.addItem("apoptosis")
+        self.behavior_dropdown.addItem("necrosis")
+        self.behavior_dropdown.addItem("migration speed")
+        self.behavior_dropdown.addItem("migration bias")
+        self.behavior_dropdown.addItem("migration persistence time")
+        for s in substrates:
+            self.behavior_dropdown.addItem("chemotactic response to " + s)
+        self.behavior_dropdown.addItem("cell-cell adhesion")
+        self.behavior_dropdown.addItem("cell-cell adhesion elastic constant")
+        for ct in self.celldef_tab.param_d.keys():
+            self.behavior_dropdown.addItem("adhesive affinity to " + ct)
+        self.behavior_dropdown.addItem("relative maximum adhesion distance")
+        self.behavior_dropdown.addItem("cell-cell repulsion")
+        self.behavior_dropdown.addItem("cell-BM adhesion")
+        self.behavior_dropdown.addItem("cell-BM repulsion")
+        self.behavior_dropdown.addItem("phagocytose dead cell")
+        for ct in self.celldef_tab.param_d.keys():
+            self.behavior_dropdown.addItem("phagocytose " + ct)
+        for adj in ["phagocytose ","attack ","fuse to ","transform to "]:
+            for ct in self.celldef_tab.param_d.keys():
+                self.behavior_dropdown.addItem(adj + ct)
+            
+            
+
+        #----- signals
         for s in substrates:
             self.signal_dropdown.addItem(s)
         for s in substrates:
@@ -392,13 +438,6 @@ class Rules(QWidget):
         self.signal_dropdown.addItem("total attack time")
         self.signal_dropdown.addItem("time")
 
-        print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
-        for key in self.celldef_tab.param_d.keys():
-            logging.debug(f'cell type ---> {key}')
-            self.celltype_dropdown.addItem(key)
-            # self.signal_dropdown.addItem(key)
-            # break
-        # print("\n\n------------\nrules_tab.py: fill_gui(): self.celldef_tab.param_d = ",self.cell_def_tab.param_d)
 
 
     #   <cell_rules type="csv" enabled="true">
