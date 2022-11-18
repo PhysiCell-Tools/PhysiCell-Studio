@@ -84,7 +84,7 @@ class Rules(QWidget):
         self.action_dropdown = QComboBox()
         self.action_dropdown.addItem("cycle entry")
         self.rules_tab_layout.addWidget(self.action_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
-        # self.action_dropdown.currentIndexChanged.connect(self.substrate_dropdown_changed_cb)  
+        # self.action_dropdown.currentIndexChanged.connect(self.signal_dropdown_changed_cb)  
 
         self.rule_val1 = QLineEdit()
         self.rule_val1.setValidator(QtGui.QDoubleValidator())
@@ -106,9 +106,9 @@ class Rules(QWidget):
         # self.rules_tab_layout.addWidget(self.check2, idx_row,1,1,1)
 
         icol += 1
-        self.substrate_dropdown = QComboBox()
-        self.rules_tab_layout.addWidget(self.substrate_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
-        self.substrate_dropdown.currentIndexChanged.connect(self.substrate_dropdown_changed_cb)  
+        self.signal_dropdown = QComboBox()
+        self.rules_tab_layout.addWidget(self.signal_dropdown, idx_row,icol, 1,1) # w, row, column, rowspan, colspan
+        self.signal_dropdown.currentIndexChanged.connect(self.signal_dropdown_changed_cb)  
 
         # self.celltype_dropdown.currentIndexChanged.connect(self.celltype_dropdown_changed_cb)  
 
@@ -132,7 +132,7 @@ class Rules(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         # self.rules_tab_layout.addWidget(label, idx_row,3,1,5) 
 
-        # self.rules_tab_layout.addWidget(self.substrate_dropdown, idx_row,2, 1,1) # w, row, column, rowspan, colspan
+        # self.rules_tab_layout.addWidget(self.signal_dropdown, idx_row,2, 1,1) # w, row, column, rowspan, colspan
         # self.signals_dropdown.currentIndexChanged.connect(self.live_phagocytosis_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
         # ----- behaviors
 
@@ -244,9 +244,9 @@ class Rules(QWidget):
             idx_row += 1
             glayout.addWidget(blank_line, idx_row,0, 1,1) # w, row, column, rowspan, colspan
 
-    def substrate_dropdown_changed_cb(self, idx):
-        celltype_name = self.substrate_dropdown.currentText()
-        self.substrate = celltype_name
+    def signal_dropdown_changed_cb(self, idx):
+        name = self.signal_dropdown.currentText()
+        self.signal = name
 
         # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
@@ -291,7 +291,7 @@ class Rules(QWidget):
         rule_str += ','
         rule_str += self.rule_val3.text()
         rule_str += ','
-        rule_str += self.substrate_dropdown.currentText()
+        rule_str += self.signal_dropdown.currentText()
         rule_str += ','
         rule_str += self.up_down_dropdown.currentText()
         rule_str += ','
@@ -364,20 +364,39 @@ class Rules(QWidget):
     def fill_gui(self):
         logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
         print("rules_tab.py: fill_gui(): self.microenv_tab.param_d.keys()= ",self.microenv_tab.param_d.keys())
+        substrates = []
         for key in self.microenv_tab.param_d.keys():
             logging.debug(f'substrate type ---> {key}')
             if key == 'gradients' or key == 'track_in_agents':
                 pass
             else:
-                self.substrate_dropdown.addItem(key)
-            # break
-        # self.substrate_dropdown.addItem("aaaaaaaabbbbbbbbbbccccccccccdddddddddd")
+                substrates.append(key)
+
+        for s in substrates:
+            self.signal_dropdown.addItem(s)
+        for s in substrates:
+            self.signal_dropdown.addItem("intracellular " + s)
+        for s in substrates:
+            self.signal_dropdown.addItem(s + " gradient")
+        self.signal_dropdown.addItem("pressure")
+        self.signal_dropdown.addItem("volume")
+
+        for ct in self.celldef_tab.param_d.keys():
+            self.signal_dropdown.addItem("contact with " + ct)
+
+        self.signal_dropdown.addItem("contact with live cell")
+        self.signal_dropdown.addItem("contact with dead cell")
+        self.signal_dropdown.addItem("contact with BM")
+        self.signal_dropdown.addItem("damage")
+        self.signal_dropdown.addItem("dead")
+        self.signal_dropdown.addItem("total attack time")
+        self.signal_dropdown.addItem("time")
 
         print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
         for key in self.celldef_tab.param_d.keys():
             logging.debug(f'cell type ---> {key}')
             self.celltype_dropdown.addItem(key)
-            # self.substrate_dropdown.addItem(key)
+            # self.signal_dropdown.addItem(key)
             # break
         # print("\n\n------------\nrules_tab.py: fill_gui(): self.celldef_tab.param_d = ",self.cell_def_tab.param_d)
 
