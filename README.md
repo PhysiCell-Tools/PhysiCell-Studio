@@ -39,6 +39,11 @@ python bin/pmb.py --help
 
 NOTE: a model's configuration file (.xml) needs to have a "flattened" format, as opposed to the traditional "hierarchical" format, for the cell_definitions. That is to say, each cell_definition needs to explicitly provide *all* parameters, not just those that differ from a parent cell_definition. All of the config files in the `/data` directory have the flattened format.
 
+## Release 2.9.3
+* remove Rules for now
+* add voxel and mechanics grid toggles to 2D View
+* remove rules subtab code in Cell Types module
+
 ## Release 2.9.2
 * logging for debugging (not just errors)
 * sanity checks for vis3D with existing output
