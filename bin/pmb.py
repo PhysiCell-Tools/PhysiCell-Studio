@@ -29,7 +29,7 @@ from config_tab import Config
 from cell_def_tab import CellDef 
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
-from rules_tab import Rules
+# from rules_tab import Rules
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
@@ -438,7 +438,8 @@ class PhysiCellXMLCreator(QWidget):
         else:  # just 2D view
             view_menu = menubar.addMenu('&View')
             view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-
+            view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
+            view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -703,6 +704,14 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.shading_choice = 'auto'
         self.vis_tab.update_plots()
 
+    def toggle_2D_voxel_grid_cb(self):
+        self.vis_tab.show_voxel_grid = not self.vis_tab.show_voxel_grid
+        self.vis_tab.update_plots()
+
+    def toggle_2D_mech_grid_cb(self):
+        self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
+        self.vis_tab.update_plots()
+
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
         logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
@@ -936,7 +945,7 @@ def main():
 
         parser.add_argument("-s", "--studio", "--Studio", help="include Studio tabs", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model" , action="store_true")
-        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("-c", "--config",  type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec",  type=str, help="executable model")
@@ -957,9 +966,9 @@ def main():
             logging.debug(f'pmb.py: Assume a 3D model')
             model3D_flag = True
             # print("done with args.three")
-        if args.rules:
-            logging.debug(f'pmb.py: Show Rules tab')
-            rules_flag = True
+        # if args.rules:
+        #     logging.debug(f'pmb.py: Show Rules tab')
+        #     rules_flag = True
         if args.skip_validate:
             logging.debug(f'pmb.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
@@ -1043,6 +1052,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
+    rules_flag = False
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
     ex.show()
     # startup_notice()
