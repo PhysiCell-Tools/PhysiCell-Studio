@@ -29,7 +29,7 @@ from config_tab import Config
 from cell_def_tab import CellDef 
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
-from rules_tab import Rules
+# from rules_tab import Rules
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
@@ -233,7 +233,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'pmb.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            self.rules_tab = Rules(self.microenv_tab,self.celldef_tab)
+            self.rules_tab = Rules(self.microenv_tab, self.celldef_tab)
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
@@ -249,7 +249,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
             # self.run_tab.config_xml_name.setText(current_xml_file)
             self.run_tab.exec_name.setText(exec_file)
             self.run_tab.config_xml_name.setText(self.current_xml_file)
@@ -259,6 +259,8 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.microenv_tab = self.microenv_tab 
             self.run_tab.celldef_tab = self.celldef_tab
             self.run_tab.user_params_tab = self.user_params_tab
+            if self.rules_flag:
+                self.run_tab.rules_tab = self.rules_tab
             self.run_tab.tree = self.tree
 
             self.run_tab.config_file = self.current_xml_file
@@ -436,7 +438,8 @@ class PhysiCellXMLCreator(QWidget):
         else:  # just 2D view
             view_menu = menubar.addMenu('&View')
             view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-
+            view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
+            view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -604,13 +607,15 @@ class PhysiCellXMLCreator(QWidget):
             # out_file = "mymodel.xml"
             # out_file = full_path_model_name 
             # out_file = self.current_save_file
-            xml_file = self.current_xml_file
-            self.setWindowTitle(self.title_prefix + xml_file)
+            # xml_file = self.current_xml_file
+            # print("--- xml_file =",xml_file )
+            
+            self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
             # print("\n\n ===================================")
-            print("pmb.py:  save_as_cb: writing to: ",out_file)
+            print("pmb.py:  save_as_cb: writing to: ",self.current_xml_file)
 
-            self.tree.write(out_file)
+            self.tree.write(self.current_xml_file)
 
         except Exception as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
@@ -697,6 +702,14 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.shading_choice = 'gouraud'
         else:
             self.vis_tab.shading_choice = 'auto'
+        self.vis_tab.update_plots()
+
+    def toggle_2D_voxel_grid_cb(self):
+        self.vis_tab.show_voxel_grid = not self.vis_tab.show_voxel_grid
+        self.vis_tab.update_plots()
+
+    def toggle_2D_mech_grid_cb(self):
+        self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
         self.vis_tab.update_plots()
 
     # -------- relevant to vis3D -----------
@@ -932,7 +945,7 @@ def main():
 
         parser.add_argument("-s", "--studio", "--Studio", help="include Studio tabs", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model" , action="store_true")
-        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("-c", "--config",  type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec",  type=str, help="executable model")
@@ -953,9 +966,9 @@ def main():
             logging.debug(f'pmb.py: Assume a 3D model')
             model3D_flag = True
             # print("done with args.three")
-        if args.rules:
-            logging.debug(f'pmb.py: Show Rules tab')
-            rules_flag = True
+        # if args.rules:
+        #     logging.debug(f'pmb.py: Show Rules tab')
+        #     rules_flag = True
         if args.skip_validate:
             logging.debug(f'pmb.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
@@ -1039,6 +1052,7 @@ def main():
 
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
+    rules_flag = False
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
     ex.show()
     # startup_notice()

@@ -39,6 +39,7 @@ class Legend(QWidget):
 
         self.process = None
         self.output_dir = '.'   # set in pmb.py
+        self.current_dir = '.'   # reset in pmb.py
         
         #-------------------------------------------
         self.scroll = QScrollArea()  # might contain centralWidget
@@ -79,21 +80,28 @@ class Legend(QWidget):
     def reload_legend(self):
         # print('reload_legend(): cwd = self.output_dir = ',os.getcwd())
         # self.output_dir = os.getcwd()
-        print('self.output_dir = ',self.output_dir)
+        print('reload_legend(): self.output_dir = ',self.output_dir)
 
-        for idx in range(20):
+        for idx in range(4):
             print("waiting for creation of legend.svg ...",idx)
             # path = Path("legend.svg")
             path = Path(self.output_dir,"legend.svg")
+            # path = Path(self.current_dir,self.output_dir,"legend.svg")
             print("path = ",path)
             if path.is_file():
+            # try:
                 # self.svgView.load("legend.svg")
                 full_fname = os.path.join(self.output_dir, "legend.svg")
+                # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
+                print("full_fname = ",full_fname)
                 self.svgView.load(full_fname)
                 break
+            # except:
+            #     path = Path(self.current_dir,self.output_dir,"legend.svg")
+            #     time.sleep(1)
             else:
-                # path = Path("legend.svg")
                 path = Path(self.output_dir,"legend.svg")
+                # path = Path(self.current_dir,self.output_dir,"legend.svg")
                 time.sleep(1)
         # try:
         #     self.svg.load("legend.svg")

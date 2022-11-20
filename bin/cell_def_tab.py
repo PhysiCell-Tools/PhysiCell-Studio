@@ -213,7 +213,6 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
         self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
-        # self.tab_widget.addTab(self.create_rules_tab(),"Rules")
 
         self.cell_types_tabs_layout = QGridLayout()
         self.cell_types_tabs_layout.addWidget(self.tab_widget, 0,0,1,1) # w, row, column, rowspan, colspan
@@ -4544,109 +4543,6 @@ class CellDef(QWidget):
     # def save_xml(self):
     #     # self.text.setText(random.choice(self.hello))
     #     pass
-
-    #--------------------------------------------------------
-    def create_rules_tab(self):
-        rules_tab = QWidget()
-        glayout = QGridLayout()
-
-        label = QLabel("Phenotype: rules")
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
-
-        #---
-        idr = 1
-        glayout.addWidget(QHLine(), idr,0, 1,2) # w, row, column, rowspan, colspan
-
-        # label = QLabel("Chemotaxis")
-        # label.setFixedWidth(200)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setStyleSheet('background-color: yellow')
-        # idr += 1
-        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        # self.chemotaxis_enabled = QCheckBox("enabled")
-        # self.chemotaxis_enabled.clicked.connect(self.chemotaxis_enabled_cb)
-        # glayout.addWidget(self.chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-        self.rules_type_dropdown = QComboBox()
-        self.rules_type_dropdown.addItem("signal_response")   # 0 -> 0
-        # self.motility_substrate_dropdown.setFixedWidth(240)
-        idr += 1
-        glayout.addWidget(self.rules_type_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
-        # self.rules_type_dropdown.currentIndexChanged.connect(self.rules_type_changed_cb)  # beware: will be triggered on a ".clear" too
-        # self.motility_substrate_dropdown.addItem("oxygen")
-
-        # self.chemotaxis_direction_positive = QCheckBox("up gradient (+1)")
-        # glayout.addWidget(self.chemotaxis_direction_positive, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-        self.response_type_dropdown = QComboBox()
-        self.response_type_dropdown.addItem("Hill")   # 0 -> 0
-        idr += 1
-        glayout.addWidget(self.response_type_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        self.hill_response_increase = QRadioButton("increase")
-        # self.chemotaxis_direction_towards.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addLayout(self.chemotaxis_direction_towards, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-        self.hill_response_decrease = QRadioButton("decrease")
-        # self.chemotaxis_direction_against.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addWidget(self.chemotaxis_direction_against, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.hill_response_increase)
-        hbox.addWidget(self.hill_response_decrease)
-        glayout.addLayout(hbox, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-
-        #---
-        label = QLabel("max_response")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        self.max_response = QLineEdit()
-        # self.max_response.textChanged.connect(self.volume_fluid_fraction_changed)
-        self.max_response.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.max_response, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-        #---
-        label = QLabel("hill_power")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        self.hill_power = QLineEdit()
-        # self.hill_power.textChanged.connect(self.volume_fluid_fraction_changed)
-        self.hill_power.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.hill_power, idr,1, 1,1) # w, row, column, rowspan, colspan
-        
-        #---
-        label = QLabel("half_max")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        self.half_max = QLineEdit()
-        # self.half_max.textChanged.connect(self.volume_fluid_fraction_changed)
-        self.half_max.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.half_max, idr,1, 1,1) # w, row, column, rowspan, colspan
-
-
-        #------
-        for idx in range(11):  # rwh: hack solution to align rows
-            blank_line = QLabel("")
-            idr += 1
-            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        #------
-        # vlayout.setVerticalSpacing(10)  # rwh - argh
-        rules_tab.setLayout(glayout)
-        return rules_tab
-
 
 
     #--------------------------------------------------------
