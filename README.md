@@ -1,6 +1,6 @@
 # PhysiCell model builder/Studio: graphical user interface (GUI) for a PhysiCell model
 
-VERSION: 2.9.2
+VERSION: 2.9.3
 
 A graphical user interface (GUI) application to make it easier to create and edit a PhysiCell (XML) model. 
 
