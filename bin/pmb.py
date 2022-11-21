@@ -340,6 +340,8 @@ Version 2.9.3
 
 PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.
 
+NOTE: When loading a model (.xml configuration file), it must be a complete or "flat" format for the <cell_definitions>. Many legacy PhysiCell models used a hierarchical format in which a <cell_definition> could inherit from a parent. The hierarchical format is not supported in the Studio.
+
 For more information:
 https://github.com/PhysiCell-Tools/PhysiCell-model-builder
 https://github.com/PhysiCell-Tools/Studio (future home)
