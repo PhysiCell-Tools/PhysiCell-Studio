@@ -133,7 +133,7 @@ class CellDef(QWidget):
         self.tree = QTreeWidget() # tree is overkill; list would suffice; meh.
         self.tree.setFocusPolicy(QtCore.Qt.NoFocus)  # don't allow arrow keys to select
         # self.tree.setStyleSheet("background-color: lightgray")
-        self.tree.setFixedWidth(tree_widget_width)
+        # self.tree.setFixedWidth(tree_widget_width)
         self.tree.setFixedHeight(tree_widget_height)
         # self.tree.setColumnCount(1)
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
@@ -153,24 +153,41 @@ class CellDef(QWidget):
         self.cell_def_horiz_layout.addWidget(self.tree)
 
         self.scroll_cell_def_tree = QScrollArea()
-        self.scroll_cell_def_tree.setWidget(self.tree)
+        # self.scroll_cell_def_tree.setWidget(self.tree)
+
+        #-----------
+        tree_w_vbox = QVBoxLayout()
+        tree_w_vbox.addWidget(self.tree)
 
         # splitter.addWidget(self.tree)
         self.splitter.addWidget(self.scroll_cell_def_tree)
 
         #------------------
-        self.controls_hbox = QHBoxLayout()
+        tree_w_hbox = QHBoxLayout()
+        # self.controls_hbox = QHBoxLayout()
         self.new_button = QPushButton("New")
         self.new_button.clicked.connect(self.new_cell_def)
-        self.controls_hbox.addWidget(self.new_button)
+        self.new_button.setStyleSheet("background-color: lightgreen")
+        # self.controls_hbox.addWidget(self.new_button)
+        tree_w_hbox.addWidget(self.new_button)
 
         self.copy_button = QPushButton("Copy")
         self.copy_button.clicked.connect(self.copy_cell_def)
-        self.controls_hbox.addWidget(self.copy_button)
+        self.copy_button.setStyleSheet("background-color: lightgreen")
+        # self.controls_hbox.addWidget(self.copy_button)
+        tree_w_hbox.addWidget(self.copy_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_cell_def)
-        self.controls_hbox.addWidget(self.delete_button)
+        self.delete_button.setStyleSheet("background-color: yellow")
+        # self.controls_hbox.addWidget(self.delete_button)
+        tree_w_hbox.addWidget(self.delete_button)
+
+        #---------
+        self.tree_w = QWidget()
+        tree_w_vbox.addLayout(tree_w_hbox)
+        self.tree_w.setLayout(tree_w_vbox)
+        self.scroll_cell_def_tree.setWidget(self.tree_w)
 
         #------------------
         # self.cycle_tab = QWidget()
@@ -4320,7 +4337,7 @@ class CellDef(QWidget):
             self.custom_data_count = self.custom_data_count + 1
 
         self.layout = QVBoxLayout(self)
-        self.layout.addLayout(self.controls_hbox)
+        # self.layout.addLayout(self.controls_hbox)
         self.layout.addWidget(self.splitter)
 
         # for idx in range(5):  # rwh: hack solution to align rows

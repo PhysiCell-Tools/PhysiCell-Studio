@@ -43,9 +43,12 @@ class SubstrateDef(QWidget):
 
         #---------------
         # self.cell_defs = CellDefInstances()
-        self.microenv_hbox = QHBoxLayout()
+        # self.microenv_hbox = QHBoxLayout()
 
         splitter = QSplitter()
+        leftwidth = 150
+        # splitter.setSizes([split_leftwidth, self.width() - leftwidth])
+        # splitter.setSizes([leftwidth, self.width() - leftwidth])
 
         tree_widget_width = 240
         tree_widget_height = 400
@@ -83,14 +86,52 @@ class SubstrateDef(QWidget):
         #-------------------------
         # self.name_list = QListWidget() # tree is overkill; list would suffice; meh.
 
-        self.microenv_hbox.addWidget(self.tree)
+        # self.microenv_hbox.addWidget(self.tree)
         # self.microenv_hbox.addWidget(self.name_list)
 
 
         self.scroll_substrate_tree = QScrollArea()
-        self.scroll_substrate_tree.setWidget(self.tree)
+        # self.scroll_substrate_tree.setFixedWidth(tree_widget_width)
+
+        # self.tree_w = QWidget()
+        tree_w_vbox = QVBoxLayout()
+        tree_w_vbox.addWidget(self.tree)
+
+        # self.scroll_substrate_tree.setWidget(self.tree)
         # self.scroll_substrate_tree.setWidget(self.name_list)
 
+        #---------
+        tree_w_hbox = QHBoxLayout()
+        self.new_button = QPushButton("New")
+        self.new_button.clicked.connect(self.new_substrate)
+        self.new_button.setStyleSheet("background-color: lightgreen")
+        bwidth = 70
+        bheight = 32
+        # self.new_button.setFixedWidth(bwidth)
+        tree_w_hbox.addWidget(self.new_button)
+
+        self.copy_button = QPushButton("Copy")
+        self.copy_button.clicked.connect(self.copy_substrate)
+        self.copy_button.setStyleSheet("background-color: lightgreen")
+        # self.copy_button.setFixedWidth(bwidth)
+        tree_w_hbox.addWidget(self.copy_button)
+
+        self.delete_button = QPushButton("Delete")
+        self.delete_button.clicked.connect(self.delete_substrate)
+        self.delete_button.setStyleSheet("background-color: yellow")
+        # self.delete_button.setFixedWidth(bwidth)
+        tree_w_hbox.addWidget(self.delete_button)
+
+
+        #---------
+        self.tree_w = QWidget()
+        # self.tree_w.setFixedWidth(tree_widget_width)
+        # self.tree_w.setFixedHeight(tree_widget_height)
+        tree_w_vbox.addLayout(tree_w_hbox)
+        self.tree_w.setLayout(tree_w_vbox)
+        self.scroll_substrate_tree.setWidget(self.tree_w)
+        # self.scroll_substrate_tree.setWidget(self.tree)
+        #---------
         # splitter.addWidget(self.tree)
         splitter.addWidget(self.scroll_substrate_tree)
 
@@ -114,18 +155,6 @@ class SubstrateDef(QWidget):
         # self.microenv_hbox.addWidget(self.)
 
         #------------------
-        controls_hbox = QHBoxLayout()
-        self.new_button = QPushButton("New")
-        self.new_button.clicked.connect(self.new_substrate)
-        controls_hbox.addWidget(self.new_button)
-
-        self.copy_button = QPushButton("Copy")
-        self.copy_button.clicked.connect(self.copy_substrate)
-        controls_hbox.addWidget(self.copy_button)
-
-        self.delete_button = QPushButton("Delete")
-        self.delete_button.clicked.connect(self.delete_substrate)
-        controls_hbox.addWidget(self.delete_button)
 
         # self.vbox.addLayout(hbox)
         # self.vbox.addWidget(QHLine())
@@ -391,8 +420,8 @@ class SubstrateDef(QWidget):
 
         self.layout = QVBoxLayout(self)
 
-        self.layout.addLayout(controls_hbox)
-
+        # self.layout.addLayout(controls_hbox)
+ 
         # self.layout.addWidget(self.tabs)
         # self.layout.addWidget(QHLine())
         # self.layout.addWidget(self.params)
