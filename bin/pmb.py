@@ -4,8 +4,11 @@ pmb.py - driving module for the PhysiCell Model Builder GUI to read in a sample 
 Authors:
 Randy Heiland (heiland@iu.edu): lead designer and developer
 Vincent Noel, Institut Curie: Cell Types|Intracellular|boolean
-IU Students: Michael Siler, Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur: early design, testing
 Dr. Paul Macklin (macklinp@iu.edu): PI, funding and testing
+
+Macklin Lab members (grads & postdocs): testing, design, code contributions.
+Many IU undergraduate students affiliated with the Macklin Lab: testing, design, code contributions.
+PhysiCell community: testing, design, code contributions.
 
 """
 
@@ -21,7 +24,7 @@ from xml.dom import minidom
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPalette, QColor, QIcon
+from PyQt5.QtGui import QPalette, QColor, QIcon, QFont
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
 
@@ -50,11 +53,14 @@ def startup_notice():
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setText("Editing the template config file from the PMB /data directory. If you want to edit another, use File->Open or File->Samples")
     msgBox.setStandardButtons(QMessageBox.Ok)
-    # msgBox.buttonClicked.connect(msgButtonClick)
 
     returnValue = msgBox.exec()
     # if returnValue == QMessageBox.Ok:
     #     print('OK clicked')
+
+def quit_cb():
+    global pmb_app
+    pmb_app.quit()
 
   
 class PhysiCellXMLCreator(QWidget):
@@ -310,8 +316,58 @@ class PhysiCellXMLCreator(QWidget):
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        self.tabWidget.setCurrentIndex(0)  # Config (default)
+        # self.tabWidget.setCurrentIndex(0)  # Config (default)
+        # self.tabWidget.setCurrentIndex(1)  # rwh: Microenv
+        self.tabWidget.setCurrentIndex(2)  # rwh: Microenv
 
+
+    def about_pyqt(self):
+        msgBox = QMessageBox()
+        msgBox.setTextFormat(Qt.RichText)
+        about_text = """ 
+PhysiCell Studio is developed using PyQt5.<br><br>
+
+For licensing information:<br>
+<a href="https://github.com/PyQt5/PyQt/blob/master/LICENSE">github.com/PyQt5/PyQt/blob/master/LICENSE</a>
+
+        """
+        msgBox.setText(about_text)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        returnValue = msgBox.exec()
+
+    def about_studio(self):
+        msgBox = QMessageBox()
+        # font = QFont()
+        # font.setBold(True)
+        # msgBox.setFont(font)
+        msgBox.setTextFormat(Qt.RichText)
+        # msgBox.setIcon(QMessageBox.Information)
+        version_file =  os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'VERSION.txt'))
+        try:
+            with open(version_file) as f:
+                v = f.readline()
+        except:
+            v = "(can't find VERSION.txt)\n"
+            print("Unable to open ",version_file)
+        about_text = "Version " + v + """ <br><br>
+PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
+
+NOTE: When loading a model (.xml configuration file), it must be a "flat" format for the  cell_definitions, i.e., all parameters need to be defined. &nbsp; Many legacy PhysiCell models used a hierarchical format in which a cell_definition could inherit from a parent. &nbsp; The hierarchical format is not supported in the Studio.<br><br>
+
+For more information:<br>
+<a href="https://github.com/PhysiCell-Tools/PhysiCell-model-builder">github.com/PhysiCell-Tools/PhysiCell-model-builder</a><br>
+<a href="https://github.com/MathCancer/PhysiCell">https://github.com/MathCancer/PhysiCell</a><br>
+<br>
+PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no event shall the Authors be liable for any damages whatsoever.<br>
+        """
+        msgBox.setText(about_text)
+        # msgBox.setInformativeText(about_text)
+        # msgBox.setDetailedText(about_text)
+        # msgBox.setText("PhysiCell Studio is a tool to provide easy editing of a PhysiCell model and, optionally, run a model and visualize results.")
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        # msgBox.buttonClicked.connect(msgButtonClick)
+
+        returnValue = msgBox.exec()
 
     def enablePlotTab(self, bval):
         # self.tabWidget.setTabEnabled(5, bval)
@@ -326,6 +382,14 @@ class PhysiCellXMLCreator(QWidget):
     def menu(self):
         menubar = QMenuBar(self)
         menubar.setNativeMenuBar(False)
+
+        #--------------
+        studio_menu = menubar.addMenu('&Studio')
+        studio_menu.addAction("About", self.about_studio)
+        studio_menu.addAction("About PyQt", self.about_pyqt)
+        # studio_menu.addAction("Preferences", self.prefs_cb)
+        studio_menu.addSeparator()
+        studio_menu.addAction("Quit", quit_cb)
 
         #--------------
         file_menu = menubar.addMenu('&File')
@@ -344,6 +408,7 @@ class PhysiCellXMLCreator(QWidget):
         simularium_act.triggered.connect(self.simularium_cb)
 
         #--------------
+        file_menu.addSeparator()
         samples_menu = file_menu.addMenu("Samples")
 
         template_act = QAction('template', self)
@@ -933,7 +998,9 @@ class PhysiCellXMLCreator(QWidget):
 #     ex.show()
 #     sys.exit(app.exec_())
 
+pmb_app = None
 def main():
+    global pmb_app
     # inputfile = ''
     config_file = None
     studio_flag = False
@@ -1057,6 +1124,7 @@ def main():
     ex.show()
     # startup_notice()
     sys.exit(pmb_app.exec_())
+    # pmb_app.quit()
 	
 if __name__ == '__main__':
     # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')

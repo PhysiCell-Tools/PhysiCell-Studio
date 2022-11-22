@@ -193,7 +193,7 @@ class ICs(QWidget):
         icol += 1
         self.csv_button = QPushButton("->cells.csv")
         # self.csv_button.setFixedWidth(btn_width)
-        self.csv_button.setStyleSheet("background-color: cyan")
+        self.csv_button.setStyleSheet("background-color: lightgreen")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.csv_button.clicked.connect(self.csv_cb)
         self.glayout1.addWidget(self.csv_button, idr,icol,1,1) 

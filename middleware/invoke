@@ -1,3 +1,0 @@
-#!/bin/sh
-
-/usr/bin/invoke_app "$@" -C "python @tool/bin/gui4xml.py" -t pc4xml -u anaconda3-5.1
