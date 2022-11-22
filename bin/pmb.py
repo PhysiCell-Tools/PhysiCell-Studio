@@ -24,7 +24,7 @@ from xml.dom import minidom
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPalette, QColor, QIcon
+from PyQt5.QtGui import QPalette, QColor, QIcon, QFont
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
 
@@ -316,16 +316,19 @@ class PhysiCellXMLCreator(QWidget):
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        self.tabWidget.setCurrentIndex(0)  # Config (default)
+        # self.tabWidget.setCurrentIndex(0)  # Config (default)
+        # self.tabWidget.setCurrentIndex(1)  # rwh: Microenv
+        self.tabWidget.setCurrentIndex(2)  # rwh: Microenv
 
 
     def about_pyqt(self):
         msgBox = QMessageBox()
+        msgBox.setTextFormat(Qt.RichText)
         about_text = """ 
-PhysiCell Studio is developed using PyQt5.
+PhysiCell Studio is developed using PyQt5.<br><br>
 
-For licensing information:
-https://github.com/PyQt5/PyQt/blob/master/LICENSE
+For licensing information:<br>
+<a href="https://github.com/PyQt5/PyQt/blob/master/LICENSE">github.com/PyQt5/PyQt/blob/master/LICENSE</a>
 
         """
         msgBox.setText(about_text)
@@ -334,20 +337,32 @@ https://github.com/PyQt5/PyQt/blob/master/LICENSE
 
     def about_studio(self):
         msgBox = QMessageBox()
+        # font = QFont()
+        # font.setBold(True)
+        # msgBox.setFont(font)
+        msgBox.setTextFormat(Qt.RichText)
         # msgBox.setIcon(QMessageBox.Information)
-        about_text = """ 
-Version 2.9.3
+        version_file =  os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'VERSION.txt'))
+        try:
+            with open(version_file) as f:
+                v = f.readline()
+        except:
+            v = "(can't find VERSION.txt)\n"
+            print("Unable to open ",version_file)
+        about_text = "Version " + v + """ <br><br>
+PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
 
-PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.
+NOTE: When loading a model (.xml configuration file), it must be a "flat" format for the  cell_definitions, i.e., all parameters need to be defined. &nbsp; Many legacy PhysiCell models used a hierarchical format in which a cell_definition could inherit from a parent. &nbsp; The hierarchical format is not supported in the Studio.<br><br>
 
-NOTE: When loading a model (.xml configuration file), it must be a complete or "flat" format for the <cell_definitions>. Many legacy PhysiCell models used a hierarchical format in which a <cell_definition> could inherit from a parent. The hierarchical format is not supported in the Studio.
-
-For more information:
-https://github.com/PhysiCell-Tools/PhysiCell-model-builder
-https://github.com/PhysiCell-Tools/Studio (future home)
-https://github.com/MathCancer/PhysiCell
+For more information:<br>
+<a href="https://github.com/PhysiCell-Tools/PhysiCell-model-builder">github.com/PhysiCell-Tools/PhysiCell-model-builder</a><br>
+<a href="https://github.com/MathCancer/PhysiCell">https://github.com/MathCancer/PhysiCell</a><br>
+<br>
+PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no event shall the Authors be liable for any damages whatsoever.<br>
         """
         msgBox.setText(about_text)
+        # msgBox.setInformativeText(about_text)
+        # msgBox.setDetailedText(about_text)
         # msgBox.setText("PhysiCell Studio is a tool to provide easy editing of a PhysiCell model and, optionally, run a model and visualize results.")
         msgBox.setStandardButtons(QMessageBox.Ok)
         # msgBox.buttonClicked.connect(msgButtonClick)
