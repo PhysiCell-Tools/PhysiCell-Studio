@@ -316,9 +316,9 @@ class PhysiCellXMLCreator(QWidget):
 
         # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
-        # self.tabWidget.setCurrentIndex(0)  # Config (default)
+        self.tabWidget.setCurrentIndex(0)  # Config (default)
         # self.tabWidget.setCurrentIndex(1)  # rwh: Microenv
-        self.tabWidget.setCurrentIndex(2)  # rwh: Microenv
+        # self.tabWidget.setCurrentIndex(2)  # rwh: Microenv
 
 
     def about_pyqt(self):
@@ -501,10 +501,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # contour_act.setChecked(False)
 
         else:  # just 2D view
-            view_menu = menubar.addMenu('&View')
-            view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-            view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
-            view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
+            if self.studio_flag:
+                view_menu = menubar.addMenu('&View')
+                view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
+                view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
+                view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
