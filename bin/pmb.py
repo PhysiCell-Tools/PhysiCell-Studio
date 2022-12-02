@@ -21,6 +21,7 @@ import logging
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from xml.dom import minidom
+import numpy as np
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
@@ -37,6 +38,13 @@ from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
 from legend_tab import Legend 
+
+try:
+    from simulariumio import UnitData, MetaData, DisplayData, DISPLAY_TYPE, ModelMetaData
+    from simulariumio.physicell import PhysicellConverter, PhysicellData
+    simularium_installed = True
+except:
+    simularium_installed = False
         
 # from sbml_tab import SBMLParams 
 
@@ -276,12 +284,14 @@ class PhysiCellXMLCreator(QWidget):
 
             self.vis_tab = Vis(self.nanohub_flag)
             self.config_tab.vis_tab = self.vis_tab
-            self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = self.config_tab.folder.text()
+            self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
 
             self.legend_tab = Legend(self.nanohub_flag)
             self.legend_tab.current_dir = self.current_dir
+            self.legend_tab.pmb_data_dir = self.pmb_data_dir
             self.run_tab.vis_tab = self.vis_tab
             # self.vis_tab.setEnabled(False)
             # self.vis_tab.nanohub_flag = self.nanohub_flag
@@ -301,7 +311,8 @@ class PhysiCellXMLCreator(QWidget):
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
             self.vis_tab.init_plot_range(self.config_tab)
 
-            self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = self.config_tab.folder.text()
+            self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.legend_tab.output_dir = self.config_tab.folder.text()
             legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
             if Path(legend_file).is_file():
@@ -406,6 +417,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         simularium_act = QAction('Simularium', self)
         export_menu.addAction(simularium_act)
         simularium_act.triggered.connect(self.simularium_cb)
+        if not self.studio_flag:
+            print("simularium_installed is ",simularium_installed)
+            export_menu.setEnabled(False)
 
         #--------------
         file_menu.addSeparator()
@@ -506,6 +520,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
                 view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
                 view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
+                view_menu.addSeparator()
+                view_menu.addAction("Select output dir", self.select_plot_output_cb)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -778,6 +794,50 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
         self.vis_tab.update_plots()
 
+    def select_plot_output_cb(self):
+        # filePath = QFileDialog.getOpenFileName(self,'',".")
+        dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+
+        print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
+        # full_path_model_name = dirPath[0]
+        # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
+        # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
+        # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
+        if dir_path == "":
+            return
+        if Path(dir_path).is_dir():
+            print("select_plot_output_cb():  dir_path is valid")
+            logging.debug(f'select_plot_output_cb():  dir_path is valid')
+            # print("len(full_path_model_name) = ", len(full_path_model_name) )
+            # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
+            # fname = os.path.basename(full_path_model_name)
+            # self.current_xml_file = full_path_model_name
+
+            # self.add_new_model(self.current_xml_file, True)
+            # self.config_file = self.current_xml_file
+            # if self.studio_flag:
+            #     self.run_tab.config_file = self.current_xml_file
+            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+            # self.show_sample_model()
+
+            # self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.legend_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = dir_path
+            self.vis_tab.update_output_dir(dir_path)
+            self.legend_tab.output_dir = dir_path
+            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+            if Path(legend_file).is_file():
+                self.legend_tab.reload_legend()
+            else:
+                self.legend_tab.clear_legend()
+
+            self.vis_tab.reset_model()
+            self.vis_tab.update_plots()
+
+        else:
+            print("select_plot_output_cb():  full_path_model_name is NOT valid")
+
+
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
         logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
@@ -833,15 +893,68 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     #----------------------
     def simularium_cb(self):
+        # print("---- Simularium export coming soon...")
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText("Simularium export coming soon.")
-        msgBox.setStandardButtons(QMessageBox.Ok)
-        returnValue = msgBox.exec()
+        # msgBox.setText("Simularium export coming soon." + "simularium_installed is " + str(simularium_installed))
+        if not simularium_installed:
+            msgBox.setText("The simulariumio module is not installed. You can try to: pip install simulariumio")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            # returnValue = msgBox.exec()
+            return
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
+            
+        msgBox.setText("Proceed to generate a Simularium object from your output data?")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Cancel:
+            return
 
-        print("---- Simularium export coming soon...")
+        # self.vis_tab.output_dir = self.config_tab.folder.text()
+        sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
+        print("sim_output_dir = ",sim_output_dir )
+
+        simularium_model_data = PhysicellData(
+            timestep=1.0,
+            path_to_output_dir=sim_output_dir, 
+            meta_data=MetaData(
+                box_size=np.array([1000.0, 1000.0, 20.0]),
+                scale_factor=0.01,
+                trajectory_title="Some parameter set",
+                model_meta_data=ModelMetaData(
+                    title="worm",
+                    version="8.1",
+                    authors="A Modeler",
+                    description=(
+                        "A PhysiCell model run with some parameter set"
+                    ),
+                    doi="10.1016/j.bpj.2016.02.002",
+                    source_code_url="https://github.com/allen-cell-animated/simulariumio",
+                    source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
+                    input_data_url="https://allencell.org/path/to/native/engine/input/files",
+                    raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
+                ),
+            ),
+            nth_timestep_to_read=1,
+            display_data={
+                0: DisplayData(
+                    name="cell type 0",
+                    color="#dfdacd",
+                ),
+                1: DisplayData(
+                    name="cell type 1",
+                    color="#0080ff",
+                ),
+            },
+            time_units=UnitData("m"),  # minutes
+        )
+
+        print("calling Simularium PhysicellConverter...\n")
+        PhysicellConverter(simularium_model_data).save("simularium_model")
+
+        print("Load this model at: https://simularium.allencell.org/viewer")
+
 
     #----------------------
     def template_cb(self):

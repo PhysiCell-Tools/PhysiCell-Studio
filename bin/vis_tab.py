@@ -195,14 +195,15 @@ class Vis(QWidget):
         self.first_button.clicked.connect(self.first_plot_cb)
         # controls_hbox.addWidget(self.first_button)
         icol = 0
-        self.glayout1.addWidget(self.first_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+        irow = 0
+        self.glayout1.addWidget(self.first_button, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.back_button = QPushButton("<")
         self.back_button.setFixedWidth(arrow_button_width)
         self.back_button.clicked.connect(self.back_plot_cb)
         # controls_hbox.addWidget(self.back_button)
         icol += 1
-        self.glayout1.addWidget(self.back_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.back_button, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         frame_count_width = 40
         self.frame_count = QLineEdit()
@@ -211,7 +212,7 @@ class Vis(QWidget):
         self.frame_count.setValidator(QtGui.QIntValidator(0,10000000))
         self.frame_count.setText('0')
         icol += 1
-        self.glayout1.addWidget(self.frame_count, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.frame_count, irow,icol,1,1) # w, row, column, rowspan, colspan
 
 
         self.forward_button = QPushButton(">")
@@ -219,14 +220,14 @@ class Vis(QWidget):
         self.forward_button.clicked.connect(self.forward_plot_cb)
         # controls_hbox.addWidget(self.forward_button)
         icol += 1
-        self.glayout1.addWidget(self.forward_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.forward_button, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.last_button = QPushButton(">|")
         self.last_button.setFixedWidth(arrow_button_width)
         self.last_button.clicked.connect(self.last_plot_cb)
         # controls_hbox.addWidget(self.last_button)
         icol += 1
-        self.glayout1.addWidget(self.last_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.last_button, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
@@ -235,7 +236,7 @@ class Vis(QWidget):
         self.play_button.clicked.connect(self.animate)
         # controls_hbox.addWidget(self.play_button)
         icol += 1
-        self.glayout1.addWidget(self.play_button, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.play_button, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         # self.prepare_button = QPushButton("Prepare")
         # self.prepare_button.clicked.connect(self.prepare_plot_cb)
@@ -247,20 +248,20 @@ class Vis(QWidget):
         self.cells_checked_flag = True
         # self.glayout1.addWidget(self.cells_checkbox, 0,5,1,2) # w, row, column, rowspan, colspan
         icol += 1
-        self.glayout1.addWidget(self.cells_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.cells_checkbox, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.cells_edge_checkbox = QCheckBox('edge')
         self.cells_edge_checkbox.setChecked(True)
         self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
         self.cells_edge_checked_flag = True
         icol += 1
-        self.glayout1.addWidget(self.cells_edge_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.cells_edge_checkbox, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.cells_nucleus_checkbox = QCheckBox('nuclei')
         self.cells_nucleus_checkbox.setChecked(self.show_nucleus)
         self.cells_nucleus_checkbox.clicked.connect(self.cells_nucleus_toggle_cb)
         icol += 1
-        self.glayout1.addWidget(self.cells_nucleus_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.cells_nucleus_checkbox, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         self.substrates_checkbox = QCheckBox('Substrates')
         self.substrates_checkbox.setChecked(False)
@@ -268,7 +269,7 @@ class Vis(QWidget):
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
         self.substrates_checked_flag = False
         icol += 1
-        self.glayout1.addWidget(self.substrates_checkbox, 0,icol,1,2) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.substrates_checkbox, irow,icol,1,2) # w, row, column, rowspan, colspan
 
         self.fix_cmap_checkbox = QCheckBox('fix')
         self.fix_cmap_flag = False
@@ -276,7 +277,7 @@ class Vis(QWidget):
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
         icol += 2
-        self.glayout1.addWidget(self.fix_cmap_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.fix_cmap_checkbox, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         cvalue_width = 70
         label = QLabel("cmin")
@@ -291,9 +292,9 @@ class Vis(QWidget):
         self.cmin.setValidator(QtGui.QDoubleValidator())
         self.cmin.setEnabled(False)
         icol += 1
-        self.glayout1.addWidget(label, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(label, irow,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
-        self.glayout1.addWidget(self.cmin, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.cmin, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("cmax")
         # label.setFixedWidth(label_width)
@@ -306,15 +307,25 @@ class Vis(QWidget):
         self.cmax.setValidator(QtGui.QDoubleValidator())
         self.cmax.setEnabled(False)
         icol += 1
-        self.glayout1.addWidget(label, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(label, irow,icol,1,1) # w, row, column, rowspan, colspan
         icol += 1
-        self.glayout1.addWidget(self.cmax, 0,icol,1,1) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.cmax, irow,icol,1,1) # w, row, column, rowspan, colspan
 
         icol += 1
-        self.glayout1.addWidget(self.substrates_combobox, 0,icol,1,2) # w, row, column, rowspan, colspan
+        self.glayout1.addWidget(self.substrates_combobox, irow,icol,1,2) # w, row, column, rowspan, colspan
         
         #-----------
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
+
+
+        #-----------
+        self.output_dir_name = QLineEdit()
+        # self.frame_count.textChanged.connect(self.change_frame_count_cb)  # do later to appease the callback gods
+        # self.output_dir_name.setFixedWidth(frame_count_width)
+        self.output_dir_name.setText('')
+        irow += 1
+        icol = 0
+        self.glayout1.addWidget(self.output_dir_name, irow,icol,1,10) # w, row, column, rowspan, colspan
 
         # self.controls1.setGeometry(QRect(20, 40, 601, 501))
         # self.controls1.resize(500,30)
@@ -441,11 +452,13 @@ class Vis(QWidget):
         # self.layout.addWidget(self.controls1)
 
         self.stackw.addWidget(self.controls1)
-        self.stackw.addWidget(self.controls2)
+        # self.stackw.addWidget(self.controls2)
         # self.stackw.addWidget(self.controls3)
 
         self.stackw.setCurrentIndex(0)
-        self.stackw.setFixedHeight(40)
+        # self.stackw.setFixedHeight(40)  # if we don't specify a fixed height, these controls take up ~50% of window
+        self.stackw.setFixedHeight(80)  # if we don't specify a fixed height, these controls take up ~50% of window
+        # self.stackw.setFixedHeight(35)  # weird effects
         # self.stackw.resize(700,100)
         self.layout.addWidget(self.stackw)
         self.show_plot_range = False
@@ -457,6 +470,14 @@ class Vis(QWidget):
 
         # self.create_figure()
 
+
+    def update_output_dir(self, dir_path):
+        if os.path.isdir(dir_path):
+            print("update_output_dir(): yes, it is a dir path", dir_path)
+        else:
+            print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+        self.output_dir = dir_path
+        self.output_dir_name.setText(dir_path)
 
     def reset_plot_range(self):
         try:  # due to the initial callback
