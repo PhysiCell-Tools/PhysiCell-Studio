@@ -254,16 +254,16 @@ class Config(QWidget):
         if self.nanohub_flag:
             self.folder.setEnabled(False)
         self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
-        self.folder.textChanged.connect(self.folder_name_cb)
+        # self.folder.textChanged.connect(self.folder_name_cb)
 
-        if self.studio_flag:
-            label = QLabel("Plot/Legend folder")
-            label.setAlignment(QtCore.Qt.AlignRight)
-            self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        # if self.studio_flag:
+        #     label = QLabel("Plot/Legend folder")
+        #     label.setAlignment(QtCore.Qt.AlignRight)
+        #     self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
-            self.plot_folder = QLineEdit()
-            self.config_tab_layout.addWidget(self.plot_folder, idx_row,3,1,1) # w, row, column, rowspan, colspan
-            self.plot_folder.textChanged.connect(self.plot_folder_name_cb)
+        #     self.plot_folder = QLineEdit()
+        #     self.config_tab_layout.addWidget(self.plot_folder, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        #     self.plot_folder.textChanged.connect(self.plot_folder_name_cb)
 
         #------------------
         label = QLabel("Save data (intervals):")
@@ -363,17 +363,17 @@ class Config(QWidget):
         self.layout.addWidget(self.scroll)
 
 
-    def folder_name_cb(self):
-        try:  # due to the initial callback
-            self.plot_folder.setText(self.folder.text())
-        except:
-            pass
+    # def folder_name_cb(self):
+    #     try:  # due to the initial callback
+    #         self.plot_folder.setText(self.folder.text())
+    #     except:
+    #         pass
 
-    def plot_folder_name_cb(self):   # allow plotting data from *any* output dir
-        try:  # due to the initial callback
-            self.vis_tab.output_dir = self.plot_folder.text()
-        except:
-            pass
+    # def plot_folder_name_cb(self):   # allow plotting data from *any* output dir
+    #     try:  # due to the initial callback
+    #         self.vis_tab.output_dir = self.plot_folder.text()
+    #     except:
+    #         pass
 
         #--------------------------------------------------------
     def insert_hacky_blank_lines(self, glayout):
@@ -410,8 +410,8 @@ class Config(QWidget):
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
         self.folder.setText(self.xml_root.find(".//folder").text)
-        if self.studio_flag:
-            self.plot_folder.setText(self.xml_root.find(".//folder").text)
+        # if self.studio_flag:
+        #     self.plot_folder.setText(self.xml_root.find(".//folder").text)
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??

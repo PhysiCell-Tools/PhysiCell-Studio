@@ -76,7 +76,23 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.fusion_rate_celltype = cell_def_0th 
                 cell_def_tab.transformation_rate_celltype = cell_def_0th 
 
+            # create master dict for this cell_def
             cell_def_tab.param_d[cell_def_name] = {}
+
+            # create additional sub-dicts
+            cell_def_tab.param_d[cell_def_name]["secretion"] = {}
+            cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+            cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+            cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+            cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
+            cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
+            cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
+            # fill this cell_def with default params (rf. C++ values)
+            cell_def_tab.init_default_phenotype_params(cell_def_name)
+            # print("populate_(): ",cell_def_tab.param_d)
+            # print("------   after populate ----------\n\n")
+
+
             cell_def_tab.param_d[cell_def_name]['ID'] = cell_def.attrib['ID']  # e.g., "0"
             # cell_def_tab.param_d[cell_def_name]["name"] = cell_def_name
             cell_def_tab.current_cell_def = cell_def_name  # do this for the callback methods?
@@ -154,51 +170,52 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             #  transition rates: set default values for all params
+            #rwh - yipeee, don't need now
             default_sval = '0.0'
-            cell_def_tab.param_d[cell_def_name]['cycle_live_trate00'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_trate00'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10'] = default_sval
 
 
-            #  transition rates: set default values for all "fixed_duration" checkboxes
-            default_bval = False
-            cell_def_tab.param_d[cell_def_name]['cycle_live_trate00_fixed'] = default_bval
+            # #  transition rates: set default values for all "fixed_duration" checkboxes
+            # default_bval = False
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_trate00_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = default_bval
 
 
             old_cycle_transition_path = cycle_path + "//transition_rates"
@@ -323,51 +340,51 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             #
             # cell_def_tab.phase0_duration = QLineEdit()
             default_sval = '0.0'
+#rwh - yipeee, don't need?
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration00'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration00'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01'] = default_sval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10'] = default_sval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01'] = default_sval
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10'] = default_sval
+            # #  duration: set default values for all "fixed_duration" checkboxes
+            # default_bval = False
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_duration00_fixed'] = default_bval
 
-            #  duration: set default values for all "fixed_duration" checkboxes
-            default_bval = False
-            cell_def_tab.param_d[cell_def_name]['cycle_live_duration00_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = default_bval
 
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = default_bval
-
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = default_bval
-            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = default_bval
+            # cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = default_bval
 
             phase_durations_path = cycle_path + "//phase_durations"
             logging.debug(f' >> phase_durations_path ={phase_durations_path}')
@@ -771,7 +788,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 #     print(" --> ",var.attrib['name'])
                 #     name = var.attrib['name']
 
-                cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+                # cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
                 # print("\nFor now, you need to manually enter these into your .xml\n")
                 # sys.exit(-1)
 
@@ -933,7 +950,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             # Just initialize sensitivities to default value (0) for all substrates
-            cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+            # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
             uep_microenv = cell_def_tab.xml_root.find(".//microenvironment_setup")
             for subelm in uep_microenv.findall('variable'):
                 substrate_name = subelm.attrib['name']
@@ -1037,7 +1054,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # e.g.: param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
             # or,   param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
             # or,   param_d["cancer cell"]["secretion"] = {"oxygen" : { "secretion_rate" : 42.0 } }
-            cell_def_tab.param_d[cell_def_name]["secretion"] = {}  # a dict for these params
+            # cell_def_tab.param_d[cell_def_name]["secretion"] = {}  # a dict for these params
 
             # Initialize (set to 0.0) all substrates' secretion params
             # val = "0.0"
@@ -1123,9 +1140,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["dead_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '1.0'
 
-                cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
-                cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
-                cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
+                # cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
+                # cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
+                # cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
@@ -1189,7 +1206,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             transformation_rates_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_transformations//transformation_rates"
             logging.debug(f'---- transformation_rates_path = {transformation_rates_path}')
             trp = uep.find(transformation_rates_path)
-            cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
             if trp is None:
                 # print("---- No cell_transformations found.")
                 # print("\nFor now, you need to manually enter these into your .xml\n")

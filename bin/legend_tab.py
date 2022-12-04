@@ -40,6 +40,7 @@ class Legend(QWidget):
         self.process = None
         self.output_dir = '.'   # set in pmb.py
         self.current_dir = '.'   # reset in pmb.py
+        self.pmb_data_dir = ''   # reset in pmb.py
         
         #-------------------------------------------
         self.scroll = QScrollArea()  # might contain centralWidget
@@ -77,6 +78,10 @@ class Legend(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.scroll)
 
+    def clear_legend(self):
+        legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
+        self.svgView.load(legend_file)
+
     def reload_legend(self):
         # print('reload_legend(): cwd = self.output_dir = ',os.getcwd())
         # self.output_dir = os.getcwd()
@@ -93,7 +98,7 @@ class Legend(QWidget):
                 # self.svgView.load("legend.svg")
                 full_fname = os.path.join(self.output_dir, "legend.svg")
                 # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
-                print("full_fname = ",full_fname)
+                print("legend_tab.py: full_fname = ",full_fname)
                 self.svgView.load(full_fname)
                 break
             # except:
