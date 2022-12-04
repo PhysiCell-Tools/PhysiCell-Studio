@@ -193,6 +193,8 @@ class PhysiCellXMLCreator(QWidget):
 
         # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        # print("\n\n---- pmb: post populate_tree_cell_defs():")
+        # print(self.celldef_tab.param_d)
 
         # self.celldef_tab.fill_substrates_comboboxes() # do before populate?
         self.celldef_tab.fill_celltypes_comboboxes()

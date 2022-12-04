@@ -236,6 +236,18 @@ class CellDef(QWidget):
         # self.cell_types_tabs_layout.addWidget(self.tab_params_widget, 1,0,1,1) # w, row, column, rowspan, colspan
 
     #----------------------------------------------------------------------
+    def init_default_phenotype_params(self, cdname):
+        self.new_cycle_params(cdname)
+        self.new_death_params(cdname)
+        self.new_volume_params(cdname)
+        self.new_mechanics_params(cdname)
+        self.new_motility_params(cdname)
+        self.new_secretion_params(cdname)
+        self.new_interaction_params(cdname)
+        self.new_intracellular_params(cdname)
+        # self.new_custom_data_params(cdname)
+
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def new_cell_def(self):
         # print('------ new_cell_def')
@@ -249,16 +261,7 @@ class CellDef(QWidget):
         #     print()
         # print()
 
-        # Then "zero out" all entries and uncheck checkboxes
-        self.new_cycle_params(cdname)
-        self.new_death_params(cdname)
-        self.new_volume_params(cdname)
-        self.new_mechanics_params(cdname)
-        self.new_motility_params(cdname)
-        self.new_secretion_params(cdname)
-        self.new_interaction_params(cdname)
-        self.new_intracellular_params(cdname)
-        # self.new_custom_data_params(cdname)
+        self.init_default_phenotype_params(cdname)
 
         # print("\n ----- new dict:")
         # for k in self.param_d.keys():
