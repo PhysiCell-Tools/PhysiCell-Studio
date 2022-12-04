@@ -5106,67 +5106,62 @@ class CellDef(QWidget):
         self.physiboss_update_list_behaviours()
     #-----------------------------------------------------------------------------------------
     def new_cycle_params(self, cdname):
-        # cdname = self.current_cell_def
-        sval = self.default_sval
         self.param_d[cdname]['cycle_choice_idx'] = 0
 
-        self.param_d[cdname]['cycle_live_trate00'] = sval
+        self.param_d[cdname]['cycle_live_trate00'] = '0.00072'
 
-        self.param_d[cdname]['cycle_Ki67_trate01'] = sval
-        self.param_d[cdname]['cycle_Ki67_trate10'] = sval
+        self.param_d[cdname]['cycle_Ki67_trate01'] = '3.63108e-3'
+        self.param_d[cdname]['cycle_Ki67_trate10'] = '1.07527e-3'
 
-        self.param_d[cdname]['cycle_advancedKi67_trate01'] = sval
-        self.param_d[cdname]['cycle_advancedKi67_trate12'] = sval
-        self.param_d[cdname]['cycle_advancedKi67_trate20'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_trate01'] = '4.60405e-3'
+        self.param_d[cdname]['cycle_advancedKi67_trate12'] = '1.28205e-3'
+        self.param_d[cdname]['cycle_advancedKi67_trate20'] = '6.66666e-3'
 
-        self.param_d[cdname]['cycle_flowcyto_trate01'] = sval
-        self.param_d[cdname]['cycle_flowcyto_trate12'] = sval
-        self.param_d[cdname]['cycle_flowcyto_trate20'] = sval
+        self.param_d[cdname]['cycle_flowcyto_trate01'] = '0.00324'
+        self.param_d[cdname]['cycle_flowcyto_trate12'] = '0.00208'
+        self.param_d[cdname]['cycle_flowcyto_trate20'] = '0.00333'
 
-        self.param_d[cdname]['cycle_flowcytosep_trate01'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_trate12'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_trate23'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_trate30'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_trate01'] = '0.00335'
+        self.param_d[cdname]['cycle_flowcytosep_trate12'] = '0.00208'
+        self.param_d[cdname]['cycle_flowcytosep_trate23'] = '0.00417'
+        self.param_d[cdname]['cycle_flowcytosep_trate30'] = '0.0167'
 
-        self.param_d[cdname]['cycle_quiescent_trate01'] = sval
-        self.param_d[cdname]['cycle_quiescent_trate10'] = sval
+        self.param_d[cdname]['cycle_quiescent_trate01'] = '3.63108e-3'
+        self.param_d[cdname]['cycle_quiescent_trate10'] = '1.07527e-3'
 
         # duration times
-        sval = '1.e9'
-        self.param_d[cdname]['cycle_live_duration00'] = sval
+        self.param_d[cdname]['cycle_live_duration00'] = '1388.88889'
 
-        self.param_d[cdname]['cycle_Ki67_duration01'] = sval
-        self.param_d[cdname]['cycle_Ki67_duration10'] = sval
+        self.param_d[cdname]['cycle_Ki67_duration01'] = '275.40015'
+        self.param_d[cdname]['cycle_Ki67_duration10'] = '929.99898'
 
-        self.param_d[cdname]['cycle_advancedKi67_duration01'] = sval
-        self.param_d[cdname]['cycle_advancedKi67_duration12'] = sval
-        self.param_d[cdname]['cycle_advancedKi67_duration20'] = sval
+        self.param_d[cdname]['cycle_advancedKi67_duration01'] = '217.20007'
+        self.param_d[cdname]['cycle_advancedKi67_duration12'] = '780.00078'
+        self.param_d[cdname]['cycle_advancedKi67_duration20'] = '150.00015'
 
-        self.param_d[cdname]['cycle_flowcyto_duration01'] = sval
-        self.param_d[cdname]['cycle_flowcyto_duration12'] = sval
-        self.param_d[cdname]['cycle_flowcyto_duration20'] = sval
+        self.param_d[cdname]['cycle_flowcyto_duration01'] = '308.64198'
+        self.param_d[cdname]['cycle_flowcyto_duration12'] = '480.76923'
+        self.param_d[cdname]['cycle_flowcyto_duration20'] = '300.30030'
 
-        self.param_d[cdname]['cycle_flowcytosep_duration01'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_duration12'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_duration23'] = sval
-        self.param_d[cdname]['cycle_flowcytosep_duration30'] = sval
+        self.param_d[cdname]['cycle_flowcytosep_duration01'] = '298.50746'
+        self.param_d[cdname]['cycle_flowcytosep_duration12'] = '480.76923'
+        self.param_d[cdname]['cycle_flowcytosep_duration23'] = '239.80815'
+        self.param_d[cdname]['cycle_flowcytosep_duration30'] = '59.88024'
 
-        self.param_d[cdname]['cycle_quiescent_duration01'] = sval
-        self.param_d[cdname]['cycle_quiescent_duration10'] = sval
-
+        self.param_d[cdname]['cycle_quiescent_duration01'] = '275.40016'
+        self.param_d[cdname]['cycle_quiescent_duration10'] = '929.99898'
 
         #-------------------------
         # transition rates "fixed"
-
         bval = self.default_bval
         self.param_d[cdname]['cycle_live_trate00_fixed'] = bval
 
         self.param_d[cdname]['cycle_Ki67_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_Ki67_trate10_fixed'] = bval
+        self.param_d[cdname]['cycle_Ki67_trate10_fixed'] = True
 
         self.param_d[cdname]['cycle_advancedKi67_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'] = True
+        self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'] = True
 
         self.param_d[cdname]['cycle_flowcyto_trate01_fixed'] = bval
         self.param_d[cdname]['cycle_flowcyto_trate12_fixed'] = bval
@@ -5178,18 +5173,17 @@ class CellDef(QWidget):
         self.param_d[cdname]['cycle_flowcytosep_trate30_fixed'] = bval
 
         self.param_d[cdname]['cycle_quiescent_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_quiescent_trate10_fixed'] = bval
-
+        self.param_d[cdname]['cycle_quiescent_trate10_fixed'] = True
 
         #------ duration times "fixed"
         self.param_d[cdname]['cycle_live_duration00_fixed'] = bval
 
         self.param_d[cdname]['cycle_Ki67_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_Ki67_duration10_fixed'] = bval
+        self.param_d[cdname]['cycle_Ki67_duration10_fixed'] = True
 
         self.param_d[cdname]['cycle_advancedKi67_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'] = True
+        self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'] = True
 
         self.param_d[cdname]['cycle_flowcyto_duration01_fixed'] = bval
         self.param_d[cdname]['cycle_flowcyto_duration12_fixed'] = bval
@@ -5201,54 +5195,61 @@ class CellDef(QWidget):
         self.param_d[cdname]['cycle_flowcytosep_duration30_fixed'] = bval
 
         self.param_d[cdname]['cycle_quiescent_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_quiescent_duration10_fixed'] = bval
+        self.param_d[cdname]['cycle_quiescent_duration10_fixed'] = True
 
 
     def new_death_params(self, cdname):
         sval = self.default_sval
         duration_sval = '1.e9'
-        self.param_d[cdname]["death_rate"] = sval
-        self.param_d[cdname]["apoptosis_death_rate"] = sval
-        self.param_d[cdname]["apoptosis_phase0_duration"] = duration_sval
+        self.param_d[cdname]["death_rate"] = '5.31667e-05'   # deprecated??
+        self.param_d[cdname]["apoptosis_death_rate"] = '5.31667e-05'
+        self.param_d[cdname]["apoptosis_phase0_duration"] = '516'
         self.param_d[cdname]["apoptosis_phase0_fixed"] = False
 
-        self.param_d[cdname]["apoptosis_unlysed_rate"] = sval
-        self.param_d[cdname]["apoptosis_lysed_rate"] = sval
-        self.param_d[cdname]["apoptosis_cyto_rate"] = sval
-        self.param_d[cdname]["apoptosis_nuclear_rate"] = sval
-        self.param_d[cdname]["apoptosis_calcif_rate"] = sval
-        self.param_d[cdname]["apoptosis_rel_rupture_volume"] = sval
+        self.param_d[cdname]["apoptosis_unlysed_rate"] = '0.05'
+        self.param_d[cdname]["apoptosis_lysed_rate"] = '0'
+        self.param_d[cdname]["apoptosis_cyto_rate"] = '1.66667e-02'
+        self.param_d[cdname]["apoptosis_nuclear_rate"] = '5.83333e-03'
+        self.param_d[cdname]["apoptosis_calcif_rate"] = '0'
+        self.param_d[cdname]["apoptosis_rel_rupture_volume"] = '2.0'
 
         #-----
         self.param_d[cdname]["necrosis_death_rate"] = sval
-        self.param_d[cdname]["necrosis_phase0_duration"] = duration_sval
+
+        self.param_d[cdname]["necrosis_trate01"] = '9e.9'
+        self.param_d[cdname]['necrosis_trate01_fixed'] = False
+        self.param_d[cdname]["necrosis_trate12"] = '1.15741e-05'
+        self.param_d[cdname]['necrosis_trate12_fixed'] = True
+
+        self.param_d[cdname]["necrosis_phase0_duration"] = '1.11111e-10'
         self.param_d[cdname]["necrosis_phase0_fixed"] = False
-        self.param_d[cdname]["necrosis_phase1_duration"] = duration_sval
-        self.param_d[cdname]["necrosis_phase1_fixed"] = False
+        self.param_d[cdname]["necrosis_phase1_duration"] = '86399.80646'
+        self.param_d[cdname]["necrosis_phase1_fixed"] = True
 
-        self.param_d[cdname]["necrosis_unlysed_rate"] = sval
-        self.param_d[cdname]["necrosis_lysed_rate"] = sval
-        self.param_d[cdname]["necrosis_cyto_rate"] = sval
-        self.param_d[cdname]["necrosis_nuclear_rate"] = sval
-        self.param_d[cdname]["necrosis_calcif_rate"] = sval
-        self.param_d[cdname]["necrosis_rel_rupture_rate"] = sval
+        self.param_d[cdname]["necrosis_unlysed_rate"] = '1.11667e-02'
+        self.param_d[cdname]["necrosis_lysed_rate"] = '8.33333e-4'
+        self.param_d[cdname]["necrosis_cyto_rate"] = '5.33333e-05'
+        self.param_d[cdname]["necrosis_nuclear_rate"] = '2.16667e-4'
+        self.param_d[cdname]["necrosis_calcif_rate"] = '7e-05'
+        self.param_d[cdname]["necrosis_rel_rupture_rate"] = '2.0'
 
-    def new_volume_params(self, cdname):
+
+    def new_volume_params(self, cdname):   # rf. core/*_phenotype.cpp
         sval = self.default_sval
         # use PhysiCell_phenotype.cpp: Volume::Volume() values
         self.param_d[cdname]["volume_total"] = '2494'
         self.param_d[cdname]["volume_fluid_fraction"] = '0.75'
         self.param_d[cdname]["volume_nuclear"] = '540'
-        self.param_d[cdname]["volume_fluid_change_rate"] = sval
-        self.param_d[cdname]["volume_cytoplasmic_rate"] = sval
-        self.param_d[cdname]["volume_nuclear_rate"] = sval
-        self.param_d[cdname]["volume_calcif_fraction"] = sval
-        self.param_d[cdname]["volume_calcif_rate"] = sval
-        self.param_d[cdname]["volume_rel_rupture_vol"] = sval
+        self.param_d[cdname]["volume_fluid_change_rate"] = '0.05'  # 3.0 / 60
+        self.param_d[cdname]["volume_cytoplasmic_rate"] = '0.0045'   # 0.27 / 60
+        self.param_d[cdname]["volume_nuclear_rate"] = '0.0055'   # 0.33 / 60
+        self.param_d[cdname]["volume_calcif_fraction"] = '0.0'
+        self.param_d[cdname]["volume_calcif_rate"] = '0.0'
+        self.param_d[cdname]["volume_rel_rupture_vol"] = '2'
 
     def new_mechanics_params(self, cdname_new):
         sval = self.default_sval
-        # we're being inconsistent, but use defaults found in phenotype.cpp:Mechanics() instead of 0.0
+        # use defaults found in phenotype.cpp:Mechanics() instead of 0.0
         self.param_d[cdname_new]["mechanics_adhesion"] = '0.4'
         self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
         self.param_d[cdname_new]["mechanics_adhesion_distance"] = '1.25'
@@ -5272,9 +5273,9 @@ class CellDef(QWidget):
 
     def new_motility_params(self, cdname):
         sval = self.default_sval
-        self.param_d[cdname]["speed"] = sval
-        self.param_d[cdname]["persistence_time"] = sval
-        self.param_d[cdname]["migration_bias"] = sval
+        self.param_d[cdname]["speed"] = '1.0'
+        self.param_d[cdname]["persistence_time"] = '1.0'
+        self.param_d[cdname]["migration_bias"] = '0.0'
 
         self.param_d[cdname]["motility_enabled"] = False
         self.param_d[cdname]["motility_use_2D"] = True
