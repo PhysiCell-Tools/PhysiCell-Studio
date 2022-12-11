@@ -35,6 +35,8 @@ class CellDef(QWidget):
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
+        self.num_dec = 5  # how many digits to right of decimal point?
+
         # self.chemotactic_sensitivity_dict = {}   # rwh - bogus/not useful since we need per cell type
         self.default_sval = '0.0'  # default scalar value (as string)
         self.default_affinity = '1.0'
@@ -792,6 +794,7 @@ class CellDef(QWidget):
         self.cycle_flowcytosep_trate01 = QLineEdit()
         self.cycle_flowcytosep_trate01.textChanged.connect(self.cycle_flowcytosep_trate01_changed)
         self.cycle_flowcytosep_trate01.setValidator(QtGui.QDoubleValidator())
+        self.cycle_flowcytosep_trate01.setMaxLength(10)  #rwhtest
         glayout.addWidget(self.cycle_flowcytosep_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
         self.cycle_flowcytosep_trate01_fixed = QCheckBox("Fixed")
@@ -5108,6 +5111,7 @@ class CellDef(QWidget):
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
     #-----------------------------------------------------------------------------------------
+    # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
     def new_cycle_params(self, cdname):
         self.param_d[cdname]['cycle_choice_idx'] = 0
 
@@ -5127,7 +5131,7 @@ class CellDef(QWidget):
         self.param_d[cdname]['cycle_flowcytosep_trate01'] = '0.00335'
         self.param_d[cdname]['cycle_flowcytosep_trate12'] = '0.00208'
         self.param_d[cdname]['cycle_flowcytosep_trate23'] = '0.00417'
-        self.param_d[cdname]['cycle_flowcytosep_trate30'] = '0.0167'
+        self.param_d[cdname]['cycle_flowcytosep_trate30'] = '0.01667'   # C++ had only 4-digits: 0.0167 ??
 
         self.param_d[cdname]['cycle_quiescent_trate01'] = '3.63108e-3'
         self.param_d[cdname]['cycle_quiescent_trate10'] = '1.07527e-3'
@@ -5419,6 +5423,8 @@ class CellDef(QWidget):
         self.cycle_flowcyto_trate20.setText(self.param_d[cdname]['cycle_flowcyto_trate20'])
 
         self.cycle_flowcytosep_trate01.setText(self.param_d[cdname]['cycle_flowcytosep_trate01'])
+        # self.cycle_flowcytosep_trate01.setText(f'{self.param_d[cdname]["cycle_flowcytosep_trate01"]:.{self.num_dec}f}')
+        # val3.setText(f'{fval:.{number_of_decimals}f}')
         self.cycle_flowcytosep_trate12.setText(self.param_d[cdname]['cycle_flowcytosep_trate12'])
         self.cycle_flowcytosep_trate23.setText(self.param_d[cdname]['cycle_flowcytosep_trate23'])
         self.cycle_flowcytosep_trate30.setText(self.param_d[cdname]['cycle_flowcytosep_trate30'])
