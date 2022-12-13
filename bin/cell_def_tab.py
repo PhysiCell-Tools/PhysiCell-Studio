@@ -238,6 +238,7 @@ class CellDef(QWidget):
         # self.cell_types_tabs_layout.addWidget(self.tab_params_widget, 1,0,1,1) # w, row, column, rowspan, colspan
 
     #----------------------------------------------------------------------
+    # Set all the default params to what they are in PhysiCell (C++), e.g., *_standard_models.cpp, etc.
     def init_default_phenotype_params(self, cdname):
         self.new_cycle_params(cdname)
         self.new_death_params(cdname)
@@ -3900,77 +3901,142 @@ class CellDef(QWidget):
     def cycle_live_trate00_fixed_clicked(self, bval):
         # print('cycle_live_trate00_fixed_clicked: bval=',bval)
         self.param_d[self.current_cell_def]['cycle_live_trate00_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_live_duration00_fixed'] = bval
+        # self.cycle_flowcyto_trate01_fixed_clicked()
+        self.cycle_live_duration00_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_Ki67_trate01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_Ki67_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration01_fixed'] = bval
+        self.cycle_Ki67_duration01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_Ki67_trate10_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_Ki67_trate10_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_Ki67_duration10_fixed'] = bval
+        self.cycle_Ki67_duration10_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_advancedKi67_trate01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01_fixed'] = bval
+        self.cycle_advancedKi67_duration01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_advancedKi67_trate12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12_fixed'] = bval
+        self.cycle_advancedKi67_duration12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_advancedKi67_trate20_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20_fixed'] = bval
+        self.cycle_advancedKi67_duration20_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_flowcyto_trate01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01_fixed'] = bval
+        self.cycle_flowcyto_duration01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcyto_trate12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_trate12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12_fixed'] = bval
+        self.cycle_flowcyto_duration12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcyto_trate20_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_trate20_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_duration20_fixed'] = bval
+        self.cycle_flowcyto_duration20_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_flowcytosep_trate01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01_fixed'] = bval
+        print("cycle_flowcytosep_trate01_fixed_clicked: set cycle_flowcytosep_duration01_fixed, bval = ",bval)
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01_fixed'] = bval
+        # print("  then call cycle_flowcytosep_duration01_fixed_clicked(bval)")
+        # self.cycle_flowcytosep_duration01_fixed_clicked(bval)
+        self.cycle_flowcytosep_duration01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_trate12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12_fixed'] = bval
+        self.cycle_flowcytosep_duration12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_trate23_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23_fixed'] = bval
+        self.cycle_flowcytosep_duration23_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_trate30_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30_fixed'] = bval
+        self.cycle_flowcytosep_duration30_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_quiescent_trate01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_quiescent_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration01_fixed'] = bval
+        self.cycle_quiescent_duration01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_quiescent_trate10_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_quiescent_trate10_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_quiescent_duration10_fixed'] = bval
+        self.cycle_quiescent_duration10_fixed.setChecked(bval)   # sync rate and duration
 
     # --- duration
     def cycle_live_duration00_fixed_clicked(self, bval):
         # print('cycle_live_duration00_fixed_clicked: bval=',bval)
         self.param_d[self.current_cell_def]['cycle_live_duration00_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_live_trate00_fixed'] = bval
+        self.cycle_live_trate00_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_Ki67_duration01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_Ki67_duration01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate01_fixed'] = bval
+        self.cycle_Ki67_trate01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_Ki67_duration10_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_Ki67_duration10_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_Ki67_trate10_fixed'] = bval
+        self.cycle_Ki67_trate10_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_advancedKi67_duration01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01_fixed'] = bval
+        self.cycle_advancedKi67_trate01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_advancedKi67_duration12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12_fixed'] = bval
+        self.cycle_advancedKi67_trate12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_advancedKi67_duration20_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20_fixed'] = bval
+        self.cycle_advancedKi67_trate20_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_flowcyto_duration01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_duration01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01_fixed'] = bval
+        self.cycle_flowcyto_trate01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcyto_duration12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_duration12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12_fixed'] = bval
+        self.cycle_flowcyto_trate12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcyto_duration20_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcyto_duration20_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcyto_trate20_fixed'] = bval
+        self.cycle_flowcyto_trate20_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_flowcytosep_duration01_fixed_clicked(self, bval):
+        # print("cycle_flowcytosep_duration01_fixed_clicked, bval= ",bval)
         self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01_fixed'] = bval
+        self.cycle_flowcytosep_trate01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_duration12_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12_fixed'] = bval
+        self.cycle_flowcytosep_trate12_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_duration23_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23_fixed'] = bval
+        self.cycle_flowcytosep_trate23_fixed.setChecked(bval)   # sync rate and duration
     def cycle_flowcytosep_duration30_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30_fixed'] = bval
+        self.cycle_flowcytosep_trate30_fixed.setChecked(bval)   # sync rate and duration
 
     def cycle_quiescent_duration01_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_quiescent_duration01_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate01_fixed'] = bval
+        self.cycle_quiescent_trate01_fixed.setChecked(bval)   # sync rate and duration
     def cycle_quiescent_duration10_fixed_clicked(self, bval):
         self.param_d[self.current_cell_def]['cycle_quiescent_duration10_fixed'] = bval
+        self.param_d[self.current_cell_def]['cycle_quiescent_trate10_fixed'] = bval
+        self.cycle_quiescent_trate10_fixed.setChecked(bval)   # sync rate and duration
 
     #------------------------------
     # --- death
