@@ -1394,13 +1394,6 @@ class CellDef(QWidget):
         # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
         # 	</phase_transition_rates>
 
-        # <model code="101" name="necrosis">
-        # 	<death_rate units="1/min">0.0</death_rate>
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
-        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
-        # 	</phase_transition_rates>
-
         label = QLabel("phase 0->1 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1563,6 +1556,12 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
+        # <model code="101" name="necrosis">
+        # 	<death_rate units="1/min">0.0</death_rate>
+        # 	<phase_transition_rates units="1/min">
+        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
+        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
+        # 	</phase_transition_rates>
         label = QLabel("death rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1687,6 +1686,7 @@ class CellDef(QWidget):
         glayout.addWidget(self.necrosis_phase1_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_phase1_duration_fixed = QCheckBox("Fixed")
+        self.necrosis_phase1_duration_fixed.toggled.connect(self.necrosis_phase1_duration_fixed_toggled)
         glayout.addWidget(self.necrosis_phase1_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -4045,12 +4045,19 @@ class CellDef(QWidget):
 
     def apoptosis_phase0_duration_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_phase0_duration'] = text
-    def apoptosis_phase0_duration_fixed_toggled(self, b):
-        self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = b
+    def apoptosis_phase0_duration_fixed_toggled(self, bval):
+        # sync rate and duration
+        self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = bval
+        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = bval
+        self.apoptosis_trate01_fixed.setChecked(bval)   # sync rate and duration
+
     def apoptosis_trate01_changed(self, text):
         self.param_d[self.current_cell_def]["apoptosis_trate01"] = text
-    def apoptosis_trate01_fixed_toggled(self, b):
-        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = b
+    def apoptosis_trate01_fixed_toggled(self, bval):
+        # sync rate and duration
+        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = bval
+        self.apoptosis_phase0_duration_fixed.setChecked(bval)   # sync rate and duration
 
     def apoptosis_unlysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['apoptosis_unlysed_rate'] = text
@@ -4072,19 +4079,31 @@ class CellDef(QWidget):
 
     def necrosis_phase0_duration_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_phase0_duration'] = text
-    def necrosis_phase0_duration_fixed_toggled(self, b):
-        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = b
+    def necrosis_phase0_duration_fixed_toggled(self, bval):
+        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = bval
+        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = bval
+        self.necrosis_trate01_fixed.setChecked(bval)   # sync rate and duration
 
     def necrosis_phase1_duration_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_phase1_duration'] = text
+    def necrosis_phase1_duration_fixed_toggled(self, bval):
+        self.param_d[self.current_cell_def]['necrosis_phase1_fixed'] = bval
+        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = bval
+        self.necrosis_trate12_fixed.setChecked(bval)   # sync rate and duration
+
     def necrosis_trate01_changed(self, text):
         self.param_d[self.current_cell_def]["necrosis_trate01"] = text
-    def necrosis_trate01_fixed_toggled(self, b):
-        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = b
+    def necrosis_trate01_fixed_toggled(self, bval):
+        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = bval
+        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = bval
+        self.necrosis_phase0_duration_fixed.setChecked(bval)   # sync rate and duration
+
     def necrosis_trate12_changed(self, text):
         self.param_d[self.current_cell_def]["necrosis_trate12"] = text
-    def necrosis_trate12_fixed_toggled(self, b):
-        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = b
+    def necrosis_trate12_fixed_toggled(self, bval):
+        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = bval
+        self.param_d[self.current_cell_def]['necrosis_phase1_fixed'] = bval
+        self.necrosis_phase1_duration_fixed.setChecked(bval)   # sync rate and duration
 
     def necrosis_unlysed_rate_changed(self, text):
         self.param_d[self.current_cell_def]['necrosis_unlysed_rate'] = text
