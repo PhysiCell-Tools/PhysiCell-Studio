@@ -5,7 +5,7 @@ Parse the .xml config file and create the appropriate data structures that conta
 Authors:
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
-(see Credits.md)
+and rf. Credits.md
 
 """
 
@@ -95,6 +95,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
             cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
             cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
+
             # fill this cell_def with default params (rf. C++ values)
             cell_def_tab.init_default_phenotype_params(cell_def_name)
             # print("populate_(): ",cell_def_tab.param_d)
@@ -569,7 +570,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                             if  pd.attrib['index'] == "0":
                     # 			<duration index="0" fixed_duration="true">86400.1</duration>
                                 cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_duration"] = pd.text
-                                print("populate(): apop phase0 duration= ",pd.text)  # rwh
+                                # print("populate(): apop phase0 duration= ",pd.text)  # rwh
                                 cell_def_tab.param_d[cell_def_name]["apoptosis_trate01"] = invertf2s(pd.text)
                                 if  pd.attrib['fixed_duration'].lower() == "true":
                                     cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
@@ -1394,6 +1395,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # to call 'append_more_cb' for the excess.
             cell_def_tab.custom_data_count = 0
             cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
+            # print("------- in populate*:  param_d=",cell_def_tab.param_d)
+            # print("-------\n\n")
             if uep_custom_data:
                 # print("--------------- populate_tree: custom_dat for cell_def_name= ",cell_def_name)
                 # cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
@@ -1419,14 +1422,23 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         conserved_flag = True
 
                     units_val = "dimensionless"
+                    desc_str = ""
                     if 'units' in var.attrib.keys():
                         units_val = var.attrib['units']
+                        cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
                         logging.debug(f'--------- units_val= {units_val}')
+
+                    if 'description' in var.attrib.keys():
+                        desc_str = var.attrib['description']
+                        cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
+                        logging.debug(f'--------- desc_str= {desc_str}')
 
                         # no can do: RuntimeError: dictionary changed size during iteration
                         # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag+'__conserved'] = True
 
-                    cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag, units_val]
+                    # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag, units_val]
+                    cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag]
+                    # cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
                     logging.debug(f'populate: cell_def_name= {cell_def_name} --> custom_data: {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
 
                     cell_def_tab.custom_data_count += 1
