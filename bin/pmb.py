@@ -9,6 +9,7 @@ Dr. Paul Macklin (macklinp@iu.edu): PI, funding and testing
 Macklin Lab members (grads & postdocs): testing, design, code contributions.
 Many IU undergraduate students affiliated with the Macklin Lab: testing, design, code contributions.
 PhysiCell community: testing, design, code contributions.
+Rf. Credits.md
 
 """
 
@@ -193,6 +194,8 @@ class PhysiCellXMLCreator(QWidget):
 
         # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
+
         # print("\n\n---- pmb: post populate_tree_cell_defs():")
         # print(self.celldef_tab.param_d)
 
@@ -327,11 +330,9 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        # tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
-        # tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
         self.tabWidget.setCurrentIndex(0)  # Config (default)
-        # self.tabWidget.setCurrentIndex(1)  # rwh: Microenv
-        # self.tabWidget.setCurrentIndex(2)  # rwh: Microenv
+        # self.tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
+        # self.tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
 
     def about_pyqt(self):
@@ -581,7 +582,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.microenv_tab.fill_gui(None)
         # self.microenv_tab.fill_gui()
         # self.celldef_tab.clear_gui()
-        self.celldef_tab.clear_custom_data_params()
+
+        # self.celldef_tab.clear_custom_data_params()
+
         # self.celldef_tab.fill_substrates_comboboxes()
         # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file

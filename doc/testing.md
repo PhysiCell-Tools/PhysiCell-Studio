@@ -27,4 +27,33 @@ Have two Terminal (Command Prompt) windows open. Let's call them T1 and T2.
 
  Another thing to manually test is for parameters that may have become deprecated in C++, but not yet in the Studio.
 
+---
+# Testing workflows
 
+## General for Model Builder (just GUI and .xml)
+
+Edit parameters in various tabs/subtabs. If the model has
+multiple Microenvironment substrates and/or multiple Cell Types, try editing those as well.
+Use the menu "File -> Save as" to a (new) model config file.
+Inspect this file to see if it correctly saved your edits. Ideally, you could keep the file open
+in a IDE and watch it update live as you save new edits.
+
+## Cell Types | Custom Data
+
+A custom variable (`Name` column) can have unique `Value` and `Conserve` values across different cell types, however
+its `Units` and `Description` will be the same across cell types.
+
+* Make edits to existing parameters. Save results, inspect .xml.
+* Confirm that changing the name of a variable (in `Name` column), also changes its name in other cell types.
+* Confirm that changing its Units or Description also gets changed in other cell types.
+* Confirm that changing a Value or Conserve flag for a variable does NOT get copied over to other cell types.
+* Select a row, click the "Delete Row" button. Save results, inspect .xml.
+* Use keyboard to remove (delete) just a variable name. Confirm it is also removed from all other cell types and that when you Save results, it is not saved in the .xml.
+* Try entering a non-numeric string as a Value. Should not be allowed/possible.
+* Try entering a non-valid Name string, e.g., contains spaces, special chars, or starts with a number. Should not be allowed/possible.
+
+---
+## General for Studio (includes ICs,Run,Plot,Legend tabs)
+
+* For now, you will need to download PhysiCell and build a model - one of the sample models, for example.
+* See the scenarios at the top of this document.
