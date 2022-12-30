@@ -30,7 +30,7 @@ Have two Terminal (Command Prompt) windows open. Let's call them T1 and T2.
 ---
 # Testing workflows
 
-## General
+## General for Model Builder (just GUI and .xml)
 
 Edit parameters in various tabs/subtabs. If the model has
 multiple Microenvironment substrates and/or multiple Cell Types, try editing those as well.
@@ -51,3 +51,9 @@ its `Units` and `Description` will be the same across cell types.
 * Use keyboard to remove (delete) just a variable name. Confirm it is also removed from all other cell types and that when you Save results, it is not saved in the .xml.
 * Try entering a non-numeric string as a Value. Should not be allowed/possible.
 * Try entering a non-valid Name string, e.g., contains spaces, special chars, or starts with a number. Should not be allowed/possible.
+
+---
+## General for Studio (includes ICs,Run,Plot,Legend tabs)
+
+* For now, you will need to download PhysiCell and build a model - one of the sample models, for example.
+* See the scenarios at the top of this document.
