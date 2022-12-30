@@ -1,4 +1,34 @@
 """
+
+Custom Data UI rules:
+* populate_tree_cell_defs.py - parse the config file (.xml) and creates the param_d dict:
+     * param_d[cell_type]['custom_data'][custom_var_name] = [value, conserved_flag]
+     * master_custom_d[custom_var_name] = [units, desc]
+   * attempt to create a master list of custom var names which will be the union of all
+     unique custom var names across all <cell_definition>. This would allow more flexibility
+     when users have a legacy config file. Of course when they save the .xml from the Studio,
+     it will write out the entire block of ALL custom vars in each <cell_definition>.
+
+* create_custom_data_tab(): 
+   * defines self.custom_data_table = QTableWidget() with 5 columns: 
+         Name, Value, Conserved, Units, Description
+   * each of those table's cells actually defines another type of widget, 
+     e.g, MyQLineEdit, which has a callback function whenever its text changes. 
+     The checkbox for "Conserved" is unique.
+
+* update_custom_data_params():
+   * called whenever a different cell type is selected in the self.tree = QTreeWidget()
+
+* 
+   * maintains the global list of custom var names
+* 
+    def custom_data_name_changed(self, text):
+    def custom_data_value_changed(self, text):
+    def custom_var_conserved_clicked(self,bval):
+    def custom_data_units_changed(self, text):
+    def custom_data_desc_changed(self, text):
+
+
 Authors:
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
@@ -26,10 +56,20 @@ class QHLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
+# Overloading the QCheckBox widget 
+class MyQCheckBox(QCheckBox):
+    vname = None
+    # idx = None  # index
+    wrow = 0  # widget's row in a table
+    wcol = 0  # widget's column in a table
+
 # Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
 class MyQLineEdit(QLineEdit):
     vname = None
-    idx = None  # index
+    # idx = None  # index
+    wrow = 0
+    wcol = 0
+    prev = None
 
 class CellDef(QWidget):
     def __init__(self, dark_mode):
@@ -67,12 +107,15 @@ class CellDef(QWidget):
         self.xml_root = None
         self.config_path = None
         self.debug_print_fill_xml = True
-        self.custom_data_count = 0
+        # self.custom_var_count = 0  # no longer used? just get len(self.master_custom_var_d)
         self.max_custom_data_rows = 99
         self.max_entries = self.max_custom_data_rows
-        self.master_custom_varname = []
-        self.master_custom_units = []
-        self.master_custom_desc = []
+
+        self.master_custom_var_d = {}    # dict: [unique custom var name]=[row#, units, desc]
+        self.custom_units_default = ''
+        self.custom_desc_default = ''
+        # self.master_custom_units = []
+        # self.master_custom_desc = []
         # self.custom_data_units_width = 90
 
         self.cycle_duration_flag = False
@@ -207,11 +250,11 @@ class CellDef(QWidget):
         # self.interaction_tab = QWidget()
 
         self.custom_data_tab = QWidget()
-        self.custom_data_conserved = []  # rwh: do I use this?
-        self.custom_data_name = []
-        self.custom_data_value = []   # rwh: [text, conserved_flag] or [text, conserved_flag, units]?
-        self.custom_data_units = []
-        self.custom_data_description = []
+        # self.custom_data_conserved = []  # rwh: do I use this?
+        # self.custom_data_name = []
+        # self.custom_data_value = []   # rwh: [text, conserved_flag] or [text, conserved_flag, units]?
+        # self.custom_data_units = []
+        # self.custom_data_description = []
 
         # self.scroll_params = QScrollArea()
 
@@ -249,19 +292,27 @@ class CellDef(QWidget):
         # self.cell_types_tabs_layout.addWidget(self.tab_params_widget, 1,0,1,1) # w, row, column, rowspan, colspan
 
     #----------------------------------------------------------------------
-    def custom_table_error(self,msg):
+    def custom_duplicate_error(self,row,col,msg):
+        # if self.custom_data_table.cellWidget(row,col).text()  == '0':
+            # return
         msgBox = QMessageBox()
         msgBox.setTextFormat(Qt.RichText)
-#         about_text = """ 
-# PhysiCell Studio is developed using PyQt5.<br><br>
-
-# For licensing information:<br>
-# <a href="https://github.com/PyQt5/PyQt/blob/master/LICENSE">github.com/PyQt5/PyQt/blob/master/LICENSE</a>
-
-#         """
         msgBox.setText(msg)
         msgBox.setStandardButtons(QMessageBox.Ok)
         returnValue = msgBox.exec()
+
+    #----------------------------------------------------------------------
+    def custom_table_error(self,row,col,msg):
+        # if self.custom_data_table.cellWidget(row,col).text()  == '0':
+        #     return
+        msgBox = QMessageBox()
+        msgBox.setTextFormat(Qt.RichText)
+        msgBox.setText(msg)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        returnValue = msgBox.exec()
+
+        # Attempt to only warn once... oh well, annoy the user.
+        # self.custom_data_edit_active = not self.custom_data_edit_active
 
     #----------------------------------------------------------------------
     # Set all the default params to what they are in PhysiCell (C++), e.g., *_standard_models.cpp, etc.
@@ -274,7 +325,7 @@ class CellDef(QWidget):
         self.new_secretion_params(cdname)
         self.new_interaction_params(cdname)
         self.new_intracellular_params(cdname)
-        # self.new_custom_data_params(cdname)
+        self.new_custom_data_params(cdname)
 
         # print("\n\n",self.param_d)
         # self.custom_data_tab.param_d = self.param_d
@@ -4275,52 +4326,6 @@ class CellDef(QWidget):
         # self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['net_export_rate'] = text
 
-    #--------------------------------------------------------------
-    # --- custom data (rwh: OMG, this took a lot of time to solve!)
-    def custom_data_value_changed(self, text):
-        if not self.current_cell_def:
-            return
-        # print("self.sender() = ", self.sender())
-        vname = self.sender().vname.text()
-        print("custom_data_value_changed(): vname= ",vname)
-        # vname = self.sender().text()
-        # print("custom_data_value_changed(): vname = ", vname)
-
-        row = self.custom_data_table.currentRow() 
-        col = self.custom_data_table.currentColumn()
-        print("     row,col= ",row,col)   # argh! = -1,-1 ?!
-        print("     currentItem= ",self.custom_data_table.currentItem())   # argh! = None
-        print("     item(1,1).text()= ",self.custom_data_table.item(1,1).text() )   # 
-
-        if len(vname) == 0:
-            print("HEY! define var name before value!")
-            self.custom_table_error("Define Name first!")
-
-            item = QTableWidgetItem('')
-            # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            self.custom_data_table.setItem(row, col, item)   # 1st col is var name
-            # self.custom_data_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
-
-            # self.custom_data_table.setCellWidget(row, col, '0')  # error, need QWidget for 3rd arg
-            return
-
-        logging.debug(f'\n THIS! ~~~~~~~~~~~ cell_def_tab.py: custom_data_value_changed(): vname = {vname}, val = {text}')
-        # populate: self.param_d[cell_def_name]['custom_data'] =  {'cvar1': '42.0', 'cvar2': '0.42', 'cvar3': '0.042'}
-        # self.param_d[self.current_cell_def]['custom_data']['cvar1'] = text
-        logging.debug(f'       before:')  # rwh
-        # logging.debug(f'{self.param_d[self.current_cell_def]["custom_data"][vname]}')
-
-        # conserved_flag = False
-        # units_val = "dimensionless"
-        conserved_flag = self.param_d[self.current_cell_def]['custom_data'][vname][1]
-        # units_val = self.param_d[self.current_cell_def]['custom_data'][vname][2]
-
-        # self.param_d[self.current_cell_def]['custom_data'][vname] = [text, conserved_flag, units_val]  # rwh- FIX
-        self.param_d[self.current_cell_def]['custom_data'][vname] = [text, conserved_flag]  # rwh- FIX
-        logging.debug(f'       after:')
-        # logging.debug(f'{self.param_d[self.current_cell_def]["custom_data"][vname]}')
-        # print(self.param_d[self.current_cell_def]['custom_data'])
-
     #--------------------------------------------------------
     # def custom_data_clicked_cb(self, item):
     #     row = self.custom_data_table.currentRow()
@@ -4353,7 +4358,7 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     # def custom_data_changed_cb(self, item):
-    def custom_data_changed_cb(self, row,col):
+    def custom_data_changed_cb_old(self, row,col):
         # row = self.custom_data_table.currentRow()
         # col = self.custom_data_table.currentColumn()
         # if item.checkState() == QtCore.Qt.Checked:
@@ -4426,35 +4431,114 @@ class CellDef(QWidget):
 
     #--------------------------------------------------------
     def custom_data_search_cb(self, s):
-        self.custom_data_table.setCurrentItem(None)
         if not s:
-            return
-        matching_items = self.custom_data_table.findItems(s, QtCore.Qt.MatchContains)
-        if matching_items:
-            item = matching_items[0]  # Take the first.
-            self.custom_data_table.setCurrentItem(item)
+            s = 'thisisadummystring'
+
+        for irow in range(self.max_custom_data_rows):
+            if s in self.custom_data_table.cellWidget(irow,self.custom_icol_name).text():
+                # print(f"   found {s} at row {irow}")
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet("background: bisque")
+                # self.custom_data_table.selectRow(irow)  # don't do this; keyboard input -> cell 
+            else:
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet("background: white")
+            # self.custom_data_table.setCurrentItem(item)
 
     #--------------------------------------------------------
+    def add_row_custom_table(self, row_num):
+        # row_num = self.max_custom_data_rows - 1
+        self.custom_data_table.insertRow(row_num)
+        for irow in [row_num]:
+            # print("=== add_row_custom_table(): irow=",irow)
+            # ------- custom data variable name
+            w_varname = MyQLineEdit()
+            w_varname.setFrame(False)
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            name_validator = QtGui.QRegExpValidator(rx_valid_varname )
+            w_varname.setValidator(name_validator)
+
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
+            w_varname.vname = w_varname  
+            w_varname.wrow = irow
+            w_varname.wcol = 0   # beware: hard-coded 
+            w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
+
+            # ------- custom data variable value
+            w_varval = MyQLineEdit('0.0')
+            w_varval.setFrame(False)
+            w_varval.vname = w_varname  
+            w_varval.wrow = irow
+            w_varval.wcol = 1   # beware: hard-coded 
+            w_varval.setValidator(QtGui.QDoubleValidator())
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_value, w_varval)
+            w_varval.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
+
+
+            # ------- custom data variable conserved flag (equally divided during cell division)
+            w_var_conserved = MyQCheckBox()
+            w_var_conserved.vname = w_varname  
+            w_var_conserved.wrow = irow
+            w_var_conserved.wcol = 2
+
+            # rwh NB! Leave these lines in (for less confusing clicking/coloring of cell)
+            item = QTableWidgetItem('')
+            item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            self.custom_data_table.setItem(irow, self.custom_icol_conserved, item)
+
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_conserved, w_var_conserved)
+
+            # ------- custom data variable units
+            w_var_units = MyQLineEdit()
+            w_var_units.setFrame(False)
+            w_var_units.setFrame(False)
+            w_var_units.vname = w_varname  
+            w_var_units.wrow = irow
+            w_var_units.wcol = 3   # beware: hard-coded 
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_units, w_var_units)
+            w_var_units.textChanged[str].connect(self.custom_data_units_changed)  # being explicit about passing a string 
+
+            # ------- custom data variable description
+            w_var_desc = MyQLineEdit()
+            w_var_desc.setFrame(False)
+            w_var_desc.vname = w_varname  
+            w_var_desc.wrow = irow
+            w_var_desc.wcol = 4   # beware: hard-coded 
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_desc, w_var_desc)
+            w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
+
+
+    #--------------------------------------------------------
+    # Delete an entire row from the Custom Data subtab. Somewhat tricky...
     def delete_custom_data_cb(self):
         row = self.custom_data_table.currentRow()
-        # print("------------- delete_custom_data_cb")
-        varname = self.custom_data_table.cellWidget(row,1).text()
+        # print("------------- delete_custom_data_cb(), row=",row)
+        varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
         # print(" custom var name= ",varname)
-        # print("--- old:")
-        # print(f' master_custom_varname= {self.master_custom_varname}')
-        # print(f' custom_var_d= {self.custom_var_d}')
+        # print(" master_custom_var_d= ",self.master_custom_var_d)
 
-        self.master_custom_varname.remove(varname)
-        self.custom_var_d.pop(varname)
-        for cdef in self.param_d.keys():
-            self.param_d[cdef]['custom_data'].pop(varname)
-        # print("--- new:")
-        # print(f' master_custom_varname= {self.master_custom_varname}')
-        # print(f' custom_var_d= {self.custom_var_d}')
-        # self.custom_var_d[vname] = ['units','desc'] 
-        # button = self.sender()
+        if varname in self.master_custom_var_d.keys():
+            self.master_custom_var_d.pop(varname)
+            for key in self.master_custom_var_d.keys():
+                if self.master_custom_var_d[key][0] > row:   # remember: [row, units, description]
+                    self.master_custom_var_d[key][0] -= 1
+            # remove (pop) this custom var name from ALL cell types
+            for cdef in self.param_d.keys():
+                # print(f"   popping {varname} from {cdef}")
+                self.param_d[cdef]['custom_data'].pop(varname)
+
+        # Since each widget in each row had an associated row #, we need to decrement all those following
+        # the row that was just deleted.
+        for irow in range(row, self.max_custom_data_rows):
+            # print("---- decrement wrow in irow=",irow)
+            self.custom_data_table.cellWidget(irow,self.custom_icol_name).wrow -= 1  # sufficient to only decr the "name" column
+
+            # print(f"   after removing {varname}, master_custom_var_d= ",self.master_custom_var_d)
 
         self.custom_data_table.removeRow(row)
+
+        self.add_row_custom_table(self.max_custom_data_rows - 1)
+        self.enable_all_custom_data()
+        # print(" 2)master_custom_var_d= ",self.master_custom_var_d)
+        # print("------------- LEAVING  delete_custom_data_cb")
 
     #--------------------------------------------------------
     def create_custom_data_tab(self):
@@ -4466,9 +4550,14 @@ class CellDef(QWidget):
         self.custom_icol_units = 3  # custom Units
         self.custom_icol_desc = 4  # custom Description
 
-        self.custom_var_d = {}   # will have value= [units, desc]
+        # self.master_custom_var_d = {}   # will have value= [units, desc]
 
+        # self.custom_var_d = {}   # will have value= [units, desc]
         self.custom_var_conserved = False
+        self.custom_var_value_str_default = '0.0'
+        self.custom_var_conserved_default = False
+
+        self.custom_table_disabled = False
 
         custom_data_tab = QWidget()
         custom_data_tab_scroll = QScrollArea()
@@ -4478,7 +4567,7 @@ class CellDef(QWidget):
         hlayout = QHBoxLayout()
 
         self.custom_data_search = QLineEdit()
-        self.custom_data_search.setPlaceholderText("Search...")
+        self.custom_data_search.setPlaceholderText("Search for Name...")
         self.custom_data_search.textChanged.connect(self.custom_data_search_cb)
         hlayout.addWidget(self.custom_data_search)
 
@@ -4491,12 +4580,22 @@ class CellDef(QWidget):
 
         self.custom_data_table = QTableWidget()
         # self.custom_data_table.cellClicked.connect(self.custom_data_cell_was_clicked)
-        self.max_custom_data_rows = 50
+        # self.max_custom_data_rows = 50
+        self.max_custom_data_rows = 100
         self.max_custom_data_cols = 5
+
+        # self.max_custom_rows_edited = self.max_custom_data_rows 
+
         self.custom_data_table.setColumnCount(self.max_custom_data_cols)
         self.custom_data_table.setRowCount(self.max_custom_data_rows)
         # self.custom_data_table.setHorizontalHeaderLabels(['Conserve','Name','Value','Units','Desc'])
         self.custom_data_table.setHorizontalHeaderLabels(['Name','Value','Conserve','Units','Desc'])
+
+        # Don't like the behavior these offer, e.g., locks down width of 0th column :/
+        # header = self.custom_data_table.horizontalHeader()       
+        # header.setSectionResizeMode(0, QHeaderView.Stretch)
+        # header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+            
         for irow in range(self.max_custom_data_rows):
             # ------- custom data variable name
             w_varname = MyQLineEdit()
@@ -4505,51 +4604,79 @@ class CellDef(QWidget):
             name_validator = QtGui.QRegExpValidator(rx_valid_varname )
             w_varname.setValidator(name_validator)
 
-            item = QTableWidgetItem('')
-            # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            self.custom_data_table.setItem(irow, self.custom_icol_name, item)   # 1st col is var name
             self.custom_data_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
+
+            # item = QTableWidgetItem('')
+            # # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            # self.custom_data_table.setItem(irow, self.custom_icol_name, item)   # 1st col is var name
+            # self.custom_data_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
 
             # self.custom_data_name.append(w_varname)
             w_varname.vname = w_varname  
-            w_varname.idx = irow
+            w_varname.wrow = irow
+            w_varname.wcol = 0   # beware: hard-coded 
+            # w_varname.idx = irow   # rwh: is .idx used?
             w_varname.textChanged[str].connect(self.custom_data_name_changed)  # being explicit about passing a string 
 
 
             # ------- custom data variable value
-            w_varval = MyQLineEdit()
+            w_varval = MyQLineEdit('0.0')
             w_varval.setFrame(False)
-            item = QTableWidgetItem('')
+            # item = QTableWidgetItem('')
             w_varval.vname = w_varname  
-            w_varval.idx = irow
+            w_varval.wrow = irow
+            w_varval.wcol = 1   # beware: hard-coded 
+            # w_varval.idx = irow   # rwh: is .idx used?
             w_varval.setValidator(QtGui.QDoubleValidator())
-            self.custom_data_table.setItem(irow, self.custom_icol_value, item)
+            # self.custom_data_table.setItem(irow, self.custom_icol_value, item)
             self.custom_data_table.setCellWidget(irow, self.custom_icol_value, w_varval)
             w_varval.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
 
 
             # ------- custom data variable conserved flag (equally divided during cell division)
+            # item = QTableWidgetItem('')
+            # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            # # Later...attempt fancy: disable checkable UNTIL custom var is defined...
+            # # flags = item.flags()
+            # # flags &= ~QtCore.Qt.ItemIsEditable
+            # # flags |= QtCore.Qt.ItemIsUserCheckable 
+            # # flags &= ~QtCore.Qt.ItemIsUserCheckable   # make uncheckable (until a custom var defined)
+            # # item.setFlags(flags)
+            # item.setCheckState(QtCore.Qt.Unchecked)
+            # self.custom_data_table.setItem(irow, self.custom_icol_conserved, item)
+            # # self.custom_data_table.item(irow, 0).setEnabled(False)
+
+            w_var_conserved = MyQCheckBox()
+            # w_var_conserved.setFrame(False)
+            w_var_conserved.vname = w_varname  
+            w_var_conserved.wrow = irow
+            w_var_conserved.wcol = 2
+            w_var_conserved.clicked.connect(self.custom_var_conserved_clicked)
+
+            # item = QTableWidgetItem('')
+            # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            # self.custom_data_table.setItem(irow, self.custom_icol_conserved, item)
+
+            # rwh NB! Leave these lines in (for less confusing clicking/coloring of cell)
             item = QTableWidgetItem('')
             item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-            # Later...attempt fancy: disable checkable UNTIL custom var is defined...
-            # flags = item.flags()
-            # flags &= ~QtCore.Qt.ItemIsEditable
-            # flags |= QtCore.Qt.ItemIsUserCheckable 
-            # flags &= ~QtCore.Qt.ItemIsUserCheckable   # make uncheckable (until a custom var defined)
-            # item.setFlags(flags)
-            item.setCheckState(QtCore.Qt.Unchecked)
             self.custom_data_table.setItem(irow, self.custom_icol_conserved, item)
-            # self.custom_data_table.item(irow, 0).setEnabled(False)
+
+            self.custom_data_table.setCellWidget(irow, self.custom_icol_conserved, w_var_conserved)
 
 
             # ------- custom data variable units
             w_var_units = MyQLineEdit()
             w_var_units.setFrame(False)
-            item = QTableWidgetItem('')
+            w_var_units.setFrame(False)
+            # item = QTableWidgetItem('')
             w_var_units.vname = w_varname  
-            w_var_units.idx = irow
+            w_var_units.wrow = irow
+            w_var_units.wcol = 3   # beware: hard-coded 
+            # w_var_units.idx = irow
             # w_varval.setValidator(QtGui.QDoubleValidator())
-            self.custom_data_table.setItem(irow, self.custom_icol_units, item)
+            # self.custom_data_table.setItem(irow, self.custom_icol_units, item)
             self.custom_data_table.setCellWidget(irow, self.custom_icol_units, w_var_units)
             w_var_units.textChanged[str].connect(self.custom_data_units_changed)  # being explicit about passing a string 
             # w_var_units.textChanged[str].connect(self.custom_data_units_changed)  # being explicit about passing a string 
@@ -4558,18 +4685,20 @@ class CellDef(QWidget):
             # ------- custom data variable description
             w_var_desc = MyQLineEdit()
             w_var_desc.setFrame(False)
-            item = QTableWidgetItem('')
+            # item = QTableWidgetItem('')
             w_var_desc.vname = w_varname  
-            w_var_desc.idx = irow
+            w_var_desc.wrow = irow
+            w_var_desc.wcol = 4   # beware: hard-coded 
+            # w_var_desc.idx = irow
             # w_varval.setValidator(QtGui.QDoubleValidator())
-            self.custom_data_table.setItem(irow, self.custom_icol_desc, item)
+            # self.custom_data_table.setItem(irow, self.custom_icol_desc, item)
             self.custom_data_table.setCellWidget(irow, self.custom_icol_desc, w_var_desc)
             w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
 
 
 
         # self.custom_data_table.itemClicked.connect(self.custom_data_clicked_cb)
-        self.custom_data_table.cellChanged.connect(self.custom_data_changed_cb)
+        # self.custom_data_table.cellChanged.connect(self.custom_data_changed_cb)
 
 
 
@@ -4590,144 +4719,283 @@ class CellDef(QWidget):
         custom_data_tab.setLayout(vlayout)
         return custom_data_tab_scroll
 
-    #-------------------------------------------------------------------
-    def custom_conserved_check_clicked(self,checked,row):
-        logging.debug(f'\n--- custom_conserved_check_clicked()')
-        ch = self.sender()
-        logging.debug(f'type(ch) = {type(ch)}')
-        logging.debug(f'ch = "{ch}')
-        logging.debug(f'checked = {checked}')
-        logging.debug(f'row = {row}')
-        try:
-            vname = self.master_custom_varname[row]
-        except:
-            logging.debug(f'custom_conserved_check_clicked(): but got an error; no var probably')
-            return
-        logging.debug(f'vname = {vname}')
-        logging.debug(f'\n--- updating cell def: {self.current_cell_def}')
-        logging.debug(f'before:  {self.param_d[self.current_cell_def]["custom_data"]}')  # rwh: FIX/TODO
-        self.param_d[self.current_cell_def]['custom_data'][vname][1] = checked  # [vname, conserved_flag, units]
-        logging.debug(f'after: {self.param_d[self.current_cell_def]["custom_data"]}')  
-        # print("dir(ch) = ",dir(ch))
-            # print(ch.parent())
-            # ix = self.table.indexAt(ch.pos())
-            # print(ix.row(), ix.column(), ch.isChecked())
+    #----------------------------------------
+    def disable_table_cells_for_duplicate_name(self, widget=None):
+        # disable all cells in the Custom Data table
+        for irow in range(0,self.max_custom_data_rows):
+            for icol in range(5):
+                self.custom_data_table.cellWidget(irow,icol).setEnabled(False)
+                self.custom_data_table.cellWidget(irow,icol).setStyleSheet("background: lightgray")   # yellow
+                # self.sender().setStyleSheet("color: red;")
 
-    # def custom_conserved_check_clicked(self, checked):
-    #     print("--- custom_conserved_check_clicked(),  checked = ",checked)
-    #     idx = self.sender().idx
-    #     print(" .   idx=",idx)
-    #     print(self.param_d[self.current_cell_def]['custom_data'])  # rwh: FIX/TODO
+        if widget:   # enable only(!) the widget that needs to be fixed (because it's a duplicate)
+            wrow = widget.wrow
+            wcol = widget.wcol
+            self.custom_data_table.cellWidget(wrow,wcol).setEnabled(True)
+            # self.custom_data_table.setCurrentItem(None)
+            self.custom_data_table.cellWidget(wrow,wcol).setStyleSheet("background: white")
+            self.custom_data_table.setCurrentCell(wrow,wcol)
+
+        # Also disable the cell type tree
+        self.tree.setEnabled(False)
 
     #----------------------------------------
+    def enable_all_custom_data(self):
+        # for irow in range(self.max_custom_vars):
+        # for irow in range(self.max_custom_rows_edited):
+        for irow in range(self.max_custom_data_rows):
+            for icol in range(5):
+                # if (icol != 2) and (irow != row) and (icol != col):
+                # if irow > 47:
+                    # print("enable all(): irow,icol=",irow,icol)
+                # if self.custom_data_table.cellWidget(irow,icol):
+                self.custom_data_table.cellWidget(irow,icol).setEnabled(True)
+                self.custom_data_table.cellWidget(irow,icol).setStyleSheet("background: white")
+                # else:
+                    # print("oops!  self.custom_data_table.cellWidget(irow,icol) is None")
+                # self.sender().setStyleSheet("color: red;")
+
+        # self.custom_data_table.cellWidget(self.max_custom_rows_edited+1,0).setEnabled(True)
+        # self.custom_data_table.cellWidget(self.max_custom_rows_edited+1,0).setStyleSheet("background: white")
+
+        self.tree.setEnabled(True)
+
+    #----------------------------------------
+    # Callback when user edits a "Name" cell in the table. Somewhat tricky...
+    # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
-        logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
-        logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
+        # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
+        # print(f'\n--------- custom_data_name_changed() --------')
+        # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
+        # print("incoming master_custom_var_d= ",self.master_custom_var_d)
         # print(f'custom_data_name_changed():   self.current_cell_def = {self.current_cell_def}')
         # print(f'custom_data_name_changed():   text= {text}')
 
-        # # print("self.sender() = ", self.sender())
-        vname = self.sender().vname.text()
-        idx = self.sender().idx
-        logging.debug(f' self.sender().idx= {self.sender().idx}')
-        logging.debug(f' master_custom_varname= {self.master_custom_varname}')
-        # print(f' self.sender().idx= {self.sender().idx}')
-        # print(f' master_custom_varname= {self.master_custom_varname}')
-
-        if idx < len(self.master_custom_varname):
-            old_varname = self.master_custom_varname[idx]
-            logging.debug(f' old varname = {old_varname}')
-        else:  # adding a new varname
-            self.master_custom_varname.append(vname)
-            for cdname in self.param_d.keys():
-                logging.debug(f'----- cdname = {cdname}')
-                logging.debug(f'----- cdname keys()= {self.param_d[cdname].keys()}')
-                # self.param_d[cdname]['custom_data'][vname] = '0.0' #rwh: [value, conserved_flag, units]
-                # self.param_d[cdname]['custom_data'][vname] = ['0.0',False,""] #rwh: [value, conserved_flag, units]
-                self.param_d[cdname]['custom_data'][vname] = ['0.0',False] #rwh: [value, conserved_flag]
-                self.custom_var_d[vname] = ['units','desc'] 
-                logging.debug(self.param_d[cdname]['custom_data'])
-                self.custom_data_count = len(self.param_d[cdname]['custom_data'])
-                logging.debug(f'self.custom_data_count = {self.custom_data_count}')
+        if not self.custom_data_edit_active:  # hack to avoid unwanted callback
+            # print("--- edit is not active, leaving!")
             return
 
-        # prev_vname = self.celldef_tab.custom_data_name[idx].text()
-        # print("custom_data_name_changed(): prev_vname = ",prev_vname)
-        # # print("(master) prev_vname = ", self.sender().prev_vname)
-        logging.debug(f'custom_data_name_changed(): vname = {vname}')
-        logging.debug(f'custom_data_name_changed(): idx =  {idx}')
-        logging.debug(f'custom_data_name_changed(): custom_data_name_changed(): text = {text}')
-        # print(f'custom_data_name_changed(): vname = {vname}')
-        # print(f'custom_data_name_changed(): idx =  {idx}')
-        # print(f'custom_data_name_changed(): custom_data_name_changed(): text = {text}')
-        # print()
+        vname = self.sender().vname.text()
+        # print(f'  len(vname)= {len(vname)}')
+        # print(f'  vname (.text())= {vname}')
 
-        if old_varname != vname:
-            logging.debug(f'custom_data_name_changed(): self.param_d.keys() = {self.param_d.keys()}')
-            for cdname in self.param_d.keys():
-                logging.debug(f'----- cdname = {cdname}')
-                # print(f'----- cdname = {cdname}')
+        prev_name = self.sender().prev
+        # print(f'  prev_name= {prev_name}')
 
-                self.param_d[cdname]['custom_data'][vname] = self.param_d[cdname]['custom_data'].pop(old_varname)
-                logging.debug(self.param_d[cdname]['custom_data'])
-                print(self.param_d[cdname]['custom_data'])
+        len_vname = len(vname)
+        # user has deleted the entire name; remove any prev name from the relevant dicts
+        if len_vname == 0:
+            # print("--------- handling len(vname)==0 ")
+            # print("--------- handling len(vname)==0 ")
+            # print("1) master_custom_var_d= ",self.master_custom_var_d)
+            if prev_name:
+                # print(f"--------- pop prev_name {prev_name}")
+                self.master_custom_var_d.pop(prev_name)
+                # print("2) master_custom_var_d= ",self.master_custom_var_d)
+                for cdname in self.param_d.keys():
+                    self.param_d[cdname]["custom_data"].pop(prev_name)
+                    # print(f"3) self.param_d[{cdname}]['custom_data']= ",self.param_d[cdname]['custom_data'])
 
-                self.master_custom_varname = [vname if x==old_varname else x for x in self.master_custom_varname]
-            # print(f' (updated) master_custom_varname= {self.master_custom_varname}')
+                self.sender().prev = None  # update previous to be None
+            # return
 
-            # self.param_d[cell_def_name]['custom_data'][var.tag] = val   # TODO: rename this dict key (var.tag)
-            # a_dict[new_key] = a_dict.pop(old_key)
+        else:  # vname has >=1 length
+            wrow = self.sender().wrow
+            # print("--------- handling len(vname) >= 1. wrow= ",wrow)
+            # next_row = self.sender().wrow + 1
+            # print("  len(vname)>=1.  next_row= ",next_row)
 
-        # New, manual way (Sep 2021): once a user enters a new name for a custom var, enable its other fields.
-        # self.select[idx].setEnabled(True)
-        # print("len(vname) = ",len(vname))
-        # if len(vname) > 0:
-        #     print("------- vname=",vname)
+            # check for duplicate name; if so, disable entire table forcing this name to be changed
+            if vname in self.master_custom_var_d.keys():
+                # print(f"-- found {vname} in master_custom_var_d: {self.master_custom_var_d}")
+                self.disable_table_cells_for_duplicate_name(self.sender())
+                self.custom_table_disabled = True
+                # print("--------- 1) leave function")
+                return  # --------- leave function
 
+
+            # else:  # new name is not a duplicate
+            elif len_vname == 1:   # starting with a new name (1st char)
+                # print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+
+                # If we're at the last row, add N(=10) more rows to the table.
+                if wrow == self.max_custom_data_rows-1:
+                    # print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+                    # print("add 10 rows")
+                    for ival in range(10):
+                        self.add_row_custom_table(self.max_custom_data_rows+ival)
+                    self.max_custom_data_rows += 10
+                    # print("post: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+                    # print("self.max_custom_data_rows= ",self.max_custom_data_rows)
+
+                units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
+                desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
+                if prev_name:
+                    self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
+                else:
+                    self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                # print(f'post adding {vname} --> {self.master_custom_var_d}')
+
+                # -- since we're adding this var for the 1st time, add it to each cell type, using same values
+                val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
+                bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
+                for cdname in self.param_d.keys():
+                    # print(f'--- cdname= {cdname},  vname={vname}')
+                    self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
+
+                self.sender().prev = vname  # update the previous to be the current
+
+            else:  # length of vname >= 1 
+                # print(f'--- len_vname >= 1:  vname={vname},  prev_name={prev_name}')
+                if prev_name:   # if this name had a previous name, update it (pop the previous) in the dicts
+                    # print(f'----- prev_name={prev_name}')
+                    self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
+                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
+                    # self.master_custom_var_d.pop(prev_name)
+
+                    # units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
+                    # desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
+                    # self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
+
+
+                    for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname},  prev_name={prev_name}')
+                        self.param_d[cdname]["custom_data"][vname] = self.param_d[cdname]["custom_data"].pop(prev_name)
+                    self.sender().prev = vname  # update the previous to be the current
+
+                else:
+                    # print(f'----- no prev_name; add to dicts')
+                    units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
+                    desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
+                    self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                    # print(f"after adding {vname} -->  {self.master_custom_var_d}")
+
+                    val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
+                    bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
+                    for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname}')
+                        self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
+
+                    self.sender().prev = vname  # update the previous to be the current
+
+        self.max_custom_vars = len(self.master_custom_var_d)
+        # print("- max_custom_vars = ",self.max_custom_vars)
+        # self.sender().prev = vname
+
+        # Let's use whatever is there now
+
+        # print("    master_custom_var_d= ",self.master_custom_var_d)
+
+        if self.custom_table_disabled:
+            self.enable_all_custom_data()
+            self.custom_table_disabled = False
         # print(f'============== leave custom_data_name_changed() --------')
+
+
+    #--------------------------------------------------------------
+    # Callback when user edit a Value cell in the table. Somewhat tricky...
+    def custom_data_value_changed(self, text):
+        if not self.current_cell_def:
+            return
+
+        if not self.custom_data_edit_active:
+            # print("custom_data_value_changed(): returning due to active edit False!")
+            return
+
+        # print("custom_data_value_changed(): self.current_cell_def= ",self.current_cell_def)
+        # print("self.sender() = ", self.sender())
+        vname = self.sender().vname.text()
+
+        wrow = self.sender().wrow
+        wcol = self.sender().wcol
+
+        if len(vname) == 0:
+            # print("HEY! define var name before value!")
+            self.custom_table_error(wrow,wcol,"Define Name first!")
+            self.custom_data_table.cellWidget(wrow,wcol).setText(self.custom_var_value_str_default)
+
+            # item = QTableWidgetItem('')
+            # self.custom_data_table.setItem(row, col, item)   # 1st col is var name
+            return
+
+        # self.param_d[self.current_cell_def]['custom_data'][vname] = [text, conserved_flag]  
+        self.param_d[self.current_cell_def]['custom_data'][vname][0] = text  # [value, conserved flag]
+        # print("custom_data_value_changed(): = self.param_d[self.current_cell_def]['custom_data'][vname][0]",self.param_d[self.current_cell_def]['custom_data'][vname][0])
+
+    #----------------------------------------
+    def custom_var_conserved_clicked(self,bval):
+        # print("== custom_var_conserved_clicked(): bval=",bval)
+        if not self.current_cell_def:
+            return
+
+        if not self.custom_data_edit_active:
+            # print("custom_var_conserved_clicked(): returning due to active edit False!")
+            return
+        # print("self.sender().wrow = ", self.sender().wrow)
+        vname = self.sender().vname.text()
+        # print("    vname= ",vname)
+
+        wrow = self.sender().wrow
+        wcol = self.sender().wcol
+
+        if len(vname) == 0:
+            # print("HEY! define var name before clicking conserved flag!")
+            self.custom_table_error(wrow,wcol,"Define Name first!")
+            self.custom_data_table.cellWidget(wrow,wcol).setChecked(False)
+            return
+
+        self.param_d[self.current_cell_def]['custom_data'][vname][1] = bval  # [value, conserved flag]
+        # print("custom_data_value_changed(): = self.param_d[self.current_cell_def]['custom_data'][vname][0]",self.param_d[self.current_cell_def]['custom_data'][vname][0])
+
 
     #----------------------------------------
     # NOTE: it doesn't matter what cell type is selected; units are the same for ALL. Just unique to custom var name.
     def custom_data_units_changed(self, text):
-        logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_units_changed() --------')
+        # logging.debug(f'\n--------- cell_def_tab.py: custom_data_units_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
         # print(f'custom_data_units_changed():   self.current_cell_def = {self.current_cell_def}')
-        # print(f'custom_data_units_changed():   text= {text}')
+        # print(f'custom_data_units_changed(): ----  text= {text}')
 
-        # # print("self.sender() = ", self.sender())
+        # print("self.sender().wrow = ", self.sender().wrow)
         varname = self.sender().vname.text()
-        print("    varname= ",varname)
+        # print("    varname= ",varname)
+        wrow = self.sender().wrow
 
         # if len(varname == 0):
         #     print("HEY, idiot! sincerely, units")
         #     return
 
         # print(f"-------   its varname is {varname}")
-        if varname not in self.custom_var_d.keys():
-            self.custom_var_d[varname] = ['','']
-        self.custom_var_d[varname][0] = text
-        # print("self.custom_var_d[varname]= ",self.custom_var_d[varname])
+        if varname not in self.master_custom_var_d.keys():
+            self.master_custom_var_d[varname] = [wrow, '', '']   # [wrow, units, desc]
+        self.master_custom_var_d[varname][1] = text   # hack, hard-coded
+        # print("self.master_custom_var_d[varname]= ",self.master_custom_var_d[varname])
 
         # print(f'============== leave custom_data_units_changed() --------')
 
     #----------------------------------------
     def custom_data_desc_changed(self, text):
-        logging.debug(f'\n--------- cell_def_tab.py: custom_data_desc_changed() --------')
+        # logging.debug(f'\n--------- cell_def_tab.py: custom_data_desc_changed() --------')
         # print(f'custom_data_desc_changed():   self.current_cell_def = {self.current_cell_def}')
         # print(f'custom_data_desc_changed():   text= {text}')
 
         varname = self.sender().vname.text()
-        print("    varname= ",varname)
+        # print("    varname= ",varname)
+        wrow = self.sender().wrow
 
         # if len(varname == 0):
         #     print("HEY, idiot! sincerely, desc")
         #     return
 
         # print(f"-------   its varname is {varname}")
-        if varname not in self.custom_var_d.keys():
-            self.custom_var_d[varname] = ['','']
-        self.custom_var_d[varname][1] = text
-        # print("self.custom_var_d[varname]= ",self.custom_var_d[varname])
+        if varname not in self.master_custom_var_d.keys():
+            self.master_custom_var_d[varname] = [wroww, '', '']   # [wrow, units, desc]
+        self.master_custom_var_d[varname][2] = text  # hack, hard-code
+        # print("self.master_custom_var_d[varname]= ",self.master_custom_var_d[varname])
 
         # print(f'============== leave custom_data_desc_changed() --------')
 
@@ -4735,20 +5003,19 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     # called from studio.py for a new model
     def clear_custom_data_tab(self):
-        logging.debug(f'\n\n------- cell_def_tab.py: clear_custom_data_tab(self):  self.custom_data_count = {self.custom_data_count}')
-        for idx in range(self.custom_data_count):
-            self.custom_data_name[idx].setReadOnly(False)  # turn off read-only so we can change it. ugh.
-            self.custom_data_name[idx].setText("")  # BEWARE! triggers a callback
-            # self.custom_data_name[idx].setReadOnly(True)
+        # logging.debug(f'\n\n------- cell_def_tab.py: clear_custom_data_tab(self):  self.custom_var_count = {self.custom_var_count}')
 
-            self.custom_data_value[idx].setText("") # BEWARE! triggers a callback
-            self.custom_data_conserved[idx].setChecked(False)  # rwh: 
+        self.custom_data_edit_active = False
 
-            # self.custom_data_units[idx].setReadOnly(False)
-            # self.custom_data_units[idx].setText("")
-            # self.custom_data_units[idx].setReadOnly(True)
+        for irow in range(self.max_custom_data_rows):
+            self.custom_data_table.cellWidget(irow,self.custom_icol_name).setText('')
+            self.custom_data_table.cellWidget(irow,self.custom_icol_value).setText('0.0')
+            self.custom_data_table.cellWidget(irow,self.custom_icol_conserved).setCheckState(False)
+            self.custom_data_table.cellWidget(irow,self.custom_icol_units).setText('')
+            self.custom_data_table.cellWidget(irow,self.custom_icol_desc).setText('')
         
-        self.custom_data_count = 0
+        # self.custom_var_count = 0
+        self.custom_data_edit_active = True
 
     #--------------------------------------------------------
     # @QtCore.Slot()
@@ -5046,8 +5313,8 @@ class CellDef(QWidget):
 
     #         self.vbox.addLayout(hbox)
     #         # self.main_layout.addLayout(hbox)
-    #         self.custom_data_count = self.custom_data_count + 1
-    #         print(self.custom_data_count)
+    #         self.custom_var_count = self.custom_var_count + 1
+    #         print(self.custom_var_count)
 
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
@@ -5395,6 +5662,8 @@ class CellDef(QWidget):
         self.param_d[cdname]["apoptosis_phase0_duration"] = '516'
         self.param_d[cdname]["apoptosis_phase0_fixed"] = False
 
+        self.param_d[cdname]["apoptosis_duration_flag"] = False
+
         self.param_d[cdname]["apoptosis_unlysed_rate"] = '0.05'
         self.param_d[cdname]["apoptosis_lysed_rate"] = '0'
         self.param_d[cdname]["apoptosis_cyto_rate"] = '1.66667e-02'
@@ -5409,6 +5678,8 @@ class CellDef(QWidget):
         self.param_d[cdname]['necrosis_trate01_fixed'] = False
         self.param_d[cdname]["necrosis_trate12"] = '1.15741e-05'
         self.param_d[cdname]['necrosis_trate12_fixed'] = True
+
+        self.param_d[cdname]["necrosis_duration_flag"] = False
 
         self.param_d[cdname]["necrosis_phase0_duration"] = '1.11111e-10'
         self.param_d[cdname]["necrosis_phase0_fixed"] = False
@@ -5561,6 +5832,7 @@ class CellDef(QWidget):
 
     def new_custom_data_params(self, cdname):
         logging.debug(f'------- new_custom_data_params() -----')
+        # print(f'------- new_custom_data_params() -----')
         sval = self.default_sval
         if 'custom_data' not in self.param_d[cdname].keys():
             return
@@ -5570,7 +5842,7 @@ class CellDef(QWidget):
         for key in self.param_d[cdname]['custom_data'].keys():
             logging.debug(f'{key}, {self.param_d[cdname]["custom_data"][key]}')
             # self.custom_data_name[idx].setText(key)
-            self.param_d[cdname]['custom_data'][key] = sval
+            self.param_d[cdname]['custom_data'][key] = [self.custom_var_value_str_default, self.custom_var_conserved_default]   # [value, conserved flag]
             idx += 1
 
     #-----------------------------------------------------------------------------------------
@@ -6004,7 +6276,66 @@ class CellDef(QWidget):
 
         else:
             self.intracellular_type_dropdown.setCurrentIndex(0)
+
     #-----------------------------------------------------------------------------------------
+    def update_custom_data_params(self):
+        cdname = self.current_cell_def
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
+        # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        if 'custom_data' not in self.param_d[cdname].keys():
+            return
+
+        self.clear_custom_data_tab()  # clean out before re-populating
+
+        num_vals = len(self.param_d[cdname]['custom_data'].keys())
+        # print("  -------- custom_data # keys =", num_vals)
+        # return
+
+        idx = 0
+        self.custom_data_edit_active = False
+
+        for key in self.param_d[cdname]['custom_data'].keys():
+            # print("--------- update_custom_data_params():  key = ",key)
+            # logging.debug(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
+            # logging.debug(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
+            # print(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
+            # print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
+
+            if len(key) > 0:  # probably not necessary anymore
+                # logging.debug(f'cell_def_tab.py: update_custom_data_params(): {key},{self.param_d[cdname]["custom_data"][key]}')
+                # print(f'       update_custom_data_params(): custom_data= {self.param_d[cdname]["custom_data"]}')
+                # print(f'       update_custom_data_params(): {key},{self.param_d[cdname]["custom_data"][key]}')
+
+                irow = self.master_custom_var_d[key][0]
+                # print("---- irow=",irow)
+                #------------- name
+                # self.custom_data_table.cellWidget(idx,self.custom_icol_name).setText(key)   # rwh: tricky; custom var name
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setText(key)   # rwh: tricky; custom var name
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).prev = key 
+
+                # self.custom_data_table.cellWidget(idx,self.custom_icol_name).setStyleSheet("color: black;")
+
+                #------------- value
+                self.custom_data_table.cellWidget(irow,self.custom_icol_value).setText(self.param_d[cdname]['custom_data'][key][0]) 
+
+                #------------- conserved
+                self.custom_data_table.cellWidget(irow,self.custom_icol_conserved).setChecked(self.param_d[cdname]['custom_data'][key][1]) 
+
+
+                # NOTE: the following two (units, desc) are the same across all cell types
+                #------------- units
+                # print(f"    update_custom_data_params(): master_custom_var_d= {self.master_custom_var_d}")
+                self.custom_data_table.cellWidget(irow,self.custom_icol_units).setText(self.master_custom_var_d[key][1])
+
+                #------------- description
+                self.custom_data_table.cellWidget(irow,self.custom_icol_desc).setText(self.master_custom_var_d[key][2])
+
+            idx += 1
+
+        self.custom_data_edit_active = True
+
+    #-----------------------------------------------------------------------------------------
+    # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
         cdname = self.current_cell_def
         if not cdname:
@@ -6020,98 +6351,6 @@ class CellDef(QWidget):
             self.custom_data_value[idx].setText('')
             self.custom_data_conserved[idx].setChecked(False)
             # idx += 1
-
-    #-----------------------------------------------------------------------------------------
-    def update_custom_data_params(self):
-        cdname = self.current_cell_def
-        # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
-        # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
-        if 'custom_data' not in self.param_d[cdname].keys():
-            return
-
-        num_vals = len(self.param_d[cdname]['custom_data'].keys())
-        # print("  -------- custom_data # keys =", num_vals)
-        # return
-
-        idx = 0
-        # for key in self.param_d[cdname]['custom_data'].keys():
-        for key in self.master_custom_varname:
-            # logging.debug(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
-            logging.debug(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
-            # print(f'["custom_data"]keys() = {self.param_d[cdname]["custom_data"].keys()}')
-            # print("cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
-
-            if len(key) > 0:  # probably not necessary anymore
-                # e.g.,  receptor,['0.0', False, 'dimensionless']
-
-                logging.debug(f'cell_def_tab.py: update_custom_data_params(): {key},{self.param_d[cdname]["custom_data"][key]}')
-                # print(f'cell_def_tab.py: update_custom_data_params(): {key},{self.param_d[cdname]["custom_data"][key]}')
-
-                # var name
-                # self.custom_data_name[idx].setText(key)
-                # print(f"~~~~~~    setItem key={key} in row={idx}, col=1")
-                # self.custom_data_table.setItem(idx,1, QTableWidgetItem(key))   # custom var name
-
-                # self.custom_data_table.cellWidget(idx,1).setText(key)   # rwh: tricky; custom var name
-                self.custom_data_table.cellWidget(idx,self.custom_icol_name).setText(key)   # rwh: tricky; custom var name
-                # setText(key)
-
-                # var value
-                # self.custom_data_value[idx].setText(self.param_d[cdname]['custom_data'][key][0])
-                # self.custom_data_table.setItem(idx,2, QTableWidgetItem(self.param_d[cdname]['custom_data'][key][0])) # custom var value (string)
-                self.custom_data_table.cellWidget(idx,self.custom_icol_value).setText(self.param_d[cdname]['custom_data'][key][0]) # rwh: tricky; custom var value
-
-                # self.custom_data_table
-
-                # logging.debug(f'custom_data_conserved[idx]---> {self.custom_data_conserved[idx]}')
-                # logging.debug(f'["custom_data"][key])       ---> {self.param_d[cdname]["custom_data"][key]}')
-                # logging.debug(f'["custom_data"][key][0])       ---> {self.param_d[cdname]["custom_data"][key][0]}')
-                # logging.debug(f'["custom_data"][key][1])       ---> {self.param_d[cdname]["custom_data"][key][1]}')
-                # logging.debug(f'["custom_data"][key][2])       ---> {self.param_d[cdname]["custom_data"][key][2]}')
-
-                # self.custom_data_conserved[idx].setChecked(self.param_d[cdname]['custom_data'][key][1])
-                # self.custom_data_table.setItem(idx,0, QTableWidgetItem(self.param_d[cdname]['custom_data'][key][1]))  # Conserve boolean
-                # self.custom_data_table.setItem(idx,0, QTableWidgetItem.setCheckState(QtCore.Qt.Checked))
-                item = QTableWidgetItem()
-                # item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                if self.param_d[cdname]['custom_data'][key][1]:  # e.g., receptor,['0.0', True, 'dimensionless']
-                    item.setCheckState(QtCore.Qt.Checked)
-                else:
-                    item.setCheckState(QtCore.Qt.Unchecked)
-                # chkBoxItem = QTableWidgetItem()
-                # chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                # chkBoxItem.setCheckState(QtCore.Qt.Unchecked)
-                # self.custom_data_table.setItem(idx,3, QTableWidgetItem(self.param_d[cdname]['custom_data'][key][1])) 
-
-                # self.custom_data_table.setItem(idx,0, item) # boolean Conserve
-                self.custom_data_table.setItem(idx,self.custom_icol_conserved, item) # boolean Conserve
-
-                # self.custom_data_units[idx].setText(self.param_d[cdname]['custom_data'][key][2])
-                # self.custom_data_table.setItem(idx,3, QTableWidgetItem(self.param_d[cdname]['custom_data'][key][2]))  # units
-                # self.custom_data_table.cellWidget(idx,3).setText(self.param_d[cdname]['custom_data'][key][2])
-                self.custom_data_table.cellWidget(idx,self.custom_icol_units).setText(self.custom_var_d[key][0])
-
-                # self.custom_data_table.cellWidget(idx,4).setText(self.param_d[cdname]['custom_data'][key][3])
-                # self.custom_data_table.cellWidget(idx,4).setText('foodesc') # rwh: tricky; custom var desc
-                self.custom_data_table.cellWidget(idx,self.custom_icol_desc).setText(self.custom_var_d[key][1])
-
-                # sys.exit(1) # rwh
-
-                # print("\n THIS~~~~~~~~~ cell_def_tab.py: update_custom_data_params(): ",key,self.param_d[cdname]['custom_data'][key])
-            idx += 1
-
-        # print('idx=',idx)
-        # for jdx in range(idx,self.max_custom_data_rows):
-        #     self.custom_data_name[jdx].setText('')
-        #     self.custom_data_value[jdx].setText('')
-        #     self.custom_data_units[jdx].setText('')
-        #     self.custom_data_conserved[jdx].setChecked(False)
-
-
-        # jdx = 0
-        # for var in uep_custom_data:
-        #     print(jdx, ") ",var)
-        #     self.custom_data_name[jdx].setText(var.tag)
 
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
@@ -7104,41 +7343,43 @@ class CellDef(QWidget):
     # Get values from the dict and generate/write a new XML
     def fill_xml_custom_data(self, custom_data, cdef):
         if self.debug_print_fill_xml:
-            logging.debug(f'------------------- fill_xml_custom_data():  self.custom_data_count = {self.custom_data_count}')
-            # print(f'------------------- fill_xml_custom_data():  self.custom_data_count = {self.custom_data_count}')
+            # logging.debug(f'------------------- fill_xml_custom_data():  self.custom_var_count = {self.custom_var_count}')
+            # print(f'------------------- fill_xml_custom_data():  self.custom_var_count = {self.custom_var_count}')
             logging.debug(f'------ ["custom_data"]: for {cdef}')
             # print(self.param_d[cdef]['custom_data'])
 
-        if self.custom_data_count == 0:
-            logging.debug(f' fill_xml_custom_data():  leaving due to count=0')
-            return
+        # if self.custom_var_count == 0:
+        #     logging.debug(f' fill_xml_custom_data():  leaving due to count=0')
+        #     return
 
         idx = 0
         for key_name in self.param_d[cdef]['custom_data'].keys():
-            print(f'---------\nfill_xml_custom_data()  key_name= {key_name}, len(key_name)={len(key_name)}')
+            # print(f'---------\nfill_xml_custom_data()  key_name= {key_name}, len(key_name)={len(key_name)}')
             if len(key_name) == 0:
-                self.custom_table_error(f"Waring: There is at least one empty Cell Type Custom Data variable name.")
+                self.custom_table_error(-1,-1,f"Warning: There is at least one empty Cell Type Custom Data variable name.")
                 continue
             elif len(self.param_d[cdef]['custom_data'][key_name][0]) == 0:  # value for this var for this cell def
-                self.custom_table_error(f"Warning: Not saving '{key_name}' due to missing value.")
+                self.custom_table_error(-1,-1,f"Warning: Not saving '{key_name}' due to missing value.")
                 continue
-            print(f"fill_xml_custom_data() {self.param_d[cdef]['custom_data'][key_name]}")
-            # print("len custom_var_d=", len(self.custom_var_d[key_name]))
-            if key_name not in self.custom_var_d.keys():
-                self.custom_var_d[key_name] = ['','']
-            # print(f'fill_xml_custom_data():  custom_var_d= {self.custom_var_d[key_name]}')
-            units = self.custom_var_d[key_name][0]
+            # print(f"fill_xml_custom_data() {self.param_d[cdef]['custom_data'][key_name]}")
+            # print("len custom_var_d=", len(self.master_custom_var_d[key_name]))
+            if key_name not in self.master_custom_var_d.keys():   # rwh: would this ever happen?
+                # print(f' fill_xml_custom_data():  weird, key_name {key_name} not in master_custom_var_d. Adding dummy [0,"", ""].')
+                self.master_custom_var_d[key_name] = [0, '','']  # [wrow, units, desc]
+            # print(f'fill_xml_custom_data():  custom_var_d= {self.master_custom_var_d[key_name]}')
+            units = self.master_custom_var_d[key_name][1]  # hack, hard-coded
             # print(f'  units = {units}')
-            desc = self.custom_var_d[key_name][1]
+            desc = self.master_custom_var_d[key_name][2]  # hack, hard-coded
             # print(f'  desc = {desc}')
+
             conserved = "false"
-            if self.param_d[cdef]['custom_data'][key_name][1]:
+            if self.param_d[cdef]['custom_data'][key_name][1]:  # hack, hard-coded
             # if self.custom_data_conserved[idx].checkState():
                 conserved = "true"
             idx += 1
             elm = ET.SubElement(custom_data, key_name, 
-                    { "units":units,
-                      "conserved":conserved,
+                    { "conserved":conserved,
+                      "units":units,
                       "description":desc } )
 
             # elm.text = self.param_d[cdef]['custom_data'][key_name]  # value for this var for this cell def

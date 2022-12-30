@@ -26,7 +26,9 @@ class UserParams(QtWidgets.QWidget):
         # self.current_param = None
         self.xml_root = None
         self.count = 0
-        self.max_rows = 100  # initially (TODO: check if enough for initial .xml)
+        # self.max_rows = 100  # initially (TODO: check if enough for initial .xml)
+        self.max_rows = 200  # initially (TODO: check if enough for initial .xml)
+        self.max_rows = 125  # initially (TODO: check if enough for initial .xml)
 
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"

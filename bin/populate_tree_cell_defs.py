@@ -59,7 +59,8 @@ def validate_cell_defs(cell_defs_elm, skip_validate):
 def populate_tree_cell_defs(cell_def_tab, skip_validate):
     logging.debug(f'=======================  populate_tree_cell_defs(): ======================= ')
     logging.debug(f'    cell_def_tab.param_d = {cell_def_tab.param_d}')
-    cell_def_tab.master_custom_varname.clear()
+    # cell_def_tab.master_custom_varname.clear()
+    cell_def_tab.master_custom_var_d.clear()
 
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
     validate_cell_defs(uep, skip_validate)
@@ -1385,7 +1386,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # custom_data_path = ".//cell_definition[" + str(cell_def_tab.idx_current_cell_def) + "]//custom_data//"
             logging.debug(f'uep_custom_data= {uep_custom_data}')
 
-            # for jdx in range(cell_def_tab.custom_data_count):
+            # for jdx in range(cell_def_tab.custom_var_count):
             #     cell_def_tab.custom_data_name[jdx].setText('')
             #     cell_def_tab.custom_data_value[jdx].setText('')
                 
@@ -1393,7 +1394,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             jdx = 0
             # rwh/TODO: if we have more vars than we initially created rows for, we'll need
             # to call 'append_more_cb' for the excess.
-            cell_def_tab.custom_data_count = 0
+            cell_def_tab.custom_var_count = 0
             cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
             # print("------- in populate*:  param_d=",cell_def_tab.param_d)
             # print("-------\n\n")
@@ -1411,8 +1412,10 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
 
                     # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = val
-                    if var.tag not in cell_def_tab.master_custom_varname:
-                        cell_def_tab.master_custom_varname.append(var.tag)
+                    # if var.tag not in cell_def_tab.master_custom_varname:
+                    if var.tag not in cell_def_tab.master_custom_var_d.keys():
+                        # cell_def_tab.master_custom_varname.append(var.tag)  # unique entries
+                        cell_def_tab.master_custom_var_d[var.tag] = [cell_def_tab.custom_var_count, '', '']  # [row#, units, desc]
 
                     conserved_flag = False
                     logging.debug(f'var.attrib.keys() = {var.attrib.keys()}')
@@ -1421,17 +1424,28 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         logging.debug(f'-------- conserved is true for {var}')
                         conserved_flag = True
 
-                    units_val = "dimensionless"
-                    desc_str = ""
+                    # units_str = "dimensionless"
+                    # desc_str = ""
                     if 'units' in var.attrib.keys():
-                        units_val = var.attrib['units']
-                        cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
-                        logging.debug(f'--------- units_val= {units_val}')
+                        units_str = var.attrib['units']
+                        # for multiple cell types, use longest "units" string
+                        if len(units_str) > len(cell_def_tab.master_custom_var_d[var.tag][1]):
+                            cell_def_tab.master_custom_var_d[var.tag][1] = units_str  # hack: hard-coded index
+                        # cell_def_tab.custom_var_d[var.tag] = [units_str, desc_str]
+                        # logging.debug(f'--------- units_str= {units_str}')
 
                     if 'description' in var.attrib.keys():
                         desc_str = var.attrib['description']
-                        cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
-                        logging.debug(f'--------- desc_str= {desc_str}')
+                        # for multiple cell types, use longest "description" string
+                        if len(desc_str) > len(cell_def_tab.master_custom_var_d[var.tag][2]):
+                            cell_def_tab.master_custom_var_d[var.tag][2] = desc_str  # hack: hard-coded index
+                        # cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
+                        # logging.debug(f'--------- desc_str= {desc_str}')
+
+                    # print(f"populate():  master_custom_var_d= {cell_def_tab.master_custom_var_d}")
+                    # cell_def_tab.master_custom_units.append(units_str)
+                    # cell_def_tab.master_custom_desc.append(desc_str)
+                    # cell_def_tab.master_custom_var_d[var.tag]=[units_str, desc_str]
 
                         # no can do: RuntimeError: dictionary changed size during iteration
                         # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag+'__conserved'] = True
@@ -1441,7 +1455,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
                     logging.debug(f'populate: cell_def_name= {cell_def_name} --> custom_data: {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
 
-                    cell_def_tab.custom_data_count += 1
+                    cell_def_tab.custom_var_count += 1
             #     cell_def_tab.custom_data_name[jdx].setText(var.tag)
             #     print("tag=",var.tag)
             #     cell_def_tab.custom_data_value[jdx].setText(var.text)
