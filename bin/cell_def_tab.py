@@ -46,7 +46,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
 # from PyQt5.QtCore import Qt
-from cell_def_custom_data import CustomData
+# from cell_def_custom_data import CustomData
 
 
 
@@ -7466,11 +7466,10 @@ class CellDef(QWidget):
                 self.fill_xml_intracellular(pheno,cdef)
 
                 # ------- custom data ------- 
-                customdata = ET.SubElement(elm, 'custom_data')
-                customdata.text = self.indent10
-                customdata.tail = self.indent6
-                self.fill_xml_custom_data(customdata,cdef)
-
+                custom_data = ET.SubElement(elm, 'custom_data')
+                custom_data.text = self.indent10
+                custom_data.tail = self.indent6
+                self.fill_xml_custom_data(custom_data,cdef)
 
                 uep.insert(idx,elm)
                 idx += 1
