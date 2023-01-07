@@ -4765,7 +4765,9 @@ class CellDef(QWidget):
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
-        # print(f'\n--------- custom_data_name_changed() --------')
+        debug_me = False
+        if debug_me:
+            print(f'\n--------- custom_data_name_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
         # print("incoming master_custom_var_d= ",self.master_custom_var_d)
         # print(f'custom_data_name_changed():   self.current_cell_def = {self.current_cell_def}')
@@ -4777,19 +4779,22 @@ class CellDef(QWidget):
 
         vname = self.sender().vname.text()
         # print(f'  len(vname)= {len(vname)}')
-        # print(f'  vname (.text())= {vname}')
+        if debug_me:
+            print(f'  vname (.text())= {vname}')
 
         prev_name = self.sender().prev
-        # print(f'  prev_name= {prev_name}')
+        if debug_me:
+            print(f'  prev_name= {prev_name}')
 
         len_vname = len(vname)
         # user has deleted the entire name; remove any prev name from the relevant dicts
         if len_vname == 0:
-            # print("--------- handling len(vname)==0 ")
-            # print("--------- handling len(vname)==0 ")
-            # print("1) master_custom_var_d= ",self.master_custom_var_d)
+            if debug_me:
+                print("--------- handling len(vname)==0 ")
+                print("1) master_custom_var_d= ",self.master_custom_var_d)
             if prev_name:
-                # print(f"--------- pop prev_name {prev_name}")
+                if debug_me:
+                    print(f"--------- pop prev_name {prev_name}")
                 self.master_custom_var_d.pop(prev_name)
                 # print("2) master_custom_var_d= ",self.master_custom_var_d)
                 for cdname in self.param_d.keys():
@@ -4801,7 +4806,8 @@ class CellDef(QWidget):
 
         else:  # vname has >=1 length
             wrow = self.sender().wrow
-            # print("--------- handling len(vname) >= 1. wrow= ",wrow)
+            if debug_me:
+                print("--------- handling len(vname) >= 1. wrow= ",wrow)
             # next_row = self.sender().wrow + 1
             # print("  len(vname)>=1.  next_row= ",next_row)
 
@@ -4816,7 +4822,8 @@ class CellDef(QWidget):
 
             # else:  # new name is not a duplicate
             elif len_vname == 1:   # starting with a new name (1st char)
-                # print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+                if debug_me:
+                    print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
 
                 # If we're at the last row, add N(=10) more rows to the table.
                 if wrow == self.max_custom_data_rows-1:
@@ -4832,17 +4839,25 @@ class CellDef(QWidget):
                 desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
                 # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
                 if prev_name:
+                    # this is replacing a previous name; it's NOT a new var
+                    if debug_me:
+                        print(f" replace (pop) {prev_name} with {vname} on master_custom_var_d and all param_d cdname")
                     self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
-                else:
+                    for cdname in self.param_d.keys():
+                        self.param_d[cdname]["custom_data"][vname] = self.param_d[cdname]["custom_data"].pop(prev_name)
+
+                else:  # a NEW var
+                    if debug_me:
+                        print(f" Adding a NEW var {vname}")
                     self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
                 # print(f'post adding {vname} --> {self.master_custom_var_d}')
 
                 # -- since we're adding this var for the 1st time, add it to each cell type, using same values
-                val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
-                bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
-                for cdname in self.param_d.keys():
-                    # print(f'--- cdname= {cdname},  vname={vname}')
-                    self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
+                    val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
+                    bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
+                    for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname}')
+                        self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
 
                 self.sender().prev = vname  # update the previous to be the current
 
@@ -6281,7 +6296,10 @@ class CellDef(QWidget):
     def update_custom_data_params(self):
         cdname = self.current_cell_def
         # print("\n--------- cell_def_tab.py: update_custom_data_params():  cdname= ",cdname)
-        # print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+        debug_me = False
+        if debug_me:
+            print("\n--------- cell_def_tab.py: update_custom_data_params():  self.param_d[cdname]['custom_data'] = ",self.param_d[cdname]['custom_data'])
+
         if 'custom_data' not in self.param_d[cdname].keys():
             return
 
