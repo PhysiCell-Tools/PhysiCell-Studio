@@ -32,11 +32,14 @@ Have two Terminal (Command Prompt) windows open. Let's call them T1 and T2.
 
 ## General for Model Builder (just GUI and .xml)
 
-Edit parameters in various tabs/subtabs. If the model has
+* Edit parameters in various tabs/subtabs. If the model has
 multiple Microenvironment substrates and/or multiple Cell Types, try editing those as well.
 Use the menu "File -> Save as" to a (new) model config file.
 Inspect this file to see if it correctly saved your edits. Ideally, you could keep the file open
 in a IDE and watch it update live as you save new edits.
+
+* During a single session of using the Studio, load different models containing different numbers of 
+ substrates and/or cell types. Do the various dropdown boxes that contain substrates or cell types get updated correctly?
 
 ## Cell Types | Custom Data
 
