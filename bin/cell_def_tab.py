@@ -378,13 +378,18 @@ class CellDef(QWidget):
         logging.debug(f'new name= {self.current_cell_def}')
         self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
+        self.live_phagocytosis_celltype = self.current_cell_def
+        self.attack_rate_celltype = self.current_cell_def
+        self.fusion_rate_celltype = self.current_cell_def
+        self.transformation_rate_celltype = self.current_cell_def
+
         self.renamed_celltype(prev_name, self.current_cell_def)
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     # Make a new cell_def (that's a copy of the currently selected one)
     def copy_cell_def(self):
-        # print('------ copy_cell_def')
+        # print('------ copy_cell_def()')
         cdname_copy = "cell_def%02d" % self.new_cell_def_count
         cdname_original = self.current_cell_def
         self.param_d[cdname_copy] = copy.deepcopy(self.param_d[cdname_original])
@@ -392,6 +397,7 @@ class CellDef(QWidget):
 
         # we need to add the newly created cell def into each cell def's interaction/transformation dicts, with values of the copy
         sval = self.default_sval
+        # print('1) copy_cell_def(): param_d.keys=',self.param_d.keys())
         for cdname in self.param_d.keys():    # for each cell def
             # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
             for cdname2 in self.param_d.keys():    # for each cell def
@@ -406,6 +412,7 @@ class CellDef(QWidget):
                 # else: # use values from copied cell def
 
         logging.debug(f'--> copy_cell_def():\n {self.param_d[cdname_copy]}')
+        # print('2) copy_cell_def(): param_d.keys=',self.param_d.keys())
 
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
@@ -418,6 +425,7 @@ class CellDef(QWidget):
         # self.cell_type_name.setText(cdname)
 
         self.add_new_celltype(cdname_copy)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
+        # print('3) copy_cell_def(): param_d.keys=',self.param_d.keys())
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
@@ -2968,12 +2976,20 @@ class CellDef(QWidget):
         self.param_d[self.current_cell_def]['dead_phagocytosis_rate'] = text
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
+        # print("live_phagocytosis_rate_changed:  self.live_phagocytosis_celltype=",self.live_phagocytosis_celltype)
         # print("live_phagocytosis_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
+
+        celltype_name = self.live_phagocytosis_dropdown.currentText()
+
+        # self.param_d[self.current_cell_def]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
+        self.param_d[self.current_cell_def]['live_phagocytosis_rate'][celltype_name] = text
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
         # print("attack_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
+        celltype_name = self.attack_rate_dropdown.currentText()
+
+        # self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
+        self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
         # print("damage_rate_changed:  text=",text)
@@ -2981,11 +2997,15 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def fusion_rate_changed(self,text):
         # print("fusion_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['fusion_rate'][self.fusion_rate_celltype] = text
+        celltype_name = self.fusion_rate_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['fusion_rate'][self.fusion_rate_celltype] = text
+        self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
         # print("transformation_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
+        celltype_name = self.cell_transformation_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
+        self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
 
 
     #--------------------------------------------------------
@@ -6383,6 +6403,8 @@ class CellDef(QWidget):
 
         # fill in the GUI with this cell def's params
 
+        # self.live_phagocytosis_celltype = self.current_cell_def
+
         self.update_cycle_params()
         self.update_death_params()
         self.update_volume_params()
@@ -7091,6 +7113,7 @@ class CellDef(QWidget):
     def fill_xml_interactions(self,pheno,cdef):
         if self.debug_print_fill_xml:
             logging.debug(f'------------------- fill_xml_interactions():  cdef= {cdef}')
+            # print(f'------------------- fill_xml_interactions():  cdef= {cdef}')
 
         interactions = ET.SubElement(pheno, "cell_interactions")
         interactions.text = self.indent12  # affects indent of child
@@ -7106,12 +7129,15 @@ class CellDef(QWidget):
         lpr.tail = "\n" + self.indent12
 
         logging.debug(f'--- live_phagocytosis_rate= {self.param_d[cdef]["live_phagocytosis_rate"]}')
+        # print("live_phagocytosis_rate keys=",self.param_d[cdef]['live_phagocytosis_rate'].keys())
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
             logging.debug(f'  key in live_phagocytosis_rate= {key}')
+            # print(f'  key in live_phagocytosis_rate= {key}')
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
             logging.debug(f'{key}  --> {val}')
+            # print(f'{key}  --> {val}')
             elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
@@ -7418,6 +7444,7 @@ class CellDef(QWidget):
     def fill_xml(self):
         # pass
         logging.debug(f'\n\n----------- cell_def_tab.py: fill_xml(): ----------')
+        # print(f'\n\n----------- cell_def_tab.py: fill_xml(): ----------')
         # print("self.param_d.keys() = ",self.param_d.keys())
         # print()
         # print("self.param_d['default'] = ",self.param_d['default'])
