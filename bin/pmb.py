@@ -81,6 +81,7 @@ class PhysiCellXMLCreator(QWidget):
             from vis_tab import Vis 
 
         self.studio_flag = studio_flag 
+        self.view_shading = None
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
         self.model3D_flag = model3D_flag 
@@ -293,6 +294,7 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
+            self.vis_tab.view_shading = self.view_shading
 
             self.legend_tab = Legend(self.nanohub_flag)
             self.legend_tab.current_dir = self.current_dir
@@ -520,11 +522,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         else:  # just 2D view
             if self.studio_flag:
                 view_menu = menubar.addMenu('&View')
-                view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
+                self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
+                self.view_shading.setEnabled(False)
                 view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
                 view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
                 view_menu.addSeparator()
                 view_menu.addAction("Select output dir", self.select_plot_output_cb)
+                # self.vis_tab.view_menu = view_menu
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
