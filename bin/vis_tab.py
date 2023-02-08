@@ -1,3 +1,12 @@
+"""
+vis_tab.py - provide visualization on Plot tab. Cells can be plotted on top of substrates/signals.
+
+Authors:
+Randy Heiland (heiland@iu.edu)
+Dr. Paul Macklin (macklinp@iu.edu)
+Rf. Credits.md
+"""
+
 import sys
 import os
 import time

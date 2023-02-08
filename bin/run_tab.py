@@ -1,8 +1,10 @@
 """
+run_tab.py - Run tab: execute a simulation and see terminal text output
+
 Authors:
 Randy Heiland (heiland@iu.edu)
-Adam Morrow, Michael Siler, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
+Rf. Credits.md
 
 """
 
@@ -181,7 +183,7 @@ class RunModel(QWidget):
             # else:
                 # os.system('rm -rf output*')
             time.sleep(1)
-            if self.nanohub_flag and s.path.isdir('tmpdir'):
+            if self.nanohub_flag and os.path.isdir('tmpdir'):
                 # something on NFS causing issues...
                 tname = tempfile.mkdtemp(suffix='.bak', prefix='tmpdir_', dir='.')
                 shutil.move('tmpdir', tname)
