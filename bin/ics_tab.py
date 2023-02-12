@@ -307,12 +307,12 @@ class ICs(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
-        self.output_folder = QLineEdit("config")
-        rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
-        name_validator = QtGui.QRegExpValidator(rx_valid_varname)
-        self.output_folder.setValidator(name_validator)
-        # self.output_folder.returnPressed.connect(self.output_folder_cb)
-        hbox.addWidget(self.output_folder)
+        self.csv_folder = QLineEdit("config")
+        # rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+        # name_validator = QtGui.QRegExpValidator(rx_valid_varname)
+        # self.csv_folder.setValidator(name_validator)
+        # self.csv_folder.returnPressed.connect(self.csv_folder_cb)
+        hbox.addWidget(self.csv_folder)
 
         #--
         # hbox = QHBoxLayout()
@@ -321,8 +321,7 @@ class ICs(QWidget):
         hbox.addWidget(label)
 
         self.output_file = QLineEdit("cells.csv")
-        self.output_file.setValidator(name_validator)
-        # self.output_folder.returnPressed.connect(self.output_folder_cb)
+        # self.output_file.setValidator(name_validator)
         hbox.addWidget(self.output_file)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -704,8 +703,10 @@ class ICs(QWidget):
                 xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
 
                 xlist.append(xval_offset)
-                ylist.append(yval + self.y0_value)
-                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                yval_offset = yval + self.y0_value
+                ylist.append(yval_offset)
+                # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
                 rlist.append(rval)
                 count+=1
 
@@ -791,9 +792,12 @@ class ICs(QWidget):
                 #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
                 #     # plt.plot(xval_offset,yval,'ro',markersize=30)
 
-                    xlist.append(xval_offset + self.x0_value)
-                    ylist.append(yval + self.y0_value)
-                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                    xval_offset += self.x0_value
+                    xlist.append(xval_offset)
+                    yval_offset = yval + self.y0_value
+                    ylist.append(yval_offset)
+                    # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
                     rlist.append(rval)
                     count+=1
 
@@ -984,7 +988,7 @@ class ICs(QWidget):
         # x = y = z = np.arange(0.0,5.0,1.0)
         # np.savetxt('cells.csv', (x,y,z), delimiter=',')
         # print(self.csv_array)
-        dir_name = self.output_folder.text()
+        dir_name = self.csv_folder.text()
         # print(f'dir_name={dir_name}<end>')
         if len(dir_name) > 0 and not os.path.isdir(dir_name):
             os.makedirs(dir_name)

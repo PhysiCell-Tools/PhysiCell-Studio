@@ -18,7 +18,7 @@ import platform
 import sys
 import argparse
 import logging
-# import shutil # for possible copy of file
+import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from xml.dom import minidom
@@ -73,7 +73,7 @@ def quit_cb():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
             from vis3D_tab import Vis 
@@ -85,6 +85,8 @@ class PhysiCellXMLCreator(QWidget):
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
         self.model3D_flag = model3D_flag 
+        self.nanohub_flag = nanohub_flag 
+        print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
         self.ics_tab_index = 4
         self.plot_tab_index = 6
@@ -104,9 +106,10 @@ class PhysiCellXMLCreator(QWidget):
 
         self.vis2D_gouraud = False
 
-        self.nanohub_flag = False
+        # self.nanohub_flag = False
         if( 'HOME' in os.environ.keys() ):
-            self.nanohub_flag = "home/nanohub" in os.environ['HOME']
+            if "home/nanohub" in os.environ['HOME']:
+                self.nanohub_flag = True
 
         self.p = None # Necessary to download files!
 
@@ -147,6 +150,8 @@ class PhysiCellXMLCreator(QWidget):
         else:
             # model_name = "interactions"  # for testing latest xml
             model_name = "template"
+            if self.nanohub_flag:
+                model_name = "biorobots_flat"
             # model_name = "test1"
             # model_name = "interactions"
 
@@ -157,6 +162,7 @@ class PhysiCellXMLCreator(QWidget):
 
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
             self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
+
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
@@ -173,6 +179,15 @@ class PhysiCellXMLCreator(QWidget):
         self.config_tab = Config(self.studio_flag)
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
+        if self.nanohub_flag:  # rwh - test if works on nanoHUB
+            print("pmb.py: ---- TRUE nanohub_flag: updating config_tab folder")
+            self.config_tab.folder.setText('tmpdir')
+            self.config_tab.folder.setEnabled(False)
+            self.config_tab.csv_folder.setText('')
+            self.config_tab.csv_folder.setEnabled(False)
+            self.config_tab.folder.setText('tmpdir')
+        else:
+            print("pmb.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
         self.microenv_tab = SubstrateDef()
         self.microenv_tab.xml_root = self.xml_root
@@ -265,11 +280,24 @@ class PhysiCellXMLCreator(QWidget):
             self.ics_tab = ICs(self.config_tab, self.celldef_tab)
             self.ics_tab.fill_celltype_combobox()
             self.ics_tab.reset_info()
+
+            if self.nanohub_flag:  # rwh - test if works on nanoHUB
+                print("pmb.py: ---- TRUE nanohub_flag: updating ics_tab folder")
+                self.ics_tab.csv_folder.setText('')
+                self.ics_tab.csv_folder.setEnabled(False)
+            else:
+                print("pmb.py: ---- FALSE nanohub_flag: NOT updating ics_tab folder")
+
             self.celldef_tab.ics_tab = self.ics_tab
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
             self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
+
+            self.homedir = os.getcwd()
+            print("pmb.py: self.homedir = ",self.homedir)
+            self.run_tab.homedir = self.homedir
+
             # self.run_tab.config_xml_name.setText(current_xml_file)
             self.run_tab.exec_name.setText(exec_file)
             self.run_tab.config_xml_name.setText(self.current_xml_file)
@@ -292,6 +320,10 @@ class PhysiCellXMLCreator(QWidget):
             self.config_tab.vis_tab = self.vis_tab
             # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
+            if self.nanohub_flag:  # rwh - test if works on nanoHUB
+                self.vis_tab.output_folder.setText('tmpdir')
+                self.vis_tab.output_folder.setEnabled(False)
+
             self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
             self.vis_tab.view_shading = self.view_shading
@@ -402,85 +434,97 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         #--------------
         studio_menu = menubar.addMenu('&Studio')
         studio_menu.addAction("About", self.about_studio)
-        studio_menu.addAction("About PyQt", self.about_pyqt)
+        # studio_menu.addAction("About PyQt", self.about_pyqt)
         # studio_menu.addAction("Preferences", self.prefs_cb)
-        studio_menu.addSeparator()
-        studio_menu.addAction("Quit", quit_cb)
+        if not self.nanohub_flag:
+            studio_menu.addSeparator()
+            studio_menu.addAction("Quit", quit_cb)
 
-        #--------------
+        #-----
         file_menu = menubar.addMenu('&File')
-
-        # file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
-        file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-        # file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-        file_menu.addAction("Save as", self.save_as_cb)
-        file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-
-        #--------------
-        export_menu = file_menu.addMenu("Export")
-
-        simularium_act = QAction('Simularium', self)
-        export_menu.addAction(simularium_act)
-        simularium_act.triggered.connect(self.simularium_cb)
-        if not self.studio_flag:
-            print("simularium_installed is ",simularium_installed)
-            export_menu.setEnabled(False)
+        if self.nanohub_flag:
+            model_menu = menubar.addMenu('&Model')
+            model_menu.addAction("biorobots", self.biorobots_nanohub_cb)
+            model_menu.addAction("celltypes3", self.celltypes3_nanohub_cb)
+            model_menu.addAction("pred_prey_farmer", self.pred_prey_nanohub_cb)
 
         #--------------
-        file_menu.addSeparator()
-        samples_menu = file_menu.addMenu("Samples")
+        else:
+            # file_menu = menubar.addMenu('&File')
+            # file_menu.addAction("New (template)", self.new_model_cb, QtGui.QKeySequence('Ctrl+n'))
+            file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
+            # file_menu.addAction("Save mymodel.xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+            file_menu.addAction("Save as", self.save_as_cb)
+            file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+            #------
+            export_menu = file_menu.addMenu("Export")
 
-        template_act = QAction('template', self)
-        samples_menu.addAction(template_act)
-        template_act.triggered.connect(self.template_cb)
+            simularium_act = QAction('Simularium', self)
+            export_menu.addAction(simularium_act)
+            simularium_act.triggered.connect(self.simularium_cb)
+            if not self.studio_flag:
+                print("simularium_installed is ",simularium_installed)
+                export_menu.setEnabled(False)
 
-        biorobots_act = QAction('biorobots', self)
-        samples_menu.addAction(biorobots_act)
-        biorobots_act.triggered.connect(self.biorobots_cb)
+            #------
+            file_menu.addSeparator()
+            samples_menu = file_menu.addMenu("Samples")
 
-        cancer_biorobots_act = QAction('cancer biorobots', self)
-        samples_menu.addAction(cancer_biorobots_act)
-        cancer_biorobots_act.triggered.connect(self.cancer_biorobots_cb)
+            template_act = QAction('template', self)
+            samples_menu.addAction(template_act)
+            template_act.triggered.connect(self.template_cb)
 
-        hetero_act = QAction('heterogeneity', self)
-        samples_menu.addAction(hetero_act)
-        hetero_act.triggered.connect(self.hetero_cb)
+            biorobots_act = QAction('biorobots', self)
+            samples_menu.addAction(biorobots_act)
+            biorobots_act.triggered.connect(self.biorobots_cb)
 
-        pred_prey_act = QAction('predator-prey-farmer', self)
-        samples_menu.addAction(pred_prey_act)
-        pred_prey_act.triggered.connect(self.pred_prey_cb)
+            cancer_biorobots_act = QAction('cancer biorobots', self)
+            samples_menu.addAction(cancer_biorobots_act)
+            cancer_biorobots_act.triggered.connect(self.cancer_biorobots_cb)
 
-        virus_mac_act = QAction('virus-macrophage', self)
-        samples_menu.addAction(virus_mac_act)
-        virus_mac_act.triggered.connect(self.virus_mac_cb)
+            hetero_act = QAction('heterogeneity', self)
+            samples_menu.addAction(hetero_act)
+            hetero_act.triggered.connect(self.hetero_cb)
 
-        worm_act = QAction('worm', self)
-        samples_menu.addAction(worm_act)
-        worm_act.triggered.connect(self.worm_cb)
+            pred_prey_act = QAction('predator-prey-farmer', self)
+            samples_menu.addAction(pred_prey_act)
+            pred_prey_act.triggered.connect(self.pred_prey_cb)
 
-        interactions_act = QAction('interactions', self)
-        samples_menu.addAction(interactions_act)
-        interactions_act.triggered.connect(self.interactions_cb)
+            virus_mac_act = QAction('virus-macrophage', self)
+            samples_menu.addAction(virus_mac_act)
+            virus_mac_act.triggered.connect(self.virus_mac_cb)
 
-        cancer_immune_act = QAction('cancer immune (3D)', self)
-        samples_menu.addAction(cancer_immune_act)
-        cancer_immune_act.triggered.connect(self.cancer_immune_cb)
+            worm_act = QAction('worm', self)
+            samples_menu.addAction(worm_act)
+            worm_act.triggered.connect(self.worm_cb)
 
-        physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
-        samples_menu.addAction(physiboss_cell_lines_act)
-        physiboss_cell_lines_act.triggered.connect(self.physiboss_cell_lines_cb)
+            interactions_act = QAction('interactions', self)
+            samples_menu.addAction(interactions_act)
+            interactions_act.triggered.connect(self.interactions_cb)
 
-        subcell_act = QAction('subcellular', self)
-        # samples_menu.addAction(subcell_act)
-        subcell_act.triggered.connect(self.subcell_cb)
+            cancer_immune_act = QAction('cancer immune (3D)', self)
+            samples_menu.addAction(cancer_immune_act)
+            cancer_immune_act.triggered.connect(self.cancer_immune_cb)
 
-        covid19_act = QAction('covid19_v5', self)
-        # samples_menu.addAction(covid19_act)
-        covid19_act.triggered.connect(self.covid19_cb)
+            physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
+            samples_menu.addAction(physiboss_cell_lines_act)
+            physiboss_cell_lines_act.triggered.connect(self.physiboss_cell_lines_cb)
 
-        test_gui_act = QAction('test-gui', self)
-        # samples_menu.addAction(test_gui_act)
-        test_gui_act.triggered.connect(self.test_gui_cb)
+            subcell_act = QAction('subcellular', self)
+            # samples_menu.addAction(subcell_act)
+            subcell_act.triggered.connect(self.subcell_cb)
+
+            covid19_act = QAction('covid19_v5', self)
+            # samples_menu.addAction(covid19_act)
+            covid19_act.triggered.connect(self.covid19_cb)
+
+            test_gui_act = QAction('test-gui', self)
+            # samples_menu.addAction(test_gui_act)
+            test_gui_act.triggered.connect(self.test_gui_cb)
+
+        # else:
+            # file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
+
 
         if self.nanohub_flag:
             self.download_menu = file_menu.addMenu('Download')
@@ -488,7 +532,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_svg_item = self.download_menu.addAction("Download SVG", self.download_svg_cb)
             self.download_mat_item = self.download_menu.addAction("Download binary (.mat) data", self.download_full_cb)
             # self.download_menu_item.setEnabled(False)
-            self.download_menu.setEnabled(False)
+            # self.download_menu.setEnabled(False)
         else:
             self.download_menu = None
 
@@ -526,29 +570,76 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 self.view_shading.setEnabled(False)
                 view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
                 view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
-                view_menu.addSeparator()
-                view_menu.addAction("Select output dir", self.select_plot_output_cb)
+                if not self.nanohub_flag:
+                    view_menu.addSeparator()
+                    view_menu.addAction("Select output dir", self.select_plot_output_cb)
                 # self.vis_tab.view_menu = view_menu
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
     #-----------------------------------------------------------------
     # Not currently used
-    # def add_new_model(self, name, read_only):
-    #     # does it already exist? If so, return
-    #     if name in self.model.keys():
-    #         print("add_new_model: model already exists, just return (dict)= ",self.model)
-    #         return
-    #     self.model[name] = read_only
-    #     self.num_models += 1
-    #     print("add_new_model: self.model (dict)= ",self.model)
+    def add_new_model(self, name, read_only):
+        # does it already exist? If so, return
+        # if name in self.model.keys():
+        #     return
+        # self.model[name] = read_only
+        # self.num_models += 1
+        # print("add_new_model(): self.model (dict)= ",self.model)
 
-    #     # models_menu_act = QAction(name, self)
-    #     # self.models_menu.addAction(models_menu_act)
-    #     # models_menu_act.triggered.connect(self.select_current_model_cb)
+        # models_menu_act = QAction(name, self)
+        # self.models_menu.addAction(models_menu_act)
+        # models_menu_act.triggered.connect(self.select_current_model_cb)
 
-    #     print("add_new_model: title suffix= ",name)
-    #     self.setWindowTitle(self.title_prefix + name)
+        print("add_new_model: title suffix= ",name)
+        self.setWindowTitle(self.title_prefix + name)
+
+        #---------- rwh?
+        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        # print("add_new_model(): self.tree = ET.parse(xml_file) for ",self.config_file)
+        print("add_new_model(): self.tree = ET.parse(xml_file) for ",name)
+        # with open(self.config_file, 'r') as xml_file:
+        with open(name, 'r') as xml_file:
+            self.tree = ET.parse(xml_file)
+        # tree = ET.parse(read_file)
+        # self.tree = ET.parse(read_file)
+        self.xml_root = self.tree.getroot()
+
+        # self.num_models = 0
+        # self.model = {}  # key: name, value:[read-only, tree]
+
+        #-------  Re-populate the GUI with the new model's params -------
+        # self.config_tab = Config(self.nanohub_flag)
+        self.config_tab.xml_root = self.xml_root
+        self.config_tab.fill_gui()
+
+        # self.microenv_tab = SubstrateDef()
+        self.microenv_tab.xml_root = self.xml_root
+        substrate_name = self.microenv_tab.first_substrate_name()
+        print("studio.py: substrate_name=",substrate_name)
+        self.microenv_tab.populate_tree()  # rwh: both fill_gui and populate_tree??
+
+        # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
+
+        # self.celldef_tab = CellDef()
+        self.celldef_tab.xml_root = self.xml_root
+        cd_name = self.celldef_tab.first_cell_def_name()
+        print("studio.py: cd_name=",cd_name)
+        # self.celldef_tab.populate_tree()
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        self.celldef_tab.fill_substrates_comboboxes()
+        # self.vis_tab.substrates_cbox_changed_cb(2)
+        self.microenv_tab.celldef_tab = self.celldef_tab
+
+        # self.cell_customdata_tab = CellCustomData()
+        # self.cell_customdata_tab.xml_root = self.xml_root
+        # self.cell_customdata_tab.celldef_tab = self.celldef_tab
+        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
+        # self.celldef_tab.fill_custom_data_tab()
+        
+        # self.user_params_tab = UserParams()
+        self.user_params_tab.xml_root = self.xml_root
+        self.user_params_tab.fill_gui()
 
     # Probably not used unless we later implement it
     # def select_current_model_cb(self):
@@ -897,8 +988,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         self.config_file = self.current_xml_file
         self.show_sample_model()
-        if self.nanohub_flag:  # rwh - test if works on nanoHUB
-            self.config_tab.folder.setText('.')
+        # if self.nanohub_flag:  # rwh - test if works on nanoHUB
+        #     print("pmb.py: load_model(): ---- TRUE nanohub_flag: updating config_tab and ics_tab folder")
+        #     self.config_tab.folder.setText('.')
+        #     self.ics_tab.folder.setText('.')
+        # else:
+        #     print("pmb.py: load_model():  ---- FALSE nanohub_flag: NOT updating config_tab and ics_tab folder")
 
     #----------------------
     def simularium_cb(self):
@@ -964,6 +1059,119 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         print("Load this model at: https://simularium.allencell.org/viewer")
 
+
+    def biorobots_nanohub_cb(self):
+        print("\n\n\n================ copy/load sample ======================================")
+        os.chdir(self.homedir)
+        name = "biorobots_flat"
+        # sample_file = Path("data", name + ".xml")
+        # sample_file = Path(self.absolute_data_dir, name + ".xml")
+        sample_file = Path(self.pmb_data_dir, name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        shutil.copy(sample_file, copy_file)
+
+        # self.add_new_model(copy_file, True)
+        # self.config_file = "config_samples/" + name + ".xml"
+        self.config_file = copy_file
+        # self.show_sample_model()
+        # self.run_tab.exec_name.setText('../biorobots')
+
+        try:
+            print("biorobots_nanohub_cb():------------- copying ",sample_file," to ",copy_file)
+            shutil.copy(sample_file, copy_file)
+        except:
+            print("biorobots_nanohub_cb(): Unable to copy file(1).")
+            sys.exit(1)
+
+        try:
+            print("biorobots_nanohub_cb():------------- copying ",sample_file," to config.xml")
+            shutil.copy(sample_file, "config.xml")
+        except:
+            print("biorobots_nanohub_cb(): Unable to copy file(2).")
+            sys.exit(1)
+
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        print("biorobots_nanohub_cb:   self.config_file = ",self.config_file)
+
+        self.show_sample_model()
+        if self.nanohub_flag:
+            self.run_tab.exec_name.setText('biorobots')
+        else:
+            self.run_tab.exec_name.setText('../biorobots')
+        self.vis_tab.show_edge = False
+        self.vis_tab.bgcolor = [1,1,1,1]
+
+
+    def celltypes3_nanohub_cb(self):
+        print("\n\n\n================ copy/load sample ======================================")
+        os.chdir(self.homedir)
+        # name = "celltypes3_flat-with-default-celldef"
+        name = "celltypes3_flat"
+        # sample_file = Path("data", name + ".xml")
+        # sample_file = Path(self.absolute_data_dir, name + ".xml")
+        sample_file = Path(self.pmb_data_dir, name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        try:
+            print("celltypes3_cb():------------- copying ",sample_file," to ",copy_file)
+            shutil.copy(sample_file, copy_file)
+        except:
+            print("celltypes3_cb(): Unable to copy file(1).")
+            sys.exit(1)
+
+        try:
+            print("celltypes3_cb():------------- copying ",sample_file," to config.xml")
+            shutil.copy(sample_file, "config.xml")
+        except:
+            print("celltypes3_cb(): Unable to copy file(2).")
+            sys.exit(1)
+
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        print("celltypes3_cb:   self.config_file = ",self.config_file)
+
+        self.show_sample_model()
+        if self.nanohub_flag:
+            self.run_tab.exec_name.setText('celltypes3')
+        else:
+            self.run_tab.exec_name.setText('../celltypes3')
+        self.vis_tab.show_edge = True
+        self.vis_tab.bgcolor = [0,0,0,1]
+
+
+    def pred_prey_nanohub_cb(self):
+        os.chdir(self.homedir)
+        name = "pred_prey_flat"
+        # sample_file = Path("data", name + ".xml")
+        # sample_file = Path(self.absolute_data_dir, name + ".xml")
+        sample_file = Path(self.pmb_data_dir, name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        try:
+            print("pred_prey_cb():------------- copying ",sample_file," to ",copy_file)
+            shutil.copy(sample_file, copy_file)
+        except:
+            print("pred_prey_cb(): Unable to copy file(1).")
+            sys.exit(1)
+
+        try:
+            print("pred_prey_cb():------------- copying ",sample_file," to config.xml")
+            shutil.copy(sample_file, "config.xml")
+        except:
+            print("pred_prey_cb(): Unable to copy file(2).")
+            sys.exit(1)
+
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        print("pred_prey_cb:   self.config_file = ",self.config_file)
+
+        self.show_sample_model()
+        if self.nanohub_flag:
+            self.run_tab.exec_name.setText('pred_prey')
+        else:
+            self.run_tab.exec_name.setText('../pred_prey')
+        self.vis_tab.show_edge = True
+        self.vis_tab.bgcolor = [1,1,1,1]
+        # self.vis_tab.reset_model()
 
     #----------------------
     def template_cb(self):
@@ -1130,15 +1338,17 @@ def main():
     model3D_flag = False
     rules_flag = False
     skip_validate_flag = False
+    nanohub_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
 
         parser.add_argument("-s", "--studio", "--Studio", help="include Studio tabs", action="store_true")
-        parser.add_argument("-3", "--three", "--3D", help="assume a 3D model" , action="store_true")
+        parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
         # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
-        parser.add_argument("-c", "--config",  type=str, help="config file (.xml)")
-        parser.add_argument("-e", "--exec",  type=str, help="executable model")
+        parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
+        parser.add_argument("-c", "--config", type=str, help="config file (.xml)")
+        parser.add_argument("-e", "--exec", type=str, help="executable model")
 
         exec_file = 'project'  # for template sample
 
@@ -1159,6 +1369,9 @@ def main():
         # if args.rules:
         #     logging.debug(f'pmb.py: Show Rules tab')
         #     rules_flag = True
+        if args.nanohub:
+            logging.debug(f'pmb.py: nanoHUB mode')
+            nanohub_flag = True
         if args.skip_validate:
             logging.debug(f'pmb.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
@@ -1243,7 +1456,7 @@ def main():
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
     rules_flag = False
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag)
     ex.show()
     # startup_notice()
     sys.exit(pmb_app.exec_())
