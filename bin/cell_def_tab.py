@@ -5709,7 +5709,7 @@ class CellDef(QWidget):
         #-----
         self.param_d[cdname]["necrosis_death_rate"] = sval
 
-        self.param_d[cdname]["necrosis_trate01"] = '9e.9'
+        self.param_d[cdname]["necrosis_trate01"] = '9e9'
         self.param_d[cdname]['necrosis_trate01_fixed'] = False
         self.param_d[cdname]["necrosis_trate12"] = '1.15741e-05'
         self.param_d[cdname]['necrosis_trate12_fixed'] = True
