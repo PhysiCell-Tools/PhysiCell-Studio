@@ -2218,13 +2218,20 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         # self.vbox.addWidget(label)
 
+        self.is_movable_w = QCheckBox("is_movable")
+        self.is_movable_w.setChecked(True)
+        self.is_movable_w.setEnabled(False)   # disabled until implemented in C++
+        self.is_movable_w.clicked.connect(self.is_movable_cb)
+        idr = 0
+        glayout.addWidget(self.is_movable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
+
     # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
     # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
     # <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
         label = QLabel("cell-cell adhesion strength")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        idr = 0
+        idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_cell_adhesion_strength = QLineEdit()
@@ -4241,6 +4248,21 @@ class CellDef(QWidget):
         self.param_d[self.current_cell_def]['volume_rel_rupture_vol'] = text
 
     # --- mechanics
+    def enable_mech_params(self, bval):
+        self.cell_cell_adhesion_strength.setEnabled(bval)
+        self.cell_cell_repulsion_strength.setEnabled(bval)
+        self.relative_maximum_adhesion_distance.setEnabled(bval)
+        self.cell_adhesion_affinity_dropdown.setEnabled(bval)
+        self.cell_adhesion_affinity.setEnabled(bval)
+        self.set_relative_equilibrium_distance.setEnabled(bval)
+        self.set_relative_equilibrium_distance_enabled.setEnabled(bval)
+        self.set_absolute_equilibrium_distance.setEnabled(bval)
+        self.set_absolute_equilibrium_distance_enabled.setEnabled(bval)
+
+    def is_movable_cb(self,bval):
+        self.param_d[self.current_cell_def]['is_movable'] = bval
+        self.enable_mech_params(bval)
+
     def cell_cell_adhesion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
     def cell_cell_repulsion_strength_changed(self, text):
@@ -5744,6 +5766,8 @@ class CellDef(QWidget):
 
     def new_mechanics_params(self, cdname_new):
         sval = self.default_sval
+
+        self.param_d[cdname_new]['is_movable'] = True
         # use defaults found in phenotype.cpp:Mechanics() instead of 0.0
         self.param_d[cdname_new]["mechanics_adhesion"] = '0.4'
         self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
@@ -6088,6 +6112,8 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
         cdname = self.current_cell_def
+        self.is_movable_w.setChecked(self.param_d[self.current_cell_def]['is_movable'])
+        self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
         self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])

@@ -30,6 +30,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QFont
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QStyleFactory
 
+from pretty_print_xml import pretty_print
 from config_tab import Config
 from cell_def_tab import CellDef 
 from microenv_tab import SubstrateDef 
@@ -73,7 +74,7 @@ def quit_cb():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
             from vis3D_tab import Vis 
@@ -199,6 +200,8 @@ class PhysiCellXMLCreator(QWidget):
 
         self.celldef_tab = CellDef(self.dark_mode)
         self.celldef_tab.xml_root = self.xml_root
+        if is_movable_flag:
+            self.celldef_tab.is_movable_w.setEnabled(True)
 
         cd_name = self.celldef_tab.first_cell_def_name()
         # print("pmb.py: first_cell_def_name=",cd_name)
@@ -753,12 +756,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
 
-    def prettify(self, elem):
-        """Return a pretty-printed XML string for the Element.
-        """
-        rough_string = ET.tostring(elem, 'utf-8')
-        reparsed = minidom.parseString(rough_string)
-        return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
 
     def save_as_cb(self):
         # print("------ save_as_cb():")
@@ -798,6 +795,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("pmb.py:  save_as_cb: writing to: ",self.current_xml_file)
 
             self.tree.write(self.current_xml_file)
+            pretty_print(self.current_xml_file, self.current_xml_file)
 
         except Exception as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
@@ -827,43 +825,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # print("pmb.py:  save_cb: writing to: ",out_file)
             print("pmb.py:  save_cb: writing to: ",self.current_xml_file)
 
-            # self.tree.write(self.config_file)
-            # root = ET.fromstring("<fruits><fruit>banana</fruit><fruit>apple</fruit></fruits>""")
-            # tree = ET.ElementTree(root)
-            # ET.indent(self.tree)  # ugh, only in 3.9
-            # root = ET.tostring(self.tree)
-            # self.indent(self.tree)
-            # self.indent(root)
-
-            # rwh: ARGH, doesn't work
-            # root = self.tree.getroot()
-            # out_str = self.prettify(root)
-            # print(out_str)
-
-
             # self.tree.write(out_file)  # originally
             self.tree.write(self.current_xml_file)
-
-            # # new: pretty print
-            # root = self.tree.getroot()
-            # # return reparsed.toprettyxml(indent="",  newl="")  # newl="\n"
-            # # long_str = ET.tostring(root)
-            # # print("len(long_str)= ",len(long_str))
-            # # # bstr = bytearray(long_str.replace(" ",""))
-            # # # bstr = str.encode(long_str.replace("\n",""))
-            # # bstr = str.encode(long_str)
-            # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent=" ",newl="")
-            # # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(newl="")
-            # # xmlstr2 = minidom.parseString(xmlstr).toprettyxml(indent=" ",newl="")
-            # xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-            # # xmlstr = minidom.parseString(bstr).toprettyxml(indent=" ")
-            # with open(out_file, "w") as f:
-            #     f.write(xmlstr)
-
-            # rwh NOTE: after saving the .xml, do we need to read it back in to reflect changes.
-            # self.tree = ET.parse(self.config_file)
-            # self.xml_root = self.tree.getroot()
-            # self.reset_xml_root()
+            pretty_print(self.current_xml_file, self.current_xml_file)
     
         except Exception as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
@@ -1339,6 +1303,7 @@ def main():
     rules_flag = False
     skip_validate_flag = False
     nanohub_flag = False
+    is_movable_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
 
@@ -1347,6 +1312,7 @@ def main():
         # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
+        parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
         parser.add_argument("-c", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec", type=str, help="executable model")
 
@@ -1372,6 +1338,8 @@ def main():
         if args.nanohub:
             logging.debug(f'pmb.py: nanoHUB mode')
             nanohub_flag = True
+        if args.is_movable:
+            is_movable_flag = True
         if args.skip_validate:
             logging.debug(f'pmb.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
@@ -1456,7 +1424,7 @@ def main():
     # pmb_app.setPalette(QtGui.QGuiApplication.palette())
 
     rules_flag = False
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag)
     ex.show()
     # startup_notice()
     sys.exit(pmb_app.exec_())

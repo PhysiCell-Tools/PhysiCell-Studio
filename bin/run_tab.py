@@ -13,11 +13,10 @@ import os
 import time
 import logging
 from pathlib import Path
+from pretty_print_xml import pretty_print
 from PyQt5 import QtCore, QtGui
-# from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea, QPushButton,QPlainTextEdit
 from PyQt5.QtWidgets import QMessageBox
-
 from PyQt5.QtCore import QProcess
 
 class QHLine(QFrame):
@@ -171,55 +170,37 @@ class RunModel(QWidget):
 
         # if self.nanohub_flag: # copy normal workflow of an app, strange as it is
         if True: # copy normal workflow of an app, strange as it is
-
             # make sure we are where we started (app's root dir)
-            logging.debug(f'\n------>>>> doing os.chdir to {self.current_dir}')
+            # logging.debug(f'\n------>>>> doing os.chdir to {self.current_dir}')
             os.chdir(self.current_dir)
-
             # remove any previous data
             # NOTE: this dir name needs to match the <folder>  in /data/<config_file.xml>
             if self.nanohub_flag:
                 os.system('rm -rf tmpdir*')
-            # else:
-                # os.system('rm -rf output*')
-            time.sleep(1)
-            if self.nanohub_flag and os.path.isdir('tmpdir'):
-                # something on NFS causing issues...
-                tname = tempfile.mkdtemp(suffix='.bak', prefix='tmpdir_', dir='.')
-                shutil.move('tmpdir', tname)
-            if self.nanohub_flag:
+                time.sleep(1)
+                if os.path.isdir('tmpdir'):
+                    # something on NFS causing issues...
+                    tname = tempfile.mkdtemp(suffix='.bak', prefix='tmpdir_', dir='.')
+                    shutil.move('tmpdir', tname)
                 os.makedirs('tmpdir')
+                tdir = os.path.abspath('tmpdir')
             else:
-                # os.makedirs('output')
                 self.output_dir = self.config_tab.folder.text()
-                # os.system('rm -rf tmpdir*')
                 os.system('rm -rf ' + self.output_dir)
                 logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
                 os.makedirs(self.output_dir)  # do 'mkdir output_dir'
                 time.sleep(1)
-
-            # write the default config file to tmpdir
-            # new_config_file = "tmpdir/config.xml"  # use Path; work on Windows?
-            if self.nanohub_flag:
-                tdir = os.path.abspath('tmpdir')
-            else:
-                # tdir = os.path.abspath('.')
                 tdir = os.path.abspath(self.output_dir)
+
 
             new_config_file = Path(tdir,"config.xml")
             self.celldef_tab.config_path = new_config_file
             self.update_xml_from_gui()
 
-            # write_config_file(new_config_file)  
-            # update the .xml config file
-            # self.config_tab.fill_xml()
-            # self.microenv_tab.fill_xml()
-            # self.celldef_tab.fill_xml()
-            # self.user_params_tab.fill_xml()
-            # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
+            # logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
             # print("run_tab.py: ----> writing modified model to ",new_config_file)
             self.tree.write(self.config_file)
+            pretty_print(self.config_file, self.config_file)
             # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
             # sys.exit(1)
 
@@ -240,27 +221,8 @@ class RunModel(QWidget):
             self.vis_tab.reset_plot_range()
             self.vis_tab.init_plot_range(self.config_tab) # heaven help the person who needs to understand this
 
-        # for f in Path('./output').glob('*.*'):
-        #     try:
-        #         f.unlink()
-        #     except OSError as e:
-        #         print("Error: %s : %s" % (f, e.strerror))
-        # print("  rm -rf tmpdir/*")
-        # os.system('rm -rf tmpdir/*')
-
-        # if os.path.isdir('tmpdir'):
-        #     # something on NFS causing issues...
-        #     tname = tempfile.mkdtemp(suffix='.bak', prefix='output_', dir='.')
-        #     shutil.move('output', tname)
-        # os.makedirs('output')
-
-        # update axes ranges on Plots
-
 
         if self.p is None:  # No process running.
-            # self.vis_tab.setEnabled(True)
-            # self.pStudio.enablePlotTab(True)
-            # self.pStudio.enableLegendTab(True)
             self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
             self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
             self.message("Executing process")
@@ -275,7 +237,7 @@ class RunModel(QWidget):
             if self.nanohub_flag:
                 self.p.start("submit",["--local",exec_str,xml_str])
             else:
-                logging.debug(f'\nrun_tab.py: running: {exec_str}, {xml_str}')
+                # logging.debug(f'\nrun_tab.py: running: {exec_str}, {xml_str}')
                 self.p.start(exec_str, [xml_str])
 
                 # print("\n\nrun_tab.py: running: ",exec_str," output/config.xml")
@@ -284,11 +246,11 @@ class RunModel(QWidget):
 
             self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
         else:
-            logging.debug(f'self.p is not None???')
+            # logging.debug(f'self.p is not None???')
             print(f'self.p is not None???')
 
     def cancel_model_cb(self):
-        logging.debug(f'===========  cancel_model_cb():  ============')
+        # logging.debug(f'===========  cancel_model_cb():  ============')
         if self.p:  # process running.
             self.p.kill()
             # self.p.terminate()
