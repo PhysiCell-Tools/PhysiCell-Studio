@@ -772,6 +772,16 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             mechanics_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//"
             logging.debug(f'mechanics_path={mechanics_path}')
 
+            is_movable_tag =  uep.find(mechanics_path+"is_movable")
+            if is_movable_tag:
+                val =  uep.find(mechanics_path+"is_movable").text
+                if val.lower() == 'true':
+                    cell_def_tab.param_d[cell_def_name]["is_movable"] = True
+                else:
+                    cell_def_tab.param_d[cell_def_name]["is_movable"] = False
+            else:
+                cell_def_tab.param_d[cell_def_name]["is_movable"] = True
+
             # cell_def_tab.cell_cell_adhesion_strength.setText(uep.find(mechanics_path+"cell_cell_adhesion_strength").text)
             # cell_def_tab.cell_cell_repulsion_strength.setText(uep.find(mechanics_path+"cell_cell_repulsion_strength").text)
             val =  uep.find(mechanics_path+"cell_cell_adhesion_strength").text
