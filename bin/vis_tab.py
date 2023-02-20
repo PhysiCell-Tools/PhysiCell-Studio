@@ -90,6 +90,7 @@ class Vis(QWidget):
         self.plot_cells_svg = True
         # self.plot_svg_flag = False
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
+        self.substrate_name = None
         self.plot_xmin = None
         self.plot_xmax = None
         self.plot_ymin = None
@@ -713,6 +714,7 @@ class Vis(QWidget):
     def substrates_combobox_changed_cb(self,idx):
         # print("----- vis_tab.py: substrates_combobox_changed_cb: idx = ",idx)
         self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        self.substrate_name = self.substrates_combobox.currentText()
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -1858,6 +1860,7 @@ class Vis(QWidget):
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
             # print("(init substrate) self.figure.axes= ",self.figure.axes)
 
+        self.cbar1.set_label(self.substrate_name)
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
