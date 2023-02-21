@@ -304,14 +304,20 @@ class ICs(QWidget):
         #---------------------
         self.vbox.addWidget(QHLine())
 
+        hbox = QHBoxLayout()
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(btn_width)
         self.save_button.setStyleSheet("background-color: lightgreen")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.save_button.clicked.connect(self.save_cb)
-        # hbox.addWidget(self.save_button)
-        self.vbox.addWidget(self.save_button)
+        hbox.addWidget(self.save_button)
+        # self.vbox.addWidget(self.save_button)
 
+        self.use_names = QCheckBox("use cell type names")
+        hbox.addWidget(self.use_names)
+        self.vbox.addLayout(hbox)
+
+        #---
         hbox = QHBoxLayout()
         label = QLabel("folder")
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1084,4 +1090,19 @@ class ICs(QWidget):
         #     returnValue = msgBox.exec()
         # else:
             # np.savetxt('cells.csv', self.csv_array, delimiter=',')
-        np.savetxt(full_fname, self.csv_array, delimiter=',')
+
+
+        # Recall: self.csv_array = np.empty([1,4])  # default floats
+        if self.use_names.isChecked():
+            # print("----- Writing v2 .csv file for cells")
+            # print("self.csv_array.shape= ",self.csv_array.shape)
+            # print(self.csv_array)
+            cell_name = list(self.celldef_tab.param_d.keys())
+            # print("cell_name=",cell_name)
+            with open(full_fname, 'w') as f:
+                f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')
+                for idx in range(len(self.csv_array)):
+                    ict = int(self.csv_array[idx,3])  # cell type index
+                    f.write(f'{self.csv_array[idx,0]},{self.csv_array[idx,1]},{self.csv_array[idx,2]},{cell_name[ict]}\n')
+        else:
+            np.savetxt(full_fname, self.csv_array, delimiter=',')
