@@ -10,7 +10,11 @@ def pretty_print(infile,outfile):
     root = tree.getroot()
 
     # here the magic happens
-    ET.indent(root, space='    ') 
+    try:
+        ET.indent(root, space='    ') 
+    except:  # probably using Python < 3.9 (without "indent" method)
+        return
+
     s_root = ET.tostring(root).decode("utf-8")
 
     # add a carriage return before each major block
