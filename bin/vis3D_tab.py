@@ -472,7 +472,8 @@ class Vis(QWidget):
         # self.glayout1.addWidget(self.cells_edge_checkbox, 0,icol,1,1) # w, row, column, rowspan, colspan
 
         self.substrates_checkbox = QCheckBox('Substrates')
-        self.substrates_checked_flag = True
+        # self.substrates_checked_flag = True
+        self.substrates_checked_flag = False
         self.substrates_checkbox.setChecked(self.substrates_checked_flag)
         # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
@@ -685,6 +686,15 @@ class Vis(QWidget):
         # self.canvas.update()
         # self.canvas.draw()
         return
+
+    def update_output_dir(self, dir_path):
+        return 
+        # if os.path.isdir(dir_path):
+        #     print("update_output_dir(): yes, it is a dir path", dir_path)
+        # else:
+        #     print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+        # self.output_dir = dir_path
+        # self.output_folder.setText(dir_path)
 
     def fill_substrates_combobox(self, substrate_list):
         print("vis3D_tab.py: ------- fill_substrates_combobox")
@@ -1242,9 +1252,13 @@ class Vis(QWidget):
 
         print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
         # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
-        mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
+        # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
         current_time = mcds.get_time()
         print('time=', current_time )
+        print("metadata keys=",mcds.data['metadata'].keys())
+        current_time = mcds.data['metadata']['current_time']
+        print('time(verbose)=', current_time )
 
         self.title_str = 'time '+ str(current_time) + ' min'
         # self.text_title_actor.SetInput(self.title_str)
@@ -1257,15 +1271,19 @@ class Vis(QWidget):
 
             # print("mcds.data dict_keys= ",mcds.data['discrete_cells'].keys())   # dict_keys(...)
 
-            ncells = len(mcds.data['discrete_cells']['ID'])
+            # ncells = len(mcds.data['discrete_cells']['ID'])
+            ncells = len(mcds.data['discrete_cells']['data']['ID'])
             print('ncells=', ncells)
             self.title_str += ", # cells=" + str(ncells)
 
             global xyz
             xyz = np.zeros((ncells, 3))
-            xyz[:, 0] = mcds.data['discrete_cells']['position_x']
-            xyz[:, 1] = mcds.data['discrete_cells']['position_y']
-            xyz[:, 2] = mcds.data['discrete_cells']['position_z']
+            # xyz[:, 0] = mcds.data['discrete_cells']['position_x']
+            # xyz[:, 1] = mcds.data['discrete_cells']['position_y']
+            # xyz[:, 2] = mcds.data['discrete_cells']['position_z']
+            xyz[:, 0] = mcds.data['discrete_cells']['data']['position_x']
+            xyz[:, 1] = mcds.data['discrete_cells']['data']['position_y']
+            xyz[:, 2] = mcds.data['discrete_cells']['data']['position_z']
             #xyz = xyz[:1000]
             # print("position_x = ",xyz[:,0])
             xmin = min(xyz[:,0])
@@ -1283,7 +1301,8 @@ class Vis(QWidget):
             print("zmin = ",zmin)
             print("zmax = ",zmax)
 
-            cell_type = mcds.data['discrete_cells']['cell_type']
+            # cell_type = mcds.data['discrete_cells']['cell_type']
+            cell_type = mcds.data['discrete_cells']['data']['cell_type']
             # print(type(cell_type))
             # print(cell_type)
             unique_cell_type = np.unique(cell_type)
@@ -1315,13 +1334,18 @@ class Vis(QWidget):
             self.cell_data.SetNumberOfTuples(ncells)
 
             for idx in range(ncells):
-                x= mcds.data['discrete_cells']['position_x'][idx]
-                y= mcds.data['discrete_cells']['position_y'][idx]
-                z= mcds.data['discrete_cells']['position_z'][idx]
-                id = mcds.data['discrete_cells']['cell_type'][idx]
+                # x= mcds.data['discrete_cells']['position_x'][idx]
+                # y= mcds.data['discrete_cells']['position_y'][idx]
+                # z= mcds.data['discrete_cells']['position_z'][idx]
+                # id = mcds.data['discrete_cells']['cell_type'][idx]
+                x= mcds.data['discrete_cells']['data']['position_x'][idx]
+                y= mcds.data['discrete_cells']['data']['position_y'][idx]
+                z= mcds.data['discrete_cells']['data']['position_z'][idx]
+                id = mcds.data['discrete_cells']['data']['cell_type'][idx]
                 self.points.InsertNextPoint(x, y, z)
                 # self.cellVolume.InsertNextValue(30.0 + 2*idx)
-                total_volume = mcds.data['discrete_cells']['total_volume'][idx]
+                # total_volume = mcds.data['discrete_cells']['total_volume'][idx]
+                total_volume = mcds.data['discrete_cells']['data']['total_volume'][idx]
                 # self.cellVolume.InsertNextValue(1.0 + 2*idx)
 
                 # rval = (total_volume*3/4/pi)**1/3
