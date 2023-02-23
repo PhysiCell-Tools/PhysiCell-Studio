@@ -3421,31 +3421,40 @@ class CellDef(QWidget):
     
     def physiboss_clicked_add_mutant(self):
         self.physiboss_add_mutant()
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"].append(("", ""))
+        self.param_d[self.current_cell_def]["intracellular"]["mutants"].append({
+            'node': '',
+            'value': '',
+        })
 
     def physiboss_add_mutant(self):
 
-        mutants_editor = QHBoxLayout()
-        mutants_node = QLineEdit()
+        mutants_editor = QHBoxLayout()        
+        
+        mutants_node_dropdown = QComboBox()
+        mutants_node_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                mutants_node_dropdown.addItem(node)
+        
         mutants_value = QLineEdit()
         mutants_remove = QPushButton("Delete")
         id = len(self.physiboss_mutants)
-        mutants_node.textChanged.connect(lambda text: self.physiboss_mutants_node_changed(id, text))
+        mutants_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(id, index))
         mutants_value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(id, text))
         mutants_remove.clicked.connect(lambda: self.physiboss_clicked_remove_mutant(id))
 
-        mutants_editor.addWidget(mutants_node)
+        mutants_editor.addWidget(mutants_node_dropdown)
         mutants_editor.addWidget(mutants_value)
         mutants_editor.addWidget(mutants_remove)
         self.physiboss_mutants_layout.addLayout(mutants_editor)
-        self.physiboss_mutants.append((mutants_node, mutants_value, mutants_remove, mutants_editor))
+        self.physiboss_mutants.append((mutants_node_dropdown, mutants_value, mutants_remove, mutants_editor))
 
     def physiboss_clicked_remove_mutant(self, i):
         self.physiboss_remove_mutant(i)
         del self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]
 
     def physiboss_remove_mutant(self, i):
-        self.physiboss_mutants[i][0].textChanged.disconnect()
+        self.physiboss_mutants[i][0].currentIndexChanged.disconnect()
         self.physiboss_mutants[i][0].deleteLater()
         self.physiboss_mutants[i][1].textChanged.disconnect()
         self.physiboss_mutants[i][1].deleteLater()
@@ -3457,8 +3466,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, mutant in enumerate(self.physiboss_mutants):
             name, value, button, _ = mutant
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_mutants_node_changed(i, text))
+            name.curremtIndexChanged.disconnect()
+            name.curremtIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(i, text))
             button.clicked.disconnect()
@@ -3468,11 +3477,12 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_mutants))):
             self.physiboss_remove_mutant(i)
     
-    def physiboss_mutants_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["mutants"][i][1])
+    def physiboss_mutants_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
 
     def physiboss_mutants_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i] = (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["value"] = text
 
     def physiboss_clicked_add_parameter(self):
         self.physiboss_add_parameter()
@@ -6478,8 +6488,8 @@ class CellDef(QWidget):
                 for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
                     self.physiboss_add_mutant()
                     node, value, _, _ = self.physiboss_mutants[i]
-                    node.setText(mutant[0])
-                    value.setText(mutant[1])
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(mutant["node"]))
+                    value.setText(mutant["value"])
 
                 self.physiboss_clear_parameters()
                 for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
@@ -7469,16 +7479,16 @@ class CellDef(QWidget):
                     scaling.text = self.param_d[cdef]['intracellular']['scaling']
                     scaling.tail = self.indent12
 
-                    if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
+                    if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
                         scaling.tail = self.indent14
                         mutants = ET.SubElement(settings, "mutations")
                         mutants.text = self.indent16
                         mutants.tail = self.indent14
                         
-                        for node, value in self.param_d[cdef]['intracellular']['mutants']:
-                            if node != "" and value != "":
-                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": node})
-                                mutant.text = value
+                        for mutant_def in self.param_d[cdef]["intracellular"]["mutants"]:
+                            if mutant_def["node"] != "" and mutant_def["value"] != "":
+                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": mutant_def["node"]})
+                                mutant.text = mutant_def["value"]
                                 mutant.tail = self.indent16
 
                         mutant.tail = self.indent12

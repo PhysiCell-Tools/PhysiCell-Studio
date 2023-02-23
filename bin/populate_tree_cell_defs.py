@@ -1328,7 +1328,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         uep_intracellular_mutants = uep_settings.find("mutations")
                         if uep_intracellular_mutants is not None:
                             for mutant in uep_intracellular_mutants:
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["intracellular_name"], mutant.text))
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append({"node": mutant.attrib["intracellular_name"], "value": mutant.text})
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
                         uep_intracellular_parameters = uep_settings.find("parameters")
