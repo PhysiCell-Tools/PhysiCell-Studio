@@ -54,7 +54,7 @@ class QHLine(QFrame):
 
 class Vis(QWidget):
 
-    def __init__(self, nanohub_flag):
+    def __init__(self, nanohub_flag, dark_mode):
         super().__init__()
         # global self.config_params
 
@@ -62,6 +62,7 @@ class Vis(QWidget):
         self.mech_voxel_size = 30
 
         self.nanohub_flag = nanohub_flag
+        self.dark_mode = dark_mode
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -259,6 +260,8 @@ class Vis(QWidget):
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
         self.play_button.setStyleSheet("background-color : lightgreen")
+        if self.dark_mode:
+            self.play_button.setStyleSheet("background-color : green")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         self.vbox.addWidget(self.play_button)
@@ -326,6 +329,8 @@ class Vis(QWidget):
         self.custom_button = QPushButton("append custom data")
         self.custom_button.setFixedWidth(150)
         self.custom_button.setStyleSheet("background-color : lightgreen")
+        if self.dark_mode:
+            self.custom_button.setStyleSheet("background-color : green")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.custom_button.clicked.connect(self.append_custom_cb)
         self.vbox.addWidget(self.custom_button)

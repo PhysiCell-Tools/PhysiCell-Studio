@@ -26,13 +26,14 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class RunModel(QWidget):
-    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu):
+    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu, dark_mode):
         super().__init__()
 
         self.nanohub_flag = nanohub_flag
         self.tab_widget = tab_widget
         self.rules_flag = rules_flag
         self.download_menu = download_menu
+        self.dark_mode = dark_mode
 
         #-------------------------------------------
         # used with nanoHUB app
@@ -75,6 +76,8 @@ class RunModel(QWidget):
 
         self.run_button = QPushButton("Run Simulation")
         self.run_button.setStyleSheet("background-color: lightgreen")
+        if self.dark_mode:
+            self.run_button.setStyleSheet("background-color: green")
         hbox.addWidget(self.run_button)
         self.run_button.clicked.connect(self.run_model_cb)
 

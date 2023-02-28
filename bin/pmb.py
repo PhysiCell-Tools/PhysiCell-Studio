@@ -98,8 +98,10 @@ class PhysiCellXMLCreator(QWidget):
 
         self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
-        if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):
+        if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):  # vs. machine()=x86_64
             self.dark_mode = True
+        print(f"  platform.system().lower()={platform.system().lower()}, platform.machine()={platform.machine()}")
+        print("PhysiCellXMLCreator(): self.dark_mode= ",self.dark_mode)
 
         self.title_prefix = "PhysiCell Model Builder: "
         if studio_flag:
@@ -190,7 +192,7 @@ class PhysiCellXMLCreator(QWidget):
         else:
             print("pmb.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
-        self.microenv_tab = SubstrateDef()
+        self.microenv_tab = SubstrateDef(self.dark_mode)
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
         # print("pmb.py: first_substrate_name=",substrate_name)
@@ -280,7 +282,7 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             logging.debug(f'pmb.py: creating ICs, Run, and Plot tabs')
-            self.ics_tab = ICs(self.config_tab, self.celldef_tab)
+            self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.dark_mode)
             self.ics_tab.fill_celltype_combobox()
             self.ics_tab.reset_info()
 
@@ -295,7 +297,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu, self.dark_mode)
 
             self.homedir = os.getcwd()
             print("pmb.py: self.homedir = ",self.homedir)
@@ -319,7 +321,7 @@ class PhysiCellXMLCreator(QWidget):
 
             self.tabWidget.addTab(self.run_tab,"Run")
 
-            self.vis_tab = Vis(self.nanohub_flag)
+            self.vis_tab = Vis(self.nanohub_flag, self.dark_mode)
             self.config_tab.vis_tab = self.vis_tab
             # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
@@ -776,9 +778,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
+            print("save_as_cb():  doing config_tab.fill_xml")
             self.config_tab.fill_xml()
+            print("save_as_cb():  doing microenv_tab.fill_xml")
             self.microenv_tab.fill_xml()
+            print("save_as_cb():  doing celldef_tab.fill_xml")
             self.celldef_tab.fill_xml()
+            print("save_as_cb():  doing user_params_tab.fill_xml")
             self.user_params_tab.fill_xml()
             if self.rules_flag:
                 self.rules_tab.fill_xml()
@@ -795,6 +801,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("pmb.py:  save_as_cb: writing to: ",self.current_xml_file)
 
             self.tree.write(self.current_xml_file)
+            print("pmb.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
 
         except Exception as e:

@@ -80,6 +80,7 @@ class CellDef(QWidget):
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
         self.num_dec = 5  # how many digits to right of decimal point?
+        self.dark_mode = dark_mode
 
         # self.chemotactic_sensitivity_dict = {}   # rwh - bogus/not useful since we need per cell type
         self.default_sval = '0.0'  # default scalar value (as string)
@@ -91,7 +92,7 @@ class CellDef(QWidget):
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
-        if dark_mode:
+        if self.dark_mode:
             self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
             self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
@@ -218,19 +219,25 @@ class CellDef(QWidget):
         # self.controls_hbox = QHBoxLayout()
         self.new_button = QPushButton("New")
         self.new_button.clicked.connect(self.new_cell_def)
-        self.new_button.setStyleSheet("background-color: lightgreen")
+        button_color_str = "background-color: lightgreen"
+        if self.dark_mode:
+            button_color_str = "background-color: green"
+        self.new_button.setStyleSheet(button_color_str)
         # self.controls_hbox.addWidget(self.new_button)
         tree_w_hbox.addWidget(self.new_button)
 
         self.copy_button = QPushButton("Copy")
         self.copy_button.clicked.connect(self.copy_cell_def)
-        self.copy_button.setStyleSheet("background-color: lightgreen")
+        self.copy_button.setStyleSheet(button_color_str)
         # self.controls_hbox.addWidget(self.copy_button)
         tree_w_hbox.addWidget(self.copy_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_cell_def)
-        self.delete_button.setStyleSheet("background-color: yellow")
+        button_color_str = "background-color: yellow"
+        if self.dark_mode:
+            button_color_str = "background-color: IndianRed"
+        self.delete_button.setStyleSheet(button_color_str)
         # self.controls_hbox.addWidget(self.delete_button)
         tree_w_hbox.addWidget(self.delete_button)
 
@@ -1926,21 +1933,21 @@ class CellDef(QWidget):
             logging.debug(f'apoptosis_phase_transition_cb: --> duration')
             self.apoptosis_duration_flag = True
             self.apoptosis_trate01.setReadOnly(True)
-            self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
+            # self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
             self.apoptosis_trate01_fixed.setEnabled(False)
 
             self.apoptosis_phase0_duration.setReadOnly(False)
-            self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
+            # self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
             self.apoptosis_phase0_duration_fixed.setEnabled(True)
         else:  # transition rates
             logging.debug(f'apoptosis_phase_transition_cb: NOT duration')
             self.apoptosis_duration_flag = False
             self.apoptosis_phase0_duration.setReadOnly(True)
-            self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
+            # self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
             self.apoptosis_phase0_duration_fixed.setEnabled(False)
 
             self.apoptosis_trate01.setReadOnly(False)
-            self.apoptosis_trate01.setStyleSheet("background-color: white")  
+            # self.apoptosis_trate01.setStyleSheet("background-color: white")  
             self.apoptosis_trate01_fixed.setEnabled(True)
 
         self.param_d[self.current_cell_def]['apoptosis_duration_flag'] = self.apoptosis_duration_flag
@@ -1965,33 +1972,33 @@ class CellDef(QWidget):
             self.necrosis_duration_flag = True
             # self.customize_cycle_choices()
             self.necrosis_trate01.setReadOnly(True)
-            self.necrosis_trate01.setStyleSheet("background-color: lightgray")
+            # self.necrosis_trate01.setStyleSheet("background-color: lightgray")
             self.necrosis_trate01_fixed.setEnabled(False)
             self.necrosis_trate12.setReadOnly(True)
-            self.necrosis_trate12.setStyleSheet("background-color: lightgray")
+            # self.necrosis_trate12.setStyleSheet("background-color: lightgray")
             self.necrosis_trate12_fixed.setEnabled(False)
 
             self.necrosis_phase0_duration.setReadOnly(False)
-            self.necrosis_phase0_duration.setStyleSheet("background-color: white")
+            # self.necrosis_phase0_duration.setStyleSheet("background-color: white")
             self.necrosis_phase0_duration_fixed.setEnabled(True)
             self.necrosis_phase1_duration.setReadOnly(False)
-            self.necrosis_phase1_duration.setStyleSheet("background-color: white")
+            # self.necrosis_phase1_duration.setStyleSheet("background-color: white")
             self.necrosis_phase1_duration_fixed.setEnabled(True)
         else:  # transition rates
             logging.debug(f'necrosis_phase_transition_cb: NOT duration')
             self.necrosis_duration_flag = False
             self.necrosis_phase0_duration.setReadOnly(True)
-            self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
+            # self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
             self.necrosis_phase0_duration_fixed.setEnabled(False)
             self.necrosis_phase1_duration.setReadOnly(True)
-            self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
+            # self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
             self.necrosis_phase1_duration_fixed.setEnabled(False)
 
             self.necrosis_trate01.setReadOnly(False)
-            self.necrosis_trate01.setStyleSheet("background-color: white")  
+            # self.necrosis_trate01.setStyleSheet("background-color: white")  
             self.necrosis_trate01_fixed.setEnabled(True)
             self.necrosis_trate12.setReadOnly(False)
-            self.necrosis_trate12.setStyleSheet("background-color: white")  
+            # self.necrosis_trate12.setStyleSheet("background-color: white")  
             self.necrosis_trate12_fixed.setEnabled(True)
             # self.customize_cycle_choices()
             # pass
@@ -4476,13 +4483,20 @@ class CellDef(QWidget):
         if not s:
             s = 'thisisadummystring'
 
+        # print("---custom_data_search_cb()")
         for irow in range(self.max_custom_data_rows):
             if s in self.custom_data_table.cellWidget(irow,self.custom_icol_name).text():
                 # print(f"   found {s} at row {irow}")
-                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet("background: bisque")
+                backcolor = "background: bisque"
+                if self.dark_mode:
+                    backcolor = "background: DarkSlateGray"
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet(backcolor)
                 # self.custom_data_table.selectRow(irow)  # don't do this; keyboard input -> cell 
             else:
-                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet("background: white")
+                backcolor = "background: white"
+                if self.dark_mode:
+                    backcolor = "background: black"
+                self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet(backcolor)
             # self.custom_data_table.setCurrentItem(item)
 
     #--------------------------------------------------------
@@ -4616,6 +4630,8 @@ class CellDef(QWidget):
         delete_custom_data_btn = QPushButton("Delete row")
         delete_custom_data_btn.clicked.connect(self.delete_custom_data_cb)
         delete_custom_data_btn.setStyleSheet("background-color: yellow")
+        if self.dark_mode:
+            delete_custom_data_btn.setStyleSheet("background-color: IndianRed")
         hlayout.addWidget(delete_custom_data_btn)
 
         vlayout.addLayout(hlayout)
@@ -4764,10 +4780,13 @@ class CellDef(QWidget):
     #----------------------------------------
     def disable_table_cells_for_duplicate_name(self, widget=None):
         # disable all cells in the Custom Data table
+        backcolor = "background: lightgray"
+        if self.dark_mode:
+            backcolor = "background: DarkSlateGray"
         for irow in range(0,self.max_custom_data_rows):
             for icol in range(5):
                 self.custom_data_table.cellWidget(irow,icol).setEnabled(False)
-                self.custom_data_table.cellWidget(irow,icol).setStyleSheet("background: lightgray")   # yellow
+                self.custom_data_table.cellWidget(irow,icol).setStyleSheet(backcolor)   # yellow
                 # self.sender().setStyleSheet("color: red;")
 
         if widget:   # enable only(!) the widget that needs to be fixed (because it's a duplicate)
@@ -4775,7 +4794,10 @@ class CellDef(QWidget):
             wcol = widget.wcol
             self.custom_data_table.cellWidget(wrow,wcol).setEnabled(True)
             # self.custom_data_table.setCurrentItem(None)
-            self.custom_data_table.cellWidget(wrow,wcol).setStyleSheet("background: white")
+            backcolor = "background: white"
+            if self.dark_mode:
+                backcolor = "background: black"
+            self.custom_data_table.cellWidget(wrow,wcol).setStyleSheet(backcolor)
             self.custom_data_table.setCurrentCell(wrow,wcol)
 
         # Also disable the cell type tree
@@ -4785,6 +4807,9 @@ class CellDef(QWidget):
     def enable_all_custom_data(self):
         # for irow in range(self.max_custom_vars):
         # for irow in range(self.max_custom_rows_edited):
+        backcolor = "background: white"
+        if self.dark_mode:
+            backcolor = "background: black"
         for irow in range(self.max_custom_data_rows):
             for icol in range(5):
                 # if (icol != 2) and (irow != row) and (icol != col):
@@ -4792,7 +4817,7 @@ class CellDef(QWidget):
                     # print("enable all(): irow,icol=",irow,icol)
                 # if self.custom_data_table.cellWidget(irow,icol):
                 self.custom_data_table.cellWidget(irow,icol).setEnabled(True)
-                self.custom_data_table.cellWidget(irow,icol).setStyleSheet("background: white")
+                self.custom_data_table.cellWidget(irow,icol).setStyleSheet(backcolor)
                 # else:
                     # print("oops!  self.custom_data_table.cellWidget(irow,icol) is None")
                 # self.sender().setStyleSheet("color: red;")

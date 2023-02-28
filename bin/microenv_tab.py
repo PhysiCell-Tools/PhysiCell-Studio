@@ -22,9 +22,11 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class SubstrateDef(QWidget):
-    def __init__(self):
+    def __init__(self, dark_mode):
         super().__init__()
         # global self.microenv_params
+
+        self.dark_mode = dark_mode
 
         self.param_d = {}  # a dict of dicts - rwh/todo, used anymore?
         # self.substrate = {}
@@ -105,6 +107,8 @@ class SubstrateDef(QWidget):
         self.new_button = QPushButton("New")
         self.new_button.clicked.connect(self.new_substrate)
         self.new_button.setStyleSheet("background-color: lightgreen")
+        if self.dark_mode:
+            self.new_button.setStyleSheet("background-color: green")
         bwidth = 70
         bheight = 32
         # self.new_button.setFixedWidth(bwidth)
@@ -113,12 +117,16 @@ class SubstrateDef(QWidget):
         self.copy_button = QPushButton("Copy")
         self.copy_button.clicked.connect(self.copy_substrate)
         self.copy_button.setStyleSheet("background-color: lightgreen")
+        if self.dark_mode:
+            self.copy_button.setStyleSheet("background-color: green")
         # self.copy_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.copy_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_substrate)
         self.delete_button.setStyleSheet("background-color: yellow")
+        if self.dark_mode:
+            self.delete_button.setStyleSheet("background-color: IndianRed")
         # self.delete_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.delete_button)
 

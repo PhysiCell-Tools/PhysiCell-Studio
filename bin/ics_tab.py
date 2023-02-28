@@ -51,12 +51,13 @@ class QHLine(QFrame):
 
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab):
+    def __init__(self, config_tab, celldef_tab, dark_mode):
         super().__init__()
         # global self.config_params
 
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
+        self.dark_mode = dark_mode
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -274,12 +275,16 @@ class ICs(QWidget):
         self.clear_button = QPushButton("Clear all")
         self.clear_button.setFixedWidth(btn_width)
         self.clear_button.setStyleSheet("background-color: yellow")
+        if self.dark_mode:
+            self.clear_button.setStyleSheet("background-color: IndianRed")
         self.clear_button.clicked.connect(self.clear_cb)
         hbox.addWidget(self.clear_button)
 
         self.plot_button = QPushButton("Plot")
         self.plot_button.setFixedWidth(btn_width)
         self.plot_button.setStyleSheet("background-color: lightgreen")
+        if self.dark_mode:
+            self.plot_button.setStyleSheet("background-color: green")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.plot_button.clicked.connect(self.plot_cb)
         hbox.addWidget(self.plot_button)
@@ -287,6 +292,8 @@ class ICs(QWidget):
         self.undo_button = QPushButton("Undo last")
         self.undo_button.setFixedWidth(btn_width)
         self.undo_button.setStyleSheet("background-color: yellow")
+        if self.dark_mode:
+            self.undo_button.setStyleSheet("background-color: IndianRed")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.undo_button.clicked.connect(self.undo_cb)
         hbox.addWidget(self.undo_button)
@@ -308,6 +315,8 @@ class ICs(QWidget):
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(btn_width)
         self.save_button.setStyleSheet("background-color: lightgreen")
+        if self.dark_mode:
+            self.save_button.setStyleSheet("background-color: green")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.save_button.clicked.connect(self.save_cb)
         hbox.addWidget(self.save_button)
