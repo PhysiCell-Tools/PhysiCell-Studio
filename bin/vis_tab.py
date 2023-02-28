@@ -54,7 +54,7 @@ class QHLine(QFrame):
 
 class Vis(QWidget):
 
-    def __init__(self, nanohub_flag):
+    def __init__(self, nanohub_flag, dark_mode):
         super().__init__()
         # global self.config_params
 
@@ -62,6 +62,7 @@ class Vis(QWidget):
         self.mech_voxel_size = 30
 
         self.nanohub_flag = nanohub_flag
+        self.dark_mode = dark_mode
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -193,6 +194,8 @@ class Vis(QWidget):
         self.substrates_cbar_combobox.setEnabled(False)
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
+
+        # Need to have the substrates_combobox before doing create_figure!
         self.create_figure()
 
         # self.config_params = QWidget()
@@ -201,7 +204,9 @@ class Vis(QWidget):
 
         # self.vbox = QVBoxLayout()
         # self.vbox.addStretch(0)
+        self.create_vis_UI()
 
+    def create_vis_UI(self):
         #---------------------
         splitter = QSplitter()
         self.scroll_params = QScrollArea()
@@ -255,6 +260,8 @@ class Vis(QWidget):
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
         self.play_button.setStyleSheet("background-color : lightgreen")
+        if self.dark_mode:
+            self.play_button.setStyleSheet("background-color : green")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         self.vbox.addWidget(self.play_button)
@@ -322,6 +329,8 @@ class Vis(QWidget):
         self.custom_button = QPushButton("append custom data")
         self.custom_button.setFixedWidth(150)
         self.custom_button.setStyleSheet("background-color : lightgreen")
+        if self.dark_mode:
+            self.custom_button.setStyleSheet("background-color : green")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.custom_button.clicked.connect(self.append_custom_cb)
         self.vbox.addWidget(self.custom_button)
@@ -399,7 +408,6 @@ class Vis(QWidget):
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
         self.vbox.addLayout(hbox)
-        # self.vbox.addWidget(groupbox)
 
         label = QLabel("(press 'Enter' if cmin or cmax changes)")
         self.vbox.addWidget(label)
@@ -423,131 +431,28 @@ class Vis(QWidget):
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
 
         #-------------------
-        # self.controls2 = QWidget()
-        # # controls_hbox2 = QHBoxLayout()
-        # visible_flag = True
-
-        # label = QLabel("xmin")
-        # label.setFixedWidth(label_width)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-
-
-        # domain_value_width = 60
-        # self.my_xmin = QLineEdit()
-        # self.my_xmin.textChanged.connect(self.change_plot_range)
-        # self.my_xmin.setFixedWidth(domain_value_width)
-        # self.my_xmin.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_xmin)
-        # self.my_xmin.setVisible(visible_flag)
-        # # controls_hbox2.addWidget(label)
-
-        # label = QLabel("xmax")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_xmax = QLineEdit()
-        # self.my_xmax.textChanged.connect(self.change_plot_range)
-        # self.my_xmax.setFixedWidth(domain_value_width)
-        # self.my_xmax.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_xmax)
-        # self.my_xmax.setVisible(visible_flag)
-
-        # label = QLabel("ymin")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_ymin = QLineEdit()
-        # self.my_ymin.textChanged.connect(self.change_plot_range)
-        # self.my_ymin.setFixedWidth(domain_value_width)
-        # self.my_ymin.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_ymin)
-        # self.my_ymin.setVisible(visible_flag)
-
-        # label = QLabel("ymax")
-        # label.setFixedWidth(label_width)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # controls_hbox2.addWidget(label)
-        # self.my_ymax = QLineEdit()
-        # self.my_ymax.textChanged.connect(self.change_plot_range)
-        # self.my_ymax.setFixedWidth(domain_value_width)
-        # self.my_ymax.setValidator(QtGui.QDoubleValidator())
-        # # controls_hbox2.addWidget(self.my_ymax)
-        # self.my_ymax.setVisible(visible_flag)
-
-        # w = QPushButton("Reset")
-        # w.clicked.connect(self.reset_plot_range)
-        # # controls_hbox2.addWidget(w)
-
-        # self.my_xmin.setText(str(self.xmin))
-        # self.my_xmax.setText(str(self.xmax))
-        # self.my_ymin.setText(str(self.ymin))
-        # self.my_ymax.setText(str(self.ymax))
-
-        #-------------------
         self.substrates_combobox.currentIndexChanged.connect(self.substrates_combobox_changed_cb)
-        # self.substrates_cbar_combobox.currentIndexChanged.connect(self.colorbar_combobox_changed_cb)
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
 
-        # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
-        # self.cell_scalar_combobox.currentIndexChanged.connect(self.colorbar_combobox_changed_cb)
         self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
-        # self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.colorbar_combobox_changed_cb)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
 
-        # controls_vbox = QVBoxLayout()
-        # controls_vbox.addLayout(controls_hbox)
-        # controls_vbox.addLayout(controls_hbox2)
-
         #==================================================================
-        # self.config_params.setLayout(self.vbox)
-
-        # self.vbox.addStretch()
-
-        # self.plot_params.setLayout(self.vbox)
-
         self.scroll_plot.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll_plot.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll_plot.setWidgetResizable(True)
-        # self.scroll_plot.setWidget(self.plot_params)
 
-
-        # self.scroll_plot.setWidget(self.config_params) # self.config_params = QWidget()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
-        # self.layout = QVBoxLayout(self)
-        # self.layout.addLayout(controls_hbox)
-        # self.layout.addLayout(controls_hbox2)
-        # self.layout.addLayout(controls_vbox)
-
-        # self.layout.addWidget(self.controls1)
 
         self.stackw.addWidget(self.controls1)
-        # self.stackw.addWidget(self.controls2)
-        # self.stackw.addWidget(self.controls3)
-
         self.stackw.setCurrentIndex(0)
-        # self.stackw.setFixedHeight(40)
-        # self.stackw.resize(700,100)
-        # self.layout.addWidget(self.stackw)
-
-        # splitter.addWidget(self.stackw)
-        # splitter.addWidget(self.controls1)
 
         self.scroll_params.setWidget(self.stackw)
         splitter.addWidget(self.scroll_plot)
-        # splitter.addWidget(self.stackw)
 
         self.show_plot_range = False
-        # if self.show_plot_range:
-        #     self.layout.addWidget(self.controls2)
-        # self.layout.addWidget(self.my_xmin)
-        # self.layout.addWidget(self.scroll_plot)
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(splitter)
-        # self.layout.addStretch()
-
-        # self.create_figure()
 
     def output_folder_cb(self):
         # print(f"output_folder_cb(): old={self.output_dir}")
