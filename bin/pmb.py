@@ -179,7 +179,7 @@ class PhysiCellXMLCreator(QWidget):
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
 
-        self.config_tab = Config(self.studio_flag)
+        self.config_tab = Config(self.studio_flag, self.dark_mode)
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
