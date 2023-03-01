@@ -935,7 +935,8 @@ class Vis(QWidget):
             self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
-            self.physiboss_vis_checkbox.setEnabled(False)
+            if self.physiboss_vis_checkbox is not None:
+                self.physiboss_vis_checkbox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
 
             if self.cax2:
@@ -947,7 +948,8 @@ class Vis(QWidget):
             self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
-            self.physiboss_vis_checkbox.setEnabled(True)
+            if self.physiboss_vis_checkbox is not None:
+                self.physiboss_vis_checkbox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
