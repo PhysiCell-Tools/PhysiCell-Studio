@@ -1334,7 +1334,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         uep_intracellular_parameters = uep_settings.find("parameters")
                         if uep_intracellular_parameters is not None:
                             for parameter in uep_intracellular_parameters:
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["intracellular_name"], parameter.text))                    
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append({"name": parameter.attrib["intracellular_name"], "value": parameter.text})                    
 
                     # print("cell def : " + cell_def_name + " : dt = " + cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"])
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
@@ -1382,6 +1382,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.physiboss_update_list_signals()
                 cell_def_tab.physiboss_update_list_behaviours()
                 cell_def_tab.physiboss_update_list_nodes()
+                cell_def_tab.physiboss_update_list_parameters()
             
 
             logging.debug(f'------ done parsing intracellular:')

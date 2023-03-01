@@ -3193,7 +3193,8 @@ class CellDef(QWidget):
     def physiboss_cfg_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['cfg_filename'] = text
-    
+            self.physiboss_update_list_parameters()
+
     def physiboss_update_list_signals(self):
 
         if self.current_cell_def == None:
@@ -3348,7 +3349,35 @@ class CellDef(QWidget):
                 
             #     for _, node, _, _, _, _, _, _ in self.physiboss_outputs:
             #         node.clear()
+    
+    def physiboss_update_list_parameters(self):
+        
+        t_intracellular = self.param_d[self.current_cell_def]["intracellular"]        
+        if t_intracellular is not None:
+            # Here I started by looking at both the bnd and the cfg
+            if (
+                t_intracellular is not None 
+                and "cfg_filename" in t_intracellular.keys() and t_intracellular['cfg_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["cfg_filename"])) 
+                # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
+                ):
+                list_parameters = []
+                # list_internal_nodes = []
+                with open(os.path.join(os.getcwd(), t_intracellular["cfg_filename"]), 'r') as cfg_file:
+                    for line in cfg_file.readlines():
+                        if line.strip().startswith("$"):
+                            list_parameters.append(line.split("=")[0].strip())
+                            
+                        # elif ".is_internal" in line:
+                        #     tokens = line.split("=")
+                        #     value = int(tokens[1].strip()[:-1])
+                        #     node = tokens[0].strip().replace(".is_internal", "")
+                        #     if value == 1:
+                        #         list_internal_nodes.append(node)
                 
+                # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
+                
+                self.param_d[self.current_cell_def]["intracellular"]["list_parameters"] = list_parameters
+ 
     def physiboss_time_step_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
@@ -3494,32 +3523,39 @@ class CellDef(QWidget):
 
     def physiboss_clicked_add_parameter(self):
         self.physiboss_add_parameter()
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"].append(("", ""))
+        self.param_d[self.current_cell_def]["intracellular"]["parameters"].append({
+            'name': None,
+            'value': None
+        })
 
     def physiboss_add_parameter(self):
 
         parameters_editor = QHBoxLayout()
-        parameters_node = QLineEdit()
+        parameters_dropdown = QComboBox()
+        parameters_dropdown.setFixedWidth(150)
+        if "list_parameters" in self.param_d[self.current_cell_def]["intracellular"]:
+            for parameter in self.param_d[self.current_cell_def]["intracellular"]["list_parameters"]:
+                parameters_dropdown.addItem(parameter)
         parameters_value = QLineEdit()
         parameters_remove = QPushButton("Delete")
        
         id = len(self.physiboss_parameters)
-        parameters_node.textChanged.connect(lambda text: self.physiboss_parameters_node_changed(id, text))
+        parameters_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(id, index))
         parameters_value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(id, text))
         parameters_remove.clicked.connect(lambda: self.physiboss_clicked_remove_parameter(id))
 
-        parameters_editor.addWidget(parameters_node)
+        parameters_editor.addWidget(parameters_dropdown)
         parameters_editor.addWidget(parameters_value)
         parameters_editor.addWidget(parameters_remove)
         self.physiboss_parameters_layout.addLayout(parameters_editor)
-        self.physiboss_parameters.append((parameters_node, parameters_value, parameters_remove, parameters_editor))
+        self.physiboss_parameters.append((parameters_dropdown, parameters_value, parameters_remove, parameters_editor))
 
     def physiboss_clicked_remove_parameter(self, i):
         self.physiboss_remove_parameter(i)
         del self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]
 
     def physiboss_remove_parameter(self, i):
-        self.physiboss_parameters[i][0].textChanged.disconnect()
+        self.physiboss_parameters[i][0].currentIndexChanged.disconnect()
         self.physiboss_parameters[i][0].deleteLater()
         self.physiboss_parameters[i][1].textChanged.disconnect()
         self.physiboss_parameters[i][1].deleteLater()
@@ -3531,8 +3567,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, parameter in enumerate(self.physiboss_parameters):
             name, value, button, _ = parameter
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_parameters_node_changed(i, text))
+            name.currentIndexChanged.disconnect()
+            name.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(i, text))
             button.clicked.disconnect()
@@ -3542,11 +3578,12 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_parameters))):
             self.physiboss_remove_parameter(i)
 
-    def physiboss_parameters_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["parameters"][i][1])
+    def physiboss_parameters_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] = self.param_d[self.current_cell_def]["intracellular"]["list_parameters"][index]
 
     def physiboss_parameters_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i] = (self.param_d[self.current_cell_def]["intracellular"]["parameters"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["value"] = text
     
     def physiboss_clicked_add_input(self):
         self.physiboss_add_input()
@@ -6485,6 +6522,15 @@ class CellDef(QWidget):
                 self.physiboss_time_stochasticity.setText(self.param_d[cdname]["intracellular"]["time_stochasticity"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
 
+                self.physiboss_clear_inputs()
+                self.physiboss_clear_outputs()      
+                self.fill_substrates_comboboxes()
+                self.fill_celltypes_comboboxes()
+                self.physiboss_update_list_signals()
+                self.physiboss_update_list_behaviours()
+                self.physiboss_update_list_nodes()
+                self.physiboss_update_list_parameters()
+                
                 self.physiboss_clear_initial_values()
                 for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
                     self.physiboss_add_initial_values()
@@ -6503,16 +6549,9 @@ class CellDef(QWidget):
                 for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
                     self.physiboss_add_parameter()
                     name, value, _, _ = self.physiboss_parameters[i]
-                    name.setText(parameter[0])
-                    value.setText(parameter[1])
+                    name.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_parameters"].index(parameter["name"]))
+                    value.setText(parameter["value"])
 
-                self.physiboss_clear_inputs()
-                self.physiboss_clear_outputs()      
-                self.fill_substrates_comboboxes()
-                self.fill_celltypes_comboboxes()
-                self.physiboss_update_list_signals()
-                self.physiboss_update_list_behaviours()
-                self.physiboss_update_list_nodes()
                 
                 for i, input in enumerate(self.param_d[cdname]["intracellular"]["inputs"]):
                     self.physiboss_add_input()
@@ -7508,10 +7547,10 @@ class CellDef(QWidget):
                         parameters.text = self.indent16
                         parameters.tail = self.indent14
                         
-                        for name, value in self.param_d[cdef]['intracellular']['parameters']:
-                            if name != "" and value != "":
-                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": name})
-                                parameter.text = value
+                        for parameter_def in self.param_d[cdef]['intracellular']['parameters']:
+                            if parameter_def["name"] != "" and parameter_def["value"] != "":
+                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": parameter_def["name"]})
+                                parameter.text = parameter_def["value"]
                                 parameter.tail = self.indent16
 
                         parameter.tail = self.indent12
