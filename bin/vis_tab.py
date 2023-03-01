@@ -811,12 +811,29 @@ class Vis(QWidget):
                     self.physiboss_node_dict[cell_def.get("name")] = []
                     bnd_filename = intracellular.find("bnd_filename").text
                     
+                    list_nodes = []
                     with open(os.path.join(os.getcwd(), bnd_filename), "r") as bnd_file:
                         for line in bnd_file.readlines():        
                             if line.strip().lower().startswith("node"):
                                 node = line.strip().split(" ")[1]
-                                self.physiboss_node_dict[cell_def.get("name")].append(node)
-                                
+                                list_nodes.append(node)
+
+
+                    cfg_filename = intracellular.find("cfg_filename").text
+                    list_internal_nodes = []
+                    with open(os.path.join(os.getcwd(), cfg_filename), "r") as cfg_file:
+                        for line in cfg_file.readlines():        
+                            if "is_internal" in line:
+                                tokens = line.split("=")
+                                value = int(tokens[1].strip()[:-1])
+                                node = tokens[0].strip().replace(".is_internal", "")
+                                if value == 1:
+                                    list_internal_nodes.append(node)
+
+                    list_output_nodes = list(set(list_nodes).difference(set(list_internal_nodes)))
+                    self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
+
+          
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
