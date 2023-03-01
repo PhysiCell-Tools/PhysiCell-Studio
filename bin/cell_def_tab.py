@@ -3302,54 +3302,41 @@ class CellDef(QWidget):
             if (
                 t_intracellular is not None 
                 and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
-                # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
                 ):
                 list_nodes = []
                 with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
                     list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
             
-                list_output_nodes = []
-                # with open(t_intracellular["cfg_filename"], 'r') as cfg_file:
-                #     list_output_nodes = [(node.split(".")[0], node.split("=")[1].split(";")[0]) for node in cfg_file.readlines() if ".is_internal" in node]
-                # list_internal_nodes = [node for node, value in list_output_nodes if value.lower() in [1, "true"]]
-            
-                list_model_nodes = list(set(list_nodes).difference(set(list_output_nodes)))
-                self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_model_nodes
+                self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_nodes
 
                 for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
                     node.currentIndexChanged.disconnect()
                     node.clear()
-                    for name in list_model_nodes:
+                    for name in list_nodes:
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] is not None
-                        and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_model_nodes
+                        and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_nodes
                     ):
-                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"]))
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"]))
                     else:
                         node.setCurrentIndex(-1)
         
                 for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
                     node.currentIndexChanged.disconnect()
                     node.clear()
-                    for name in list_model_nodes:
+                    for name in list_nodes:
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] is not None
-                        and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_model_nodes
+                        and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_nodes
                     ):
-                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"]))
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"]))
                     else:
                         node.setCurrentIndex(-1)
-            # else:
-            #     for _, node, _, _, _, _, _, _ in self.physiboss_inputs:
-            #         node.clear()
-                
-            #     for _, node, _, _, _, _, _, _ in self.physiboss_outputs:
-            #         node.clear()
-    
+          
     def physiboss_update_list_parameters(self):
         
         t_intracellular = self.param_d[self.current_cell_def]["intracellular"]        
