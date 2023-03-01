@@ -3363,34 +3363,41 @@ class CellDef(QWidget):
     
     def physiboss_clicked_add_initial_value(self):
         self.physiboss_add_initial_values()
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append((None, None))
+        self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append({
+            'node': None,
+            'value': None
+        })
 
     def physiboss_add_initial_values(self):
 
         initial_states_editor = QHBoxLayout()
-        initial_states_node = QLineEdit()
+        initial_states_dropdown = QComboBox()
+        initial_states_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                initial_states_dropdown.addItem(node)
         initial_states_value = QLineEdit()
         initial_states_remove = QPushButton("Delete")
         initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
-        initial_states_node.textChanged.connect(lambda text: self.physiboss_initial_value_node_changed(id, text))
+        initial_states_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(id, index))
         initial_states_value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(id, text))
         initial_states_remove.clicked.connect(lambda: self.physiboss_clicked_remove_initial_values(id))
 
-        initial_states_editor.addWidget(initial_states_node)
+        initial_states_editor.addWidget(initial_states_dropdown)
         initial_states_editor.addWidget(initial_states_value)
         initial_states_editor.addWidget(initial_states_remove)
 
         self.physiboss_initial_states_layout.addLayout(initial_states_editor)
-        self.physiboss_initial_states.append((initial_states_node, initial_states_value, initial_states_remove, initial_states_editor))
+        self.physiboss_initial_states.append((initial_states_dropdown, initial_states_value, initial_states_remove, initial_states_editor))
 
     def physiboss_clicked_remove_initial_values(self, i):
         self.physiboss_remove_initial_values(i)
         del self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]
 
     def physiboss_remove_initial_values(self, i):
-        self.physiboss_initial_states[i][0].textChanged.disconnect()
+        self.physiboss_initial_states[i][0].currentIndexChanged.disconnect()
         self.physiboss_initial_states[i][0].deleteLater()
         self.physiboss_initial_states[i][1].textChanged.disconnect()
         self.physiboss_initial_states[i][1].deleteLater()
@@ -3402,8 +3409,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, initial_state in enumerate(self.physiboss_initial_states):
             node, value, button, _ = initial_state
-            node.textChanged.disconnect()
-            node.textChanged.connect(lambda text: self.physiboss_initial_value_node_changed(i, text))
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(i, text))
             button.clicked.disconnect()
@@ -3413,11 +3420,12 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_initial_states))):
             self.physiboss_remove_initial_values(i)
     
-    def physiboss_initial_value_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i][1])
+    def physiboss_initial_value_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]['node'] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
 
     def physiboss_initial_value_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i] = (self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]['value'] = text
     
     def physiboss_clicked_add_mutant(self):
         self.physiboss_add_mutant()
@@ -6481,8 +6489,8 @@ class CellDef(QWidget):
                 for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
                     self.physiboss_add_initial_values()
                     node, value, _, _ = self.physiboss_initial_states[i]
-                    node.setText(initial_value[0])
-                    value.setText(initial_value[1])
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(initial_value["node"]))
+                    value.setText(initial_value["value"])
 
                 self.physiboss_clear_mutants()
                 for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
@@ -7455,10 +7463,10 @@ class CellDef(QWidget):
                         initial_values.text = self.indent14
                         initial_values.tail = self.indent12
                         
-                        for node, value in self.param_d[cdef]['intracellular']['initial_values']:
-                            if node != "" and value != "":
-                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": node})
-                                initial_value.text = value
+                        for initial_value_def in self.param_d[cdef]['intracellular']['initial_values']:
+                            if initial_value_def["node"] != "" and initial_value_def["value"] != "":
+                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": initial_value_def["node"]})
+                                initial_value.text = initial_value_def["value"]
                                 initial_value.tail = self.indent14
                         initial_value.tail = self.indent12
                         

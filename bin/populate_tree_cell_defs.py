@@ -1341,7 +1341,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
                     if uep_intracellular_iv is not None:
                         for initial_value in uep_intracellular_iv:
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append((initial_value.attrib["intracellular_name"], initial_value.text))
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append({"node": initial_value.attrib["intracellular_name"], "value": initial_value.text})
                   
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"] = []
