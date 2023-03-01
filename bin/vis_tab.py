@@ -26,6 +26,8 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
 from collections import deque
 import glob
+import csv
+import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
@@ -211,6 +213,7 @@ class Vis(QWidget):
 
         # self.config_file = "mymodel.xml"
         self.config_path = None
+        self.physiboss_node_dict = {}
         
         self.reset_model_flag = True
         self.xmin = -80
@@ -595,6 +598,17 @@ class Vis(QWidget):
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         self.vbox.addWidget(self.cell_counts_button)
 
+        self.physiboss_qline = None
+        self.physiboss_hbox_1 = None
+        
+        self.physiboss_vis_checkbox = None
+        self.physiboss_vis_flag = False
+        self.physiboss_selected_cell_line = None
+        self.physiboss_selected_node = None
+        self.physiboss_hbox_2 = None
+
+        self.physiboss_cell_type_combobox = None
+        self.physiboss_node_combobox = None
         #-----------
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
 
@@ -783,9 +797,114 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
+    def build_physiboss_info(self):
+        tree = ET.parse(Path(self.config_path))
+        xml_root = tree.getroot()
+        cell_defs = xml_root.find(".//cell_definitions")
+        self.physiboss_node_dict.clear()
+        
+        if cell_defs is not None:
+            for cell_def in cell_defs:
+                intracellular = cell_def.find("phenotype//intracellular")
+                
+                if intracellular is not None and intracellular.get("type").lower() == "maboss":
+                    self.physiboss_node_dict[cell_def.get("name")] = []
+                    bnd_filename = intracellular.find("bnd_filename").text
+                    
+                    with open(os.path.join(os.getcwd(), bnd_filename), "r") as bnd_file:
+                        for line in bnd_file.readlines():        
+                            if line.strip().lower().startswith("node"):
+                                node = line.strip().split(" ")[1]
+                                self.physiboss_node_dict[cell_def.get("name")].append(node)
+                                
+        if len(self.physiboss_node_dict) > 0:
+            self.physiboss_vis_show()
+            self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
+            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[0]])
+        else:
+            self.physiboss_vis_hide()
+            
+            
+    def physiboss_vis_show(self):
+
+        if self.physiboss_vis_checkbox is None:
+                
+            self.physiboss_qline = QHLine()
+            self.vbox.addWidget(self.physiboss_qline)
+            
+            self.physiboss_hbox_1 = QHBoxLayout()
+            
+            self.physiboss_vis_checkbox = QCheckBox('Color by PhysiBoSS node state')
+            self.physiboss_vis_flag = False
+            self.physiboss_vis_checkbox.setEnabled(not self.plot_cells_svg)
+            self.physiboss_vis_checkbox.setChecked(self.physiboss_vis_flag)
+            self.physiboss_vis_checkbox.clicked.connect(self.physiboss_vis_toggle_cb)
+            self.physiboss_hbox_1.addWidget(self.physiboss_vis_checkbox)
+            
+            self.vbox.addLayout(self.physiboss_hbox_1)
+            
+            self.physiboss_hbox_2 = QHBoxLayout()
+
+            self.physiboss_cell_type_combobox = QComboBox()
+            self.physiboss_cell_type_combobox.setEnabled(False)
+            self.physiboss_cell_type_combobox.currentIndexChanged.connect(self.physiboss_vis_cell_type_cb)
+            self.physiboss_node_combobox = QComboBox()
+            self.physiboss_node_combobox.setEnabled(False)
+            self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
+            self.physiboss_hbox_2.addWidget(self.physiboss_cell_type_combobox)
+            self.physiboss_hbox_2.addWidget(self.physiboss_node_combobox)
+
+            self.vbox.addLayout(self.physiboss_hbox_2)
+        
+    def physiboss_vis_hide(self):
+
+        if self.physiboss_vis_checkbox is not None:
+            self.physiboss_vis_checkbox.disconnect()
+            self.physiboss_cell_type_combobox.disconnect()
+            self.physiboss_node_combobox.disconnect()
+            self.physiboss_qline.deleteLater()
+            
+            self.physiboss_vis_checkbox.deleteLater()
+            self.physiboss_hbox_1.deleteLater()
+
+            self.physiboss_cell_type_combobox.deleteLater()
+            self.physiboss_node_combobox.deleteLater()
+
+            self.physiboss_hbox_2.deleteLater()
+
+    def fill_physiboss_cell_types_combobox(self, cell_types):
+        self.physiboss_cell_type_combobox.clear()
+        for s in cell_types:
+            self.physiboss_cell_type_combobox.addItem(s)
+        self.physiboss_selected_cell_line = 0
+    
+    def fill_physiboss_nodes_combobox(self, nodes):
+        self.physiboss_node_combobox.clear()
+        for s in nodes:
+            self.physiboss_node_combobox.addItem(s)
+
+    def physiboss_vis_toggle_cb(self, bval):
+        self.physiboss_vis_flag = bval
+        self.physiboss_cell_type_combobox.setEnabled(bval)
+        self.physiboss_node_combobox.setEnabled(bval)
+        self.cell_scalar_combobox.setEnabled(not bval)
+        self.cell_scalar_cbar_combobox.setEnabled(not bval)
+        self.update_plots()
+        
+    def physiboss_vis_cell_type_cb(self, idx):
+        if idx > 0:
+            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+            self.physiboss_selected_cell_line = idx
+            self.update_plots()
+            
+    def physiboss_vis_node_cb(self, idx):
+        self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
+        self.update_plots()
+        
     
     def update_config_path(self, config_path):
         self.config_path = config_path
+        self.build_physiboss_info()
 
     def output_folder_cb(self):
         # print(f"output_folder_cb(): old={self.output_dir}")
@@ -799,6 +918,7 @@ class Vis(QWidget):
             self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
+            self.physiboss_vis_checkbox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
 
             if self.cax2:
@@ -810,6 +930,7 @@ class Vis(QWidget):
             self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
+            self.physiboss_vis_checkbox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -1902,15 +2023,55 @@ class Vis(QWidget):
         # mcds = pyMCDS(xml_file_root, "tmpdir", microenv=False, graph=False, verbose=True)
         total_min = mcds.get_time()
         # print("    time=",total_min)
-        try:
-            cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
-            return
+        
+        if self.physiboss_vis_flag:
+            try:
+                cell_types = mcds.get_cell_df()["cell_type"]
+            except:
+                print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()['cell_type']")
+                return
+            
+            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+            
+            if not Path(physiboss_state_file).is_file():
+                print("vis_tab.py: plot_cell_scalar(): error file not found ",physiboss_state_file)
+                return
+            
+            cell_scalar = {}
+            with open(physiboss_state_file, newline='') as csvfile:
+                states_reader = csv.reader(csvfile, delimiter=',')
+                    
+                for row in states_reader:
+                    if row[0] != 'ID':
+                        ID = int(row[0])
+                        if cell_types[ID] == self.physiboss_selected_cell_line:
+                            nodes = row[1].split(" -- ")                      
+                            if self.physiboss_selected_node in nodes:
+                                cell_scalar.update({ID: 2})      
+                            else:
+                                cell_scalar.update({ID: 0})
+                        else:
+                            cell_scalar.update({ID: 9})
+                            
+            cell_scalar = pandas.Series(cell_scalar)
+            
+            # To plot green/red/grey cells, we use a qualitative cell map called Set1
+            cbar_name = "Set1"
+            vmin = 0
+            vmax = 9
+            
+        else:
+            try:
+                cell_scalar = mcds.get_cell_df()[cell_scalar_name]
+            except:
+                print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
+                return
+        
+            vmin = cell_scalar.min()
+            vmax = cell_scalar.max()
+            
         num_cells = len(cell_scalar)
         # print("  len(cell_scalar) = ",len(cell_scalar))
-        vmin = cell_scalar.min()
-        vmax = cell_scalar.max()
         # fix_cmap = 0
         # print(f'   cell_scalar.min(), max() = {vmin}, {vmax}')
         cell_vol = mcds.get_cell_df()['total_volume']
@@ -1937,7 +2098,7 @@ class Vis(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=0.5, cmap=cbar_name)
+                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=0.5, cmap=cbar_name, vmin=vmin, vmax=vmax)
             except (ValueError):
                 print("\n------ ERROR: Exception from circles with edges\n")
                 pass
@@ -1949,30 +2110,37 @@ class Vis(QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-        if self.cax2:
+        if not self.physiboss_vis_flag:
+            if self.cax2:
+                try:
+                    self.cax2.remove()
+                except:
+                    pass
+                # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
+                # print(" self.figure.axes= ",self.figure.axes)
+                #ppp
+                ax2_divider = make_axes_locatable(self.ax0)
+                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+                # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
+                # print(" self.figure.axes= ",self.figure.axes)
+                # self.axis_id_cellscalar = len(self.figure.axes) - 1
+                self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                self.cbar2.ax.set_xlabel(cell_scalar_name)
+            else:
+                ax2_divider = make_axes_locatable(self.ax0)
+                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+                self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                # print(" self.figure.axes= ",self.figure.axes)
+                self.cbar2.ax.set_xlabel(cell_scalar_name)
+        
+        elif self.cax2:
             try:
-                self.cax2.remove()
+                    self.cax2.remove()
             except:
                 pass
-            # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            #ppp
-            ax2_divider = make_axes_locatable(self.ax0)
-            self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
-            # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            # self.axis_id_cellscalar = len(self.figure.axes) - 1
-            self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
-        else:
-            ax2_divider = make_axes_locatable(self.ax0)
-            self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
-            self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            # print(" self.figure.axes= ",self.figure.axes)
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
-
+                
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
