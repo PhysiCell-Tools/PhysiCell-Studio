@@ -210,6 +210,8 @@ class Vis(QWidget):
         self.show_plot_range = False
 
         # self.config_file = "mymodel.xml"
+        self.config_path = None
+        
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -781,6 +783,9 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
+    
+    def update_config_path(self, config_path):
+        self.config_path = config_path
 
     def output_folder_cb(self):
         # print(f"output_folder_cb(): old={self.output_dir}")
