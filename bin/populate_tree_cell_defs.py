@@ -1314,6 +1314,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = "12.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = "1.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["start_time"] = "0.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
 
@@ -1323,6 +1324,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_settings.find("intracellular_dt").text if uep_settings.find("intracellular_dt") is not None else "12.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_settings.find("scaling").text if uep_settings.find("scaling") is not None else "1.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_settings.find("time_stochasticity").text if uep_settings.find("time_stochasticity") is not None else "0.0"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["start_time"] = uep_settings.find("start_time").text if uep_settings.find("start_time") is not None else "0.0"
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
                         uep_intracellular_mutants = uep_settings.find("mutations")

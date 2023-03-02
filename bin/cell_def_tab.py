@@ -3377,6 +3377,10 @@ class CellDef(QWidget):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_stochasticity'] = text
     
+    def physiboss_starttime_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['start_time'] = text
+    
     def physiboss_clicked_add_initial_value(self):
         self.physiboss_add_initial_values()
         self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append({
@@ -3991,6 +3995,20 @@ class CellDef(QWidget):
         time_stochasticity_hbox.addWidget(self.physiboss_time_stochasticity)
 
         ly.addLayout(time_stochasticity_hbox)
+
+        starttime_hbox = QHBoxLayout()
+
+        starttime_label = QLabel("Start time")
+        starttime_hbox.addWidget(starttime_label)
+
+        self.physiboss_starttime = QLineEdit()
+        self.physiboss_starttime.textChanged.connect(self.physiboss_starttime_changed)
+        # Commenting it because for french, we need to use a comma, which then get written in the XML and might cause problems
+        # self.physiboss_scaling.setValidator(QtGui.QDoubleValidator())
+
+        starttime_hbox.addWidget(self.physiboss_starttime)
+
+        ly.addLayout(starttime_hbox)
 
 
         initial_states_groupbox = QGroupBox("Initial states")
@@ -6508,6 +6526,7 @@ class CellDef(QWidget):
                 self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
                 self.physiboss_time_stochasticity.setText(self.param_d[cdname]["intracellular"]["time_stochasticity"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
+                self.physiboss_starttime.setText(self.param_d[cdname]["intracellular"]["start_time"])
 
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()      
@@ -7512,6 +7531,10 @@ class CellDef(QWidget):
                     scaling = ET.SubElement(settings, "scaling")
                     scaling.text = self.param_d[cdef]['intracellular']['scaling']
                     scaling.tail = self.indent12
+                    
+                    start_time = ET.SubElement(settings, "start_time")
+                    start_time.text = self.param_d[cdef]['intracellular']['start_time']
+                    start_time.tail = self.indent12
 
                     if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
                         scaling.tail = self.indent14
