@@ -34,6 +34,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QRectF
+locale_en_US = QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
 
 import numpy as np
 import scipy.io
@@ -544,7 +545,9 @@ class Vis(QWidget):
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
         self.cmin.setFixedWidth(cvalue_width)
-        self.cmin.setValidator(QtGui.QDoubleValidator())
+        cmin_validator = QtGui.QDoubleValidator()
+        cmin_validator.setLocale(locale_en_US)
+        self.cmin.setValidator(cmin_validator)
         self.cmin.setEnabled(False)
         hbox.addWidget(self.cmin)
 
@@ -556,7 +559,9 @@ class Vis(QWidget):
         self.cmax.setText('1.0')
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
-        self.cmax.setValidator(QtGui.QDoubleValidator())
+        cmax_validator = QtGui.QDoubleValidator()
+        cmax_validator.setLocale(locale_en_US)
+        self.cmax.setValidator(cmax_validator)
         self.cmax.setEnabled(False)
         hbox.addWidget(self.cmax)
 
