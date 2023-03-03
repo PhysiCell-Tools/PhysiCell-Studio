@@ -6703,6 +6703,9 @@ class CellDef(QWidget):
                 self.physiboss_starttime.setText(self.param_d[cdname]["intracellular"]["start_time"])
                 self.physiboss_global_inheritance_checkbox.setChecked(self.param_d[cdname]["intracellular"]["global_inheritance"] == "True")
 
+                self.physiboss_clear_initial_values()
+                self.physiboss_clear_mutants()
+                self.physiboss_clear_parameters()
                 self.physiboss_clear_node_inheritance()
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()
@@ -6719,21 +6722,18 @@ class CellDef(QWidget):
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(node_inheritance["node"]))
                     flag.setChecked(node_inheritance["flag"] == "True")
                     
-                self.physiboss_clear_initial_values()
                 for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
                     self.physiboss_add_initial_values()
                     node, value, _, _ = self.physiboss_initial_states[i]
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(initial_value["node"]))
                     value.setText(initial_value["value"])
 
-                self.physiboss_clear_mutants()
                 for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
                     self.physiboss_add_mutant()
                     node, value, _, _ = self.physiboss_mutants[i]
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(mutant["node"]))
                     value.setText(mutant["value"])
 
-                self.physiboss_clear_parameters()
                 for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
                     self.physiboss_add_parameter()
                     name, value, _, _ = self.physiboss_parameters[i]
