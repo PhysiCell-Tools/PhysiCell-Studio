@@ -3301,7 +3301,10 @@ class CellDef(QWidget):
             # Here I started by looking at both the bnd and the cfg
             if (
                 t_intracellular is not None 
-                and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
+                and "bnd_filename" in t_intracellular.keys() 
+                and t_intracellular['bnd_filename'] is not None 
+                and len(t_intracellular['bnd_filename']) > 0
+                and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
                 ):
                 list_nodes = []
                 with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
@@ -3373,7 +3376,10 @@ class CellDef(QWidget):
             # Here I started by looking at both the bnd and the cfg
             if (
                 t_intracellular is not None 
-                and "cfg_filename" in t_intracellular.keys() and t_intracellular['cfg_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["cfg_filename"])) 
+                and "cfg_filename" in t_intracellular.keys() 
+                and t_intracellular['cfg_filename'] is not None \
+                and len(t_intracellular['cfg_filename']) > 0
+                and os.path.exists(os.path.join(os.getcwd(), t_intracellular["cfg_filename"])) 
                 # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
                 ):
                 list_parameters = []
