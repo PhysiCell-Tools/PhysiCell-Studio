@@ -1391,6 +1391,13 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     })
                                     
                 # Update widget values
+                cell_def_tab.physiboss_clear_initial_values()
+                cell_def_tab.physiboss_clear_parameters()
+                cell_def_tab.physiboss_clear_mutants()
+                cell_def_tab.physiboss_clear_node_inheritance()
+                cell_def_tab.physiboss_clear_inputs()
+                cell_def_tab.physiboss_clear_outputs()
+                
                 cell_def_tab.physiboss_update_list_signals()
                 cell_def_tab.physiboss_update_list_behaviours()
                 cell_def_tab.physiboss_update_list_nodes()
