@@ -3970,6 +3970,7 @@ class CellDef(QWidget):
                 self.physiboss_time_step.setText("12.0")
                 self.physiboss_time_stochasticity.setText("0.0")
                 self.physiboss_scaling.setText("1.0")
+                self.physiboss_starttime.setText("0.0")
                 self.physiboss_global_inheritance_checkbox.setChecked(False)
                 self.param_d[self.current_cell_def]["intracellular"] = None
                 
@@ -4011,6 +4012,9 @@ class CellDef(QWidget):
             
             if 'scaling' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_scaling.setText("1.0")
+            
+            if 'start_time' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.physiboss_starttime.setText("0.0")
                 
             if 'global_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_global_inheritance_checkbox.setChecked(False)
