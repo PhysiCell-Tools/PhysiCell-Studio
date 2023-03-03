@@ -20,7 +20,7 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class UserParams(QtWidgets.QWidget):
-    def __init__(self, dark_mode):
+    def __init__(self):
         super().__init__()
 
         # self.current_param = None
@@ -33,26 +33,49 @@ class UserParams(QtWidgets.QWidget):
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
-        if dark_mode:
-            self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
-            self.row_color2 =  "background-color: rgb( 99, 99, 10)"
 
         #-------------------------------------------
         self.label_width = 150
         self.units_width = 190
 
+        self.combobox_width = 90
+
         self.scroll_area = QtWidgets.QScrollArea()
         # splitter.addWidget(self.scroll)
         # self.cell_def_horiz_layout.addWidget(self.scroll)
 
+        stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            QPushButton{
+                color: #000000;
+                background-color: #FFFFFF; 
+                border-style: outset;
+                border-radius: 10px;
+                border-color: black;
+                padding: 4px;
+            }
+            """
+                # border-style: outset;
+                # border-radius: 10px;
+                # border-color: black;
+                # padding: 4px;
+
         self.user_params = QtWidgets.QWidget()
+        # self.user_params.setStyleSheet(stylesheet)
+
         self.main_layout = QtWidgets.QVBoxLayout()
         # self.main_layout.addStretch(0)
 
         #------------------
+        button_width = 200
         controls_hbox = QtWidgets.QHBoxLayout()
         # self.new_button = QPushButton("New")
         self.new_button = QPushButton("Append 10 more rows")
+        self.new_button.setFixedWidth(button_width)
+        self.new_button.setStyleSheet("background-color: lightgreen; color: black")
         controls_hbox.addWidget(self.new_button)
         self.new_button.clicked.connect(self.append_more_cb)
 
@@ -60,6 +83,8 @@ class UserParams(QtWidgets.QWidget):
         # controls_hbox.addWidget(self.copy_button)
 
         self.clear_button = QPushButton("Clear selected rows")
+        self.clear_button.setFixedWidth(button_width)
+        self.clear_button.setStyleSheet("background-color: yellow; color: black")
         controls_hbox.addWidget(self.clear_button)
         self.clear_button.clicked.connect(self.clear_rows_cb)
 
@@ -98,7 +123,8 @@ class UserParams(QtWidgets.QWidget):
         self.description = []
 
         self.type_dropdown = QComboBox()
-        self.type_dropdown.setFixedWidth(300)
+        self.type_dropdown.setStyleSheet("color: #000000; background-color: #FFFFFF;")
+        # self.type_dropdown.setFixedWidth(450)
         # self.type_dropdown.currentIndexChanged.connect(self.cycle_changed_cb)
         self.type_dropdown.addItem("int")
         self.type_dropdown.addItem("double")
@@ -125,6 +151,8 @@ class UserParams(QtWidgets.QWidget):
             #-----
             # w = QLineEdit()
             w_cbox = QComboBox()
+            w_cbox.setStyleSheet("color: #000000; background-color: #FFFFFF;")
+            w_cbox.setFixedWidth(self.combobox_width)
             # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
             w_cbox.addItem("double")
             w_cbox.addItem("int")
@@ -246,6 +274,8 @@ class UserParams(QtWidgets.QWidget):
 
             w = QComboBox()
             # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
+            w.setStyleSheet("color: #000000; background-color: #FFFFFF;")
+            w.setFixedWidth(self.combobox_width)
             w.addItem("double")
             w.addItem("int")
             w.addItem("bool")

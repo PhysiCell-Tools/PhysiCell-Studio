@@ -51,13 +51,12 @@ class QHLine(QFrame):
 
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab, dark_mode):
+    def __init__(self, config_tab, celldef_tab):
         super().__init__()
         # global self.config_params
 
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
-        self.dark_mode = dark_mode
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -138,6 +137,25 @@ class ICs(QWidget):
         label_height = 20
         units_width = 70
 
+        self.combobox_stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+            # QCheckBox::indicator{
+            #     color: #000000;
+            #     background-color: #FFFFFF; 
+            # }
+        
+        self.stylesheet = """ 
+            QLineEdit:disabled {
+                background-color: rgb(236,236,236);
+                color: rgb(99,99,99);
+            }
+            """
+
+
         self.scroll_plot = QScrollArea()  # might contain centralWidget
         # self.create_figure()
 
@@ -145,6 +163,7 @@ class ICs(QWidget):
         self.vbox.addStretch(1)
 
         self.ics_params = QWidget()
+        self.ics_params.setStyleSheet(self.combobox_stylesheet)
         self.ics_params.setLayout(self.vbox)
 
         #----
@@ -154,6 +173,7 @@ class ICs(QWidget):
         hbox.addWidget(label)
 
         self.celltype_combobox = QComboBox()
+        # self.celltype_combobox.setStyleSheet(self.combobox_stylesheet)
         self.celltype_combobox.setFixedWidth(200)  # how wide is sufficient?
         hbox.addWidget(self.celltype_combobox)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
@@ -162,6 +182,7 @@ class ICs(QWidget):
         #----
         hbox = QHBoxLayout()
         self.geom_combobox = QComboBox()
+        # self.geom_combobox.setStyleSheet(self.combobox_stylesheet)
         w_width = 150
         self.geom_combobox.setFixedWidth(w_width)
         self.geom_combobox.addItem("annulus/disk")
@@ -186,6 +207,7 @@ class ICs(QWidget):
         hbox.addWidget(label)
 
         self.num_cells = QLineEdit()
+        self.num_cells.setStyleSheet(self.stylesheet)
         fixed_width_value = 80
         self.num_cells.setFixedWidth(fixed_width_value)
         self.num_cells.setValidator(QtGui.QIntValidator(1,100000))
@@ -274,26 +296,20 @@ class ICs(QWidget):
         btn_width = 80
         self.clear_button = QPushButton("Clear all")
         self.clear_button.setFixedWidth(btn_width)
-        self.clear_button.setStyleSheet("background-color: yellow")
-        if self.dark_mode:
-            self.clear_button.setStyleSheet("background-color: IndianRed")
+        self.clear_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         self.clear_button.clicked.connect(self.clear_cb)
         hbox.addWidget(self.clear_button)
 
         self.plot_button = QPushButton("Plot")
         self.plot_button.setFixedWidth(btn_width)
-        self.plot_button.setStyleSheet("background-color: lightgreen")
-        if self.dark_mode:
-            self.plot_button.setStyleSheet("background-color: green")
+        self.plot_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.plot_button.clicked.connect(self.plot_cb)
         hbox.addWidget(self.plot_button)
 
         self.undo_button = QPushButton("Undo last")
         self.undo_button.setFixedWidth(btn_width)
-        self.undo_button.setStyleSheet("background-color: yellow")
-        if self.dark_mode:
-            self.undo_button.setStyleSheet("background-color: IndianRed")
+        self.undo_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.undo_button.clicked.connect(self.undo_cb)
         hbox.addWidget(self.undo_button)
@@ -314,9 +330,7 @@ class ICs(QWidget):
         hbox = QHBoxLayout()
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(btn_width)
-        self.save_button.setStyleSheet("background-color: lightgreen")
-        if self.dark_mode:
-            self.save_button.setStyleSheet("background-color: green")
+        self.save_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.save_button.clicked.connect(self.save_cb)
         hbox.addWidget(self.save_button)

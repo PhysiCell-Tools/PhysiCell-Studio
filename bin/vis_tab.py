@@ -29,6 +29,9 @@ import glob
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtGui import QPainter
+from PyQt5.QtCore import QRectF
 
 import numpy as np
 import scipy.io
@@ -44,17 +47,117 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+class SvgWidget(QSvgWidget):
+    def __init__(self, *args):
+        QSvgWidget.__init__(self, *args)
+
+    def paintEvent(self, event):
+        renderer = self.renderer()
+        if renderer != None:
+            painter = QPainter(self)
+            size = renderer.defaultSize()
+            ratio = size.height()/size.width()
+            length = min(self.width(), self.height())
+            renderer.render(painter, QRectF(0, 0, length, ratio * length))
+            painter.end()
+
+class Legend(QWidget):
+    # def __init__(self, doc_absolute_path, nanohub_flag):
+    def __init__(self, nanohub_flag):
+        super().__init__()
+
+        # self.doc_absolute_path = doc_absolute_path
+
+        self.process = None
+        self.output_dir = '.'   # set in pmb.py
+        self.current_dir = '.'   # reset in pmb.py
+        self.pmb_data_dir = ''   # reset in pmb.py
+        
+        #-------------------------------------------
+        self.scroll = QScrollArea()  # might contain centralWidget
+
+        self.svgView = SvgWidget()
+        self.vbox = QVBoxLayout()
+
+        self.svgView.setLayout(self.vbox)
+
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setWidgetResizable(True)
+        # self.scroll.setWidgetResizable(False)
+
+        self.scroll.setWidget(self.svgView) 
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.scroll)
+
+    def clear_legend(self):
+        legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
+        self.svgView.load(legend_file)
+
+    def reload_legend(self):
+        print('reload_legend(): self.output_dir = ',self.output_dir)
+        for idx in range(4):
+            print("waiting for creation of legend.svg ...",idx)
+            # path = Path("legend.svg")
+            path = Path(self.output_dir,"legend.svg")
+            # path = Path(self.current_dir,self.output_dir,"legend.svg")
+            print("path = ",path)
+            if path.is_file():
+            # try:
+                # self.svgView.load("legend.svg")
+                full_fname = os.path.join(self.output_dir, "legend.svg")
+                # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
+                print("legend_tab.py: full_fname = ",full_fname)
+                self.svgView.load(full_fname)
+                break
+            # except:
+            #     path = Path(self.current_dir,self.output_dir,"legend.svg")
+            #     time.sleep(1)
+            else:
+                path = Path(self.output_dir,"legend.svg")
+                # path = Path(self.current_dir,self.output_dir,"legend.svg")
+                time.sleep(1)
+
+#------------------------------
+class LegendPlotWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        # self.label = QLabel("Cell populations")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setStyleSheet("background-color:transparent;")
+        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
+class PopulationPlotWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("Cell populations")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setStyleSheet("background-color:transparent;")
+        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
         # self.setFrameShadow(QFrame.Plain)
-        self.setStyleSheet("border:1px solid black")
+        # self.setStyleSheet("border:1px solid black")
 
 class Vis(QWidget):
 
-    def __init__(self, nanohub_flag, dark_mode):
+    def __init__(self, nanohub_flag, run_tab):
         super().__init__()
         # global self.config_params
 
@@ -62,9 +165,13 @@ class Vis(QWidget):
         self.mech_voxel_size = 30
 
         self.nanohub_flag = nanohub_flag
-        self.dark_mode = dark_mode
+        self.run_tab = run_tab
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
+
+        self.population_plot = None
+        self.celltype_name = []
+        self.celltype_color = []
 
         self.animating_flag = False
 
@@ -179,7 +286,53 @@ class Vis(QWidget):
         label_height = 20
         units_width = 70
 
+        # Beware: padding seems to alter the behavior; adding scroll arrows to choices list!
+                # padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px;
+                # height: 30px;
+        self.stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+                height: 20px;
+            }
+            QComboBox:disabled {
+                background-color: rgb(199,199,199);
+                color: rgb(99,99,99);
+            }
+            QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; } 
+            QPushButton:hover { border: 1px solid; border-radius: 3px; border-color: rgb(33, 77, 115); } QPushButton:focus { outline-color: transparent; border: 2px solid; border-color: rgb(151, 195, 243); } QPushButton:pressed{ background-color: rgb(145, 255, 145); } 
+            QPushButton:disabled { color: black; border-color: grey; background-color: rgb(199,199,199); }
+
+            """
+            # QPushButton{ font-family: "Segoe UI"; font-size: 8pt; border: 1px solid; border-color: rgb(46, 103, 156); border-radius: 3px; padding-right: 10px; padding-left: 10px; padding-top: 5px; padding-bottom: 5px; background-color: rgb(77, 138, 201); color: white; font: bold; width: 64px; } 
+            # QPushButton{
+            #     color:#000000;
+            #     background-color: lightgreen; 
+            #     border-style: outset;
+            #     border-color: black;
+            #     padding: 2px;
+            # }
+            # QLineEdit:disabled {
+            #     background-color: rgb(199,199,199);
+            #     color: rgb(99,99,99);
+            # }
+            # QPushButton:disabled {
+            #     background-color: rgb(199,199,199);
+            # }
+                # color: #000000;
+                # background-color: #FFFFFF; 
+                # border-style: outset;
+                # border-width: 2px;
+                # border-radius: 10px;
+                # border-color: beige;
+                # font: bold 14px;
+                # min-width: 10em;
+                # padding: 6px;
+                # padding: 1px 18px 1px 3px;
+
+
         self.substrates_combobox = QComboBox()
+        # self.substrates_combobox.setStyleSheet(self.stylesheet)
         self.substrates_combobox.setEnabled(False)
         self.field_dict = {}
         self.field_min_max = {}
@@ -206,14 +359,16 @@ class Vis(QWidget):
         # self.vbox.addStretch(0)
         self.create_vis_UI()
 
+
     def create_vis_UI(self):
-        #---------------------
+
         splitter = QSplitter()
         self.scroll_params = QScrollArea()
         splitter.addWidget(self.scroll_params)
 
         #---------------------
         self.stackw = QStackedWidget()
+        self.stackw.setStyleSheet(self.stylesheet)  # will/should apply to all children widgets
         # self.stackw.setCurrentIndex(0)
 
         self.controls1 = QWidget()
@@ -259,9 +414,7 @@ class Vis(QWidget):
         #------
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
-        self.play_button.setStyleSheet("background-color : lightgreen")
-        if self.dark_mode:
-            self.play_button.setStyleSheet("background-color : green")
+        # self.play_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         self.vbox.addWidget(self.play_button)
@@ -328,9 +481,8 @@ class Vis(QWidget):
 
         self.custom_button = QPushButton("append custom data")
         self.custom_button.setFixedWidth(150)
-        self.custom_button.setStyleSheet("background-color : lightgreen")
-        if self.dark_mode:
-            self.custom_button.setStyleSheet("background-color : green")
+        self.custom_button.setEnabled(False)
+        # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.custom_button.clicked.connect(self.append_custom_cb)
         self.vbox.addWidget(self.custom_button)
@@ -383,7 +535,6 @@ class Vis(QWidget):
         # label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
         self.cmin = QLineEdit()
-        self.cmin.setEnabled(False)
         self.cmin.setText('0.0')
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
@@ -397,7 +548,6 @@ class Vis(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox.addWidget(label)
         self.cmax = QLineEdit()
-        self.cmin.setEnabled(False)
         self.cmax.setText('1.0')
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
@@ -424,8 +574,24 @@ class Vis(QWidget):
         self.output_folder = QLineEdit()
         self.output_folder.returnPressed.connect(self.output_folder_cb)
         hbox.addWidget(self.output_folder)
+
+        label = QLabel("(then 'Enter')")
+        hbox.addWidget(label)
+
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
+
+        # label = QLabel("(press 'Enter' to change)")
+        # self.vbox.addWidget(label)
+
+        self.vbox.addWidget(QHLine())
+
+        #------------------
+        self.cell_counts_button = QPushButton("Population plot")
+        # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.cell_counts_button.setFixedWidth(200)
+        self.cell_counts_button.clicked.connect(self.cell_counts_cb)
+        self.vbox.addWidget(self.cell_counts_button)
 
         #-----------
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
@@ -454,6 +620,179 @@ class Vis(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(splitter)
 
+
+    def get_cell_types_from_config(self):
+        config_file = self.run_tab.config_xml_name.text()
+        print("get_cell_types():  config_file=",config_file)
+        basename = os.path.basename(config_file)
+        print("get_cell_types():  basename=",basename)
+        out_config_file = os.path.join(self.output_dir, basename)
+        print("get_cell_types():  out_config_file=",out_config_file)
+
+        try:
+            self.tree = ET.parse(out_config_file)
+            self.xml_root = self.tree.getroot()
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error opening or parsing " + out_config_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
+
+        try:
+            self.celltype_name.clear()
+            uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
+            if uep:
+                idx = 0
+                for var in uep.findall('cell_definition'):
+                    name = var.attrib['name']
+                    self.celltype_name.append(name)
+            print("get_cell_types_from_config(): ",self.celltype_name)
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error parsing " + out_config_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
+
+        return True
+
+
+    def get_cell_types_from_legend(self):
+        legend_file = os.path.join(self.output_dir, "legend.svg")
+        # print("--get_cell_types():  legend=",legend_file)
+        self.celltype_name.clear()
+        self.celltype_color.clear()
+
+        try:
+            self.tree = ET.parse(legend_file)
+            self.xml_root = self.tree.getroot()
+            print("xml_root=",self.xml_root)
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error opening or parsing " + legend_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
+
+        try: 
+            for var in self.xml_root.findall('{http://www.w3.org/2000/svg}text'):
+                ctname = var.text.strip()
+                print("-- ctname=",ctname)
+                self.celltype_name.append(ctname)
+            print(self.celltype_name)
+
+            idx = 0
+            for var in self.xml_root.findall('{http://www.w3.org/2000/svg}circle'):
+                if idx % 2:
+                    cattr = var.attrib
+                    print("-- cattr=",cattr)
+                    print("-- cattr['fill']=",cattr['fill'])
+                    self.celltype_color.append(cattr['fill'])
+                idx += 1
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error parsing " + legend_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
+
+        return True
+
+
+    def cell_counts_cb(self):
+        print("---- cell_counts_cb(): --> window for 2D population plots")
+        # self.analysis_data_wait.value = 'compute n of N ...'
+
+        if not self.get_cell_types_from_legend():
+            if not self.get_cell_types_from_config():
+                return
+
+        xml_pattern = self.output_dir + "/" + "output*.xml"
+        xml_files = glob.glob(xml_pattern)
+        # print(xml_files)
+        num_xml = len(xml_files)
+        if num_xml == 0:
+            print("last_plot_cb(): WARNING: no output*.xml files present")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        xml_files.sort()
+        # print("sorted: ",xml_files)
+
+        mcds = []
+        for fname in xml_files:
+            basename = os.path.basename(fname)
+            # print("basename= ",basename)
+            # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
+            mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
+
+        # keys_l = list(mcds[0].data['discrete_cells']['data'])
+        # print("keys_l= ",keys_l)
+
+        # xml_files = glob.glob('output*.xml')
+        # xml_file_root = "output%08d.xml" % 0
+        # xml_file = os.path.join(self.output_dir, xml_file_root)
+        # if not Path(xml_file).is_file():
+        #     print("append_custom_cb(): ERROR: file not found",xml_file)
+        #     return
+
+        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+
+
+        # mcds = [pyMCDS(xml_files[i], '.') for i in range(ds_count)]
+        tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
+        print("max tval=",tval)
+
+        # self.yval4 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 4) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100.) == True)) for idx in range(ds_count)] )
+
+        if not self.population_plot:
+            self.population_plot = PopulationPlotWindow()
+
+        self.population_plot.ax0.cla()
+
+        # ctype_plot = []
+        lw = 2
+        # for itype, ctname in enumerate(self.celltypes_list):
+        for itype in range(len(self.celltype_name)):
+            ctname = self.celltype_name[itype]
+            try:
+                ctcolor = self.celltype_color[itype]
+            except:
+                ctcolor = 'C' + str(itype)   # use random colors from matplotlib
+            yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+
+            self.population_plot.ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
+
+            # ctype_plot.append(yval)
+            # print("yval= ",yval)
+
+
+        # p1 = self.ax1.plot(self.xval, self.yval4, label='Mac', linewidth=3, color=self.mac_color)
+        # p2 = self.ax1.plot(self.xval, self.yval5, linestyle='dashed', label='Neut', linewidth=3, color=self.neut_color)
+
+        # self.population_plot.ax0.plot(tval,yval,'r-')
+        # self.population_plot.ax0.plot(tval,yval0,yval1)
+        # self.population_plot.ax0.plot(tval, yval1, label='ctype1', linewidth=lw, color="red")
+        # self.population_plot.ax0.grid()
+        self.population_plot.ax0.set_xlabel('time (mins)')
+        self.population_plot.ax0.set_ylabel('# of cells')
+        self.population_plot.ax0.set_title("cell populations", fontsize=10)
+        self.population_plot.canvas.update()
+        self.population_plot.canvas.draw()
+        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
+        self.population_plot.show()
+
+
+
     def output_folder_cb(self):
         # print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
@@ -463,6 +802,7 @@ class Vis(QWidget):
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
+            self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
@@ -473,6 +813,7 @@ class Vis(QWidget):
 
         else:
             self.plot_cells_svg = False
+            self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
@@ -950,6 +1291,11 @@ class Vis(QWidget):
         xml_file = os.path.join(self.output_dir, xml_file_root)
         if not Path(xml_file).is_file():
             print("append_custom_cb(): ERROR: file not found",xml_file)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find file " + xml_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
             return
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
@@ -977,7 +1323,7 @@ class Vis(QWidget):
         if not self.animating_flag:
             self.animating_flag = True
             self.play_button.setText("Pause")
-            self.play_button.setStyleSheet("background-color : red")
+            # self.play_button.setStyleSheet("QPushButton {background-color: red; color: black;}")
 
             if self.reset_model_flag:
                 self.reset_model()
@@ -989,7 +1335,7 @@ class Vis(QWidget):
         else:
             self.animating_flag = False
             self.play_button.setText("Play")
-            self.play_button.setStyleSheet("background-color : lightgreen")
+            # self.play_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
             self.timer.stop()
 
 

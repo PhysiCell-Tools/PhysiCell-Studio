@@ -26,14 +26,13 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class RunModel(QWidget):
-    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu, dark_mode):
+    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu):
         super().__init__()
 
         self.nanohub_flag = nanohub_flag
         self.tab_widget = tab_widget
         self.rules_flag = rules_flag
         self.download_menu = download_menu
-        self.dark_mode = dark_mode
 
         #-------------------------------------------
         # used with nanoHUB app
@@ -75,14 +74,12 @@ class RunModel(QWidget):
         hbox = QHBoxLayout()
 
         self.run_button = QPushButton("Run Simulation")
-        self.run_button.setStyleSheet("background-color: lightgreen")
-        if self.dark_mode:
-            self.run_button.setStyleSheet("background-color: green")
+        self.run_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         hbox.addWidget(self.run_button)
         self.run_button.clicked.connect(self.run_model_cb)
 
         self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setStyleSheet("background-color: red")
+        self.cancel_button.setStyleSheet("QPushButton {background-color: tomato; color: black;}")
         # self.cancel_button.setStyleSheet("background-color: rgb(250,50,50)")
         hbox.addWidget(self.cancel_button)
         self.cancel_button.clicked.connect(self.cancel_model_cb)

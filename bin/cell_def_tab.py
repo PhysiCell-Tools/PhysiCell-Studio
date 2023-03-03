@@ -49,6 +49,47 @@ from PyQt5.QtGui import QDoubleValidator
 # from cell_def_custom_data import CustomData
 
 
+class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
+    def __init__(self):
+        super(QLineEdit_color, self).__init__()
+        # newtab.setStyleSheet("background-color: rgb(236,236,236)")
+        style = """
+            QLineEdit {
+                color: black;
+                background-color: white; 
+            }
+            QLineEdit:disabled {
+                background-color: rgb(199,199,199);
+            }
+            """
+        self.setStyleSheet(style)
+        # self.setStyleSheet("background-color: white")
+
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+        checkbox_style = """
+                QCheckBox::indicator:pressed
+                {
+                    background-color: lightgreen;
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+                # color:#000000;
+                # background-color:#FFFFFF; 
+                # border-style: outset;
+                # border-radius: 10px;
+                # border-color: black;
+                # padding: 4px;
+        # self.setStyleSheet("background-color: white")
+        self.setStyleSheet(checkbox_style)
 
 class QHLine(QFrame):
     def __init__(self):
@@ -72,7 +113,7 @@ class MyQLineEdit(QLineEdit):
     prev = None
 
 class CellDef(QWidget):
-    def __init__(self, dark_mode):
+    def __init__(self):
         super().__init__()
         # global self.params_cell_def
 
@@ -80,7 +121,6 @@ class CellDef(QWidget):
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
         self.num_dec = 5  # how many digits to right of decimal point?
-        self.dark_mode = dark_mode
 
         # self.chemotactic_sensitivity_dict = {}   # rwh - bogus/not useful since we need per cell type
         self.default_sval = '0.0'  # default scalar value (as string)
@@ -92,9 +132,24 @@ class CellDef(QWidget):
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
-        if self.dark_mode:
-            self.row_color1 = "background-color: darkslategray"  # = rgb( 47, 79, 79)
-            self.row_color2 =  "background-color: rgb( 99, 99, 10)"
+
+        self.combobox_stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+        self.checkbox_style = """
+                QCheckBox::indicator:pressed
+                {
+                    background-color: lightgreen;
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    border: 1px solid #5A5A5A;
+                    background-color: rgb(236,236,236);
+                }
+                """
 
         self.ics_tab = None
 
@@ -148,6 +203,8 @@ class CellDef(QWidget):
         # TODO: check if these names must be specific in the C++ 
         self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
 
+        self.stacked_volume = QStackedWidget()
+
         # ugly attempt to prettyprint XML
         self.indent1 = '\n'
         self.indent6 = '\n      '
@@ -183,6 +240,13 @@ class CellDef(QWidget):
         # tree_widget_height = 1200
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; meh.
+        stylesheet = """
+        QTreeWidget::item:selected{
+            background-color: rgb(236,236,236);
+            color: black;
+        }
+        """
+        self.tree.setStyleSheet(stylesheet)  # don't allow arrow keys to select
         self.tree.setFocusPolicy(QtCore.Qt.NoFocus)  # don't allow arrow keys to select
         # self.tree.setStyleSheet("background-color: lightgray")
         # self.tree.setFixedWidth(tree_widget_width)
@@ -219,25 +283,19 @@ class CellDef(QWidget):
         # self.controls_hbox = QHBoxLayout()
         self.new_button = QPushButton("New")
         self.new_button.clicked.connect(self.new_cell_def)
-        button_color_str = "background-color: lightgreen"
-        if self.dark_mode:
-            button_color_str = "background-color: green"
-        self.new_button.setStyleSheet(button_color_str)
+        self.new_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.controls_hbox.addWidget(self.new_button)
         tree_w_hbox.addWidget(self.new_button)
 
         self.copy_button = QPushButton("Copy")
         self.copy_button.clicked.connect(self.copy_cell_def)
-        self.copy_button.setStyleSheet(button_color_str)
+        self.copy_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.controls_hbox.addWidget(self.copy_button)
         tree_w_hbox.addWidget(self.copy_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_cell_def)
-        button_color_str = "background-color: yellow"
-        if self.dark_mode:
-            button_color_str = "background-color: IndianRed"
-        self.delete_button.setStyleSheet(button_color_str)
+        self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         # self.controls_hbox.addWidget(self.delete_button)
         tree_w_hbox.addWidget(self.delete_button)
 
@@ -279,6 +337,30 @@ class CellDef(QWidget):
         #     background: green;
         # }
         # ''')
+        phenotab_stylesheet = """ 
+            {
+            background-color: rgb(236,236,236)
+            }
+            QLineEdit {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            QLabel {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            QPushButton {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+        lineedit_stylesheet = """ 
+            background-color: rgb(236,236,236);
+            QLineEdit {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
         self.tab_widget.addTab(self.create_cycle_tab(),"Cycle")
         self.tab_widget.addTab(self.create_death_tab(),"Death")
         self.tab_widget.addTab(self.create_volume_tab(),"Volume")
@@ -548,6 +630,23 @@ class CellDef(QWidget):
         logging.debug(f'\n====================== create_cycle_tab ===================')
         # self.group_cycle = QGroupBox()
         self.params_cycle = QWidget()
+
+        stylesheet = """ 
+            QTabBar::tab:selected {background: orange;}  # dodgerblue
+
+            QLabel {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            QPushButton {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+
+        # self.params_cycle.setStyleSheet("QLineEdit { background-color: white }")
+        self.params_cycle.setStyleSheet("background-color: rgb(236,236,236)")
+        # background:rgb(200,100,150)
         self.vbox_cycle = QVBoxLayout()
         # glayout = QGridLayout()
 
@@ -568,6 +667,12 @@ class CellDef(QWidget):
 
         #----------------------------
         self.cycle_dropdown = QComboBox()
+        # self.cycle_dropdown.setStyleSheet("background-color: rgb(236,236,236)")
+
+        # self.cycle_dropdown.setStyleSheet("background-color: white")
+        self.cycle_dropdown.setStyleSheet(self.combobox_stylesheet)
+        # self.cycle_dropdown.setStyleSheet("background-color: white")
+        # self.cycle_dropdown.setStyleSheet("text: black")
         self.cycle_dropdown.setFixedWidth(300)
         # self.cycle_dropdown.currentIndex.connect(self.cycle_changed_cb)
         self.cycle_dropdown.currentIndexChanged.connect(self.cycle_changed_cb)
@@ -609,6 +714,7 @@ class CellDef(QWidget):
 
         # transition rates
         self.stack_trate_live = QWidget()
+        # self.stack_trate_live .setStyleSheet("QLineEdit { background-color: white }")
         self.stack_trate_Ki67 = QWidget()
         self.stack_trate_advancedKi67 = QWidget()
         self.stack_trate_flowcyto = QWidget()
@@ -672,6 +778,9 @@ class CellDef(QWidget):
         self.stack_trate_live_idx = idx_stacked_widget 
         logging.debug(f' new stacked widget: trate live -------------> {idx_stacked_widget}')
         self.stacked_cycle.addWidget(self.stack_trate_live)  # <------------- stack widget 0
+
+        # arg, following seems to be required, in spite of pmb.py doing pmb_app.setStyleSheet("QLineEdit { background-color: white }")  !!
+        self.stacked_cycle.setStyleSheet("QLineEdit { background-color: white }")
 
 
         #------ Cycle transition rates (Ki67) ----------------------
@@ -1440,6 +1549,8 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_death_tab(self):
         death_tab = QWidget()
+        death_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        death_tab.setStyleSheet("QLineEdit { background-color: white }")
         # self.scroll_params = QScrollArea()
         death_tab_scroll = QScrollArea()
         glayout = QGridLayout()
@@ -2029,6 +2140,18 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_volume_tab(self):
         volume_tab = QWidget()
+        lineedit_stylesheet = """ 
+            background-color: rgb(236,236,236);
+            QLineEdit {
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+        volume_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        # volume_tab.setStyleSheet(lineedit_stylesheet)
+        # volume_tab.setStyleSheet("background-color: rgb(236,236,236)"
+            # "QLineEdit {color: #000000; background-color: #FFFFFF;}")
+        # volume_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
         # vlayout = QVBoxLayout()
 
@@ -2048,7 +2171,7 @@ class CellDef(QWidget):
         # self.volume_total_hbox.addWidget(label)
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_total = QLineEdit()
+        self.volume_total = QLineEdit_color()
         self.volume_total.textChanged.connect(self.volume_total_changed)
         self.volume_total.setValidator(QtGui.QDoubleValidator())
         # self.volume_total_hbox.addWidget(self.volume_total)
@@ -2068,7 +2191,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_fluid_fraction = QLineEdit()
+        self.volume_fluid_fraction = QLineEdit_color()
         self.volume_fluid_fraction.textChanged.connect(self.volume_fluid_fraction_changed)
         self.volume_fluid_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2085,7 +2208,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_nuclear = QLineEdit()
+        self.volume_nuclear = QLineEdit_color()
         self.volume_nuclear.textChanged.connect(self.volume_nuclear_changed)
         self.volume_nuclear.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2106,7 +2229,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_fluid_change_rate = QLineEdit()
+        self.volume_fluid_change_rate = QLineEdit_color()
         self.volume_fluid_change_rate.textChanged.connect(self.volume_fluid_change_rate_changed)
         self.volume_fluid_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2123,7 +2246,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_cytoplasmic_biomass_change_rate = QLineEdit()
+        self.volume_cytoplasmic_biomass_change_rate = QLineEdit_color()
         self.volume_cytoplasmic_biomass_change_rate.textChanged.connect(self.volume_cytoplasmic_biomass_change_rate_changed)
         self.volume_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2140,7 +2263,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_nuclear_biomass_change_rate = QLineEdit()
+        self.volume_nuclear_biomass_change_rate = QLineEdit_color()
         self.volume_nuclear_biomass_change_rate.textChanged.connect(self.volume_nuclear_biomass_change_rate_changed)
         self.volume_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2159,7 +2282,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_calcified_fraction = QLineEdit()
+        self.volume_calcified_fraction = QLineEdit_color()
         self.volume_calcified_fraction.textChanged.connect(self.volume_calcified_fraction_changed)
         self.volume_calcified_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcified_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2176,7 +2299,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_calcification_rate = QLineEdit()
+        self.volume_calcification_rate = QLineEdit_color()
         self.volume_calcification_rate.textChanged.connect(self.volume_calcification_rate_changed)
         self.volume_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2194,7 +2317,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.relative_rupture_volume = QLineEdit()
+        self.relative_rupture_volume = QLineEdit_color()
         self.relative_rupture_volume.textChanged.connect(self.relative_rupture_volume_changed)
         self.relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2218,6 +2341,8 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_mechanics_tab(self):
         mechanics_tab = QWidget()
+        mechanics_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        # mechanics_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: mechanics")
@@ -2225,12 +2350,14 @@ class CellDef(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         # self.vbox.addWidget(label)
 
-        self.is_movable_w = QCheckBox("is_movable")
-        self.is_movable_w.setChecked(True)
-        self.is_movable_w.setEnabled(False)   # disabled until implemented in C++
-        self.is_movable_w.clicked.connect(self.is_movable_cb)
+        # opposite of 'is_movable' in C++
+        self.unmovable_w = QCheckBox_custom("unmovable (not available yet)")
+        # self.unmovable_w.setStyleSheet(self.checkbox_style)
+        self.unmovable_w.setEnabled(True)   # disabled until implemented in C++?
+        self.unmovable_w.setChecked(False)
+        self.unmovable_w.clicked.connect(self.unmovable_cb)
         idr = 0
-        glayout.addWidget(self.is_movable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
     # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
     # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
@@ -2241,7 +2368,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_cell_adhesion_strength = QLineEdit()
+        self.cell_cell_adhesion_strength = QLineEdit_color()
         self.cell_cell_adhesion_strength.textChanged.connect(self.cell_cell_adhesion_strength_changed)
         self.cell_cell_adhesion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_cell_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2258,7 +2385,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_cell_repulsion_strength = QLineEdit()
+        self.cell_cell_repulsion_strength = QLineEdit_color()
         self.cell_cell_repulsion_strength.textChanged.connect(self.cell_cell_repulsion_strength_changed)
         self.cell_cell_repulsion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_cell_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2277,7 +2404,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_bm_adhesion_strength = QLineEdit()
+        self.cell_bm_adhesion_strength = QLineEdit_color()
         self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
         self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2296,7 +2423,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_bm_repulsion_strength = QLineEdit()
+        self.cell_bm_repulsion_strength = QLineEdit_color()
         self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
         self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2314,7 +2441,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.relative_maximum_adhesion_distance = QLineEdit()
+        self.relative_maximum_adhesion_distance = QLineEdit_color()
         self.relative_maximum_adhesion_distance.textChanged.connect(self.relative_maximum_adhesion_distance_changed)
         self.relative_maximum_adhesion_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.relative_maximum_adhesion_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2332,10 +2459,11 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_adhesion_affinity_dropdown = QComboBox()
+        self.cell_adhesion_affinity_dropdown.setStyleSheet(self.combobox_stylesheet)
         glayout.addWidget(self.cell_adhesion_affinity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.cell_adhesion_affinity_dropdown.currentIndexChanged.connect(self.cell_adhesion_affinity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.cell_adhesion_affinity = QLineEdit()
+        self.cell_adhesion_affinity = QLineEdit_color()
         self.cell_adhesion_affinity.textChanged.connect(self.cell_adhesion_affinity_changed)
         self.cell_adhesion_affinity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2360,7 +2488,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_relative_equilibrium_distance = QLineEdit()
+        self.set_relative_equilibrium_distance = QLineEdit_color()
         self.set_relative_equilibrium_distance.textChanged.connect(self.set_relative_equilibrium_distance_changed)
         self.set_relative_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_relative_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2381,7 +2509,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_absolute_equilibrium_distance = QLineEdit()
+        self.set_absolute_equilibrium_distance = QLineEdit_color()
         self.set_absolute_equilibrium_distance.textChanged.connect(self.set_absolute_equilibrium_distance_changed)
         self.set_absolute_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_absolute_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2407,7 +2535,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.elastic_constant = QLineEdit()
+        self.elastic_constant = QLineEdit_color()
         self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2426,7 +2554,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.attachment_rate = QLineEdit()
+        self.attachment_rate = QLineEdit_color()
         self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2445,7 +2573,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.detachment_rate = QLineEdit()
+        self.detachment_rate = QLineEdit_color()
         self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2470,6 +2598,8 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_motility_tab(self):
         motility_tab = QWidget()
+        motility_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        # motility_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: motility")
@@ -2489,7 +2619,7 @@ class CellDef(QWidget):
         idr = 0
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.speed = QLineEdit()
+        self.speed = QLineEdit_color()
         self.speed.textChanged.connect(self.speed_changed)
         self.speed.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.speed, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2507,7 +2637,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.persistence_time = QLineEdit()
+        self.persistence_time = QLineEdit_color()
         self.persistence_time.textChanged.connect(self.persistence_time_changed)
         self.persistence_time.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.persistence_time, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2524,7 +2654,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.migration_bias = QLineEdit()
+        self.migration_bias = QLineEdit_color()
         self.migration_bias.textChanged.connect(self.migration_bias_changed)
         self.migration_bias.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.migration_bias, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2544,14 +2674,14 @@ class CellDef(QWidget):
         #     </chemotaxis>
         # </options>
         #---
-        self.motility_enabled = QCheckBox("enable motility")
+        self.motility_enabled = QCheckBox_custom("enable motility")
         self.motility_enabled.clicked.connect(self.motility_enabled_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(self.label_width)
         idr += 1
         glayout.addWidget(self.motility_enabled, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.motility_use_2D = QCheckBox("2D")
+        self.motility_use_2D = QCheckBox_custom("2D")
         self.motility_use_2D.clicked.connect(self.motility_use_2D_cb)
         # self.motility_use_2D.setAlignment(QtCore.Qt.AlignRight)
         glayout.addWidget(self.motility_use_2D, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2567,11 +2697,12 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.chemotaxis_enabled = QCheckBox("enabled")
+        self.chemotaxis_enabled = QCheckBox_custom("enabled")
         self.chemotaxis_enabled.clicked.connect(self.chemotaxis_enabled_cb)
         glayout.addWidget(self.chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.motility_substrate_dropdown = QComboBox()
+        self.motility_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
         # self.motility_substrate_dropdown.setFixedWidth(240)
         idr += 1
         glayout.addWidget(self.motility_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -2616,15 +2747,16 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.advanced_chemotaxis_enabled = QCheckBox("enabled")
+        self.advanced_chemotaxis_enabled = QCheckBox_custom("enabled")
         self.advanced_chemotaxis_enabled.clicked.connect(self.advanced_chemotaxis_enabled_cb)
         glayout.addWidget(self.advanced_chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.normalize_each_gradient = QCheckBox("normalize gradient")
+        self.normalize_each_gradient = QCheckBox_custom("normalize gradient")
         self.normalize_each_gradient.clicked.connect(self.normalize_each_gradient_cb)
         glayout.addWidget(self.normalize_each_gradient, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         self.motility2_substrate_dropdown = QComboBox()
+        self.motility2_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
         # self.motility_substrate_dropdown.setFixedWidth(240)
         idr += 1
         glayout.addWidget(self.motility2_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -2636,7 +2768,7 @@ class CellDef(QWidget):
         # idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.chemo_sensitivity = QLineEdit()
+        self.chemo_sensitivity = QLineEdit_color()
         self.chemo_sensitivity.textChanged.connect(self.chemo_sensitivity_changed)
         self.chemo_sensitivity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.chemo_sensitivity, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2655,6 +2787,8 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_secretion_tab(self):
         secretion_tab = QWidget()
+        secretion_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        # secretion_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: secretion")
@@ -2705,6 +2839,7 @@ class CellDef(QWidget):
         # self.vbox.addWidget(label)
 
         self.secretion_substrate_dropdown = QComboBox()
+        self.secretion_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
         idr = 0
         glayout.addWidget(self.secretion_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
         self.secretion_substrate_dropdown.currentIndexChanged.connect(self.secretion_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
@@ -2716,7 +2851,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.secretion_rate = QLineEdit()
+        self.secretion_rate = QLineEdit_color()
         self.secretion_rate.textChanged.connect(self.secretion_rate_changed)
         self.secretion_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2735,7 +2870,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.secretion_target = QLineEdit()
+        self.secretion_target = QLineEdit_color()
         self.secretion_target.textChanged.connect(self.secretion_target_changed)
         self.secretion_target.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_target, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2755,7 +2890,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.uptake_rate = QLineEdit()
+        self.uptake_rate = QLineEdit_color()
         self.uptake_rate.textChanged.connect(self.uptake_rate_changed)
         self.uptake_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.uptake_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2772,7 +2907,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.secretion_net_export_rate = QLineEdit()
+        self.secretion_net_export_rate = QLineEdit_color()
         self.secretion_net_export_rate.textChanged.connect(self.secretion_net_export_rate_changed)
         self.secretion_net_export_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.secretion_net_export_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -2839,6 +2974,10 @@ class CellDef(QWidget):
             # </cell_transformations>
 
         interaction_tab = QWidget()
+        interaction_tab.setStyleSheet("background-color: rgb(236,236,236)")
+        # interaction_tab.setStyleSheet("QLineEdit { background-color: white }")
+        # interaction_tab.setStyleSheet("QPushButton { background-color: white }")
+        # interaction_tab.setStyleSheet("QPushButton { color: black }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: interaction")
@@ -2856,7 +2995,7 @@ class CellDef(QWidget):
         idr = 0
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.dead_phagocytosis_rate = QLineEdit()
+        self.dead_phagocytosis_rate = QLineEdit_color()
         self.dead_phagocytosis_rate.textChanged.connect(self.dead_phagocytosis_rate_changed)
         self.dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2875,10 +3014,11 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.live_phagocytosis_dropdown = QComboBox()
+        self.live_phagocytosis_dropdown.setStyleSheet(self.combobox_stylesheet)
         glayout.addWidget(self.live_phagocytosis_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.live_phagocytosis_dropdown.currentIndexChanged.connect(self.live_phagocytosis_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.live_phagocytosis_rate = QLineEdit()
+        self.live_phagocytosis_rate = QLineEdit_color()
         self.live_phagocytosis_rate.textChanged.connect(self.live_phagocytosis_rate_changed)
         self.live_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.live_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2896,10 +3036,11 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.attack_rate_dropdown = QComboBox()
+        self.attack_rate_dropdown.setStyleSheet(self.combobox_stylesheet)
         glayout.addWidget(self.attack_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.attack_rate_dropdown.currentIndexChanged.connect(self.attack_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.attack_rate = QLineEdit()
+        self.attack_rate = QLineEdit_color()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
         self.attack_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2916,7 +3057,7 @@ class CellDef(QWidget):
         idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.damage_rate = QLineEdit()
+        self.damage_rate = QLineEdit_color()
         self.damage_rate.textChanged.connect(self.damage_rate_changed)
         self.damage_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2934,10 +3075,11 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.fusion_rate_dropdown = QComboBox()
+        self.fusion_rate_dropdown.setStyleSheet(self.combobox_stylesheet)
         glayout.addWidget(self.fusion_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.fusion_rate_dropdown.currentIndexChanged.connect(self.fusion_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.fusion_rate = QLineEdit()
+        self.fusion_rate = QLineEdit_color()
         self.fusion_rate.textChanged.connect(self.fusion_rate_changed)
         self.fusion_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.fusion_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2955,10 +3097,11 @@ class CellDef(QWidget):
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_transformation_dropdown = QComboBox()
+        self.cell_transformation_dropdown.setStyleSheet(self.combobox_stylesheet)
         glayout.addWidget(self.cell_transformation_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.cell_transformation_dropdown.currentIndexChanged.connect(self.cell_transformation_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.transformation_rate = QLineEdit()
+        self.transformation_rate = QLineEdit_color()
         self.transformation_rate.textChanged.connect(self.transformation_rate_changed)
         self.transformation_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.transformation_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -3023,11 +3166,11 @@ class CellDef(QWidget):
 
 
     #--------------------------------------------------------
-    def create_molecular_tab(self):
-        label = QLabel("Phenotype: molecular")
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        self.vbox.addWidget(label)
+    # def create_molecular_tab(self):
+    #     label = QLabel("Phenotype: molecular")
+    #     label.setStyleSheet("background-color: orange")
+    #     label.setAlignment(QtCore.Qt.AlignCenter)
+    #     self.vbox.addWidget(label)
 
 
     def choose_bnd_file(self):
@@ -3228,6 +3371,7 @@ class CellDef(QWidget):
         initial_states_node = QLineEdit()
         initial_states_value = QLineEdit()
         initial_states_remove = QPushButton("Delete")
+        initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
         initial_states_node.textChanged.connect(lambda text: self.physiboss_initial_value_node_changed(id, text))
@@ -3402,17 +3546,20 @@ class CellDef(QWidget):
         inputs_editor = QHBoxLayout()
                 
         inputs_signal_dropdown = QComboBox()
+        inputs_signal_dropdown.setStyleSheet(self.combobox_stylesheet)
         inputs_signal_dropdown.setFixedWidth(200)
         for signal in self.physiboss_signals:
             inputs_signal_dropdown.addItem(signal)
         
         inputs_node_dropdown = QComboBox()
+        inputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
         inputs_node_dropdown.setFixedWidth(150)
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 inputs_node_dropdown.addItem(node)
         
         inputs_action = QComboBox()
+        inputs_action.setStyleSheet(self.combobox_stylesheet)
         inputs_action.setFixedWidth(100)
         inputs_action.addItem("activation")
         inputs_action.addItem("inhibition")
@@ -3523,17 +3670,20 @@ class CellDef(QWidget):
 
         outputs_editor = QHBoxLayout()
         outputs_behaviour_dropdown = QComboBox()
+        outputs_behaviour_dropdown.setStyleSheet(self.combobox_stylesheet)
         outputs_behaviour_dropdown.setFixedWidth(200)
         for behaviour in self.physiboss_behaviours:
             outputs_behaviour_dropdown.addItem(behaviour)
         
         outputs_node_dropdown = QComboBox()
+        outputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
         outputs_node_dropdown.setFixedWidth(150)
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 outputs_node_dropdown.addItem(node)
         
         outputs_action = QComboBox()
+        outputs_action.setStyleSheet(self.combobox_stylesheet)
         outputs_action.setFixedWidth(100)
         outputs_action.addItem("activation")
         outputs_action.addItem("inhibition")
@@ -3696,6 +3846,7 @@ class CellDef(QWidget):
     #--------------------------------------------------------
     def create_intracellular_tab(self):
         intracellular_tab = QWidget()
+        intracellular_tab.setStyleSheet("QPushButton { color: black }")
         intracellular_tab_scroll = QScrollArea()
         glayout = QVBoxLayout()
 
@@ -3709,6 +3860,7 @@ class CellDef(QWidget):
         type_hbox.addWidget(type_label)
 
         self.intracellular_type_dropdown = QComboBox()
+        self.intracellular_type_dropdown.setStyleSheet(self.combobox_stylesheet)
         self.intracellular_type_dropdown.setFixedWidth(300)
         self.intracellular_type_dropdown.currentIndexChanged.connect(self.intracellular_type_changed)
         self.intracellular_type_dropdown.addItem("none")
@@ -3815,6 +3967,7 @@ class CellDef(QWidget):
         ly.addWidget(initial_states_groupbox)
         
         initial_states_addbutton = QPushButton("Add new initial value")
+        initial_states_addbutton.setStyleSheet("QPushButton { color: black }")
         initial_states_addbutton.clicked.connect(self.physiboss_clicked_add_initial_value)
         ly.addWidget(initial_states_addbutton)
 
@@ -3834,6 +3987,7 @@ class CellDef(QWidget):
         ly.addWidget(mutants_groupbox)
  
         mutants_addbutton = QPushButton("Add new mutant")
+        mutants_addbutton.setStyleSheet("QPushButton { color: black }")
         mutants_addbutton.clicked.connect(self.physiboss_clicked_add_mutant)
         ly.addWidget(mutants_addbutton)
 
@@ -3853,6 +4007,7 @@ class CellDef(QWidget):
         ly.addWidget(parameters_groupbox)
 
         parameters_addbutton = QPushButton("Add new parameter")
+        parameters_addbutton.setStyleSheet("QPushButton { color: black }")
         parameters_addbutton.clicked.connect(self.physiboss_clicked_add_parameter)
         ly.addWidget(parameters_addbutton)
 
@@ -3883,6 +4038,7 @@ class CellDef(QWidget):
         ly.addWidget(inputs_groupbox)
 
         inputs_addbutton = QPushButton("Add new input")
+        inputs_addbutton.setStyleSheet("QPushButton { color: black }")
         inputs_addbutton.clicked.connect(self.physiboss_clicked_add_input)
         ly.addWidget(inputs_addbutton)
 
@@ -3914,6 +4070,7 @@ class CellDef(QWidget):
         ly.addWidget(outputs_groupbox)
 
         outputs_addbutton = QPushButton("Add new output")
+        outputs_addbutton.setStyleSheet("QPushButton { color: black }")
         outputs_addbutton.clicked.connect(self.physiboss_clicked_add_output)
         ly.addWidget(outputs_addbutton)
 
@@ -4266,9 +4423,10 @@ class CellDef(QWidget):
         self.set_absolute_equilibrium_distance.setEnabled(bval)
         self.set_absolute_equilibrium_distance_enabled.setEnabled(bval)
 
-    def is_movable_cb(self,bval):
-        self.param_d[self.current_cell_def]['is_movable'] = bval
-        self.enable_mech_params(bval)
+    def unmovable_cb(self,bval):
+        # print("--------- unmovable_cb()  called!  bval=",bval)
+        self.param_d[self.current_cell_def]['is_movable'] = not bval  # uh, this isn't not confusing :/
+        self.enable_mech_params(not bval)
 
     def cell_cell_adhesion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
@@ -4319,15 +4477,15 @@ class CellDef(QWidget):
     def chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_chemotaxis'] = bval
         if bval:
-            self.motility_substrate_dropdown.setEnabled(True)
-            self.chemotaxis_direction_towards.setEnabled(True)
-            self.chemotaxis_direction_against.setEnabled(True)
-
             self.advanced_chemotaxis_enabled.setChecked(False)
             self.param_d[self.current_cell_def]['motility_advanced_chemotaxis'] = False
             self.motility2_substrate_dropdown.setEnabled(False)
             self.chemo_sensitivity.setEnabled(False)
             self.normalize_each_gradient.setEnabled(False)
+
+        self.motility_substrate_dropdown.setEnabled(bval)
+        self.chemotaxis_direction_towards.setEnabled(bval)
+        self.chemotaxis_direction_against.setEnabled(bval)
 
     def advanced_chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_advanced_chemotaxis'] = bval
@@ -4338,9 +4496,17 @@ class CellDef(QWidget):
 
             self.chemotaxis_enabled.setChecked(False)
             self.param_d[self.current_cell_def]['motility_chemotaxis'] = False
-            self.motility2_substrate_dropdown.setEnabled(True)
-            self.chemo_sensitivity.setEnabled(True)
-            self.normalize_each_gradient.setEnabled(True)
+
+        #     self.motility2_substrate_dropdown.setEnabled(True)
+        #     self.chemo_sensitivity.setEnabled(True)
+        #     self.normalize_each_gradient.setEnabled(True)
+        # else:
+        #     self.motility2_substrate_dropdown.setEnabled(False)
+        #     self.normalize_each_gradient.setEnabled(False)
+        #     self.chemo_sensitivity.setEnabled(False)
+        self.motility2_substrate_dropdown.setEnabled(bval)
+        self.chemo_sensitivity.setEnabled(bval)
+        self.normalize_each_gradient.setEnabled(bval)
 
     def normalize_each_gradient_cb(self,bval):
         self.param_d[self.current_cell_def]['normalize_each_gradient'] = bval
@@ -4488,14 +4654,10 @@ class CellDef(QWidget):
             if s in self.custom_data_table.cellWidget(irow,self.custom_icol_name).text():
                 # print(f"   found {s} at row {irow}")
                 backcolor = "background: bisque"
-                if self.dark_mode:
-                    backcolor = "background: DarkSlateGray"
                 self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet(backcolor)
                 # self.custom_data_table.selectRow(irow)  # don't do this; keyboard input -> cell 
             else:
                 backcolor = "background: white"
-                if self.dark_mode:
-                    backcolor = "background: black"
                 self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet(backcolor)
             # self.custom_data_table.setCurrentItem(item)
 
@@ -4531,6 +4693,7 @@ class CellDef(QWidget):
 
             # ------- custom data variable conserved flag (equally divided during cell division)
             w_var_conserved = MyQCheckBox()
+            w_var_conserved.setStyleSheet(self.checkbox_style)
             w_var_conserved.vname = w_varname  
             w_var_conserved.wrow = irow
             w_var_conserved.wcol = 2
@@ -4629,9 +4792,7 @@ class CellDef(QWidget):
 
         delete_custom_data_btn = QPushButton("Delete row")
         delete_custom_data_btn.clicked.connect(self.delete_custom_data_cb)
-        delete_custom_data_btn.setStyleSheet("background-color: yellow")
-        if self.dark_mode:
-            delete_custom_data_btn.setStyleSheet("background-color: IndianRed")
+        delete_custom_data_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         hlayout.addWidget(delete_custom_data_btn)
 
         vlayout.addLayout(hlayout)
@@ -4705,6 +4866,7 @@ class CellDef(QWidget):
             # # self.custom_data_table.item(irow, 0).setEnabled(False)
 
             w_var_conserved = MyQCheckBox()
+            w_var_conserved.setStyleSheet(self.checkbox_style)
             # w_var_conserved.setFrame(False)
             w_var_conserved.vname = w_varname  
             w_var_conserved.wrow = irow
@@ -4781,8 +4943,6 @@ class CellDef(QWidget):
     def disable_table_cells_for_duplicate_name(self, widget=None):
         # disable all cells in the Custom Data table
         backcolor = "background: lightgray"
-        if self.dark_mode:
-            backcolor = "background: DarkSlateGray"
         for irow in range(0,self.max_custom_data_rows):
             for icol in range(5):
                 self.custom_data_table.cellWidget(irow,icol).setEnabled(False)
@@ -4795,8 +4955,6 @@ class CellDef(QWidget):
             self.custom_data_table.cellWidget(wrow,wcol).setEnabled(True)
             # self.custom_data_table.setCurrentItem(None)
             backcolor = "background: white"
-            if self.dark_mode:
-                backcolor = "background: black"
             self.custom_data_table.cellWidget(wrow,wcol).setStyleSheet(backcolor)
             self.custom_data_table.setCurrentCell(wrow,wcol)
 
@@ -4808,8 +4966,6 @@ class CellDef(QWidget):
         # for irow in range(self.max_custom_vars):
         # for irow in range(self.max_custom_rows_edited):
         backcolor = "background: white"
-        if self.dark_mode:
-            backcolor = "background: black"
         for irow in range(self.max_custom_data_rows):
             for icol in range(5):
                 # if (icol != 2) and (irow != row) and (icol != col):
@@ -4818,6 +4974,8 @@ class CellDef(QWidget):
                 # if self.custom_data_table.cellWidget(irow,icol):
                 self.custom_data_table.cellWidget(irow,icol).setEnabled(True)
                 self.custom_data_table.cellWidget(irow,icol).setStyleSheet(backcolor)
+                if icol == 2:
+                    self.custom_data_table.cellWidget(irow,icol).setStyleSheet(self.checkbox_style)
                 # else:
                     # print("oops!  self.custom_data_table.cellWidget(irow,icol) is None")
                 # self.sender().setStyleSheet("color: red;")
@@ -5792,7 +5950,7 @@ class CellDef(QWidget):
     def new_mechanics_params(self, cdname_new):
         sval = self.default_sval
 
-        self.param_d[cdname_new]['is_movable'] = True
+        self.param_d[cdname_new]['is_movable'] = False
         # use defaults found in phenotype.cpp:Mechanics() instead of 0.0
         self.param_d[cdname_new]["mechanics_adhesion"] = '0.4'
         self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
@@ -6137,7 +6295,7 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
         cdname = self.current_cell_def
-        self.is_movable_w.setChecked(self.param_d[self.current_cell_def]['is_movable'])
+        self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
         self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
