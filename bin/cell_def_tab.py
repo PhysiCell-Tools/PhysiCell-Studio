@@ -3309,6 +3309,35 @@ class CellDef(QWidget):
             
                 self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_nodes
 
+                for i, (node, _, _, _) in enumerate(self.physiboss_initial_states):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] in list_nodes
+                    ):
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+
+                for i, (node, _, _, _) in enumerate(self.physiboss_mutants):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] in list_nodes
+                    ):
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+
+
                 for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
                     node.currentIndexChanged.disconnect()
                     node.clear()
@@ -3364,7 +3393,21 @@ class CellDef(QWidget):
                 # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
                 
                 self.param_d[self.current_cell_def]["intracellular"]["list_parameters"] = list_parameters
- 
+                
+                for i, (param, _, _, _) in enumerate(self.physiboss_parameters):
+                    param.currentIndexChanged.disconnect()
+                    param.clear()
+                    for name in list_parameters:
+                        param.addItem(name)
+                    param.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] in list_parameters
+                    ):
+                        param.setCurrentIndex(list_parameters.index(self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"]))
+                    else:
+                        param.setCurrentIndex(-1)
+
     def physiboss_time_step_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
