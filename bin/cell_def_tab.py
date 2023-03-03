@@ -3385,9 +3385,9 @@ class CellDef(QWidget):
                             
                         # elif ".is_internal" in line:
                         #     tokens = line.split("=")
-                        #     value = int(tokens[1].strip()[:-1])
+                        #     value = tokens[1].strip()[:-1].lower() in ["1", "true"]
                         #     node = tokens[0].strip().replace(".is_internal", "")
-                        #     if value == 1:
+                        #     if value:
                         #         list_internal_nodes.append(node)
                 
                 # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
