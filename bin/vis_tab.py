@@ -1350,11 +1350,13 @@ class Vis(QWidget):
 
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
-
             if self.cax2:
-                self.cax2.remove()
-                self.cax2 = None
-
+                try:
+                    self.cax2.remove()
+                    self.cax2 = None
+                except:
+                    pass
+            
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
