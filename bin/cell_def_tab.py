@@ -3825,6 +3825,84 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_outputs))):
             self.physiboss_remove_output(i)
 
+    def physiboss_global_inheritance_checkbox_cb(self, bval):
+        self.physiboss_global_inheritance_flag = bval
+        self.param_d[self.current_cell_def]["intracellular"]["global_inheritance"] = str(bval)
+
+    def physiboss_clicked_add_node_inheritance(self):
+        self.physiboss_add_node_inheritance()
+        self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"].append({
+            'node': '',
+            'flag': str(not self.physiboss_global_inheritance),
+        })
+        
+    def physiboss_add_node_inheritance(self):
+        
+        node_inheritance_editor = QHBoxLayout()
+        node_inheritance_dropdown = QComboBox()
+        node_inheritance_dropdown.setFixedWidth(200)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                node_inheritance_dropdown.addItem(node)
+        
+                
+        node_inheritance_checkbox = QCheckBox('Node-specific inheritance')
+        node_inheritance_checkbox.setEnabled(True)
+        node_inheritance_checkbox.setChecked(not self.physiboss_global_inheritance_flag)
+        
+        node_inheritance_remove = QPushButton("Delete")
+
+
+        id = len(self.physiboss_node_specific_inheritance)
+        node_inheritance_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(id, index))
+        node_inheritance_checkbox.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(id, bval))
+        # outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
+        node_inheritance_remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(id))
+
+        node_inheritance_editor.addWidget(node_inheritance_dropdown)
+        node_inheritance_editor.addWidget(node_inheritance_checkbox)
+        node_inheritance_editor.addWidget(node_inheritance_remove)
+        
+       
+        self.physiboss_inheritance_layout.addLayout(node_inheritance_editor)
+        self.physiboss_node_specific_inheritance.append((node_inheritance_dropdown, node_inheritance_checkbox, node_inheritance_remove, node_inheritance_editor))
+    
+    
+    def physiboss_remove_node_inheritance(self, i):
+        self.physiboss_node_specific_inheritance[i][0].currentIndexChanged.disconnect()
+        self.physiboss_node_specific_inheritance[i][0].deleteLater()
+        self.physiboss_node_specific_inheritance[i][1].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[i][1].deleteLater()
+        self.physiboss_node_specific_inheritance[i][2].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[i][2].deleteLater()
+        self.physiboss_node_specific_inheritance[i][3].deleteLater()
+        del self.physiboss_node_specific_inheritance[i]
+    
+    
+        # Here we should remap the clicked method to have the proper id
+        for i, node_inheritance in enumerate(self.physiboss_node_specific_inheritance):
+            node, flag, remove, _ = node_inheritance
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(i, index))
+            flag.clicked.disconnect()
+            flag.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(i, bval))
+            remove.clicked.disconnect()
+            remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(i))
+      
+    def physiboss_node_inheritance_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
+  
+    def physiboss_node_inheritance_flag_changed(self, i, bval):
+        self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]["flag"] = str(bval)
+  
+    def physiboss_clicked_remove_node_inheritance(self, i):
+        self.physiboss_remove_node_inheritance(i)
+        del self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]
+        
+    def physiboss_clear_node_inheritance(self):
+        for i, _ in reversed(list(enumerate(self.physiboss_node_specific_inheritance))):
+            self.physiboss_remove_node_inheritance(i)
 
     def intracellular_type_changed(self, index):
 
@@ -3839,9 +3917,11 @@ class CellDef(QWidget):
                 self.physiboss_clear_parameters()
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()
+                self.physiboss_clear_node_inheritance()
                 self.physiboss_time_step.setText("12.0")
                 self.physiboss_time_stochasticity.setText("0.0")
                 self.physiboss_scaling.setText("1.0")
+                self.physiboss_global_inheritance.setChecked(False)
                 self.param_d[self.current_cell_def]["intracellular"] = None
                 
         elif index == 1:
@@ -3870,6 +3950,10 @@ class CellDef(QWidget):
                 self.param_d[self.current_cell_def]["intracellular"]["outputs"] = []
                 self.physiboss_clear_outputs()
 
+            if 'node_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"] = []
+                self.physiboss_clear_node_inheritance()
+
             if 'time_step' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_time_step.setText("12.0")
 
@@ -3878,6 +3962,9 @@ class CellDef(QWidget):
             
             if 'scaling' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_scaling.setText("1.0")
+                
+            if 'global_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.physiboss_global_inheritance.setChecked(False)
                 
             self.physiboss_update_list_signals()
             self.physiboss_update_list_behaviours()
@@ -4133,6 +4220,40 @@ class CellDef(QWidget):
         outputs_addbutton.setStyleSheet("QPushButton { color: black }")
         outputs_addbutton.clicked.connect(self.physiboss_clicked_add_output)
         ly.addWidget(outputs_addbutton)
+
+
+        inheritance_groupbox = QGroupBox("Inheritance")
+
+        self.physiboss_inheritance_layout = QVBoxLayout()
+
+        self.physiboss_global_inheritance = QHBoxLayout()
+
+        self.physiboss_global_inheritance_checkbox = QCheckBox('Global inheritance')
+        self.physiboss_global_inheritance_flag = False
+        self.physiboss_global_inheritance_checkbox.setEnabled(True)
+        self.physiboss_global_inheritance_checkbox.setChecked(self.physiboss_global_inheritance_flag)
+        self.physiboss_global_inheritance_checkbox.clicked.connect(self.physiboss_global_inheritance_checkbox_cb)
+        self.physiboss_global_inheritance.addWidget(self.physiboss_global_inheritance_checkbox)
+        self.physiboss_inheritance_layout.addLayout(self.physiboss_global_inheritance)
+        
+        
+        inheritance_labels = QHBoxLayout()
+        inheritance_node_label = QLabel("Node")
+        inheritance_node_label.setFixedWidth(200)
+        inheritance_value_label = QLabel("Value")
+        inheritance_value_label.setFixedWidth(150)
+        inheritance_labels.addWidget(inheritance_node_label)
+        inheritance_labels.addWidget(inheritance_value_label)
+
+        self.physiboss_inheritance_layout.addLayout(inheritance_labels)
+        inheritance_groupbox.setLayout(self.physiboss_inheritance_layout)
+        self.physiboss_node_specific_inheritance = []
+
+        ly.addWidget(inheritance_groupbox)
+
+        inheritance_addbutton = QPushButton("Add node-specific inheritance")
+        inheritance_addbutton.clicked.connect(self.physiboss_clicked_add_node_inheritance)
+        ly.addWidget(inheritance_addbutton)
 
 
         glayout.addWidget(self.physiboss_boolean_frame)
@@ -6527,9 +6648,11 @@ class CellDef(QWidget):
                 self.physiboss_time_stochasticity.setText(self.param_d[cdname]["intracellular"]["time_stochasticity"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
                 self.physiboss_starttime.setText(self.param_d[cdname]["intracellular"]["start_time"])
+                self.physiboss_global_inheritance_checkbox.setChecked(self.param_d[cdname]["intracellular"]["global_inheritance"] == "True")
 
+                self.physiboss_clear_node_inheritance()
                 self.physiboss_clear_inputs()
-                self.physiboss_clear_outputs()      
+                self.physiboss_clear_outputs()
                 self.fill_substrates_comboboxes()
                 self.fill_celltypes_comboboxes()
                 self.physiboss_update_list_signals()
@@ -6537,6 +6660,12 @@ class CellDef(QWidget):
                 self.physiboss_update_list_nodes()
                 self.physiboss_update_list_parameters()
                 
+                for i, node_inheritance in enumerate(self.param_d[cdname]["intracellular"]["node_inheritance"]):
+                    self.physiboss_add_node_inheritance()
+                    node, flag, _, _ = self.physiboss_node_specific_inheritance[i]
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(node_inheritance["node"]))
+                    flag.setChecked(node_inheritance["flag"] == "True")
+                    
                 self.physiboss_clear_initial_values()
                 for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
                     self.physiboss_add_initial_values()
@@ -7535,6 +7664,14 @@ class CellDef(QWidget):
                     start_time = ET.SubElement(settings, "start_time")
                     start_time.text = self.param_d[cdef]['intracellular']['start_time']
                     start_time.tail = self.indent12
+                    
+                    inheritance = ET.SubElement(settings, "inheritance", {"global": self.param_d[cdef]['intracellular']['global_inheritance']})
+                    if len(self.param_d[cdef]["intracellular"]["node_inheritance"]) > 0:
+                        for node_inheritance_def in self.param_d[cdef]["intracellular"]["node_inheritance"]:
+                            if node_inheritance_def["node"] != "" and node_inheritance_def["flag"] != "":
+                                node_inheritance = ET.SubElement(inheritance, "inherit_node", {"intracellular_name": node_inheritance_def["node"]})
+                                node_inheritance.text = node_inheritance_def["flag"]
+                                node_inheritance.tail = self.indent16
 
                     if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
                         scaling.tail = self.indent14
