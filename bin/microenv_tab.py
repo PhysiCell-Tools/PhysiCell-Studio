@@ -22,17 +22,15 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class SubstrateDef(QWidget):
-    def __init__(self, dark_mode):
+    def __init__(self, config_tab):
         super().__init__()
         # global self.microenv_params
-
-        self.dark_mode = dark_mode
 
         self.param_d = {}  # a dict of dicts - rwh/todo, used anymore?
         # self.substrate = {}
         self.current_substrate = None
         self.xml_root = None
-        self.celldef_tab = None
+        self.config_tab = config_tab
         self.new_substrate_count = 1
 
         self.default_rate_units = "1/min"
@@ -56,6 +54,13 @@ class SubstrateDef(QWidget):
         tree_widget_height = 400
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; Meh.
+        stylesheet = """
+        QTreeWidget::item:selected{
+            background-color: rgb(236,236,236);
+            color: black;
+        }
+        """
+        self.tree.setStyleSheet(stylesheet)  # don't allow arrow keys to select
         self.tree.setFocusPolicy(QtCore.Qt.NoFocus)  # don't allow arrow keys to select
         # self.tree.itemDoubleClicked.connect(self.treeitem_edit_cb)
         # self.tree.setStyleSheet("background-color: lightgray")
@@ -106,9 +111,7 @@ class SubstrateDef(QWidget):
         tree_w_hbox = QHBoxLayout()
         self.new_button = QPushButton("New")
         self.new_button.clicked.connect(self.new_substrate)
-        self.new_button.setStyleSheet("background-color: lightgreen")
-        if self.dark_mode:
-            self.new_button.setStyleSheet("background-color: green")
+        self.new_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         bwidth = 70
         bheight = 32
         # self.new_button.setFixedWidth(bwidth)
@@ -116,17 +119,13 @@ class SubstrateDef(QWidget):
 
         self.copy_button = QPushButton("Copy")
         self.copy_button.clicked.connect(self.copy_substrate)
-        self.copy_button.setStyleSheet("background-color: lightgreen")
-        if self.dark_mode:
-            self.copy_button.setStyleSheet("background-color: green")
+        self.copy_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.copy_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.copy_button)
 
         self.delete_button = QPushButton("Delete")
         self.delete_button.clicked.connect(self.delete_substrate)
-        self.delete_button.setStyleSheet("background-color: yellow")
-        if self.dark_mode:
-            self.delete_button.setStyleSheet("background-color: IndianRed")
+        self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         # self.delete_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.delete_button)
 
@@ -157,6 +156,15 @@ class SubstrateDef(QWidget):
         # self.microenv_hbox.addWidget(self.scroll_area)
 
         self.microenv_params = QWidget()
+        stylesheet = """ 
+            QPushButton {
+                color: #000000;
+            }
+            """
+
+        # self.params_cycle.setStyleSheet("QLineEdit { background-color: white }")
+        # self.microenv_params.setStyleSheet(stylesheet)
+
         self.vbox = QVBoxLayout()
         # self.vbox.addStretch(0)
 
@@ -253,12 +261,19 @@ class SubstrateDef(QWidget):
         self.dirichlet_bc_units.setFixedWidth(units_width)
         hbox.addWidget(self.dirichlet_bc_units)
 
-# 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
-        self.dirichlet_bc_enabled = QCheckBox("on")
-        self.dirichlet_bc_enabled.stateChanged.connect(self.dirichlet_toggle_cb)
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(label_width)
-        hbox.addWidget(self.dirichlet_bc_enabled)
+# # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
+#         self.dirichlet_bc_enabled = QCheckBox("on")
+#         self.dirichlet_bc_enabled.stateChanged.connect(self.dirichlet_toggle_cb)
+#         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
+#         # label.setFixedWidth(label_width)
+#         hbox.addWidget(self.dirichlet_bc_enabled)
+
+        self.apply_dc_button = QPushButton("Apply to all")
+        # self.apply_dc_button.setFixedWidth(btn_width)
+        self.apply_dc_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.apply_dc_button.clicked.connect(self.apply_dc_cb)
+        hbox.addWidget(self.apply_dc_button)
+
 
         self.vbox.addLayout(hbox)
 
@@ -381,6 +396,8 @@ class SubstrateDef(QWidget):
         hbox.addWidget(self.enable_zmax)
         self.vbox.addLayout(hbox)
 
+        # self.update_3D()
+
         #-------------
         # Toggles for overall microenv (all substrates)
         self.vbox.addWidget(QHLine())
@@ -462,6 +479,27 @@ class SubstrateDef(QWidget):
     #     # self.tree.setCurrentItem(treeitem)
     #     self.tree.setItemWidget(treeitem,column,None)
 
+    def apply_dc_cb(self):
+        text = self.dirichlet_bc.text()
+        self.dirichlet_xmin.setText(text)
+        self.dirichlet_xmax.setText(text)
+        self.dirichlet_ymin.setText(text)
+        self.dirichlet_ymax.setText(text)
+        self.dirichlet_zmin.setText(text)
+        self.dirichlet_zmax.setText(text)
+
+
+    def update_3D(self):
+        zmax = float(self.config_tab.zmax.text())
+        zmin = float(self.config_tab.zmin.text())
+        zdel = float(self.config_tab.zdel.text())
+        is_3D = False
+        if (zmax-zmin) > zdel:
+            is_3D = True
+        self.dirichlet_zmin.setEnabled(is_3D)
+        self.enable_zmin.setEnabled(is_3D)
+        self.dirichlet_zmax.setEnabled(is_3D)
+        self.enable_zmax.setEnabled(is_3D)
 
     def diffusion_coef_changed(self, text):
         # print("Text: %s", text)
@@ -475,13 +513,13 @@ class SubstrateDef(QWidget):
 
     def dirichlet_bc_changed(self, text):
         self.param_d[self.current_substrate]["dirichlet_bc"] = text
-        if self.dirichlet_bc_enabled.isChecked():
-            self.dirichlet_xmin.setText(text)
-            self.dirichlet_xmax.setText(text)
-            self.dirichlet_ymin.setText(text)
-            self.dirichlet_ymax.setText(text)
-            self.dirichlet_zmin.setText(text)
-            self.dirichlet_zmax.setText(text)
+        # if self.dirichlet_bc_enabled.isChecked():
+        #     self.dirichlet_xmin.setText(text)
+        #     self.dirichlet_xmax.setText(text)
+        #     self.dirichlet_ymin.setText(text)
+        #     self.dirichlet_ymax.setText(text)
+        #     self.dirichlet_zmin.setText(text)
+        #     self.dirichlet_zmax.setText(text)
 
     def dirichlet_toggle_cb(self):
         return  # until we determine a more logical way to deal with this
@@ -766,7 +804,8 @@ class SubstrateDef(QWidget):
         self.init_cond_units.setText(self.param_d[self.current_substrate]["init_cond_units"])
         self.dirichlet_bc.setText(self.param_d[self.current_substrate]["dirichlet_bc"])
         self.dirichlet_bc_units.setText(self.param_d[self.current_substrate]["dirichlet_bc_units"])
-        self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
+        # self.dirichlet_bc_enabled.setChecked(self.param_d[self.current_substrate]["dirichlet_enabled"])
+        # self.dirichlet_bc_enabled.setChecked(True)
 
         # xmin = self.param_d[self.current_substrate]["dirichlet_xmin"]
         # print("    xmin=",xmin)
@@ -880,7 +919,7 @@ class SubstrateDef(QWidget):
                     dirichlet_bc_path = var_path.find('.//Dirichlet_boundary_condition')
                     dirichlet_bc = dirichlet_bc_path.text
                     # self.substrate["init_cond"] = init_cond
-                    self.param_d[substrate_name]["dirichlet_bc"] = dirichlet_bc
+                    self.param_d[substrate_name]["dirichlet_bc"] = dirichlet_bc  # always make it True??
                     # if idx == 1:
                     #     self.dirichlet_bc.setText(dirichlet_bc)
 

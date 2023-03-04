@@ -1,16 +1,18 @@
 """
 Authors:
 Randy Heiland (heiland@iu.edu)
-Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
+Rf. Credits.md
 """
 
 import sys
 import logging
+import os
+from pathlib import Path
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog
+# from PyQt5.QtWidgets import QMessageBox
 
 class QHLine(QFrame):
     def __init__(self):
@@ -18,6 +20,132 @@ class QHLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:pressed
+                {
+                    background-color: lightgreen;
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        checkbox_style_43= """
+QCheckBox {
+    spacing: 5px;
+}
+
+QCheckBox::indicator:checked {
+    background-color: white;
+}
+"""
+# QCheckBox::indicator {
+#     width: 13px;
+#     height: 13px;
+#     background-color: gray;
+# }
+
+        checkbox_style_42= """
+        QCheckBox::indicator {
+    width: 20px;
+    height: 20px;
+    background-color: gray;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: white white black black;
+}
+QCheckBox::indicator:checked {
+    background-color: blue;
+}
+QCheckBox:checked, QCheckBox::indicator:checked {
+    border-color: black black white white;
+}
+QCheckBox:checked {
+    background-color: transparent;
+}
+                """
+
+    # https://stackoverflow.com/questions/70072890/how-to-set-qcheckbox-checked-area-stylesheet
+        checkbox_style_stupid = """
+        QCheckBox::indicator {
+    width: 30px;
+    height: 30px;
+    background-color: gray;
+    border-radius: 15px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: white white black black;
+}
+QCheckBox::indicator:checked {
+    background-color: qradialgradient(spread:pad, 
+                            cx:0.5,
+                            cy:0.5,
+                            radius:0.9,
+                            fx:0.5,
+                            fy:0.5,
+                            stop:0 rgba(0, 255, 0, 255), 
+                            stop:1 rgba(0, 64, 0, 255));
+}
+QCheckBox:checked, QCheckBox::indicator:checked {
+    border-color: black black white white;
+}
+QCheckBox:checked {
+    background-color: qradialgradient(spread:pad, 
+                            cx:0.739, 
+                            cy:0.278364, 
+                            radius:0.378, 
+                            fx:0.997289, 
+                            fy:0.00289117, 
+                            stop:0 rgba(255, 255, 255, 255), 
+                            stop:1 rgba(160, 160, 160, 255));
+}
+                """
+        checkbox_style01 = """
+                QCheckBox::indicator:pressed
+                {
+                    background-color: lightgreen;
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        checkbox_style00 = """
+                QCheckBox::indicator:pressed
+                {
+                    background-color: blue;
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 20x;
+                    height : 20px;
+                    border-radius : 2px;
+                }
+                """
+                # QCheckBox::indicator:checked
+                # {
+                #     background-color: rgb(0,0,255);
+                #     border: 1px solid #5A5A5A;
+                #     width : 15x;
+                #     height : 15px;
+                #     border-radius : 3px;
+                # }
+        self.setStyleSheet(checkbox_style)
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
@@ -150,6 +278,8 @@ class Config(QWidget):
 
         #----------
         self.virtual_walls = QCheckBox("Virtual walls")
+        self.virtual_walls.setChecked(True)
+        # self.virtual_walls.setCheckState(True)
         idx_row += 1
         self.config_tab_layout.addWidget(self.virtual_walls, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
@@ -273,6 +403,29 @@ class Config(QWidget):
 
         #------
         self.save_svg = QCheckBox("SVG")
+        # self.save_svg.setStyleSheet("QCheckBox::indicator"
+        #                         "{"
+        #                         "background-image :url(checkmark.png);"
+        #                         "}")
+        # self.save_svg.setStyleSheet("QCheckBox::indicator"
+        #                        "{"
+        #                        "width :30px;"
+        #                        "height :30px;"
+        #                        "}"
+        #                        "QCheckBox::indicator:unchecked:pressed"
+        #                        "{"
+        #                        "background-color : green;"
+        #                        "}")
+        # self.save_svg.setStyleSheet("QCheckBox::indicator"
+        #                        "{"
+        #                        "width :30px;"
+        #                        "height :30px;"
+        #                        "}"
+        #                        "QCheckBox::indicator:unchecked:pressed"
+        #                        "{"
+        #                        "background-color : green;"
+        #                        "}")
+        self.save_svg.setChecked(True)
         icol += 2
         self.config_tab_layout.addWidget(self.save_svg, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
@@ -296,7 +449,7 @@ class Config(QWidget):
 
         #------
         self.save_full = QCheckBox("Full")
-        icol += 1
+        icol += 2
         self.config_tab_layout.addWidget(self.save_full, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         # label = QLabel("every")
@@ -347,6 +500,11 @@ class Config(QWidget):
         icol += 1
         self.config_tab_layout.addWidget(self.csv_file, idx_row,icol,1,2) # w, row, column, rowspan, colspan
 
+        self.import_seeding_button = QPushButton("Import")
+        self.import_seeding_button.setFixedWidth(100)
+        self.import_seeding_button.setStyleSheet("background-color: lightgreen; color: black")
+        self.import_seeding_button.clicked.connect(self.import_seeding_cb)
+        self.config_tab_layout.addWidget(self.import_seeding_button, idx_row, 7, 1, 1)
 
         self.insert_hacky_blank_lines(self.config_tab_layout)
 
@@ -529,7 +687,7 @@ class Config(QWidget):
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
-        logging.debug(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
+        print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'
@@ -549,12 +707,16 @@ class Config(QWidget):
         else:
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'false'
 
+        if self.xml_root.find(".//initial_conditions") is None: 
+            print("\n ===  ERROR: Original XML is missing <initial_conditions> block\n")
+            return
+
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
-        logging.debug(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
+        print(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
 
         self.xml_root.find(".//initial_conditions//cell_positions/filename").text = self.csv_file.text()
-        logging.debug(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
+        print(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:
@@ -580,3 +742,43 @@ class Config(QWidget):
         # xml_root.find(".//SVG").find(".//interval").text = str(self.svg_interval.value)
         # xml_root.find(".//full_data").find(".//enable").text = str(self.toggle_mcds.value)
         # xml_root.find(".//full_data").find(".//interval").text = str(self.mcds_interval.value)
+
+            #-----------------------------------------------------------
+    def import_seeding_cb(self):
+        # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+        filePath = QFileDialog.getOpenFileName(self,'',".")
+        full_path_rules_name = filePath[0]
+        # logging.debug(f'\nimport_seeding_cb():  full_path_rules_name ={full_path_rules_name}')
+        print(f'\nimport_seeding_cb():  full_path_rules_name ={full_path_rules_name}')
+        basename = os.path.basename(full_path_rules_name)
+        print(f'import_seeding_cb():  basename ={basename}')
+        dirname = os.path.dirname(full_path_rules_name)
+        print(f'import_seeding_cb():  dirname ={dirname}')
+        # if (len(full_path_rules_name) > 0) and Path(full_path_rules_name):
+        if (len(full_path_rules_name) > 0) and Path(full_path_rules_name).is_file():
+            print("import_seeding_cb():  filePath is valid")
+            # logging.debug(f'     filePath is valid')
+            print("len(full_path_rules_name) = ", len(full_path_rules_name) )
+            # logging.debug(f'     len(full_path_rules_name) = {len(full_path_rules_name)}' )
+            self.csv_folder.setText(dirname)
+            self.csv_file.setText(basename)
+            # fname = os.path.basename(full_path_rules_name)
+            # self.current_xml_file = full_path_rules_name
+
+            # self.add_new_model(self.current_xml_file, True)
+            # self.config_file = self.current_xml_file
+            # if self.studio_flag:
+            #     self.run_tab.config_file = self.current_xml_file
+            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+            # self.show_sample_model()
+            # self.fill_gui()
+
+            # arg! how does it not catch this as an invalid file above??
+            # in fill_rules():  full_rules_fname= /Users/heiland/git/data/tumor_rules.csv
+            print(f'import_seeding_cb():  (guess) calling fill_rules() with ={full_path_rules_name}')
+            # if not self.nanohub_flag:
+            #     full_path_rules_name = os.path.abspath(os.path.join(self.homedir,'tmpdir',folder_name, file_name))
+            #     print(f'import_seeding_cb():  NOW calling fill_rules() with ={full_path_rules_name}')
+
+        else:
+            print("import_seeding_cb():  full_path_model_name is NOT valid")

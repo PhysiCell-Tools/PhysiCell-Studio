@@ -96,12 +96,12 @@ class PhysiCellXMLCreator(QWidget):
             self.plot_tab_index += 1
             self.legend_tab_index += 1
 
-        self.dark_mode = False
+        # self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
-        if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):  # vs. machine()=x86_64
-            self.dark_mode = True
+        # if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):  # vs. machine()=x86_64
+            # self.dark_mode = True
         print(f"  platform.system().lower()={platform.system().lower()}, platform.machine()={platform.machine()}")
-        print("PhysiCellXMLCreator(): self.dark_mode= ",self.dark_mode)
+        # print("PhysiCellXMLCreator(): self.dark_mode= ",self.dark_mode)
 
         self.title_prefix = "PhysiCell Model Builder: "
         if studio_flag:
@@ -180,8 +180,14 @@ class PhysiCellXMLCreator(QWidget):
         self.model = {}  # key: name, value:[read-only, tree]
 
         self.config_tab = Config(self.studio_flag)
+        self.config_tab_idx = 0
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
+
+        # Trying/failing to force the proper display of (default) checkboxes
+        self.config_tab.save_svg.update()
+        self.config_tab.save_svg.repaint()
+
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
             print("pmb.py: ---- TRUE nanohub_flag: updating config_tab folder")
             self.config_tab.folder.setText('tmpdir')
@@ -192,7 +198,8 @@ class PhysiCellXMLCreator(QWidget):
         else:
             print("pmb.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
-        self.microenv_tab = SubstrateDef(self.dark_mode)
+        self.microenv_tab = SubstrateDef(self.config_tab)
+        self.microenv_tab_idx = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
         # print("pmb.py: first_substrate_name=",substrate_name)
@@ -200,7 +207,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef(self.dark_mode)
+        self.celldef_tab = CellDef()
         self.celldef_tab.xml_root = self.xml_root
         if is_movable_flag:
             self.celldef_tab.is_movable_w.setEnabled(True)
@@ -225,7 +232,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.user_params_tab = UserParams(self.dark_mode)
+        self.user_params_tab = UserParams()
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
@@ -267,6 +274,7 @@ class PhysiCellXMLCreator(QWidget):
         self.tabWidget.addTab(self.microenv_tab,"Microenvironment")
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
         self.tabWidget.addTab(self.user_params_tab,"User Params")
+        self.tabWidget.currentChanged.connect(self.tab_change_cb)
 
         self.current_dir = os.getcwd()
         # print("pmb.py: self.current_dir = ",self.current_dir)
@@ -282,7 +290,7 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             logging.debug(f'pmb.py: creating ICs, Run, and Plot tabs')
-            self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.dark_mode)
+            self.ics_tab = ICs(self.config_tab, self.celldef_tab)
             self.ics_tab.fill_celltype_combobox()
             self.ics_tab.reset_info()
 
@@ -297,7 +305,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu, self.dark_mode)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
 
             self.homedir = os.getcwd()
             print("pmb.py: self.homedir = ",self.homedir)
@@ -321,7 +329,7 @@ class PhysiCellXMLCreator(QWidget):
 
             self.tabWidget.addTab(self.run_tab,"Run")
 
-            self.vis_tab = Vis(self.nanohub_flag, self.dark_mode)
+            self.vis_tab = Vis(self.nanohub_flag, self.run_tab)
             self.config_tab.vis_tab = self.vis_tab
             # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
@@ -369,10 +377,19 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        self.tabWidget.setCurrentIndex(0)  # Config (default)
+        self.tabWidget.setCurrentIndex(self.config_tab_idx)  # Config (default)
+        # self.tabWidget.repaint()  # Config (default)
+        # self.config_tab.config_params.update()  # 
         # self.tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
         # self.tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
+    def tab_change_cb(self,index: int):
+        # print("\n-------- tab index=",index)
+        # if index == 0:
+        #     pmb_app.resize(1101,770) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
+        #     pmb_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
+        if index == self.microenv_tab_idx: # microenv_tab
+            self.microenv_tab.update_3D()
 
     def about_pyqt(self):
         msgBox = QMessageBox()
@@ -403,7 +420,7 @@ For licensing information:<br>
             v = "(can't find VERSION.txt)\n"
             print("Unable to open ",version_file)
         about_text = "Version " + v + """ <br><br>
-PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
+PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is led by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
 
 NOTE: When loading a model (.xml configuration file), it must be a "flat" format for the  cell_definitions, i.e., all parameters need to be defined. &nbsp; Many legacy PhysiCell models used a hierarchical format in which a cell_definition could inherit from a parent. &nbsp; The hierarchical format is not supported in the Studio.<br><br>
 
@@ -435,6 +452,15 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def menu(self):
         menubar = QMenuBar(self)
         menubar.setNativeMenuBar(False)
+
+        stylesheet = """ 
+            QMenuBar {color: black;}
+            QMenuBar::item:selected {background: white;}  # dodgerblue
+            QMenuBar::item:pressed {background: white;}  # dodgerblue
+            """
+        # QString style = "QMenuBar::item:selected { background: white; } QMenuBar::item:pressed {  background: white; }"
+        menubar.setStyleSheet("color: black")
+        # menubar.setStyleSheet(stylesheet)
 
         #--------------
         studio_menu = menubar.addMenu('&Studio')
@@ -1381,58 +1407,73 @@ def main():
     icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
     pmb_app.setWindowIcon(QIcon(icon_path))
 
-#    pmb_app.setStyleSheet("")  # affect dark mode?
-    # pmb_app.setStyleSheet("Fusion")  # affect dark mode?
+    print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
 
-    logging.debug(f'QStyleFactory.keys() = {QStyleFactory.keys()}')
+    # Use a palette to help force light-mode (not dark) style
+    # Not all seem to be used, but beware/test(!) if changed.
+    palette = QPalette()
+    rgb = 236
+    palette.setColor(QPalette.Window, QColor(rgb, rgb, rgb))
+    palette.setColor(QPalette.WindowText, Qt.black)
 
-    # pmb_app.setStyleSheet(open("pyqt5-dark-theme.stylesheet").read())
-    # pmb_app.setStyleSheet(open("darkorange.stylesheet").read())
-    # pmb_app.setStyleSheet(open("pmb_dark.stylesheet").read())
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    rgb = 100
+    palette.setColor(QPalette.Base, QColor(rgb, rgb, rgb))
+    palette.setColor(QPalette.AlternateBase, QColor(rgb, rgb, rgb))
 
-    # Now use a palette to switch to dark colors:
-    # palette = QPalette()
+    palette.setColor(QPalette.ToolTipBase, Qt.black)
+    palette.setColor(QPalette.ToolTipText, Qt.white)
 
-    # # dark mode
-    # palette.setColor(QPalette.Window, QColor(53, 53, 53))
-    # palette.setColor(QPalette.WindowText, Qt.white)
-    # palette.setColor(QPalette.Base, QColor(25, 25, 25))
-    # palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ToolTipBase, Qt.black)
-    # palette.setColor(QPalette.ToolTipText, Qt.white)
-    # palette.setColor(QPalette.Text, Qt.white)
+    # for QLineEdit()
+    palette.setColor(QPalette.Base, Qt.white)
+    palette.setColor(QPalette.Text, Qt.black)
+
     # palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ButtonText, Qt.white)
-    # palette.setColor(QPalette.BrightText, Qt.red)
-    # palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    # palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    # palette.setColor(QPalette.HighlightedText, Qt.black)
+    palette.setColor(QPalette.Button, QColor(200, 200, 0))  # dull yellow: seems to affect tree widget header and table headers
 
-    # # non dark mode
-    # rgb = 250
-    # palette.setColor(QPalette.Window, QColor(rgb, rgb, rgb))
-    # palette.setColor(QPalette.WindowText, Qt.black)
-    # palette.setColor(QPalette.Base, QColor(25, 25, 25))
-    # palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ToolTipBase, Qt.black)
-    # palette.setColor(QPalette.ToolTipText, Qt.white)
-    # palette.setColor(QPalette.Text, Qt.white)
-    # palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ButtonText, Qt.white)
-    # palette.setColor(QPalette.BrightText, Qt.red)
-    # palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    # palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    # palette.setColor(QPalette.HighlightedText, Qt.black)
+    # palette.setColor(QPalette.ButtonText, Qt.white)  # e.g., header for tree widgets??
+    # palette.setColor(QPalette.ButtonText, Qt.green)  # e.g., header for tree widgets??
+    palette.setColor(QPalette.ButtonText, Qt.black)  # e.g., header for tree widget too?!
 
-    # pmb_app.setPalette(palette)
-    # palette = QtGui.QPalette()
-    # print(palette.)
+    palette.setColor(QPalette.BrightText, Qt.red)
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(236, 236, 236))   # background when user tabs through QLineEdits
+    palette.setColor(QPalette.Highlight, QColor(210, 210, 210))   # background when user tabs through QLineEdits
+    palette.setColor(QPalette.HighlightedText, Qt.black)
 
-    # pmb_app.setPalette(QtGui.QGuiApplication.palette())
+    pmb_app.setPalette(palette)
+    # pmb_app.setStyleSheet("QCheckBox { background-color: red }")
+    # pmb_app.setStyleSheet("QLineEdit { background-color: white }; QComboBox { height: 34 } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+    pmb_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+    # pmb_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+
 
     rules_flag = False
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag)
+    print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
+    # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)
+    # print("width=",ex.size())
+
+
+    # -- Insanity. Trying/failing to force the proper display of (default) checkboxes
+    # ex.config_tab.config_params.update()  # attempt to refresh, to show checkboxes!
+    # ex.config_tab.scroll.update()  # attempt to refresh, to show checkboxes!
+    # ex.config_tab.repaint()  # attempt to refresh, to show checkboxes!
+    # ex.tabWidget.repaint()  # Config (default)
+    # ex.repaint()  # Config (default)
+
     ex.show()
+
+    # -- Insanity. Just trying to refresh the initial Config tab so the checkboxes will render properly :/
+    # ex.config_tab.update()  # attempt to refresh, to show checkboxes!
+    # ex.config_tab.repaint()  # attempt to refresh, to show checkboxes!
+    # ex.resize(1101,770)
+    # ex.update()
+    # ex.repaint()
+    # ex.show()
+    # print("size 2=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
+
     # startup_notice()
     sys.exit(pmb_app.exec_())
     # pmb_app.quit()
