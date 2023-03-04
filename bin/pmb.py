@@ -420,7 +420,7 @@ For licensing information:<br>
             v = "(can't find VERSION.txt)\n"
             print("Unable to open ",version_file)
         about_text = "Version " + v + """ <br><br>
-PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is lead by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
+PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and, optionally, run a model and visualize results. &nbsp; It is led by the Macklin Lab (Indiana University) with contributions from the PhysiCell community.<br><br>
 
 NOTE: When loading a model (.xml configuration file), it must be a "flat" format for the  cell_definitions, i.e., all parameters need to be defined. &nbsp; Many legacy PhysiCell models used a hierarchical format in which a cell_definition could inherit from a parent. &nbsp; The hierarchical format is not supported in the Studio.<br><br>
 
