@@ -28,7 +28,7 @@ To also specify the name of a configuration file (to populate the GUI), use "-c"
 python bin/pmb.py --studio -e template -c config/PhysiCell_settings.xml
 ```
 
-To specify 3D visualization , use "-3" argument.
+To specify 3D visualization , use "--3" argument.
 
 To see all possible arguments:
 ```
