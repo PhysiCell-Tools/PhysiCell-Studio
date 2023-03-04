@@ -33,6 +33,8 @@ class SubstrateDef(QWidget):
         self.config_tab = config_tab
         self.new_substrate_count = 1
 
+        self.is_3D = False
+
         self.default_rate_units = "1/min"
         self.dirichlet_units = "mmHG"
 
@@ -493,13 +495,13 @@ class SubstrateDef(QWidget):
         zmax = float(self.config_tab.zmax.text())
         zmin = float(self.config_tab.zmin.text())
         zdel = float(self.config_tab.zdel.text())
-        is_3D = False
+        self.is_3D = False
         if (zmax-zmin) > zdel:
-            is_3D = True
-        self.dirichlet_zmin.setEnabled(is_3D)
-        self.enable_zmin.setEnabled(is_3D)
-        self.dirichlet_zmax.setEnabled(is_3D)
-        self.enable_zmax.setEnabled(is_3D)
+            self.is_3D = True
+        self.dirichlet_zmin.setEnabled(self.is_3D)
+        self.enable_zmin.setEnabled(self.is_3D)
+        self.dirichlet_zmax.setEnabled(self.is_3D)
+        self.enable_zmax.setEnabled(self.is_3D)
 
     def diffusion_coef_changed(self, text):
         # print("Text: %s", text)
@@ -1220,9 +1222,16 @@ class SubstrateDef(QWidget):
                 subelm.text = self.param_d[substrate]["init_cond"]
                 subelm.tail = indent8
                     # self.param_d[substrate_name]["dirichlet_bc_units"] = dc_bc_units
+                dirichlet_BC_flag = False
+                if self.param_d[substrate]["enable_xmin"] or self.param_d[substrate]["enable_xmax"] or self.param_d[substrate]["enable_ymin"]  or self.param_d[substrate]["enable_ymax"]: 
+                    dirichlet_BC_flag = True
+                if not dirichlet_BC_flag and self.is_3D:
+                    if self.param_d[substrate]["enable_zmin"] or self.param_d[substrate]["enable_zmax"]:
+                        dirichlet_BC_flag = True
                 subelm = ET.SubElement(elm, "Dirichlet_boundary_condition",
                         {"units":self.param_d[substrate]["dirichlet_bc_units"], 
-                         "enabled":str(self.param_d[substrate]["dirichlet_enabled"]) })
+                         "enabled":str(dirichlet_BC_flag) })
+                        #  "enabled":str(self.param_d[substrate]["dirichlet_enabled"]) })
                         # {"units":"mmHg", "enabled":str(self.param_d[substrate]["dirichlet_enabled"])})
                 subelm.text = self.param_d[substrate]["dirichlet_bc"]
                 subelm.tail = indent8
