@@ -1314,6 +1314,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = "12.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = "1.0"
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["start_time"] = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["global_inheritance"] = "False"
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["node_inheritance"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
 
@@ -1323,25 +1326,34 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_settings.find("intracellular_dt").text if uep_settings.find("intracellular_dt") is not None else "12.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_settings.find("scaling").text if uep_settings.find("scaling") is not None else "1.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_settings.find("time_stochasticity").text if uep_settings.find("time_stochasticity") is not None else "0.0"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["start_time"] = uep_settings.find("start_time").text if uep_settings.find("start_time") is not None else "0.0"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["global_inheritance"] = uep_settings.find("inheritance").attrib["global"] if uep_settings.find("inheritance") is not None and uep_settings.find("inheritance").attrib["global"] else "False"
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["node_inheritance"] = []
+                        uep_intracellular_nodes_inheritance = uep_settings.find("inheritance")
+                        if uep_intracellular_nodes_inheritance is not None:
+                            for node_inheritance in uep_intracellular_nodes_inheritance:
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["node_inheritance"].append({
+                                    "node": node_inheritance.attrib["intracellular_name"], "flag": node_inheritance.text
+                                })
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"] = []
                         uep_intracellular_mutants = uep_settings.find("mutations")
                         if uep_intracellular_mutants is not None:
                             for mutant in uep_intracellular_mutants:
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append((mutant.attrib["intracellular_name"], mutant.text))
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["mutants"].append({"node": mutant.attrib["intracellular_name"], "value": mutant.text})
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"] = []
                         uep_intracellular_parameters = uep_settings.find("parameters")
                         if uep_intracellular_parameters is not None:
                             for parameter in uep_intracellular_parameters:
-                                cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append((parameter.attrib["intracellular_name"], parameter.text))                    
+                                cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append({"name": parameter.attrib["intracellular_name"], "value": parameter.text})                    
 
                     # print("cell def : " + cell_def_name + " : dt = " + cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"])
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
                     if uep_intracellular_iv is not None:
                         for initial_value in uep_intracellular_iv:
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append((initial_value.attrib["intracellular_name"], initial_value.text))
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"].append({"node": initial_value.attrib["intracellular_name"], "value": initial_value.text})
                   
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["inputs"] = []
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["outputs"] = []
@@ -1379,9 +1391,17 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     })
                                     
                 # Update widget values
+                cell_def_tab.physiboss_clear_initial_values()
+                cell_def_tab.physiboss_clear_parameters()
+                cell_def_tab.physiboss_clear_mutants()
+                cell_def_tab.physiboss_clear_node_inheritance()
+                cell_def_tab.physiboss_clear_inputs()
+                cell_def_tab.physiboss_clear_outputs()
+                
                 cell_def_tab.physiboss_update_list_signals()
                 cell_def_tab.physiboss_update_list_behaviours()
                 cell_def_tab.physiboss_update_list_nodes()
+                cell_def_tab.physiboss_update_list_parameters()
             
 
             logging.debug(f'------ done parsing intracellular:')

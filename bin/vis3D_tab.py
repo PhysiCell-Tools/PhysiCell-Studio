@@ -849,6 +849,9 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
+    def build_physiboss_info(self):
+        pass
+        
     def reset_plot_range(self):
         try:  # due to the initial callback
             self.my_xmin.setText(str(self.xmin))
