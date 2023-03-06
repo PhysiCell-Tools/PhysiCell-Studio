@@ -681,16 +681,16 @@ class Vis(QWidget):
         try: 
             for var in self.xml_root.findall('{http://www.w3.org/2000/svg}text'):
                 ctname = var.text.strip()
-                print("-- ctname=",ctname)
+                # print("-- ctname=",ctname)
                 self.celltype_name.append(ctname)
             print(self.celltype_name)
 
             idx = 0
             for var in self.xml_root.findall('{http://www.w3.org/2000/svg}circle'):
-                if idx % 2:
+                if (idx % 2) == 0:  # some legend.svg only have color on 1st occurrence (e.g., biorobots)
                     cattr = var.attrib
-                    print("-- cattr=",cattr)
-                    print("-- cattr['fill']=",cattr['fill'])
+                    # print("-- cattr=",cattr)
+                    # print("-- cattr['fill']=",cattr['fill'])
                     self.celltype_color.append(cattr['fill'])
                 idx += 1
         except:
@@ -705,7 +705,7 @@ class Vis(QWidget):
 
 
     def cell_counts_cb(self):
-        print("---- cell_counts_cb(): --> window for 2D population plots")
+        # print("---- cell_counts_cb(): --> window for 2D population plots")
         # self.analysis_data_wait.value = 'compute n of N ...'
 
         if not self.get_cell_types_from_legend():
@@ -735,22 +735,8 @@ class Vis(QWidget):
             # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
             mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
 
-        # keys_l = list(mcds[0].data['discrete_cells']['data'])
-        # print("keys_l= ",keys_l)
-
-        # xml_files = glob.glob('output*.xml')
-        # xml_file_root = "output%08d.xml" % 0
-        # xml_file = os.path.join(self.output_dir, xml_file_root)
-        # if not Path(xml_file).is_file():
-        #     print("append_custom_cb(): ERROR: file not found",xml_file)
-        #     return
-
-        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-
-
-        # mcds = [pyMCDS(xml_files[i], '.') for i in range(ds_count)]
         tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
-        print("max tval=",tval)
+        # print("  max tval=",tval)
 
         # self.yval4 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 4) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100.) == True)) for idx in range(ds_count)] )
 
@@ -762,33 +748,36 @@ class Vis(QWidget):
         # ctype_plot = []
         lw = 2
         # for itype, ctname in enumerate(self.celltypes_list):
+        print("  self.celltype_name=",self.celltype_name)
         for itype in range(len(self.celltype_name)):
             ctname = self.celltype_name[itype]
             try:
                 ctcolor = self.celltype_color[itype]
             except:
                 ctcolor = 'C' + str(itype)   # use random colors from matplotlib
+            print("  ctcolor=",ctcolor)
+            if 'rgb' in ctcolor:
+                rgb = ctcolor.replace('rgb','')
+                rgb = rgb.replace('(','')
+                rgb = rgb.replace(')','')
+                rgb = rgb.split(',')
+                print("--- rgb after split=",rgb)
+                ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
+                print("--- converted rgb=",ctcolor)
             yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+            # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
+            # print("  yval=",yval)
 
             self.population_plot.ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
 
-            # ctype_plot.append(yval)
-            # print("yval= ",yval)
 
-
-        # p1 = self.ax1.plot(self.xval, self.yval4, label='Mac', linewidth=3, color=self.mac_color)
-        # p2 = self.ax1.plot(self.xval, self.yval5, linestyle='dashed', label='Neut', linewidth=3, color=self.neut_color)
-
-        # self.population_plot.ax0.plot(tval,yval,'r-')
-        # self.population_plot.ax0.plot(tval,yval0,yval1)
-        # self.population_plot.ax0.plot(tval, yval1, label='ctype1', linewidth=lw, color="red")
-        # self.population_plot.ax0.grid()
         self.population_plot.ax0.set_xlabel('time (mins)')
         self.population_plot.ax0.set_ylabel('# of cells')
         self.population_plot.ax0.set_title("cell populations", fontsize=10)
+        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
         self.population_plot.canvas.update()
         self.population_plot.canvas.draw()
-        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
+        # self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
         self.population_plot.show()
 
 
@@ -1681,7 +1670,7 @@ class Vis(QWidget):
             if child.text and "Current time" in child.text:
                 svals = child.text.split()
                 # remove the ".00" on minutes
-                self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
+                self.title_str += svals[2] + " days, " + svals[4] + " hrs, " + svals[7][:-3] + " mins"
 
                 # self.cell_time_mins = int(svals[2])*1440 + int(svals[4])*60 + int(svals[7][:-3])
                 # self.title_str += "   cells: " + str(self.cell_time_mins) + "m"   # rwh
@@ -1929,7 +1918,13 @@ class Vis(QWidget):
         xvals = mcds.get_cell_df()['position_x']
         yvals = mcds.get_cell_df()['position_y']
 
-        self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
+        # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
+        # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
+
+        mins = total_min
+        hrs = int(mins/60)
+        days = int(hrs/24)
+        self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
         self.title_str += " (" + str(num_cells) + " agents)"
 
         axes_min = mcds.get_mesh()[0][0][0][0]
