@@ -3193,7 +3193,8 @@ class CellDef(QWidget):
     def physiboss_cfg_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['cfg_filename'] = text
-    
+            self.physiboss_update_list_parameters()
+
     def physiboss_update_list_signals(self):
 
         if self.current_cell_def == None:
@@ -3300,55 +3301,119 @@ class CellDef(QWidget):
             # Here I started by looking at both the bnd and the cfg
             if (
                 t_intracellular is not None 
-                and "bnd_filename" in t_intracellular.keys() and t_intracellular['bnd_filename'] is not None and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
-                # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
+                and "bnd_filename" in t_intracellular.keys() 
+                and t_intracellular['bnd_filename'] is not None 
+                and len(t_intracellular['bnd_filename']) > 0
+                and os.path.exists(os.path.join(os.getcwd(), t_intracellular["bnd_filename"])) 
                 ):
                 list_nodes = []
                 with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
                     list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
             
-                list_output_nodes = []
-                # with open(t_intracellular["cfg_filename"], 'r') as cfg_file:
-                #     list_output_nodes = [(node.split(".")[0], node.split("=")[1].split(";")[0]) for node in cfg_file.readlines() if ".is_internal" in node]
-                # list_internal_nodes = [node for node, value in list_output_nodes if value.lower() in [1, "true"]]
-            
-                list_model_nodes = list(set(list_nodes).difference(set(list_output_nodes)))
-                self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_model_nodes
+                self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_nodes
+
+                for i, (node, _, _, _) in enumerate(self.physiboss_initial_states):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] in list_nodes
+                    ):
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+
+                for i, (node, _, _, _) in enumerate(self.physiboss_mutants):
+                    node.currentIndexChanged.disconnect()
+                    node.clear()
+                    for name in list_nodes:
+                        node.addItem(name)
+                    node.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] in list_nodes
+                    ):
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"]))
+                    else:
+                        node.setCurrentIndex(-1)
+
 
                 for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
                     node.currentIndexChanged.disconnect()
                     node.clear()
-                    for name in list_model_nodes:
+                    for name in list_nodes:
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] is not None
-                        and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_model_nodes
+                        and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_nodes
                     ):
-                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"]))
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"]))
                     else:
                         node.setCurrentIndex(-1)
         
                 for i, (_, node, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
                     node.currentIndexChanged.disconnect()
                     node.clear()
-                    for name in list_model_nodes:
+                    for name in list_nodes:
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] is not None
-                        and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_model_nodes
+                        and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_nodes
                     ):
-                        node.setCurrentIndex(list_model_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"]))
+                        node.setCurrentIndex(list_nodes.index(self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"]))
                     else:
                         node.setCurrentIndex(-1)
-            # else:
-            #     for _, node, _, _, _, _, _, _ in self.physiboss_inputs:
-            #         node.clear()
+          
+    def physiboss_update_list_parameters(self):
+        
+        t_intracellular = self.param_d[self.current_cell_def]["intracellular"]        
+        if t_intracellular is not None:
+            # Here I started by looking at both the bnd and the cfg
+            if (
+                t_intracellular is not None 
+                and "cfg_filename" in t_intracellular.keys() 
+                and t_intracellular['cfg_filename'] is not None \
+                and len(t_intracellular['cfg_filename']) > 0
+                and os.path.exists(os.path.join(os.getcwd(), t_intracellular["cfg_filename"])) 
+                # and t_intracellular["cfg_filename"] and and os.path.exists(t_intracellular["cfg_filename"])
+                ):
+                list_parameters = []
+                # list_internal_nodes = []
+                with open(os.path.join(os.getcwd(), t_intracellular["cfg_filename"]), 'r') as cfg_file:
+                    for line in cfg_file.readlines():
+                        if line.strip().startswith("$"):
+                            list_parameters.append(line.split("=")[0].strip())
+                            
+                        # elif ".is_internal" in line:
+                        #     tokens = line.split("=")
+                        #     value = tokens[1].strip()[:-1].lower() in ["1", "true"]
+                        #     node = tokens[0].strip().replace(".is_internal", "")
+                        #     if value:
+                        #         list_internal_nodes.append(node)
                 
-            #     for _, node, _, _, _, _, _, _ in self.physiboss_outputs:
-            #         node.clear()
+                # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
                 
+                self.param_d[self.current_cell_def]["intracellular"]["list_parameters"] = list_parameters
+                
+                for i, (param, _, _, _) in enumerate(self.physiboss_parameters):
+                    param.currentIndexChanged.disconnect()
+                    param.clear()
+                    for name in list_parameters:
+                        param.addItem(name)
+                    param.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
+
+                    if (self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] is not None
+                        and self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] in list_parameters
+                    ):
+                        param.setCurrentIndex(list_parameters.index(self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"]))
+                    else:
+                        param.setCurrentIndex(-1)
+
     def physiboss_time_step_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_step'] = text
@@ -3361,36 +3426,47 @@ class CellDef(QWidget):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]['time_stochasticity'] = text
     
+    def physiboss_starttime_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['start_time'] = text
+    
     def physiboss_clicked_add_initial_value(self):
         self.physiboss_add_initial_values()
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append((None, None))
+        self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append({
+            'node': None,
+            'value': None
+        })
 
     def physiboss_add_initial_values(self):
 
         initial_states_editor = QHBoxLayout()
-        initial_states_node = QLineEdit()
+        initial_states_dropdown = QComboBox()
+        initial_states_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                initial_states_dropdown.addItem(node)
         initial_states_value = QLineEdit()
         initial_states_remove = QPushButton("Delete")
         initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
-        initial_states_node.textChanged.connect(lambda text: self.physiboss_initial_value_node_changed(id, text))
+        initial_states_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(id, index))
         initial_states_value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(id, text))
         initial_states_remove.clicked.connect(lambda: self.physiboss_clicked_remove_initial_values(id))
 
-        initial_states_editor.addWidget(initial_states_node)
+        initial_states_editor.addWidget(initial_states_dropdown)
         initial_states_editor.addWidget(initial_states_value)
         initial_states_editor.addWidget(initial_states_remove)
 
         self.physiboss_initial_states_layout.addLayout(initial_states_editor)
-        self.physiboss_initial_states.append((initial_states_node, initial_states_value, initial_states_remove, initial_states_editor))
+        self.physiboss_initial_states.append((initial_states_dropdown, initial_states_value, initial_states_remove, initial_states_editor))
 
     def physiboss_clicked_remove_initial_values(self, i):
         self.physiboss_remove_initial_values(i)
         del self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]
 
     def physiboss_remove_initial_values(self, i):
-        self.physiboss_initial_states[i][0].textChanged.disconnect()
+        self.physiboss_initial_states[i][0].currentIndexChanged.disconnect()
         self.physiboss_initial_states[i][0].deleteLater()
         self.physiboss_initial_states[i][1].textChanged.disconnect()
         self.physiboss_initial_states[i][1].deleteLater()
@@ -3402,8 +3478,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, initial_state in enumerate(self.physiboss_initial_states):
             node, value, button, _ = initial_state
-            node.textChanged.disconnect()
-            node.textChanged.connect(lambda text: self.physiboss_initial_value_node_changed(i, text))
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(i, text))
             button.clicked.disconnect()
@@ -3413,39 +3489,49 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_initial_states))):
             self.physiboss_remove_initial_values(i)
     
-    def physiboss_initial_value_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i][1])
+    def physiboss_initial_value_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]['node'] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
 
     def physiboss_initial_value_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i] = (self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]['value'] = text
     
     def physiboss_clicked_add_mutant(self):
         self.physiboss_add_mutant()
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"].append(("", ""))
+        self.param_d[self.current_cell_def]["intracellular"]["mutants"].append({
+            'node': '',
+            'value': '',
+        })
 
     def physiboss_add_mutant(self):
 
-        mutants_editor = QHBoxLayout()
-        mutants_node = QLineEdit()
+        mutants_editor = QHBoxLayout()        
+        
+        mutants_node_dropdown = QComboBox()
+        mutants_node_dropdown.setFixedWidth(150)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                mutants_node_dropdown.addItem(node)
+        
         mutants_value = QLineEdit()
         mutants_remove = QPushButton("Delete")
         id = len(self.physiboss_mutants)
-        mutants_node.textChanged.connect(lambda text: self.physiboss_mutants_node_changed(id, text))
+        mutants_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(id, index))
         mutants_value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(id, text))
         mutants_remove.clicked.connect(lambda: self.physiboss_clicked_remove_mutant(id))
 
-        mutants_editor.addWidget(mutants_node)
+        mutants_editor.addWidget(mutants_node_dropdown)
         mutants_editor.addWidget(mutants_value)
         mutants_editor.addWidget(mutants_remove)
         self.physiboss_mutants_layout.addLayout(mutants_editor)
-        self.physiboss_mutants.append((mutants_node, mutants_value, mutants_remove, mutants_editor))
+        self.physiboss_mutants.append((mutants_node_dropdown, mutants_value, mutants_remove, mutants_editor))
 
     def physiboss_clicked_remove_mutant(self, i):
         self.physiboss_remove_mutant(i)
         del self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]
 
     def physiboss_remove_mutant(self, i):
-        self.physiboss_mutants[i][0].textChanged.disconnect()
+        self.physiboss_mutants[i][0].currentIndexChanged.disconnect()
         self.physiboss_mutants[i][0].deleteLater()
         self.physiboss_mutants[i][1].textChanged.disconnect()
         self.physiboss_mutants[i][1].deleteLater()
@@ -3457,8 +3543,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, mutant in enumerate(self.physiboss_mutants):
             name, value, button, _ = mutant
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_mutants_node_changed(i, text))
+            name.curremtIndexChanged.disconnect()
+            name.curremtIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(i, text))
             button.clicked.disconnect()
@@ -3468,40 +3554,48 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_mutants))):
             self.physiboss_remove_mutant(i)
     
-    def physiboss_mutants_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["mutants"][i][1])
+    def physiboss_mutants_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
 
     def physiboss_mutants_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i] = (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["value"] = text
 
     def physiboss_clicked_add_parameter(self):
         self.physiboss_add_parameter()
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"].append(("", ""))
+        self.param_d[self.current_cell_def]["intracellular"]["parameters"].append({
+            'name': None,
+            'value': None
+        })
 
     def physiboss_add_parameter(self):
 
         parameters_editor = QHBoxLayout()
-        parameters_node = QLineEdit()
+        parameters_dropdown = QComboBox()
+        parameters_dropdown.setFixedWidth(150)
+        if "list_parameters" in self.param_d[self.current_cell_def]["intracellular"]:
+            for parameter in self.param_d[self.current_cell_def]["intracellular"]["list_parameters"]:
+                parameters_dropdown.addItem(parameter)
         parameters_value = QLineEdit()
         parameters_remove = QPushButton("Delete")
        
         id = len(self.physiboss_parameters)
-        parameters_node.textChanged.connect(lambda text: self.physiboss_parameters_node_changed(id, text))
+        parameters_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(id, index))
         parameters_value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(id, text))
         parameters_remove.clicked.connect(lambda: self.physiboss_clicked_remove_parameter(id))
 
-        parameters_editor.addWidget(parameters_node)
+        parameters_editor.addWidget(parameters_dropdown)
         parameters_editor.addWidget(parameters_value)
         parameters_editor.addWidget(parameters_remove)
         self.physiboss_parameters_layout.addLayout(parameters_editor)
-        self.physiboss_parameters.append((parameters_node, parameters_value, parameters_remove, parameters_editor))
+        self.physiboss_parameters.append((parameters_dropdown, parameters_value, parameters_remove, parameters_editor))
 
     def physiboss_clicked_remove_parameter(self, i):
         self.physiboss_remove_parameter(i)
         del self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]
 
     def physiboss_remove_parameter(self, i):
-        self.physiboss_parameters[i][0].textChanged.disconnect()
+        self.physiboss_parameters[i][0].currentIndexChanged.disconnect()
         self.physiboss_parameters[i][0].deleteLater()
         self.physiboss_parameters[i][1].textChanged.disconnect()
         self.physiboss_parameters[i][1].deleteLater()
@@ -3513,8 +3607,8 @@ class CellDef(QWidget):
         # Here we should remap the clicked method to have the proper id
         for i, parameter in enumerate(self.physiboss_parameters):
             name, value, button, _ = parameter
-            name.textChanged.disconnect()
-            name.textChanged.connect(lambda text: self.physiboss_parameters_node_changed(i, text))
+            name.currentIndexChanged.disconnect()
+            name.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(i, text))
             button.clicked.disconnect()
@@ -3524,11 +3618,12 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_parameters))):
             self.physiboss_remove_parameter(i)
 
-    def physiboss_parameters_node_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i] = (text, self.param_d[self.current_cell_def]["intracellular"]["parameters"][i][1])
+    def physiboss_parameters_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] = self.param_d[self.current_cell_def]["intracellular"]["list_parameters"][index]
 
     def physiboss_parameters_value_changed(self, i, text):
-        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i] = (self.param_d[self.current_cell_def]["intracellular"]["parameters"][i][0], text)
+        self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["value"] = text
     
     def physiboss_clicked_add_input(self):
         self.physiboss_add_input()
@@ -3779,6 +3874,84 @@ class CellDef(QWidget):
         for i, _ in reversed(list(enumerate(self.physiboss_outputs))):
             self.physiboss_remove_output(i)
 
+    def physiboss_global_inheritance_checkbox_cb(self, bval):
+        self.physiboss_global_inheritance_flag = bval
+        self.param_d[self.current_cell_def]["intracellular"]["global_inheritance"] = str(bval)
+
+    def physiboss_clicked_add_node_inheritance(self):
+        self.physiboss_add_node_inheritance()
+        self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"].append({
+            'node': '',
+            'flag': str(not self.physiboss_global_inheritance),
+        })
+        
+    def physiboss_add_node_inheritance(self):
+        
+        node_inheritance_editor = QHBoxLayout()
+        node_inheritance_dropdown = QComboBox()
+        node_inheritance_dropdown.setFixedWidth(200)
+        if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
+            for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
+                node_inheritance_dropdown.addItem(node)
+        
+                
+        node_inheritance_checkbox = QCheckBox('Node-specific inheritance')
+        node_inheritance_checkbox.setEnabled(True)
+        node_inheritance_checkbox.setChecked(not self.physiboss_global_inheritance_flag)
+        
+        node_inheritance_remove = QPushButton("Delete")
+
+
+        id = len(self.physiboss_node_specific_inheritance)
+        node_inheritance_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(id, index))
+        node_inheritance_checkbox.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(id, bval))
+        # outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
+        node_inheritance_remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(id))
+
+        node_inheritance_editor.addWidget(node_inheritance_dropdown)
+        node_inheritance_editor.addWidget(node_inheritance_checkbox)
+        node_inheritance_editor.addWidget(node_inheritance_remove)
+        
+       
+        self.physiboss_inheritance_layout.addLayout(node_inheritance_editor)
+        self.physiboss_node_specific_inheritance.append((node_inheritance_dropdown, node_inheritance_checkbox, node_inheritance_remove, node_inheritance_editor))
+    
+    
+    def physiboss_remove_node_inheritance(self, i):
+        self.physiboss_node_specific_inheritance[i][0].currentIndexChanged.disconnect()
+        self.physiboss_node_specific_inheritance[i][0].deleteLater()
+        self.physiboss_node_specific_inheritance[i][1].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[i][1].deleteLater()
+        self.physiboss_node_specific_inheritance[i][2].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[i][2].deleteLater()
+        self.physiboss_node_specific_inheritance[i][3].deleteLater()
+        del self.physiboss_node_specific_inheritance[i]
+    
+    
+        # Here we should remap the clicked method to have the proper id
+        for i, node_inheritance in enumerate(self.physiboss_node_specific_inheritance):
+            node, flag, remove, _ = node_inheritance
+            node.currentIndexChanged.disconnect()
+            node.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(i, index))
+            flag.clicked.disconnect()
+            flag.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(i, bval))
+            remove.clicked.disconnect()
+            remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(i))
+      
+    def physiboss_node_inheritance_node_changed(self, i, index):
+        if index >= 0:
+            self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]["node"] = self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][index]
+  
+    def physiboss_node_inheritance_flag_changed(self, i, bval):
+        self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]["flag"] = str(bval)
+  
+    def physiboss_clicked_remove_node_inheritance(self, i):
+        self.physiboss_remove_node_inheritance(i)
+        del self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"][i]
+        
+    def physiboss_clear_node_inheritance(self):
+        for i, _ in reversed(list(enumerate(self.physiboss_node_specific_inheritance))):
+            self.physiboss_remove_node_inheritance(i)
 
     def intracellular_type_changed(self, index):
 
@@ -3793,9 +3966,12 @@ class CellDef(QWidget):
                 self.physiboss_clear_parameters()
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()
+                self.physiboss_clear_node_inheritance()
                 self.physiboss_time_step.setText("12.0")
                 self.physiboss_time_stochasticity.setText("0.0")
                 self.physiboss_scaling.setText("1.0")
+                self.physiboss_starttime.setText("0.0")
+                self.physiboss_global_inheritance_checkbox.setChecked(False)
                 self.param_d[self.current_cell_def]["intracellular"] = None
                 
         elif index == 1:
@@ -3824,6 +4000,10 @@ class CellDef(QWidget):
                 self.param_d[self.current_cell_def]["intracellular"]["outputs"] = []
                 self.physiboss_clear_outputs()
 
+            if 'node_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["node_inheritance"] = []
+                self.physiboss_clear_node_inheritance()
+
             if 'time_step' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_time_step.setText("12.0")
 
@@ -3832,6 +4012,12 @@ class CellDef(QWidget):
             
             if 'scaling' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.physiboss_scaling.setText("1.0")
+            
+            if 'start_time' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.physiboss_starttime.setText("0.0")
+                
+            if 'global_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.physiboss_global_inheritance_checkbox.setChecked(False)
                 
             self.physiboss_update_list_signals()
             self.physiboss_update_list_behaviours()
@@ -3949,6 +4135,20 @@ class CellDef(QWidget):
         time_stochasticity_hbox.addWidget(self.physiboss_time_stochasticity)
 
         ly.addLayout(time_stochasticity_hbox)
+
+        starttime_hbox = QHBoxLayout()
+
+        starttime_label = QLabel("Start time")
+        starttime_hbox.addWidget(starttime_label)
+
+        self.physiboss_starttime = QLineEdit()
+        self.physiboss_starttime.textChanged.connect(self.physiboss_starttime_changed)
+        # Commenting it because for french, we need to use a comma, which then get written in the XML and might cause problems
+        # self.physiboss_scaling.setValidator(QtGui.QDoubleValidator())
+
+        starttime_hbox.addWidget(self.physiboss_starttime)
+
+        ly.addLayout(starttime_hbox)
 
 
         initial_states_groupbox = QGroupBox("Initial states")
@@ -4073,6 +4273,40 @@ class CellDef(QWidget):
         outputs_addbutton.setStyleSheet("QPushButton { color: black }")
         outputs_addbutton.clicked.connect(self.physiboss_clicked_add_output)
         ly.addWidget(outputs_addbutton)
+
+
+        inheritance_groupbox = QGroupBox("Inheritance")
+
+        self.physiboss_inheritance_layout = QVBoxLayout()
+
+        self.physiboss_global_inheritance = QHBoxLayout()
+
+        self.physiboss_global_inheritance_checkbox = QCheckBox('Global inheritance')
+        self.physiboss_global_inheritance_flag = False
+        self.physiboss_global_inheritance_checkbox.setEnabled(True)
+        self.physiboss_global_inheritance_checkbox.setChecked(self.physiboss_global_inheritance_flag)
+        self.physiboss_global_inheritance_checkbox.clicked.connect(self.physiboss_global_inheritance_checkbox_cb)
+        self.physiboss_global_inheritance.addWidget(self.physiboss_global_inheritance_checkbox)
+        self.physiboss_inheritance_layout.addLayout(self.physiboss_global_inheritance)
+        
+        
+        inheritance_labels = QHBoxLayout()
+        inheritance_node_label = QLabel("Node")
+        inheritance_node_label.setFixedWidth(200)
+        inheritance_value_label = QLabel("Value")
+        inheritance_value_label.setFixedWidth(150)
+        inheritance_labels.addWidget(inheritance_node_label)
+        inheritance_labels.addWidget(inheritance_value_label)
+
+        self.physiboss_inheritance_layout.addLayout(inheritance_labels)
+        inheritance_groupbox.setLayout(self.physiboss_inheritance_layout)
+        self.physiboss_node_specific_inheritance = []
+
+        ly.addWidget(inheritance_groupbox)
+
+        inheritance_addbutton = QPushButton("Add node-specific inheritance")
+        inheritance_addbutton.clicked.connect(self.physiboss_clicked_add_node_inheritance)
+        ly.addWidget(inheritance_addbutton)
 
 
         glayout.addWidget(self.physiboss_boolean_frame)
@@ -6466,35 +6700,46 @@ class CellDef(QWidget):
                 self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
                 self.physiboss_time_stochasticity.setText(self.param_d[cdname]["intracellular"]["time_stochasticity"])
                 self.physiboss_scaling.setText(self.param_d[cdname]["intracellular"]["scaling"])
+                self.physiboss_starttime.setText(self.param_d[cdname]["intracellular"]["start_time"])
+                self.physiboss_global_inheritance_checkbox.setChecked(self.param_d[cdname]["intracellular"]["global_inheritance"] == "True")
 
                 self.physiboss_clear_initial_values()
-                for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
-                    self.physiboss_add_initial_values()
-                    node, value, _, _ = self.physiboss_initial_states[i]
-                    node.setText(initial_value[0])
-                    value.setText(initial_value[1])
-
                 self.physiboss_clear_mutants()
-                for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
-                    self.physiboss_add_mutant()
-                    node, value, _, _ = self.physiboss_mutants[i]
-                    node.setText(mutant[0])
-                    value.setText(mutant[1])
-
                 self.physiboss_clear_parameters()
-                for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
-                    self.physiboss_add_parameter()
-                    name, value, _, _ = self.physiboss_parameters[i]
-                    name.setText(parameter[0])
-                    value.setText(parameter[1])
-
+                self.physiboss_clear_node_inheritance()
                 self.physiboss_clear_inputs()
-                self.physiboss_clear_outputs()      
+                self.physiboss_clear_outputs()
                 self.fill_substrates_comboboxes()
                 self.fill_celltypes_comboboxes()
                 self.physiboss_update_list_signals()
                 self.physiboss_update_list_behaviours()
                 self.physiboss_update_list_nodes()
+                self.physiboss_update_list_parameters()
+                
+                for i, node_inheritance in enumerate(self.param_d[cdname]["intracellular"]["node_inheritance"]):
+                    self.physiboss_add_node_inheritance()
+                    node, flag, _, _ = self.physiboss_node_specific_inheritance[i]
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(node_inheritance["node"]))
+                    flag.setChecked(node_inheritance["flag"] == "True")
+                    
+                for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
+                    self.physiboss_add_initial_values()
+                    node, value, _, _ = self.physiboss_initial_states[i]
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(initial_value["node"]))
+                    value.setText(initial_value["value"])
+
+                for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
+                    self.physiboss_add_mutant()
+                    node, value, _, _ = self.physiboss_mutants[i]
+                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(mutant["node"]))
+                    value.setText(mutant["value"])
+
+                for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
+                    self.physiboss_add_parameter()
+                    name, value, _, _ = self.physiboss_parameters[i]
+                    name.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_parameters"].index(parameter["name"]))
+                    value.setText(parameter["value"])
+
                 
                 for i, input in enumerate(self.param_d[cdname]["intracellular"]["inputs"]):
                     self.physiboss_add_input()
@@ -7445,10 +7690,10 @@ class CellDef(QWidget):
                         initial_values.text = self.indent14
                         initial_values.tail = self.indent12
                         
-                        for node, value in self.param_d[cdef]['intracellular']['initial_values']:
-                            if node != "" and value != "":
-                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": node})
-                                initial_value.text = value
+                        for initial_value_def in self.param_d[cdef]['intracellular']['initial_values']:
+                            if initial_value_def["node"] != "" and initial_value_def["value"] != "":
+                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": initial_value_def["node"]})
+                                initial_value.text = initial_value_def["value"]
                                 initial_value.tail = self.indent14
                         initial_value.tail = self.indent12
                         
@@ -7468,17 +7713,29 @@ class CellDef(QWidget):
                     scaling = ET.SubElement(settings, "scaling")
                     scaling.text = self.param_d[cdef]['intracellular']['scaling']
                     scaling.tail = self.indent12
+                    
+                    start_time = ET.SubElement(settings, "start_time")
+                    start_time.text = self.param_d[cdef]['intracellular']['start_time']
+                    start_time.tail = self.indent12
+                    
+                    inheritance = ET.SubElement(settings, "inheritance", {"global": self.param_d[cdef]['intracellular']['global_inheritance']})
+                    if len(self.param_d[cdef]["intracellular"]["node_inheritance"]) > 0:
+                        for node_inheritance_def in self.param_d[cdef]["intracellular"]["node_inheritance"]:
+                            if node_inheritance_def["node"] != "" and node_inheritance_def["flag"] != "":
+                                node_inheritance = ET.SubElement(inheritance, "inherit_node", {"intracellular_name": node_inheritance_def["node"]})
+                                node_inheritance.text = node_inheritance_def["flag"]
+                                node_inheritance.tail = self.indent16
 
-                    if len(self.param_d[cdef]['intracellular']['mutants']) > 0:
+                    if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
                         scaling.tail = self.indent14
                         mutants = ET.SubElement(settings, "mutations")
                         mutants.text = self.indent16
                         mutants.tail = self.indent14
                         
-                        for node, value in self.param_d[cdef]['intracellular']['mutants']:
-                            if node != "" and value != "":
-                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": node})
-                                mutant.text = value
+                        for mutant_def in self.param_d[cdef]["intracellular"]["mutants"]:
+                            if mutant_def["node"] != "" and mutant_def["value"] != "":
+                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": mutant_def["node"]})
+                                mutant.text = mutant_def["value"]
                                 mutant.tail = self.indent16
 
                         mutant.tail = self.indent12
@@ -7490,10 +7747,10 @@ class CellDef(QWidget):
                         parameters.text = self.indent16
                         parameters.tail = self.indent14
                         
-                        for name, value in self.param_d[cdef]['intracellular']['parameters']:
-                            if name != "" and value != "":
-                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": name})
-                                parameter.text = value
+                        for parameter_def in self.param_d[cdef]['intracellular']['parameters']:
+                            if parameter_def["name"] != "" and parameter_def["value"] != "":
+                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": parameter_def["name"]})
+                                parameter.text = parameter_def["value"]
                                 parameter.tail = self.indent16
 
                         parameter.tail = self.indent12

@@ -220,7 +220,7 @@ class RunModel(QWidget):
             self.vis_tab.reset_model_flag = True
             self.vis_tab.reset_plot_range()
             self.vis_tab.init_plot_range(self.config_tab) # heaven help the person who needs to understand this
-
+            self.vis_tab.build_physiboss_info()
 
         if self.p is None:  # No process running.
             self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
