@@ -65,7 +65,6 @@ class Vis(QWidget):
         self.celltype_name = []
         self.celltype_color = []
 
-        self.config_path = None
         self.show_xy_plane = True
         self.show_yz_plane = True
         self.show_xz_plane = True
@@ -850,8 +849,8 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
-    def update_config_path(self, config_path):
-        self.config_path = config_path
+    def build_physiboss_info(self):
+        pass
         
     def reset_plot_range(self):
         try:  # due to the initial callback

@@ -213,7 +213,6 @@ class Vis(QWidget):
         self.show_plot_range = False
 
         # self.config_file = "mymodel.xml"
-        self.config_path = None
         self.physiboss_node_dict = {}
         
         self.reset_model_flag = True
@@ -803,9 +802,28 @@ class Vis(QWidget):
 
 
     def build_physiboss_info(self):
-        tree = ET.parse(Path(self.config_path))
-        xml_root = tree.getroot()
-        cell_defs = xml_root.find(".//cell_definitions")
+        config_file = self.run_tab.config_xml_name.text()
+        print("get_cell_types():  config_file=",config_file)
+        basename = os.path.basename(config_file)
+        print("get_cell_types():  basename=",basename)
+        out_config_file = os.path.join(self.output_dir, basename)
+        print("get_cell_types():  out_config_file=",out_config_file)
+
+        try:
+            self.tree = ET.parse(out_config_file)
+            self.xml_root = self.tree.getroot()
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error opening or parsing " + out_config_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
+
+        
+        # tree = ET.parse(Path(self.config_path))
+        # xml_root = tree.getroot()
+        cell_defs = self.xml_root.find(".//cell_definitions")
         self.physiboss_node_dict.clear()
         
         if cell_defs is not None:
@@ -923,11 +941,6 @@ class Vis(QWidget):
         self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
         self.update_plots()
         
-    
-    def update_config_path(self, config_path):
-        self.config_path = config_path
-        self.build_physiboss_info()
-
     def output_folder_cb(self):
         # print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
