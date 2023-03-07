@@ -849,7 +849,7 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
-    def build_physiboss_info(self):
+    def build_physiboss_info(self, config_file):
         pass
         
     def reset_plot_range(self):
