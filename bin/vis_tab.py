@@ -801,21 +801,21 @@ class Vis(QWidget):
         self.population_plot.show()
 
 
-    def build_physiboss_info(self):
-        config_file = self.run_tab.config_xml_name.text()
-        print("get_cell_types():  config_file=",config_file)
-        basename = os.path.basename(config_file)
-        print("get_cell_types():  basename=",basename)
-        out_config_file = os.path.join(self.output_dir, basename)
-        print("get_cell_types():  out_config_file=",out_config_file)
+    def build_physiboss_info(self, config_file):
+        # config_file = self.run_tab.config_xml_name.text()
+        # print("get_cell_types():  config_file=",config_file)
+        # basename = os.path.basename(config_file)
+        # print("get_cell_types():  basename=",basename)
+        # out_config_file = os.path.join(self.output_dir, basename)
+        # print("get_cell_types():  out_config_file=",out_config_file)
 
         try:
-            self.tree = ET.parse(out_config_file)
+            self.tree = ET.parse(config_file)
             self.xml_root = self.tree.getroot()
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + out_config_file)
+            msgBox.setText("Error opening or parsing " + config_file)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
