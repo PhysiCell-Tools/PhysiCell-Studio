@@ -16,6 +16,7 @@ from pathlib import Path
 
 from vtk import *
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
 import glob
 
 from PyQt5 import QtCore, QtGui
@@ -65,10 +66,17 @@ class Vis(QWidget):
         self.celltype_name = []
         self.celltype_color = []
 
+        self.axes_actor = None
         self.show_xy_plane = True
         self.show_yz_plane = True
         self.show_xz_plane = True
         self.show_voxels = False
+        self.show_axes = False
+        self.substrate_name = ""
+        self.lut_jet = self.get_jet_map()
+        self.lut_viridis = self.get_viridis_map()
+        # self.lut_substrate = self.get_jet_map()
+        self.lut_substrate = self.lut_jet
 
         # VTK pipeline
         self.points = vtkPoints()
@@ -165,10 +173,11 @@ class Vis(QWidget):
         # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
         # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
-        lut_heat = self.get_heat_map()
         self.substrate_mapper = vtkDataSetMapper()
         self.substrate_mapper.SetInputData(self.substrate_data)
-        self.substrate_mapper.SetLookupTable(lut_heat)
+        # self.substrate_mapper.SetLookupTable(lut_heat)
+        self.substrate_mapper.SetLookupTable(self.lut_substrate)
+        # self.substrate_mapper.SetLookupTable(cmap='viridis')
         self.substrate_mapper.SetScalarModeToUseCellData()
         # self.substrate_mapper.SetScalarRange(0, 33)
 
@@ -194,7 +203,7 @@ class Vis(QWidget):
         self.cutterXYMapper = vtkPolyDataMapper()
         self.cutterXYMapper.SetInputConnection(self.cutterXY.GetOutputPort())
         self.cutterXYMapper.ScalarVisibilityOn()
-        self.cutterXYMapper.SetLookupTable(lut_heat)
+        self.cutterXYMapper.SetLookupTable(self.lut_substrate)
         self.cutterXYMapper.SetScalarModeToUseCellData()
         # self.cutterXYMapper.SetScalarModeToUsePointData()
         #self.cutterMapper.SetScalarRange(0, vmax)
@@ -213,7 +222,7 @@ class Vis(QWidget):
         self.cutterYZMapper.SetInputConnection(self.cutterYZ.GetOutputPort())
         self.cutterYZMapper.ScalarVisibilityOn()
         # lut = self.get_heat_map()
-        self.cutterYZMapper.SetLookupTable(lut_heat)
+        self.cutterYZMapper.SetLookupTable(self.lut_substrate)
         self.cutterYZMapper.SetScalarModeToUseCellData()
 
         self.cutterYZActor = vtkActor()
@@ -230,7 +239,7 @@ class Vis(QWidget):
         self.cutterXZMapper.SetInputConnection(self.cutterXZ.GetOutputPort())
         self.cutterXZMapper.ScalarVisibilityOn()
         # lut = self.get_heat_map()
-        self.cutterXZMapper.SetLookupTable(lut_heat)
+        self.cutterXZMapper.SetLookupTable(self.lut_substrate)
         self.cutterXZMapper.SetScalarModeToUseCellData()
 
         self.cutterXZActor = vtkActor()
@@ -260,7 +269,8 @@ class Vis(QWidget):
 
         #-----
         self.scalarBar = vtkScalarBarActor()
-        self.scalarBar.SetTitle("oxygen")
+        # self.scalarBar.SetTitle("oxygen")
+        self.scalarBar.SetTitle("substrate")
         self.scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
         self.scalarBar.GetPositionCoordinate().SetValue(0.1,0.01)
         self.scalarBar.UnconstrainedFontSizeOn()
@@ -301,7 +311,7 @@ class Vis(QWidget):
 
         # self.plot_svg_flag = True
         self.plot_svg_flag = False
-        self.field_index = 4  # substrate (0th -> 4 in the .mat)
+        # self.field_index = 4  # substrate (0th -> 4 in the .mat)
 
         self.use_defaults = True
         self.title_str = ""
@@ -398,7 +408,7 @@ class Vis(QWidget):
 
         self.substrates_combobox = QComboBox()
         # self.substrates_combobox.setStyleSheet(self.stylesheet)
-        self.substrates_combobox.setEnabled(False)
+        # self.substrates_combobox.setEnabled(False)
         self.field_dict = {}
         self.field_min_max = {}
         self.cmin_value = 0.0
@@ -406,10 +416,10 @@ class Vis(QWidget):
         # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
 
         self.substrates_cbar_combobox = QComboBox()
-        self.substrates_cbar_combobox.addItem("viridis")
         self.substrates_cbar_combobox.addItem("jet")
+        self.substrates_cbar_combobox.addItem("viridis")
         self.substrates_cbar_combobox.addItem("YlOrRd")
-        self.substrates_cbar_combobox.setEnabled(False)
+        # self.substrates_cbar_combobox.setEnabled(False)
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
 
@@ -534,8 +544,8 @@ class Vis(QWidget):
         hbox.addWidget(self.cell_scalar_combobox)
 
         self.cell_scalar_cbar_combobox = QComboBox()
-        self.cell_scalar_cbar_combobox.addItem("viridis")
         self.cell_scalar_cbar_combobox.addItem("jet")
+        self.cell_scalar_cbar_combobox.addItem("viridis")
         self.cell_scalar_cbar_combobox.addItem("YlOrRd")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(True)  # for 3D
@@ -555,7 +565,7 @@ class Vis(QWidget):
         # hbox = QHBoxLayout()
         self.substrates_checkbox = QCheckBox('substrates')
         self.substrates_checkbox.setChecked(False)
-        self.substrates_checkbox.setEnabled(False)
+        # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
         self.substrates_checked_flag = False
         # hbox.addWidget(self.substrates_checkbox)
@@ -585,7 +595,7 @@ class Vis(QWidget):
 
         self.fix_cmap_checkbox = QCheckBox('fix')
         self.fix_cmap_flag = False
-        self.fix_cmap_checkbox.setEnabled(False)
+        # self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
         hbox.addWidget(self.fix_cmap_checkbox)
@@ -602,7 +612,7 @@ class Vis(QWidget):
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
         self.cmin.setFixedWidth(cvalue_width)
         self.cmin.setValidator(QtGui.QDoubleValidator())
-        self.cmin.setEnabled(False)
+        # self.cmin.setEnabled(False)
         hbox.addWidget(self.cmin)
 
         label = QLabel("cmax")
@@ -614,7 +624,7 @@ class Vis(QWidget):
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
         self.cmax.setValidator(QtGui.QDoubleValidator())
-        self.cmax.setEnabled(False)
+        # self.cmax.setEnabled(False)
         hbox.addWidget(self.cmax)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
@@ -656,7 +666,8 @@ class Vis(QWidget):
 
         #-------------------
         self.substrates_combobox.currentIndexChanged.connect(self.substrates_combobox_changed_cb)
-        self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
         self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
@@ -738,16 +749,16 @@ class Vis(QWidget):
         try: 
             for var in self.xml_root.findall('{http://www.w3.org/2000/svg}text'):
                 ctname = var.text.strip()
-                print("-- ctname=",ctname)
+                # print("-- ctname (from legend.svg)=",ctname)
                 self.celltype_name.append(ctname)
-            print(self.celltype_name)
+            print("get_cell_types_from_legend(): celltype_name=",self.celltype_name)
 
             idx = 0
             for var in self.xml_root.findall('{http://www.w3.org/2000/svg}circle'):
                 if idx % 2:
                     cattr = var.attrib
-                    print("-- cattr=",cattr)
-                    print("-- cattr['fill']=",cattr['fill'])
+                    # print("-- cattr=",cattr)
+                    # print("-- cattr['fill']=",cattr['fill'])
                     self.celltype_color.append(cattr['fill'])
                 idx += 1
         except:
@@ -762,7 +773,7 @@ class Vis(QWidget):
 
 
     def cell_counts_cb(self):
-        print("---- cell_counts_cb(): --> window for 2D population plots")
+        # print("---- cell_counts_cb(): --> window for 2D population plots")
         # self.analysis_data_wait.value = 'compute n of N ...'
 
         if not self.get_cell_types_from_legend():
@@ -791,6 +802,7 @@ class Vis(QWidget):
             # print("basename= ",basename)
             # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
             mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
+            # mcds.append(pyMCDS(basename, self.output_dir, microenv=True, graph=False, verbose=True))
 
         # keys_l = list(mcds[0].data['discrete_cells']['data'])
         # print("keys_l= ",keys_l)
@@ -807,7 +819,7 @@ class Vis(QWidget):
 
         # mcds = [pyMCDS(xml_files[i], '.') for i in range(ds_count)]
         tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
-        print("max tval=",tval)
+        # print("max tval=",tval)
 
         # self.yval4 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 4) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100.) == True)) for idx in range(ds_count)] )
 
@@ -843,8 +855,8 @@ class Vis(QWidget):
         self.population_plot.ax0.set_xlabel('time (mins)')
         self.population_plot.ax0.set_ylabel('# of cells')
         self.population_plot.ax0.set_title("cell populations", fontsize=10)
-        self.population_plot.canvas.update()
-        self.population_plot.canvas.draw()
+        # self.population_plot.canvas.update()
+        # self.population_plot.canvas.draw()
         self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
         self.population_plot.show()
 
@@ -914,6 +926,7 @@ class Vis(QWidget):
             self.cell_scalar_combobox.addItem(default_var_l[idx])
         self.cell_scalar_combobox.insertSeparator(len(default_var_l))
 
+
     def append_custom_cb(self):
         self.add_default_cell_vars()
 
@@ -924,7 +937,8 @@ class Vis(QWidget):
             print("append_custom_cb(): ERROR: file not found",xml_file)
             return
 
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=True, graph=False, verbose=True)
 
         # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
         num_keys = len(mcds.data['discrete_cells']['data'].keys())
@@ -982,11 +996,14 @@ class Vis(QWidget):
         # self.output_folder.setText(dir_path)
 
     def fill_substrates_combobox(self, substrate_list):
-        print("vis3D_tab.py: ------- fill_substrates_combobox")
+        print("vis3D_tab.py: fill_substrates_combobox(): substrate_list =",substrate_list)
         print("substrate_list = ",substrate_list )
+        self.substrate_name = substrate_list[0]
+        print("\n----------------------- fill_substrates_combobox(): self.substrate_name=",self.substrate_name) # e.g., oxygen
+        # sys.exit(1)
         self.substrates_combobox.clear()
         for s in substrate_list:
-            # print(" --> ",s)
+            print(" --> ",s)
             self.substrates_combobox.addItem(s)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
 
@@ -996,6 +1013,7 @@ class Vis(QWidget):
             self.ren.AddActor(self.cutterXYActor)
         else:
             self.ren.RemoveActor(self.cutterXYActor)
+        self.vtkWidget.GetRenderWindow().Render()
 
     def yz_plane_toggle_cb(self,flag):
         self.show_yz_plane = flag
@@ -1003,6 +1021,7 @@ class Vis(QWidget):
             self.ren.AddActor(self.cutterYZActor)
         else:
             self.ren.RemoveActor(self.cutterYZActor)
+        self.vtkWidget.GetRenderWindow().Render()
 
     def xz_plane_toggle_cb(self,flag):
         self.show_xz_plane = flag
@@ -1010,6 +1029,7 @@ class Vis(QWidget):
             self.ren.AddActor(self.cutterXZActor)
         else:
             self.ren.RemoveActor(self.cutterXZActor)
+        self.vtkWidget.GetRenderWindow().Render()
 
     def voxels_toggle_cb(self,flag):
         self.show_voxels = flag
@@ -1017,15 +1037,68 @@ class Vis(QWidget):
             self.ren.AddActor(self.substrate_actor)
         else:
             self.ren.RemoveActor(self.substrate_actor)
+        self.vtkWidget.GetRenderWindow().Render()
+
+    def axes_toggle_cb(self,flag):
+        self.show_axes = flag
+        if flag:
+            if self.axes_actor is None:
+                print("------- showing axes_actor")
+                self.ren.RemoveActor(self.axes_actor)
+                self.axes_actor = vtkAxesActor()
+                self.axes_actor.SetShaftTypeToCylinder()
+                # subjective scaling
+                cradius = self.ymax * 0.001
+                self.axes_actor.SetCylinderRadius(cradius)
+                self.axes_actor.SetConeRadius(cradius*10)
+                laxis = self.ymax + self.ymax * 0.2
+                self.axes_actor.SetTotalLength(laxis,laxis,laxis)
+                # Change the font size to something reasonable
+                # Ref: http://vtk.1045678.n5.nabble.com/VtkAxesActor-Problem-td4311250.html
+                fsize = 12
+                self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+                self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+                self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+                self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+                self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+                self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+                self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+                self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+                self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+                # self.ren.AddActor(self.axes_actor)
+            self.ren.AddActor(self.axes_actor)
+        else:
+            self.ren.RemoveActor(self.axes_actor)
+        self.vtkWidget.GetRenderWindow().Render()
 
     def colorbar_combobox_changed_cb(self,idx):
         self.update_plots()
 
     def substrates_combobox_changed_cb(self,idx):
         # print("----- vis3D_tab.py: substrates_combobox_changed_cb: idx = ",idx)
-        self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        self.field_index = idx # substrate (0th -> 4 in the .mat)
         self.substrate_name = self.substrates_combobox.currentText()
+        print("\n>>> substrates_combobox_changed_cb(): self.substrate_name= ", self.substrate_name)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
+        self.update_plots()
+
+    def substrates_cbar_combobox_changed_cb(self,idx):
+        # print("----- vis3D_tab.py: substrates_combobox_changed_cb: idx = ",idx)
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        cbar_name = self.substrates_cbar_combobox.currentText()
+        print("\n>---------------->> substrates_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+        if cbar_name.find("jet") >= 0:
+            print(" -------  cbar_name=  jet_map")
+            # self.lut_substrate = self.get_jet_map()
+            self.lut_substrate = self.lut_jet
+        else:
+            print(" -------  cbar_name=  viridis_map")
+            # self.lut_substrate = self.get_viridis_map()
+            self.lut_substrate = self.lut_viridis
+
         self.update_plots()
 
 
@@ -1281,7 +1354,7 @@ class Vis(QWidget):
         # field_name = self.field_dict[self.substrate_choice.value]
         # field_name = self.field_dict[self.substrates_combobox.currentText()]
         field_name = self.substrates_combobox.currentText()
-        print("field_name= ",field_name)
+        print("fix_cmap_toggle_cb(): field_name= ",field_name)
         # print(self.cmap_fixed_toggle.value)
         # if (self.colormap_fixed_toggle.value):  # toggle on fixed range
         # if (bval):  # toggle on fixed range
@@ -1363,7 +1436,7 @@ class Vis(QWidget):
         self.text_title_actor = vtkTextActor()
         self.text_title_actor.SetInput('Dummy title')
         self.text_title_actor.GetTextProperty().SetColor(0,0,0)
-        self.text_title_actor.GetTextProperty().SetFontSize(10)
+        # self.text_title_actor.GetTextProperty().SetFontSize(6)  # just select the title to resize it
 
         self.text_representation = vtkTextRepresentation()
         self.text_representation.GetPositionCoordinate().SetValue(0.25, 0.94)
@@ -1469,13 +1542,47 @@ class Vis(QWidget):
         # # self.canvas.draw()
 
     #------------------------------------------------------------
-    def get_heat_map(self):
-        table_size = 512
+    def get_jet_map(self):
+        # table_size = 512
+        table_size = 256
         lut = vtkLookupTable()
         lut.SetNumberOfTableValues(table_size)
         # lut.SetHueRange(0.0, 0.667)  # red-to-blue
         lut.SetHueRange( 0.667, 0.)  # blue-to-red
         lut.Build()
+        return lut
+
+    #------------------------------------------------------------
+    def get_viridis_map(self):
+        table_size = 12
+
+        lut = vtkLookupTable()
+        # activeRange = self.vtkData.GetPointData().GetArray(self.activeAr).GetRange()
+        # lf.lut.SetTableRange(activeRange)
+        lut.SetNumberOfTableValues(table_size)
+
+        rgb = np.array([[0.267004, 0.004874, 0.329415, 1.      ],
+       [0.283072, 0.130895, 0.449241, 1.      ],
+       [0.262138, 0.242286, 0.520837, 1.      ],
+       [0.220057, 0.343307, 0.549413, 1.      ],
+       [0.177423, 0.437527, 0.557565, 1.      ],
+       [0.143343, 0.522773, 0.556295, 1.      ],
+       [0.119512, 0.607464, 0.540218, 1.      ],
+       [0.166383, 0.690856, 0.496502, 1.      ],
+       [0.319809, 0.770914, 0.411152, 1.      ],
+       [0.525776, 0.833491, 0.288127, 1.      ],
+       [0.762373, 0.876424, 0.137064, 1.      ],
+       [0.993248, 0.906157, 0.143936, 1.      ]])
+       # rgb.shape = (12, 4)
+        idxs = np.round(np.linspace(0, 11, table_size)).astype(int)
+        for i in range(table_size):
+            lut.SetTableValue(i,
+                           rgb[i, 0],
+                           rgb[i, 1],
+                           rgb[i, 2],
+                           1)
+
+        # lut.Build()
         return lut
 
     # rf. https://kitware.github.io/vtk-examples/site/Python/PolyData/CurvaturesDemo/
@@ -1525,8 +1632,12 @@ class Vis(QWidget):
     # def plot_svg(self, frame, rdel=''):
     def plot_cells3D(self, frame):
         print("plot_cells3D:  self.output_dir= ",self.output_dir)
+        print("plot_cells3D:  self.substrate_name= ",self.substrate_name)
         print("plot_cells3D:  frame= ",frame)
         self.frame_count.setText(str(frame))
+
+        read_microenv_flag = self.substrates_checkbox.isChecked()
+
         # xml_file = Path(self.output_dir, "output00000000.xml")
         # xml_file = "output00000000.xml"
         xml_file = "output%08d.xml" % frame
@@ -1542,13 +1653,15 @@ class Vis(QWidget):
         print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
         # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
-        mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
+        # mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=read_microenv_flag, graph=False, verbose=True)
         current_time = mcds.get_time()
         print('time=', current_time )
         print("metadata keys=",mcds.data['metadata'].keys())
         current_time = mcds.data['metadata']['current_time']
         print('time(verbose)=', current_time )
 
+        current_time = round(current_time, 2)
         self.title_str = 'time '+ str(current_time) + ' min'
         # self.text_title_actor.SetInput(self.title_str)
 
@@ -1563,6 +1676,8 @@ class Vis(QWidget):
             # ncells = len(mcds.data['discrete_cells']['ID'])
             ncells = len(mcds.data['discrete_cells']['data']['ID'])
             print('ncells=', ncells)
+            if ncells == 0:
+                return
             self.title_str += ", # cells=" + str(ncells)
 
             global xyz
@@ -1642,7 +1757,7 @@ class Vis(QWidget):
                 # print(idx,") total_volume= ", total_volume, ", rval=",rval )
                 # self.cellID.InsertNextValue(id)
                 self.radii.InsertNextValue(rval)
-                # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; heatmap across all cells
+                # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; jet/heatmap across all cells
 
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
                 # print("idx, cell_type[idx]= ",idx,cell_type[idx])
@@ -1717,16 +1832,26 @@ class Vis(QWidget):
             self.ren.RemoveActor(self.cells_actor)
 
         self.text_title_actor.SetInput(self.title_str)
+
         #-------------------
         if self.substrates_checked_flag:
 
             print("substrate names= ",mcds.get_substrate_names())
+
+            field_name = self.substrates_combobox.currentText()
+            print("plot_cells3D(): field_name= ",field_name)
+
+            print("plot_cells3D(): self.substrate_name= ",self.substrate_name)
             # sub_name = mcds.get_substrate_names()[0]
-            sub_name = mcds.get_substrate_names()[self.field_index]
-            self.scalarBar.SetTitle(sub_name)
-            sub_dict = mcds.data['continuum_variables'][sub_name]
+            # sub_name = mcds.get_substrate_names()[self.field_index]  # NOoo!
+            # self.scalarBar.SetTitle(sub_name)
+            self.scalarBar.SetTitle(self.substrate_name)
+            # sub_dict = mcds.data['continuum_variables'][sub_name]
+            sub_dict = mcds.data['continuum_variables'][self.substrate_name]
             sub_concentration = sub_dict['data']
             print("sub_concentration.shape= ",sub_concentration.shape)
+            print("np.min(sub_concentration)= ",np.min(sub_concentration))
+            print("np.max(sub_concentration)= ",np.max(sub_concentration))
             # print("sub_concentration = ",sub_concentration)
 
             # update VTK pipeline
@@ -1852,6 +1977,7 @@ class Vis(QWidget):
                 self.cutterXY.Update()
 
                 self.cutterXYMapper.SetScalarRange(vmin, vmax)
+                self.cutterXYMapper.SetLookupTable(self.lut_substrate)
                 # self.cutterXYMapper.SetScalarRange(0, vmax)
                 self.cutterXYMapper.Update()
                 # cutMapper.SetInputConnection(planeCut.GetOutputPort())
@@ -1894,6 +2020,7 @@ class Vis(QWidget):
                 self.cutterYZ.Update()
 
                 self.cutterYZMapper.SetScalarRange(vmin, vmax)
+                self.cutterYZMapper.SetLookupTable(self.lut_substrate)
                 # self.cutterYZMapper.SetScalarRange(0, vmax)
                 self.cutterYZMapper.Update()
 
@@ -1916,6 +2043,7 @@ class Vis(QWidget):
                 self.cutterXZ.Update()
 
                 self.cutterXZMapper.SetScalarRange(vmin, vmax)
+                self.cutterXZMapper.SetLookupTable(self.lut_substrate)
                 # self.cutterXZMapper.SetScalarRange(0, vmax)
                 self.cutterXZMapper.Update()
 
@@ -1962,12 +2090,58 @@ class Vis(QWidget):
             self.ren.RemoveActor2D(self.scalarBar)
 
 
-        self.vtkWidget.GetRenderWindow().Render()
 
-        # self.ren.ResetCamera()
-        # renderer.SetBackground(colors.GetColor3d('SlateGray'))  # Background Slate Gray
+        # if self.axes_actor is None:
+        if self.show_axes:
+            print("------- showing axes_actor")
+            self.ren.RemoveActor(self.axes_actor)
+            self.axes_actor = vtkAxesActor()
+            self.axes_actor.SetShaftTypeToCylinder()
+            # subjective scaling
+            cradius = self.ymax * 0.001
+            self.axes_actor.SetCylinderRadius(cradius)
+            self.axes_actor.SetConeRadius(cradius*10)
+            laxis = self.ymax + self.ymax * 0.2
+            self.axes_actor.SetTotalLength(laxis,laxis,laxis)
+            # Change the font size to something reasonable
+            # Ref: http://vtk.1045678.n5.nabble.com/VtkAxesActor-Problem-td4311250.html
+            fsize = 12
+            self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+            self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+            self.axes_actor.GetXAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+            self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+            self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+            self.axes_actor.GetYAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+            self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
+            self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
+            self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+            self.ren.AddActor(self.axes_actor)
 
     # renderWindow.SetWindowName('PhysiCell model')
-    # renderWindow.Render()
+        # renderWindow.Render()
+        # self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
+        self.vtkWidget.GetRenderWindow().Render()
     # renderWindowInteractor.Start()
         return
+
+    def make_axes_actor(self, scale, xyzLabels):
+        axes = vtkAxesActor()
+        axes.SetScale(scale[0], scale[1], scale[2])
+        axes.SetShaftTypeToCylinder()
+        axes.SetXAxisLabelText(xyzLabels[0])
+        axes.SetYAxisLabelText(xyzLabels[1])
+        axes.SetZAxisLabelText(xyzLabels[2])
+        axes.SetCylinderRadius(5. * axes.GetCylinderRadius())
+        axes.SetConeRadius(1.025 * axes.GetConeRadius())
+        axes.SetSphereRadius(10.5 * axes.GetSphereRadius())
+        tprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
+        tprop.ItalicOff()
+        tprop.ShadowOn()
+        tprop.SetFontFamilyToTimes()
+        # Use the same text properties on the other two axes.
+        axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
+        axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
+        # return axes
+        self.axes_actor = axes

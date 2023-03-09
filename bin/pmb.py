@@ -77,6 +77,12 @@ class PhysiCellXMLCreator(QWidget):
     def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
+            try:
+                import vtk
+            except:
+                print("\nError: Unable to `import vtk` for 3D visualization. \nYou can try to do `pip install vtk` from the command line and then and re-run the Studio, or run the Studio without the 3D visualization argument and settle for 2D vis.\n")
+                sys.exit(-1)
+
             from vis3D_tab import Vis 
         else:
             from vis_tab import Vis 
@@ -180,7 +186,7 @@ class PhysiCellXMLCreator(QWidget):
         self.model = {}  # key: name, value:[read-only, tree]
 
         self.config_tab = Config(self.studio_flag)
-        self.config_tab_idx = 0
+        self.config_tab_index = 0
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
 
@@ -199,7 +205,7 @@ class PhysiCellXMLCreator(QWidget):
             print("pmb.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
         self.microenv_tab = SubstrateDef(self.config_tab)
-        self.microenv_tab_idx = 1
+        self.microenv_tab_index = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
         # print("pmb.py: first_substrate_name=",substrate_name)
@@ -377,7 +383,10 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        self.tabWidget.setCurrentIndex(self.config_tab_idx)  # Config (default)
+        if self.model3D_flag:
+            self.tabWidget.setCurrentIndex(self.plot_tab_index)
+        else:
+            self.tabWidget.setCurrentIndex(self.config_tab_index)  # Config (default)
         # self.tabWidget.repaint()  # Config (default)
         # self.config_tab.config_params.update()  # 
         # self.tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
@@ -388,7 +397,7 @@ class PhysiCellXMLCreator(QWidget):
         # if index == 0:
         #     pmb_app.resize(1101,770) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
         #     pmb_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
-        if index == self.microenv_tab_idx: # microenv_tab
+        if index == self.microenv_tab_index: # microenv_tab
             self.microenv_tab.update_3D()
 
     def about_pyqt(self):
@@ -589,6 +598,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             voxels_act = view3D_menu.addAction("All voxels")
             voxels_act.setCheckable(True)
             voxels_act.setChecked(False)
+
+            axes_act = view3D_menu.addAction("Axes")
+            axes_act.setCheckable(True)
+            axes_act.setChecked(False)
 
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
@@ -937,7 +950,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     # -------- relevant to vis3D -----------
     def view3D_cb(self, action):
-        logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
+        # logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
         if "XY" in action.text():
             self.vis_tab.xy_plane_toggle_cb(action.isChecked())
         elif "YZ" in action.text():
@@ -946,8 +959,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.vis_tab.xz_plane_toggle_cb(action.isChecked())
         elif "voxels" in action.text():
             self.vis_tab.voxels_toggle_cb(action.isChecked())
-        elif "axes" in action.text():
-            pass
+        elif "Axes" in action.text():
+            self.vis_tab.axes_toggle_cb(action.isChecked())
         elif "contour" in action.text():
             pass
         return
@@ -1407,7 +1420,7 @@ def main():
     icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
     pmb_app.setWindowIcon(QIcon(icon_path))
 
-    print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
+    # print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
 
     # Use a palette to help force light-mode (not dark) style
     # Not all seem to be used, but beware/test(!) if changed.
