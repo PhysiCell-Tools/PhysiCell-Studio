@@ -26,11 +26,12 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class RunModel(QWidget):
-    def __init__(self, nanohub_flag, tab_widget, rules_flag, download_menu):
+    def __init__(self, nanohub_flag, tab_widget, celldef_tab, rules_flag, download_menu):
         super().__init__()
 
         self.nanohub_flag = nanohub_flag
         self.tab_widget = tab_widget
+        self.celldef_tab = celldef_tab
         self.rules_flag = rules_flag
         self.download_menu = download_menu
 
@@ -227,7 +228,13 @@ class RunModel(QWidget):
             self.vis_tab.reset_model()
             self.vis_tab.update_plots()
 
-            self.vis_tab.build_physiboss_info()
+            if self.celldef_tab.intracellular_type_dropdown.currentText().find("boolean") >= 0:
+                print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
+                self.vis_tab.build_physiboss_info()
+            else:
+                print("\n--- run_tab:  calling vis_tab.disable_physiboss_info()")
+                self.vis_tab.disable_physiboss_info()
+                # self.vis_tab.physiboss_vis_hide
 
         if self.p is None:  # No process running.
             self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab

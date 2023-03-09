@@ -40,6 +40,7 @@ import sys
 import shutil
 import copy
 import logging
+import inspect
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui
@@ -3295,7 +3296,8 @@ class CellDef(QWidget):
 
     def physiboss_update_list_nodes(self):
 
-        t_intracellular = self.param_d[self.current_cell_def]["intracellular"]        
+        t_intracellular = self.param_d[self.current_cell_def]["intracellular"]
+        print(f'----- {inspect.stack()[0][3]}: {t_intracellular}')
         if t_intracellular is not None:
 
             # Here I started by looking at both the bnd and the cfg
@@ -3326,6 +3328,7 @@ class CellDef(QWidget):
                     else:
                         node.setCurrentIndex(-1)
 
+                print("_mutants= ",self.physiboss_mutants)
                 for i, (node, _, _, _) in enumerate(self.physiboss_mutants):
                     node.currentIndexChanged.disconnect()
                     node.clear()
@@ -3333,6 +3336,8 @@ class CellDef(QWidget):
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
 
+                    print("  ['mutants']= ",self.param_d[self.current_cell_def]["intracellular"]["mutants"])
+                    print("  >> i= ",i)
                     if (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] in list_nodes
                     ):
@@ -6725,18 +6730,28 @@ class CellDef(QWidget):
                 for i, initial_value in enumerate(self.param_d[cdname]["intracellular"]["initial_values"]):
                     self.physiboss_add_initial_values()
                     node, value, _, _ = self.physiboss_initial_states[i]
-                    node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(initial_value["node"]))
-                    value.setText(initial_value["value"])
+                    if "list_nodes" in self.param_d[cdname]["intracellular"].keys():
+                        node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(initial_value["node"]))
+                        value.setText(initial_value["value"])
+                    else:
+                        print("----- ERROR(0): update_intracellular_params() has no 'list_nodes' key.")
+                        break
 
                 for i, mutant in enumerate(self.param_d[cdname]["intracellular"]["mutants"]):
                     self.physiboss_add_mutant()
                     node, value, _, _ = self.physiboss_mutants[i]
+                    if "list_nodes" not in self.param_d[cdname]["intracellular"].keys():
+                        print("----- ERROR(1): update_intracellular_params() has no 'list_nodes' key.")
+                        break
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(mutant["node"]))
                     value.setText(mutant["value"])
 
                 for i, parameter in enumerate(self.param_d[cdname]["intracellular"]["parameters"]):
                     self.physiboss_add_parameter()
                     name, value, _, _ = self.physiboss_parameters[i]
+                    if "list_nodes" not in self.param_d[cdname]["intracellular"].keys():
+                        print("----- ERROR(2): update_intracellular_params() has no 'list_nodes' key.")
+                        break
                     name.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_parameters"].index(parameter["name"]))
                     value.setText(parameter["value"])
 
@@ -6747,6 +6762,9 @@ class CellDef(QWidget):
                     logging.debug(f'update_intracellular_params(): cdname={cdname},  {input["name"]}={input["name"]}')
                     logging.debug(f'  param_d= {self.param_d[cdname]["intracellular"]}')
                     name.setCurrentIndex(self.physiboss_signals.index(input["name"]))
+                    if "list_nodes" not in self.param_d[cdname]["intracellular"].keys():
+                        print("----- ERROR(3): update_intracellular_params() has no 'list_nodes' key.")
+                        break
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(input["node"]))
                     action.setCurrentIndex(1 if input["action"] == "inhibition" else 0)
                     threshold.setText(input["threshold"])
@@ -6757,6 +6775,9 @@ class CellDef(QWidget):
                     self.physiboss_add_output()
                     name, node, action, value, basal_value, smoothing, _, _ = self.physiboss_outputs[i]
                     name.setCurrentIndex(self.physiboss_behaviours.index(output["name"]))
+                    if "list_nodes" not in self.param_d[cdname]["intracellular"].keys():
+                        print("----- ERROR(4): update_intracellular_params() has no 'list_nodes' key.")
+                        break
                     node.setCurrentIndex(self.param_d[cdname]["intracellular"]["list_nodes"].index(output["node"]))
                     action.setCurrentIndex(1 if output["action"] == "inhibition" else 0)
                     value.setText(output["value"])

@@ -311,7 +311,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.celldef_tab, self.rules_flag, self.download_menu)
 
             self.homedir = os.getcwd()
             print("pmb.py: self.homedir = ",self.homedir)
@@ -1006,6 +1006,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def load_model(self,name):
         if self.studio_flag:
             self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
+            self.vis_tab.physiboss_vis_checkbox = None    # default: assume a non-boolean intracellular model
+            self.vis_tab.physiboss_vis_flag = False
+            if self.vis_tab.physiboss_vis_checkbox:
+                self.vis_tab.physiboss_vis_checkbox.setChecked(False)
+
 
         os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
 
@@ -1260,6 +1265,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def physiboss_cell_lines_cb(self):
         self.load_model("physiboss_cell_lines_flat")
+        # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
 

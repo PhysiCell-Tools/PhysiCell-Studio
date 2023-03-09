@@ -805,13 +805,28 @@ class Vis(QWidget):
         # self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
         self.population_plot.show()
 
+    def disable_physiboss_info(self):
+        print("vis_tab: ------- disable_physiboss_info()")
+        if self.physiboss_vis_checkbox is not None:
+            print("vis_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
+            try:
+                self.physiboss_vis_checkbox.setChecked(False)
+                self.physiboss_vis_checkbox.setEnabled(False)
+                self.physiboss_cell_type_combobox.setEnabled(False)
+                self.physiboss_node_combobox.setEnabled(False)
+            except:
+                print("ERROR: Exception disabling physiboss widgets")
+                pass
+        else:
+            print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
         print("build_physiboss_info(): get_cell_types():  config_file=",config_file)
         basename = os.path.basename(config_file)
         print("get_cell_types():  basename=",basename)
-        out_config_file = os.path.join(self.output_dir, basename)
+        # out_config_file = os.path.join(self.output_dir, basename)
+        out_config_file = config_file
         print("get_cell_types():  out_config_file=",out_config_file)
 
         try:
@@ -840,11 +855,22 @@ class Vis(QWidget):
                     bnd_filename = intracellular.find("bnd_filename").text
                     
                     list_nodes = []
-                    with open(os.path.join(os.getcwd(), bnd_filename), "r") as bnd_file:
-                        for line in bnd_file.readlines():        
-                            if line.strip().lower().startswith("node"):
-                                node = line.strip().split(" ")[1]
-                                list_nodes.append(node)
+                    full_fname = os.path.join(os.getcwd(), bnd_filename)
+                    try:
+                        # with open(os.path.join(os.getcwd(), bnd_filename), "r") as bnd_file:
+                        with open(full_fname, "r") as bnd_file:
+                            for line in bnd_file.readlines():        
+                                if line.strip().lower().startswith("node"):
+                                    node = line.strip().split(" ")[1]
+                                    list_nodes.append(node)
+                    except:
+                        print("vis_tab:  ERROR opening/reading ",full_fname)
+                        msgBox = QMessageBox()
+                        msgBox.setIcon(QMessageBox.Information)
+                        msgBox.setText("Cannot open or read " + full_fname)
+                        msgBox.setStandardButtons(QMessageBox.Ok)
+                        msgBox.exec()
+                        return
 
 
                     cfg_filename = intracellular.find("cfg_filename").text
@@ -902,6 +928,7 @@ class Vis(QWidget):
             self.vbox.addLayout(self.physiboss_hbox_2)
         
     def physiboss_vis_hide(self):
+        print("\n--------- physiboss_vis_hide()")
 
         if self.physiboss_vis_checkbox is not None:
             self.physiboss_vis_checkbox.disconnect()
