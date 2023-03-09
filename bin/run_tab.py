@@ -220,6 +220,13 @@ class RunModel(QWidget):
             self.vis_tab.reset_model_flag = True
             self.vis_tab.reset_plot_range()
             self.vis_tab.init_plot_range(self.config_tab) # heaven help the person who needs to understand this
+            self.vis_tab.output_folder.setText(self.output_dir) 
+
+            self.vis_tab.output_dir = self.output_dir
+            self.legend_tab.output_dir = self.output_dir
+            self.vis_tab.reset_model()
+            self.vis_tab.update_plots()
+
             self.vis_tab.build_physiboss_info()
 
         if self.p is None:  # No process running.

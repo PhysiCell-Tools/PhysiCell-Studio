@@ -169,6 +169,7 @@ class Vis(QWidget):
 
         self.nanohub_flag = nanohub_flag
         self.run_tab = run_tab
+        self.legend_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -228,13 +229,12 @@ class Vis(QWidget):
 
         self.aspect_ratio = 0.7
 
-        self.view_shading = None
-        self.show_voxel_grid = False
-        self.show_mech_grid = False
-        self.show_vectors = False
+        self.view_aspect_square = True
+        self.view_smooth_shading = False
 
-        # self.show_grid = False
-        # self.show_vectors = False
+        self.show_voxel_grid = False
+        self.show_mechanics_grid = False
+        self.show_vectors = False
 
         self.show_nucleus = False
         # self.show_edge = False
@@ -581,11 +581,15 @@ class Vis(QWidget):
 
         # self.output_folder = QLineEdit(self.output_dir)
         self.output_folder = QLineEdit()
-        self.output_folder.returnPressed.connect(self.output_folder_cb)
+        self.output_folder.setEnabled(False)
+        # self.output_folder.returnPressed.connect(self.output_folder_cb)
         hbox.addWidget(self.output_folder)
 
-        label = QLabel("(then 'Enter')")
-        hbox.addWidget(label)
+        # label = QLabel("(then 'Enter')")
+        # hbox.addWidget(label)
+        output_folder_button = QPushButton("Select")
+        output_folder_button.clicked.connect(self.output_folder_cb)
+        hbox.addWidget(output_folder_button)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -659,6 +663,7 @@ class Vis(QWidget):
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
+            # print("get_cell_types_from_config(): Error opening or parsing " + out_config_file)
 
         try:
             self.celltype_name.clear()
@@ -725,7 +730,7 @@ class Vis(QWidget):
 
 
     def cell_counts_cb(self):
-        # print("---- cell_counts_cb(): --> window for 2D population plots")
+        print("---- cell_counts_cb(): --> window for 2D population plots")
         # self.analysis_data_wait.value = 'compute n of N ...'
 
         if not self.get_cell_types_from_legend():
@@ -803,7 +808,7 @@ class Vis(QWidget):
 
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("get_cell_types():  config_file=",config_file)
+        print("build_physiboss_info(): get_cell_types():  config_file=",config_file)
         basename = os.path.basename(config_file)
         print("get_cell_types():  basename=",basename)
         out_config_file = os.path.join(self.output_dir, basename)
@@ -815,7 +820,7 @@ class Vis(QWidget):
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + out_config_file)
+            msgBox.setText("build_physiboss_info(): Error opening or parsing " + out_config_file)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
@@ -942,9 +947,52 @@ class Vis(QWidget):
         self.update_plots()
         
     def output_folder_cb(self):
-        # print(f"output_folder_cb(): old={self.output_dir}")
+        print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
-        # print(f"                    new={self.output_dir}")
+        print(f"                    new={self.output_dir}")
+        # filePath = QFileDialog.getOpenFileName(self,'',".")
+        dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+
+        print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
+        # full_path_model_name = dirPath[0]
+        # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
+        # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
+        # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
+        if dir_path == "":
+            return
+        if Path(dir_path).is_dir():
+            print("select_plot_output_cb():  dir_path is valid")
+            # print("len(full_path_model_name) = ", len(full_path_model_name) )
+            # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
+            # fname = os.path.basename(full_path_model_name)
+            # self.current_xml_file = full_path_model_name
+
+            # self.add_new_model(self.current_xml_file, True)
+            # self.config_file = self.current_xml_file
+            # if self.studio_flag:
+            #     self.run_tab.config_file = self.current_xml_file
+            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+            # self.show_sample_model()
+
+            # self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.legend_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = dir_path
+            # self.vis_tab.update_output_dir(dir_path)
+            # self.output_dir(dir_path)
+            self.output_dir = dir_path
+            self.output_folder.setText(dir_path)
+            self.legend_tab.output_dir = dir_path
+            legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
+            if Path(legend_file).is_file():
+                self.legend_tab.reload_legend()
+            else:
+                self.legend_tab.clear_legend()
+
+            self.reset_model()
+            self.update_plots()
+
+        else:
+            print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
 
     def cells_svg_mat_cb(self):
         radioBtn = self.sender()
@@ -1354,7 +1402,28 @@ class Vis(QWidget):
 
             self.update_plots()
 
+    #----- View menu items
+    def view_aspect_toggle_cb(self,bval):
+        self.view_aspect_square = bval
+        print("vis_tab.py: self.view_aspect_square = ",self.view_aspect_square)
+        self.update_plots()
 
+    def shading_toggle_cb(self,bval):
+        if bval:
+            self.shading_choice = 'gouraud'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        else:
+            self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        self.update_plots()
+
+    def voxel_grid_toggle_cb(self,bval):
+        self.show_voxel_grid = bval
+        self.update_plots()
+
+    def mechanics_grid_toggle_cb(self,bval):
+        self.show_mechanics_grid = bval
+        self.update_plots()
+
+    #----------------------------------------------
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval
         self.cells_svg_rb.setEnabled(bval)
@@ -1386,8 +1455,8 @@ class Vis(QWidget):
         self.substrates_combobox.setEnabled(bval)
         self.substrates_cbar_combobox.setEnabled(bval)
 
-        if self.view_shading:
-            self.view_shading.setEnabled(bval)
+        # if self.view_shading:
+        #     self.view_shading.setEnabled(bval)
 
         if not self.substrates_checked_flag:
             if self.cax1:
@@ -1765,7 +1834,7 @@ class Vis(QWidget):
 
         if self.show_voxel_grid:
             self.plot_voxel_grid()
-        if self.show_mech_grid:
+        if self.show_mechanics_grid:
             self.plot_mechanics_grid()
 
         # if self.show_vectors:
@@ -2027,7 +2096,10 @@ class Vis(QWidget):
             # print("--- plotting circles without edges!!")
             self.circles(xvals,yvals, s=rvals, color=rgbas )
 
-        self.ax0.set_aspect(1.0)
+        if self.view_aspect_square:
+            self.ax0.set_aspect('equal')
+        else:
+            self.ax0.set_aspect('auto')
     
     #-----------------------------------------------------
     def plot_cell_scalar(self, frame):
@@ -2037,7 +2109,7 @@ class Vis(QWidget):
             
         if self.show_voxel_grid:
             self.plot_voxel_grid()
-        if self.show_mech_grid:
+        if self.show_mechanics_grid:
             self.plot_mechanics_grid()
 
 
@@ -2183,7 +2255,11 @@ class Vis(QWidget):
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        self.ax0.set_aspect(1.0)
+
+        if self.view_aspect_square:
+            self.ax0.set_aspect('equal')
+        else:
+            self.ax0.set_aspect('auto')
 
     #------------------------------------------------------------
     def plot_substrate(self, frame):
@@ -2322,4 +2398,8 @@ class Vis(QWidget):
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        self.ax0.set_aspect(1.0)
+
+        if self.view_aspect_square:
+            self.ax0.set_aspect('equal')
+        else:
+            self.ax0.set_aspect('auto')
