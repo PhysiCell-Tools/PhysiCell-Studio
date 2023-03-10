@@ -3438,8 +3438,8 @@ class CellDef(QWidget):
     def physiboss_clicked_add_initial_value(self):
         self.physiboss_add_initial_values()
         self.param_d[self.current_cell_def]["intracellular"]["initial_values"].append({
-            'node': None,
-            'value': None
+            'node': self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][0],
+            'value': ""
         })
 
     def physiboss_add_initial_values(self):
@@ -3504,8 +3504,8 @@ class CellDef(QWidget):
     def physiboss_clicked_add_mutant(self):
         self.physiboss_add_mutant()
         self.param_d[self.current_cell_def]["intracellular"]["mutants"].append({
-            'node': '',
-            'value': '',
+            'node': self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][0],
+            'value': "",
         })
 
     def physiboss_add_mutant(self):
@@ -3569,8 +3569,8 @@ class CellDef(QWidget):
     def physiboss_clicked_add_parameter(self):
         self.physiboss_add_parameter()
         self.param_d[self.current_cell_def]["intracellular"]["parameters"].append({
-            'name': None,
-            'value': None
+            'name': self.param_d[self.current_cell_def]["intracellular"]["list_parameters"][0],
+            'value': ""
         })
 
     def physiboss_add_parameter(self):
@@ -3633,12 +3633,12 @@ class CellDef(QWidget):
     def physiboss_clicked_add_input(self):
         self.physiboss_add_input()
         self.param_d[self.current_cell_def]["intracellular"]["inputs"].append({
-            'name': '',
-            'node': '',
+            'name': self.physiboss_signals[0],
+            'node': self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][0],
             'action': 'activation',
-            'threshold': 1.0,
-            'inact_threshold': 1.0,
-            'smoothing': 0
+            'threshold': "",
+            'inact_threshold': "",
+            'smoothing': ""
         })
 
     def physiboss_add_input(self):
@@ -3758,12 +3758,12 @@ class CellDef(QWidget):
     def physiboss_clicked_add_output(self):
         self.physiboss_add_output()
         self.param_d[self.current_cell_def]["intracellular"]["outputs"].append({
-            'name': '',
-            'node': '',
+            'name': self.physiboss_behaviours[0],
+            'node': self.param_d[self.current_cell_def]["intracellular"]["list_nodes"][0],
             'action': 'activation',
-            'value': 1.0,
-            'basal_value': 1.0,
-            'smoothing': 0
+            'value': "",
+            'basal_value': "",
+            'smoothing': ""
         })
 
     def physiboss_add_output(self):
