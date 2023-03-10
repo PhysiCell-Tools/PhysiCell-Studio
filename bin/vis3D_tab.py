@@ -75,6 +75,7 @@ class Vis(QWidget):
         self.substrate_name = ""
         self.lut_jet = self.get_jet_map()
         self.lut_viridis = self.get_viridis_map()
+        self.lut_ylorrd = self.get_ylorrd_map()
         # self.lut_substrate = self.get_jet_map()
         self.lut_substrate = self.lut_jet
 
@@ -210,6 +211,14 @@ class Vis(QWidget):
 
         self.cutterXYActor = vtkActor()
         self.cutterXYActor.SetMapper(self.cutterXYMapper)
+
+        # https://kitware.github.io/vtk-examples/site/Python/VisualizationAlgorithms/Cutter/
+        # cutter = vtkCutter()
+        # cutter.SetCutFunction(plane)
+        # cutter.SetInputConnection(cube.GetOutputPort())
+        # cutter.Update()
+        # cutterMapper = vtkPolyDataMapper()
+        # cutterMapper.SetInputConnection(cutter.GetOutputPort())
 
         #-----
         self.planeYZ = vtkPlane()
@@ -647,8 +656,11 @@ class Vis(QWidget):
         self.output_folder.returnPressed.connect(self.output_folder_cb)
         hbox.addWidget(self.output_folder)
 
-        label = QLabel("(then 'Enter')")
-        hbox.addWidget(label)
+        # label = QLabel("(then 'Enter')")
+        # hbox.addWidget(label)
+        output_folder_button = QPushButton("Select")
+        output_folder_button.clicked.connect(self.output_folder_cb)
+        hbox.addWidget(output_folder_button)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -661,6 +673,18 @@ class Vis(QWidget):
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         self.vbox.addWidget(self.cell_counts_button)
 
+        #-----------
+        self.physiboss_qline = None
+        self.physiboss_hbox_1 = None
+        
+        self.physiboss_vis_checkbox = None
+        self.physiboss_vis_flag = False
+        self.physiboss_selected_cell_line = None
+        self.physiboss_selected_node = None
+        self.physiboss_hbox_2 = None
+
+        self.physiboss_cell_type_combobox = None
+        self.physiboss_node_combobox = None
         #-----------
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
 
@@ -860,6 +884,20 @@ class Vis(QWidget):
         self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
         self.population_plot.show()
 
+    def disable_physiboss_info(self):
+        print("vis_tab: ------- disable_physiboss_info()")
+        if self.physiboss_vis_checkbox is not None:
+            print("vis_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
+            try:
+                self.physiboss_vis_checkbox.setChecked(False)
+                self.physiboss_vis_checkbox.setEnabled(False)
+                self.physiboss_cell_type_combobox.setEnabled(False)
+                self.physiboss_node_combobox.setEnabled(False)
+            except:
+                print("ERROR: Exception disabling physiboss widgets")
+                pass
+        else:
+            print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
     def build_physiboss_info(self):
         pass
@@ -958,6 +996,54 @@ class Vis(QWidget):
         self.disable_cell_scalar_cb = False
 
         self.update_plots()
+
+    def output_folder_cb(self):
+        print(f"output_folder_cb(): old={self.output_dir}")
+        self.output_dir = self.output_folder.text()
+        print(f"                    new={self.output_dir}")
+        # filePath = QFileDialog.getOpenFileName(self,'',".")
+        dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+
+        print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
+        # full_path_model_name = dirPath[0]
+        # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
+        # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
+        # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
+        if dir_path == "":
+            return
+        if Path(dir_path).is_dir():
+            print("select_plot_output_cb():  dir_path is valid")
+            # print("len(full_path_model_name) = ", len(full_path_model_name) )
+            # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
+            # fname = os.path.basename(full_path_model_name)
+            # self.current_xml_file = full_path_model_name
+
+            # self.add_new_model(self.current_xml_file, True)
+            # self.config_file = self.current_xml_file
+            # if self.studio_flag:
+            #     self.run_tab.config_file = self.current_xml_file
+            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+            # self.show_sample_model()
+
+            # self.vis_tab.output_dir = self.config_tab.folder.text()
+            # self.legend_tab.output_dir = self.config_tab.folder.text()
+            # self.vis_tab.output_dir = dir_path
+            # self.vis_tab.update_output_dir(dir_path)
+            # self.output_dir(dir_path)
+            self.output_dir = dir_path
+            self.output_folder.setText(dir_path)
+            self.legend_tab.output_dir = dir_path
+            legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
+            if Path(legend_file).is_file():
+                self.legend_tab.reload_legend()
+            else:
+                self.legend_tab.clear_legend()
+
+            self.reset_model()
+            self.update_plots()
+
+        else:
+            print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
 
 
     def change_plot_range(self):
@@ -1094,10 +1180,14 @@ class Vis(QWidget):
             print(" -------  cbar_name=  jet_map")
             # self.lut_substrate = self.get_jet_map()
             self.lut_substrate = self.lut_jet
-        else:
+        elif cbar_name.find("viridis") >= 0:
             print(" -------  cbar_name=  viridis_map")
             # self.lut_substrate = self.get_viridis_map()
             self.lut_substrate = self.lut_viridis
+        elif cbar_name.find("YlOrRd") >= 0:
+            print(" -------  cbar_name=  ylorrd")
+            # self.lut_substrate = self.get_viridis_map()
+            self.lut_substrate = self.lut_ylorrd
 
         self.update_plots()
 
@@ -1553,8 +1643,11 @@ class Vis(QWidget):
         return lut
 
     #------------------------------------------------------------
+    # https://matplotlib.org/3.1.1/tutorials/colors/colormap-manipulation.html
+    # >>> viridis = cm.get_cmap('viridis', 32)
+    # >>> viridis(np.linspace(0, 1, 32))
     def get_viridis_map(self):
-        table_size = 12
+        table_size = 32
 
         lut = vtkLookupTable()
         # activeRange = self.vtkData.GetPointData().GetArray(self.activeAr).GetRange()
@@ -1562,19 +1655,93 @@ class Vis(QWidget):
         lut.SetNumberOfTableValues(table_size)
 
         rgb = np.array([[0.267004, 0.004874, 0.329415, 1.      ],
-       [0.283072, 0.130895, 0.449241, 1.      ],
-       [0.262138, 0.242286, 0.520837, 1.      ],
-       [0.220057, 0.343307, 0.549413, 1.      ],
-       [0.177423, 0.437527, 0.557565, 1.      ],
-       [0.143343, 0.522773, 0.556295, 1.      ],
-       [0.119512, 0.607464, 0.540218, 1.      ],
-       [0.166383, 0.690856, 0.496502, 1.      ],
-       [0.319809, 0.770914, 0.411152, 1.      ],
-       [0.525776, 0.833491, 0.288127, 1.      ],
-       [0.762373, 0.876424, 0.137064, 1.      ],
-       [0.993248, 0.906157, 0.143936, 1.      ]])
+            [0.277018, 0.050344, 0.375715, 1.      ],
+            [0.282327, 0.094955, 0.417331, 1.      ],
+            [0.282884, 0.13592 , 0.453427, 1.      ],
+            [0.278012, 0.180367, 0.486697, 1.      ],
+            [0.269308, 0.218818, 0.509577, 1.      ],
+            [0.257322, 0.25613 , 0.526563, 1.      ],
+            [0.243113, 0.292092, 0.538516, 1.      ],
+            [0.225863, 0.330805, 0.547314, 1.      ],
+            [0.210503, 0.363727, 0.552206, 1.      ],
+            [0.19586 , 0.395433, 0.555276, 1.      ],
+            [0.182256, 0.426184, 0.55712 , 1.      ],
+            [0.168126, 0.459988, 0.558082, 1.      ],
+            [0.15627 , 0.489624, 0.557936, 1.      ],
+            [0.144759, 0.519093, 0.556572, 1.      ],
+            [0.133743, 0.548535, 0.553541, 1.      ],
+            [0.123463, 0.581687, 0.547445, 1.      ],
+            [0.119423, 0.611141, 0.538982, 1.      ],
+            [0.12478 , 0.640461, 0.527068, 1.      ],
+            [0.143303, 0.669459, 0.511215, 1.      ],
+            [0.180653, 0.701402, 0.488189, 1.      ],
+            [0.226397, 0.728888, 0.462789, 1.      ],
+            [0.281477, 0.755203, 0.432552, 1.      ],
+            [0.344074, 0.780029, 0.397381, 1.      ],
+            [0.421908, 0.805774, 0.35191 , 1.      ],
+            [0.496615, 0.826376, 0.306377, 1.      ],
+            [0.575563, 0.844566, 0.256415, 1.      ],
+            [0.657642, 0.860219, 0.203082, 1.      ],
+            [0.751884, 0.874951, 0.143228, 1.      ],
+            [0.83527 , 0.886029, 0.102646, 1.      ],
+            [0.916242, 0.896091, 0.100717, 1.      ],
+            [0.993248, 0.906157, 0.143936, 1.      ]])
+        
        # rgb.shape = (12, 4)
-        idxs = np.round(np.linspace(0, 11, table_size)).astype(int)
+        idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
+        for i in range(table_size):
+            lut.SetTableValue(i,
+                           rgb[i, 0],
+                           rgb[i, 1],
+                           rgb[i, 2],
+                           1)
+
+        # lut.Build()
+        return lut
+
+    #------------------------------------------------------------
+    def get_ylorrd_map(self):
+        table_size = 32
+
+        lut = vtkLookupTable()
+        # activeRange = self.vtkData.GetPointData().GetArray(self.activeAr).GetRange()
+        # lf.lut.SetTableRange(activeRange)
+        lut.SetNumberOfTableValues(table_size)
+
+        rgb = np.array([[1.        , 1.        , 0.8       , 1.        ],
+       [1.        , 0.98178368, 0.75547122, 1.        ],
+       [1.        , 0.96356736, 0.71094244, 1.        ],
+       [1.        , 0.94535104, 0.66641366, 1.        ],
+       [0.9998735 , 0.92688172, 0.62213789, 1.        ],
+       [0.99886148, 0.90664137, 0.57963314, 1.        ],
+       [0.99784946, 0.88640101, 0.5371284 , 1.        ],
+       [0.99683744, 0.86616066, 0.49462366, 1.        ],
+       [0.99607843, 0.84111322, 0.45211891, 1.        ],
+       [0.99607843, 0.80164453, 0.40961417, 1.        ],
+       [0.99607843, 0.76217584, 0.36710942, 1.        ],
+       [0.99607843, 0.72270715, 0.32460468, 1.        ],
+       [0.99569892, 0.68399747, 0.29196711, 1.        ],
+       [0.99468691, 0.64655281, 0.27577483, 1.        ],
+       [0.99367489, 0.60910816, 0.25958254, 1.        ],
+       [0.99266287, 0.5716635 , 0.24339026, 1.        ],
+       [0.99165085, 0.52106262, 0.22618596, 1.        ],
+       [0.99063884, 0.4573055 , 0.20796964, 1.        ],
+       [0.98962682, 0.39354839, 0.18975332, 1.        ],
+       [0.9886148 , 0.32979127, 0.171537  , 1.        ],
+       [0.97242252, 0.27299178, 0.15585073, 1.        ],
+       [0.94712207, 0.22036686, 0.14168248, 1.        ],
+       [0.92182163, 0.16774194, 0.12751423, 1.        ],
+       [0.89652119, 0.11511701, 0.11334598, 1.        ],
+       [0.86135357, 0.08222644, 0.11739405, 1.        ],
+       [0.8228969 , 0.05591398, 0.12751423, 1.        ],
+       [0.78444023, 0.02960152, 0.13763441, 1.        ],
+       [0.74598355, 0.00328906, 0.14775459, 1.        ],
+       [0.68716003, 0.        , 0.14901961, 1.        ],
+       [0.62542694, 0.        , 0.14901961, 1.        ],
+       [0.56369386, 0.        , 0.14901961, 1.        ],
+       [0.50196078, 0.        , 0.14901961, 1.        ]])
+       # rgb.shape = (12, 4)
+        idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
         for i in range(table_size):
             lut.SetTableValue(i,
                            rgb[i, 0],
@@ -1847,6 +2014,10 @@ class Vis(QWidget):
             # self.scalarBar.SetTitle(sub_name)
             self.scalarBar.SetTitle(self.substrate_name)
             # sub_dict = mcds.data['continuum_variables'][sub_name]
+            if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
+                print(f" ---  ERROR: substrate={self.substrate_name} is not valid.")
+                return
+
             sub_dict = mcds.data['continuum_variables'][self.substrate_name]
             sub_concentration = sub_dict['data']
             print("sub_concentration.shape= ",sub_concentration.shape)
@@ -1971,6 +2142,7 @@ class Vis(QWidget):
                 # self.ren.RemoveActor2D(self.scalarBar)
 
                 self.cutterXY.SetInputData(self.substrate_data)
+                # self.cutterXY.SetInputData(self.glyph.GetOutput())
                 self.planeXY.SetOrigin(x0,y0,0)
                 self.cutterXY.SetCutFunction(self.planeXY)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
