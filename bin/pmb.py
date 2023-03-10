@@ -582,23 +582,30 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-        # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-            # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
-            xy_act = view3D_menu.addAction("XY plane")
+            xy_act = view3D_menu.addAction("XY slice")
             xy_act.setCheckable(True)
             xy_act.setChecked(True)
 
-            yz_act = view3D_menu.addAction("YZ plane")
+            yz_act = view3D_menu.addAction("YZ slice")
             yz_act.setCheckable(True)
             yz_act.setChecked(True)
 
-            xz_act = view3D_menu.addAction("XZ plane")
+            xz_act = view3D_menu.addAction("XZ slice")
             xz_act.setCheckable(True)
             xz_act.setChecked(True)
 
             voxels_act = view3D_menu.addAction("All voxels")
             voxels_act.setCheckable(True)
             voxels_act.setChecked(False)
+            view3D_menu.addSeparator()
+
+            # actions for cell clipping/cropping
+            xy_clip_act = view3D_menu.addAction("XY clip")
+            xy_clip_act.setCheckable(True)
+            xy_clip_act.setChecked(True)
+
+            view3D_menu.addSeparator()
+
 
             axes_act = view3D_menu.addAction("Axes")
             axes_act.setCheckable(True)
@@ -980,12 +987,16 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def view3D_cb(self, action):
         # logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
-        if "XY" in action.text():
-            self.vis_tab.xy_plane_toggle_cb(action.isChecked())
-        elif "YZ" in action.text():
-            self.vis_tab.yz_plane_toggle_cb(action.isChecked())
-        elif "XZ" in action.text():
-            self.vis_tab.xz_plane_toggle_cb(action.isChecked())
+        if "XY slice" in action.text():
+            self.vis_tab.xy_slice_toggle_cb(action.isChecked())
+        elif "YZ slice" in action.text():
+            self.vis_tab.yz_slice_toggle_cb(action.isChecked())
+        elif "XZ slice" in action.text():
+            self.vis_tab.xz_slice_toggle_cb(action.isChecked())
+
+        elif "XY clip" in action.text():
+            self.vis_tab.xy_clip_toggle_cb(action.isChecked())
+
         elif "voxels" in action.text():
             self.vis_tab.voxels_toggle_cb(action.isChecked())
         elif "Axes" in action.text():
