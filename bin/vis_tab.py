@@ -814,6 +814,8 @@ class Vis(QWidget):
                 self.physiboss_vis_checkbox.setEnabled(False)
                 self.physiboss_cell_type_combobox.setEnabled(False)
                 self.physiboss_node_combobox.setEnabled(False)
+                self.physiboss_vis_hide()
+
             except:
                 print("ERROR: Exception disabling physiboss widgets")
                 pass
