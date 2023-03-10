@@ -602,10 +602,16 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # actions for cell clipping/cropping
             xy_clip_act = view3D_menu.addAction("XY clip")
             xy_clip_act.setCheckable(True)
-            xy_clip_act.setChecked(True)
+            xy_clip_act.setChecked(False)
 
+            yz_clip_act = view3D_menu.addAction("YZ clip")
+            yz_clip_act.setCheckable(True)
+            yz_clip_act.setChecked(False)
+
+            xz_clip_act = view3D_menu.addAction("XZ clip")
+            xz_clip_act.setCheckable(True)
+            xz_clip_act.setChecked(False)
             view3D_menu.addSeparator()
-
 
             axes_act = view3D_menu.addAction("Axes")
             axes_act.setCheckable(True)
@@ -996,6 +1002,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         elif "XY clip" in action.text():
             self.vis_tab.xy_clip_toggle_cb(action.isChecked())
+        elif "YZ clip" in action.text():
+            self.vis_tab.yz_clip_toggle_cb(action.isChecked())
+        elif "XZ clip" in action.text():
+            self.vis_tab.xz_clip_toggle_cb(action.isChecked())
 
         elif "voxels" in action.text():
             self.vis_tab.voxels_toggle_cb(action.isChecked())

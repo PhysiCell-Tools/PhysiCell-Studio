@@ -67,11 +67,16 @@ class Vis(QWidget):
         self.celltype_color = []
 
         self.axes_actor = None
-        self.show_xy_plane = True
-        self.show_yz_plane = True
-        self.show_xz_plane = True
+        self.show_xy_slice = True
+        self.show_yz_slice = True
+        self.show_xz_slice = True
         self.show_voxels = False
         self.show_axes = False
+
+        self.show_xy_clip = False
+        self.show_yz_clip = False
+        self.show_xz_clip = False
+
         self.substrate_name = ""
         self.lut_jet = self.get_jet_map()
         self.lut_viridis = self.get_viridis_map()
@@ -275,6 +280,17 @@ class Vis(QWidget):
         # self.contMapper.ScalarVisibilityOff()
         # self.contActor = vtkActor()
         # self.contActor.SetMapper(self.contMapper)
+
+        #-----
+        self.clipXY = vtkClipPolyData()
+        self.clipYZ = vtkClipPolyData()
+        self.clipXZ = vtkClipPolyData()
+
+        # self.clipXYMapper = vtkPolyDataMapper()
+        # self.clipXYMapper.SetInputConnection(self.clipXY.GetOutputPort())
+
+        # self.clipXYActor = vtkActor()
+        # self.clipXYActor.SetMapper(self.clipXYMapper)
 
         #-----
         self.scalarBar = vtkScalarBarActor()
@@ -1093,30 +1109,47 @@ class Vis(QWidget):
             self.substrates_combobox.addItem(s)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
 
-    def xy_plane_toggle_cb(self,flag):
-        self.show_xy_plane = flag
+    def xy_slice_toggle_cb(self,flag):
+        self.show_xy_slice = flag
         if flag:
             self.ren.AddActor(self.cutterXYActor)
         else:
             self.ren.RemoveActor(self.cutterXYActor)
         self.vtkWidget.GetRenderWindow().Render()
 
-    def yz_plane_toggle_cb(self,flag):
-        self.show_yz_plane = flag
+    def yz_slice_toggle_cb(self,flag):
+        self.show_yz_slice = flag
         if flag:
             self.ren.AddActor(self.cutterYZActor)
         else:
             self.ren.RemoveActor(self.cutterYZActor)
         self.vtkWidget.GetRenderWindow().Render()
 
-    def xz_plane_toggle_cb(self,flag):
-        self.show_xz_plane = flag
+    def xz_slice_toggle_cb(self,flag):
+        self.show_xz_slice = flag
         if flag:
             self.ren.AddActor(self.cutterXZActor)
         else:
             self.ren.RemoveActor(self.cutterXZActor)
         self.vtkWidget.GetRenderWindow().Render()
 
+    #---------
+    def xy_clip_toggle_cb(self,flag):
+        self.show_xy_clip = flag
+        print("xy_clip_toggle_cb(): show_xy_clip=",self.show_xy_clip)
+        self.update_plots()
+
+    def yz_clip_toggle_cb(self,flag):
+        self.show_yz_clip = flag
+        print("yz_clip_toggle_cb(): show_yz_clip=",self.show_yz_clip)
+        self.update_plots()
+
+    def xz_clip_toggle_cb(self,flag):
+        self.show_xz_clip = flag
+        print("xz_clip_toggle_cb(): show_xz_clip=",self.show_xz_clip)
+        self.update_plots()
+
+    #---------
     def voxels_toggle_cb(self,flag):
         self.show_voxels = flag
         if flag:
@@ -1977,23 +2010,40 @@ class Vis(QWidget):
             # self.glyph.SetScalarRange(0, vmax)
             self.glyph.Update()
 
-            # actor.GetProperty().SetCoatRoughness (0.5)
-            # actor.GetProperty().SetCoatRoughness (0.2)
-            # actor.GetProperty().SetCoatRoughness (1.0)
+            #----------------------------------------------
+            clipped_cells_flag = False
+            polydata = self.glyph.GetOutput()
+            if self.show_xy_clip:
+                clipped_cells_flag = True
+                self.clipXY.SetInputData(self.glyph.GetOutput())
+                # self.planeXY.SetOrigin(x0,y0,0)
+                self.clipXY.SetClipFunction(self.planeXY)
+                self.clipXY.Update()
+                polydata = self.clipXY.GetOutput()
+                self.cells_mapper.SetInputConnection(self.clipXY.GetOutputPort())
+            if self.show_yz_clip:
+                clipped_cells_flag = True
+                self.clipYZ.SetInputData(polydata)
+                # self.planeYZ.SetOrigin(0,0,0)
+                self.clipYZ.SetClipFunction(self.planeYZ)
+                self.clipYZ.Update()
+                polydata = self.clipYZ.GetOutput()
+                self.cells_mapper.SetInputConnection(self.clipYZ.GetOutputPort())
+            if self.show_xz_clip:
+                clipped_cells_flag = True
+                self.clipXZ.SetInputData(polydata)
+                # self.planeXZ.SetOrigin(0,0,0)
+                self.clipXZ.SetClipFunction(self.planeXZ)
+                # polydata = self.clipXZ.GetOutput()
+                self.clipXZ.Update()
+                self.cells_mapper.SetInputConnection(self.clipXZ.GetOutputPort())
 
-            # renderer = vtkRenderer()
-            # amval = 1.0  # default
-            # renderer.SetAmbient(amval, amval, amval)
+            if not clipped_cells_flag:
+                # self.cells_mapper = vtkPolyDataMapper()
+                self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
 
-            # renderWindow = vtkRenderWindow()
-            # renderWindow.SetPosition(100,100)
-            # renderWindow.SetSize(1400,1200)
-            # renderWindow.AddRenderer(renderer)
-            # renderWindowInteractor = vtkRenderWindowInteractor()
-            # renderWindowInteractor.SetRenderWindow(renderWindow)
+            self.cells_actor.SetMapper(self.cells_mapper)
 
-            # renderer.AddActor(actor)
-            # self.cells_actor.GetProperty().SetColor(80, 20, 20)
             self.ren.AddActor(self.cells_actor)
         else:
             self.ren.RemoveActor(self.cells_actor)
@@ -2002,7 +2052,6 @@ class Vis(QWidget):
 
         #-------------------
         if self.substrates_checked_flag:
-
             print("substrate names= ",mcds.get_substrate_names())
 
             field_name = self.substrates_combobox.currentText()
@@ -2066,6 +2115,8 @@ class Vis(QWidget):
             vmax = -vmin
             # for z in range( 0, nz+1 ) :  # if point data, not cell data
             kount = 0
+
+            # optimize?
             for z in range( 0, nz ) :   # NOTE: using cell data, not point data
                 for y in range( 0, ny ) :
                     for x in range( 0, nx ) :
@@ -2117,7 +2168,7 @@ class Vis(QWidget):
             # if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
             #     print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
-            # if self.show_voxels or self.show_xy_plane or self.show_yz_plane or self.show_xz_plane:
+            # if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
             #     self.ren.RemoveActor2D(self.scalarBar)
             #     self.ren.AddActor2D(self.scalarBar)
             # else:
@@ -2136,7 +2187,7 @@ class Vis(QWidget):
                 self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
-            if self.show_xy_plane:
+            if self.show_xy_slice:
                 # self.ren.RemoveActor(self.substrate_actor)
                 self.ren.RemoveActor(self.cutterXYActor)
                 # self.ren.RemoveActor2D(self.scalarBar)
@@ -2181,7 +2232,7 @@ class Vis(QWidget):
                 # self.ren.AddActor2D(self.scalarBar)
 
 
-            if self.show_yz_plane:
+            if self.show_yz_slice:
                 self.ren.RemoveActor(self.cutterYZActor)
                 # self.ren.RemoveActor2D(self.scalarBar)
 
@@ -2204,7 +2255,7 @@ class Vis(QWidget):
                 self.scalarBar.SetLookupTable(self.cutterYZMapper.GetLookupTable())
                 # self.ren.AddActor2D(self.scalarBar)
 
-            if self.show_xz_plane:
+            if self.show_xz_slice:
                 self.ren.RemoveActor(self.cutterXZActor)
                 # self.ren.RemoveActor2D(self.scalarBar)
 
@@ -2227,6 +2278,7 @@ class Vis(QWidget):
                 self.scalarBar.SetLookupTable(self.cutterXZMapper.GetLookupTable())
                 # self.ren.AddActor2D(self.scalarBar)
 
+
             #-------------------
             # self.domain_outline = vtkOutlineFilter()
             self.domain_outline.SetInputData(self.substrate_data)
@@ -2246,7 +2298,7 @@ class Vis(QWidget):
 
 
             self.ren.RemoveActor2D(self.scalarBar)
-            if self.show_voxels or self.show_xy_plane or self.show_yz_plane or self.show_xz_plane:
+            if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
                 # self.ren.RemoveActor2D(self.scalarBar)
                 self.ren.AddActor2D(self.scalarBar)
             # else:
@@ -2258,6 +2310,8 @@ class Vis(QWidget):
             self.ren.RemoveActor(self.cutterXYActor)
             self.ren.RemoveActor(self.cutterYZActor)
             self.ren.RemoveActor(self.cutterXZActor)
+
+            # self.ren.RemoveActor(self.clipXYActor)
             self.ren.RemoveActor(self.domain_outline_actor)
             self.ren.RemoveActor2D(self.scalarBar)
 
