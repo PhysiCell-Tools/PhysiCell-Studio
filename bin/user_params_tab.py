@@ -402,6 +402,7 @@ class UserParams(QtWidgets.QWidget):
 
         uep = self.xml_root.find('.//user_parameters')
         knt = 0
+        elm = None
         for idx in range(self.count):
             vname = self.name[idx].text()
             if vname:  # only deal with rows having names
@@ -416,5 +417,6 @@ class UserParams(QtWidgets.QWidget):
                 elm.tail = '\n        '
                 uep.insert(knt,elm)
                 knt += 1
-        elm.tail = '\n    '
+        if elm:
+            elm.tail = '\n    '
         logging.debug(f'found {knt}')

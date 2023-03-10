@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QStyleFactory
 
 from pretty_print_xml import pretty_print
 from config_tab import Config
-from cell_def_tab import CellDef 
+from cell_def_tab import CellDef, CellDefException
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
 # from rules_tab import Rules
@@ -77,12 +77,18 @@ class PhysiCellXMLCreator(QWidget):
     def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
+            try:
+                import vtk
+            except:
+                print("\nError: Unable to `import vtk` for 3D visualization. \nYou can try to do `pip install vtk` from the command line and then and re-run the Studio, or run the Studio without the 3D visualization argument and settle for 2D vis.\n")
+                sys.exit(-1)
+
             from vis3D_tab import Vis 
         else:
             from vis_tab import Vis 
 
         self.studio_flag = studio_flag 
-        self.view_shading = None
+        # self.view_shading = None
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
         self.model3D_flag = model3D_flag 
@@ -180,7 +186,7 @@ class PhysiCellXMLCreator(QWidget):
         self.model = {}  # key: name, value:[read-only, tree]
 
         self.config_tab = Config(self.studio_flag)
-        self.config_tab_idx = 0
+        self.config_tab_index = 0
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
 
@@ -199,7 +205,7 @@ class PhysiCellXMLCreator(QWidget):
             print("pmb.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
         self.microenv_tab = SubstrateDef(self.config_tab)
-        self.microenv_tab_idx = 1
+        self.microenv_tab_index = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
         # print("pmb.py: first_substrate_name=",substrate_name)
@@ -305,7 +311,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.rules_flag, self.download_menu)
+            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.celldef_tab, self.rules_flag, self.download_menu)
 
             self.homedir = os.getcwd()
             print("pmb.py: self.homedir = ",self.homedir)
@@ -339,9 +345,10 @@ class PhysiCellXMLCreator(QWidget):
 
             self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
-            self.vis_tab.view_shading = self.view_shading
+            # self.vis_tab.view_shading = self.view_shading
 
             self.legend_tab = Legend(self.nanohub_flag)
+            self.vis_tab.legend_tab = self.legend_tab
             self.legend_tab.current_dir = self.current_dir
             self.legend_tab.pmb_data_dir = self.pmb_data_dir
             self.run_tab.vis_tab = self.vis_tab
@@ -377,7 +384,10 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 
-        self.tabWidget.setCurrentIndex(self.config_tab_idx)  # Config (default)
+        if self.model3D_flag:
+            self.tabWidget.setCurrentIndex(self.plot_tab_index)
+        else:
+            self.tabWidget.setCurrentIndex(self.config_tab_index)  # Config (default)
         # self.tabWidget.repaint()  # Config (default)
         # self.config_tab.config_params.update()  # 
         # self.tabWidget.setCurrentIndex(1)  # rwh/debug: select Microenv
@@ -388,7 +398,7 @@ class PhysiCellXMLCreator(QWidget):
         # if index == 0:
         #     pmb_app.resize(1101,770) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
         #     pmb_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
-        if index == self.microenv_tab_idx: # microenv_tab
+        if index == self.microenv_tab_index: # microenv_tab
             self.microenv_tab.update_3D()
 
     def about_pyqt(self):
@@ -572,23 +582,40 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-        # file_menu.addAction("XY plane", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-            # xy_act = view3D_menu.addAction("XY plane", self.xy_plane_cb)
-            xy_act = view3D_menu.addAction("XY plane")
+            xy_act = view3D_menu.addAction("XY slice")
             xy_act.setCheckable(True)
             xy_act.setChecked(True)
 
-            yz_act = view3D_menu.addAction("YZ plane")
+            yz_act = view3D_menu.addAction("YZ slice")
             yz_act.setCheckable(True)
             yz_act.setChecked(True)
 
-            xz_act = view3D_menu.addAction("XZ plane")
+            xz_act = view3D_menu.addAction("XZ slice")
             xz_act.setCheckable(True)
             xz_act.setChecked(True)
 
             voxels_act = view3D_menu.addAction("All voxels")
             voxels_act.setCheckable(True)
             voxels_act.setChecked(False)
+            view3D_menu.addSeparator()
+
+            # actions for cell clipping/cropping
+            xy_clip_act = view3D_menu.addAction("XY clip")
+            xy_clip_act.setCheckable(True)
+            xy_clip_act.setChecked(False)
+
+            yz_clip_act = view3D_menu.addAction("YZ clip")
+            yz_clip_act.setCheckable(True)
+            yz_clip_act.setChecked(False)
+
+            xz_clip_act = view3D_menu.addAction("XZ clip")
+            xz_clip_act.setCheckable(True)
+            xz_clip_act.setChecked(False)
+            view3D_menu.addSeparator()
+
+            axes_act = view3D_menu.addAction("Axes")
+            axes_act.setCheckable(True)
+            axes_act.setChecked(False)
 
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
@@ -597,14 +624,31 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         else:  # just 2D view
             if self.studio_flag:
                 view_menu = menubar.addMenu('&View')
-                self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-                self.view_shading.setEnabled(False)
-                view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
-                view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
-                if not self.nanohub_flag:
-                    view_menu.addSeparator()
-                    view_menu.addAction("Select output dir", self.select_plot_output_cb)
+                view_menu.triggered.connect(self.view2D_cb)
+
+                item = view_menu.addAction("1:1 aspect")
+                item.setCheckable(True)
+                item.setChecked(True)
+
+                # self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
+                # self.view_shading.setEnabled(False)
+                item = view_menu.addAction("smooth shading")
+                item.setCheckable(True)
+                item.setChecked(False)
+
+                # view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
+                # view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
+                # if not self.nanohub_flag:
+                #     view_menu.addSeparator()
+                #     view_menu.addAction("Select output dir", self.select_plot_output_cb)
                 # self.vis_tab.view_menu = view_menu
+                item = view_menu.addAction("voxel grid")
+                item.setCheckable(True)
+                item.setChecked(False)
+
+                item = view_menu.addAction("mechanics grid")
+                item.setCheckable(True)
+                item.setChecked(False)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -830,7 +874,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("pmb.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
 
-        except Exception as e:
+        except CellDefException as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
@@ -862,7 +906,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.tree.write(self.current_xml_file)
             pretty_print(self.current_xml_file, self.current_xml_file)
     
-        except Exception as e:
+        except CellDefException as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
 
     def validate_cb(self):  # not used currently
@@ -875,79 +919,98 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
 
-    def toggle_2D_shading_cb(self):
-        self.vis2D_gouraud = not self.vis2D_gouraud
-        if self.vis2D_gouraud:
-            self.vis_tab.shading_choice = 'gouraud'
-        else:
-            self.vis_tab.shading_choice = 'auto'
-        self.vis_tab.update_plots()
+    # def toggle_2D_shading_cb(self):
+    #     self.vis2D_gouraud = not self.vis2D_gouraud
+    #     if self.vis2D_gouraud:
+    #         self.vis_tab.shading_choice = 'gouraud'
+    #     else:
+    #         self.vis_tab.shading_choice = 'auto'
+    #     self.vis_tab.update_plots()
 
-    def toggle_2D_voxel_grid_cb(self):
-        self.vis_tab.show_voxel_grid = not self.vis_tab.show_voxel_grid
-        self.vis_tab.update_plots()
+    # def toggle_2D_voxel_grid_cb(self):
+    #     self.vis_tab.show_voxel_grid = not self.vis_tab.show_voxel_grid
+    #     self.vis_tab.update_plots()
 
-    def toggle_2D_mech_grid_cb(self):
-        self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
-        self.vis_tab.update_plots()
+    # def toggle_2D_mech_grid_cb(self):
+    #     self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
+    #     self.vis_tab.update_plots()
 
-    def select_plot_output_cb(self):
-        # filePath = QFileDialog.getOpenFileName(self,'',".")
-        dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+    # def select_plot_output_cb(self):
+    #     # filePath = QFileDialog.getOpenFileName(self,'',".")
+    #     dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
 
-        print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
-        # full_path_model_name = dirPath[0]
-        # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
-        # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
-        # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
-        if dir_path == "":
-            return
-        if Path(dir_path).is_dir():
-            print("select_plot_output_cb():  dir_path is valid")
-            logging.debug(f'select_plot_output_cb():  dir_path is valid')
-            # print("len(full_path_model_name) = ", len(full_path_model_name) )
-            # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
-            # fname = os.path.basename(full_path_model_name)
-            # self.current_xml_file = full_path_model_name
+    #     print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
+    #     # full_path_model_name = dirPath[0]
+    #     # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
+    #     # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
+    #     # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
+    #     if dir_path == "":
+    #         return
+    #     if Path(dir_path).is_dir():
+    #         print("select_plot_output_cb():  dir_path is valid")
+    #         logging.debug(f'select_plot_output_cb():  dir_path is valid')
+    #         # print("len(full_path_model_name) = ", len(full_path_model_name) )
+    #         # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
+    #         # fname = os.path.basename(full_path_model_name)
+    #         # self.current_xml_file = full_path_model_name
 
-            # self.add_new_model(self.current_xml_file, True)
-            # self.config_file = self.current_xml_file
-            # if self.studio_flag:
-            #     self.run_tab.config_file = self.current_xml_file
-            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
-            # self.show_sample_model()
+    #         # self.add_new_model(self.current_xml_file, True)
+    #         # self.config_file = self.current_xml_file
+    #         # if self.studio_flag:
+    #         #     self.run_tab.config_file = self.current_xml_file
+    #         #     self.run_tab.config_xml_name.setText(self.current_xml_file)
+    #         # self.show_sample_model()
 
-            # self.vis_tab.output_dir = self.config_tab.folder.text()
-            # self.legend_tab.output_dir = self.config_tab.folder.text()
-            # self.vis_tab.output_dir = dir_path
-            self.vis_tab.update_output_dir(dir_path)
-            self.legend_tab.output_dir = dir_path
-            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
-            if Path(legend_file).is_file():
-                self.legend_tab.reload_legend()
-            else:
-                self.legend_tab.clear_legend()
+    #         # self.vis_tab.output_dir = self.config_tab.folder.text()
+    #         # self.legend_tab.output_dir = self.config_tab.folder.text()
+    #         # self.vis_tab.output_dir = dir_path
+    #         self.vis_tab.update_output_dir(dir_path)
+    #         self.legend_tab.output_dir = dir_path
+    #         legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+    #         if Path(legend_file).is_file():
+    #             self.legend_tab.reload_legend()
+    #         else:
+    #             self.legend_tab.clear_legend()
 
-            self.vis_tab.reset_model()
-            self.vis_tab.update_plots()
+    #         self.vis_tab.reset_model()
+    #         self.vis_tab.update_plots()
 
-        else:
-            print("select_plot_output_cb():  full_path_model_name is NOT valid")
+    #     else:
+    #         print("select_plot_output_cb():  full_path_model_name is NOT valid")
 
 
-    # -------- relevant to vis3D -----------
+    def view2D_cb(self, action):
+        print("view2D_cb(): ",action.text())
+        if action.text().find("aspect") >= 0:
+            self.vis_tab.view_aspect_toggle_cb(action.isChecked())
+        elif action.text().find("shading") >= 0:
+             self.vis_tab.shading_toggle_cb(action.isChecked())
+        elif action.text().find("voxel") >= 0:
+             self.vis_tab.voxel_grid_toggle_cb(action.isChecked())
+        elif action.text().find("mechanics") >= 0:
+             self.vis_tab.mechanics_grid_toggle_cb(action.isChecked())
+        return
+
     def view3D_cb(self, action):
-        logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
-        if "XY" in action.text():
-            self.vis_tab.xy_plane_toggle_cb(action.isChecked())
-        elif "YZ" in action.text():
-            self.vis_tab.yz_plane_toggle_cb(action.isChecked())
-        elif "XZ" in action.text():
-            self.vis_tab.xz_plane_toggle_cb(action.isChecked())
+        # logging.debug(f'pmb.py: view3D_cb: {action.text()}, {action.isChecked()}')
+        if "XY slice" in action.text():
+            self.vis_tab.xy_slice_toggle_cb(action.isChecked())
+        elif "YZ slice" in action.text():
+            self.vis_tab.yz_slice_toggle_cb(action.isChecked())
+        elif "XZ slice" in action.text():
+            self.vis_tab.xz_slice_toggle_cb(action.isChecked())
+
+        elif "XY clip" in action.text():
+            self.vis_tab.xy_clip_toggle_cb(action.isChecked())
+        elif "YZ clip" in action.text():
+            self.vis_tab.yz_clip_toggle_cb(action.isChecked())
+        elif "XZ clip" in action.text():
+            self.vis_tab.xz_clip_toggle_cb(action.isChecked())
+
         elif "voxels" in action.text():
             self.vis_tab.voxels_toggle_cb(action.isChecked())
-        elif "axes" in action.text():
-            pass
+        elif "Axes" in action.text():
+            self.vis_tab.axes_toggle_cb(action.isChecked())
         elif "contour" in action.text():
             pass
         return
@@ -964,6 +1027,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def load_model(self,name):
         if self.studio_flag:
             self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
+            self.vis_tab.physiboss_vis_checkbox = None    # default: assume a non-boolean intracellular model
+            self.vis_tab.physiboss_vis_flag = False
+            if self.vis_tab.physiboss_vis_checkbox:
+                self.vis_tab.physiboss_vis_checkbox.setChecked(False)
+
 
         os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
 
@@ -1218,6 +1286,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def physiboss_cell_lines_cb(self):
         self.load_model("physiboss_cell_lines_flat")
+        # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
 
@@ -1407,7 +1476,7 @@ def main():
     icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
     pmb_app.setWindowIcon(QIcon(icon_path))
 
-    print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
+    # print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
 
     # Use a palette to help force light-mode (not dark) style
     # Not all seem to be used, but beware/test(!) if changed.
