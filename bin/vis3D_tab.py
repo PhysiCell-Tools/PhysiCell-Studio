@@ -915,7 +915,7 @@ class Vis(QWidget):
         else:
             print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
-    def build_physiboss_info(self):
+    def build_physiboss_info(self, config_file):
         pass
         
     def reset_plot_range(self):

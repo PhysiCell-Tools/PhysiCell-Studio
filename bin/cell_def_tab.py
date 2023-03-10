@@ -6733,6 +6733,7 @@ class CellDef(QWidget):
                     self.physiboss_bnd_file.setText(self.param_d[cdname]["intracellular"]["bnd_filename"])
                 if "cfg_filename" in self.param_d[cdname]["intracellular"].keys():
                     self.physiboss_cfg_file.setText(self.param_d[cdname]["intracellular"]["cfg_filename"])
+
                 if "time_step" in self.param_d[cdname]["intracellular"].keys():
                     self.physiboss_time_step.setText(self.param_d[cdname]["intracellular"]["time_step"])
                 if "time_stochasticity" in self.param_d[cdname]["intracellular"].keys():

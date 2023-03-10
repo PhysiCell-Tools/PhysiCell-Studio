@@ -822,6 +822,7 @@ class Vis(QWidget):
         else:
             print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
+
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
         print("build_physiboss_info(): get_cell_types():  config_file=",config_file)
@@ -832,12 +833,14 @@ class Vis(QWidget):
         print("get_cell_types():  out_config_file=",out_config_file)
 
         try:
-            self.tree = ET.parse(out_config_file)
+            self.tree = ET.parse(config_file)
             self.xml_root = self.tree.getroot()
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
+
             msgBox.setText("build_physiboss_info(): Error opening or parsing " + out_config_file)
+
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
