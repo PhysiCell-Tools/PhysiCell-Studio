@@ -3903,7 +3903,8 @@ class CellDef(QWidget):
 
     def physiboss_global_inheritance_checkbox_cb(self, bval):
         self.physiboss_global_inheritance_flag = bval
-        self.param_d[self.current_cell_def]["intracellular"]["global_inheritance"] = str(bval)
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["global_inheritance"] = str(bval)
 
     def physiboss_clicked_add_node_inheritance(self):
         self.physiboss_add_node_inheritance()
@@ -4044,8 +4045,8 @@ class CellDef(QWidget):
                 self.physiboss_starttime.setText("0.0")
                 
             if 'global_inheritance' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["global_inheritance"] = "False"
                 self.physiboss_global_inheritance_checkbox.setChecked(False)
-                
             self.physiboss_update_list_signals()
             self.physiboss_update_list_behaviours()
             self.physiboss_boolean_frame.show()
