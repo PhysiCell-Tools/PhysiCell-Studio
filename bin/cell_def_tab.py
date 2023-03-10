@@ -7873,6 +7873,7 @@ class CellDef(QWidget):
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
     def fill_xml_custom_data(self, custom_data, cdef):
+        elm = None
         if self.debug_print_fill_xml:
             # logging.debug(f'------------------- fill_xml_custom_data():  self.custom_var_count = {self.custom_var_count}')
             # print(f'------------------- fill_xml_custom_data():  self.custom_var_count = {self.custom_var_count}')
@@ -7920,10 +7921,11 @@ class CellDef(QWidget):
         # print("\n------ updated cell_def custom_data:")
         # print(self.param_d[cdef]['custom_data'])
 
-        elm.tail = self.indent8   # back up 2 for the very last one
+        if elm:
+            elm.tail = self.indent8   # back up 2 for the very last one
 
-        if self.debug_print_fill_xml:
-            logging.debug(f'\n')
+        # if self.debug_print_fill_xml:
+        #     logging.debug(f'\n')
 
 
     #-------------------------------------------------------------------
