@@ -6209,7 +6209,7 @@ class CellDef(QWidget):
         self.param_d[cdname]["volume_calcif_rate"] = '0.0'
         self.param_d[cdname]["volume_rel_rupture_vol"] = '2'
 
-    def new_mechanics_params(self, cdname_new):
+    def new_mechanics_params(self, cdname_new):  # rf. PhysiCell core/*_phenotype.cpp constructor
         sval = self.default_sval
 
         self.param_d[cdname_new]['is_movable'] = False
@@ -6223,6 +6223,10 @@ class CellDef(QWidget):
 
         self.param_d[cdname_new]["mechanics_relative_equilibrium_distance_enabled"] = False
         self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance_enabled"] = False
+
+        self.param_d[cdname_new]["mechanics_elastic_constant"] = '0.01'
+        self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
+        self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
 
         for cdname in self.param_d.keys():    # for each cell def
             for cdname2 in self.param_d.keys():    # for each cell def
