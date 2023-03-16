@@ -969,14 +969,15 @@ class Vis(QWidget):
         self.update_plots()
         
     def physiboss_vis_cell_type_cb(self, idx):
-        if idx > 0:
-            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+        if idx >= 0:
             self.physiboss_selected_cell_line = idx
+            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
             self.update_plots()
             
     def physiboss_vis_node_cb(self, idx):
-        self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
-        self.update_plots()
+        if idx >= 0:
+            self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
+            self.update_plots()
         
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
