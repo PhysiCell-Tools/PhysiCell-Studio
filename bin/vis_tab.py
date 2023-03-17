@@ -150,6 +150,21 @@ class PopulationPlotWindow(QWidget):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
 
+class PhysiBoSSStatesPopulationPlotWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("PhysiBoSS states populations")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setStyleSheet("background-color:transparent;")
+        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -174,6 +189,7 @@ class Vis(QWidget):
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.population_plot = None
+        self.physiboss_population_plot = None
         self.celltype_name = []
         self.celltype_color = []
 
@@ -937,6 +953,7 @@ class Vis(QWidget):
             self.physiboss_population_counts_button = QPushButton("Boolean states plot")
             # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
             self.physiboss_population_counts_button.setFixedWidth(200)
+            self.physiboss_population_counts_button.setEnabled(False)
             self.physiboss_population_counts_button.clicked.connect(self.physiboss_state_counts_cb)
             self.vbox.addWidget(self.physiboss_population_counts_button)
 
@@ -993,13 +1010,8 @@ class Vis(QWidget):
 
 
     def physiboss_state_counts_cb(self):
-        print("---- cell_counts_cb(): --> window for 2D population plots")
-        # self.analysis_data_wait.value = 'compute n of N ...'
-
-        if not self.get_cell_types_from_legend():
-            if not self.get_cell_types_from_config():
-                return
-
+        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+        
         xml_pattern = self.output_dir + "/" + "output*.xml"
         xml_files = glob.glob(xml_pattern)
         
@@ -1015,7 +1027,6 @@ class Vis(QWidget):
 
         xml_files.sort()
         
-        print("PhysiBoSS selected celltype = ", self.physiboss_selected_cell_line)
         cell_def_name = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
         all_states = set()
         states_pops = []
@@ -1062,20 +1073,20 @@ class Vis(QWidget):
             
 
         tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
-        if not self.population_plot:
-            self.population_plot = PopulationPlotWindow()
+        if not self.physiboss_population_plot:
+            self.physiboss_population_plot = PhysiBoSSStatesPopulationPlotWindow()
 
-        self.population_plot.ax0.cla()
-        self.population_plot.ax0.plot(tval, pop_data, label=states_index.keys())
+        self.physiboss_population_plot.ax0.cla()
+        self.physiboss_population_plot.ax0.plot(tval, pop_data, label=states_index.keys())
 
 
-        self.population_plot.ax0.set_xlabel('time (mins)')
-        self.population_plot.ax0.set_ylabel('# of cells')
-        self.population_plot.ax0.set_title("PhysiBoSS state populations of cell line " + cell_def_name, fontsize=10)
-        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
-        self.population_plot.canvas.update()
-        self.population_plot.canvas.draw()
-        self.population_plot.show()
+        self.physiboss_population_plot.ax0.set_xlabel('time (mins)')
+        self.physiboss_population_plot.ax0.set_ylabel('# of cells')
+        self.physiboss_population_plot.ax0.set_title("PhysiBoSS state populations of cell line " + cell_def_name, fontsize=10)
+        self.physiboss_population_plot.ax0.legend(loc='center right', prop={'size': 8})
+        self.physiboss_population_plot.canvas.update()
+        self.physiboss_population_plot.canvas.draw()
+        self.physiboss_population_plot.show()
 
         
     def output_folder_cb(self):
