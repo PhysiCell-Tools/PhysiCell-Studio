@@ -232,6 +232,7 @@ class Vis(QWidget):
         # self.config_file = "mymodel.xml"
         self.physiboss_node_dict = {}
         self.physiboss_previous_node = None
+        self.physiboss_previous_cells = None
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -929,7 +930,7 @@ class Vis(QWidget):
             
             self.physiboss_vis_checkbox = QCheckBox('Color by PhysiBoSS node state')
             self.physiboss_vis_flag = False
-            self.physiboss_vis_checkbox.setEnabled(not self.plot_cells_svg)
+            self.physiboss_vis_checkbox.setEnabled(True)
             self.physiboss_vis_checkbox.setChecked(self.physiboss_vis_flag)
             self.physiboss_vis_checkbox.clicked.connect(self.physiboss_vis_toggle_cb)
             self.physiboss_hbox_1.addWidget(self.physiboss_vis_checkbox)
@@ -993,8 +994,25 @@ class Vis(QWidget):
         self.physiboss_cell_type_combobox.setEnabled(bval)
         self.physiboss_node_combobox.setEnabled(bval)
         self.physiboss_population_counts_button.setEnabled(bval)
-        self.cell_scalar_combobox.setEnabled(not bval)
-        self.cell_scalar_cbar_combobox.setEnabled(not bval)
+        
+        if bval:
+            self.physiboss_previous_cells = self.plot_cells_svg
+            self.plot_cells_svg = False
+            self.custom_button.setEnabled(False)
+            self.cells_svg_rb.setChecked(False)
+            self.cells_mat_rb.setChecked(True)
+            self.cell_scalar_combobox.setEnabled(False)
+            self.cell_scalar_cbar_combobox.setEnabled(False)
+        
+            
+        else:
+            self.plot_cells_svg = self.physiboss_previous_cells
+            self.custom_button.setEnabled(not self.plot_cells_svg)
+            self.cells_svg_rb.setChecked(self.plot_cells_svg)
+            self.cells_mat_rb.setChecked(not self.plot_cells_svg)
+            self.cell_scalar_combobox.setEnabled(not self.plot_cells_svg)
+            self.cell_scalar_cbar_combobox.setEnabled(not not self.plot_cells_svg)
+           
         self.update_plots()
         
     def physiboss_vis_cell_type_cb(self, idx):
@@ -1157,7 +1175,7 @@ class Vis(QWidget):
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
-                self.physiboss_vis_checkbox.setEnabled(False)
+                self.physiboss_vis_checkbox.setChecked(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
 
             if self.cax2:
