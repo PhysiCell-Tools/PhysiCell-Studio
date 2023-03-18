@@ -1602,7 +1602,10 @@ class Vis(QWidget):
         self.cells_svg_rb.setEnabled(bval)
         self.cells_mat_rb.setEnabled(bval)
         self.cells_edge_checkbox.setEnabled(bval)
-
+        
+        if self.physiboss_vis_checkbox is not None:
+            self.physiboss_vis_checkbox.setEnabled(bval)
+            
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
             if self.cax2:
