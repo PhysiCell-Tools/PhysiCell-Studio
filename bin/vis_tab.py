@@ -231,7 +231,7 @@ class Vis(QWidget):
 
         # self.config_file = "mymodel.xml"
         self.physiboss_node_dict = {}
-        
+        self.physiboss_previous_node = None
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -1000,7 +1000,19 @@ class Vis(QWidget):
     def physiboss_vis_cell_type_cb(self, idx):
         if idx >= 0:
             self.physiboss_selected_cell_line = idx
+            self.physiboss_previous_node = self.physiboss_selected_node
+            self.physiboss_node_combobox.disconnect()
             self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+            if self.physiboss_previous_node is not None and self.physiboss_previous_node in self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]]:
+                node_ind = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]].index(self.physiboss_previous_node)
+                self.physiboss_node_combobox.setCurrentIndex(node_ind)
+                self.physiboss_selected_node = self.physiboss_previous_node
+                self.physiboss_previous_node = None
+            else:
+                self.physiboss_node_combobox.setCurrentIndex(0)
+                self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][0]
+                
+            self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.update_plots()
             
     def physiboss_vis_node_cb(self, idx):
