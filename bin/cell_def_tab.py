@@ -3299,7 +3299,7 @@ class CellDef(QWidget):
     def physiboss_update_list_nodes(self):
 
         t_intracellular = self.param_d[self.current_cell_def]["intracellular"]
-        print(f'----- {inspect.stack()[0][3]}: {t_intracellular}')
+        
         if t_intracellular is not None:
 
             # Here I started by looking at both the bnd and the cfg
@@ -3335,7 +3335,6 @@ class CellDef(QWidget):
                         self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] = ""
                         node.setCurrentIndex(-1)
 
-                print("_mutants= ",self.physiboss_mutants)
                 for i, (node, _, _, _) in enumerate(self.physiboss_mutants):
                     node.currentIndexChanged.disconnect()
                     node.clear()
@@ -3343,8 +3342,6 @@ class CellDef(QWidget):
                         node.addItem(name)
                     node.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
 
-                    print("  ['mutants']= ",self.param_d[self.current_cell_def]["intracellular"]["mutants"])
-                    print("  >> i= ",i)
                     if (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] in list_nodes
                     ):

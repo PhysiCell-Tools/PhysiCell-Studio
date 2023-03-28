@@ -150,6 +150,21 @@ class PopulationPlotWindow(QWidget):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
 
+class PhysiBoSSStatesPopulationPlotWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("PhysiBoSS states populations")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setStyleSheet("background-color:transparent;")
+        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -174,6 +189,7 @@ class Vis(QWidget):
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.population_plot = None
+        self.physiboss_population_plot = None
         self.celltype_name = []
         self.celltype_color = []
 
@@ -215,7 +231,8 @@ class Vis(QWidget):
 
         # self.config_file = "mymodel.xml"
         self.physiboss_node_dict = {}
-        
+        self.physiboss_previous_node = None
+        self.physiboss_previous_cells = None
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -617,6 +634,7 @@ class Vis(QWidget):
 
         self.physiboss_cell_type_combobox = None
         self.physiboss_node_combobox = None
+        self.physiboss_population_counts_button = None
         #-----------
         self.frame_count.textChanged.connect(self.change_frame_count_cb)
 
@@ -912,7 +930,7 @@ class Vis(QWidget):
             
             self.physiboss_vis_checkbox = QCheckBox('Color by PhysiBoSS node state')
             self.physiboss_vis_flag = False
-            self.physiboss_vis_checkbox.setEnabled(not self.plot_cells_svg)
+            self.physiboss_vis_checkbox.setEnabled(True)
             self.physiboss_vis_checkbox.setChecked(self.physiboss_vis_flag)
             self.physiboss_vis_checkbox.clicked.connect(self.physiboss_vis_toggle_cb)
             self.physiboss_hbox_1.addWidget(self.physiboss_vis_checkbox)
@@ -931,7 +949,15 @@ class Vis(QWidget):
             self.physiboss_hbox_2.addWidget(self.physiboss_node_combobox)
 
             self.vbox.addLayout(self.physiboss_hbox_2)
-        
+       
+            #------------------
+            self.physiboss_population_counts_button = QPushButton("Boolean states plot")
+            # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+            self.physiboss_population_counts_button.setFixedWidth(200)
+            self.physiboss_population_counts_button.setEnabled(False)
+            self.physiboss_population_counts_button.clicked.connect(self.physiboss_state_counts_cb)
+            self.vbox.addWidget(self.physiboss_population_counts_button)
+
     def physiboss_vis_hide(self):
         print("\n--------- physiboss_vis_hide()")
 
@@ -948,6 +974,9 @@ class Vis(QWidget):
             self.physiboss_node_combobox.deleteLater()
 
             self.physiboss_hbox_2.deleteLater()
+            
+            self.physiboss_population_counts_button.disconnect()
+            self.physiboss_population_counts_button.deleteLater()
 
     def fill_physiboss_cell_types_combobox(self, cell_types):
         self.physiboss_cell_type_combobox.clear()
@@ -964,19 +993,131 @@ class Vis(QWidget):
         self.physiboss_vis_flag = bval
         self.physiboss_cell_type_combobox.setEnabled(bval)
         self.physiboss_node_combobox.setEnabled(bval)
-        self.cell_scalar_combobox.setEnabled(not bval)
-        self.cell_scalar_cbar_combobox.setEnabled(not bval)
+        self.physiboss_population_counts_button.setEnabled(bval)
+        
+        if bval:
+            self.physiboss_previous_cells = self.plot_cells_svg
+            self.plot_cells_svg = False
+            self.custom_button.setEnabled(False)
+            self.cells_svg_rb.setChecked(False)
+            self.cells_mat_rb.setChecked(True)
+            self.cell_scalar_combobox.setEnabled(False)
+            self.cell_scalar_cbar_combobox.setEnabled(False)
+        
+            
+        else:
+            self.plot_cells_svg = self.physiboss_previous_cells
+            self.custom_button.setEnabled(not self.plot_cells_svg)
+            self.cells_svg_rb.setChecked(self.plot_cells_svg)
+            self.cells_mat_rb.setChecked(not self.plot_cells_svg)
+            self.cell_scalar_combobox.setEnabled(not self.plot_cells_svg)
+            self.cell_scalar_cbar_combobox.setEnabled(not not self.plot_cells_svg)
+           
         self.update_plots()
         
     def physiboss_vis_cell_type_cb(self, idx):
-        if idx > 0:
-            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+        if idx >= 0:
             self.physiboss_selected_cell_line = idx
+            self.physiboss_previous_node = self.physiboss_selected_node
+            self.physiboss_node_combobox.disconnect()
+            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+            if self.physiboss_previous_node is not None and self.physiboss_previous_node in self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]]:
+                node_ind = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]].index(self.physiboss_previous_node)
+                self.physiboss_node_combobox.setCurrentIndex(node_ind)
+                self.physiboss_selected_node = self.physiboss_previous_node
+                self.physiboss_previous_node = None
+            else:
+                self.physiboss_node_combobox.setCurrentIndex(0)
+                self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][0]
+                
+            self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.update_plots()
             
     def physiboss_vis_node_cb(self, idx):
-        self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
-        self.update_plots()
+        if idx >= 0:
+            self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
+            self.update_plots()
+
+
+    def physiboss_state_counts_cb(self):
+        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+        
+        xml_pattern = self.output_dir + "/" + "output*.xml"
+        xml_files = glob.glob(xml_pattern)
+        
+        num_xml = len(xml_files)
+        if num_xml == 0:
+            print("last_plot_cb(): WARNING: no output*.xml files present")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        xml_files.sort()
+        
+        cell_def_name = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
+        all_states = set()
+        states_pops = []
+        mcds = []
+        for i_frame, fname in enumerate(xml_files):
+            basename = os.path.basename(fname)
+            t_mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
+            mcds.append(t_mcds)
+            
+            try:
+                cell_types = t_mcds.get_cell_df()["cell_type"]
+            except:
+                print("vis_tab.py: physiboss_state_counts_cb(): error performing mcds.get_cell_df()['cell_type']")
+                return
+            
+            
+            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
+            
+            if not Path(physiboss_state_file).is_file():
+                print("vis_tab.py: physiboss_state_counts_cb(): error file not found ",physiboss_state_file)
+                return
+            
+            states_pop = {}
+            with open(physiboss_state_file, newline='') as csvfile:
+                states_reader = csv.reader(csvfile, delimiter=',')
+                for row in states_reader:
+                    if row[0] != 'ID':
+                        ID = int(row[0])
+                        if cell_types[ID] == self.physiboss_selected_cell_line:
+                            if row[1] in states_pop.keys():
+                                states_pop[row[1]] += 1
+                            else:
+                                states_pop[row[1]] = 1
+            
+            states_pops.append(states_pop)
+            all_states = all_states.union(set(states_pop.keys()))
+        
+        pop_data = np.zeros((len(xml_files), len(all_states)))
+        states_index = {state:i for i, state in enumerate(all_states)}
+        for i_frame, fname in enumerate(xml_files):
+            for state, pop in states_pops[i_frame].items():
+                pop_data[i_frame, states_index[state]] = pop
+                
+            
+
+        tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
+        if not self.physiboss_population_plot:
+            self.physiboss_population_plot = PhysiBoSSStatesPopulationPlotWindow()
+
+        self.physiboss_population_plot.ax0.cla()
+        self.physiboss_population_plot.ax0.plot(tval, pop_data, label=states_index.keys())
+
+
+        self.physiboss_population_plot.ax0.set_xlabel('time (mins)')
+        self.physiboss_population_plot.ax0.set_ylabel('# of cells')
+        self.physiboss_population_plot.ax0.set_title("PhysiBoSS state populations of cell line " + cell_def_name, fontsize=10)
+        self.physiboss_population_plot.ax0.legend(loc='center right', prop={'size': 8})
+        self.physiboss_population_plot.canvas.update()
+        self.physiboss_population_plot.canvas.draw()
+        self.physiboss_population_plot.show()
+
         
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
@@ -1034,7 +1175,7 @@ class Vis(QWidget):
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
-                self.physiboss_vis_checkbox.setEnabled(False)
+                self.physiboss_vis_checkbox.setChecked(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
 
             if self.cax2:
@@ -1461,7 +1602,10 @@ class Vis(QWidget):
         self.cells_svg_rb.setEnabled(bval)
         self.cells_mat_rb.setEnabled(bval)
         self.cells_edge_checkbox.setEnabled(bval)
-
+        
+        if self.physiboss_vis_checkbox is not None:
+            self.physiboss_vis_checkbox.setEnabled(bval)
+            
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
             if self.cax2:
