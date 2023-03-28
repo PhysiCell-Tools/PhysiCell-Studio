@@ -2398,7 +2398,8 @@ class CellDef(QWidget):
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #-----
-        self.new_stuff = False
+        # self.new_stuff = False
+        self.new_stuff = True
         label = QLabel("cell-BM adhesion strength")
         label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
