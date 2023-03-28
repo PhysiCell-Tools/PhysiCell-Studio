@@ -2229,6 +2229,22 @@ class Vis(QWidget):
 
         # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
         # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
+        
+        discrete_variable = None
+        # print(cell_scalar_name, " - discrete: ", (cell_scalar % 1  == 0).all()) # Possible test if the variable is discrete or continuum variable (issue: in some time the continuum variable can be classified as discrete (example time=0))
+        if( cell_scalar_name == 'cell_type' or cell_scalar_name == 'current_phase'): discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
+        if( discrete_variable ): # Generic way: if variable is discrete
+            self.cell_scalar_cbar_combobox.setEnabled(False)
+            from_list = matplotlib.colors.LinearSegmentedColormap.from_list
+            discrete_variable.sort()
+            if (len(discrete_variable) == 1): cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(discrete_variable))
+            else: cbar_name = from_list(None, plt.cm.Set1(range(0,len(discrete_variable))), len(discrete_variable))
+            vmin = None
+            vmax = None
+            # Change the values between 0 and number of possible values
+            for i, value in enumerate(discrete_variable):
+                cell_scalar = cell_scalar.replace(value,i)
+        else: self.cell_scalar_cbar_combobox.setEnabled(True)
 
         mins = total_min
         hrs = int(mins/60)
@@ -2283,7 +2299,13 @@ class Vis(QWidget):
                     self.cax2.remove()
             except:
                 pass
-                
+        
+        if( discrete_variable ): # Generic way: if variable is discrete
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(discrete_variable)), cax=self.cax2, orientation="horizontal")
+            # self.cbar2.ax.tick_params(length=0) # remove tick line
+            cell_plot.set_clim(vmin=-0.5,vmax=len(discrete_variable)-0.5) # scaling bar to the center of the ticks
+            self.cbar2.set_ticklabels(discrete_variable) # It's possible to give strings
+   
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)

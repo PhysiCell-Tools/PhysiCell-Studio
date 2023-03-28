@@ -72,6 +72,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
         for cell_def in uep:
             # <cell_definition name="default" ID="0">
             logging.debug(f'----- cell_def.tag= {cell_def.tag}')
+            if cell_def.tag != "cell_definition":
+                logging.debug(f'-------- found unexpected child <cell_definitions>; skip over {cell_def}')
+                continue
             if cell_def.tag == "cell_rules":
                 logging.debug(f'-------- found cell_rules child; break out on {cell_def}')
                 break
