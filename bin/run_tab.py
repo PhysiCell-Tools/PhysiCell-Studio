@@ -41,7 +41,6 @@ class RunModel(QWidget):
         # following set in pmb.py
         self.current_dir = ''   
         self.config_file = None
-        self.tree = None
 
         # these get set in pmb.py
         self.config_tab = None
@@ -128,17 +127,8 @@ class RunModel(QWidget):
         self.layout.addWidget(self.scroll)
 
 #------------------------------
+    # replicate what we do in the "save" function in the main module
     def update_xml_from_gui(self):
-        self.xml_root = self.tree.getroot()
-        logging.debug(f'\n ========================== run_tab.py: update_xml_from_gui(): self.xml_root = {self.xml_root}')
-        self.config_tab.xml_root = self.xml_root
-        self.microenv_tab.xml_root = self.xml_root
-        self.celldef_tab.xml_root = self.xml_root
-        self.user_params_tab.xml_root = self.xml_root
-        if self.rules_flag:
-            self.rules_tab.xml_root = self.xml_root
-        # sys.exit(1)
-
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
         self.celldef_tab.fill_xml()
@@ -195,13 +185,19 @@ class RunModel(QWidget):
                     tdir = os.path.abspath(self.output_dir)
 
 
-                new_config_file = Path(tdir,"config.xml")
-                self.celldef_tab.config_path = new_config_file
+                #   Only req'd for nanoHUB??
+                # print("run_tab.py: ----> here 3")
+                # new_config_file = Path(tdir,"config.xml")
+                # self.celldef_tab.config_path = new_config_file
+                # print("run_tab.py: ----> here 4")
+
                 self.update_xml_from_gui()
 
                 # logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
-                # print("run_tab.py: ----> writing modified model to ",new_config_file)
+                # print("run_tab.py: ----> new_config_file = ",new_config_file)
+                # print("run_tab.py: ----> self.config_file = ",self.config_file)
                 self.tree.write(self.config_file)
+                # print("run_tab.py: ----> here 5")
                 pretty_print(self.config_file, self.config_file)
                 # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
                 # sys.exit(1)
