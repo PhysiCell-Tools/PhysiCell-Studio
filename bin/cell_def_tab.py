@@ -2359,7 +2359,7 @@ class CellDef(QWidget):
         self.unmovable_w.setChecked(False)
         self.unmovable_w.clicked.connect(self.unmovable_cb)
         idr = 0
-        glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
+        # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
     # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
     # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
@@ -2368,6 +2368,7 @@ class CellDef(QWidget):
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
+        idr = 0
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.cell_cell_adhesion_strength = QLineEdit_color()
