@@ -603,6 +603,7 @@ class Config(QWidget):
         indent8 = '\n        '
         indent10 = '\n          '
 
+        print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
         # print("config_tab: fill_xml: xmin=",self.xmin.text() )
         self.xml_root.find(".//x_min").text = self.xmin.text()
         self.xml_root.find(".//x_max").text = self.xmax.text()
@@ -682,6 +683,7 @@ class Config(QWidget):
         #     opts.insert(0,subelm)
 
         self.xml_root.find(".//max_time").text = self.max_time.text()
+        print(f'------- config_tab.py: fill_xml(): update max_time = {self.max_time.text()}')
         self.xml_root.find(".//dt_diffusion").text = self.diffusion_dt.text()
         self.xml_root.find(".//dt_mechanics").text = self.mechanics_dt.text()
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()

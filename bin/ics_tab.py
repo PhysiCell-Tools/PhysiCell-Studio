@@ -337,6 +337,7 @@ class ICs(QWidget):
         # self.vbox.addWidget(self.save_button)
 
         self.use_names = QCheckBox("use cell type names")
+        self.use_names.setChecked(True)
         hbox.addWidget(self.use_names)
         self.vbox.addLayout(hbox)
 

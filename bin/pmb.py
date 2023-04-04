@@ -136,7 +136,8 @@ class PhysiCellXMLCreator(QWidget):
         print("self.current_dir = ",self.current_dir)
         logging.debug(f'self.current_dir = {self.current_dir}')
         self.pmb_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        self.pmb_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
         print("self.pmb_root_dir = ",self.pmb_root_dir)
         logging.debug(f'self.pmb_root_dir = {self.pmb_root_dir}')
 
@@ -170,7 +171,7 @@ class PhysiCellXMLCreator(QWidget):
             # data_dir = os.path.join(self.current_dir,'data')
 
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
+            self.current_xml_file = os.path.join(self.pmb_config_dir, model_name + ".xml")
 
 
 
@@ -353,7 +354,7 @@ class PhysiCellXMLCreator(QWidget):
             self.legend_tab = Legend(self.nanohub_flag)
             self.vis_tab.legend_tab = self.legend_tab
             self.legend_tab.current_dir = self.current_dir
-            self.legend_tab.pmb_data_dir = self.pmb_data_dir
+            self.legend_tab.pmb_config_dir = self.pmb_config_dir
             self.run_tab.vis_tab = self.vis_tab
             # self.vis_tab.setEnabled(False)
             # self.vis_tab.nanohub_flag = self.nanohub_flag
@@ -545,6 +546,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             interactions_act = QAction('interactions', self)
             samples_menu.addAction(interactions_act)
             interactions_act.triggered.connect(self.interactions_cb)
+
+            mechano_act = QAction('mechano', self)
+            samples_menu.addAction(mechano_act)
+            mechano_act.triggered.connect(self.mechano_cb)
 
             cancer_immune_act = QAction('cancer immune (3D)', self)
             samples_menu.addAction(cancer_immune_act)
@@ -765,6 +770,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def save_as_cb(self):
         # print("------ save_as_cb():")
+        self.celldef_tab.check_valid_cell_defs()
+        
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getSaveFileName(self,'',".")
         # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
@@ -812,6 +819,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
+        self.celldef_tab.check_valid_cell_defs()
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
@@ -914,7 +922,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
         # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
-        self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
+        self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         logging.debug(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
         print(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
@@ -1005,7 +1013,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def template_cb(self):
         self.load_model("template")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./template')
+            self.run_tab.exec_name.setText('./project')
 
     def biorobots_cb(self):
         self.load_model("biorobots")
@@ -1041,6 +1049,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.load_model("interactions")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./interaction_demo')
+
+    def mechano_cb(self):
+        self.load_model("mechano")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./mechano')
 
     def cancer_immune_cb(self):
         self.load_model("cancer_immune3D_flat")

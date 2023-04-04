@@ -41,6 +41,8 @@ import shutil
 import copy
 import logging
 import inspect
+import string
+import random
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui
@@ -114,6 +116,7 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
+
 class CellDef(QWidget):
     def __init__(self):
         super().__init__()
@@ -158,7 +161,7 @@ class CellDef(QWidget):
         self.current_cell_def = None
         self.cell_adhesion_affinity_celltype = None
 
-        self.new_cell_def_count = 1
+        self.new_cell_def_count = 0
         self.label_width = 210
         self.units_width = 110
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
@@ -242,10 +245,21 @@ class CellDef(QWidget):
         # tree_widget_height = 1200
 
         self.tree = QTreeWidget() # tree is overkill; list would suffice; meh.
+        # stylesheet = """
+        # QTreeWidget::item:selected{
+        #     background-color: rgb(236,236,236);
+        #     color: black;
+        # }
+        # """
         stylesheet = """
         QTreeWidget::item:selected{
             background-color: rgb(236,236,236);
             color: black;
+        }
+        QTreeWidget::item{
+            border-bottom: 1px solid black;
+            border-left:   1px solid black;
+            border-right:  1px solid black;
         }
         """
         self.tree.setStyleSheet(stylesheet)  # don't allow arrow keys to select
@@ -254,10 +268,16 @@ class CellDef(QWidget):
         # self.tree.setFixedWidth(tree_widget_width)
         self.tree.setFixedHeight(tree_widget_height)
         # self.tree.setColumnCount(1)
+        self.tree.setColumnCount(2)
+        # self.tree.setColumnWidth(50,5)   # doesn't work
+
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
+        # self.tree.itemChanged.connect(self.tree_item_changed_cb_0)   # rename a cell type
         self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
-        header = QTreeWidgetItem(["---  Cell Type  ---"])
+        # header = QTreeWidgetItem(["---  Cell Type  ---"])
+        header = QTreeWidgetItem(["  ---  Cell Type ---","|-- ID --"])
+        # self.tree.resizeColumnToContents(5)
 
         self.tree.setHeaderItem(header)
 
@@ -274,7 +294,10 @@ class CellDef(QWidget):
         # self.scroll_cell_def_tree.setWidget(self.tree)
 
         #-----------
+        self.auto_number_IDs_checkbox = QCheckBox("auto number IDs when saved\n(beware of cells.csv using IDs)")
+
         tree_w_vbox = QVBoxLayout()
+        tree_w_vbox.addWidget(self.auto_number_IDs_checkbox)
         tree_w_vbox.addWidget(self.tree)
 
         # splitter.addWidget(self.tree)
@@ -383,6 +406,63 @@ class CellDef(QWidget):
         # self.cell_types_tabs_layout.addWidget(self.tab_params_widget, 1,0,1,1) # w, row, column, rowspan, colspan
 
     #----------------------------------------------------------------------
+    def check_valid_cell_defs(self):
+        if self.auto_number_IDs_checkbox.isChecked():
+            return
+
+        print('---- check_valid_cell_defs(): ---')
+
+        error_msg = """
+Error: Cell Type IDs need to consist of unique integers, include 0, and can be re-ordered to form a sequence (0,1,2,...,N), e.g.,
+<br><br>
+Valid: (0,1,2,3) or (3,0,2,1)<br>
+Invalid: (0,2,3) or (1,2,3)
+<br><br>
+Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affect a cell.csv file that references cell types by ID.
+"""
+
+        valid = True
+
+        # -- check for duplicate names
+        found = set()
+        dupes = [x for x in self.param_d.keys() if x in found or found.add(x)]
+        print("dupes=",dupes)
+        if dupes:
+            valid = False
+        else:
+            # -- check for duplicate IDs
+            id_l = []
+            for cdname in self.param_d.keys():
+                id_num = int(self.param_d[cdname]["ID"])
+                # print('{cdname}, {self.param_d[cdname]["ID"]}')
+                print(f'{cdname}, {self.param_d[cdname]["ID"]}')
+                id_l.append(id_num)
+            print(f"id_l={id_l}")
+
+            id_l.sort()
+            print(f"id_l (sorted)={id_l}")
+
+            for count, value in enumerate(id_l):
+                if count != value:
+                    valid = False
+                    break
+
+        # -- check for ID=0 
+        if 0 in id_l:
+            print("  found 0 ID")
+        else:
+            print("  ERROR: No 0 ID")
+            valid = False
+            # msg = "Error: one cell type must have ID=0"
+
+        if not valid:
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(error_msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+
+    #----------------------------------------------------------------------
     def custom_duplicate_error(self,row,col,msg):
         # if self.custom_data_table.cellWidget(row,col).text()  == '0':
             # return
@@ -426,7 +506,20 @@ class CellDef(QWidget):
     # @QtCore.Slot()
     def new_cell_def(self):
         # print('------ new_cell_def')
-        cdname = "cell_def%02d" % self.new_cell_def_count
+        # cdname = "cell_def%02d" % self.new_cell_def_count
+        # if cdname in self.param_d.keys():
+        #     print('new_cell_def(): duplicate name, changing to a random string')
+        #     cdname = self.random_name()
+
+        prefix = "ntype_"
+        cdname = self.random_name(prefix,3)
+        while True:
+            if cdname in self.param_d.keys():
+                print('new_cell_def(): duplicate name, changing to a random string')
+                cdname = self.random_name(prefix,3)
+            else:
+                break
+
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
@@ -443,7 +536,6 @@ class CellDef(QWidget):
         #     print(" ===>>> ",k, " : ", self.param_d[k])
         #     print()
 
-        self.new_cell_def_count += 1
         self.current_cell_def = cdname
 
         self.add_new_celltype(cdname)  # add to all qcomboboxes that have celltypes (e.g., in interactions)
@@ -451,22 +543,29 @@ class CellDef(QWidget):
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
-        treeitem = QTreeWidgetItem([cdname])
+        # treeitem = QTreeWidgetItem([cdname])
+        treeitem = QTreeWidgetItem([cdname, self.param_d[cdname]["ID"]])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
         self.tree_item_clicked_cb(treeitem, 0)
 
+        self.new_cell_def_count += 1
+
     #----------------------
     # When a cell type is selected(via double-click) and renamed
-    def tree_item_changed_cb(self, it,col):
+    def tree_item_changed_cb_0(self, it,col):
         logging.debug(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  # col=0 always
+        print(f'--------- tree_item_changed_cb_0(): {it}, {col}, {it.text(col)}')  
 
         prev_name = self.current_cell_def
         logging.debug(f'prev_name= {prev_name}')
+        print(f'prev_name= {prev_name}')
         self.current_cell_def = it.text(col)
         logging.debug(f'new name= {self.current_cell_def}')
+        print(f'new name= {self.current_cell_def}')
+
         self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
         self.live_phagocytosis_celltype = self.current_cell_def
@@ -474,17 +573,109 @@ class CellDef(QWidget):
         self.fusion_rate_celltype = self.current_cell_def
         self.transformation_rate_celltype = self.current_cell_def
 
+        print(f'self.param_d[self.current_cell_def]["live_phagocytosis_rate"]= {self.param_d[self.current_cell_def]["live_phagocytosis_rate"]}')
         self.renamed_celltype(prev_name, self.current_cell_def)
+
+    #----------------------
+    # When a cell type is selected(via double-click) and renamed
+    def tree_item_changed_cb(self, it,col):
+        logging.debug(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  # col 0 is name; 1 is ID
+        print(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  
+        currentIndex= self.tree.currentIndex()
+        print(f'currentIndex= {currentIndex}')
+        # print("dir= ",dir(currentIndex))
+        row = currentIndex.row()
+        print(f'currentIndex.row()= {currentIndex.row()}')
+
+        item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
+        print(f'item_idx= {item_idx}')
+
+        if col == 1:  # ID
+            cdname = it.text(0)
+            self.param_d[cdname]["ID"] = it.text(1)
+            return
+
+        prev_name = self.current_cell_def
+        logging.debug(f'prev_name= {prev_name}')
+        print(f'prev_name= {prev_name}')
+        # new_name = it.text(col)
+        new_name = it.text(0)
+        id_num = it.text(1)
+        print(self.param_d.keys())
+
+        while True:
+            if new_name in self.param_d.keys():
+                print("\n------ ERROR: name exists!")
+                msgBox = QMessageBox()
+                msgBox.setTextFormat(Qt.RichText)
+                # msgBox.setText("Error: duplicate name, please rename.")
+                msgBox.setText("Error: Duplicate name. We will append a random suffix.")
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                returnValue = msgBox.exec()
+                new_name = self.random_name(new_name+"_",3)
+                print("----- new_name (after append suffix) = ",new_name)
+
+                treeitem = QTreeWidgetItem([new_name, id_num])
+                treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
+                # self.tree.topLevelItem(0).child(1).setText(0, "foo")
+                # self.tree.topLevelItem(0).setText(0, "foo")
+                # num_items = self.tree.invisibleRootItem().childCount()
+                # self.tree.insertTopLevelItem(num_items,treeitem)
+                self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
+                self.tree.insertTopLevelItem(item_idx,treeitem)
+                self.tree.setCurrentItem(treeitem)
+                # self.tree.show()
+
+                # num_items = self.tree.invisibleRootItem().childCount()
+                # # print("tree has num_items = ",num_items)
+                # treeitem = QTreeWidgetItem([cdname_copy, self.param_d[cdname_copy]["ID"]])
+                # treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
+                # self.tree.insertTopLevelItem(num_items,treeitem)
+                # self.tree.setCurrentItem(treeitem)
+                # self.tree_item_clicked_cb(treeitem, 0)
+
+            else:
+                break
+
+        self.current_cell_def = new_name
+        logging.debug(f'new name= {self.current_cell_def}')
+        print(f'new name= {self.current_cell_def}')
+        self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
+
+        self.live_phagocytosis_celltype = self.current_cell_def
+        self.attack_rate_celltype = self.current_cell_def
+        self.fusion_rate_celltype = self.current_cell_def
+        self.transformation_rate_celltype = self.current_cell_def
+
+        print(f'before calling renamed_celltype(): prev_name= {prev_name}')
+        self.renamed_celltype(prev_name, self.current_cell_def)
+
+    #----------------------------------------------------------------------
+    def random_name(self,prefix,num_chars):
+        letters = string.ascii_lowercase
+        # return ''.join(random.choice(letters) for i in range(num_chars))
+        rstring = ''.join(random.choice(letters) for i in range(num_chars))
+        return (prefix + rstring)
 
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     # Make a new cell_def (that's a copy of the currently selected one)
     def copy_cell_def(self):
         # print('------ copy_cell_def()')
-        cdname_copy = "cell_def%02d" % self.new_cell_def_count
+        # cdname_copy = "cell_def%02d" % self.new_cell_def_count
+        prefix = "ctype_"
+        cdname_copy = self.random_name(prefix,3)
+        while True:
+            if cdname_copy in self.param_d.keys():
+                print('copy_cell_def(): duplicate name, changing to a random string')
+                cdname_copy = self.random_name(prefix,3)
+            else:
+                break
+
         cdname_original = self.current_cell_def
         self.param_d[cdname_copy] = copy.deepcopy(self.param_d[cdname_original])
-        # self.param_d[cdname_copy]["ID"] = str(self.new_cell_def_count)  # no longer necessary; we auto-generate at 'save'
+
+        self.param_d[cdname_copy]["ID"] = str(self.new_cell_def_count)  # rwh Note: we won't do this if we auto-generate the ID #s at "save"
 
         # we need to add the newly created cell def into each cell def's interaction/transformation dicts, with values of the copy
         sval = self.default_sval
@@ -510,8 +701,6 @@ class CellDef(QWidget):
         #     print()
         # print()
 
-        self.new_cell_def_count += 1
-
         self.current_cell_def = cdname_copy
         # self.cell_type_name.setText(cdname)
 
@@ -521,13 +710,15 @@ class CellDef(QWidget):
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
         # print("tree has num_items = ",num_items)
-        treeitem = QTreeWidgetItem([cdname_copy])
+        # treeitem = QTreeWidgetItem([cdname_copy])
+        treeitem = QTreeWidgetItem([cdname_copy, self.param_d[cdname_copy]["ID"]])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
         self.tree.setCurrentItem(treeitem)
 
         self.tree_item_clicked_cb(treeitem, 0)
 
+        self.new_cell_def_count += 1
         
     #----------------------------------------------------------------------
     def show_delete_warning(self):
@@ -542,7 +733,7 @@ class CellDef(QWidget):
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
 
-
+    #----------------------------------------------------------------------
     # @QtCore.Slot()
     def delete_cell_def(self):
         num_items = self.tree.invisibleRootItem().childCount()
@@ -552,6 +743,8 @@ class CellDef(QWidget):
             # QMessageBox.information(self, "Not allowed to delete all substrates")
             self.show_delete_warning()
             return
+
+        self.new_cell_def_count -= 1
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
         # print('------      item_idx=',item_idx)
@@ -609,7 +802,7 @@ class CellDef(QWidget):
             self.param_d[cdef]['transformation_rate'].pop(self.current_cell_def,0)
 
 
-        item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
+        item_idx = self.tree.indexFromItem(self.tree.currentItem()).row()   # rwh: apparently not used?
         # print('------      item_idx=',item_idx)
         # self.tree.removeItemWidget(self.tree.currentItem(), 0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
@@ -6063,6 +6256,7 @@ class CellDef(QWidget):
         #     self.current_secretion_substrate = new_name
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
+
     #-----------------------------------------------------------------------------------------
     # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
     def new_cycle_params(self, cdname):
@@ -6365,6 +6559,7 @@ class CellDef(QWidget):
         # # elif 'separated' in self.param_d[cdname]['cycle']:
         # #     self.cycle_dropdown.setCurrentIndex(4)
 
+        print(f'cell_def_tab: update_cycle_params(): self.param_d.keys()= {self.param_d.keys()}') 
         if self.param_d[cdname]['cycle_duration_flag']:
             self.cycle_rb2.setChecked(True)
         else:
@@ -6905,7 +7100,10 @@ class CellDef(QWidget):
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        # print('\n\n------------ tree_item_clicked_cb -----------:', it, col, it.text(col) )
+        # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
+        print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
+        if col > 0:  # only allow editing cell type name, not ID
+            return
         self.current_cell_def = it.text(col)
         # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
 
@@ -7997,52 +8195,76 @@ class CellDef(QWidget):
         uep = self.xml_root.find('.//cell_definitions')
 
 
-        idx = 0
+        # Note: at this point, the IDs should be guaranteed to be in a, possibly unordered, sequence of IDs
+        # whose #s include 0-N. For example, there may appear in the order ID=2, ID=0, ID=1. When we write out
+        # these cell_defs, we want to put them in sequential order: 0,1,2.
+        id_l = []
         for cdef in self.param_d.keys():
-            logging.debug(f'\n--- key in param_d.keys() = {cdef}')
-            if cdef in cdefs_in_tree:
-                logging.debug(f'matched! {cdef}')
+            id_l.append(self.param_d[cdef]["ID"])
+        print(f'------------cell_def_tab.py: fill_xml(): (original) IDs = {id_l}')
 
-		# <cell_definition name="round cell" ID="0">
-		# 	<phenotype>
-		# 		<cycle code="5" name="live">  
-		# 			<phase_transition_rates units="1/min"> 
-		# 				<rate start_index="0" end_index="0" fixed_duration="true">0.000072</rate>
-		# 			</phase_transition_rates>
-		# 		</cycle>
-        # vs.
-                    # <phase_durations units="min"> 
-					# 	<duration index="0" fixed_duration="false">300.0</duration>
-					# 	<duration index="1" fixed_duration="true">480</duration>
-					# 	<duration index="2" fixed_duration="true">240</duration>
-					# 	<duration index="3" fixed_duration="true">60</duration>
-					# </phase_durations>
-                # print("cell_def_tab.py: fill_xml(): --> ",var.attrib['ID'])
-                elm = ET.Element("cell_definition", 
-                        {"name":cdef, "ID":str(idx)})  # rwh: renumbering IDs; do we need to retain the original IDs?
-                        # {"name":cdef, "ID":self.param_d[cdef]["ID"]})  # rwh: if retaining original IDs.
-                elm.tail = '\n' + self.indent6
-                elm.text = self.indent8
-                pheno = ET.SubElement(elm, 'phenotype')
-                pheno.text = self.indent10
-                pheno.tail = self.indent8
+        idx = 0
+        done = False
+        # while not done:
 
-                self.fill_xml_cycle(pheno,cdef)
-                self.fill_xml_death(pheno,cdef)
-                self.fill_xml_volume(pheno,cdef)
-                self.fill_xml_mechanics(pheno,cdef)
-                self.fill_xml_motility(pheno,cdef)
-                self.fill_xml_secretion(pheno,cdef)
-                self.fill_xml_interactions(pheno,cdef)
-                self.fill_xml_intracellular(pheno,cdef)
+        num_outer_loops = len(self.param_d.keys())
+        if self.auto_number_IDs_checkbox.isChecked():
+            num_outer_loops = 1
 
-                # ------- custom data ------- 
-                custom_data = ET.SubElement(elm, 'custom_data')
-                custom_data.text = self.indent10
-                custom_data.tail = self.indent6
-                self.fill_xml_custom_data(custom_data,cdef)
+        for count in range(num_outer_loops):
+            print("---- count= ",count)
+            for cdef in self.param_d.keys():
+                if not self.auto_number_IDs_checkbox.isChecked():
+                    if int(self.param_d[cdef]["ID"]) != count:
+                        continue
 
-                uep.insert(idx,elm)
-                idx += 1
+                logging.debug(f'\n--- key in param_d.keys() = {cdef}')
+                if cdef in cdefs_in_tree:
+                    logging.debug(f'matched! {cdef}')
+
+            # <cell_definition name="round cell" ID="0">
+            # 	<phenotype>
+            # 		<cycle code="5" name="live">  
+            # 			<phase_transition_rates units="1/min"> 
+            # 				<rate start_index="0" end_index="0" fixed_duration="true">0.000072</rate>
+            # 			</phase_transition_rates>
+            # 		</cycle>
+            # vs.
+                        # <phase_durations units="min"> 
+                        # 	<duration index="0" fixed_duration="false">300.0</duration>
+                        # 	<duration index="1" fixed_duration="true">480</duration>
+                        # 	<duration index="2" fixed_duration="true">240</duration>
+                        # 	<duration index="3" fixed_duration="true">60</duration>
+                        # </phase_durations>
+                    # print("cell_def_tab.py: fill_xml(): --> ",var.attrib['ID'])
+                    if self.auto_number_IDs_checkbox.isChecked():
+                        elm = ET.Element("cell_definition", 
+                                {"name":cdef, "ID":str(idx)})
+                    else:
+                        elm = ET.Element("cell_definition", 
+                                {"name":cdef, "ID":self.param_d[cdef]["ID"]})  # rwh: if retaining original IDs.
+                    elm.tail = '\n' + self.indent6
+                    elm.text = self.indent8
+                    pheno = ET.SubElement(elm, 'phenotype')
+                    pheno.text = self.indent10
+                    pheno.tail = self.indent8
+
+                    self.fill_xml_cycle(pheno,cdef)
+                    self.fill_xml_death(pheno,cdef)
+                    self.fill_xml_volume(pheno,cdef)
+                    self.fill_xml_mechanics(pheno,cdef)
+                    self.fill_xml_motility(pheno,cdef)
+                    self.fill_xml_secretion(pheno,cdef)
+                    self.fill_xml_interactions(pheno,cdef)
+                    self.fill_xml_intracellular(pheno,cdef)
+
+                    # ------- custom data ------- 
+                    custom_data = ET.SubElement(elm, 'custom_data')
+                    custom_data.text = self.indent10
+                    custom_data.tail = self.indent6
+                    self.fill_xml_custom_data(custom_data,cdef)
+
+                    uep.insert(idx,elm)
+                    idx += 1
 
         logging.debug(f'----------- end cell_def_tab.py: fill_xml(): ----------')
