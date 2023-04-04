@@ -62,6 +62,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     # cell_def_tab.master_custom_varname.clear()
     cell_def_tab.master_custom_var_d.clear()
 
+    cell_def_tab.new_cell_def_count = 0   # reset the somewhat artificial # of cell defs
+
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
     validate_cell_defs(uep, skip_validate)
 
