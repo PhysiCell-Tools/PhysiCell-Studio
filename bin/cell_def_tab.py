@@ -272,7 +272,6 @@ class CellDef(QWidget):
         # self.tree.setColumnWidth(50,5)   # doesn't work
 
         self.tree.itemClicked.connect(self.tree_item_clicked_cb)
-        # self.tree.itemChanged.connect(self.tree_item_changed_cb_0)   # rename a cell type
         self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
         # header = QTreeWidgetItem(["---  Cell Type  ---"])
@@ -552,29 +551,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.tree_item_clicked_cb(treeitem, 0)
 
         self.new_cell_def_count += 1
-
-    #----------------------
-    # When a cell type is selected(via double-click) and renamed
-    def tree_item_changed_cb_0(self, it,col):
-        logging.debug(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  # col=0 always
-        print(f'--------- tree_item_changed_cb_0(): {it}, {col}, {it.text(col)}')  
-
-        prev_name = self.current_cell_def
-        logging.debug(f'prev_name= {prev_name}')
-        print(f'prev_name= {prev_name}')
-        self.current_cell_def = it.text(col)
-        logging.debug(f'new name= {self.current_cell_def}')
-        print(f'new name= {self.current_cell_def}')
-
-        self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
-
-        self.live_phagocytosis_celltype = self.current_cell_def
-        self.attack_rate_celltype = self.current_cell_def
-        self.fusion_rate_celltype = self.current_cell_def
-        self.transformation_rate_celltype = self.current_cell_def
-
-        print(f'self.param_d[self.current_cell_def]["live_phagocytosis_rate"]= {self.param_d[self.current_cell_def]["live_phagocytosis_rate"]}')
-        self.renamed_celltype(prev_name, self.current_cell_def)
 
     #----------------------
     # When a cell type is selected(via double-click) and renamed
@@ -7102,9 +7078,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def tree_item_clicked_cb(self, it,col):
         # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
         print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
-        if col > 0:  # only allow editing cell type name, not ID
-            return
-        self.current_cell_def = it.text(col)
+        # cdname = it.text(0)
+        # if col > 0:  # only allow editing cell type name, not ID
+            # return
+        # self.current_cell_def = it.text(col)
+        self.current_cell_def = it.text(0)
         # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
 
         # for k in self.param_d.keys():
