@@ -15,6 +15,31 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator #, QTreeWidgetItemIterator
 
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        self.setStyleSheet(checkbox_style)
+
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -307,7 +332,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_xmin.textChanged.connect(self.dirichlet_xmin_changed)
         hbox.addWidget(self.dirichlet_xmin)
 
-        self.enable_xmin = QCheckBox("on")
+        self.enable_xmin = QCheckBox_custom("on")
         self.enable_xmin.stateChanged.connect(self.enable_xmin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -325,7 +350,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_xmax.textChanged.connect(self.dirichlet_xmax_changed)
         hbox.addWidget(self.dirichlet_xmax)
 
-        self.enable_xmax = QCheckBox("on")
+        self.enable_xmax = QCheckBox_custom("on")
         self.enable_xmax.stateChanged.connect(self.enable_xmax_cb)
         hbox.addWidget(self.enable_xmax)
         self.vbox.addLayout(hbox)
@@ -341,7 +366,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_ymin.textChanged.connect(self.dirichlet_ymin_changed)
         hbox.addWidget(self.dirichlet_ymin)
 
-        self.enable_ymin = QCheckBox("on")
+        self.enable_ymin = QCheckBox_custom("on")
         self.enable_ymin.stateChanged.connect(self.enable_ymin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -359,7 +384,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_ymax.textChanged.connect(self.dirichlet_ymax_changed)
         hbox.addWidget(self.dirichlet_ymax)
 
-        self.enable_ymax = QCheckBox("on")
+        self.enable_ymax = QCheckBox_custom("on")
         self.enable_ymax.stateChanged.connect(self.enable_ymax_cb)
         hbox.addWidget(self.enable_ymax)
         self.vbox.addLayout(hbox)
@@ -375,7 +400,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_zmin.textChanged.connect(self.dirichlet_zmin_changed)
         hbox.addWidget(self.dirichlet_zmin)
 
-        self.enable_zmin = QCheckBox("on")
+        self.enable_zmin = QCheckBox_custom("on")
         self.enable_zmin.stateChanged.connect(self.enable_zmin_cb)
         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
         # label.setFixedWidth(label_width)
@@ -393,7 +418,7 @@ class SubstrateDef(QWidget):
         self.dirichlet_zmax.textChanged.connect(self.dirichlet_zmax_changed)
         hbox.addWidget(self.dirichlet_zmax)
 
-        self.enable_zmax = QCheckBox("on")
+        self.enable_zmax = QCheckBox_custom("on")
         self.enable_zmax.stateChanged.connect(self.enable_zmax_cb)
         hbox.addWidget(self.enable_zmax)
         self.vbox.addLayout(hbox)
@@ -407,13 +432,13 @@ class SubstrateDef(QWidget):
         hbox = QHBoxLayout()
         hbox.addWidget(QLabel("For all substrates: "))
 
-        self.gradients = QCheckBox("calculate gradients")
+        self.gradients = QCheckBox_custom("calculate gradients")
         self.gradients.stateChanged.connect(self.gradients_cb)
         hbox.addWidget(self.gradients)
         # self.vbox.addLayout(hbox)
 
         # hbox = QHBoxLayout()
-        self.track_in_agents = QCheckBox("track in agents")
+        self.track_in_agents = QCheckBox_custom("track in agents")
         self.track_in_agents.stateChanged.connect(self.track_in_agents_cb)
         hbox.addWidget(self.track_in_agents)
         self.vbox.addLayout(hbox)

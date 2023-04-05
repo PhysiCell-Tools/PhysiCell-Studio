@@ -21,7 +21,7 @@ import logging
 import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from xml.dom import minidom
+# from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
 import numpy as np
 
 from PyQt5 import QtCore, QtGui
@@ -145,7 +145,8 @@ class PhysiCellXMLCreator(QWidget):
         self.config_dir = os.path.realpath(os.path.join('.', 'config'))
 
         if self.current_dir == self.pmb_root_dir:  # are we running from PMB root dir?
-            self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            # self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
         print(f'self.config_dir =  {self.config_dir}')
         logging.debug(f'self.config_dir = {self.config_dir}')
 
@@ -162,17 +163,7 @@ class PhysiCellXMLCreator(QWidget):
             model_name = "template"
             if self.nanohub_flag:
                 model_name = "biorobots_flat"
-            # model_name = "test1"
-            # model_name = "interactions"
-
-            # bin_dir = os.path.dirname(os.path.abspath(__file__))
-            # data_dir = os.path.join(bin_dir,'..','data')
-            # data_dir = os.path.normpath(data_dir)
-            # data_dir = os.path.join(self.current_dir,'data')
-
-            # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
             self.current_xml_file = os.path.join(self.pmb_config_dir, model_name + ".xml")
-
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
@@ -249,37 +240,31 @@ class PhysiCellXMLCreator(QWidget):
         print("pmb.py: ",self.xml_root.find(".//cell_definitions//cell_rules"))
         # if self.xml_root.find(".//cell_definitions//cell_rules"):
 
-        # self.sbml_tab = SBMLParams()
-        # self.sbml_tab.xml_root = self.xml_root
-        # self.sbml_tab.fill_gui()
-
-        # if studio_flag:
-        #     self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.download_menu)
-        #     self.current_dir = os.getcwd()
-        #     print("model.py: self.current_dir = ",self.current_dir)
-        #     self.run_tab.current_dir = self.current_dir
-        #     self.run_tab.config_tab = self.config_tab
-        #     self.run_tab.microenv_tab = self.microenv_tab 
-        #     self.run_tab.celldef_tab = self.celldef_tab
-        #     self.run_tab.user_params_tab = self.user_params_tab
-        #     self.run_tab.tree = self.tree
-
         #------------------
         self.tabWidget = QTabWidget()
-        stylesheet = """ 
-            QTabBar::tab:selected {background: orange;}  # dodgerblue
+        # stylesheet = """ 
+        #     QTabBar::tab:selected {background: orange;}  # dodgerblue
 
-            QLabel {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
+        #     QLabel {
+        #         color: #000000;
+        #         background-color: #FFFFFF; 
+        #     }
+        #     QPushButton {
+        #         color: #000000;
+        #         background-color: #FFFFFF; 
+        #     }
+        #     QTabWidget::tab-bar {
+        #         alignment: center;
+        #     }
+        #     """
 
-        self.tabWidget.setStyleSheet(stylesheet)
+        # self.tabWidget.setStyleSheet(stylesheet)
+        self.tabWidget.setStyleSheet('''
+            QTabWidget::tab-bar {
+                alignment: center;
+            }
+            QTabBar::tab:selected {background: orange;}
+        ''')
         self.tabWidget.addTab(self.config_tab,"Config Basics")
         self.tabWidget.addTab(self.microenv_tab,"Microenvironment")
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
@@ -341,7 +326,6 @@ class PhysiCellXMLCreator(QWidget):
 
             self.vis_tab = Vis(self.nanohub_flag, self.run_tab)
             self.config_tab.vis_tab = self.vis_tab
-            # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
                 self.vis_tab.output_folder.setText('tmpdir')
@@ -356,9 +340,6 @@ class PhysiCellXMLCreator(QWidget):
             self.legend_tab.current_dir = self.current_dir
             self.legend_tab.pmb_config_dir = self.pmb_config_dir
             self.run_tab.vis_tab = self.vis_tab
-            # self.vis_tab.setEnabled(False)
-            # self.vis_tab.nanohub_flag = self.nanohub_flag
-            # self.vis_tab.xml_root = self.xml_root
             self.tabWidget.addTab(self.vis_tab,"Plot")
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
@@ -683,20 +664,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         self.microenv_tab.clear_gui()
         self.microenv_tab.populate_tree()
-        # self.microenv_tab.fill_gui(None)
-        # self.microenv_tab.fill_gui()
-        # self.celldef_tab.clear_gui()
 
-        # self.celldef_tab.clear_custom_data_params()
-
-        # self.celldef_tab.fill_substrates_comboboxes()
-        # self.celldef_tab.populate_tree()
         self.celldef_tab.config_path = self.current_xml_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
-        # self.celldef_tab.fill_gui(None)
-        # self.celldef_tab.customize_cycle_choices() #rwh/todo: needed? 
-        # self.celldef_tab.fill_substrates_comboboxes()
+
         self.celldef_tab.fill_celltypes_comboboxes()
 
         if self.studio_flag:
@@ -710,17 +682,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def show_sample_model(self):
         logging.debug(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
         print(f'\npmb: show_sample_model(): self.config_file = {self.config_file}')
-        # self.config_file = "config_samples/biorobots.xml"
         self.tree = ET.parse(self.config_file)
         print(f'pmb: show_sample_model(): self.tree = {self.tree}')
         self.run_tab.tree = self.tree  #rwh
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
         self.setWindowTitle(self.title_prefix + self.config_file)
-        # self.config_tab.fill_gui(self.xml_root)  # 
-        # self.microenv_tab.fill_gui(self.xml_root)  # microenv
-        # self.celldef_tab.fill_gui("foobar")  # cell defs
-        # self.celldef_tab.fill_motility_substrates()
 
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
@@ -799,12 +766,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.user_params_tab.fill_xml()
             if self.rules_flag:
                 self.rules_tab.fill_xml()
-
-            # out_file = "mymodel.xml"
-            # out_file = full_path_model_name 
-            # out_file = self.current_save_file
-            # xml_file = self.current_xml_file
-            # print("--- xml_file =",xml_file )
             
             self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
@@ -831,13 +792,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             if self.rules_flag:
                 self.rules_tab.fill_xml()
 
-            # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
-            # print("pmb.py:  save_cb: writing to: ",self.config_file)
-
-            # out_file = self.config_file
-            # out_file = "mymodel.xml"
-            # out_file = self.current_save_file
-            # xml_file = self.current_xml_file
             self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
             # print("\n\n ===================================")
@@ -918,10 +872,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
 
-        # data_dir = os.path.join(self.current_dir,'data')
-        # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-        # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
-        # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
         self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         logging.debug(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
         print(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
@@ -1157,13 +1107,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 self.p.start("exportfile mcds.zip")
         return
     #-----------------------------------------------------------------
-		
-# def main():
-#     app = QApplication(sys.argv)
-#     ex = PhysiCellXMLCreator()
-#     # ex.setGeometry(100,100, 800,600)
-#     ex.show()
-#     sys.exit(app.exec_())
 
 pmb_app = None
 def main():
@@ -1241,6 +1184,10 @@ def main():
         # print("Error parsing command line args.")
         sys.exit(-1)
 
+    root = os.path.dirname(os.path.abspath(__file__))        
+    # QDir.addSearchPath('themes', os.path.join(root, 'themes'))
+    QtCore.QDir.addSearchPath('images', os.path.join(root, 'images'))
+
     pmb_app = QApplication(sys.argv)
 
     icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
@@ -1284,7 +1231,9 @@ def main():
     pmb_app.setPalette(palette)
     # pmb_app.setStyleSheet("QCheckBox { background-color: red }")
     # pmb_app.setStyleSheet("QLineEdit { background-color: white }; QComboBox { height: 34 } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+
     pmb_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+
     # pmb_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
 
