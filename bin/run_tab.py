@@ -51,6 +51,8 @@ class RunModel(QWidget):
         self.vis_tab = None
         self.legend_tab = None
 
+        self.tree = None
+
         self.output_dir = 'output'
 
         #-----
@@ -148,6 +150,7 @@ class RunModel(QWidget):
 
     def run_model_cb(self):
         logging.debug(f'===========  run_model_cb():  ============')
+        self.celldef_tab.check_valid_cell_defs()
 
         if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
             msg = QMessageBox()
@@ -233,6 +236,8 @@ class RunModel(QWidget):
                     self.vis_tab.disable_physiboss_info()
                     # self.vis_tab.physiboss_vis_hide
 
+            print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
+
             if self.p is None:  # No process running.
                 self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
                 self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
@@ -245,6 +250,7 @@ class RunModel(QWidget):
                 # self.p.start("mymodel", ['biobots.xml'])
                 exec_str = self.exec_name.text()
                 xml_str = self.config_xml_name.text()
+                print("\n--- run_tab:  xml_str before run is ",xml_str)
                 if self.nanohub_flag:
                     self.p.start("submit",["--local",exec_str,xml_str])
                 else:

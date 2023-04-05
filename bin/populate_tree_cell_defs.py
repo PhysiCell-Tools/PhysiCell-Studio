@@ -62,6 +62,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     # cell_def_tab.master_custom_varname.clear()
     cell_def_tab.master_custom_var_d.clear()
 
+    cell_def_tab.new_cell_def_count = 0   # reset the somewhat artificial # of cell defs
+
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
     validate_cell_defs(uep, skip_validate)
 
@@ -110,11 +112,14 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # cell_def_tab.param_d[cell_def_name]["name"] = cell_def_name
             cell_def_tab.current_cell_def = cell_def_name  # do this for the callback methods?
 
-            cellname = QTreeWidgetItem([cell_def_name])
+            # cellname = QTreeWidgetItem([cell_def_name])
+            cellname = QTreeWidgetItem([cell_def_name, cell_def.attrib['ID']])
             cellname.setFlags(cellname.flags() | QtCore.Qt.ItemIsEditable)
             cell_def_tab.tree.insertTopLevelItem(idx,cellname)
             if idx == 0:  # select the 1st (0th) entry
                 cell_def_tab.tree.setCurrentItem(cellname)
+
+            cell_def_tab.tree.resizeColumnToContents(idx)  # rwh (after adding ID column)
 
             idx += 1
 

@@ -40,7 +40,8 @@ class Legend(QWidget):
         self.process = None
         self.output_dir = '.'   # set in pmb.py
         self.current_dir = '.'   # reset in pmb.py
-        self.pmb_data_dir = ''   # reset in pmb.py
+        # self.pmb_data_dir = ''   # reset in pmb.py
+        self.pmb_config_dir = ''   # reset in pmb.py
         
         #-------------------------------------------
         self.scroll = QScrollArea()  # might contain centralWidget
@@ -79,7 +80,7 @@ class Legend(QWidget):
         self.layout.addWidget(self.scroll)
 
     def clear_legend(self):
-        legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
+        legend_file = os.path.join(self.pmb_config_dir, 'empty_legend.svg')
         self.svgView.load(legend_file)
 
     def reload_legend(self):

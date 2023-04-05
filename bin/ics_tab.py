@@ -256,7 +256,7 @@ class ICs(QWidget):
         hbox = QHBoxLayout()
 
         cvalue_width = 70
-        label = QLabel("D1")
+        label = QLabel("R1")  # confusing, but let's change the label to "R" (~radius) instead of "D" (distance)
         label.setFixedWidth(30)
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -273,7 +273,7 @@ class ICs(QWidget):
         self.d1val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
         hbox.addWidget(self.d1val)
 
-        label = QLabel("D2")
+        label = QLabel("R2")
         label.setFixedWidth(30)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
@@ -337,6 +337,7 @@ class ICs(QWidget):
         # self.vbox.addWidget(self.save_button)
 
         self.use_names = QCheckBox("use cell type names")
+        self.use_names.setChecked(True)
         hbox.addWidget(self.use_names)
         self.vbox.addLayout(hbox)
 

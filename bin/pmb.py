@@ -136,7 +136,8 @@ class PhysiCellXMLCreator(QWidget):
         print("self.current_dir = ",self.current_dir)
         logging.debug(f'self.current_dir = {self.current_dir}')
         self.pmb_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        # self.pmb_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        self.pmb_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
         print("self.pmb_root_dir = ",self.pmb_root_dir)
         logging.debug(f'self.pmb_root_dir = {self.pmb_root_dir}')
 
@@ -170,16 +171,19 @@ class PhysiCellXMLCreator(QWidget):
             # data_dir = os.path.join(self.current_dir,'data')
 
             # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
-            self.current_xml_file = os.path.join(self.pmb_data_dir, model_name + ".xml")
+            self.current_xml_file = os.path.join(self.pmb_config_dir, model_name + ".xml")
 
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
         self.setWindowTitle(self.title_prefix + self.current_xml_file)
         self.config_file = self.current_xml_file  # to Save
+        print(f"pmb: (default) self.config_file = {self.config_file}")
 
         self.tree = ET.parse(self.config_file)
+        print(f"pmb: (default) self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
+        print(f"pmb: (default) self.xml_root = {self.xml_root}")   #rwh
 
 
         self.num_models = 0
@@ -350,7 +354,7 @@ class PhysiCellXMLCreator(QWidget):
             self.legend_tab = Legend(self.nanohub_flag)
             self.vis_tab.legend_tab = self.legend_tab
             self.legend_tab.current_dir = self.current_dir
-            self.legend_tab.pmb_data_dir = self.pmb_data_dir
+            self.legend_tab.pmb_config_dir = self.pmb_config_dir
             self.run_tab.vis_tab = self.vis_tab
             # self.vis_tab.setEnabled(False)
             # self.vis_tab.nanohub_flag = self.nanohub_flag
@@ -543,6 +547,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             samples_menu.addAction(interactions_act)
             interactions_act.triggered.connect(self.interactions_cb)
 
+            mechano_act = QAction('mechano', self)
+            samples_menu.addAction(mechano_act)
+            mechano_act.triggered.connect(self.mechano_cb)
+
             cancer_immune_act = QAction('cancer immune (3D)', self)
             samples_menu.addAction(cancer_immune_act)
             cancer_immune_act.triggered.connect(self.cancer_immune_cb)
@@ -652,82 +660,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
-    #-----------------------------------------------------------------
-    # Not currently used
-    def add_new_model(self, name, read_only):
-        # does it already exist? If so, return
-        # if name in self.model.keys():
-        #     return
-        # self.model[name] = read_only
-        # self.num_models += 1
-        # print("add_new_model(): self.model (dict)= ",self.model)
-
-        # models_menu_act = QAction(name, self)
-        # self.models_menu.addAction(models_menu_act)
-        # models_menu_act.triggered.connect(self.select_current_model_cb)
-
-        print("add_new_model: title suffix= ",name)
-        self.setWindowTitle(self.title_prefix + name)
-
-        #---------- rwh?
-        print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        # print("add_new_model(): self.tree = ET.parse(xml_file) for ",self.config_file)
-        print("add_new_model(): self.tree = ET.parse(xml_file) for ",name)
-        # with open(self.config_file, 'r') as xml_file:
-        with open(name, 'r') as xml_file:
-            self.tree = ET.parse(xml_file)
-        # tree = ET.parse(read_file)
-        # self.tree = ET.parse(read_file)
-        self.xml_root = self.tree.getroot()
-
-        # self.num_models = 0
-        # self.model = {}  # key: name, value:[read-only, tree]
-
-        #-------  Re-populate the GUI with the new model's params -------
-        # self.config_tab = Config(self.nanohub_flag)
-        self.config_tab.xml_root = self.xml_root
-        self.config_tab.fill_gui()
-
-        # self.microenv_tab = SubstrateDef()
-        self.microenv_tab.xml_root = self.xml_root
-        substrate_name = self.microenv_tab.first_substrate_name()
-        print("studio.py: substrate_name=",substrate_name)
-        self.microenv_tab.populate_tree()  # rwh: both fill_gui and populate_tree??
-
-        # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
-
-        # self.celldef_tab = CellDef()
-        self.celldef_tab.xml_root = self.xml_root
-        cd_name = self.celldef_tab.first_cell_def_name()
-        print("studio.py: cd_name=",cd_name)
-        # self.celldef_tab.populate_tree()
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
-        self.celldef_tab.fill_substrates_comboboxes()
-        # self.vis_tab.substrates_cbox_changed_cb(2)
-        self.microenv_tab.celldef_tab = self.celldef_tab
-
-        # self.cell_customdata_tab = CellCustomData()
-        # self.cell_customdata_tab.xml_root = self.xml_root
-        # self.cell_customdata_tab.celldef_tab = self.celldef_tab
-        # self.cell_customdata_tab.fill_gui(self.celldef_tab)
-        # self.celldef_tab.fill_custom_data_tab()
-        
-        # self.user_params_tab = UserParams()
-        self.user_params_tab.xml_root = self.xml_root
-        self.user_params_tab.fill_gui()
-
-    # Probably not used unless we later implement it
-    # def select_current_model_cb(self):
-    #     # models_menu_act = QtGui.QAction(name, self)
-    #     # self.models_menu.addAction(models_menu_act)
-    #     model_act = self.models_menu.menuAction()
-    #     print('select_current_model_cb: ',model_act)
-    #     action = self.sender()
-    #     model_name = action.text()
-    #     print('select_current_model_cb: title suffix name= ',model_name)
-
-    #     self.setWindowTitle(self.title_prefix + model_name)
-
     def reset_xml_root(self):
         self.celldef_tab.clear_custom_data_tab()
         self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
@@ -736,7 +668,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         # self.microenv_tab.param_d.clear()
 
+        print(f"\nreset_xml_root() self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
+        print(f"reset_xml_root() self.xml_root = {self.xml_root}")
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
@@ -775,9 +709,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def show_sample_model(self):
         logging.debug(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
-        print(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
+        print(f'\npmb: show_sample_model(): self.config_file = {self.config_file}')
         # self.config_file = "config_samples/biorobots.xml"
         self.tree = ET.parse(self.config_file)
+        print(f'pmb: show_sample_model(): self.tree = {self.tree}')
+        self.run_tab.tree = self.tree  #rwh
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
         self.setWindowTitle(self.title_prefix + self.config_file)
@@ -797,17 +733,20 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_file():
             print("open_as_cb():  filePath is valid")
             logging.debug(f'     filePath is valid')
-            print("len(full_path_model_name) = ", len(full_path_model_name) )
+            print("           len(full_path_model_name) = ", len(full_path_model_name) )
             logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
             # fname = os.path.basename(full_path_model_name)
             self.current_xml_file = full_path_model_name
 
-            # self.add_new_model(self.current_xml_file, True)
             self.config_file = self.current_xml_file
+            print("open_as_cb():  self.config_file = ",self.config_file)
             if self.studio_flag:
                 self.run_tab.config_file = self.current_xml_file
+                print("open_as_cb():  setting run_tab.config_file = ",self.run_tab.config_file)
                 self.run_tab.config_xml_name.setText(self.current_xml_file)
+
             self.show_sample_model()
+            # self.reset_xml_root()   #rwh - done in show_sample_model
 
         else:
             print("open_as_cb():  full_path_model_name is NOT valid")
@@ -831,6 +770,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def save_as_cb(self):
         # print("------ save_as_cb():")
+        self.celldef_tab.check_valid_cell_defs()
+        
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getSaveFileName(self,'',".")
         # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
@@ -878,6 +819,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
     def save_cb(self):
+        self.celldef_tab.check_valid_cell_defs()
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
@@ -918,65 +860,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         returnValue = msgBox.exec()
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
-
-    # def toggle_2D_shading_cb(self):
-    #     self.vis2D_gouraud = not self.vis2D_gouraud
-    #     if self.vis2D_gouraud:
-    #         self.vis_tab.shading_choice = 'gouraud'
-    #     else:
-    #         self.vis_tab.shading_choice = 'auto'
-    #     self.vis_tab.update_plots()
-
-    # def toggle_2D_voxel_grid_cb(self):
-    #     self.vis_tab.show_voxel_grid = not self.vis_tab.show_voxel_grid
-    #     self.vis_tab.update_plots()
-
-    # def toggle_2D_mech_grid_cb(self):
-    #     self.vis_tab.show_mech_grid = not self.vis_tab.show_mech_grid
-    #     self.vis_tab.update_plots()
-
-    # def select_plot_output_cb(self):
-    #     # filePath = QFileDialog.getOpenFileName(self,'',".")
-    #     dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
-
-    #     print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
-    #     # full_path_model_name = dirPath[0]
-    #     # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
-    #     # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
-    #     # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
-    #     if dir_path == "":
-    #         return
-    #     if Path(dir_path).is_dir():
-    #         print("select_plot_output_cb():  dir_path is valid")
-    #         logging.debug(f'select_plot_output_cb():  dir_path is valid')
-    #         # print("len(full_path_model_name) = ", len(full_path_model_name) )
-    #         # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
-    #         # fname = os.path.basename(full_path_model_name)
-    #         # self.current_xml_file = full_path_model_name
-
-    #         # self.add_new_model(self.current_xml_file, True)
-    #         # self.config_file = self.current_xml_file
-    #         # if self.studio_flag:
-    #         #     self.run_tab.config_file = self.current_xml_file
-    #         #     self.run_tab.config_xml_name.setText(self.current_xml_file)
-    #         # self.show_sample_model()
-
-    #         # self.vis_tab.output_dir = self.config_tab.folder.text()
-    #         # self.legend_tab.output_dir = self.config_tab.folder.text()
-    #         # self.vis_tab.output_dir = dir_path
-    #         self.vis_tab.update_output_dir(dir_path)
-    #         self.legend_tab.output_dir = dir_path
-    #         legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
-    #         if Path(legend_file).is_file():
-    #             self.legend_tab.reload_legend()
-    #         else:
-    #             self.legend_tab.clear_legend()
-
-    #         self.vis_tab.reset_model()
-    #         self.vis_tab.update_plots()
-
-    #     else:
-    #         print("select_plot_output_cb():  full_path_model_name is NOT valid")
 
 
     def view2D_cb(self, action):
@@ -1039,8 +922,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.current_xml_file = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'template.xml'))
         # self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         # self.current_xml_file = os.path.join(self.config_dir, name + ".xml")
-        self.current_xml_file = os.path.join(self.pmb_data_dir, name + ".xml")
+        self.current_xml_file = os.path.join(self.pmb_config_dir, name + ".xml")
         logging.debug(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
+        print(f'pmb.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
         logging.debug(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
         print(f'pmb.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
@@ -1125,132 +1009,19 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         print("Load this model at: https://simularium.allencell.org/viewer")
 
 
-    def biorobots_nanohub_cb(self):
-        print("\n\n\n================ copy/load sample ======================================")
-        os.chdir(self.homedir)
-        name = "biorobots_flat"
-        # sample_file = Path("data", name + ".xml")
-        # sample_file = Path(self.absolute_data_dir, name + ".xml")
-        sample_file = Path(self.pmb_data_dir, name + ".xml")
-        copy_file = "copy_" + name + ".xml"
-        shutil.copy(sample_file, copy_file)
-
-        # self.add_new_model(copy_file, True)
-        # self.config_file = "config_samples/" + name + ".xml"
-        self.config_file = copy_file
-        # self.show_sample_model()
-        # self.run_tab.exec_name.setText('../biorobots')
-
-        try:
-            print("biorobots_nanohub_cb():------------- copying ",sample_file," to ",copy_file)
-            shutil.copy(sample_file, copy_file)
-        except:
-            print("biorobots_nanohub_cb(): Unable to copy file(1).")
-            sys.exit(1)
-
-        try:
-            print("biorobots_nanohub_cb():------------- copying ",sample_file," to config.xml")
-            shutil.copy(sample_file, "config.xml")
-        except:
-            print("biorobots_nanohub_cb(): Unable to copy file(2).")
-            sys.exit(1)
-
-        self.add_new_model(copy_file, True)
-        self.config_file = copy_file
-        print("biorobots_nanohub_cb:   self.config_file = ",self.config_file)
-
-        self.show_sample_model()
-        if self.nanohub_flag:
-            self.run_tab.exec_name.setText('biorobots')
-        else:
-            self.run_tab.exec_name.setText('../biorobots')
-        self.vis_tab.show_edge = False
-        self.vis_tab.bgcolor = [1,1,1,1]
-
-
-    def celltypes3_nanohub_cb(self):
-        print("\n\n\n================ copy/load sample ======================================")
-        os.chdir(self.homedir)
-        # name = "celltypes3_flat-with-default-celldef"
-        name = "celltypes3_flat"
-        # sample_file = Path("data", name + ".xml")
-        # sample_file = Path(self.absolute_data_dir, name + ".xml")
-        sample_file = Path(self.pmb_data_dir, name + ".xml")
-        copy_file = "copy_" + name + ".xml"
-        try:
-            print("celltypes3_cb():------------- copying ",sample_file," to ",copy_file)
-            shutil.copy(sample_file, copy_file)
-        except:
-            print("celltypes3_cb(): Unable to copy file(1).")
-            sys.exit(1)
-
-        try:
-            print("celltypes3_cb():------------- copying ",sample_file," to config.xml")
-            shutil.copy(sample_file, "config.xml")
-        except:
-            print("celltypes3_cb(): Unable to copy file(2).")
-            sys.exit(1)
-
-        self.add_new_model(copy_file, True)
-        self.config_file = copy_file
-        print("celltypes3_cb:   self.config_file = ",self.config_file)
-
-        self.show_sample_model()
-        if self.nanohub_flag:
-            self.run_tab.exec_name.setText('celltypes3')
-        else:
-            self.run_tab.exec_name.setText('../celltypes3')
-        self.vis_tab.show_edge = True
-        self.vis_tab.bgcolor = [0,0,0,1]
-
-
-    def pred_prey_nanohub_cb(self):
-        os.chdir(self.homedir)
-        name = "pred_prey_flat"
-        # sample_file = Path("data", name + ".xml")
-        # sample_file = Path(self.absolute_data_dir, name + ".xml")
-        sample_file = Path(self.pmb_data_dir, name + ".xml")
-        copy_file = "copy_" + name + ".xml"
-        try:
-            print("pred_prey_cb():------------- copying ",sample_file," to ",copy_file)
-            shutil.copy(sample_file, copy_file)
-        except:
-            print("pred_prey_cb(): Unable to copy file(1).")
-            sys.exit(1)
-
-        try:
-            print("pred_prey_cb():------------- copying ",sample_file," to config.xml")
-            shutil.copy(sample_file, "config.xml")
-        except:
-            print("pred_prey_cb(): Unable to copy file(2).")
-            sys.exit(1)
-
-        self.add_new_model(copy_file, True)
-        self.config_file = copy_file
-        print("pred_prey_cb:   self.config_file = ",self.config_file)
-
-        self.show_sample_model()
-        if self.nanohub_flag:
-            self.run_tab.exec_name.setText('pred_prey')
-        else:
-            self.run_tab.exec_name.setText('../pred_prey')
-        self.vis_tab.show_edge = True
-        self.vis_tab.bgcolor = [1,1,1,1]
-        # self.vis_tab.reset_model()
-
     #----------------------
     def template_cb(self):
         self.load_model("template")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./template')
+            self.run_tab.exec_name.setText('./project')
 
     def biorobots_cb(self):
-        self.load_model("biorobots_flat")
+        self.load_model("biorobots")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./biorobots')
 
     def cancer_biorobots_cb(self):
-        self.load_model("cancer_biorobots_flat")
+        self.load_model("cancer_biorobots")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./cancer_biorobots')
 
@@ -1260,7 +1031,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.exec_name.setText('./heterogeneity')
 
     def pred_prey_cb(self):
-        self.load_model("pred_prey_flat")
+        self.load_model("pred_prey_farmer")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./pred_prey')
 
@@ -1279,6 +1050,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if self.studio_flag:
             self.run_tab.exec_name.setText('./interaction_demo')
 
+    def mechano_cb(self):
+        self.load_model("mechano")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./mechano')
+
     def cancer_immune_cb(self):
         self.load_model("cancer_immune3D_flat")
         if self.studio_flag:
@@ -1289,12 +1065,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
-
-    # def template3D_cb(self):
-    #     name = "template3D_flat"
-    #     self.add_new_model(name, True)
-    #     self.config_file = "config_samples/" + name + ".xml"
-    #     self.show_sample_model()
 
     def subcell_cb(self):
         self.load_model("subcellular_flat")
@@ -1548,9 +1318,9 @@ def main():
     # pmb_app.quit()
 	
 if __name__ == '__main__':
-    # logging.basicConfig(filename='pmb.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
-    # logging.basicConfig(filename="pmb_debug.log", level=logging.INFO)
-    logfile = "pmb_debug.log"
+    # logging.basicConfig(filename='studio.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(filename="studio_debug.log", level=logging.INFO)
+    logfile = "studio_debug.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
     # logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
     main()

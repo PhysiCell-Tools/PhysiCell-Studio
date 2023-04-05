@@ -1532,7 +1532,7 @@ class Vis(QWidget):
         self.current_svg_frame -= 1
         if self.current_svg_frame < 0:
             self.current_svg_frame = 0
-        print('back_plot_cb(): svg # ',self.current_svg_frame)
+        # print('back_plot_cb(): svg # ',self.current_svg_frame)
 
         self.update_plots()
 
