@@ -53,6 +53,7 @@ from PyQt5.QtGui import QDoubleValidator
 
 class CellDefException(Exception):
     pass
+
 class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
     def __init__(self):
         super(QLineEdit_color, self).__init__()
@@ -72,10 +73,15 @@ class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
+
         checkbox_style = """
-                QCheckBox::indicator:pressed
-                {
-                    background-color: lightgreen;
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
                 }
                 QCheckBox::indicator:unchecked
                 {
@@ -86,13 +92,6 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                     border-radius : 3px;
                 }
                 """
-                # color:#000000;
-                # background-color:#FFFFFF; 
-                # border-style: outset;
-                # border-radius: 10px;
-                # border-color: black;
-                # padding: 4px;
-        # self.setStyleSheet("background-color: white")
         self.setStyleSheet(checkbox_style)
 
 class QHLine(QFrame):
@@ -293,7 +292,7 @@ class CellDef(QWidget):
         # self.scroll_cell_def_tree.setWidget(self.tree)
 
         #-----------
-        self.auto_number_IDs_checkbox = QCheckBox("auto number IDs when saved\n(beware of cells.csv using IDs)")
+        self.auto_number_IDs_checkbox = QCheckBox_custom("auto number IDs when saved\n(beware of cells.csv using IDs)")
 
         tree_w_vbox = QVBoxLayout()
         tree_w_vbox.addWidget(self.auto_number_IDs_checkbox)
@@ -925,7 +924,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_live_trate00.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_live_trate00, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_live_trate00_fixed = QCheckBox("Fixed")
+        self.cycle_live_trate00_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_live_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_live_trate00_fixed.clicked.connect(self.cycle_live_trate00_fixed_clicked)
 
@@ -969,7 +968,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_Ki67_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_Ki67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_Ki67_trate01_fixed = QCheckBox("Fixed")
+        self.cycle_Ki67_trate01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_Ki67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_Ki67_trate01_fixed.clicked.connect(self.cycle_Ki67_trate01_fixed_clicked)
 
@@ -989,7 +988,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_Ki67_trate10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_Ki67_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_Ki67_trate10_fixed = QCheckBox("Fixed")
+        self.cycle_Ki67_trate10_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_Ki67_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_Ki67_trate10_fixed.clicked.connect(self.cycle_Ki67_trate10_fixed_clicked)
 
@@ -1024,7 +1023,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_trate01_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_trate01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate01_fixed.clicked.connect(self.cycle_advancedKi67_trate01_fixed_clicked)
 
@@ -1044,7 +1043,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_trate12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_trate12_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_trate12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate12_fixed.clicked.connect(self.cycle_advancedKi67_trate12_fixed_clicked)
 
@@ -1064,7 +1063,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_trate20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_trate20_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_trate20_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_advancedKi67_trate20_fixed.clicked.connect(self.cycle_advancedKi67_trate20_fixed_clicked)
 
@@ -1098,7 +1097,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_trate01_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_trate01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate01_fixed.clicked.connect(self.cycle_flowcyto_trate01_fixed_clicked)
 
@@ -1118,7 +1117,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_trate12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_trate12_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_trate12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate12_fixed.clicked.connect(self.cycle_flowcyto_trate12_fixed_clicked)
 
@@ -1138,7 +1137,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_trate20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_trate20_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_trate20_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcyto_trate20_fixed.clicked.connect(self.cycle_flowcyto_trate20_fixed_clicked)
 
@@ -1174,7 +1173,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_trate01.setMaxLength(10)  #rwhtest
         glayout.addWidget(self.cycle_flowcytosep_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_trate01_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_trate01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate01_fixed.clicked.connect(self.cycle_flowcytosep_trate01_fixed_clicked)
 
@@ -1194,7 +1193,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_trate12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_trate12_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_trate12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate12_fixed.clicked.connect(self.cycle_flowcytosep_trate12_fixed_clicked)
 
@@ -1214,7 +1213,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_trate23.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_trate23, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_trate23_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_trate23_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate23_fixed.clicked.connect(self.cycle_flowcytosep_trate23_fixed_clicked)
 
@@ -1234,7 +1233,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_trate30.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_trate30, 3,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_trate30_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_trate30_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_trate30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_flowcytosep_trate30_fixed.clicked.connect(self.cycle_flowcytosep_trate30_fixed_clicked)
 
@@ -1269,7 +1268,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_quiescent_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_quiescent_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_quiescent_trate01_fixed = QCheckBox("Fixed")
+        self.cycle_quiescent_trate01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_quiescent_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_quiescent_trate01_fixed.clicked.connect(self.cycle_quiescent_trate01_fixed_clicked)
 
@@ -1289,7 +1288,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_quiescent_trate10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_quiescent_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_quiescent_trate10_fixed = QCheckBox("Fixed")
+        self.cycle_quiescent_trate10_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_quiescent_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
         self.cycle_quiescent_trate10_fixed.clicked.connect(self.cycle_quiescent_trate10_fixed_clicked)
 
@@ -1325,7 +1324,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_live_duration00.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_live_duration00, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_live_duration00_fixed = QCheckBox("Fixed")
+        self.cycle_live_duration00_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_live_duration00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
         # NOTE: callbacks to all Fixed checkboxes are below, after the widgets are created.
 
@@ -1361,7 +1360,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_Ki67_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_Ki67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_Ki67_duration01_fixed = QCheckBox("Fixed")
+        self.cycle_Ki67_duration01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_Ki67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1380,7 +1379,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_Ki67_duration10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_Ki67_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_Ki67_duration10_fixed = QCheckBox("Fixed")
+        self.cycle_Ki67_duration10_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_Ki67_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1415,7 +1414,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_duration01_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_duration01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1434,7 +1433,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_duration12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_duration12_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_duration12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1453,7 +1452,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_advancedKi67_duration20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_advancedKi67_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_advancedKi67_duration20_fixed = QCheckBox("Fixed")
+        self.cycle_advancedKi67_duration20_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_advancedKi67_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1487,7 +1486,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_duration01_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_duration01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1506,7 +1505,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_duration12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_duration12_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_duration12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1525,7 +1524,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcyto_duration20.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcyto_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcyto_duration20_fixed = QCheckBox("Fixed")
+        self.cycle_flowcyto_duration20_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcyto_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1559,7 +1558,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_duration01_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_duration01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1578,7 +1577,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_duration12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_duration12_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_duration12_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1597,7 +1596,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_duration23.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_duration23, 2,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_duration23_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_duration23_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1616,7 +1615,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_flowcytosep_duration30.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_flowcytosep_duration30, 3,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_flowcytosep_duration30_fixed = QCheckBox("Fixed")
+        self.cycle_flowcytosep_duration30_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_flowcytosep_duration30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1650,7 +1649,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_quiescent_duration01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_quiescent_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_quiescent_duration01_fixed = QCheckBox("Fixed")
+        self.cycle_quiescent_duration01_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_quiescent_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1669,7 +1668,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cycle_quiescent_duration10.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cycle_quiescent_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
 
-        self.cycle_quiescent_duration10_fixed = QCheckBox("Fixed")
+        self.cycle_quiescent_duration10_fixed = QCheckBox_custom("Fixed")
         glayout.addWidget(self.cycle_quiescent_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
@@ -1783,7 +1782,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_trate01_fixed = QCheckBox("Fixed")
+        self.apoptosis_trate01_fixed = QCheckBox_custom("Fixed")
         self.apoptosis_trate01_fixed.toggled.connect(self.apoptosis_trate01_fixed_toggled)
         glayout.addWidget(self.apoptosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1804,7 +1803,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.apoptosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_phase0_duration_fixed = QCheckBox("Fixed")
+        self.apoptosis_phase0_duration_fixed = QCheckBox_custom("Fixed")
         self.apoptosis_phase0_duration_fixed.toggled.connect(self.apoptosis_phase0_duration_fixed_toggled)
         glayout.addWidget(self.apoptosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1996,7 +1995,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.necrosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate01_fixed = QCheckBox("Fixed")
+        self.necrosis_trate01_fixed = QCheckBox_custom("Fixed")
         self.necrosis_trate01_fixed.toggled.connect(self.necrosis_trate01_fixed_toggled)
         glayout.addWidget(self.necrosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2017,7 +2016,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.necrosis_trate12.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_trate12, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate12_fixed = QCheckBox("Fixed")
+        self.necrosis_trate12_fixed = QCheckBox_custom("Fixed")
         self.necrosis_trate12_fixed.toggled.connect(self.necrosis_trate12_fixed_toggled)
         glayout.addWidget(self.necrosis_trate12_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2042,7 +2041,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.necrosis_phase0_duration_hbox.addWidget(self.necrosis_phase0_duration)
         glayout.addWidget(self.necrosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase0_duration_fixed = QCheckBox("Fixed")
+        self.necrosis_phase0_duration_fixed = QCheckBox_custom("Fixed")
         self.necrosis_phase0_duration_fixed.toggled.connect(self.necrosis_phase0_duration_fixed_toggled)
         glayout.addWidget(self.necrosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2063,7 +2062,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.necrosis_phase1_duration.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_phase1_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase1_duration_fixed = QCheckBox("Fixed")
+        self.necrosis_phase1_duration_fixed = QCheckBox_custom("Fixed")
         self.necrosis_phase1_duration_fixed.toggled.connect(self.necrosis_phase1_duration_fixed_toggled)
         glayout.addWidget(self.necrosis_phase1_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2666,7 +2665,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_relative_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_relative_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_relative_equilibrium_distance_enabled = QCheckBox("enable")
+        self.set_relative_equilibrium_distance_enabled = QCheckBox_custom("enable")
         self.set_relative_equilibrium_distance_enabled.clicked.connect(self.set_relative_equilibrium_distance_enabled_cb)
         glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2687,7 +2686,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_absolute_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.set_absolute_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_absolute_equilibrium_distance_enabled = QCheckBox("enable")
+        self.set_absolute_equilibrium_distance_enabled = QCheckBox_custom("enable")
         self.set_absolute_equilibrium_distance_enabled.clicked.connect(self.set_absolute_equilibrium_distance_enabled_cb)
         glayout.addWidget(self.set_absolute_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2882,7 +2881,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
         # self.motility_substrate_dropdown.addItem("oxygen")
 
-        # self.chemotaxis_direction_positive = QCheckBox("up gradient (+1)")
+        # self.chemotaxis_direction_positive = QCheckBox_custom("up gradient (+1)")
         # glayout.addWidget(self.chemotaxis_direction_positive, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.chemotaxis_direction_towards = QRadioButton("towards")
@@ -4094,7 +4093,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 node_inheritance_dropdown.addItem(node)
         
                 
-        node_inheritance_checkbox = QCheckBox('Node-specific inheritance')
+        node_inheritance_checkbox = QCheckBox_custom('Node-specific inheritance')
         node_inheritance_checkbox.setEnabled(True)
         node_inheritance_checkbox.setChecked(not self.physiboss_global_inheritance_flag)
         
@@ -4480,7 +4479,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.physiboss_global_inheritance = QHBoxLayout()
 
-        self.physiboss_global_inheritance_checkbox = QCheckBox('Global inheritance')
+        self.physiboss_global_inheritance_checkbox = QCheckBox_custom('Global inheritance')
         self.physiboss_global_inheritance_flag = False
         self.physiboss_global_inheritance_checkbox.setEnabled(True)
         self.physiboss_global_inheritance_checkbox.setChecked(self.physiboss_global_inheritance_flag)

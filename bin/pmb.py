@@ -242,20 +242,29 @@ class PhysiCellXMLCreator(QWidget):
 
         #------------------
         self.tabWidget = QTabWidget()
-        stylesheet = """ 
-            QTabBar::tab:selected {background: orange;}  # dodgerblue
+        # stylesheet = """ 
+        #     QTabBar::tab:selected {background: orange;}  # dodgerblue
 
-            QLabel {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
+        #     QLabel {
+        #         color: #000000;
+        #         background-color: #FFFFFF; 
+        #     }
+        #     QPushButton {
+        #         color: #000000;
+        #         background-color: #FFFFFF; 
+        #     }
+        #     QTabWidget::tab-bar {
+        #         alignment: center;
+        #     }
+        #     """
 
-        self.tabWidget.setStyleSheet(stylesheet)
+        # self.tabWidget.setStyleSheet(stylesheet)
+        self.tabWidget.setStyleSheet('''
+            QTabWidget::tab-bar {
+                alignment: center;
+            }
+            QTabBar::tab:selected {background: orange;}
+        ''')
         self.tabWidget.addTab(self.config_tab,"Config Basics")
         self.tabWidget.addTab(self.microenv_tab,"Microenvironment")
         self.tabWidget.addTab(self.celldef_tab,"Cell Types")
@@ -1174,6 +1183,10 @@ def main():
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
+
+    root = os.path.dirname(os.path.abspath(__file__))        
+    # QDir.addSearchPath('themes', os.path.join(root, 'themes'))
+    QtCore.QDir.addSearchPath('images', os.path.join(root, 'images'))
 
     pmb_app = QApplication(sys.argv)
 

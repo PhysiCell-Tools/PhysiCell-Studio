@@ -50,6 +50,31 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        self.setStyleSheet(checkbox_style)
+
+
 class SvgWidget(QSvgWidget):
     def __init__(self, *args):
         QSvgWidget.__init__(self, *args)
@@ -432,7 +457,7 @@ class Vis(QWidget):
         self.vbox.addWidget(QHLine())
 
         hbox = QHBoxLayout()
-        self.cells_checkbox = QCheckBox('cells')
+        self.cells_checkbox = QCheckBox_custom('cells')
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
         self.cells_checked_flag = True
@@ -462,7 +487,7 @@ class Vis(QWidget):
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
 
-        self.cells_edge_checkbox = QCheckBox('edge')
+        self.cells_edge_checkbox = QCheckBox_custom('edge')
         self.cells_edge_checkbox.setChecked(True)
         self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
         self.cells_edge_checked_flag = True
@@ -496,7 +521,7 @@ class Vis(QWidget):
         self.vbox.addWidget(QHLine())
 
         # hbox = QHBoxLayout()
-        self.substrates_checkbox = QCheckBox('substrates')
+        self.substrates_checkbox = QCheckBox_custom('substrates')
         self.substrates_checkbox.setChecked(False)
         # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
@@ -526,7 +551,7 @@ class Vis(QWidget):
 #     padding: 0px 5px 0px 5px;
 # }
 
-        self.fix_cmap_checkbox = QCheckBox('fix')
+        self.fix_cmap_checkbox = QCheckBox_custom('fix')
         self.fix_cmap_flag = False
         self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
@@ -910,7 +935,7 @@ class Vis(QWidget):
             
             self.physiboss_hbox_1 = QHBoxLayout()
             
-            self.physiboss_vis_checkbox = QCheckBox('Color by PhysiBoSS node state')
+            self.physiboss_vis_checkbox = QCheckBox_custom('Color by PhysiBoSS node state')
             self.physiboss_vis_flag = False
             self.physiboss_vis_checkbox.setEnabled(not self.plot_cells_svg)
             self.physiboss_vis_checkbox.setChecked(self.physiboss_vis_flag)

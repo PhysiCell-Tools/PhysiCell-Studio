@@ -41,6 +41,30 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        self.setStyleSheet(checkbox_style)
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -336,7 +360,7 @@ class ICs(QWidget):
         hbox.addWidget(self.save_button)
         # self.vbox.addWidget(self.save_button)
 
-        self.use_names = QCheckBox("use cell type names")
+        self.use_names = QCheckBox_custom("use cell type names")
         self.use_names.setChecked(True)
         hbox.addWidget(self.use_names)
         self.vbox.addLayout(hbox)

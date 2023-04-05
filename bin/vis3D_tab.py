@@ -31,6 +31,30 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        self.setStyleSheet(checkbox_style)
+
 class PopulationPlotWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -521,7 +545,7 @@ class Vis(QWidget):
         self.vbox.addWidget(QHLine())
 
         hbox = QHBoxLayout()
-        self.cells_checkbox = QCheckBox('cells')
+        self.cells_checkbox = QCheckBox_custom('cells')
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
         self.cells_checked_flag = True
@@ -588,7 +612,7 @@ class Vis(QWidget):
         self.vbox.addWidget(QHLine())
 
         # hbox = QHBoxLayout()
-        self.substrates_checkbox = QCheckBox('substrates')
+        self.substrates_checkbox = QCheckBox_custom('substrates')
         self.substrates_checkbox.setChecked(False)
         # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
@@ -618,7 +642,7 @@ class Vis(QWidget):
 #     padding: 0px 5px 0px 5px;
 # }
 
-        self.fix_cmap_checkbox = QCheckBox('fix')
+        self.fix_cmap_checkbox = QCheckBox_custom('fix')
         self.fix_cmap_flag = False
         # self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)

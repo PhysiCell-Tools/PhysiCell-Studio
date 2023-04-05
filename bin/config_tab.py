@@ -9,25 +9,23 @@ import sys
 import logging
 import os
 from pathlib import Path
-# import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
+import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog
 # from PyQt5.QtWidgets import QMessageBox
-
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
 
         checkbox_style = """
-                QCheckBox::indicator:pressed
-                {
-                    background-color: lightgreen;
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
                 }
                 QCheckBox::indicator:unchecked
                 {
@@ -38,113 +36,6 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                     border-radius : 3px;
                 }
                 """
-        checkbox_style_43= """
-QCheckBox {
-    spacing: 5px;
-}
-
-QCheckBox::indicator:checked {
-    background-color: white;
-}
-"""
-# QCheckBox::indicator {
-#     width: 13px;
-#     height: 13px;
-#     background-color: gray;
-# }
-
-        checkbox_style_42= """
-        QCheckBox::indicator {
-    width: 20px;
-    height: 20px;
-    background-color: gray;
-    border-radius: 3px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: white white black black;
-}
-QCheckBox::indicator:checked {
-    background-color: blue;
-}
-QCheckBox:checked, QCheckBox::indicator:checked {
-    border-color: black black white white;
-}
-QCheckBox:checked {
-    background-color: transparent;
-}
-                """
-
-    # https://stackoverflow.com/questions/70072890/how-to-set-qcheckbox-checked-area-stylesheet
-        checkbox_style_stupid = """
-        QCheckBox::indicator {
-    width: 30px;
-    height: 30px;
-    background-color: gray;
-    border-radius: 15px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: white white black black;
-}
-QCheckBox::indicator:checked {
-    background-color: qradialgradient(spread:pad, 
-                            cx:0.5,
-                            cy:0.5,
-                            radius:0.9,
-                            fx:0.5,
-                            fy:0.5,
-                            stop:0 rgba(0, 255, 0, 255), 
-                            stop:1 rgba(0, 64, 0, 255));
-}
-QCheckBox:checked, QCheckBox::indicator:checked {
-    border-color: black black white white;
-}
-QCheckBox:checked {
-    background-color: qradialgradient(spread:pad, 
-                            cx:0.739, 
-                            cy:0.278364, 
-                            radius:0.378, 
-                            fx:0.997289, 
-                            fy:0.00289117, 
-                            stop:0 rgba(255, 255, 255, 255), 
-                            stop:1 rgba(160, 160, 160, 255));
-}
-                """
-        checkbox_style01 = """
-                QCheckBox::indicator:pressed
-                {
-                    background-color: lightgreen;
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                """
-        checkbox_style00 = """
-                QCheckBox::indicator:pressed
-                {
-                    background-color: blue;
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 20x;
-                    height : 20px;
-                    border-radius : 2px;
-                }
-                """
-                # QCheckBox::indicator:checked
-                # {
-                #     background-color: rgb(0,0,255);
-                #     border: 1px solid #5A5A5A;
-                #     width : 15x;
-                #     height : 15px;
-                #     border-radius : 3px;
-                # }
         self.setStyleSheet(checkbox_style)
 
 class Config(QWidget):
@@ -277,11 +168,14 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(self.zdel, idx_row,5,1,1) # w, row, column, rowspan, colspan
 
         #----------
-        self.virtual_walls = QCheckBox("Virtual walls")
+        self.virtual_walls = QCheckBox_custom("virtual walls")
         self.virtual_walls.setChecked(True)
-        # self.virtual_walls.setCheckState(True)
         idx_row += 1
         self.config_tab_layout.addWidget(self.virtual_walls, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        self.disable_auto_springs = QCheckBox_custom("disable springs")
+        self.disable_auto_springs.setChecked(True)
+        self.config_tab_layout.addWidget(self.disable_auto_springs, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #============  Misc ================================
         label = QLabel("Times")
@@ -402,7 +296,7 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         #------
-        self.save_svg = QCheckBox("SVG")
+        self.save_svg = QCheckBox_custom("SVG")
         # self.save_svg.setStyleSheet("QCheckBox::indicator"
         #                         "{"
         #                         "background-image :url(checkmark.png);"
@@ -448,7 +342,7 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         #------
-        self.save_full = QCheckBox("Full")
+        self.save_full = QCheckBox_custom("Full")
         icol += 2
         self.config_tab_layout.addWidget(self.save_full, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
@@ -475,7 +369,7 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        self.cells_csv = QCheckBox("enable")
+        self.cells_csv = QCheckBox_custom("enable")
         self.cells_csv.setEnabled(True)
         icol = 1
         self.config_tab_layout.addWidget(self.cells_csv, idx_row,icol,1,1) # w, row, column, rowspan, colspan
@@ -555,10 +449,25 @@ class Config(QWidget):
         self.zmax.setText(self.xml_root.find(".//z_max").text)
         self.zdel.setText(self.xml_root.find(".//dz").text)
 
-        self.virtual_walls.setChecked(False)
         if self.xml_root.find(".//virtual_wall_at_domain_edge") is not None:
+            print("\n\n---------virtual_wall text.lower()=",self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower())
+            check = self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower()
+            print("---------virtual_wall check=",check)
+            print("---------type(check)=",type(check))
+            print("---------check.find('true')=",check.find('true'))
             if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
+            # if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower().find("true") >= 0:
+                print("--------- doing self.virtual_walls.setChecked(True)")
                 self.virtual_walls.setChecked(True)
+            else:
+                self.virtual_walls.setChecked(False)
+        else:
+            print("\n\n---------virtual_wall is None !!!!!!!!!!!!1")
+
+        self.disable_auto_springs.setChecked(False)
+        if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
+            if self.xml_root.find(".//disable_automated_spring_adhesions").text.lower() == "true":
+                self.disable_auto_springs.setChecked(True)
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         self.diffusion_dt.setText(self.xml_root.find(".//dt_diffusion").text)
@@ -641,12 +550,35 @@ class Config(QWidget):
         #     print("------ Missing <options> in config .xml.  HALT.")
         #     sys.exit(1)
 
+                # subelm = ET.SubElement(elm, 'physical_parameter_set')
+                # subelm.text = indent10
+                # subelm.tail = indent8
 
-        # rwh: I ended up *requiring* the original .xml (which is copied) have the <virtual_wall_at_domain_edge...> element.
+                # subelm2 = ET.SubElement(subelm, "diffusion_coefficient",{"units":"micron^2/min"})
+                # subelm2.text = self.param_d[substrate]["diffusion_coef"]
+                # subelm2.tail = indent10
+
+        # do not *require* the input .xml to have these tags; insert them if missing
         bval = "false"
         if self.virtual_walls.isChecked():
             bval = "true"
-        self.xml_root.find(".//virtual_wall_at_domain_edge").text = bval
+        if self.xml_root.find(".//virtual_wall_at_domain_edge") is not None:
+            self.xml_root.find(".//virtual_wall_at_domain_edge").text = bval
+        else:  # missing in original; insert it (happens at write)
+            uep = self.xml_root.find('.//options')
+            subelm = ET.SubElement(uep, "virtual_wall_at_domain_edge")
+            subelm.text = bval
+
+        bval = "false"
+        if self.disable_auto_springs.isChecked():
+            bval = "true"
+        if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
+            self.xml_root.find(".//disable_automated_spring_adhesions").text = bval
+        else:  # missing in original; insert it (happens at write)
+            uep = self.xml_root.find('.//options')
+            subelm = ET.SubElement(uep, "disable_automated_spring_adhesions")
+            subelm.text = bval
+
 
         # rwh: Not sure why I couldn't get this to work, i.e., to *insert* the element (just one time) if it didn't exist.
         # vwall = self.xml_root.find(".//virtual_wall_at_domain_edge")
