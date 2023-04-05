@@ -21,7 +21,7 @@ import logging
 import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from xml.dom import minidom
+# from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
 import numpy as np
 
 from PyQt5 import QtCore, QtGui
@@ -1284,7 +1284,9 @@ def main():
     pmb_app.setPalette(palette)
     # pmb_app.setStyleSheet("QCheckBox { background-color: red }")
     # pmb_app.setStyleSheet("QLineEdit { background-color: white }; QComboBox { height: 34 } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+
     pmb_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+
     # pmb_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
 
