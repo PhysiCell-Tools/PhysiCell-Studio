@@ -511,7 +511,7 @@ class Config(QWidget):
         indent8 = '\n        '
         indent10 = '\n          '
 
-        print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
+        # print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
         # print("config_tab: fill_xml: xmin=",self.xmin.text() )
         self.xml_root.find(".//x_min").text = self.xmin.text()
         self.xml_root.find(".//x_max").text = self.xmax.text()
@@ -614,13 +614,13 @@ class Config(QWidget):
         #     opts.insert(0,subelm)
 
         self.xml_root.find(".//max_time").text = self.max_time.text()
-        print(f'------- config_tab.py: fill_xml(): update max_time = {self.max_time.text()}')
+        # print(f'------- config_tab.py: fill_xml(): update max_time = {self.max_time.text()}')
         self.xml_root.find(".//dt_diffusion").text = self.diffusion_dt.text()
         self.xml_root.find(".//dt_mechanics").text = self.mechanics_dt.text()
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
-        print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'
@@ -646,10 +646,10 @@ class Config(QWidget):
 
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
-        print(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
 
         self.xml_root.find(".//initial_conditions//cell_positions/filename").text = self.csv_file.text()
-        print(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:
