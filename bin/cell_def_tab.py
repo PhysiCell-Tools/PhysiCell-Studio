@@ -5074,6 +5074,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
     #--------------------------------------------------------
+    def clear_all_var_name_prev(self):
+        # print("---clear_all_var_name_prev()")
+        for irow in range(self.max_custom_data_rows):
+            self.custom_data_table.cellWidget(irow,self.custom_icol_name).prev = None
+
+    #--------------------------------------------------------
     def custom_data_search_cb(self, s):
         if not s:
             s = 'thisisadummystring'
@@ -5419,7 +5425,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
-        debug_me = False
+        debug_me = True
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
@@ -5496,6 +5502,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     # this is replacing a previous name; it's NOT a new var
                     if debug_me:
                         print(f" replace (pop) {prev_name} with {vname} on master_custom_var_d and all param_d cdname")
+                        print(f" master_custom_var_d.keys() = {self.master_custom_var_d.keys()} ")
                     self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
                     for cdname in self.param_d.keys():
                         self.param_d[cdname]["custom_data"][vname] = self.param_d[cdname]["custom_data"].pop(prev_name)

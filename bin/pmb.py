@@ -684,7 +684,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         print(f'\npmb: show_sample_model(): self.config_file = {self.config_file}')
         self.tree = ET.parse(self.config_file)
         print(f'pmb: show_sample_model(): self.tree = {self.tree}')
-        self.run_tab.tree = self.tree  #rwh
+        if self.studio_flag:
+            self.run_tab.tree = self.tree  #rwh
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
         self.setWindowTitle(self.title_prefix + self.config_file)
