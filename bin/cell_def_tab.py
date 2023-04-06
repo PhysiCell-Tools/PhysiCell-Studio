@@ -43,6 +43,7 @@ import logging
 import inspect
 import string
 import random
+# import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui
@@ -5163,11 +5164,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #--------------------------------------------------------
     # Delete an entire row from the Custom Data subtab. Somewhat tricky...
     def delete_custom_data_cb(self):
+        debug_me = False
         row = self.custom_data_table.currentRow()
         # print("------------- delete_custom_data_cb(), row=",row)
         varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
-        # print(" custom var name= ",varname)
-        # print(" master_custom_var_d= ",self.master_custom_var_d)
+        if debug_me:
+            print(" custom var name= ",varname)
+            print(" master_custom_var_d.keys()= ",self.master_custom_var_d.keys())
+            # print(" master_custom_var_d= ",self.master_custom_var_d)
 
         if varname in self.master_custom_var_d.keys():
             self.master_custom_var_d.pop(varname)
@@ -5176,7 +5180,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     self.master_custom_var_d[key][0] -= 1
             # remove (pop) this custom var name from ALL cell types
             for cdef in self.param_d.keys():
-                # print(f"   popping {varname} from {cdef}")
+                if debug_me:
+                    print(f"   popping {varname} from {cdef}")
                 self.param_d[cdef]['custom_data'].pop(varname)
 
         # Since each widget in each row had an associated row #, we need to decrement all those following
@@ -5425,7 +5430,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
-        debug_me = True
+        debug_me = False
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
@@ -5591,7 +5596,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         if len(vname) == 0:
             # print("HEY! define var name before value!")
-            self.custom_table_error(wrow,wcol,"Define Name first!")
+            self.custom_table_error(wrow,wcol,"(#1) Define Name first!")
             self.custom_data_table.cellWidget(wrow,wcol).setText(self.custom_var_value_str_default)
 
             # item = QTableWidgetItem('')
@@ -5620,7 +5625,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         if len(vname) == 0:
             # print("HEY! define var name before clicking conserved flag!")
-            self.custom_table_error(wrow,wcol,"Define Name first!")
+            self.custom_table_error(wrow,wcol,"(#2) Define Name first!")
             self.custom_data_table.cellWidget(wrow,wcol).setChecked(False)
             return
 
@@ -5631,19 +5636,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #----------------------------------------
     # NOTE: it doesn't matter what cell type is selected; units are the same for ALL. Just unique to custom var name.
     def custom_data_units_changed(self, text):
+        debug_me = False
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data_units_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
-        # print(f'custom_data_units_changed():   self.current_cell_def = {self.current_cell_def}')
-        # print(f'custom_data_units_changed(): ----  text= {text}')
+        if debug_me:
+            print(f'custom_data_units_changed():   self.current_cell_def = {self.current_cell_def}')
+            print(f'custom_data_units_changed(): ----  text= {text}')
 
         # print("self.sender().wrow = ", self.sender().wrow)
         varname = self.sender().vname.text()
-        # print("    varname= ",varname)
+        if debug_me:
+            print("    varname= ",varname)
         wrow = self.sender().wrow
+        wcol = self.sender().wcol
 
-        # if len(varname == 0):
-        #     print("HEY, idiot! sincerely, units")
-        #     return
+        if len(varname) == 0 and self.custom_data_edit_active:
+            # print("HEY! define var name before clicking conserved flag!")
+            self.custom_table_error(wrow,wcol,"(#3) Define Name first!")
+            # for line in traceback.format_stack():
+            #     print(line.strip())
+            # self.custom_data_table.cellWidget(wrow,wcol).setText(self.custom_var_value_str_default)
+            return
 
         # print(f"-------   its varname is {varname}")
         if varname not in self.master_custom_var_d.keys():
@@ -5662,10 +5675,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         varname = self.sender().vname.text()
         # print("    varname= ",varname)
         wrow = self.sender().wrow
+        wcol = self.sender().wcol
 
-        # if len(varname == 0):
-        #     print("HEY, idiot! sincerely, desc")
-        #     return
+        if len(varname) == 0 and self.custom_data_edit_active:
+            # print("HEY! define var name before clicking conserved flag!")
+            self.custom_table_error(wrow,wcol,"(#4) Define Name first!")
+            # self.custom_data_table.cellWidget(wrow,wcol).setText(self.custom_var_value_str_default)
+            return
 
         # print(f"-------   its varname is {varname}")
         if varname not in self.master_custom_var_d.keys():
@@ -5690,6 +5706,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.custom_data_table.cellWidget(irow,self.custom_icol_units).setText('')
             self.custom_data_table.cellWidget(irow,self.custom_icol_desc).setText('')
         
+        self.custom_data_search.setText('')
+
         # self.custom_var_count = 0
         self.custom_data_edit_active = True
 
@@ -6538,7 +6556,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # # elif 'separated' in self.param_d[cdname]['cycle']:
         # #     self.cycle_dropdown.setCurrentIndex(4)
 
-        print(f'cell_def_tab: update_cycle_params(): self.param_d.keys()= {self.param_d.keys()}') 
+        # print(f'cell_def_tab: update_cycle_params(): self.param_d.keys()= {self.param_d.keys()}') 
         if self.param_d[cdname]['cycle_duration_flag']:
             self.cycle_rb2.setChecked(True)
         else:
@@ -7080,7 +7098,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
         # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
-        print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
+        # print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
         # cdname = it.text(0)
         # if col > 0:  # only allow editing cell type name, not ID
             # return
@@ -8193,7 +8211,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             num_outer_loops = 1
 
         for count in range(num_outer_loops):
-            print("---- count= ",count)
+            # print("---- count= ",count)
             for cdef in self.param_d.keys():
                 if not self.auto_number_IDs_checkbox.isChecked():
                     if int(self.param_d[cdef]["ID"]) != count:

@@ -450,19 +450,18 @@ class Config(QWidget):
         self.zdel.setText(self.xml_root.find(".//dz").text)
 
         if self.xml_root.find(".//virtual_wall_at_domain_edge") is not None:
-            print("\n\n---------virtual_wall text.lower()=",self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower())
+            # print("\n\n---------virtual_wall text.lower()=",self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower())
             check = self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower()
-            print("---------virtual_wall check=",check)
-            print("---------type(check)=",type(check))
-            print("---------check.find('true')=",check.find('true'))
+            # print("---------virtual_wall check=",check)
+            # print("---------type(check)=",type(check))
+            # print("---------check.find('true')=",check.find('true'))
             if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
-            # if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower().find("true") >= 0:
-                print("--------- doing self.virtual_walls.setChecked(True)")
+                # print("--------- doing self.virtual_walls.setChecked(True)")
                 self.virtual_walls.setChecked(True)
             else:
                 self.virtual_walls.setChecked(False)
         else:
-            print("\n\n---------virtual_wall is None !!!!!!!!!!!!1")
+            print("\n\n---------virtual_wall_at_domain_edge is None !!!!!!!!!!!!1")
 
         self.disable_auto_springs.setChecked(False)
         if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
@@ -512,7 +511,7 @@ class Config(QWidget):
         indent8 = '\n        '
         indent10 = '\n          '
 
-        print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
+        # print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
         # print("config_tab: fill_xml: xmin=",self.xmin.text() )
         self.xml_root.find(".//x_min").text = self.xmin.text()
         self.xml_root.find(".//x_max").text = self.xmax.text()
@@ -615,13 +614,13 @@ class Config(QWidget):
         #     opts.insert(0,subelm)
 
         self.xml_root.find(".//max_time").text = self.max_time.text()
-        print(f'------- config_tab.py: fill_xml(): update max_time = {self.max_time.text()}')
+        # print(f'------- config_tab.py: fill_xml(): update max_time = {self.max_time.text()}')
         self.xml_root.find(".//dt_diffusion").text = self.diffusion_dt.text()
         self.xml_root.find(".//dt_mechanics").text = self.mechanics_dt.text()
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//folder").text = self.folder.text()
-        print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'
@@ -647,10 +646,10 @@ class Config(QWidget):
 
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
-        print(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting csv folder = {self.csv_folder.text()}')
 
         self.xml_root.find(".//initial_conditions//cell_positions/filename").text = self.csv_file.text()
-        print(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting csv filename = {self.csv_file.text()}')
         # if self.csv_rb1.isChecked():
         #     self.xml_root.find(".//initial_conditions//cell_positions/filename").text = 'all_cells.csv'
         # else:
