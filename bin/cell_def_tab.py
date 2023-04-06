@@ -275,7 +275,7 @@ class CellDef(QWidget):
         self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
         # header = QTreeWidgetItem(["---  Cell Type  ---"])
-        header = QTreeWidgetItem(["  ---  Cell Type ---","|-- ID --"])
+        header = QTreeWidgetItem(["  ---  Cell Type ---","-- ID --"])
         # self.tree.resizeColumnToContents(5)
 
         self.tree.setHeaderItem(header)
