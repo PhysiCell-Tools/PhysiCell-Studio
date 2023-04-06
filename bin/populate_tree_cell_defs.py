@@ -61,6 +61,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     logging.debug(f'    cell_def_tab.param_d = {cell_def_tab.param_d}')
     # cell_def_tab.master_custom_varname.clear()
     cell_def_tab.master_custom_var_d.clear()
+    cell_def_tab.clear_all_var_name_prev()
 
     cell_def_tab.new_cell_def_count = 0   # reset the somewhat artificial # of cell defs
 
