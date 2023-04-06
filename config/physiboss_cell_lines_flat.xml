@@ -217,8 +217,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_0.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_0.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -394,8 +394,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_1.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_1.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -571,8 +571,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_0.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_0.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -751,8 +751,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_0.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_0.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -931,8 +931,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_0.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_0.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -1108,8 +1108,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>data/model_0.bnd</bnd_filename>
-                    <cfg_filename>data/model.cfg</cfg_filename>
+                    <bnd_filename>config/model_0.bnd</bnd_filename>
+                    <cfg_filename>config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
