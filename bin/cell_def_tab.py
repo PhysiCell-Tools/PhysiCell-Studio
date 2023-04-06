@@ -5428,7 +5428,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
-        debug_me = True
+        debug_me = False
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
         # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
