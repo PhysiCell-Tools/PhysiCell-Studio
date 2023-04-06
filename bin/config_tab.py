@@ -450,19 +450,18 @@ class Config(QWidget):
         self.zdel.setText(self.xml_root.find(".//dz").text)
 
         if self.xml_root.find(".//virtual_wall_at_domain_edge") is not None:
-            print("\n\n---------virtual_wall text.lower()=",self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower())
+            # print("\n\n---------virtual_wall text.lower()=",self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower())
             check = self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower()
-            print("---------virtual_wall check=",check)
-            print("---------type(check)=",type(check))
-            print("---------check.find('true')=",check.find('true'))
+            # print("---------virtual_wall check=",check)
+            # print("---------type(check)=",type(check))
+            # print("---------check.find('true')=",check.find('true'))
             if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower() == "true":
-            # if self.xml_root.find(".//virtual_wall_at_domain_edge").text.lower().find("true") >= 0:
-                print("--------- doing self.virtual_walls.setChecked(True)")
+                # print("--------- doing self.virtual_walls.setChecked(True)")
                 self.virtual_walls.setChecked(True)
             else:
                 self.virtual_walls.setChecked(False)
         else:
-            print("\n\n---------virtual_wall is None !!!!!!!!!!!!1")
+            print("\n\n---------virtual_wall_at_domain_edge is None !!!!!!!!!!!!1")
 
         self.disable_auto_springs.setChecked(False)
         if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
