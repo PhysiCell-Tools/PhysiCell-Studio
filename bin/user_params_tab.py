@@ -1,16 +1,18 @@
 """
 Authors:
 Randy Heiland (heiland@iu.edu)
-Adam Morrow, Grant Waldrow, Drew Willis, Kim Crevecoeur
 Dr. Paul Macklin (macklinp@iu.edu)
+and rf. Credits.md
 
 """
 
 import sys
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 import logging
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QSpacerItem
 from PyQt5.QtGui import QDoubleValidator
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
@@ -43,16 +45,38 @@ class QHLine(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
-class UserParams(QtWidgets.QWidget):
+# Overloading the QCheckBox widget 
+class MyQCheckBox(QCheckBox):
+    vname = None
+    # idx = None  # index
+    wrow = 0  # widget's row in a table
+    wcol = 0  # widget's column in a table
+
+class MyQComboBox(QComboBox):
+    vname = None
+    # idx = None  # index
+    wrow = 0  # widget's row in a table
+    wcol = 0  # widget's column in a table
+
+# Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
+class MyQLineEdit(QLineEdit):
+    vname = None
+    # idx = None  # index
+    wrow = 0
+    wcol = 0
+    prev = None
+
+
+class UserParams(QWidget):
     def __init__(self):
         super().__init__()
 
         # self.current_param = None
         self.xml_root = None
-        self.count = 0
+        self.count = 100
         # self.max_rows = 100  # initially (TODO: check if enough for initial .xml)
-        self.max_rows = 200  # initially (TODO: check if enough for initial .xml)
-        self.max_rows = 125  # initially (TODO: check if enough for initial .xml)
+        # self.max_rows = 200  # initially (TODO: check if enough for initial .xml)
+        # self.max_rows = 125  # initially (TODO: check if enough for initial .xml)
 
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"
@@ -64,7 +88,7 @@ class UserParams(QtWidgets.QWidget):
 
         self.combobox_width = 90
 
-        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area = QScrollArea()
         # splitter.addWidget(self.scroll)
         # self.cell_def_horiz_layout.addWidget(self.scroll)
 
@@ -87,154 +111,132 @@ class UserParams(QtWidgets.QWidget):
                 # border-color: black;
                 # padding: 4px;
 
-        self.user_params = QtWidgets.QWidget()
+        self.user_params = QWidget()
+
+        self.utable = QTableWidget()
+        self.max_rows = 100
+        self.max_cols = 5
+
+        # self.enable_entire_table()
+        # self.table_disabled = False
+
+        self.utable.setColumnCount(self.max_cols)
+        self.utable.setRowCount(self.max_rows)
+        self.utable.setHorizontalHeaderLabels(['Name','Type','Value','Units','Desc'])
+
         # self.user_params.setStyleSheet(stylesheet)
 
-        self.main_layout = QtWidgets.QVBoxLayout()
+        self.main_layout = QVBoxLayout()
         # self.main_layout.addStretch(0)
 
         #------------------
         button_width = 200
-        controls_hbox = QtWidgets.QHBoxLayout()
-        # self.new_button = QPushButton("New")
-        self.new_button = QPushButton("Append 10 more rows")
-        self.new_button.setFixedWidth(button_width)
-        self.new_button.setStyleSheet("background-color: lightgreen; color: black")
-        controls_hbox.addWidget(self.new_button)
-        self.new_button.clicked.connect(self.append_more_cb)
+        controls_hbox = QHBoxLayout()
 
-        # self.copy_button = QPushButton("Copy")
-        # controls_hbox.addWidget(self.copy_button)
+        # self.main_layout.addLayout(hbox)
 
-        self.clear_button = QPushButton("Clear selected rows")
-        self.clear_button.setFixedWidth(button_width)
-        self.clear_button.setStyleSheet("background-color: yellow; color: black")
-        controls_hbox.addWidget(self.clear_button)
-        self.clear_button.clicked.connect(self.clear_rows_cb)
+        hlayout = QHBoxLayout()
+        self.name_search = QLineEdit()
+        self.name_search.setFixedWidth(400)
+        self.name_search.setPlaceholderText("Search for Name...")
+        self.name_search.textChanged.connect(self.search_user_param_cb)
+        hlayout.addWidget(self.name_search)
 
-        #------------------
-		# <random_seed type="int" units="dimensionless">0</random_seed> 
-		# <cargo_signal_D type="double" units="micron/min^2">1e3</cargo_signal_D>
+        delete_row_btn = QPushButton("Delete row")
+        delete_row_btn.setFixedWidth(100)
+        delete_row_btn.clicked.connect(self.delete_user_param_cb)
+        delete_row_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        hlayout.addWidget(delete_row_btn)
 
-        # Fixed names for columns:
-        hbox = QtWidgets.QHBoxLayout()
-        # self.select = QtWidgets.QCheckBox("")
-        col1 = QtWidgets.QLabel("Name")
-        col1.setAlignment(QtCore.Qt.AlignCenter)
-        hbox.addWidget(col1)
-        col2 = QtWidgets.QLabel("Type")
-        col2.setAlignment(QtCore.Qt.AlignCenter)
-        hbox.addWidget(col2)
-        col3 = QtWidgets.QLabel("Value")
-        col3.setAlignment(QtCore.Qt.AlignCenter)
-        col3.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(col3)
-        col4 = QtWidgets.QLabel("Units")
-        col4.setFixedWidth(self.units_width)
-        col4.setAlignment(QtCore.Qt.AlignCenter)
-        hbox.addWidget(col4)
-        # label.setFixedWidth(180)
-        self.main_layout.addLayout(hbox)
+        hlayout.addWidget(QLabel("(click row #)"))
 
-        #------------------
+        hlayout.addStretch()
+        self.main_layout.addLayout(hlayout)
+
+        self.var_icol_name = 0  # Name
+        self.var_icol_type = 1  # type combobox
+        self.var_icol_value = 2  # Value
+        self.var_icol_units = 3  # Units
+        self.var_icol_desc = 4  # Description
 
         # Create lists for the various input boxes
-        self.select = []
-        self.name = []
-        self.type = []
-        self.value = []
-        self.units = []
-        self.description = []
+        # self.select = []
+        # self.name = []
+        # self.type = []
+        # self.value = []
+        # self.units = []
+        # self.description = []
 
-        self.type_dropdown = QComboBox()
-        self.type_dropdown.setStyleSheet("color: #000000; background-color: #FFFFFF;")
-        # self.type_dropdown.setFixedWidth(450)
-        # self.type_dropdown.currentIndexChanged.connect(self.cycle_changed_cb)
-        self.type_dropdown.addItem("int")
-        self.type_dropdown.addItem("double")
-        self.type_dropdown.addItem("bool")
-        self.type_dropdown.addItem("text")
+        for irow in range(self.max_rows):
+            # ------- name
+            w_varname = MyQLineEdit()
+            w_varname.setFrame(False)
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            name_validator = QtGui.QRegExpValidator(rx_valid_varname )
+            w_varname.setValidator(name_validator)
 
-        for idx in range(self.max_rows):
-            # self.main_layout.addLayout(NewUserParam(self))
-            hbox = QHBoxLayout()
-            #-----
-            w_check = QCheckBox_custom("")
-            self.select.append(w_check)
-            hbox.addWidget(w_check)
+            self.utable.setCellWidget(irow, self.var_icol_name, w_varname)   # 1st col
+            w_varname.vname = w_varname  
+            w_varname.wrow = irow
+            w_varname.wcol = self.var_icol_name
+            w_varname.textChanged[str].connect(self.name_changed_cb)  # being explicit about passing a string 
 
-            #-----
-            w_varname = QLineEdit()
-            self.name.append(w_varname)
-            # self.name.setValidator(QtGui.QDoubleValidator())
-            # self.diffusion_coef.enter.connect(self.save_xml)
-            hbox.addWidget(w_varname)
-            if idx == 0:
-                w_varname.setText("random_seed")   # Why?
-            
-            #-----
-            # w = QLineEdit()
-            w_cbox = QComboBox()
-            w_cbox.setStyleSheet("color: #000000; background-color: #FFFFFF;")
-            w_cbox.setFixedWidth(self.combobox_width)
-            # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
-            w_cbox.addItem("double")
-            w_cbox.addItem("int")
-            w_cbox.addItem("bool")
-            w_cbox.addItem("string")
-            if idx == 0:
-                w_cbox.setCurrentIndex(1)
-            self.type.append(w_cbox)
-            hbox.addWidget(w_cbox)
+            # ------- type
+            w_var_type = MyQComboBox()
+            # w_var_type.setStyleSheet(self.checkbox_style)
+            # w_var_type.setFrame(False)
+            w_var_type.vname = w_varname  
+            w_var_type.wrow = irow
+            w_var_type.wcol = self.var_icol_type
+            # w_var_type.clicked.connect(self.var_type_clicked)
 
-            #-----
-            w_val = QLineEdit()
-            self.value.append(w_val)
-            # w.setValidator(QtGui.QDoubleValidator())
-            if idx == 0:
-                w_val.setText("0")  # Why?
-            hbox.addWidget(w_val)
+            # w_var_type.setStyleSheet("color: #000000; background-color: #FFFFFF;")
+            # w_var_type.setFixedWidth(450)
+            # w_var_type.currentIndexChanged.connect(self.cycle_changed_cb)
+            w_var_type.addItem("double")
+            w_var_type.addItem("int")
+            w_var_type.addItem("bool")
+            w_var_type.addItem("text")
 
-            #-----
-            w_units = QLineEdit()
-            w_units.setFixedWidth(self.units_width)
-            self.units.append(w_units)
-            hbox.addWidget(w_units)
+            self.utable.setCellWidget(irow, self.var_icol_type, w_var_type)
+            # self.type.append(w_var_type)
 
-            # units = QtWidgets.QLabel("micron^2/min")
-            # units.setFixedWidth(units_width)
-            # hbox.addWidget(units)
-            self.main_layout.addLayout(hbox)
+            # ------- value
+            # w_varval = MyQLineEdit('0.0')
+            w_varval = MyQLineEdit()
+            w_varval.setFrame(False)
+            # item = QTableWidgetItem('')
+            w_varval.vname = w_varname  
+            w_varval.wrow = irow
+            w_varval.wcol = self.var_icol_value
+            # w_varval.idx = irow   # rwh: is .idx used?
+            # w_varval.setValidator(QtGui.QDoubleValidator())
+            # self.utable.setItem(irow, self.var_icol_value, item)
+            self.utable.setCellWidget(irow, self.var_icol_value, w_varval)
+            # w_varval.textChanged[str].connect(self.value_changed_cb)  # being explicit about passing a string 
 
+            # ------- units
+            w_var_units = MyQLineEdit()
+            w_var_units.setFrame(False)
+            w_var_units.setFrame(False)
+            w_var_units.vname = w_varname  
+            w_var_units.wrow = irow
+            w_var_units.wcol = self.var_icol_units
+            self.utable.setCellWidget(irow, self.var_icol_units, w_var_units)
+            # w_var_units.textChanged[str].connect(self.units_changed_cb)  # being explicit about passing a string 
 
-            #-----
-            hbox = QHBoxLayout()
-            # w = QLabel("Desc:")
-            w_desc = QLabel("      Description:")
-            hbox.addWidget(w_desc)
+            # ------- description
+            w_var_desc = MyQLineEdit()
+            w_var_desc.setFrame(False)
+            w_var_desc.vname = w_varname  
+            w_var_desc.wrow = irow
+            w_var_desc.wcol = self.var_icol_desc
+            self.utable.setCellWidget(irow, self.var_icol_desc, w_var_desc)
+            # w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
 
-            w_desc = QLineEdit()
-            self.description.append(w_desc)
-            hbox.addWidget(w_desc)
-
-            if idx % 2 == 0:
-                w_varname.setStyleSheet(self.row_color1)  
-                w_val.setStyleSheet(self.row_color1)  
-                w_units.setStyleSheet(self.row_color1)
-                w_desc.setStyleSheet(self.row_color1)
-            else:
-                w_varname.setStyleSheet(self.row_color2)  
-                w_val.setStyleSheet(self.row_color2)  
-                w_units.setStyleSheet(self.row_color2)
-                w_desc.setStyleSheet(self.row_color2)
-
-            # w.setStyleSheet("background-color: lightgray")
-            # w.setStyleSheet("background-color: #e4e4e4")
-            self.main_layout.addLayout(hbox)
-
-            self.count = self.count + 1
-            # print(self.count)
-
+        # self.main_layout.addWidget(QLabel("(Note: we do not currently validate Type and Value)"))
+        self.main_layout.addWidget(QLabel("(Note: validation check performed at Save or Run)"))
+        self.main_layout.addWidget(self.utable)
 
         #==================================================================
         self.user_params.setLayout(self.main_layout)
@@ -250,166 +252,422 @@ class UserParams(QtWidgets.QWidget):
         self.layout.addLayout(controls_hbox)
         self.layout.addWidget(self.scroll_area)
 
-    def set_colors(self, color1, color2):
-        self.row_color1 = color1 
-        self.row_color2 = color2 
+    #--------------------------------------------------------
+    def add_row_utable(self, row_num):
+        self.utable.insertRow(row_num)
+
+        # self.var_icol_name = 0  # Name
+        # self.var_icol_type = 1  # type combobox
+        # self.var_icol_value = 2  # Value
+        # self.var_icol_units = 3  # Units
+        # self.var_icol_desc = 4  # Description
+        for irow in [row_num]:
+            # print("=== add_row_custom_table(): irow=",irow)
+            # ------- name
+            w_varname = MyQLineEdit()
+            w_varname.setFrame(False)
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            name_validator = QtGui.QRegExpValidator(rx_valid_varname )
+            w_varname.setValidator(name_validator)
+
+            self.utable.setCellWidget(irow, self.var_icol_name, w_varname)   # 1st col
+            w_varname.vname = w_varname  
+            w_varname.wrow = irow
+            w_varname.wcol = self.var_icol_name
+            # w_varname.textChanged[str].connect(self.name_changed_cb)  # being explicit about passing a string 
+
+            # ------- type
+            w_var_type = MyQComboBox()
+            # w_var_type.setStyleSheet(self.checkbox_style)
+            # w_var_type.setFrame(False)
+            w_var_type.vname = w_varname  
+            w_var_type.wrow = irow
+            w_var_type.wcol = self.var_icol_type
+            # w_var_type.clicked.connect(self.var_type_clicked)
+
+            # w_var_type.setStyleSheet("color: #000000; background-color: #FFFFFF;")
+            # w_var_type.setFixedWidth(450)
+            # w_var_type.currentIndexChanged.connect(self.cycle_changed_cb)
+            w_var_type.addItem("double")
+            w_var_type.addItem("int")
+            w_var_type.addItem("bool")
+            w_var_type.addItem("text")
+
+            self.utable.setCellWidget(irow, self.var_icol_type, w_var_type)
+            # self.type.append(w_var_type)
+
+            # ------- value
+            w_varval = MyQLineEdit()
+            w_varval.setFrame(False)
+            w_varval.vname = w_varname  
+            w_varval.wrow = irow
+            w_varval.wcol = self.var_icol_value
+            # w_varval.setValidator(QtGui.QDoubleValidator())
+            self.utable.setCellWidget(irow, self.var_icol_value, w_varval)
+            # w_varval.textChanged[str].connect(self.value_changed_cb)  # being explicit about passing a string 
+
+            # ------- units
+            w_var_units = MyQLineEdit()
+            w_var_units.setFrame(False)
+            w_var_units.setFrame(False)
+            w_var_units.vname = w_varname  
+            w_var_units.wrow = irow
+            w_var_units.wcol = self.var_icol_units
+            self.utable.setCellWidget(irow, self.var_icol_units, w_var_units)
+            # w_var_units.textChanged[str].connect(self.units_changed_cb)  # being explicit about passing a string 
+
+            # ------- description
+            w_var_desc = MyQLineEdit()
+            w_var_desc.setFrame(False)
+            w_var_desc.vname = w_varname  
+            w_var_desc.wrow = irow
+            w_var_desc.wcol = self.var_icol_desc
+            self.utable.setCellWidget(irow, self.var_icol_desc, w_var_desc)
+            # w_var_desc.textChanged[str].connect(self.desc_changed_cb)  # being explicit about passing a string 
+
+    #--------------------------------------------------------
+    # rf. def delete_custom_data_cb(self):
+    def delete_user_param_cb(self, s):
+        debug_me = True
+        row = self.utable.currentRow()
+
+        varname = self.utable.cellWidget(row,self.var_icol_name).text()
+        if debug_me:
+            print("------------- delete_user_param_cb(), row=",row)
+            print("    var name= ",varname)
+
+        # Since each widget in each row had an associated row #, we need to decrement all those following
+        # the row that was just deleted.
+        for irow in range(row, self.max_rows):
+            # print("---- decrement wrow in irow=",irow)
+            self.utable.cellWidget(irow,self.var_icol_name).wrow -= 1  # sufficient to only decr the "name" column
+
+        self.utable.removeRow(row)
+
+        # self.add_row_utable(self.max_rows - 1)
+        self.add_row_utable(self.count - 1)
+
+        # self.enable_all_custom_data()
+
+    #----------------------------------------
+    # Not currently used
+    def disable_table_cells_for_duplicate_name(self, widget=None):
+        backcolor = "background: lightgray"
+        for irow in range(0,self.max_rows):
+            for icol in range(self.max_cols):
+                self.utable.cellWidget(irow,icol).setEnabled(False)
+                self.utable.cellWidget(irow,icol).setStyleSheet(backcolor)   # yellow
+                # self.sender().setStyleSheet("color: red;")
+
+        if widget:   # enable only(!) the widget that needs to be fixed (because it's a duplicate)
+            wrow = widget.wrow
+            wcol = widget.wcol
+            self.utable.cellWidget(wrow,wcol).setEnabled(True)
+            # self.custom_data_table.setCurrentItem(None)
+            backcolor = "background: white"
+            self.utable.cellWidget(wrow,wcol).setStyleSheet(backcolor)
+            self.utable.setCurrentCell(wrow,wcol)
+
+        # Also disable the cell type tree
+        # self.tree.setEnabled(False)
+
+    #----------------------------------------
+    # Not currently used
+    def enable_entire_table(self):
+        # for irow in range(self.max_custom_vars):
+        # for irow in range(self.max_custom_rows_edited):
+        backcolor = "background: white"
+        print("------ enable_entire_table() for ",self.max_rows,self.max_cols)
+        for irow in range(self.max_rows):
+            for icol in range(self.max_cols):
+                # if (icol != 2) and (irow != row) and (icol != col):
+                # if irow > 47:
+                    # print("enable all(): irow,icol=",irow,icol)
+                # if self.custom_data_table.cellWidget(irow,icol):
+                self.utable.cellWidget(irow,icol).setEnabled(True)
+                self.utable.cellWidget(irow,icol).setStyleSheet(backcolor)
+                # if icol == 2:
+                #     self.utable.cellWidget(irow,icol).setStyleSheet(self.checkbox_style)
+                # else:
+                    # print("oops!  self.custom_data_table.cellWidget(irow,icol) is None")
+                # self.sender().setStyleSheet("color: red;")
+
+        # self.custom_data_table.cellWidget(self.max_custom_rows_edited+1,0).setEnabled(True)
+        # self.custom_data_table.cellWidget(self.max_custom_rows_edited+1,0).setStyleSheet("background: white")
+
+        # self.tree.setEnabled(True)
+
+    #--------------------------------------------------------
+    def search_user_param_cb(self, s):
+        if not s:
+            s = 'thisisadummystring'
+
+        # print("---search_user_param_cb()")
+        for irow in range(self.max_rows):
+            if s in self.utable.cellWidget(irow,self.var_icol_name).text():
+                # print(f"   found {s} at row {irow}")
+                backcolor = "background: bisque"
+                self.utable.cellWidget(irow,self.var_icol_name).setStyleSheet(backcolor)
+                # self.custom_data_table.selectRow(irow)  # don't do this; keyboard input -> cell 
+            else:
+                backcolor = "background: white"
+                self.utable.cellWidget(irow,self.var_icol_name).setStyleSheet(backcolor)
+            # self.custom_data_table.setCurrentItem(item)d
+
+
+    #----------------------------------------------------------------------
+    def utable_error(self,row,col,msg):
+        # if self.custom_data_table.cellWidget(row,col).text()  == '0':
+            # return
+        msgBox = QMessageBox()
+        msgBox.setTextFormat(Qt.RichText)
+        msgBox.setText(msg)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        returnValue = msgBox.exec()
+
+    #----------------------------------------
+    def validate_utable(self):
+
+        # check for duplicate names
+        found = set()
+        # dupes = [x for x in self.param_d.keys() if x in found or found.add(x)]
+        dupes = []
         for idx in range(self.max_rows):
-            if idx % 2 == 0:
-                w_varname.setStyleSheet(self.row_color1)  
-                w_val.setStyleSheet(self.row_color1)  
-                w_units.setStyleSheet(self.row_color1)
-                w_desc.setStyleSheet(self.row_color1)
+            vname = self.utable.cellWidget(idx,self.var_icol_name).text()
+            if len(vname) == 0:
+                continue
+            if vname in found:
+                dupes.append(vname)
             else:
-                w_varname.setStyleSheet(self.row_color2)  
-                w_val.setStyleSheet(self.row_color2)  
-                w_units.setStyleSheet(self.row_color2)
-                w_desc.setStyleSheet(self.row_color2)
+                found.add(vname)
+        # print("------validate_utable(): Error: duplicate names=",dupes)
 
+        if dupes:
+            msg = f"Error: Duplicate User Params: {dupes}.<br><br>XML will not be saved. Please fix before continuing."
+            self.utable_error(0,0,msg)
+            return False
+
+        #--------------------------
+        # validate doubles
+        bad_val = []
+        for idx in range(self.max_rows):
+            vname = self.utable.cellWidget(idx,self.var_icol_name).text()
+            if len(vname) == 0:
+                continue
+            v_type = self.utable.cellWidget(idx,self.var_icol_type).currentText()
+            # print("v_type= ",v_type)
+            if v_type == "double":
+                val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
+                try:
+                    float(val_str)
+                except ValueError:
+                    bad_val.append([vname,val_str])
+                    # pass
+
+        if bad_val:
+            msg = f"Error: Invalid [user param, double value]: {bad_val}.<br><br>XML will not be saved. Please fix User Params before continuing."
+            self.utable_error(0,0,msg)
+            return False
+
+        #--------------------------
+        # validate int values
+        # print("---- validate ints")
+        bad_val = []
+        for idx in range(self.max_rows):
+            vname = self.utable.cellWidget(idx,self.var_icol_name).text()
+            if len(vname) == 0:
+                continue
+            v_type = self.utable.cellWidget(idx,self.var_icol_type).currentText()
+            # print("v_type= ",v_type)
+            if v_type == "int":
+                val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
+                # print("  val_str=",val_str)
+                if val_str.isdigit():
+                    continue
+                else:
+                    bad_val.append([vname,val_str])
+                    # print("  bad_val=",bad_val)
+                    # pass
+
+        if bad_val:
+            msg = f"Error: Invalid [user param, int value]: {bad_val}.<br><br>XML will not be saved. Please fix User Params before continuing."
+            self.utable_error(0,0,msg)
+            return False
+
+        #--------------------------
+        # validate bool values
+        # print("---- validate bools")
+        bad_val = []
+        for idx in range(self.max_rows):
+            vname = self.utable.cellWidget(idx,self.var_icol_name).text()
+            if len(vname) == 0:
+                continue
+            v_type = self.utable.cellWidget(idx,self.var_icol_type).currentText()
+            # print("v_type= ",v_type)
+            if v_type == "bool":
+                # continue
+                val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
+                # print("  val_str=",val_str)
+                if (val_str.lower() == "true")  or (val_str.lower() == "false"):
+                    continue
+                else:
+                    bad_val.append([vname,val_str])
+                    # print("  bad_val=",bad_val)
+                    # pass
+
+        if bad_val:
+            msg = f"Error: Invalid [user param, bool value]: {bad_val}.<br><br>XML will not be saved. Please fix User Params before continuing. A bool value is either True or False."
+            self.utable_error(0,0,msg)
+            return False
+
+
+
+        return True
+
+    #----------------------------------------
+    def name_changed_cb(self, text):
+        wrow = self.sender().wrow
+        # print(f"----- name_changed_cb():  wrow={wrow}, self.count={self.count}, text={text}")
+
+        # check for duplicate name
+        # for idx in range(self.max_rows):
+        #     vname = self.utable.cellWidget(idx,self.var_icol_name).text()
+        #     if text == vname:
+        #         print("duplicate name  ",idx, ") ",self.utable.cellWidget(idx,self.var_icol_name).text())
+        #         # self.disable_table_cells_for_duplicate_name()
+        #         # self.disable_table_cells_for_duplicate_name(self.sender())
+        #         # self.table_disabled = True
+        #         # print("--------- 1) leave function")
+        #         return  # --------- leave function
+
+
+        # self.enable_entire_table()
+
+        N = 10
+        # If we're at the last row, add N(=10) more rows to the table.
+        if wrow == self.count - 1:
+            # print("       at last row, add more")
+            # print("add 10 rows")
+            for ival in range(N):
+                self.add_row_utable(self.count + ival)
+            self.count += N
+
+    #----------------------------------------
+    def units_changed_cb(self, text):
+        debug_me = False
+        # logging.debug(f'\n--------- units_changed_cb: -------')
+        if debug_me:
+            print(f'units_changed_cb(): ----  text= {text}')
+
+        # print("self.sender().wrow = ", self.sender().wrow)
+        varname = self.sender().vname.text()
+        if debug_me:
+            print("    varname= ",varname)
+        wrow = self.sender().wrow
+        wcol = self.sender().wcol
+
+        # self.user_params_edit_active = True
+        # if len(varname) == 0 and self.user_params_edit_active:
+        #     self.utable_error(wrow,wcol,"(#3) Define Name first!")
+        #     # for line in traceback.format_stack():
+        #     #     print(line.strip())
+        #     # self.custom_data_table.cellWidget(wrow,wcol).setText(self.custom_var_value_str_default)
+        #     return
+
+        # print(f"-------   its varname is {varname}")
+        # if varname not in self.master_custom_var_d.keys():
+        #     self.master_custom_var_d[varname] = [wrow, '', '']   # [wrow, units, desc]
+        # self.master_custom_var_d[varname][1] = text   # hack, hard-coded
+        # print("self.master_custom_var_d[varname]= ",self.master_custom_var_d[varname])
+
+    #--------------------------------------------------------
     # @QtCore.Slot()
-    def clear_rows_cb(self):
-        # print("----- clearing all selected rows")
-        for idx in range(self.count):
-            if self.select[idx].isChecked():
-                self.name[idx].clear()
-                self.type[idx].setCurrentIndex(0)  # double
-                self.value[idx].clear()
-                self.units[idx].clear()
-                self.description[idx].clear()
-                self.select[idx].setChecked(False)
+    # def clear_rows_cb(self):
+    #     # print("----- clearing all selected rows")
+    #     for idx in range(self.count):
+    #         if self.select[idx].isChecked():
+    #             self.name[idx].clear()
+    #             self.type[idx].setCurrentIndex(0)  # double
+    #             self.value[idx].clear()
+    #             self.units[idx].clear()
+    #             self.description[idx].clear()
+    #             self.select[idx].setChecked(False)
 
-    # @QtCore.Slot()
-    def append_more_cb(self):
-        # print("---- append_more_cb()")
-        # self.create_user_param()
-        # self.scrollLayout.addRow(NewUserParam(self))
-        for idx in range(10):
-            # self.main_layout.addLayout(NewUserParam(self))
-            hbox = QHBoxLayout()
-
-            w = QCheckBox_custom("")
-            self.select.append(w)
-            hbox.addWidget(w)
-
-            w_varname = QLineEdit()
-            self.name.append(w_varname)
-            # self.name.setValidator(QtGui.QDoubleValidator())
-            # self.diffusion_coef.enter.connect(self.save_xml)
-            hbox.addWidget(w_varname)
-
-            w = QComboBox()
-            # xml2jupyter: {"double":"FloatText", "int":"IntText", "bool":"Checkbox", "string":"Text", "divider":""}
-            w.setStyleSheet("color: #000000; background-color: #FFFFFF;")
-            w.setFixedWidth(self.combobox_width)
-            w.addItem("double")
-            w.addItem("int")
-            w.addItem("bool")
-            w.addItem("string")
-            self.type.append(w)
-            hbox.addWidget(w)
-
-            w_val = QLineEdit()
-            self.value.append(w_val)
-            # w.setValidator(QtGui.QDoubleValidator())
-            hbox.addWidget(w_val)
-
-            w_units = QLineEdit()
-            w_units.setFixedWidth(self.units_width)
-            self.units.append(w_units)
-            hbox.addWidget(w_units)
-
-            self.main_layout.addLayout(hbox)
-
-            hbox = QHBoxLayout()
-            w = QLabel("Desc:")
-            hbox.addWidget(w)
-
-            w_desc = QLineEdit()
-            self.description.append(w_desc)
-            hbox.addWidget(w_desc)
-            # w.setStyleSheet("background-color: lightgray")
-
-            if idx % 2 == 0:
-                w_varname.setStyleSheet(self.row_color1)  
-                w_val.setStyleSheet(self.row_color1)  
-                w_units.setStyleSheet(self.row_color1)  
-                w_desc.setStyleSheet(self.row_color1)  
-            else:
-                w_varname.setStyleSheet(self.row_color2)  
-                w_val.setStyleSheet(self.row_color2)  
-                w_units.setStyleSheet(self.row_color2)  
-                w_desc.setStyleSheet(self.row_color2)  
-
-            self.main_layout.addLayout(hbox)
-
-            self.count = self.count + 1
-            # print(self.count)
-    #     # self.text.setText(random.choice(self.hello))
-    #     pass
-
-
+    #--------------------------------------------------------
     def clear_gui(self):
-        # pass
-        for idx in range(self.count):
-            self.name[idx].setText("")
-            # self.type[idx].setText("")
-            self.value[idx].setText("0.0")
-            self.units[idx].setText("")
-            self.description[idx].setText("")
-        # self.count = 0
+        for idx in range(self.max_rows):
+            self.utable.cellWidget(idx,self.var_icol_name).setText('')
+            self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(0)   # hard-code: "double" combobox item
+            self.utable.cellWidget(idx,self.var_icol_value).setText('')
+            self.utable.cellWidget(idx,self.var_icol_units).setText('')
+            self.utable.cellWidget(idx,self.var_icol_desc).setText('')
 
-        # self.name.clear()
-        # self.value.clear()
-        # self.units.clear()
-        # self.description.clear()
-
-
+    #--------------------------------------------------------
     # populate the GUI tab with what is in the .xml
     def fill_gui(self):
         logging.debug(f'\n\n------------  user_params_tab: fill_gui --------------')
+        # print(f'\n\n------------  user_params_tab: fill_gui --------------')
         # pass
         uep_user_params = self.xml_root.find(".//user_parameters")
         # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
-        logging.debug(f'uep_user_params= {uep_user_params}')
+        # logging.debug(f'uep_user_params= {uep_user_params}')
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need
         # to call 'append_more_cb' for the excess.
+
+        # <number_of_cells type="int" units="none" description="initial number of cells (for each cell type)">0</number_of_cells>
         for var in uep_user_params:
             # type_cast = {"double":"float", "int":"int", "bool":"bool", "string":"", "divider":"Text"}
+            # print(idx, ") ",var)
+            # print(idx, ") tag= ",var.tag)
+            # print(idx, ") text= ",var.text)
+            self.utable.cellWidget(idx,self.var_icol_name).setText(var.tag)
+            self.utable.cellWidget(idx,self.var_icol_value).setText(var.text)
+            # self.utable.cellWidget(idx,self.var_icol_value).setText(var.text)
+
             if 'type' in var.keys():
                 # print("\n------------  var.attrib['type'] = ", var.attrib['type'])
                 if "divider" in var.attrib['type']:  # just for visual separation in Jupyter notebook
                     continue
+
                 # select appropriate dropdown/combobox item (double, int, bool, text)
                 elif "double" in var.attrib['type']:
-                    self.type[idx].setCurrentIndex(0)
+                    # self.type[idx].setCurrentIndex(0)   # combobox item
+                    self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(0)
                 elif "int" in var.attrib['type']:
-                    self.type[idx].setCurrentIndex(1)
+                    # self.type[idx].setCurrentIndex(1)
+                    self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(1)
                 elif "bool" in var.attrib['type']:
-                    self.type[idx].setCurrentIndex(2)
+                    # self.type[idx].setCurrentIndex(2)
+                    self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(2)
                 else:
-                    self.type[idx].setCurrentIndex(3)
+                    # self.type[idx].setCurrentIndex(3)
+                    self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(3)
             else:  # default 'double'
-                self.type[idx].setCurrentIndex(1)
-
-            # print(idx, ") ",var)
-            self.name[idx].setText(var.tag)
-            # print("tag=",var.tag)
-            self.value[idx].setText(var.text)
+                # self.type[idx].setCurrentIndex(0)
+                self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(0)
 
             if 'units' in var.keys():
-                self.units[idx].setText(var.attrib['units'])
+                # self.units[idx].setText(var.attrib['units'])
+                self.utable.cellWidget(idx,self.var_icol_units).setText(var.attrib['units'])
             if 'description' in var.keys():
+                # self.description[idx].setText(var.attrib['description'])
                 # print("----- found description: ",var.attrib['description'])
-                self.description[idx].setText(var.attrib['description'])
+                self.utable.cellWidget(idx,self.var_icol_desc).setText(var.attrib['description'])
             # else:
             #     print("----- no description found. ")
 
             idx += 1
 
+        # self.count = idx
+        # self.enable_entire_table()
+
+    #--------------------------------------------------------
     # Generate the .xml to reflect changes in the GUI
     def fill_xml(self):
         logging.debug(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
+        print(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
         uep = self.xml_root.find('.//user_parameters')
         if uep:
             logging.debug(f'--------- found //user_parameters')
@@ -427,20 +685,36 @@ class UserParams(QtWidgets.QWidget):
         uep = self.xml_root.find('.//user_parameters')
         knt = 0
         elm = None
-        for idx in range(self.count):
-            vname = self.name[idx].text()
-            if vname:  # only deal with rows having names
-                logging.debug(f'{vname}')
-                elm = ET.Element(vname, 
-                    {"type":self.type[idx].currentText(), 
-                     "units":self.units[idx].text(),
-                     "description":self.description[idx].text()})
-                # elm = ET.Element(vname, { "units":self.units[idx]})
-                # elm = ET.Element(vname)
-                elm.text = self.value[idx].text()
-                elm.tail = '\n        '
-                uep.insert(knt,elm)
-                knt += 1
-        if elm:
-            elm.tail = '\n    '
-        logging.debug(f'found {knt}')
+        try:
+            for idx in range(self.count):
+                # vname = self.name[idx].text()
+                v_name = self.utable.cellWidget(idx,self.var_icol_name).text()
+                # print(idx,")", v_name)
+                v_type = self.utable.cellWidget(idx,self.var_icol_type).currentText()
+                v_value = self.utable.cellWidget(idx,self.var_icol_value).text()
+                v_units = self.utable.cellWidget(idx,self.var_icol_units).text()
+                v_desc = self.utable.cellWidget(idx,self.var_icol_desc).text()
+                if v_name:  # only deal with rows having names
+                    logging.debug(f'{v_name}')
+                    # elm = ET.Element(vname, 
+                    #     {"type":self.type[idx].currentText(), 
+                    #      "units":self.units[idx].text(),
+                    #      "description":self.description[idx].text()})
+                    elm = ET.Element(v_name, 
+                        {"type":v_type, 
+                        "units":v_units,
+                        "description":v_desc})
+                    # elm = ET.Element(vname, { "units":self.units[idx]})
+                    # elm = ET.Element(vname)
+                    # elm.text = self.value[idx].text()
+                    elm.text = v_value
+                    elm.tail = '\n        '
+                    uep.insert(knt,elm)
+                    knt += 1
+            if elm:
+                elm.tail = '\n    '
+            logging.debug(f'found {knt}')
+
+        except:
+            msg = f"Error saving user params: idx={idx}, w(col 0)={self.utable.cellWidget(idx,self.var_icol_name)}"
+            self.utable_error(idx,0,msg)

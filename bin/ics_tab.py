@@ -17,7 +17,7 @@ from pathlib import Path
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 from matplotlib.collections import LineCollection
-from matplotlib.patches import Circle, Ellipse, Rectangle
+from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
 from matplotlib import gridspec
@@ -117,8 +117,10 @@ class ICs(QWidget):
 
         self.x0_value = 0.
         self.y0_value = 0.
-        self.d1_value = 100.
-        self.d2_value = 200.
+        self.z0_value = 0.
+        self.r1_value = 100.
+        self.r2_value = 100.
+        self.r3_value = 0.
 
         # self.config_file = "mymodel.xml"
         # self.reset_model_flag = True
@@ -187,7 +189,7 @@ class ICs(QWidget):
         self.vbox.addStretch(1)
 
         self.ics_params = QWidget()
-        self.ics_params.setStyleSheet(self.combobox_stylesheet)
+        # self.ics_params.setStyleSheet(self.combobox_stylesheet)
         self.ics_params.setLayout(self.vbox)
 
         #----
@@ -208,9 +210,10 @@ class ICs(QWidget):
         self.geom_combobox = QComboBox()
         # self.geom_combobox.setStyleSheet(self.combobox_stylesheet)
         w_width = 150
-        self.geom_combobox.setFixedWidth(w_width)
         self.geom_combobox.addItem("annulus/disk")
-        self.geom_combobox.addItem("rectangle")
+        # self.geom_combobox.addItem("annulus(2D)/shell(3D)")
+        self.geom_combobox.addItem("box")
+        self.geom_combobox.setFixedWidth(180)
         self.geom_combobox.currentIndexChanged.connect(self.geom_combobox_changed_cb)
         hbox.addWidget(self.geom_combobox)
 
@@ -240,6 +243,14 @@ class ICs(QWidget):
         # self.glayout1.addWidget(self.num_cells, idr,icol,1,1) 
         hbox.addWidget(self.num_cells)
 
+        self.zeq0 = QCheckBox_custom("2D (z=0)")
+        self.zeq0.setChecked(True)
+        self.zeq0.setEnabled(False)
+        # self.zeq0.setStyleSheet("QCheckBox {background-color: rgb(20,20,20); color: black;}")
+        # self.zeq0.setFixedWidth(50)
+        self.zeq0.clicked.connect(self.zeq0_cb)
+        hbox.addWidget(self.zeq0)
+
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
 
@@ -260,6 +271,7 @@ class ICs(QWidget):
         self.x0val.textChanged.connect(self.x0_cb)
         hbox.addWidget(self.x0val)
 
+        #--------
         label = QLabel("y0")
         label.setFixedWidth(30)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -272,6 +284,21 @@ class ICs(QWidget):
         self.y0val.setValidator(QtGui.QDoubleValidator())
         self.y0val.textChanged.connect(self.y0_cb)
         hbox.addWidget(self.y0val)
+
+        #--------
+        z0_label = QLabel("z0")
+        label.setFixedWidth(30)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(z0_label)
+
+        self.z0val = QLineEdit()
+        self.z0val.setFixedWidth(fixed_width_value)
+        self.z0val.setEnabled(False)
+        # self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        self.z0val.setText(str(self.z0_value))
+        self.z0val.setValidator(QtGui.QDoubleValidator())
+        self.z0val.textChanged.connect(self.z0_cb)
+        hbox.addWidget(self.z0val)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -286,34 +313,54 @@ class ICs(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
-        self.d1val = QLineEdit()
-        self.d1val.setFixedWidth(fixed_width_value)
-        self.d1val.setEnabled(True)
-        self.d1val.setText(str(self.d1_value))
+        self.r1val = QLineEdit()
+        self.r1val.setFixedWidth(fixed_width_value)
+        self.r1val.setEnabled(True)
+        self.r1val.setText(str(self.r1_value))
         # self.cmin.textChanged.connect(self.change_plot_range)
-        # self.d1val.returnPressed.connect(self.d1_d2_cb)
-        self.d1val.textChanged.connect(self.d1_d2_cb)
-        # self.d1val.setFixedWidth(cvalue_width)
-        self.d1val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
-        hbox.addWidget(self.d1val)
+        # self.r1val.returnPressed.connect(self.rval_cb)
+        self.r1val.textChanged.connect(self.rval_cb)
+        # self.r1val.setFixedWidth(cvalue_width)
+        self.r1val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.r1val)
 
+        #------
         label = QLabel("R2")
         label.setFixedWidth(30)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
-        self.d2val = QLineEdit()
-        self.d2val.setFixedWidth(fixed_width_value)
-        self.d2val.setEnabled(True)
-        self.d2val.setText(str(self.d2_value))
-        # self.d2val.returnPressed.connect(self.d1_d2_cb)
-        self.d2val.textChanged.connect(self.d1_d2_cb)
-        # self.d2val.setFixedWidth(cvalue_width)
-        self.d2val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
-        hbox.addWidget(self.d2val)
+        self.r2val = QLineEdit()
+        self.r2val.setFixedWidth(fixed_width_value)
+        self.r2val.setEnabled(True)
+        self.r2val.setText(str(self.r2_value))
+        # self.r2val.returnPressed.connect(self.rval_cb)
+        self.r2val.textChanged.connect(self.rval_cb)
+        # self.r2val.setFixedWidth(cvalue_width)
+        self.r2val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.r2val)
+
+        #------
+        label = QLabel("R3")
+        label.setFixedWidth(30)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.r3val = QLineEdit()
+        self.r3val.setFixedWidth(fixed_width_value)
+        self.r3val.setEnabled(False)
+        # self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        self.r3val.setText(str(self.r3_value))
+        # self.r3val.returnPressed.connect(self.rval_cb)
+        self.r3val.textChanged.connect(self.rval_cb)
+        # self.r3val.setFixedWidth(cvalue_width)
+        self.r3val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.r3val)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
+
+        self.enable_3Dwidgets(False)
 
         #----
         hbox = QHBoxLayout()
@@ -363,6 +410,15 @@ class ICs(QWidget):
         self.use_names = QCheckBox_custom("use cell type names")
         self.use_names.setChecked(True)
         hbox.addWidget(self.use_names)
+
+        hbox.addWidget(QLabel(''))
+
+        # self.zeq0 = QCheckBox_custom("z=0")
+        # # self.zeq0.setFixedWidth(50)
+        # self.zeq0.setChecked(True)
+        # self.zeq0.clicked.connect(self.zeq0_cb)
+        # hbox.addWidget(self.zeq0)
+
         self.vbox.addLayout(hbox)
 
         #---
@@ -470,12 +526,19 @@ class ICs(QWidget):
         except:
             pass
 
-    def d1_d2_cb(self):
-        # print("----- d1_d2_cb:")
+    def z0_cb(self):
         try:  # due to the initial callback
-            self.d1_value = float(self.d1val.text())
-            self.d2_value = float(self.d2val.text())
-            # print(self.d1_value, self.d2_value)
+            self.z0_value = float(self.z0val.text())
+        except:
+            pass
+
+    def rval_cb(self):
+        # print("----- rval_cb:")
+        try:  # due to the initial callback
+            self.r1_value = float(self.r1val.text())
+            self.r2_value = float(self.r2val.text())
+            self.r3_value = float(self.r3val.text())
+            # print(self.r1_value, self.r2_value)
         except:
             pass
         # self.update_plots()
@@ -488,6 +551,8 @@ class ICs(QWidget):
             self.my_xmax.setText(config_tab.xmax.text())
             self.my_ymin.setText(config_tab.ymin.text())
             self.my_ymax.setText(config_tab.ymax.text())
+            self.my_zmin.setText(config_tab.zmin.text())
+            self.my_zmax.setText(config_tab.zmax.text())
         except:
             pass
 
@@ -530,22 +595,62 @@ class ICs(QWidget):
         # print("----- celltype_combobox_changed_cb: idx = ",idx)
         # self.update_plots()
 
+    def enable_3Dwidgets(self, bval):
+        print("----- enable_3Dwidgets: bval = ",bval)
+        self.z0val.setEnabled(bval)
+        if self.geom_combobox.currentText() == "box":
+            self.r3val.setEnabled(False)
+        else:
+            self.r3val.setEnabled(bval)
+        if bval:
+            print("----- enable_3Dwidgets: bval = ",bval)
+            self.z0val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            if self.geom_combobox.currentText() == "box":
+                self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            else:
+                self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        else:
+            print("----- enable_3Dwidgets: bval = ",bval)
+            self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        
+    def set_to_origin(self):
+        self.x0_value = self.y0_value = self.z0_value = 0.
+        self.x0val.setText("0.0")
+        self.y0val.setText("0.0")
+        self.z0val.setText("0.0")
+
+    def zeq0_cb(self,bval):
+        print("----- zeq0_cb: bval = ",bval)
+        self.enable_3Dwidgets(not bval)
+
+        if not bval:
+        # self.z0val.setEnabled(bval)
+        # self.z0_label.setEnabled(bval)
+            self.set_to_origin()
+
     def geom_combobox_changed_cb(self,idx):
         # print("----- geom_combobox_changed_cb: idx = ",idx)
-        # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
+        if not self.zeq0.isChecked():
+            if self.geom_combobox.currentText() == "box":
+                self.r3val.setEnabled(True)
+                self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            else:
+                self.r3val.setEnabled(False)
+                self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
         # if idx == 0:
-        #     self.d2val.setEnabled(False)
+        #     self.r2val.setEnabled(False)
         # else:
-        #     self.d2val.setEnabled(True)
+        #     self.r2val.setEnabled(True)
         # self.update_plots()
 
     def fill_combobox_changed_cb(self,idx):
         # print("----- fill_combobox_changed_cb: idx = ",idx)
-        # if "rect" in self.geom_combobox.currentText() and "hex" in self.fill_combobox.currentText():
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
         else:
@@ -696,7 +801,7 @@ class ICs(QWidget):
     def annulus_error(self):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText("D2 must be > D1")
+        msgBox.setText("R2 must be > R1 for annulus/disk")
         #    msgBox.setWindowTitle("Example")
         msgBox.setStandardButtons(QMessageBox.Ok)
         # msgBox.buttonClicked.connect(msgButtonClick)
@@ -716,7 +821,7 @@ class ICs(QWidget):
         logging.debug(f'ics_tab.py: volume= {volume}, radius= {self.cell_radius}')
 
         if "annulus" in self.geom_combobox.currentText():
-            if self.d2_value <= self.d1_value:
+            if self.r2_value <= self.r1_value:
                 self.annulus_error()
                 return
             if "random" in self.fill_combobox.currentText():
@@ -724,11 +829,11 @@ class ICs(QWidget):
             elif "hex" in self.fill_combobox.currentText():
                 self.hex_pts_annulus()
 
-        else:  # rectangle
+        else:  # box
             if "random" in self.fill_combobox.currentText():
-                self.uniform_random_pts_rect()
+                self.uniform_random_pts_box()
             elif "hex" in self.fill_combobox.currentText():
-                self.hex_pts_rect()
+                self.hex_pts_box()
 
     #------------------------------------------------------------
     def undo_cb(self):
@@ -748,6 +853,7 @@ class ICs(QWidget):
         # print("csv_array.shape=",self.csv_array.shape)
         xvals = self.csv_array[:, 0]
         yvals = self.csv_array[:, 1]
+        zvals = self.csv_array[:, 2]
         cell_colors = []
 
         # rvals = 8
@@ -777,7 +883,7 @@ class ICs(QWidget):
         self.canvas.draw()
 
     #----------------------------------
-    def hex_pts_rect(self):
+    def hex_pts_box(self):
         xlist = deque()
         ylist = deque()
         rlist = deque()
@@ -787,16 +893,16 @@ class ICs(QWidget):
 
         colors = np.empty((0,4))
         count = 0
-        zval = 0.0
+        # zval = 0.0
         cell_type_index = self.celltype_combobox.currentIndex()
         
         ncells = int(self.num_cells.text())
-        # print("self.d1_value= ", self.d1_value)
+        # print("self.r1_value= ", self.r1_value)
 
-        x_min = -self.d1_value
-        x_max =  self.d1_value
-        y_min = -self.d2_value
-        y_max =  self.d2_value
+        x_min = -self.r1_value
+        x_max =  self.r1_value
+        y_min = -self.r2_value
+        y_max =  self.r2_value
         y_idx = -1
         # hex packing constants
         x_spacing = self.cell_radius * 2
@@ -809,20 +915,66 @@ class ICs(QWidget):
         cells_y2 = np.array([])
 
         y_idx = 0
-        for yval in np.arange(y_min,y_max, y_spacing):
-            y_idx += 1
-            for xval in np.arange(x_min,x_max, x_spacing):
-                # xval_offset = xval + (y_idx%2) * self.cell_radius
-                xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
+        z_idx = 0
 
-                xlist.append(xval_offset)
-                yval_offset = yval + self.y0_value
-                ylist.append(yval_offset)
-                # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
-                self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
-                rlist.append(rval)
-                self.cell_radii.append(self.cell_radius)
-                count+=1
+        if self.zeq0.isChecked():  # 2D
+            zval = 0.0
+            for yval in np.arange(y_min,y_max, y_spacing):
+                y_idx += 1
+                for xval in np.arange(x_min,x_max, x_spacing):
+                    # xval_offset = xval + (y_idx%2) * self.cell_radius
+                    xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
+
+                    xlist.append(xval_offset)
+                    yval_offset = yval + self.y0_value
+                    ylist.append(yval_offset)
+                    # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset, zval, cell_type_index]],axis=0)
+                    rlist.append(rval)
+                    self.cell_radii.append(self.cell_radius)
+                    count+=1
+        else:   # 3D
+
+            # for z in np.arange(z_min, z_max, z_spacing):
+            #     zc += 1
+            #     z_xoffset = (zc % 2) * cell_radius
+            #     z_yoffset = (zc % 2) * eq_tri_yctr   # 0.5773502691896256
+            #     zsq = z * z
+            #     term3 = (z - z0_e) * (z - z0_e)
+            #     # print("z_xoffset=",z_xoffset)
+            #     # print("z_yoffset=",z_yoffset)
+            #     for y in np.arange(y_min, y_max, y_spacing):
+            #         yc += 1
+            #         y2 = y + z_yoffset 
+            #         ysq = y2 * y2
+            #         term2 = (y2 - y0_e) * (y2 - y0_e)
+            #         # print('--------')
+            #         for x in np.arange(x_min, x_max, x_spacing):
+            #             x2 = x + (yc%2) * self.cell_radius + z_xoffset
+            #             xsq = x2 * x2
+            #             term1 = (x2 - x0_e) * (x2 - x0_e)
+            #             # print(x2,y2,z)
+            #             if ( (z<0.0) and (xsq + ysq + zsq) < sphere_radius2):  # assume centered about origin
+            #                 xyz = np.append(xyz, np.array([[x2,y2,z]]), axis=0)
+            #                 # val = (xsq + ysq)/a2 + zsq/c2
+            #                 val = (term1 + term2)/a2 + term3/c2
+            #                 # print(val)
+
+#------
+            for yval in np.arange(y_min,y_max, y_spacing):
+                y_idx += 1
+                for xval in np.arange(x_min,x_max, x_spacing):
+                    # xval_offset = xval + (y_idx%2) * self.cell_radius
+                    xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
+
+                    xlist.append(xval_offset)
+                    yval_offset = yval + self.y0_value
+                    ylist.append(yval_offset)
+                    # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset, zval, cell_type_index]],axis=0)
+                    rlist.append(rval)
+                    self.cell_radii.append(self.cell_radius)
+                    count+=1
 
         self.numcells_l.append(count)
 
@@ -862,14 +1014,14 @@ class ICs(QWidget):
         zval = 0.0
         cell_type_index = self.celltype_combobox.currentIndex()
         ncells = int(self.num_cells.text())
-        # print("self.d1_value= ", self.d1_value)
+        # print("self.r1_value= ", self.r1_value)
 
-        # x_min = -self.d1_value
-        # x_max =  self.d1_value
-        x_min = -self.d2_value
-        x_max =  self.d2_value
-        y_min = -self.d2_value
-        y_max =  self.d2_value
+        # x_min = -self.r1_value
+        # x_max =  self.r1_value
+        x_min = -self.r2_value
+        x_max =  self.r2_value
+        y_min = -self.r2_value
+        y_max =  self.r2_value
         y_idx = -1
         # hex packing constants
         x_spacing = self.cell_radius * 2
@@ -900,7 +1052,7 @@ class ICs(QWidget):
                 xdist = xval_offset - xctr
                 ydist = yval - yctr
                 dist = np.sqrt(xdist*xdist + ydist*ydist)
-                if (dist >= self.d1_value) and (dist <= self.d2_value):
+                if (dist >= self.r1_value) and (dist <= self.r2_value):
                 # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
                 #     xv = xval_offset - big_radius
                 #     cells_x = np.append(cells_x, xv)
@@ -943,9 +1095,10 @@ class ICs(QWidget):
         self.canvas.draw()
 
     #----------------------------------
-    def uniform_random_pts_rect(self):
+    def uniform_random_pts_box(self):
         xlist = deque()
         ylist = deque()
+        zlist = deque()
         rlist = deque()
         rgba_list = deque()
 
@@ -957,19 +1110,26 @@ class ICs(QWidget):
         cell_type_index = self.celltype_combobox.currentIndex()
         ncells = int(self.num_cells.text())
         self.numcells_l.append(ncells)
-        # print("self.d1_value= ", self.d1_value)
+        # print("self.r1_value= ", self.r1_value)
         while True:
-            sign1 = 1
+            sign = 1
             if np.random.uniform() > 0.5:
-                sign1 = -1
-            xval = self.x0_value + sign1 * np.random.uniform() * self.d1_value
-            sign2 = 1
+                sign = -1
+            xval = self.x0_value + sign * np.random.uniform() * self.r1_value
+
+            sign = 1
             if np.random.uniform() > 0.5:
-                sign2 = -1
-            yval = self.y0_value + sign2 * np.random.uniform() * self.d2_value
+                sign = -1
+            yval = self.y0_value + sign * np.random.uniform() * self.r2_value
+
+            sign = 1
+            if np.random.uniform() > 0.5:
+                sign = -1
+            zval = self.z0_value + sign * np.random.uniform() * self.r3_value
 
             xlist.append(xval)
             ylist.append(yval)
+            zlist.append(yval)
             self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
             rlist.append(rval)
             self.cell_radii.append(self.cell_radius)
@@ -1031,14 +1191,14 @@ class ICs(QWidget):
         ncells = int(self.num_cells.text())
         self.numcells_l.append(ncells)
 
-        # R1 = float(self.d1val.text())
-        # R1 = self.d1_value
-        R1 = self.d1_value - self.x0_value
+        # R1 = float(self.r1val.text())
+        # R1 = self.r1_value
+        R1 = self.r1_value - self.x0_value
         # print("R1=",R1)
         R1_sq = R1*R1
         # print("R1_sq=",R1_sq)
-        # R2 = float(self.d2val.text())
-        R2 = self.d2_value
+        # R2 = float(self.r2val.text())
+        R2 = self.r2_value
         # print("R2=",R2)
         # k = 0
         while True:
@@ -1059,7 +1219,7 @@ class ICs(QWidget):
             # print(f'{k}) d2= {d2}, R1_sq={R1_sq}')
             # if k > 300:
                 # break
-            if d2 >= self.d1_value:
+            if d2 >= self.r1_value:
                 xlist.append(xval)
                 ylist.append(yval)
                 rlist.append(rval)
@@ -1109,6 +1269,16 @@ class ICs(QWidget):
         self.cell_radii = []
 
     def save_cb(self):
+        if len(self.csv_array) == 0:
+            msg = "No cells created. You must Plot first."
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+            return
+
         # print("\n------- ics_tab.py: save_cb() -------")
         # x = y = z = np.arange(0.0,5.0,1.0)
         # np.savetxt('cells.csv', (x,y,z), delimiter=',')
@@ -1148,7 +1318,7 @@ class ICs(QWidget):
             cell_name = list(self.celldef_tab.param_d.keys())
             # print("cell_name=",cell_name)
             with open(full_fname, 'w') as f:
-                f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')
+                # f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # rwh: TODO?  Bug with 1.11.0?
                 for idx in range(len(self.csv_array)):
                     ict = int(self.csv_array[idx,3])  # cell type index
                     f.write(f'{self.csv_array[idx,0]},{self.csv_array[idx,1]},{self.csv_array[idx,2]},{cell_name[ict]}\n')
