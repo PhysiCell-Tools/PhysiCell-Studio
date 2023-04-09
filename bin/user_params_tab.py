@@ -148,7 +148,7 @@ class UserParams(QWidget):
         delete_row_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         hlayout.addWidget(delete_row_btn)
 
-        hlayout.addWidget(QLabel("(click row #)"))
+        hlayout.addWidget(QLabel("(after selecting a row #)"))
 
         hlayout.addStretch()
         self.main_layout.addLayout(hlayout)
