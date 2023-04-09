@@ -679,6 +679,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.user_params_tab.clear_gui()
         self.user_params_tab.fill_gui()
 
+
     def show_sample_model(self):
         logging.debug(f'pmb: show_sample_model(): self.config_file = {self.config_file}')
         print(f'\npmb: show_sample_model(): self.config_file = {self.config_file}')
@@ -782,6 +783,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def save_cb(self):
         self.celldef_tab.check_valid_cell_defs()
+
+        if not self.user_params_tab.validate_utable():
+            return
+
         try:
             # self.celldef_tab.config_path = self.current_save_file
             self.celldef_tab.config_path = self.current_xml_file
@@ -1216,8 +1221,7 @@ def main():
     palette.setColor(QPalette.Base, Qt.white)
     palette.setColor(QPalette.Text, Qt.black)
 
-    # palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    palette.setColor(QPalette.Button, QColor(200, 200, 0))  # dull yellow: seems to affect tree widget header and table headers
+    palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
 
     # palette.setColor(QPalette.ButtonText, Qt.white)  # e.g., header for tree widgets??
     # palette.setColor(QPalette.ButtonText, Qt.green)  # e.g., header for tree widgets??

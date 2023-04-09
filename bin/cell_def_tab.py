@@ -169,8 +169,6 @@ class CellDef(QWidget):
         self.config_path = None
         self.debug_print_fill_xml = True
         # self.custom_var_count = 0  # no longer used? just get len(self.master_custom_var_d)
-        self.max_custom_data_rows = 99
-        self.max_entries = self.max_custom_data_rows
 
         self.master_custom_var_d = {}    # dict: [unique custom var name]=[row#, units, desc]
         self.custom_units_default = ''
@@ -275,7 +273,7 @@ class CellDef(QWidget):
         self.tree.itemChanged.connect(self.tree_item_changed_cb)   # rename a cell type
 
         # header = QTreeWidgetItem(["---  Cell Type  ---"])
-        header = QTreeWidgetItem(["  ---  Cell Type ---","|-- ID --"])
+        header = QTreeWidgetItem(["  ---  Cell Type ---","-- ID --"])
         # self.tree.resizeColumnToContents(5)
 
         self.tree.setHeaderItem(header)
@@ -5226,6 +5224,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hlayout = QHBoxLayout()
 
         self.custom_data_search = QLineEdit()
+        self.custom_data_search.setFixedWidth(400)
         self.custom_data_search.setPlaceholderText("Search for Name...")
         self.custom_data_search.textChanged.connect(self.custom_data_search_cb)
         hlayout.addWidget(self.custom_data_search)
@@ -5235,11 +5234,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         delete_custom_data_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         hlayout.addWidget(delete_custom_data_btn)
 
+        hlayout.addWidget(QLabel("(click row #)"))
+
+        hlayout.addStretch()
         vlayout.addLayout(hlayout)
 
         self.custom_data_table = QTableWidget()
         # self.custom_data_table.cellClicked.connect(self.custom_data_cell_was_clicked)
-        # self.max_custom_data_rows = 50
         self.max_custom_data_rows = 100
         self.max_custom_data_cols = 5
 
@@ -5384,7 +5385,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # disable all cells in the Custom Data table
         backcolor = "background: lightgray"
         for irow in range(0,self.max_custom_data_rows):
-            for icol in range(5):
+            for icol in range(self.max_custom_data_cols):
                 self.custom_data_table.cellWidget(irow,icol).setEnabled(False)
                 self.custom_data_table.cellWidget(irow,icol).setStyleSheet(backcolor)   # yellow
                 # self.sender().setStyleSheet("color: red;")

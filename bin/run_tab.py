@@ -131,12 +131,18 @@ class RunModel(QWidget):
 #------------------------------
     # replicate what we do in the "save" function in the main module
     def update_xml_from_gui(self):
+        if not self.user_params_tab.validate_utable():
+            self.enable_run(True)
+            return False
+
         self.config_tab.fill_xml()
         self.microenv_tab.fill_xml()
         self.celldef_tab.fill_xml()
         self.user_params_tab.fill_xml()
         if self.rules_flag:
             self.rules_tab.fill_xml()
+        
+        return True
 
         # self.vis_tab.circle_radius = ET.parse(self.xml_root)
         # tree = ET.parse(xml_file)
@@ -194,7 +200,10 @@ class RunModel(QWidget):
                 # self.celldef_tab.config_path = new_config_file
                 # print("run_tab.py: ----> here 4")
 
-                self.update_xml_from_gui()
+                if not self.update_xml_from_gui():
+                    # self.run_button.setEnabled(True)
+                    self.enable_run(True)
+                    return
 
                 # logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
                 # print("run_tab.py: ----> new_config_file = ",new_config_file)
@@ -239,6 +248,7 @@ class RunModel(QWidget):
             print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
 
             if self.p is None:  # No process running.
+                self.enable_run(False)
                 self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
                 self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
                 self.message("Executing process")
@@ -277,7 +287,8 @@ class RunModel(QWidget):
         if self.p:  # process running.
             self.p.kill()
             # self.p.terminate()
-            self.run_button.setEnabled(True)
+            # self.run_button.setEnabled(True)
+            self.enable_run(True)
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
@@ -301,6 +312,7 @@ class RunModel(QWidget):
 
     def process_finished(self):
         self.message("Process finished.")
+        self.enable_run(True)
         # print("-- process finished.")
         self.vis_tab.first_plot_cb("foo")
         if self.nanohub_flag:
@@ -315,3 +327,12 @@ class RunModel(QWidget):
         msg.setWindowTitle("Error")
         msg.setFixedWidth(500)
         msg.exec_()
+
+    def enable_run(self, flag):
+        self.run_button.setEnabled(flag)
+        if flag:
+            self.run_button.setText("Run simulation")
+            self.run_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        else:
+            self.run_button.setText("...")
+            self.run_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
