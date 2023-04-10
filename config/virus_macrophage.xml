@@ -30,7 +30,7 @@
 		<folder>output</folder>  
 
 		<full_data>
-			<interval units="min">60</interval>
+			<interval units="min">10</interval>
 			<enable>true</enable>
 		</full_data>
 		
