@@ -196,7 +196,7 @@ class UserParams(QWidget):
             w_var_type.addItem("double")
             w_var_type.addItem("int")
             w_var_type.addItem("bool")
-            w_var_type.addItem("text")
+            w_var_type.addItem("string")
 
             self.utable.setCellWidget(irow, self.var_icol_type, w_var_type)
             # self.type.append(w_var_type)
@@ -291,7 +291,7 @@ class UserParams(QWidget):
             w_var_type.addItem("double")
             w_var_type.addItem("int")
             w_var_type.addItem("bool")
-            w_var_type.addItem("text")
+            w_var_type.addItem("string")
 
             self.utable.setCellWidget(irow, self.var_icol_type, w_var_type)
             # self.type.append(w_var_type)
