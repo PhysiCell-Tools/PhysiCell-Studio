@@ -992,7 +992,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.exec_name.setText('./pred_prey')
 
     def virus_mac_cb(self):
-        self.load_model("virus_macrophage_flat")
+        self.load_model("virus_macrophage")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./virus-sample')
 
