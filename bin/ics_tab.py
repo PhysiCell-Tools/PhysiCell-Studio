@@ -1312,15 +1312,18 @@ class ICs(QWidget):
 
         # Recall: self.csv_array = np.empty([1,4])  # default floats
         if self.use_names.isChecked():
-            # print("----- Writing v2 .csv file for cells")
+            print("----- Writing v2 (with cell names) .csv file for cells")
+            print("----- full_fname=",full_fname)
             # print("self.csv_array.shape= ",self.csv_array.shape)
             # print(self.csv_array)
             cell_name = list(self.celldef_tab.param_d.keys())
             # print("cell_name=",cell_name)
             with open(full_fname, 'w') as f:
-                # f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # rwh: TODO?  Bug with 1.11.0?
+                f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # PhysiCell checks for "x" or "X"
                 for idx in range(len(self.csv_array)):
                     ict = int(self.csv_array[idx,3])  # cell type index
                     f.write(f'{self.csv_array[idx,0]},{self.csv_array[idx,1]},{self.csv_array[idx,2]},{cell_name[ict]}\n')
         else:
+            print("----- Writing v1 (with cell indices) .csv file for cells")
+            print("----- full_fname=",full_fname)
             np.savetxt(full_fname, self.csv_array, delimiter=',')
