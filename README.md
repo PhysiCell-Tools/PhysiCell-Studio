@@ -10,18 +10,18 @@ Download the latest release and run the following command in your Terminal (or C
 python bin/studio.py
 ```
 
-To also specify the name of an executable, use "-e" argument, e.g.:
+To specify the name of an executable, use "-e" argument, e.g.:
 ```
-python bin/studio.py -e template 
+python bin/studio.py -e project 
 ```
 
-To also specify the name of a configuration file (to populate the GUI), use "-c" argument, e.g.:
+To specify the name of a configuration file (to populate the Studio), use "-c" argument, e.g.:
 * it must be a "flattened" one (see NOTE below)
 ```
-python bin/studio.py -e template -c config/PhysiCell_settings.xml
+python bin/studio.py -e project -c config/PhysiCell_settings.xml
 ```
 
-To specify 3D visualization , use "--3" argument.
+To specify 3D visualization , use "-3" argument.
 
 To run a minimal Studio, without the Run and Plot tabs (in case your Python is missing the required modules), use:
 ```
