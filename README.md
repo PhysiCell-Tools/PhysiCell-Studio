@@ -1,4 +1,4 @@
-# PhysiCell Studio: graphical user interface for a PhysiCell model
+# PhysiCell Studio
 
 A graphical tool to create, execute, and visualize a multicellular model using PhysiCell.
 
