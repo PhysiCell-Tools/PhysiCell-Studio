@@ -307,7 +307,10 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.homedir = self.homedir
 
             # self.run_tab.config_xml_name.setText(current_xml_file)
-            self.run_tab.exec_name.setText(exec_file)
+            # self.run_tab.exec_name.setText(exec_file)
+            # self.run_tab.exec_name.setText(str(Path(exec_file)))
+            self.run_tab.exec_name.setText(os.path.join(self.homedir, exec_file))
+
             self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.current_dir = os.getcwd()
             self.run_tab.current_dir = self.current_dir
@@ -1128,7 +1131,7 @@ def main():
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
 
-        parser.add_argument("-b", "--bare", help="no plotting, etc ", action="store_true")
+        parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
         # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
