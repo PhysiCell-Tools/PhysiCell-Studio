@@ -1272,6 +1272,24 @@ def main():
     # pmb_app.quit()
 	
 if __name__ == '__main__':
+    print("""
+
+    NOTE:
+
+    pmb.py is being deprecated and replaced with studio.py
+
+    Please start using that.
+      OLD: python bin/pmb.py --studio
+      NEW: python bin/studio.py
+    --
+      OLD: python bin/pmb.py 
+      NEW: python bin/studio.py --bare
+
+    """)
+    val = input("Enter 0 to continue anyway:\n ")
+    if val != "0":
+        sys.exit(-1)
+
     # logging.basicConfig(filename='studio.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     # logging.basicConfig(filename="studio_debug.log", level=logging.INFO)
     logfile = "studio_debug.log"
