@@ -231,7 +231,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -392,7 +391,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -556,7 +554,6 @@
                             <mutation intracellular_name="C">0</mutation>
                         </mutations>
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -720,7 +717,6 @@
                             <parameter intracellular_name="$time_scale">0.2</parameter>
                         </parameters>
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -881,7 +877,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -1045,7 +1040,6 @@
                             <parameter intracellular_name="$time_scale">0.0</parameter>
                         </parameters>
                     </settings>
-                    <mapping/>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -1057,7 +1051,7 @@
     <initial_conditions>
         <cell_positions enabled="true" type="csv">
             <folder>./config</folder>
-            <filename>cells.csv</filename>
+            <filename>cells_physiboss.csv</filename>
         </cell_positions>
     </initial_conditions>
 
