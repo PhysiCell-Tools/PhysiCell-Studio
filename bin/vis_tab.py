@@ -319,16 +319,16 @@ class Vis(QWidget):
         # Beware: padding seems to alter the behavior; adding scroll arrows to choices list!
                 # padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px;
                 # height: 30px;
+            # QComboBox{
+            #     color: #000000;
+            #     background-color: #FFFFFF; 
+            #     height: 20px;
+            # }
+            # QComboBox:disabled {
+            #     background-color: rgb(199,199,199);
+            #     color: rgb(99,99,99);
+            # }
         self.stylesheet = """ 
-            QComboBox{
-                color: #000000;
-                background-color: #FFFFFF; 
-                height: 20px;
-            }
-            QComboBox:disabled {
-                background-color: rgb(199,199,199);
-                color: rgb(99,99,99);
-            }
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; } 
             QPushButton:hover { border: 1px solid; border-radius: 3px; border-color: rgb(33, 77, 115); } QPushButton:focus { outline-color: transparent; border: 2px solid; border-color: rgb(151, 195, 243); } QPushButton:pressed{ background-color: rgb(145, 255, 145); } 
             QPushButton:disabled { color: black; border-color: grey; background-color: rgb(199,199,199); }
