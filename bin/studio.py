@@ -1020,7 +1020,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.exec_name.setText('./cancer_immune_3D')
 
     def physiboss_cell_lines_cb(self):
-        self.load_model("physiboss_cell_lines_flat")
+        self.load_model("physiboss")
         # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
@@ -1225,7 +1225,8 @@ def main():
     palette.setColor(QPalette.Base, Qt.white)
     palette.setColor(QPalette.Text, Qt.black)
 
-    palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
+    # palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
+    palette.setColor(QPalette.Button, QColor(255, 255, 255))  # white: affects tree widget header and table headers
 
     # palette.setColor(QPalette.ButtonText, Qt.white)  # e.g., header for tree widgets??
     # palette.setColor(QPalette.ButtonText, Qt.green)  # e.g., header for tree widgets??
