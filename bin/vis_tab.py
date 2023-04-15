@@ -82,7 +82,7 @@ class ExtendedComboBox(QComboBox):
         super(ExtendedComboBox, self).__init__(parent)
 
         self.setFocusPolicy(Qt.StrongFocus)
-        self.setEditable(True)
+        self.setEditable(True)  # necessary to use lineEdit().textEdited filter below; can't be False
 
         # add a filter model to filter matching items
         self.pFilterModel = QSortFilterProxyModel(self)
@@ -96,30 +96,38 @@ class ExtendedComboBox(QComboBox):
         self.setCompleter(self.completer)
 
         # connect signals
-        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)
+        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)  # necessary to show filtered items
         self.completer.activated.connect(self.on_completer_activated)
 
 
+    # Tried/failed to override this method to avoid adding a bogus variable name in search bar at top of combobox
+    # def addItem(self, text):
+    #     print("addItem():  avoid adding text=",text)
+        # items = [self.itemText(i) for i in range(self.count())]  # argh, there's really no method for this?
+            # super().addItem(text)
+
     # on selection of an item from the completer, select the corresponding item from combobox 
     def on_completer_activated(self, text):
+        print("\n--- on_completer_activated():  text= ",text)
         if text:
             index = self.findText(text)
+            print("on_completer_activated(): index= ",index)
             self.setCurrentIndex(index)
             self.activated[str].emit(self.itemText(index))
 
 
     # on model change, update the models of the filter and completer as well 
-    def setModel(self, model):
-        super(ExtendedComboBox, self).setModel(model)
-        self.pFilterModel.setSourceModel(model)
-        self.completer.setModel(self.pFilterModel)
+    # def setModel(self, model):
+    #     super(ExtendedComboBox, self).setModel(model)
+    #     self.pFilterModel.setSourceModel(model)
+    #     self.completer.setModel(self.pFilterModel)
 
 
     # on model column change, update the model column of the filter and completer as well
-    def setModelColumn(self, column):
-        self.completer.setCompletionColumn(column)
-        self.pFilterModel.setFilterKeyColumn(column)
-        super(ExtendedComboBox, self).setModelColumn(column)    
+    # def setModelColumn(self, column):
+    #     self.completer.setCompletionColumn(column)
+    #     self.pFilterModel.setFilterKeyColumn(column)
+    #     super(ExtendedComboBox, self).setModelColumn(column)    
 
 #---------------------------
 class SvgWidget(QSvgWidget):
@@ -272,9 +280,13 @@ class Vis(QWidget):
 
         # self.plot_svg_flag = True
         self.plot_cells_svg = True
+
+        self.cell_scalars_l = []
+
         # self.plot_svg_flag = False
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
+
         self.plot_xmin = None
         self.plot_xmax = None
         self.plot_ymin = None
@@ -1109,6 +1121,7 @@ class Vis(QWidget):
             # self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
+            self.custom_button.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
@@ -1124,6 +1137,7 @@ class Vis(QWidget):
             # self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
+            self.custom_button.setEnabled(True)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
@@ -1609,7 +1623,7 @@ class Vis(QWidget):
 
 
     def add_default_cell_vars(self):
-        print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
+        # print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
 
         self.disable_cell_scalar_cb = True
         self.cell_scalar_combobox.clear()
@@ -1634,63 +1648,37 @@ class Vis(QWidget):
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
 
         # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        print("plot_tab: add_default_cell_vars(): num_keys=",num_keys)
-        keys_l = list(mcds.data['discrete_cells']['data'])
-        print("plot_tab: add_default_cell_vars(): keys_l=",keys_l)
+        # num_keys = len(mcds.data['discrete_cells']['data'].keys())
+        # print("plot_tab: add_default_cell_vars(): num_keys=",num_keys)
+        # keys_l = list(mcds.data['discrete_cells']['data'])
+        self.cell_scalars_l.clear()
+        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
         # for idx in range(num_keys-1,0,-1):
         #     if "transformation_rates" in keys_l[idx]:
         #         print("found transformation_rates at index=",idx)
         #         break
         # idx1 = idx + 1
 
-        for idx in range(0, len(keys_l)):
-            # print("------ add: ",keys_l[idx])
-            if keys_l[idx] == "ID":
-                continue
-            self.cell_scalar_combobox.addItem(keys_l[idx])
+        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        self.cell_scalars_l.remove('ID')
+        self.cell_scalars_l.reverse()
+        # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
+
+        # for idx in range(0, len(keys_l)):
+        #     # print("------ add: ",keys_l[idx])
+        #     if keys_l[idx] == "ID":
+        #         continue
+        #     # self.cell_scalar_combobox.addItem(keys_l[idx])
+        #     self.cell_scalars_l.append(keys_l[idx])
+
+        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
+        # items = [self.cell_scalar_combobox.itemText(i) for i in range(self.cell_scalar_combobox.count())]
+        # print(items)
 
         self.disable_cell_scalar_cb = False
 
         self.update_plots()
 
-
-    def append_custom_cb(self):
-        print("\n\n------append_custom_cb(): -------\n")
-        # self.add_default_cell_vars()
-
-        # Add all custom vars. Hack.
-        xml_file_root = "output%08d.xml" % 0
-        xml_file = os.path.join(self.output_dir, xml_file_root)
-        if not Path(xml_file).is_file():
-            print("append_custom_cb(): ERROR: file not found",xml_file)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Could not find file " + xml_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
-
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-
-        # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        print("plot_tab: append_custom_cb(): num_keys=",num_keys)
-        keys_l = list(mcds.data['discrete_cells']['data'])
-        print("plot_tab: append_custom_cb(): keys_l=",keys_l)
-        for idx in range(num_keys-1,0,-1):
-            if "transformation_rates" in keys_l[idx]:
-                print("found transformation_rates at index=",idx)
-                break
-        idx1 = idx + 1
-
-        for idx in range(idx1, len(keys_l)):
-            print("------ add: ",keys_l[idx])
-            self.cell_scalar_combobox.addItem(keys_l[idx])
-
-        self.disable_cell_scalar_cb = False
-
-        self.update_plots()
 
     def animate(self):
         if not self.animating_flag:
@@ -1711,17 +1699,6 @@ class Vis(QWidget):
             # self.play_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
             self.timer.stop()
 
-
-    # def play_plot_cb0(self, text):
-    #     for idx in range(10):
-    #         self.current_svg_frame += 1
-    #         print('svg # ',self.current_svg_frame)
-    #         self.plot_svg(self.current_svg_frame)
-    #         self.canvas.update()
-    #         self.canvas.draw()
-    #         # time.sleep(1)
-    #         # self.ax0.clear()
-    #         # self.canvas.pause(0.05)
 
     def prepare_plot_cb(self, text):
         self.current_svg_frame += 1
@@ -2326,6 +2303,12 @@ class Vis(QWidget):
                 cell_scalar = mcds.get_cell_df()[cell_scalar_name]
             except:
                 print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You probably need to repopulate the cell scalar dropdown combobox."
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
                 return
         
             vmin = cell_scalar.min()
