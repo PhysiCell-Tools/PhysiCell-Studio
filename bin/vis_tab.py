@@ -31,9 +31,11 @@ import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from PyQt5.QtWidgets import QCompleter, QSizePolicy
+from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import QRectF
+from PyQt5.QtCore import QRectF, Qt
 locale_en_US = QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedStates)
 
 import numpy as np
@@ -74,7 +76,50 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                 """
         self.setStyleSheet(checkbox_style)
 
+#---------------------------
+class ExtendedCombo( QComboBox ):
+    def __init__( self,  parent = None):
+        super( ExtendedCombo, self ).__init__( parent )
 
+        self.setFocusPolicy( Qt.StrongFocus )
+        self.setEditable( True )
+        self.completer = QCompleter( self )
+
+        # always show all completions
+        self.completer.setCompletionMode( QCompleter.UnfilteredPopupCompletion )
+        self.pFilterModel = QSortFilterProxyModel( self )
+        self.pFilterModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
+
+        self.completer.setPopup( self.view() )
+
+        self.setCompleter( self.completer )
+
+        # self.lineEdit().textEdited[unicode].connect( self.pFilterModel.setFilterFixedString )
+        self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
+        self.completer.activated.connect(self.setTextIfCompleterIsClicked)
+
+    def setModel( self, model ):
+        super(ExtendedCombo, self).setModel( model )
+        self.pFilterModel.setSourceModel( model )
+        self.completer.setModel(self.pFilterModel)
+
+    def setModelColumn( self, column ):
+        self.completer.setCompletionColumn( column )
+        self.pFilterModel.setFilterKeyColumn( column )
+        super(ExtendedCombo, self).setModelColumn( column )
+
+    def view( self ):
+        return self.completer.popup()
+
+    def index( self ):
+        return self.currentIndex()
+
+    def setTextIfCompleterIsClicked(self, text):
+      if text:
+        index = self.findText(text)
+        self.setCurrentIndex(index)
+
+#---------------------------
 class SvgWidget(QSvgWidget):
     def __init__(self, *args):
         QSvgWidget.__init__(self, *args)
@@ -480,8 +525,9 @@ class Vis(QWidget):
         # hbox.addLayout(hbox2) 
 
         self.disable_cell_scalar_cb = False
-        self.cell_scalar_combobox = QComboBox()
-        # self.cell_scalar_combobox.setFixedWidth(300)
+        # self.cell_scalar_combobox = QComboBox()
+        self.cell_scalar_combobox = ExtendedCombo()
+        self.cell_scalar_combobox.setFixedWidth(270)
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
@@ -496,7 +542,7 @@ class Vis(QWidget):
         self.vbox.addLayout(hbox)
         #------------------
         hbox = QHBoxLayout()
-        self.add_default_cell_vars()
+        # self.add_default_cell_vars()
         self.disable_cell_scalar_cb = False
         self.cell_scalar_combobox.setEnabled(False)
         hbox.addWidget(self.cell_scalar_combobox)
@@ -509,13 +555,13 @@ class Vis(QWidget):
         hbox.addWidget(self.cell_scalar_cbar_combobox)
         self.vbox.addLayout(hbox)
 
-        self.custom_button = QPushButton("append custom data")
-        self.custom_button.setFixedWidth(150)
-        self.custom_button.setEnabled(False)
-        # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        # self.play_button.clicked.connect(self.play_plot_cb)
-        self.custom_button.clicked.connect(self.append_custom_cb)
-        self.vbox.addWidget(self.custom_button)
+        # self.custom_button = QPushButton("append custom data")
+        # self.custom_button.setFixedWidth(150)
+        # self.custom_button.setEnabled(False)
+        # # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # # self.play_button.clicked.connect(self.play_plot_cb)
+        # self.custom_button.clicked.connect(self.append_custom_cb)
+        # self.vbox.addWidget(self.custom_button)
 
         #------------------
         self.vbox.addWidget(QHLine())
@@ -1055,7 +1101,7 @@ class Vis(QWidget):
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
-            self.custom_button.setEnabled(False)
+            # self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
@@ -1067,8 +1113,10 @@ class Vis(QWidget):
                 self.cax2 = None
 
         else:
+            self.add_default_cell_vars()   # rwh: just do once!
+
             self.plot_cells_svg = False
-            self.custom_button.setEnabled(True)
+            # self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
             if self.physiboss_vis_checkbox is not None:
@@ -1556,15 +1604,53 @@ class Vis(QWidget):
 
 
     def add_default_cell_vars(self):
+        print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
+
         self.disable_cell_scalar_cb = True
         self.cell_scalar_combobox.clear()
-        default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        for idx in range(len(default_var_l)):
-            self.cell_scalar_combobox.addItem(default_var_l[idx])
-        self.cell_scalar_combobox.insertSeparator(len(default_var_l))
+
+        # -- old way (limit choices)
+        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
+        # for idx in range(len(default_var_l)):
+        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
+        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
+
+        xml_file_root = "output%08d.xml" % 0
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        if not Path(xml_file).is_file():
+            print("add_default_cell_vars(): ERROR: file not found",xml_file)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find file " + xml_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+
+        # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
+        num_keys = len(mcds.data['discrete_cells']['data'].keys())
+        print("plot_tab: add_default_cell_vars(): num_keys=",num_keys)
+        keys_l = list(mcds.data['discrete_cells']['data'])
+        print("plot_tab: add_default_cell_vars(): keys_l=",keys_l)
+        # for idx in range(num_keys-1,0,-1):
+        #     if "transformation_rates" in keys_l[idx]:
+        #         print("found transformation_rates at index=",idx)
+        #         break
+        # idx1 = idx + 1
+
+        for idx in range(0, len(keys_l)):
+            # print("------ add: ",keys_l[idx])
+            self.cell_scalar_combobox.addItem(keys_l[idx])
+
+        self.disable_cell_scalar_cb = False
+
+        self.update_plots()
+
 
     def append_custom_cb(self):
-        self.add_default_cell_vars()
+        print("\n\n------append_custom_cb(): -------\n")
+        # self.add_default_cell_vars()
 
         # Add all custom vars. Hack.
         xml_file_root = "output%08d.xml" % 0
@@ -1582,17 +1668,17 @@ class Vis(QWidget):
 
         # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
         num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        # print("plot_tab: append_custom_cb(): num_keys=",num_keys)
+        print("plot_tab: append_custom_cb(): num_keys=",num_keys)
         keys_l = list(mcds.data['discrete_cells']['data'])
-        # print("plot_tab: append_custom_cb(): keys_l=",keys_l)
+        print("plot_tab: append_custom_cb(): keys_l=",keys_l)
         for idx in range(num_keys-1,0,-1):
             if "transformation_rates" in keys_l[idx]:
-                # print("found transformation_rates at index=",idx)
+                print("found transformation_rates at index=",idx)
                 break
         idx1 = idx + 1
 
         for idx in range(idx1, len(keys_l)):
-            # print("------ add: ",keys_l[idx])
+            print("------ add: ",keys_l[idx])
             self.cell_scalar_combobox.addItem(keys_l[idx])
 
         self.disable_cell_scalar_cb = False
