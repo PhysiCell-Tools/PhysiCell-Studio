@@ -570,7 +570,7 @@ class Vis(QWidget):
         self.vbox.addLayout(hbox)
 
         # self.custom_button = QPushButton("append custom data")
-        self.custom_button = QPushButton("repopulate")
+        self.custom_button = QPushButton("refresh")
         self.custom_button.setFixedWidth(150)
         self.custom_button.setEnabled(True)
         # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
@@ -1131,7 +1131,7 @@ class Vis(QWidget):
                 self.cax2 = None
 
         else:
-            self.add_default_cell_vars()   # rwh: just do once? Nah, but add a repopulate button
+            self.add_default_cell_vars()   # rwh: just do once? Nah, but add a "refresh" button
 
             self.plot_cells_svg = False
             # self.custom_button.setEnabled(True)
@@ -2305,7 +2305,7 @@ class Vis(QWidget):
                 print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
                 msgBox = QMessageBox()
                 msgBox.setIcon(QMessageBox.Information)
-                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You probably need to repopulate the cell scalar dropdown combobox."
+                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You probably need to refresh the cell scalar dropdown combobox."
                 msgBox.setText(msg)
                 msgBox.setStandardButtons(QMessageBox.Ok)
                 msgBox.exec()
