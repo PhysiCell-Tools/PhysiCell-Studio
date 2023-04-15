@@ -77,47 +77,49 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
         self.setStyleSheet(checkbox_style)
 
 #---------------------------
-class ExtendedCombo( QComboBox ):
-    def __init__( self,  parent = None):
-        super( ExtendedCombo, self ).__init__( parent )
+class ExtendedComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super(ExtendedComboBox, self).__init__(parent)
 
-        self.setFocusPolicy( Qt.StrongFocus )
-        self.setEditable( True )
-        self.completer = QCompleter( self )
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setEditable(True)
 
-        # always show all completions
-        self.completer.setCompletionMode( QCompleter.UnfilteredPopupCompletion )
-        self.pFilterModel = QSortFilterProxyModel( self )
-        self.pFilterModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
+        # add a filter model to filter matching items
+        self.pFilterModel = QSortFilterProxyModel(self)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.pFilterModel.setSourceModel(self.model())
 
-        self.completer.setPopup( self.view() )
+        # add a completer, which uses the filter model
+        self.completer = QCompleter(self.pFilterModel, self)
+        # always show all (filtered) completions
+        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        self.setCompleter(self.completer)
 
-        self.setCompleter( self.completer )
+        # connect signals
+        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)
+        self.completer.activated.connect(self.on_completer_activated)
 
-        # self.lineEdit().textEdited[unicode].connect( self.pFilterModel.setFilterFixedString )
-        self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
-        self.completer.activated.connect(self.setTextIfCompleterIsClicked)
 
-    def setModel( self, model ):
-        super(ExtendedCombo, self).setModel( model )
-        self.pFilterModel.setSourceModel( model )
+    # on selection of an item from the completer, select the corresponding item from combobox 
+    def on_completer_activated(self, text):
+        if text:
+            index = self.findText(text)
+            self.setCurrentIndex(index)
+            self.activated[str].emit(self.itemText(index))
+
+
+    # on model change, update the models of the filter and completer as well 
+    def setModel(self, model):
+        super(ExtendedComboBox, self).setModel(model)
+        self.pFilterModel.setSourceModel(model)
         self.completer.setModel(self.pFilterModel)
 
-    def setModelColumn( self, column ):
-        self.completer.setCompletionColumn( column )
-        self.pFilterModel.setFilterKeyColumn( column )
-        super(ExtendedCombo, self).setModelColumn( column )
 
-    def view( self ):
-        return self.completer.popup()
-
-    def index( self ):
-        return self.currentIndex()
-
-    def setTextIfCompleterIsClicked(self, text):
-      if text:
-        index = self.findText(text)
-        self.setCurrentIndex(index)
+    # on model column change, update the model column of the filter and completer as well
+    def setModelColumn(self, column):
+        self.completer.setCompletionColumn(column)
+        self.pFilterModel.setFilterKeyColumn(column)
+        super(ExtendedComboBox, self).setModelColumn(column)    
 
 #---------------------------
 class SvgWidget(QSvgWidget):
@@ -526,7 +528,7 @@ class Vis(QWidget):
 
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
-        self.cell_scalar_combobox = ExtendedCombo()
+        self.cell_scalar_combobox = ExtendedComboBox()
         self.cell_scalar_combobox.setFixedWidth(270)
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
@@ -556,12 +558,15 @@ class Vis(QWidget):
         self.vbox.addLayout(hbox)
 
         # self.custom_button = QPushButton("append custom data")
-        # self.custom_button.setFixedWidth(150)
-        # self.custom_button.setEnabled(False)
-        # # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        # # self.play_button.clicked.connect(self.play_plot_cb)
+        self.custom_button = QPushButton("repopulate")
+        self.custom_button.setFixedWidth(150)
+        self.custom_button.setEnabled(True)
+        # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # self.play_button.clicked.connect(self.play_plot_cb)
         # self.custom_button.clicked.connect(self.append_custom_cb)
-        # self.vbox.addWidget(self.custom_button)
+        self.custom_button.clicked.connect(self.add_default_cell_vars)
+        self.vbox.addWidget(self.custom_button)
+        
 
         #------------------
         self.vbox.addWidget(QHLine())
@@ -1113,7 +1118,7 @@ class Vis(QWidget):
                 self.cax2 = None
 
         else:
-            self.add_default_cell_vars()   # rwh: just do once!
+            self.add_default_cell_vars()   # rwh: just do once? Nah, but add a repopulate button
 
             self.plot_cells_svg = False
             # self.custom_button.setEnabled(True)
