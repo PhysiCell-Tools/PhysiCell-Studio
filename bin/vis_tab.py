@@ -1646,6 +1646,8 @@ class Vis(QWidget):
 
         for idx in range(0, len(keys_l)):
             # print("------ add: ",keys_l[idx])
+            if keys_l[idx] == "ID":
+                continue
             self.cell_scalar_combobox.addItem(keys_l[idx])
 
         self.disable_cell_scalar_cb = False
