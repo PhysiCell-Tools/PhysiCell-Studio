@@ -151,6 +151,8 @@ class Vis(QWidget):
         self.celltype_color = []
 
         self.cell_scalars_l = []
+        self.cell_scalar_min = 0.0
+        self.cell_scalar_max = 1.0
 
         self.axes_actor = None
         self.show_xy_slice = True
@@ -168,50 +170,31 @@ class Vis(QWidget):
         self.lut_viridis = self.get_viridis_map()
         self.lut_ylorrd = self.get_ylorrd_map()
         # self.lut_substrate = self.get_jet_map()
-        self.lut_substrate = self.lut_jet
 
-        # VTK pipeline
+        self.lut_substrate = self.lut_jet
+        self.lut_cells = self.lut_jet
+
+        # -------------  VTK pipeline  --------------
+        #------  Setup for the cells (rendered as 3D glyphs (spheres))
         self.points = vtkPoints()
 
-        # self.cellID = vtkFloatArray()
-        # self.cellID.SetName("ID")
-
-        # self.cellVolume = vtkFloatArray()
-        # self.cellVolume.SetName("volume")
-
         self.radii = vtkFloatArray()
-        # self.radii.InsertNextValue(1.0)
-        # self.radii.InsertNextValue(0.1)
-        # self.radii.InsertNextValue(0.2)
         self.radii.SetName("radius")
 
-        # define the colours for the spheres
+        # define the colors for the spheres
         self.tags = vtkFloatArray()
-        # self.tags.InsertNextValue(1.0)
-        # self.tags.InsertNextValue(0.5)
-        # self.tags.InsertNextValue(0.7)
         self.tags.SetName("tag")
 
         self.cell_data = vtkFloatArray()
         self.cell_data.SetNumberOfComponents(2)
-        # self.cell_data.SetNumberOfComponents(1)
-        # self.cell_data.SetNumberOfTuples(3)
-        # self.cell_data.CopyComponent(0, self.radii, 0)
-        # self.cell_data.CopyComponent(1, self.tags, 0)
         self.cell_data.SetName("cell_data")
 
-        # construct the grid
+        # construct the unstruct "grid" to contain the cell info
         self.ugrid = vtkUnstructuredGrid()
         self.ugrid.SetPoints(self.points)
         self.ugrid.GetPointData().AddArray(self.cell_data)
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
-
-        # self.polydata = vtkPolyData()
-        # self.colors = vtkUnsignedCharArray()
-        # self.colors.SetNumberOfComponents(3)
-
-        # self.polydata.GetPointData().SetScalars(self.colors)
         self.sphereSource = vtkSphereSource()
         nres = 20
         self.sphereSource.SetPhiResolution(nres)
@@ -226,28 +209,16 @@ class Vis(QWidget):
         self.glyph.SetScaleFactor(1.0)
         self.glyph.SetColorModeToColorByScalar()
 
-        # self.glyph.SetInputData(self.polydata)
-        # self.glyph.SetColorModeToColorByScalar()
-        # glyph.SetScaleModeToScaleByScalar()
-
-        # using these 2 results in fixed size spheres
-        # self.glyph.SetScaleModeToDataScalingOff()  # results in super tiny spheres without 'ScaleFactor'
-        # glyph.SetScaleFactor(170)  # overall (multiplicative) scaling factor
-        # self.glyph.SetScaleFactor(100)  # overall (multiplicative) scaling factor
-
         self.cells_mapper = vtkPolyDataMapper()
         self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
         # self.cells_mapper.ScalarVisibilityOff()
         self.cells_mapper.ScalarVisibilityOn()
+        self.cells_mapper.SetLookupTable(self.lut_cells)
+        # self.cells_mapper.SetScalarRange(0., 1.)
         self.cells_mapper.ColorByArrayComponent("cell_data", 1)
 
         self.cells_actor = vtkActor()
         self.cells_actor.SetMapper(self.cells_mapper)
-        # self.cells_actor.GetProperty().SetColor(178, 190, 181)  # gray
-        # self.cells_actor.GetProperty().SetColor( 255, 0, 0)
-        # self.cells_actor.GetProperty().SetColor(178, 190, 181)
-        # self.cells_actor.GetProperty().SetInterpolationToPBR()
-        # actor.GetProperty().SetColor(colors.GetColor3d('Salmon'))
         print("-- actor defaults:")
         print("-- ambient:",self.cells_actor.GetProperty().GetAmbient())  # 
         print("-- diffuse:",self.cells_actor.GetProperty().GetDiffuse())  # 1.0
@@ -258,47 +229,31 @@ class Vis(QWidget):
         # self.cells_actor.GetProperty().SetSpecular(0.2)
 
 
-        #------
+        #-----------  Now setup for the substrate ----------------
         self.substrate_data = vtkStructuredPoints()
         self.field_index = 0 
-        # self.substrate_voxel_scalars = vtkFloatArray()
-        # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
-        # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
         self.substrate_mapper = vtkDataSetMapper()
         self.substrate_mapper.SetInputData(self.substrate_data)
-        # self.substrate_mapper.SetLookupTable(lut_heat)
         self.substrate_mapper.SetLookupTable(self.lut_substrate)
-        # self.substrate_mapper.SetLookupTable(cmap='viridis')
         self.substrate_mapper.SetScalarModeToUseCellData()
-        # self.substrate_mapper.SetScalarRange(0, 33)
 
         self.substrate_actor = vtkActor()
         self.substrate_actor.SetMapper(self.substrate_mapper)
-        # self.substrate_actor.GetProperty().SetAmbient(1.)
-
 
         #-----
         self.planeXY = vtkPlane()
-        # plane.SetOrigin(input.GetCenter())
-        # plane.SetOrigin(0,0,10)
         self.planeXY.SetOrigin(0,0,0)
-        # self.planeXY.SetOrigin(-30,-30,0)
         self.planeXY.SetNormal(0, 0, 1)
 
         # First create the usual cutter
         self.cutterXY = vtkCutter()
-        # self.cutterXY.SetInputData(self.substrate_data)
-        # self.cutterXY.SetCutFunction(self.planeXY)
-        # self.cutterXY.GeneratePolygons = 1
 
         self.cutterXYMapper = vtkPolyDataMapper()
         self.cutterXYMapper.SetInputConnection(self.cutterXY.GetOutputPort())
         self.cutterXYMapper.ScalarVisibilityOn()
         self.cutterXYMapper.SetLookupTable(self.lut_substrate)
         self.cutterXYMapper.SetScalarModeToUseCellData()
-        # self.cutterXYMapper.SetScalarModeToUsePointData()
-        #self.cutterMapper.SetScalarRange(0, vmax)
 
         self.cutterXYActor = vtkActor()
         self.cutterXYActor.SetMapper(self.cutterXYMapper)
@@ -321,7 +276,6 @@ class Vis(QWidget):
         self.cutterYZMapper = vtkPolyDataMapper()
         self.cutterYZMapper.SetInputConnection(self.cutterYZ.GetOutputPort())
         self.cutterYZMapper.ScalarVisibilityOn()
-        # lut = self.get_heat_map()
         self.cutterYZMapper.SetLookupTable(self.lut_substrate)
         self.cutterYZMapper.SetScalarModeToUseCellData()
 
@@ -338,7 +292,6 @@ class Vis(QWidget):
         self.cutterXZMapper = vtkPolyDataMapper()
         self.cutterXZMapper.SetInputConnection(self.cutterXZ.GetOutputPort())
         self.cutterXZMapper.ScalarVisibilityOn()
-        # lut = self.get_heat_map()
         self.cutterXZMapper.SetLookupTable(self.lut_substrate)
         self.cutterXZMapper.SetScalarModeToUseCellData()
 
@@ -372,44 +325,29 @@ class Vis(QWidget):
         self.clipYZ = vtkClipPolyData()
         self.clipXZ = vtkClipPolyData()
 
-        # self.clipXYMapper = vtkPolyDataMapper()
-        # self.clipXYMapper.SetInputConnection(self.clipXY.GetOutputPort())
-
-        # self.clipXYActor = vtkActor()
-        # self.clipXYActor.SetMapper(self.clipXYMapper)
-
         #-----
         # -- For substrate
-        self.scalarBar = vtkScalarBarActor()
-        # self.scalarBar.SetTitle("oxygen")
-        self.scalarBar.SetTitle("substrate")
-        self.scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-        # self.scalarBar.GetPositionCoordinate().SetValue(0.1,0.01)
-        self.scalarBar.GetPositionCoordinate().SetValue(0.01,0.10)
-        self.scalarBar.UnconstrainedFontSizeOn()
-        # self.scalarBar.SetOrientationToHorizontal()
-        self.scalarBar.SetOrientationToVertical()
-        self.scalarBar.SetWidth(0.08)
-        self.scalarBar.SetHeight(0.8)
-        # Test the Get/Set Position
-        # self.scalarBar.SetPosition(self.scalarBar.GetPosition())
-        self.scalarBar.GetProperty().SetColor(0,0,0)
-        self.scalarBar.GetTitleTextProperty().SetColor(0,0,0)
+        self.scalar_bar_substrate = vtkScalarBarActor()
+        self.scalar_bar_substrate.SetTitle("substrate")
+        self.scalar_bar_substrate.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.scalar_bar_substrate.GetPositionCoordinate().SetValue(0.01,0.10)
+        self.scalar_bar_substrate.UnconstrainedFontSizeOn()
+        self.scalar_bar_substrate.SetOrientationToVertical()
+        self.scalar_bar_substrate.SetWidth(0.08)
+        self.scalar_bar_substrate.SetHeight(0.8)
+        self.scalar_bar_substrate.GetProperty().SetColor(0,0,0)
+        self.scalar_bar_substrate.GetTitleTextProperty().SetColor(0,0,0)
 
         #-----
         # -- For cells' scalars
         self.scalar_bar_cells = vtkScalarBarActor()
         self.scalar_bar_cells.SetTitle("substrate")
         self.scalar_bar_cells.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-        # self.scalar_bar_cells.GetPositionCoordinate().SetValue(0.1,0.01)
         self.scalar_bar_cells.GetPositionCoordinate().SetValue(0.10,0.01)
         self.scalar_bar_cells.UnconstrainedFontSizeOn()
         self.scalar_bar_cells.SetOrientationToHorizontal()
-        # self.scalar_bar_cells.SetOrientationToVertical()
         self.scalar_bar_cells.SetWidth(0.8)
         self.scalar_bar_cells.SetHeight(0.08)
-        # Test the Get/Set Position
-        # self.scalar_bar_cells.SetPosition(self.scalar_bar_cells.GetPosition())
         self.scalar_bar_cells.GetProperty().SetColor(0,0,0)
         self.scalar_bar_cells.GetTitleTextProperty().SetColor(0,0,0)
 
@@ -851,8 +789,10 @@ class Vis(QWidget):
         # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
-        self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
-        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        # self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
+        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
+
 
         #==================================================================
         self.scroll_plot.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -1410,7 +1350,97 @@ class Vis(QWidget):
 
         self.update_plots()
 
+    #-----------
+    # def cell_scalar_range(self):
+    #     print("   cell_scalar_range():  -----")
+    #     xml_pattern = self.output_dir + "/" + "output*.xml"
+    #     xml_files = glob.glob(xml_pattern)
+    #     # print(xml_files)
+    #     num_xml = len(xml_files)
+    #     print("   num_xml= ",num_xml)
+    #     if num_xml == 0:
+    #         print("last_plot_cb(): WARNING: no output*.xml files present")
+    #         msgBox = QMessageBox()
+    #         msgBox.setIcon(QMessageBox.Information)
+    #         msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
+    #         msgBox.setStandardButtons(QMessageBox.Ok)
+    #         msgBox.exec()
+    #         return
 
+    #     xml_files.sort()
+    #     # print("sorted: ",xml_files)
+
+    #     mcds = []
+    #     for fname in xml_files:
+    #         basename = os.path.basename(fname)
+    #         # print("basename= ",basename)
+    #         # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
+    #         mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
+
+
+    #-----------
+    def cell_scalar_combobox_changed_cb(self,idx):
+        print("----- vis3D_tab.py: cell_scalar_combobox_changed_cb: idx = ",idx)
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        choice = self.cell_scalar_combobox.currentText()
+        print("    choice= ", choice)
+        if len(choice) == 0:
+            return
+
+        xml_files = glob.glob(self.output_dir+'/output*.xml')  # cross-platform OK?
+        print('xml_files = ',xml_files)
+        # xml_files = Path(self.output_dir, "initial.xml")
+        if len(xml_files) == 0:
+            return
+        # xml_files.sort()
+        # svg_files = glob.glob('snapshot*.svg')
+        # svg_files.sort()
+        print('xml_files = ',xml_files)
+
+        # xml_file = "output%08d.xml" % frame
+        # print("plot_cells3D: xml_file = ",xml_file)
+        # full_fname = os.path.join(self.output_dir, xml_file)
+        # if not os.path.exists(full_fname):
+        #     return
+
+        print("  pyMCDS reading info from ",xml_files)
+
+        self.cell_scalar_min = 1.e9
+        self.cell_scalar_max = -self.cell_scalar_min
+        for frame in range(len(xml_files)):
+            xml_file = "output%08d.xml" % frame
+            mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=True)
+            scalar_data = mcds.data['discrete_cells']['data'][choice]
+            smin = scalar_data.min()
+            smax = scalar_data.max()
+            if smin < self.cell_scalar_min:
+                self.cell_scalar_min = smin
+            if smax > self.cell_scalar_max:
+                self.cell_scalar_max = smax
+
+        print("    min,max= ",self.cell_scalar_min,', ',self.cell_scalar_max)
+
+        self.update_plots()
+
+
+    def cell_scalar_cbar_combobox_changed_cb(self,idx):
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        cbar_name = self.cell_scalar_cbar_combobox.currentText()
+        print("\n>---------------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+        if cbar_name.find("jet") >= 0:
+            print(" -------  cbar_name=  jet_map")
+            self.lut_cells = self.lut_jet
+        elif cbar_name.find("viridis") >= 0:
+            print(" -------  cbar_name=  viridis_map")
+            self.lut_cells = self.lut_viridis
+        elif cbar_name.find("YlOrRd") >= 0:
+            print(" -------  cbar_name=  ylorrd")
+            self.lut_cells = self.lut_ylorrd
+
+        self.update_plots()
+
+
+    #--------------------------
     def open_directory_cb(self):
         dialog = QFileDialog()
         # self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
@@ -1996,6 +2026,7 @@ class Vis(QWidget):
 
         return lut
 
+    # discrete color map
     def get_cell_type_colors_lut(self, num_cell_types):
         # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
         print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
@@ -2098,19 +2129,22 @@ class Vis(QWidget):
             print("\n------- cell_scalar_str= ",cell_scalar_str)
             self.scalar_bar_cells.SetTitle(cell_scalar_str)
             # cell_type = mcds.data['discrete_cells']['data']['cell_type']
-            cell_type = mcds.data['discrete_cells']['data'][cell_scalar_str]
+            cell_scalar_val = mcds.data['discrete_cells']['data'][cell_scalar_str]
             # print(type(cell_type))
             # print(cell_type)
-            unique_cell_type = np.unique(cell_type)
-            num_cell_types = len(unique_cell_type)
-            print("\nunique_cell_type = ",unique_cell_type )
-            print("num_cell_types= ",num_cell_types)
 
-            # lut = self.get_diverging_lut1()
-            lut = self.get_cell_type_colors_lut(num_cell_types)
-            self.cells_mapper.SetLookupTable(lut)
-            # mapper_POINT_CLOUD.SetLookupTable(lookupTable)
-            # scalarBar.SetLookupTable(lookupTable)
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
+            if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
+                unique_cell_type = np.unique(cell_scalar_val)
+                self.num_discrete_cell_val = len(unique_cell_type)
+                print("\nunique_cell_type = ",unique_cell_type )
+                print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
+
+                # lut = self.get_diverging_lut1()
+                lut = self.get_cell_type_colors_lut(self.num_discrete_cell_val)
+                self.cells_mapper.SetLookupTable(lut)
+            else:
+                self.cells_mapper.SetLookupTable(self.lut_viridis)
 
             #------------
             # colors = vtkNamedColors()
@@ -2146,7 +2180,8 @@ class Vis(QWidget):
 
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
                 # print("idx, cell_type[idx]= ",idx,cell_type[idx])
-                self.tags.InsertNextValue(cell_type[idx])
+                # self.tags.InsertNextValue(cell_type[idx])
+                self.tags.InsertNextValue(cell_scalar_val[idx])
 
             self.cell_data.CopyComponent(0, self.radii, 0)
             self.cell_data.CopyComponent(1, self.tags, 0)
@@ -2186,9 +2221,11 @@ class Vis(QWidget):
             # self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
             print("glyph range= ",self.glyph.GetRange())
-            print("num_cell_types= ",num_cell_types)
+            # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
-            self.cells_mapper.SetScalarRange(0,num_cell_types)
+            # self.cells_mapper.SetScalarRange(0,num_cell_types)
+            self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
+            print("--- set cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
 
@@ -2254,8 +2291,8 @@ class Vis(QWidget):
             print("plot_cells3D(): self.substrate_name= ",self.substrate_name)
             # sub_name = mcds.get_substrate_names()[0]
             # sub_name = mcds.get_substrate_names()[self.field_index]  # NOoo!
-            # self.scalarBar.SetTitle(sub_name)
-            self.scalarBar.SetTitle(self.substrate_name)
+            # self.scalar_bar_substrate.SetTitle(sub_name)
+            self.scalar_bar_substrate.SetTitle(self.substrate_name)
             # sub_dict = mcds.data['continuum_variables'][sub_name]
             if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
                 print(f" ---  ERROR: substrate={self.substrate_name} is not valid.")
@@ -2363,10 +2400,10 @@ class Vis(QWidget):
             #     print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
             # if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
-            #     self.ren.RemoveActor2D(self.scalarBar)
-            #     self.ren.AddActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
+            #     self.ren.AddActor2D(self.scalar_bar_substrate)
             # else:
-            #     self.ren.RemoveActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
             if self.show_voxels:
                 self.ren.RemoveActor(self.substrate_actor)
@@ -2378,13 +2415,13 @@ class Vis(QWidget):
 
                 # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
                 self.ren.AddActor(self.substrate_actor)
-                self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
+                self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
             if self.show_xy_slice:
                 # self.ren.RemoveActor(self.substrate_actor)
                 self.ren.RemoveActor(self.cutterXYActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterXY.SetInputData(self.substrate_data)
                 # self.cutterXY.SetInputData(self.glyph.GetOutput())
@@ -2419,16 +2456,16 @@ class Vis(QWidget):
                 # self.ren.AddActor(self.cutterXYEdgesActor)
 
                 #-------------------
-                self.scalarBar.SetLookupTable(self.cutterXYMapper.GetLookupTable())
-                # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
+                self.scalar_bar_substrate.SetLookupTable(self.cutterXYMapper.GetLookupTable())
+                # self.scalar_bar_substrate.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
 
-                # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                # self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
 
             if self.show_yz_slice:
                 self.ren.RemoveActor(self.cutterYZActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterYZ.SetInputData(self.substrate_data)
                 self.planeYZ.SetOrigin(0,y0,z0)
@@ -2446,12 +2483,12 @@ class Vis(QWidget):
                 # self.cutterYZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterYZActor)
-                self.scalarBar.SetLookupTable(self.cutterYZMapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                self.scalar_bar_substrate.SetLookupTable(self.cutterYZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
             if self.show_xz_slice:
                 self.ren.RemoveActor(self.cutterXZActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterXZ.SetInputData(self.substrate_data)
                 self.planeXZ.SetOrigin(x0,0,z0)
@@ -2469,8 +2506,8 @@ class Vis(QWidget):
                 # self.cutterXZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterXZActor)
-                self.scalarBar.SetLookupTable(self.cutterXZMapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                self.scalar_bar_substrate.SetLookupTable(self.cutterXZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
 
             #-------------------
@@ -2491,13 +2528,13 @@ class Vis(QWidget):
             self.ren.AddActor(self.domain_outline_actor)
 
 
-            self.ren.RemoveActor2D(self.scalarBar)
+            self.ren.RemoveActor2D(self.scalar_bar_substrate)
             if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
-                # self.ren.RemoveActor2D(self.scalarBar)
-                self.ren.AddActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
+                self.ren.AddActor2D(self.scalar_bar_substrate)
             # else:
-            #     self.ren.RemoveActor2D(self.scalarBar)
-            # self.ren.AddActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
+            # self.ren.AddActor2D(self.scalar_bar_substrate)
 
         else:
             self.ren.RemoveActor(self.substrate_actor)
@@ -2507,7 +2544,7 @@ class Vis(QWidget):
 
             # self.ren.RemoveActor(self.clipXYActor)
             self.ren.RemoveActor(self.domain_outline_actor)
-            self.ren.RemoveActor2D(self.scalarBar)
+            self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
 
 
