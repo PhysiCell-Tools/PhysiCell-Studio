@@ -59,13 +59,16 @@ class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
     def __init__(self):
         super(QLineEdit_color, self).__init__()
         # newtab.setStyleSheet("background-color: rgb(236,236,236)")
+
+        # argh, doesn't seem to work!
         style = """
-            QLineEdit {
+            QLineEdit:enabled {
                 color: black;
                 background-color: white; 
             }
             QLineEdit:disabled {
-                background-color: rgb(199,199,199);
+                color: black;
+                background-color: gray;
             }
             """
         self.setStyleSheet(style)
@@ -1777,6 +1780,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_trate01 = QLineEdit()
+        # self.apoptosis_trate01 = QLineEdit_color()
         self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
         self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1956,6 +1960,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #-------
         self.necrosis_group = QButtonGroup(self)
+        # self.necrosis_group = QGroupBox(self)
+        # self.necrosis_group.setStyleSheet('''
+        #     QGroupBox {
+        #         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+        #                                           stop: 0 #E0E0E0, stop: 1 #FFFFFF);
+        #         border: 2px solid #999999;
+        #         border-radius: 5px;
+        #         margin-top: 2ex;  /*leave space at the top for the title */
+        #         font-size: 13px;
+        #         color: black;
+        #     }
+        # ''')
+        # self.necrosis_group.setGeometry(QRect(10,10,100,100))
 
         self.necrosis_rb1 = QRadioButton("transition rate", self)  # OMG, leave "self"
         self.necrosis_rb1.toggled.connect(self.necrosis_phase_transition_cb)
@@ -2213,21 +2230,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'apoptosis_phase_transition_cb: --> duration')
             self.apoptosis_duration_flag = True
             self.apoptosis_trate01.setReadOnly(True)
-            # self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
+            self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
             self.apoptosis_trate01_fixed.setEnabled(False)
 
             self.apoptosis_phase0_duration.setReadOnly(False)
-            # self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
+            self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
             self.apoptosis_phase0_duration_fixed.setEnabled(True)
         else:  # transition rates
             logging.debug(f'apoptosis_phase_transition_cb: NOT duration')
             self.apoptosis_duration_flag = False
             self.apoptosis_phase0_duration.setReadOnly(True)
-            # self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
+            self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
             self.apoptosis_phase0_duration_fixed.setEnabled(False)
 
             self.apoptosis_trate01.setReadOnly(False)
-            # self.apoptosis_trate01.setStyleSheet("background-color: white")  
+            self.apoptosis_trate01.setStyleSheet("background-color: white")  
             self.apoptosis_trate01_fixed.setEnabled(True)
 
         self.param_d[self.current_cell_def]['apoptosis_duration_flag'] = self.apoptosis_duration_flag
@@ -2252,33 +2269,33 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.necrosis_duration_flag = True
             # self.customize_cycle_choices()
             self.necrosis_trate01.setReadOnly(True)
-            # self.necrosis_trate01.setStyleSheet("background-color: lightgray")
+            self.necrosis_trate01.setStyleSheet("background-color: lightgray")
             self.necrosis_trate01_fixed.setEnabled(False)
             self.necrosis_trate12.setReadOnly(True)
-            # self.necrosis_trate12.setStyleSheet("background-color: lightgray")
+            self.necrosis_trate12.setStyleSheet("background-color: lightgray")
             self.necrosis_trate12_fixed.setEnabled(False)
 
             self.necrosis_phase0_duration.setReadOnly(False)
-            # self.necrosis_phase0_duration.setStyleSheet("background-color: white")
+            self.necrosis_phase0_duration.setStyleSheet("background-color: white")
             self.necrosis_phase0_duration_fixed.setEnabled(True)
             self.necrosis_phase1_duration.setReadOnly(False)
-            # self.necrosis_phase1_duration.setStyleSheet("background-color: white")
+            self.necrosis_phase1_duration.setStyleSheet("background-color: white")
             self.necrosis_phase1_duration_fixed.setEnabled(True)
         else:  # transition rates
             logging.debug(f'necrosis_phase_transition_cb: NOT duration')
             self.necrosis_duration_flag = False
             self.necrosis_phase0_duration.setReadOnly(True)
-            # self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
             self.necrosis_phase0_duration_fixed.setEnabled(False)
             self.necrosis_phase1_duration.setReadOnly(True)
-            # self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
             self.necrosis_phase1_duration_fixed.setEnabled(False)
 
             self.necrosis_trate01.setReadOnly(False)
-            # self.necrosis_trate01.setStyleSheet("background-color: white")  
+            self.necrosis_trate01.setStyleSheet("background-color: white")  
             self.necrosis_trate01_fixed.setEnabled(True)
             self.necrosis_trate12.setReadOnly(False)
-            # self.necrosis_trate12.setStyleSheet("background-color: white")  
+            self.necrosis_trate12.setStyleSheet("background-color: white")  
             self.necrosis_trate12_fixed.setEnabled(True)
             # self.customize_cycle_choices()
             # pass

@@ -21,6 +21,9 @@ import glob
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from PyQt5.QtCore import QRectF, Qt
+from PyQt5.QtWidgets import QCompleter, QSizePolicy
+from PyQt5.QtCore import QSortFilterProxyModel
 
 import numpy as np
 import scipy.io
@@ -30,6 +33,60 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+
+#---------------------------
+class ExtendedComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super(ExtendedComboBox, self).__init__(parent)
+
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setEditable(True)  # necessary to use lineEdit().textEdited filter below; can't be False
+
+        # add a filter model to filter matching items
+        self.pFilterModel = QSortFilterProxyModel(self)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.pFilterModel.setSourceModel(self.model())
+
+        # add a completer, which uses the filter model
+        self.completer = QCompleter(self.pFilterModel, self)
+        # always show all (filtered) completions
+        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        self.setCompleter(self.completer)
+
+        # connect signals
+        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)  # necessary to show filtered items
+        self.completer.activated.connect(self.on_completer_activated)
+
+
+    # Tried/failed to override this method to avoid adding a bogus variable name in search bar at top of combobox
+    # def addItem(self, text):
+    #     print("addItem():  avoid adding text=",text)
+        # items = [self.itemText(i) for i in range(self.count())]  # argh, there's really no method for this?
+            # super().addItem(text)
+
+    # on selection of an item from the completer, select the corresponding item from combobox 
+    def on_completer_activated(self, text):
+        print("\n--- on_completer_activated():  text= ",text)
+        if text:
+            index = self.findText(text)
+            print("on_completer_activated(): index= ",index)
+            self.setCurrentIndex(index)
+            self.activated[str].emit(self.itemText(index))
+
+
+    # on model change, update the models of the filter and completer as well 
+    # def setModel(self, model):
+    #     super(ExtendedComboBox, self).setModel(model)
+    #     self.pFilterModel.setSourceModel(model)
+    #     self.completer.setModel(self.pFilterModel)
+
+
+    # on model column change, update the model column of the filter and completer as well
+    # def setModelColumn(self, column):
+    #     self.completer.setCompletionColumn(column)
+    #     self.pFilterModel.setFilterKeyColumn(column)
+    #     super(ExtendedComboBox, self).setModelColumn(column)    
+
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
@@ -77,11 +134,14 @@ class QHLine(QFrame):
         # self.setFrameShadow(QFrame.Plain)
         # self.setStyleSheet("border:1px solid black")
 
+#---------------------------------------------------------------
 class Vis(QWidget):
 
     def __init__(self, nanohub_flag, run_tab):
         super().__init__()
         # global self.config_params
+
+        self.vis2D = False
 
         self.config_tab = None
         self.run_tab = run_tab
@@ -89,6 +149,10 @@ class Vis(QWidget):
         self.population_plot = None
         self.celltype_name = []
         self.celltype_color = []
+
+        self.cell_scalars_l = []
+        self.cell_scalar_min = 0.0
+        self.cell_scalar_max = 1.0
 
         self.axes_actor = None
         self.show_xy_slice = True
@@ -106,50 +170,31 @@ class Vis(QWidget):
         self.lut_viridis = self.get_viridis_map()
         self.lut_ylorrd = self.get_ylorrd_map()
         # self.lut_substrate = self.get_jet_map()
-        self.lut_substrate = self.lut_jet
 
-        # VTK pipeline
+        self.lut_substrate = self.lut_jet
+        self.lut_cells = self.lut_jet
+
+        # -------------  VTK pipeline  --------------
+        #------  Setup for the cells (rendered as 3D glyphs (spheres))
         self.points = vtkPoints()
 
-        # self.cellID = vtkFloatArray()
-        # self.cellID.SetName("ID")
-
-        # self.cellVolume = vtkFloatArray()
-        # self.cellVolume.SetName("volume")
-
         self.radii = vtkFloatArray()
-        # self.radii.InsertNextValue(1.0)
-        # self.radii.InsertNextValue(0.1)
-        # self.radii.InsertNextValue(0.2)
         self.radii.SetName("radius")
 
-        # define the colours for the spheres
+        # define the colors for the spheres
         self.tags = vtkFloatArray()
-        # self.tags.InsertNextValue(1.0)
-        # self.tags.InsertNextValue(0.5)
-        # self.tags.InsertNextValue(0.7)
         self.tags.SetName("tag")
 
         self.cell_data = vtkFloatArray()
         self.cell_data.SetNumberOfComponents(2)
-        # self.cell_data.SetNumberOfComponents(1)
-        # self.cell_data.SetNumberOfTuples(3)
-        # self.cell_data.CopyComponent(0, self.radii, 0)
-        # self.cell_data.CopyComponent(1, self.tags, 0)
         self.cell_data.SetName("cell_data")
 
-        # construct the grid
+        # construct the unstruct "grid" to contain the cell info
         self.ugrid = vtkUnstructuredGrid()
         self.ugrid.SetPoints(self.points)
         self.ugrid.GetPointData().AddArray(self.cell_data)
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
-
-        # self.polydata = vtkPolyData()
-        # self.colors = vtkUnsignedCharArray()
-        # self.colors.SetNumberOfComponents(3)
-
-        # self.polydata.GetPointData().SetScalars(self.colors)
         self.sphereSource = vtkSphereSource()
         nres = 20
         self.sphereSource.SetPhiResolution(nres)
@@ -164,28 +209,16 @@ class Vis(QWidget):
         self.glyph.SetScaleFactor(1.0)
         self.glyph.SetColorModeToColorByScalar()
 
-        # self.glyph.SetInputData(self.polydata)
-        # self.glyph.SetColorModeToColorByScalar()
-        # glyph.SetScaleModeToScaleByScalar()
-
-        # using these 2 results in fixed size spheres
-        # self.glyph.SetScaleModeToDataScalingOff()  # results in super tiny spheres without 'ScaleFactor'
-        # glyph.SetScaleFactor(170)  # overall (multiplicative) scaling factor
-        # self.glyph.SetScaleFactor(100)  # overall (multiplicative) scaling factor
-
         self.cells_mapper = vtkPolyDataMapper()
         self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
         # self.cells_mapper.ScalarVisibilityOff()
         self.cells_mapper.ScalarVisibilityOn()
+        self.cells_mapper.SetLookupTable(self.lut_cells)
+        # self.cells_mapper.SetScalarRange(0., 1.)
         self.cells_mapper.ColorByArrayComponent("cell_data", 1)
 
         self.cells_actor = vtkActor()
         self.cells_actor.SetMapper(self.cells_mapper)
-        # self.cells_actor.GetProperty().SetColor(178, 190, 181)  # gray
-        # self.cells_actor.GetProperty().SetColor( 255, 0, 0)
-        # self.cells_actor.GetProperty().SetColor(178, 190, 181)
-        # self.cells_actor.GetProperty().SetInterpolationToPBR()
-        # actor.GetProperty().SetColor(colors.GetColor3d('Salmon'))
         print("-- actor defaults:")
         print("-- ambient:",self.cells_actor.GetProperty().GetAmbient())  # 
         print("-- diffuse:",self.cells_actor.GetProperty().GetDiffuse())  # 1.0
@@ -196,47 +229,31 @@ class Vis(QWidget):
         # self.cells_actor.GetProperty().SetSpecular(0.2)
 
 
-        #------
+        #-----------  Now setup for the substrate ----------------
         self.substrate_data = vtkStructuredPoints()
         self.field_index = 0 
-        # self.substrate_voxel_scalars = vtkFloatArray()
-        # self.substrate_data.GetPointData().SetScalars( self.substrate_voxel_scalars )
-        # self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
 
         self.substrate_mapper = vtkDataSetMapper()
         self.substrate_mapper.SetInputData(self.substrate_data)
-        # self.substrate_mapper.SetLookupTable(lut_heat)
         self.substrate_mapper.SetLookupTable(self.lut_substrate)
-        # self.substrate_mapper.SetLookupTable(cmap='viridis')
         self.substrate_mapper.SetScalarModeToUseCellData()
-        # self.substrate_mapper.SetScalarRange(0, 33)
 
         self.substrate_actor = vtkActor()
         self.substrate_actor.SetMapper(self.substrate_mapper)
-        # self.substrate_actor.GetProperty().SetAmbient(1.)
-
 
         #-----
         self.planeXY = vtkPlane()
-        # plane.SetOrigin(input.GetCenter())
-        # plane.SetOrigin(0,0,10)
         self.planeXY.SetOrigin(0,0,0)
-        # self.planeXY.SetOrigin(-30,-30,0)
         self.planeXY.SetNormal(0, 0, 1)
 
         # First create the usual cutter
         self.cutterXY = vtkCutter()
-        # self.cutterXY.SetInputData(self.substrate_data)
-        # self.cutterXY.SetCutFunction(self.planeXY)
-        # self.cutterXY.GeneratePolygons = 1
 
         self.cutterXYMapper = vtkPolyDataMapper()
         self.cutterXYMapper.SetInputConnection(self.cutterXY.GetOutputPort())
         self.cutterXYMapper.ScalarVisibilityOn()
         self.cutterXYMapper.SetLookupTable(self.lut_substrate)
         self.cutterXYMapper.SetScalarModeToUseCellData()
-        # self.cutterXYMapper.SetScalarModeToUsePointData()
-        #self.cutterMapper.SetScalarRange(0, vmax)
 
         self.cutterXYActor = vtkActor()
         self.cutterXYActor.SetMapper(self.cutterXYMapper)
@@ -259,7 +276,6 @@ class Vis(QWidget):
         self.cutterYZMapper = vtkPolyDataMapper()
         self.cutterYZMapper.SetInputConnection(self.cutterYZ.GetOutputPort())
         self.cutterYZMapper.ScalarVisibilityOn()
-        # lut = self.get_heat_map()
         self.cutterYZMapper.SetLookupTable(self.lut_substrate)
         self.cutterYZMapper.SetScalarModeToUseCellData()
 
@@ -276,7 +292,6 @@ class Vis(QWidget):
         self.cutterXZMapper = vtkPolyDataMapper()
         self.cutterXZMapper.SetInputConnection(self.cutterXZ.GetOutputPort())
         self.cutterXZMapper.ScalarVisibilityOn()
-        # lut = self.get_heat_map()
         self.cutterXZMapper.SetLookupTable(self.lut_substrate)
         self.cutterXZMapper.SetScalarModeToUseCellData()
 
@@ -310,26 +325,31 @@ class Vis(QWidget):
         self.clipYZ = vtkClipPolyData()
         self.clipXZ = vtkClipPolyData()
 
-        # self.clipXYMapper = vtkPolyDataMapper()
-        # self.clipXYMapper.SetInputConnection(self.clipXY.GetOutputPort())
-
-        # self.clipXYActor = vtkActor()
-        # self.clipXYActor.SetMapper(self.clipXYMapper)
+        #-----
+        # -- For substrate
+        self.scalar_bar_substrate = vtkScalarBarActor()
+        self.scalar_bar_substrate.SetTitle("substrate")
+        self.scalar_bar_substrate.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.scalar_bar_substrate.GetPositionCoordinate().SetValue(0.01,0.10)
+        self.scalar_bar_substrate.UnconstrainedFontSizeOn()
+        self.scalar_bar_substrate.SetOrientationToVertical()
+        self.scalar_bar_substrate.SetWidth(0.08)
+        self.scalar_bar_substrate.SetHeight(0.8)
+        self.scalar_bar_substrate.GetProperty().SetColor(0,0,0)
+        self.scalar_bar_substrate.GetTitleTextProperty().SetColor(0,0,0)
 
         #-----
-        self.scalarBar = vtkScalarBarActor()
-        # self.scalarBar.SetTitle("oxygen")
-        self.scalarBar.SetTitle("substrate")
-        self.scalarBar.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-        self.scalarBar.GetPositionCoordinate().SetValue(0.1,0.01)
-        self.scalarBar.UnconstrainedFontSizeOn()
-        self.scalarBar.SetOrientationToHorizontal()
-        self.scalarBar.SetWidth(0.8)
-        self.scalarBar.SetHeight(0.1)
-        # Test the Get/Set Position
-        # self.scalarBar.SetPosition(self.scalarBar.GetPosition())
-        self.scalarBar.GetProperty().SetColor(0,0,0)
-        self.scalarBar.GetTitleTextProperty().SetColor(0,0,0)
+        # -- For cells' scalars
+        self.scalar_bar_cells = vtkScalarBarActor()
+        self.scalar_bar_cells.SetTitle("substrate")
+        self.scalar_bar_cells.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        self.scalar_bar_cells.GetPositionCoordinate().SetValue(0.10,0.01)
+        self.scalar_bar_cells.UnconstrainedFontSizeOn()
+        self.scalar_bar_cells.SetOrientationToHorizontal()
+        self.scalar_bar_cells.SetWidth(0.8)
+        self.scalar_bar_cells.SetHeight(0.08)
+        self.scalar_bar_cells.GetProperty().SetColor(0,0,0)
+        self.scalar_bar_cells.GetTitleTextProperty().SetColor(0,0,0)
 
         #-----
         self.domain_outline = vtkOutlineFilter()
@@ -478,6 +498,8 @@ class Vis(QWidget):
 
         self.create_vis_UI()
 
+    # Ugly, but for now, reproduce/copy this into both the 2D and 3D versions of the Plot (vis) tab.
+    # The self.vis2D flag will affect what's shown.
     def create_vis_UI(self):
 
         splitter = QSplitter()
@@ -551,27 +573,35 @@ class Vis(QWidget):
         self.cells_checked_flag = True
         hbox.addWidget(self.cells_checkbox) 
 
-        # groupbox = QGroupBox()
-        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-        # hbox2 = QHBoxLayout()
-        # groupbox.setLayout(hbox2)
-        self.cells_svg_rb = QRadioButton('.svg')
-        self.cells_svg_rb.setChecked(False)
-        self.cells_svg_rb.setEnabled(False)
-        self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
-        # hbox2.addWidget(self.cells_svg_rb)
-        hbox.addWidget(self.cells_svg_rb)
-        self.cells_mat_rb = QRadioButton('.mat')
-        self.cells_mat_rb.setChecked(True)
-        self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
-        hbox.addWidget(self.cells_mat_rb)
-        # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        # hbox.addLayout(hbox2) 
+        if self.vis2D:
+            # groupbox = QGroupBox()
+            # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
+            # hbox2 = QHBoxLayout()
+            # groupbox.setLayout(hbox2)
+            self.cells_svg_rb = QRadioButton('.svg')
+            self.cells_svg_rb.setChecked(True)
+            self.cells_svg_rb.setEnabled(True)
+            self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
+            # hbox2.addWidget(self.cells_svg_rb)
+            hbox.addWidget(self.cells_svg_rb)
+            self.cells_mat_rb = QRadioButton('.mat')
+            # self.cells_mat_rb.setChecked(True)
+            self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
+            hbox.addWidget(self.cells_mat_rb)
+            # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            # hbox.addLayout(hbox2) 
+
+            self.cells_edge_checkbox = QCheckBox_custom('edge')
+            self.cells_edge_checkbox.setChecked(True)
+            self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
+            self.cells_edge_checked_flag = True
+            hbox.addWidget(self.cells_edge_checkbox) 
 
         self.disable_cell_scalar_cb = False
-        self.cell_scalar_combobox = QComboBox()
-        # self.cell_scalar_combobox.setFixedWidth(300)
+        # self.cell_scalar_combobox = QComboBox()
+        self.cell_scalar_combobox = ExtendedComboBox()
+        self.cell_scalar_combobox.setFixedWidth(270)
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
@@ -587,26 +617,52 @@ class Vis(QWidget):
         self.vbox.addLayout(hbox)
         #------------------
         hbox = QHBoxLayout()
-        self.add_default_cell_vars()
+        # self.add_default_cell_vars()
         self.disable_cell_scalar_cb = False
         self.cell_scalar_combobox.setEnabled(True)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
+        self.vbox.addLayout(hbox)
 
+
+        # self.all_button = QPushButton("append custom data")
+        # self.all_button.setFixedWidth(150)
+        # # self.all_button.setStyleSheet("background-color : lightgreen")
+        # # self.play_button.clicked.connect(self.play_plot_cb)
+        # self.all_button.clicked.connect(self.append_custom_cb)
+        # self.vbox.addWidget(self.all_button)
+
+        hbox = QHBoxLayout()
+        self.all_button = QPushButton("all")   # old: refresh
+        self.all_button.setFixedWidth(100)
+        self.all_button.setEnabled(True)
+        # self.all_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # self.play_button.clicked.connect(self.play_plot_cb)
+        # self.all_button.clicked.connect(self.append_custom_cb)
+        self.all_button.clicked.connect(self.add_default_cell_vars)
+        hbox.addWidget(self.all_button)
+
+        self.limit_button = QPushButton("limit")
+        self.limit_button.setFixedWidth(100)
+        # self.limit_button.setEnabled(False)
+        self.limit_button.clicked.connect(self.add_limit_cell_vars)
+        hbox.addWidget(self.limit_button)
+
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
+        self.vbox.addLayout(hbox)
+
+        #-------
+        hbox = QHBoxLayout()
         self.cell_scalar_cbar_combobox = QComboBox()
+        self.cell_scalar_cbar_combobox .setFixedWidth(120)
         self.cell_scalar_cbar_combobox.addItem("jet")
         self.cell_scalar_cbar_combobox.addItem("viridis")
         self.cell_scalar_cbar_combobox.addItem("YlOrRd")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(True)  # for 3D
         hbox.addWidget(self.cell_scalar_cbar_combobox)
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
-
-        self.custom_button = QPushButton("append custom data")
-        self.custom_button.setFixedWidth(150)
-        # self.custom_button.setStyleSheet("background-color : lightgreen")
-        # self.play_button.clicked.connect(self.play_plot_cb)
-        self.custom_button.clicked.connect(self.append_custom_cb)
-        self.vbox.addWidget(self.custom_button)
 
         #------------------
         self.vbox.addWidget(QHLine())
@@ -733,8 +789,10 @@ class Vis(QWidget):
         # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
-        self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
-        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        # self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
+        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
+
 
         #==================================================================
         self.scroll_plot.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -979,7 +1037,7 @@ class Vis(QWidget):
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
-            self.custom_button.setEnabled(False)
+            self.all_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
@@ -990,52 +1048,95 @@ class Vis(QWidget):
 
         else:
             self.plot_cells_svg = False
-            self.custom_button.setEnabled(True)
+            self.all_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
+
     def add_default_cell_vars(self):
+        # print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
+
         self.disable_cell_scalar_cb = True
         self.cell_scalar_combobox.clear()
-        default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        for idx in range(len(default_var_l)):
-            self.cell_scalar_combobox.addItem(default_var_l[idx])
-        self.cell_scalar_combobox.insertSeparator(len(default_var_l))
 
+        # -- old way (limit choices)
+        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
+        # for idx in range(len(default_var_l)):
+        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
+        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
 
-    def append_custom_cb(self):
-        self.add_default_cell_vars()
-
-        # Add all custom vars. Hack.
         xml_file_root = "output%08d.xml" % 0
         xml_file = os.path.join(self.output_dir, xml_file_root)
         if not Path(xml_file).is_file():
-            print("append_custom_cb(): ERROR: file not found",xml_file)
+            print("add_default_cell_vars(): ERROR: file not found",xml_file)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find file " + xml_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
             return
 
-        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=True, graph=False, verbose=True)
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        self.cell_scalars_l.clear()
+        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
 
-        # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        # print("plot_tab: append_custom_cb(): num_keys=",num_keys)
-        keys_l = list(mcds.data['discrete_cells']['data'])
-        # print("plot_tab: append_custom_cb(): keys_l=",keys_l)
-        for idx in range(num_keys-1,0,-1):
-            if "transformation_rates" in keys_l[idx]:
-                # print("found transformation_rates at index=",idx)
-                break
-        idx1 = idx + 1
+        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        self.cell_scalars_l.remove('ID')
+        self.cell_scalars_l.reverse()
+        # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
 
-        for idx in range(idx1, len(keys_l)):
-            # print("------ add: ",keys_l[idx])
-            self.cell_scalar_combobox.addItem(keys_l[idx])
+        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
+        # items = [self.cell_scalar_combobox.itemText(i) for i in range(self.cell_scalar_combobox.count())]
+        # print(items)
 
         self.disable_cell_scalar_cb = False
 
         self.update_plots()
+
+
+    def add_limit_cell_vars(self):
+        print("\n-------  add_limit_cell_vars():   self.output_dir= ",self.output_dir)
+
+        self.disable_cell_scalar_cb = True
+        self.cell_scalar_combobox.clear()
+
+        xml_file_root = "output%08d.xml" % 0
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        if not Path(xml_file).is_file():
+            print("add_default_cell_vars(): ERROR: file not found",xml_file)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find file " + xml_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        self.cell_scalars_l.clear()
+        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
+
+        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        self.cell_scalars_l.remove('ID')
+        self.cell_scalars_l.reverse()
+
+        for idx in range(len(self.cell_scalars_l)):  # crop all past the custom data
+            if self.cell_scalars_l[idx].find("transformation_rates_") >= 0:
+                break
+        # print("   post: idx=",idx)
+        self.cell_scalars_l = self.cell_scalars_l[0:idx]
+        # print("   post: ",self.cell_scalars_l)
+
+        self.cell_scalars_l.extend(['cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase','pressure','damage'])
+        # print("   post append: ",self.cell_scalars_l)
+
+        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
+
+        self.disable_cell_scalar_cb = False
+        self.update_plots()
+
+
 
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
@@ -1113,6 +1214,7 @@ class Vis(QWidget):
         return
 
     def update_output_dir(self, dir_path):
+        self.output_dir = dir_path
         return 
         # if os.path.isdir(dir_path):
         #     print("update_output_dir(): yes, it is a dir path", dir_path)
@@ -1248,7 +1350,97 @@ class Vis(QWidget):
 
         self.update_plots()
 
+    #-----------
+    # def cell_scalar_range(self):
+    #     print("   cell_scalar_range():  -----")
+    #     xml_pattern = self.output_dir + "/" + "output*.xml"
+    #     xml_files = glob.glob(xml_pattern)
+    #     # print(xml_files)
+    #     num_xml = len(xml_files)
+    #     print("   num_xml= ",num_xml)
+    #     if num_xml == 0:
+    #         print("last_plot_cb(): WARNING: no output*.xml files present")
+    #         msgBox = QMessageBox()
+    #         msgBox.setIcon(QMessageBox.Information)
+    #         msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
+    #         msgBox.setStandardButtons(QMessageBox.Ok)
+    #         msgBox.exec()
+    #         return
 
+    #     xml_files.sort()
+    #     # print("sorted: ",xml_files)
+
+    #     mcds = []
+    #     for fname in xml_files:
+    #         basename = os.path.basename(fname)
+    #         # print("basename= ",basename)
+    #         # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
+    #         mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
+
+
+    #-----------
+    def cell_scalar_combobox_changed_cb(self,idx):
+        print("----- vis3D_tab.py: cell_scalar_combobox_changed_cb: idx = ",idx)
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        choice = self.cell_scalar_combobox.currentText()
+        print("    choice= ", choice)
+        if len(choice) == 0:
+            return
+
+        xml_files = glob.glob(self.output_dir+'/output*.xml')  # cross-platform OK?
+        print('xml_files = ',xml_files)
+        # xml_files = Path(self.output_dir, "initial.xml")
+        if len(xml_files) == 0:
+            return
+        # xml_files.sort()
+        # svg_files = glob.glob('snapshot*.svg')
+        # svg_files.sort()
+        print('xml_files = ',xml_files)
+
+        # xml_file = "output%08d.xml" % frame
+        # print("plot_cells3D: xml_file = ",xml_file)
+        # full_fname = os.path.join(self.output_dir, xml_file)
+        # if not os.path.exists(full_fname):
+        #     return
+
+        print("  pyMCDS reading info from ",xml_files)
+
+        self.cell_scalar_min = 1.e9
+        self.cell_scalar_max = -self.cell_scalar_min
+        for frame in range(len(xml_files)):
+            xml_file = "output%08d.xml" % frame
+            mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=True)
+            scalar_data = mcds.data['discrete_cells']['data'][choice]
+            smin = scalar_data.min()
+            smax = scalar_data.max()
+            if smin < self.cell_scalar_min:
+                self.cell_scalar_min = smin
+            if smax > self.cell_scalar_max:
+                self.cell_scalar_max = smax
+
+        print("    min,max= ",self.cell_scalar_min,', ',self.cell_scalar_max)
+
+        self.update_plots()
+
+
+    def cell_scalar_cbar_combobox_changed_cb(self,idx):
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        cbar_name = self.cell_scalar_cbar_combobox.currentText()
+        print("\n>---------------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+        if cbar_name.find("jet") >= 0:
+            print(" -------  cbar_name=  jet_map")
+            self.lut_cells = self.lut_jet
+        elif cbar_name.find("viridis") >= 0:
+            print(" -------  cbar_name=  viridis_map")
+            self.lut_cells = self.lut_viridis
+        elif cbar_name.find("YlOrRd") >= 0:
+            print(" -------  cbar_name=  ylorrd")
+            self.lut_cells = self.lut_ylorrd
+
+        self.update_plots()
+
+
+    #--------------------------
     def open_directory_cb(self):
         dialog = QFileDialog()
         # self.output_dir = dialog.getExistingDirectory(self, 'Select an output directory')
@@ -1834,6 +2026,7 @@ class Vis(QWidget):
 
         return lut
 
+    # discrete color map
     def get_cell_type_colors_lut(self, num_cell_types):
         # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
         print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
@@ -1930,19 +2123,28 @@ class Vis(QWidget):
             print("zmax = ",zmax)
 
             # cell_type = mcds.data['discrete_cells']['cell_type']
-            cell_type = mcds.data['discrete_cells']['data']['cell_type']
+            cell_scalar_str = self.cell_scalar_combobox.currentText()
+            if len(cell_scalar_str) == 0:
+                cell_scalar_str = 'cell_type'
+            print("\n------- cell_scalar_str= ",cell_scalar_str)
+            self.scalar_bar_cells.SetTitle(cell_scalar_str)
+            # cell_type = mcds.data['discrete_cells']['data']['cell_type']
+            cell_scalar_val = mcds.data['discrete_cells']['data'][cell_scalar_str]
             # print(type(cell_type))
             # print(cell_type)
-            unique_cell_type = np.unique(cell_type)
-            num_cell_types = len(unique_cell_type)
-            print("\nunique_cell_type = ",unique_cell_type )
-            print("num_cell_types= ",num_cell_types)
 
-            # lut = self.get_diverging_lut1()
-            lut = self.get_cell_type_colors_lut(num_cell_types)
-            self.cells_mapper.SetLookupTable(lut)
-            # mapper_POINT_CLOUD.SetLookupTable(lookupTable)
-            # scalarBar.SetLookupTable(lookupTable)
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
+            if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
+                unique_cell_type = np.unique(cell_scalar_val)
+                self.num_discrete_cell_val = len(unique_cell_type)
+                print("\nunique_cell_type = ",unique_cell_type )
+                print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
+
+                # lut = self.get_diverging_lut1()
+                lut = self.get_cell_type_colors_lut(self.num_discrete_cell_val)
+                self.cells_mapper.SetLookupTable(lut)
+            else:
+                self.cells_mapper.SetLookupTable(self.lut_viridis)
 
             #------------
             # colors = vtkNamedColors()
@@ -1962,21 +2164,14 @@ class Vis(QWidget):
             self.cell_data.SetNumberOfTuples(ncells)
 
             for idx in range(ncells):
-                # x= mcds.data['discrete_cells']['position_x'][idx]
-                # y= mcds.data['discrete_cells']['position_y'][idx]
-                # z= mcds.data['discrete_cells']['position_z'][idx]
-                # id = mcds.data['discrete_cells']['cell_type'][idx]
                 x= mcds.data['discrete_cells']['data']['position_x'][idx]
                 y= mcds.data['discrete_cells']['data']['position_y'][idx]
                 z= mcds.data['discrete_cells']['data']['position_z'][idx]
-                id = mcds.data['discrete_cells']['data']['cell_type'][idx]
+                # id = mcds.data['discrete_cells']['data']['cell_type'][idx]
+                id_type = mcds.data['discrete_cells']['data']['cell_type'][idx]
                 self.points.InsertNextPoint(x, y, z)
-                # self.cellVolume.InsertNextValue(30.0 + 2*idx)
-                # total_volume = mcds.data['discrete_cells']['total_volume'][idx]
                 total_volume = mcds.data['discrete_cells']['data']['total_volume'][idx]
-                # self.cellVolume.InsertNextValue(1.0 + 2*idx)
 
-                # rval = (total_volume*3/4/pi)**1/3
                 rval = (total_volume * 0.2387) ** 0.333333
                 # print(idx,") total_volume= ", total_volume, ", rval=",rval )
                 # self.cellID.InsertNextValue(id)
@@ -1985,7 +2180,8 @@ class Vis(QWidget):
 
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
                 # print("idx, cell_type[idx]= ",idx,cell_type[idx])
-                self.tags.InsertNextValue(cell_type[idx])
+                # self.tags.InsertNextValue(cell_type[idx])
+                self.tags.InsertNextValue(cell_scalar_val[idx])
 
             self.cell_data.CopyComponent(0, self.radii, 0)
             self.cell_data.CopyComponent(1, self.tags, 0)
@@ -2025,16 +2221,22 @@ class Vis(QWidget):
             # self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
             print("glyph range= ",self.glyph.GetRange())
-            print("num_cell_types= ",num_cell_types)
-            self.cells_mapper.SetScalarRange(0,num_cell_types)
+            # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
+
+            # self.cells_mapper.SetScalarRange(0,num_cell_types)
+            self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
+            print("--- set cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
+
+            self.scalar_bar_cells.SetLookupTable(self.cells_mapper.GetLookupTable())
 
             # glyph.ScalingOn()
             # self.glyph.SetScalarRange(0, vmax)
             self.glyph.Update()
 
             #----------------------------------------------
+            # if we are clipping the cells using a clip plane
             clipped_cells_flag = False
             polydata = self.glyph.GetOutput()
             if self.show_xy_clip:
@@ -2068,9 +2270,14 @@ class Vis(QWidget):
 
             self.cells_actor.SetMapper(self.cells_mapper)
 
+            self.scalar_bar_cells.SetLookupTable(self.cells_mapper.GetLookupTable())
+
             self.ren.AddActor(self.cells_actor)
+            self.ren.AddActor2D(self.scalar_bar_cells)
         else:
             self.ren.RemoveActor(self.cells_actor)
+            self.ren.RemoveActor2D(self.scalar_bar_cells)
+
 
         self.text_title_actor.SetInput(self.title_str)
 
@@ -2084,8 +2291,8 @@ class Vis(QWidget):
             print("plot_cells3D(): self.substrate_name= ",self.substrate_name)
             # sub_name = mcds.get_substrate_names()[0]
             # sub_name = mcds.get_substrate_names()[self.field_index]  # NOoo!
-            # self.scalarBar.SetTitle(sub_name)
-            self.scalarBar.SetTitle(self.substrate_name)
+            # self.scalar_bar_substrate.SetTitle(sub_name)
+            self.scalar_bar_substrate.SetTitle(self.substrate_name)
             # sub_dict = mcds.data['continuum_variables'][sub_name]
             if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
                 print(f" ---  ERROR: substrate={self.substrate_name} is not valid.")
@@ -2193,10 +2400,10 @@ class Vis(QWidget):
             #     print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
             # if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
-            #     self.ren.RemoveActor2D(self.scalarBar)
-            #     self.ren.AddActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
+            #     self.ren.AddActor2D(self.scalar_bar_substrate)
             # else:
-            #     self.ren.RemoveActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
             if self.show_voxels:
                 self.ren.RemoveActor(self.substrate_actor)
@@ -2208,13 +2415,13 @@ class Vis(QWidget):
 
                 # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
                 self.ren.AddActor(self.substrate_actor)
-                self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
+                self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
             if self.show_xy_slice:
                 # self.ren.RemoveActor(self.substrate_actor)
                 self.ren.RemoveActor(self.cutterXYActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterXY.SetInputData(self.substrate_data)
                 # self.cutterXY.SetInputData(self.glyph.GetOutput())
@@ -2249,16 +2456,16 @@ class Vis(QWidget):
                 # self.ren.AddActor(self.cutterXYEdgesActor)
 
                 #-------------------
-                self.scalarBar.SetLookupTable(self.cutterXYMapper.GetLookupTable())
-                # self.scalarBar.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
+                self.scalar_bar_substrate.SetLookupTable(self.cutterXYMapper.GetLookupTable())
+                # self.scalar_bar_substrate.SetLookupTable(self.cells_mapper.GetLookupTable())  # debug: show cell colors
 
-                # self.scalarBar.SetLookupTable(self.substrate_mapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                # self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
 
             if self.show_yz_slice:
                 self.ren.RemoveActor(self.cutterYZActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterYZ.SetInputData(self.substrate_data)
                 self.planeYZ.SetOrigin(0,y0,z0)
@@ -2276,12 +2483,12 @@ class Vis(QWidget):
                 # self.cutterYZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterYZActor)
-                self.scalarBar.SetLookupTable(self.cutterYZMapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                self.scalar_bar_substrate.SetLookupTable(self.cutterYZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
             if self.show_xz_slice:
                 self.ren.RemoveActor(self.cutterXZActor)
-                # self.ren.RemoveActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterXZ.SetInputData(self.substrate_data)
                 self.planeXZ.SetOrigin(x0,0,z0)
@@ -2299,8 +2506,8 @@ class Vis(QWidget):
                 # self.cutterXZActor.GetProperty().SetEdgeColor(0,0,0)
 
                 self.ren.AddActor(self.cutterXZActor)
-                self.scalarBar.SetLookupTable(self.cutterXZMapper.GetLookupTable())
-                # self.ren.AddActor2D(self.scalarBar)
+                self.scalar_bar_substrate.SetLookupTable(self.cutterXZMapper.GetLookupTable())
+                # self.ren.AddActor2D(self.scalar_bar_substrate)
 
 
             #-------------------
@@ -2321,13 +2528,13 @@ class Vis(QWidget):
             self.ren.AddActor(self.domain_outline_actor)
 
 
-            self.ren.RemoveActor2D(self.scalarBar)
+            self.ren.RemoveActor2D(self.scalar_bar_substrate)
             if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
-                # self.ren.RemoveActor2D(self.scalarBar)
-                self.ren.AddActor2D(self.scalarBar)
+                # self.ren.RemoveActor2D(self.scalar_bar_substrate)
+                self.ren.AddActor2D(self.scalar_bar_substrate)
             # else:
-            #     self.ren.RemoveActor2D(self.scalarBar)
-            # self.ren.AddActor2D(self.scalarBar)
+            #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
+            # self.ren.AddActor2D(self.scalar_bar_substrate)
 
         else:
             self.ren.RemoveActor(self.substrate_actor)
@@ -2337,7 +2544,7 @@ class Vis(QWidget):
 
             # self.ren.RemoveActor(self.clipXYActor)
             self.ren.RemoveActor(self.domain_outline_actor)
-            self.ren.RemoveActor2D(self.scalarBar)
+            self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
 
 

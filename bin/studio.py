@@ -307,7 +307,10 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab.homedir = self.homedir
 
             # self.run_tab.config_xml_name.setText(current_xml_file)
-            self.run_tab.exec_name.setText(exec_file)
+            # self.run_tab.exec_name.setText(exec_file)
+            # self.run_tab.exec_name.setText(str(Path(exec_file)))
+            self.run_tab.exec_name.setText(os.path.join(self.homedir, exec_file))
+
             self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.current_dir = os.getcwd()
             self.run_tab.current_dir = self.current_dir
@@ -325,8 +328,9 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.run_tab,"Run")
 
             self.vis_tab = Vis(self.nanohub_flag, self.run_tab)
-            self.config_tab.vis_tab = self.vis_tab
+            self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
+            self.config_tab.vis_tab = self.vis_tab
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
                 self.vis_tab.output_folder.setText('tmpdir')
                 self.vis_tab.output_folder.setEnabled(False)
@@ -1017,7 +1021,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.exec_name.setText('./cancer_immune_3D')
 
     def physiboss_cell_lines_cb(self):
-        self.load_model("physiboss_cell_lines_flat")
+        self.load_model("physiboss")
         # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
             self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
@@ -1128,7 +1132,7 @@ def main():
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
 
-        parser.add_argument("-b", "--bare", help="no plotting, etc ", action="store_true")
+        parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
         # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
@@ -1222,7 +1226,8 @@ def main():
     palette.setColor(QPalette.Base, Qt.white)
     palette.setColor(QPalette.Text, Qt.black)
 
-    palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
+    # palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
+    palette.setColor(QPalette.Button, QColor(255, 255, 255))  # white: affects tree widget header and table headers
 
     # palette.setColor(QPalette.ButtonText, Qt.white)  # e.g., header for tree widgets??
     # palette.setColor(QPalette.ButtonText, Qt.green)  # e.g., header for tree widgets??

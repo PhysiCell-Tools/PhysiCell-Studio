@@ -14,7 +14,7 @@
     </domain>
 
     <overall>
-        <max_time units="min">200</max_time>
+        <max_time units="min">2000</max_time>
         <time_units>min</time_units>
         <space_units>micron</space_units>
         <dt_diffusion units="min">0.02</dt_diffusion>
@@ -29,11 +29,11 @@
     <save>
         <folder>output</folder>
         <full_data>
-            <interval units="min">10</interval>
+            <interval units="min">30</interval>
             <enable>true</enable>
         </full_data>
         <SVG>
-            <interval units="min">10</interval>
+            <interval units="min">30</interval>
             <enable>true</enable>
         </SVG>
         <legacy_data>
@@ -44,6 +44,7 @@
     <options>
         <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
         <virtual_wall_at_domain_edge>false</virtual_wall_at_domain_edge>
+        <disable_automated_spring_adhesions>true</disable_automated_spring_adhesions>
     </options>
 
     <microenvironment_setup>
@@ -187,6 +188,7 @@
                         <phagocytosis_rate name="yet_another" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="yet_yet_another" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="last_one" units="1/min">0.0</phagocytosis_rate>
+                        <phagocytosis_rate name="bacteria" units="1/min">0.0</phagocytosis_rate>
                     </live_phagocytosis_rates>
                     <attack_rates>
                         <attack_rate name="default" units="1/min">0.0</attack_rate>
@@ -195,6 +197,7 @@
                         <attack_rate name="yet_another" units="1/min">0.0</attack_rate>
                         <attack_rate name="yet_yet_another" units="1/min">0.0</attack_rate>
                         <attack_rate name="last_one" units="1/min">0.0</attack_rate>
+                        <attack_rate name="bacteria" units="1/min">0.0</attack_rate>
                     </attack_rates>
                     <damage_rate units="1/min">1.0</damage_rate>
                     <fusion_rates>
@@ -204,6 +207,7 @@
                         <fusion_rate name="yet_another" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="yet_yet_another" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="last_one" units="1/min">0.0</fusion_rate>
+                        <fusion_rate name="bacteria" units="1/min">0.0</fusion_rate>
                     </fusion_rates>
                 </cell_interactions>
                 <cell_transformations>
@@ -214,11 +218,12 @@
                         <transformation_rate name="yet_another" units="1/min">0.0</transformation_rate>
                         <transformation_rate name="yet_yet_another" units="1/min">0.0</transformation_rate>
                         <transformation_rate name="last_one" units="1/min">0.0</transformation_rate>
+                        <transformation_rate name="bacteria" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_0.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_0.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -230,23 +235,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -394,8 +382,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_1.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_1.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -407,23 +395,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -571,8 +542,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_0.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_0.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -587,23 +558,6 @@
                             <mutation intracellular_name="C">0</mutation>
                         </mutations>
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -751,8 +705,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_0.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_0.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -767,23 +721,6 @@
                             <parameter intracellular_name="$time_scale">0.2</parameter>
                         </parameters>
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -931,8 +868,8 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_0.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_0.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
                         <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
@@ -944,23 +881,6 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -1108,11 +1028,11 @@
                     </transformation_rates>
                 </cell_transformations>
                 <intracellular type="maboss">
-                    <bnd_filename>config/model_0.bnd</bnd_filename>
-                    <cfg_filename>config/model.cfg</cfg_filename>
+                    <bnd_filename>./config/model_0.bnd</bnd_filename>
+                    <cfg_filename>./config/model.cfg</cfg_filename>
                     <initial_values>
-                        <initial_value intracellular_name="A">1</initial_value>
                         <initial_value intracellular_name="C">0</initial_value>
+                        <initial_value intracellular_name="A">1</initial_value>
                     </initial_values>
                     <settings>
                         <intracellular_dt>1</intracellular_dt>
@@ -1121,26 +1041,9 @@
                         <start_time>0.0</start_time>
                         <inheritance global="False" />
                         <parameters>
-                            <parameter intracellular_name="$time_scale">0</parameter>
+                            <parameter intracellular_name="$time_scale">0.0</parameter>
                         </parameters>
                     </settings>
-                    <mapping>
-                        <input physicell_name="oxygen" intracellular_name="A">
-                            <settings>
-                                <action>inhibition</action>
-                                <threshold>10</threshold>
-                                <smoothing>0</smoothing>
-                            </settings>
-                        </input>
-                        <output physicell_name="apoptosis" intracellular_name="C">
-                            <settings>
-                                <action>activation</action>
-                                <value>5</value>
-                                <base_value>0</base_value>
-                                <smoothing>5</smoothing>
-                            </settings>
-                        </output>
-                    </mapping>
                 </intracellular>
             </phenotype>
             <custom_data>
@@ -1150,9 +1053,9 @@
     </cell_definitions>
 
     <initial_conditions>
-        <cell_positions enabled="false" type="csv">
-            <folder />
-            <filename>cells.csv</filename>
+        <cell_positions enabled="true" type="csv">
+            <folder>./config</folder>
+            <filename>cells_physiboss.csv</filename>
         </cell_positions>
     </initial_conditions>
 

@@ -243,10 +243,21 @@ class ICs(QWidget):
         # self.glayout1.addWidget(self.num_cells, idr,icol,1,1) 
         hbox.addWidget(self.num_cells)
 
-        self.zeq0 = QCheckBox_custom("2D (z=0)")
+        self.zeq0 = QCheckBox_custom("2D (z=0) (no 3D yet)")
         self.zeq0.setChecked(True)
         self.zeq0.setEnabled(False)
-        # self.zeq0.setStyleSheet("QCheckBox {background-color: rgb(20,20,20); color: black;}")
+        zeq0_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(199,199,199);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                """
+        # self.zeq0.setStyleSheet("QCheckBox::indicator {background-color: rgb(199,199,199); image: url(images:checkmark.png);}")
+        self.zeq0.setStyleSheet(zeq0_style)
         # self.zeq0.setFixedWidth(50)
         self.zeq0.clicked.connect(self.zeq0_cb)
         hbox.addWidget(self.zeq0)
@@ -1095,6 +1106,100 @@ class ICs(QWidget):
         self.canvas.draw()
 
     #----------------------------------
+    def hex_pts_annulus_percentage(self):
+        xlist = deque()
+        ylist = deque()
+        rlist = deque()
+        rgba_list = deque()
+
+        rval = self.cell_radius
+
+        colors = np.empty((0,4))
+        count = 0
+        zval = 0.0
+        cell_type_index = self.celltype_combobox.currentIndex()
+        ncells = int(self.num_cells.text())
+        # print("self.r1_value= ", self.r1_value)
+
+        # x_min = -self.r1_value
+        # x_max =  self.r1_value
+        x_min = -self.r2_value
+        x_max =  self.r2_value
+        y_min = -self.r2_value
+        y_max =  self.r2_value
+        y_idx = -1
+        # hex packing constants
+        x_spacing = self.cell_radius * 2
+        y_spacing = self.cell_radius * np.sqrt(3)
+
+        cells_x = np.array([])
+        cells_y = np.array([])
+
+        cells_x2 = np.array([])
+        cells_y2 = np.array([])
+
+        # xctr = 0.0
+        # yctr = 40.0
+        xctr = 0.0
+        yctr = 0.0
+        #big_radius = 20.0
+
+        y_idx = 0
+        for yval in np.arange(y_min,y_max, y_spacing):
+            y_idx += 1
+            for xval in np.arange(x_min,x_max, x_spacing):
+                xval_offset = xval + (y_idx%2) * self.cell_radius
+                # xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
+
+                # ixval = int(xval_offset)
+                # print(ixval)
+                # idx = np.where(x_values == ixval)
+                xdist = xval_offset - xctr
+                ydist = yval - yctr
+                dist = np.sqrt(xdist*xdist + ydist*ydist)
+                if (dist >= self.r1_value) and (dist <= self.r2_value):
+                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
+                #     xv = xval_offset - big_radius
+                #     cells_x = np.append(cells_x, xv)
+                #     cells_y = np.append(cells_y, yval)
+                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
+                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
+
+                    xval_offset += self.x0_value
+                    xlist.append(xval_offset)
+                    yval_offset = yval + self.y0_value
+                    ylist.append(yval_offset)
+                    # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
+                    rlist.append(rval)
+                    self.cell_radii.append(self.cell_radius)
+                    count+=1
+
+        self.numcells_l.append(count)
+
+        xvals = np.array(xlist)
+        yvals = np.array(ylist)
+        rvals = np.array(rlist)
+        # rgbas = np.array(rgba_list)
+
+        if (self.cells_edge_checked_flag):
+            try:
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+            except (ValueError):
+                pass
+        else:
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+
+        self.ax0.set_aspect(1.0)
+
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
+
+    #----------------------------------
     def uniform_random_pts_box(self):
         xlist = deque()
         ylist = deque()
@@ -1312,15 +1417,18 @@ class ICs(QWidget):
 
         # Recall: self.csv_array = np.empty([1,4])  # default floats
         if self.use_names.isChecked():
-            # print("----- Writing v2 .csv file for cells")
+            print("----- Writing v2 (with cell names) .csv file for cells")
+            print("----- full_fname=",full_fname)
             # print("self.csv_array.shape= ",self.csv_array.shape)
             # print(self.csv_array)
             cell_name = list(self.celldef_tab.param_d.keys())
             # print("cell_name=",cell_name)
             with open(full_fname, 'w') as f:
-                # f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # rwh: TODO?  Bug with 1.11.0?
+                f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # PhysiCell checks for "x" or "X"
                 for idx in range(len(self.csv_array)):
                     ict = int(self.csv_array[idx,3])  # cell type index
                     f.write(f'{self.csv_array[idx,0]},{self.csv_array[idx,1]},{self.csv_array[idx,2]},{cell_name[ict]}\n')
         else:
+            print("----- Writing v1 (with cell indices) .csv file for cells")
+            print("----- full_fname=",full_fname)
             np.savetxt(full_fname, self.csv_array, delimiter=',')
