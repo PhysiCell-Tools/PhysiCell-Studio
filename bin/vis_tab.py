@@ -238,11 +238,14 @@ class QHLine(QFrame):
         # self.setFrameShadow(QFrame.Plain)
         # self.setStyleSheet("border:1px solid black")
 
+#---------------------------------------------------------------
 class Vis(QWidget):
 
     def __init__(self, nanohub_flag, run_tab):
         super().__init__()
         # global self.config_params
+
+        self.vis2D = True
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
         self.mech_voxel_size = 30
@@ -449,6 +452,8 @@ class Vis(QWidget):
         self.create_vis_UI()
 
 
+    # Ugly, but for now, reproduce/copy this into both the 2D and 3D versions of the Plot (vis) tab.
+    # The self.vis2D flag will affect what's shown.
     def create_vis_UI(self):
 
         splitter = QSplitter()
@@ -503,7 +508,7 @@ class Vis(QWidget):
         #------
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
-        # self.play_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # self.play_button.setStyleSheet("background-color : lightgreen")
         # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         self.vbox.addWidget(self.play_button)
@@ -522,21 +527,30 @@ class Vis(QWidget):
         self.cells_checked_flag = True
         hbox.addWidget(self.cells_checkbox) 
 
-        # groupbox = QGroupBox()
-        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-        # hbox2 = QHBoxLayout()
-        # groupbox.setLayout(hbox2)
-        self.cells_svg_rb = QRadioButton('.svg')
-        self.cells_svg_rb.setChecked(True)
-        self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
-        # hbox2.addWidget(self.cells_svg_rb)
-        hbox.addWidget(self.cells_svg_rb)
-        self.cells_mat_rb = QRadioButton('.mat')
-        self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
-        hbox.addWidget(self.cells_mat_rb)
-        # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        # hbox.addLayout(hbox2) 
+        if self.vis2D:
+            # groupbox = QGroupBox()
+            # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
+            # hbox2 = QHBoxLayout()
+            # groupbox.setLayout(hbox2)
+            self.cells_svg_rb = QRadioButton('.svg')
+            self.cells_svg_rb.setChecked(True)
+            self.cells_svg_rb.setEnabled(True)
+            self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
+            # hbox2.addWidget(self.cells_svg_rb)
+            hbox.addWidget(self.cells_svg_rb)
+            self.cells_mat_rb = QRadioButton('.mat')
+            # self.cells_mat_rb.setChecked(True)
+            self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
+            hbox.addWidget(self.cells_mat_rb)
+            # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            # hbox.addLayout(hbox2) 
+
+            self.cells_edge_checkbox = QCheckBox_custom('edge')
+            self.cells_edge_checkbox.setChecked(True)
+            self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
+            self.cells_edge_checked_flag = True
+            hbox.addWidget(self.cells_edge_checkbox) 
 
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
@@ -547,38 +561,62 @@ class Vis(QWidget):
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
 
-        self.cells_edge_checkbox = QCheckBox_custom('edge')
-        self.cells_edge_checkbox.setChecked(True)
-        self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
-        self.cells_edge_checked_flag = True
-        hbox.addWidget(self.cells_edge_checkbox) 
+        # Skip this for 3D
+        # self.cells_edge_checkbox = QCheckBox('edge')
+        # self.cells_edge_checkbox.setChecked(True)
+        # self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
+        # self.cells_edge_checked_flag = True
+        # hbox.addWidget(self.cells_edge_checkbox) 
 
         self.vbox.addLayout(hbox)
         #------------------
         hbox = QHBoxLayout()
         # self.add_default_cell_vars()
         self.disable_cell_scalar_cb = False
-        self.cell_scalar_combobox.setEnabled(False)
+        self.cell_scalar_combobox.setEnabled(True)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
-
-        self.cell_scalar_cbar_combobox = QComboBox()
-        self.cell_scalar_cbar_combobox.addItem("viridis")
-        self.cell_scalar_cbar_combobox.addItem("jet")
-        self.cell_scalar_cbar_combobox.addItem("YlOrRd")
-        self.cell_scalar_cbar_combobox.setEnabled(False)
-        hbox.addWidget(self.cell_scalar_cbar_combobox)
         self.vbox.addLayout(hbox)
 
-        # self.custom_button = QPushButton("append custom data")
-        self.custom_button = QPushButton("refresh")
-        self.custom_button.setFixedWidth(150)
-        self.custom_button.setEnabled(True)
-        # self.custom_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+
+        # self.all_button = QPushButton("append custom data")
+        # self.all_button.setFixedWidth(150)
+        # # self.all_button.setStyleSheet("background-color : lightgreen")
+        # # self.play_button.clicked.connect(self.play_plot_cb)
+        # self.all_button.clicked.connect(self.append_custom_cb)
+        # self.vbox.addWidget(self.all_button)
+
+        hbox = QHBoxLayout()
+        self.all_button = QPushButton("all")   # old: refresh
+        self.all_button.setFixedWidth(100)
+        self.all_button.setEnabled(True)
+        # self.all_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.custom_button.clicked.connect(self.append_custom_cb)
-        self.custom_button.clicked.connect(self.add_default_cell_vars)
-        self.vbox.addWidget(self.custom_button)
-        
+        # self.all_button.clicked.connect(self.append_custom_cb)
+        self.all_button.clicked.connect(self.add_default_cell_vars)
+        hbox.addWidget(self.all_button)
+
+        self.limit_button = QPushButton("limit")
+        self.limit_button.setFixedWidth(100)
+        # self.limit_button.setEnabled(False)
+        self.limit_button.clicked.connect(self.add_limit_cell_vars)
+        hbox.addWidget(self.limit_button)
+
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
+        self.vbox.addLayout(hbox)
+
+        #-------
+        hbox = QHBoxLayout()
+        self.cell_scalar_cbar_combobox = QComboBox()
+        self.cell_scalar_cbar_combobox .setFixedWidth(120)
+        self.cell_scalar_cbar_combobox.addItem("jet")
+        self.cell_scalar_cbar_combobox.addItem("viridis")
+        self.cell_scalar_cbar_combobox.addItem("YlOrRd")
+        # self.cell_scalar_cbar_combobox.setEnabled(False)
+        self.cell_scalar_cbar_combobox.setEnabled(True)  # for 3D
+        hbox.addWidget(self.cell_scalar_cbar_combobox)
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+        self.vbox.addLayout(hbox)
 
         #------------------
         self.vbox.addWidget(QHLine())
@@ -616,7 +654,7 @@ class Vis(QWidget):
 
         self.fix_cmap_checkbox = QCheckBox_custom('fix')
         self.fix_cmap_flag = False
-        self.fix_cmap_checkbox.setEnabled(False)
+        # self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
         hbox.addWidget(self.fix_cmap_checkbox)
@@ -632,10 +670,8 @@ class Vis(QWidget):
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
         self.cmin.setFixedWidth(cvalue_width)
-        cmin_validator = QtGui.QDoubleValidator()
-        cmin_validator.setLocale(locale_en_US)
-        self.cmin.setValidator(cmin_validator)
-        self.cmin.setEnabled(False)
+        self.cmin.setValidator(QtGui.QDoubleValidator())
+        # self.cmin.setEnabled(False)
         hbox.addWidget(self.cmin)
 
         label = QLabel("cmax")
@@ -646,10 +682,8 @@ class Vis(QWidget):
         self.cmax.setText('1.0')
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
-        cmax_validator = QtGui.QDoubleValidator()
-        cmax_validator.setLocale(locale_en_US)
-        self.cmax.setValidator(cmax_validator)
-        self.cmax.setEnabled(False)
+        self.cmax.setValidator(QtGui.QDoubleValidator())
+        # self.cmax.setEnabled(False)
         hbox.addWidget(self.cmax)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
@@ -669,8 +703,7 @@ class Vis(QWidget):
 
         # self.output_folder = QLineEdit(self.output_dir)
         self.output_folder = QLineEdit()
-        self.output_folder.setEnabled(False)
-        # self.output_folder.returnPressed.connect(self.output_folder_cb)
+        self.output_folder.returnPressed.connect(self.output_folder_cb)
         hbox.addWidget(self.output_folder)
 
         # label = QLabel("(then 'Enter')")
@@ -682,18 +715,15 @@ class Vis(QWidget):
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
 
-        # label = QLabel("(press 'Enter' to change)")
-        # self.vbox.addWidget(label)
-
         self.vbox.addWidget(QHLine())
 
-        #------------------
         self.cell_counts_button = QPushButton("Population plot")
         # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         self.cell_counts_button.setFixedWidth(200)
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         self.vbox.addWidget(self.cell_counts_button)
 
+        #-----------
         self.physiboss_qline = None
         self.physiboss_hbox_1 = None
         
@@ -710,7 +740,8 @@ class Vis(QWidget):
 
         #-------------------
         self.substrates_combobox.currentIndexChanged.connect(self.substrates_combobox_changed_cb)
-        self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
         self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
@@ -1118,10 +1149,10 @@ class Vis(QWidget):
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
-            # self.custom_button.setEnabled(False)
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
-            self.custom_button.setEnabled(False)
+            self.all_button.setEnabled(False)
+            self.limit_button.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
@@ -1134,10 +1165,10 @@ class Vis(QWidget):
             self.add_default_cell_vars()   # rwh: just do once? Nah, but add a "refresh" button
 
             self.plot_cells_svg = False
-            # self.custom_button.setEnabled(True)
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
-            self.custom_button.setEnabled(True)
+            self.all_button.setEnabled(True)
+            self.limit_button.setEnabled(True)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
@@ -1288,6 +1319,25 @@ class Vis(QWidget):
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
+    def substrates_cbar_combobox_changed_cb(self,idx):
+        # print("-----  substrates_combobox_changed_cb: idx = ",idx)
+        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
+        cbar_name = self.substrates_cbar_combobox.currentText()
+        print("\n>---------------->> substrates_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+        # if cbar_name.find("jet") >= 0:
+        #     print(" -------  cbar_name=  jet_map")
+        #     # self.lut_substrate = self.get_jet_map()
+        #     self.lut_substrate = self.lut_jet
+        # elif cbar_name.find("viridis") >= 0:
+        #     print(" -------  cbar_name=  viridis_map")
+        #     # self.lut_substrate = self.get_viridis_map()
+        #     self.lut_substrate = self.lut_viridis
+        # elif cbar_name.find("YlOrRd") >= 0:
+        #     print(" -------  cbar_name=  ylorrd")
+        #     # self.lut_substrate = self.get_viridis_map()
+        #     self.lut_substrate = self.lut_ylorrd
+
+        self.update_plots()
 
     def open_directory_cb(self):
         dialog = QFileDialog()
@@ -1677,6 +1727,44 @@ class Vis(QWidget):
 
         self.disable_cell_scalar_cb = False
 
+        self.update_plots()
+
+    def add_limit_cell_vars(self):
+        print("\n-------  add_limit_cell_vars():   self.output_dir= ",self.output_dir)
+
+        self.disable_cell_scalar_cb = True
+        self.cell_scalar_combobox.clear()
+
+        xml_file_root = "output%08d.xml" % 0
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        if not Path(xml_file).is_file():
+            print("add_default_cell_vars(): ERROR: file not found",xml_file)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find file " + xml_file)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        self.cell_scalars_l.clear()
+        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
+
+        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        self.cell_scalars_l.remove('ID')
+        self.cell_scalars_l.reverse()
+        for idx in range(len(self.cell_scalars_l)):
+            if self.cell_scalars_l[idx].find("transformation_rates_") >= 0:
+                break
+        # print("   post: idx=",idx)
+        self.cell_scalars_l = self.cell_scalars_l[0:idx]
+        # print("   post: ",self.cell_scalars_l)
+        self.cell_scalars_l.extend(['cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase','pressure','damage'])
+        # print("   post append: ",self.cell_scalars_l)
+
+        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
+
+        self.disable_cell_scalar_cb = False
         self.update_plots()
 
 
