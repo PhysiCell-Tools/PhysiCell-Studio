@@ -25,7 +25,7 @@ To specify 3D visualization , use "-3" argument.
 
 To run a minimal Studio, without the Run and Plot tabs (in case your Python is missing the required modules), use:
 ```
-python bin/studio.py --bare
+python bin/studio.py --basic
 ```
 
 To see all possible arguments:
