@@ -13,135 +13,29 @@ import time
 import random
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
+import glob
+
+from vis_base import VisBase
 
 from vtk import *
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-import glob
-
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from PyQt5.QtCore import QRectF, Qt
-from PyQt5.QtWidgets import QCompleter, QSizePolicy
-from PyQt5.QtCore import QSortFilterProxyModel
+from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel
 
 import numpy as np
 import scipy.io
-# from pyMCDS_cells import pyMCDS_cells
 from pyMCDS import pyMCDS
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-#---------------------------
-class ExtendedComboBox(QComboBox):
-    def __init__(self, parent=None):
-        super(ExtendedComboBox, self).__init__(parent)
+#----------------------------------------------------------------------
+class Vis(VisBase, QWidget):
 
-        self.setFocusPolicy(Qt.StrongFocus)
-        self.setEditable(True)  # necessary to use lineEdit().textEdited filter below; can't be False
+    def __init__(self, nanohub_flag, run_tab, model3D_flag):
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab, model3D_flag=model3D_flag)
 
-        # add a filter model to filter matching items
-        self.pFilterModel = QSortFilterProxyModel(self)
-        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.pFilterModel.setSourceModel(self.model())
+        self.figure = None
 
-        # add a completer, which uses the filter model
-        self.completer = QCompleter(self.pFilterModel, self)
-        # always show all (filtered) completions
-        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
-        self.setCompleter(self.completer)
-
-        # connect signals
-        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)  # necessary to show filtered items
-        self.completer.activated.connect(self.on_completer_activated)
-
-
-    # Tried/failed to override this method to avoid adding a bogus variable name in search bar at top of combobox
-    # def addItem(self, text):
-    #     print("addItem():  avoid adding text=",text)
-        # items = [self.itemText(i) for i in range(self.count())]  # argh, there's really no method for this?
-            # super().addItem(text)
-
-    # on selection of an item from the completer, select the corresponding item from combobox 
-    def on_completer_activated(self, text):
-        print("\n--- on_completer_activated():  text= ",text)
-        if text:
-            index = self.findText(text)
-            print("on_completer_activated(): index= ",index)
-            self.setCurrentIndex(index)
-            self.activated[str].emit(self.itemText(index))
-
-
-    # on model change, update the models of the filter and completer as well 
-    # def setModel(self, model):
-    #     super(ExtendedComboBox, self).setModel(model)
-    #     self.pFilterModel.setSourceModel(model)
-    #     self.completer.setModel(self.pFilterModel)
-
-
-    # on model column change, update the model column of the filter and completer as well
-    # def setModelColumn(self, column):
-    #     self.completer.setCompletionColumn(column)
-    #     self.pFilterModel.setFilterKeyColumn(column)
-    #     super(ExtendedComboBox, self).setModelColumn(column)    
-
-
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                """
-        self.setStyleSheet(checkbox_style)
-
-class PopulationPlotWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.layout = QVBoxLayout()
-        self.label = QLabel("Cell populations")
-        # self.layout.addWidget(self.label)
-
-        self.figure = plt.figure()
-        self.canvas = FigureCanvasQTAgg(self.figure)
-        self.canvas.setStyleSheet("background-color:transparent;")
-        self.ax0 = self.figure.add_subplot(111, adjustable='box')
-        self.layout.addWidget(self.canvas)
-        self.setLayout(self.layout)
-
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-        # self.setFrameShadow(QFrame.Plain)
-        # self.setStyleSheet("border:1px solid black")
-
-#---------------------------------------------------------------
-class Vis(QWidget):
-
-    def __init__(self, nanohub_flag, run_tab):
-        super().__init__()
-        # global self.config_params
-
-        self.vis2D = False
+        self.model3D_flag = model3D_flag
 
         self.config_tab = None
         self.run_tab = run_tab
@@ -359,7 +253,7 @@ class Vis(QWidget):
         self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
 
 
-        #-----------------------------
+        #--------------------------------------------------
         self.nanohub_flag = nanohub_flag
 
         self.animating_flag = False
@@ -367,25 +261,11 @@ class Vis(QWidget):
         self.xml_root = None
         self.current_frame = 0
         self.timer = QtCore.QTimer()
-        # self.t.timeout.connect(self.task)
         self.timer.timeout.connect(self.play_plot_cb)
-
-        # self.tab = QWidget()
-        # self.tabs.resize(200,5)
-        
-        self.num_contours = 15
-        self.num_contours = 25
-        self.num_contours = 50
-        self.fontsize = 5
-
-        # self.plot_svg_flag = True
-        self.plot_svg_flag = False
-        # self.field_index = 4  # substrate (0th -> 4 in the .mat)
 
         self.use_defaults = True
         self.title_str = ""
 
-        # self.config_file = "mymodel.xml"
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -395,42 +275,12 @@ class Vis(QWidget):
         self.ymax = 100
         self.y_range = self.ymax - self.ymin
 
-        self.aspect_ratio = 0.7
-
-        self.show_nucleus = False
-        self.show_edge = False
         self.alpha = 0.7
 
-        basic_length = 12.0
-        self.figsize_width_substrate = 15.0  # allow extra for colormap
-        self.figsize_height_substrate = basic_length
-
-        self.figsize_width_2Dplot = basic_length
-        self.figsize_height_2Dplot = basic_length
-
-        # self.width_substrate = basic_length  # allow extra for colormap
-        # self.height_substrate = basic_length
-
-        self.figsize_width_svg = basic_length
-        self.figsize_height_svg = basic_length
-
-        # self.output_dir = "/Users/heiland/dev/PhysiCell_V.1.8.0_release/output"
-        # self.output_dir = "output"
-        self.output_dir = "../tmpdir"   # for nanoHUB
-        self.output_dir = "tmpdir"   # for nanoHUB
+        # self.output_dir = "../tmpdir"   # for nanoHUB
+        # self.output_dir = "tmpdir"   # for nanoHUB
         self.output_dir = "output"   # for nanoHUB
         # self.output_dir = "."   # for nanoHUB
-
-
-        # do in create_figure()?
-        # xlist = np.linspace(-3.0, 3.0, 50)
-        # print("len(xlist)=",len(xlist))
-        # ylist = np.linspace(-3.0, 3.0, 50)
-        # X, Y = np.meshgrid(xlist, ylist)
-        # Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
-        # self.cmap = plt.cm.get_cmap("viridis")
-        # self.cs = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
-        # self.cbar = self.figure.colorbar(self.cs, ax=self.ax)
 
         self.stylesheet = """ 
             QComboBox{
@@ -475,513 +325,13 @@ class Vis(QWidget):
                 # padding: 1px 18px 1px 3px;
 
 
-        self.substrates_combobox = QComboBox()
-        # self.substrates_combobox.setStyleSheet(self.stylesheet)
-        # self.substrates_combobox.setEnabled(False)
-        self.field_dict = {}
-        self.field_min_max = {}
-        self.cmin_value = 0.0
-        self.cmax_value = 1.0
-        # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
 
-        self.substrates_cbar_combobox = QComboBox()
-        self.substrates_cbar_combobox.addItem("jet")
-        self.substrates_cbar_combobox.addItem("viridis")
-        self.substrates_cbar_combobox.addItem("YlOrRd")
-        # self.substrates_cbar_combobox.setEnabled(False)
-
-        self.scroll_plot = QScrollArea()  # might contain centralWidget
-
+        self.canvas = None
         self.create_figure()
-
-        # Need to have the substrates_combobox before doing create_figure!
-
-        self.create_vis_UI()
-
-    # Ugly, but for now, reproduce/copy this into both the 2D and 3D versions of the Plot (vis) tab.
-    # The self.vis2D flag will affect what's shown.
-    def create_vis_UI(self):
-
-        splitter = QSplitter()
-        self.scroll_params = QScrollArea()
-        splitter.addWidget(self.scroll_params)
-
-        #---------------------
-        self.stackw = QStackedWidget()
-        self.stackw.setStyleSheet(self.stylesheet)  # will/should apply to all children widgets
-        # self.stackw.setCurrentIndex(0)
-
-        self.controls1 = QWidget()
-
-        self.vbox = QVBoxLayout()
-        self.controls1.setLayout(self.vbox)
-
-        hbox = QHBoxLayout()
-        arrow_button_width = 40
-        self.first_button = QPushButton("|<")
-        self.first_button.setFixedWidth(arrow_button_width)
-        self.first_button.clicked.connect(self.first_plot_cb)
-        hbox.addWidget(self.first_button)
-
-        self.back_button = QPushButton("<")
-        self.back_button.setFixedWidth(arrow_button_width)
-        self.back_button.clicked.connect(self.back_plot_cb)
-        hbox.addWidget(self.back_button)
-
-        frame_count_width = 40
-        self.frame_count = QLineEdit()
-        # self.frame_count.textChanged.connect(self.change_frame_count_cb)  # do later to appease the callback gods
-        self.frame_count.setFixedWidth(frame_count_width)
-        self.frame_count.setValidator(QtGui.QIntValidator(0,10000000))
-        self.frame_count.setText('0')
-        hbox.addWidget(self.frame_count)
-
-
-        self.forward_button = QPushButton(">")
-        self.forward_button.setFixedWidth(arrow_button_width)
-        self.forward_button.clicked.connect(self.forward_plot_cb)
-        hbox.addWidget(self.forward_button)
-
-        self.last_button = QPushButton(">|")
-        self.last_button.setFixedWidth(arrow_button_width)
-        self.last_button.clicked.connect(self.last_plot_cb)
-        hbox.addWidget(self.last_button)
-
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-
-        self.vbox.addLayout(hbox)
-
-        #------
-        self.play_button = QPushButton("Play")
-        self.play_button.setFixedWidth(70)
-        # self.play_button.setStyleSheet("background-color : lightgreen")
-        # self.play_button.clicked.connect(self.play_plot_cb)
-        self.play_button.clicked.connect(self.animate)
-        self.vbox.addWidget(self.play_button)
-
-        # self.prepare_button = QPushButton("Prepare")
-        # self.prepare_button.clicked.connect(self.prepare_plot_cb)
-        # controls_hbox.addWidget(self.prepare_button)
-
-        #------
-        self.vbox.addWidget(QHLine())
-
-        hbox = QHBoxLayout()
-        self.cells_checkbox = QCheckBox_custom('cells')
-        self.cells_checkbox.setChecked(True)
-        self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
-        self.cells_checked_flag = True
-        hbox.addWidget(self.cells_checkbox) 
-
-        if self.vis2D:
-            # groupbox = QGroupBox()
-            # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-            # hbox2 = QHBoxLayout()
-            # groupbox.setLayout(hbox2)
-            self.cells_svg_rb = QRadioButton('.svg')
-            self.cells_svg_rb.setChecked(True)
-            self.cells_svg_rb.setEnabled(True)
-            self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
-            # hbox2.addWidget(self.cells_svg_rb)
-            hbox.addWidget(self.cells_svg_rb)
-            self.cells_mat_rb = QRadioButton('.mat')
-            # self.cells_mat_rb.setChecked(True)
-            self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
-            hbox.addWidget(self.cells_mat_rb)
-            # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-            hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-            # hbox.addLayout(hbox2) 
-
-            self.cells_edge_checkbox = QCheckBox_custom('edge')
-            self.cells_edge_checkbox.setChecked(True)
-            self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
-            self.cells_edge_checked_flag = True
-            hbox.addWidget(self.cells_edge_checkbox) 
-
-        self.disable_cell_scalar_cb = False
-        # self.cell_scalar_combobox = QComboBox()
-        self.cell_scalar_combobox = ExtendedComboBox()
-        self.cell_scalar_combobox.setFixedWidth(270)
-        # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
-
-        # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
-
-
-        # Skip this for 3D
-        # self.cells_edge_checkbox = QCheckBox('edge')
-        # self.cells_edge_checkbox.setChecked(True)
-        # self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
-        # self.cells_edge_checked_flag = True
-        # hbox.addWidget(self.cells_edge_checkbox) 
-
-        self.vbox.addLayout(hbox)
-        #------------------
-        hbox = QHBoxLayout()
-        # self.add_default_cell_vars()
-        self.disable_cell_scalar_cb = False
-        self.cell_scalar_combobox.setEnabled(True)   # for 3D
-        hbox.addWidget(self.cell_scalar_combobox)
-        self.vbox.addLayout(hbox)
-
-
-        # self.all_button = QPushButton("append custom data")
-        # self.all_button.setFixedWidth(150)
-        # # self.all_button.setStyleSheet("background-color : lightgreen")
-        # # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.all_button.clicked.connect(self.append_custom_cb)
-        # self.vbox.addWidget(self.all_button)
-
-        hbox = QHBoxLayout()
-        self.all_button = QPushButton("all")   # old: refresh
-        self.all_button.setFixedWidth(100)
-        self.all_button.setEnabled(True)
-        # self.all_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.all_button.clicked.connect(self.append_custom_cb)
-        self.all_button.clicked.connect(self.add_default_cell_vars)
-        hbox.addWidget(self.all_button)
-
-        self.limit_button = QPushButton("limit")
-        self.limit_button.setFixedWidth(100)
-        # self.limit_button.setEnabled(False)
-        self.limit_button.clicked.connect(self.add_limit_cell_vars)
-        hbox.addWidget(self.limit_button)
-
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-
-        self.vbox.addLayout(hbox)
-
-        #-------
-        hbox = QHBoxLayout()
-        self.cell_scalar_cbar_combobox = QComboBox()
-        self.cell_scalar_cbar_combobox .setFixedWidth(120)
-        self.cell_scalar_cbar_combobox.addItem("jet")
-        self.cell_scalar_cbar_combobox.addItem("viridis")
-        self.cell_scalar_cbar_combobox.addItem("YlOrRd")
-        # self.cell_scalar_cbar_combobox.setEnabled(False)
-        self.cell_scalar_cbar_combobox.setEnabled(True)  # for 3D
-        hbox.addWidget(self.cell_scalar_cbar_combobox)
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        self.vbox.addLayout(hbox)
-
-        #------------------
-        self.vbox.addWidget(QHLine())
-
-        # hbox = QHBoxLayout()
-        self.substrates_checkbox = QCheckBox_custom('substrates')
-        self.substrates_checkbox.setChecked(False)
-        # self.substrates_checkbox.setEnabled(False)
-        self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
-        self.substrates_checked_flag = False
-        # hbox.addWidget(self.substrates_checkbox)
-        self.vbox.addWidget(self.substrates_checkbox)
-
-        hbox = QHBoxLayout()
-        hbox.addWidget(self.substrates_combobox)
-        hbox.addWidget(self.substrates_cbar_combobox)
-        # hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-
-        self.vbox.addLayout(hbox)
-
-        #------
-        hbox = QHBoxLayout()
-        groupbox = QGroupBox()
-        # groupbox.setTitle("colorbar")
-        # vlayout = QVBoxLayout()
-        # groupbox.setLayout(hbox)
-        groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-        # groupbox.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; left: 7px; padding: 0px 5px 0px 5px;}")
-        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black; title: }")
-#         QGroupBox::title {
-#     subcontrol-origin: margin;
-#     left: 7px;
-#     padding: 0px 5px 0px 5px;
-# }
-
-        self.fix_cmap_checkbox = QCheckBox_custom('fix')
-        self.fix_cmap_flag = False
-        # self.fix_cmap_checkbox.setEnabled(False)
-        self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
-        self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
-        hbox.addWidget(self.fix_cmap_checkbox)
-
-        cvalue_width = 60
-        label = QLabel("cmin")
-        # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        hbox.addWidget(label)
-        self.cmin = QLineEdit()
-        self.cmin.setText('0.0')
-        # self.cmin.textChanged.connect(self.change_plot_range)
-        self.cmin.returnPressed.connect(self.cmin_cmax_cb)
-        self.cmin.setFixedWidth(cvalue_width)
-        self.cmin.setValidator(QtGui.QDoubleValidator())
-        # self.cmin.setEnabled(False)
-        hbox.addWidget(self.cmin)
-
-        label = QLabel("cmax")
-        # label.setFixedWidth(label_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        hbox.addWidget(label)
-        self.cmax = QLineEdit()
-        self.cmax.setText('1.0')
-        self.cmax.returnPressed.connect(self.cmin_cmax_cb)
-        self.cmax.setFixedWidth(cvalue_width)
-        self.cmax.setValidator(QtGui.QDoubleValidator())
-        # self.cmax.setEnabled(False)
-        hbox.addWidget(self.cmax)
-
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-
-        self.vbox.addLayout(hbox)
-
-        label = QLabel("(press 'Enter' if cmin or cmax changes)")
-        self.vbox.addWidget(label)
-
-        #------------------
-        self.vbox.addWidget(QHLine())
-
-        hbox = QHBoxLayout()
-        label = QLabel("folder")
-        label.setAlignment(QtCore.Qt.AlignRight)
-        hbox.addWidget(label)
-
-        # self.output_folder = QLineEdit(self.output_dir)
-        self.output_folder = QLineEdit()
-        self.output_folder.returnPressed.connect(self.output_folder_cb)
-        hbox.addWidget(self.output_folder)
-
-        # label = QLabel("(then 'Enter')")
-        # hbox.addWidget(label)
-        output_folder_button = QPushButton("Select")
-        output_folder_button.clicked.connect(self.output_folder_cb)
-        hbox.addWidget(output_folder_button)
-
-        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        self.vbox.addLayout(hbox)
-
-        self.vbox.addWidget(QHLine())
-
-        self.cell_counts_button = QPushButton("Population plot")
-        # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        self.cell_counts_button.setFixedWidth(200)
-        self.cell_counts_button.clicked.connect(self.cell_counts_cb)
-        self.vbox.addWidget(self.cell_counts_button)
-
-        #-----------
-        self.physiboss_qline = None
-        self.physiboss_hbox_1 = None
-        
-        self.physiboss_vis_checkbox = None
-        self.physiboss_vis_flag = False
-        self.physiboss_selected_cell_line = None
-        self.physiboss_selected_node = None
-        self.physiboss_hbox_2 = None
-
-        self.physiboss_cell_type_combobox = None
-        self.physiboss_node_combobox = None
-        #-----------
-        self.frame_count.textChanged.connect(self.change_frame_count_cb)
-
-        #-------------------
-        self.substrates_combobox.currentIndexChanged.connect(self.substrates_combobox_changed_cb)
-        # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
-        self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
-
-        # self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
-        self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
-        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
-
-
-        #==================================================================
-        self.scroll_plot.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll_plot.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll_plot.setWidgetResizable(True)
-
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
 
-        self.stackw.addWidget(self.controls1)
-        self.stackw.setCurrentIndex(0)
 
-        self.scroll_params.setWidget(self.stackw)
-        splitter.addWidget(self.scroll_plot)
-
-        self.show_plot_range = False
-        self.layout = QVBoxLayout(self)
-        self.layout.addWidget(splitter)
-
-    def get_cell_types_from_config(self):
-        config_file = self.run_tab.config_xml_name.text()
-        print("get_cell_types():  config_file=",config_file)
-        basename = os.path.basename(config_file)
-        print("get_cell_types():  basename=",basename)
-        out_config_file = os.path.join(self.output_dir, basename)
-        print("get_cell_types():  out_config_file=",out_config_file)
-
-        try:
-            self.tree = ET.parse(out_config_file)
-            self.xml_root = self.tree.getroot()
-        except:
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + out_config_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return False
-
-        try:
-            self.celltype_name.clear()
-            uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
-            if uep:
-                idx = 0
-                for var in uep.findall('cell_definition'):
-                    name = var.attrib['name']
-                    self.celltype_name.append(name)
-            print("get_cell_types_from_config(): ",self.celltype_name)
-        except:
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error parsing " + out_config_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return False
-
-        return True
-
-
-    def get_cell_types_from_legend(self):
-        legend_file = os.path.join(self.output_dir, "legend.svg")
-        # print("--get_cell_types():  legend=",legend_file)
-        self.celltype_name.clear()
-        self.celltype_color.clear()
-
-        try:
-            self.tree = ET.parse(legend_file)
-            self.xml_root = self.tree.getroot()
-            print("xml_root=",self.xml_root)
-        except:
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + legend_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return False
-
-        try: 
-            for var in self.xml_root.findall('{http://www.w3.org/2000/svg}text'):
-                ctname = var.text.strip()
-                # print("-- ctname (from legend.svg)=",ctname)
-                self.celltype_name.append(ctname)
-            print("get_cell_types_from_legend(): celltype_name=",self.celltype_name)
-
-            idx = 0
-            for var in self.xml_root.findall('{http://www.w3.org/2000/svg}circle'):
-                if idx % 2:
-                    cattr = var.attrib
-                    # print("-- cattr=",cattr)
-                    # print("-- cattr['fill']=",cattr['fill'])
-                    self.celltype_color.append(cattr['fill'])
-                idx += 1
-        except:
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error parsing " + legend_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return False
-
-        return True
-
-
-    def cell_counts_cb(self):
-        # print("---- cell_counts_cb(): --> window for 2D population plots")
-        # self.analysis_data_wait.value = 'compute n of N ...'
-
-        if not self.get_cell_types_from_legend():
-            if not self.get_cell_types_from_config():
-                return
-
-        xml_pattern = self.output_dir + "/" + "output*.xml"
-        xml_files = glob.glob(xml_pattern)
-        # print(xml_files)
-        num_xml = len(xml_files)
-        if num_xml == 0:
-            print("last_plot_cb(): WARNING: no output*.xml files present")
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
-
-        xml_files.sort()
-        # print("sorted: ",xml_files)
-
-        mcds = []
-        for fname in xml_files:
-            basename = os.path.basename(fname)
-            # print("basename= ",basename)
-            # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
-            mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
-            # mcds.append(pyMCDS(basename, self.output_dir, microenv=True, graph=False, verbose=True))
-
-        # keys_l = list(mcds[0].data['discrete_cells']['data'])
-        # print("keys_l= ",keys_l)
-
-        # xml_files = glob.glob('output*.xml')
-        # xml_file_root = "output%08d.xml" % 0
-        # xml_file = os.path.join(self.output_dir, xml_file_root)
-        # if not Path(xml_file).is_file():
-        #     print("append_custom_cb(): ERROR: file not found",xml_file)
-        #     return
-
-        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-
-
-        # mcds = [pyMCDS(xml_files[i], '.') for i in range(ds_count)]
-        tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
-        # print("max tval=",tval)
-
-        # self.yval4 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 4) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100.) == True)) for idx in range(ds_count)] )
-
-        if not self.population_plot:
-            self.population_plot = PopulationPlotWindow()
-
-        self.population_plot.ax0.cla()
-
-        # ctype_plot = []
-        lw = 2
-        # for itype, ctname in enumerate(self.celltypes_list):
-        for itype in range(len(self.celltype_name)):
-            ctname = self.celltype_name[itype]
-            try:
-                ctcolor = self.celltype_color[itype]
-            except:
-                ctcolor = 'C' + str(itype)   # use random colors from matplotlib
-            yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
-
-            self.population_plot.ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
-
-            # ctype_plot.append(yval)
-            # print("yval= ",yval)
-
-
-        # p1 = self.ax1.plot(self.xval, self.yval4, label='Mac', linewidth=3, color=self.mac_color)
-        # p2 = self.ax1.plot(self.xval, self.yval5, linestyle='dashed', label='Neut', linewidth=3, color=self.neut_color)
-
-        # self.population_plot.ax0.plot(tval,yval,'r-')
-        # self.population_plot.ax0.plot(tval,yval0,yval1)
-        # self.population_plot.ax0.plot(tval, yval1, label='ctype1', linewidth=lw, color="red")
-        # self.population_plot.ax0.grid()
-        self.population_plot.ax0.set_xlabel('time (mins)')
-        self.population_plot.ax0.set_ylabel('# of cells')
-        self.population_plot.ax0.set_title("cell populations", fontsize=10)
-        # self.population_plot.canvas.update()
-        # self.population_plot.canvas.draw()
-        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
-        self.population_plot.show()
-
+    #-------------------------------
     def disable_physiboss_info(self):
         print("vis_tab: ------- disable_physiboss_info()")
         if self.physiboss_vis_checkbox is not None:
@@ -997,210 +347,21 @@ class Vis(QWidget):
         else:
             print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
+    #------------------------------
+    # Dependent on 2D/3D (not available for 3D)
     def build_physiboss_info(self, config_file):
         pass
         
-    def reset_plot_range(self):
-        try:  # due to the initial callback
-            self.my_xmin.setText(str(self.xmin))
-            self.my_xmax.setText(str(self.xmax))
-            self.my_ymin.setText(str(self.ymin))
-            self.my_ymax.setText(str(self.ymax))
 
-            self.plot_xmin = float(self.xmin)
-            self.plot_xmax = float(self.xmax)
-            self.plot_ymin = float(self.ymin)
-            self.plot_ymax = float(self.ymax)
-        except:
-            pass
-
-        self.update_plots()
-
-
-    def init_plot_range(self, config_tab):
-        print("----- init_plot_range:")
-        try:
-            # beware of widget callback 
-            self.my_xmin.setText(config_tab.xmin.text())
-            self.my_xmax.setText(config_tab.xmax.text())
-            self.my_ymin.setText(config_tab.ymin.text())
-            self.my_ymax.setText(config_tab.ymax.text())
-        except:
-            pass
-
-    def output_folder_cb(self):
-        # print(f"output_folder_cb(): old={self.output_dir}")
-        self.output_dir = self.output_folder.text()
-        # print(f"                    new={self.output_dir}")
-
-    def cells_svg_mat_cb(self):
-        radioBtn = self.sender()
-        if "svg" in radioBtn.text():
-            self.plot_cells_svg = True
-            self.all_button.setEnabled(False)
-            self.cell_scalar_combobox.setEnabled(False)
-            self.cell_scalar_cbar_combobox.setEnabled(False)
-            # self.fix_cmap_checkbox.setEnabled(bval)
-
-            if self.cax2:
-                self.cax2.remove()
-                self.cax2 = None
-
-        else:
-            self.plot_cells_svg = False
-            self.all_button.setEnabled(True)
-            self.cell_scalar_combobox.setEnabled(True)
-            self.cell_scalar_cbar_combobox.setEnabled(True)
-        # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
-        self.update_plots()
-
-
-    def add_default_cell_vars(self):
-        # print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
-
-        self.disable_cell_scalar_cb = True
-        self.cell_scalar_combobox.clear()
-
-        # -- old way (limit choices)
-        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        # for idx in range(len(default_var_l)):
-        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
-        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
-
-        xml_file_root = "output%08d.xml" % 0
-        xml_file = os.path.join(self.output_dir, xml_file_root)
-        if not Path(xml_file).is_file():
-            print("add_default_cell_vars(): ERROR: file not found",xml_file)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Could not find file " + xml_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
-
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-        self.cell_scalars_l.clear()
-        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
-
-        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
-        self.cell_scalars_l.remove('ID')
-        self.cell_scalars_l.reverse()
-        # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
-
-        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
-        # items = [self.cell_scalar_combobox.itemText(i) for i in range(self.cell_scalar_combobox.count())]
-        # print(items)
-
-        self.disable_cell_scalar_cb = False
-
-        self.update_plots()
-
-
-    def add_limit_cell_vars(self):
-        print("\n-------  add_limit_cell_vars():   self.output_dir= ",self.output_dir)
-
-        self.disable_cell_scalar_cb = True
-        self.cell_scalar_combobox.clear()
-
-        xml_file_root = "output%08d.xml" % 0
-        xml_file = os.path.join(self.output_dir, xml_file_root)
-        if not Path(xml_file).is_file():
-            print("add_default_cell_vars(): ERROR: file not found",xml_file)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Could not find file " + xml_file)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
-
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-        self.cell_scalars_l.clear()
-        self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
-
-        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
-        self.cell_scalars_l.remove('ID')
-        self.cell_scalars_l.reverse()
-
-        for idx in range(len(self.cell_scalars_l)):  # crop all past the custom data
-            if self.cell_scalars_l[idx].find("transformation_rates_") >= 0:
-                break
-        # print("   post: idx=",idx)
-        self.cell_scalars_l = self.cell_scalars_l[0:idx]
-        # print("   post: ",self.cell_scalars_l)
-
-        self.cell_scalars_l.extend(['cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase','pressure','damage'])
-        # print("   post append: ",self.cell_scalars_l)
-
-        self.cell_scalar_combobox.addItems(self.cell_scalars_l)
-
-        self.disable_cell_scalar_cb = False
-        self.update_plots()
+    # def output_folder_cb(self):
+    #     # print(f"output_folder_cb(): old={self.output_dir}")
+    #     self.output_dir = self.output_folder.text()
+    #     # print(f"                    new={self.output_dir}")
 
 
 
-    def output_folder_cb(self):
-        print(f"output_folder_cb(): old={self.output_dir}")
-        self.output_dir = self.output_folder.text()
-        print(f"                    new={self.output_dir}")
-        # filePath = QFileDialog.getOpenFileName(self,'',".")
-        dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
-
-        print("\n\nselect_plot_output_cb():  dir_path=",dir_path)
-        # full_path_model_name = dirPath[0]
-        # print("\n\nselect_plot_output_cb():  full_path_model_name =",full_path_model_name )
-        # logging.debug(f'\npmb.py: select_plot_output_cb():  full_path_model_name ={full_path_model_name}')
-        # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
-        if dir_path == "":
-            return
-        if Path(dir_path).is_dir():
-            print("select_plot_output_cb():  dir_path is valid")
-            # print("len(full_path_model_name) = ", len(full_path_model_name) )
-            # logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
-            # fname = os.path.basename(full_path_model_name)
-            # self.current_xml_file = full_path_model_name
-
-            # self.add_new_model(self.current_xml_file, True)
-            # self.config_file = self.current_xml_file
-            # if self.studio_flag:
-            #     self.run_tab.config_file = self.current_xml_file
-            #     self.run_tab.config_xml_name.setText(self.current_xml_file)
-            # self.show_sample_model()
-
-            # self.vis_tab.output_dir = self.config_tab.folder.text()
-            # self.legend_tab.output_dir = self.config_tab.folder.text()
-            # self.vis_tab.output_dir = dir_path
-            # self.vis_tab.update_output_dir(dir_path)
-            # self.output_dir(dir_path)
-            self.output_dir = dir_path
-            self.output_folder.setText(dir_path)
-            self.legend_tab.output_dir = dir_path
-            legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
-            if Path(legend_file).is_file():
-                self.legend_tab.reload_legend()
-            else:
-                self.legend_tab.clear_legend()
-
-            self.reset_model()
-            self.update_plots()
-
-        else:
-            print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
-
-
-    def change_plot_range(self):
-        print("----- change_plot_range:")
-        # print("----- my_xmin= ",self.my_xmin.text())
-        # print("----- my_xmax= ",self.my_xmax.text())
-        try:  # due to the initial callback
-            self.plot_xmin = float(self.my_xmin.text())
-            self.plot_xmax = float(self.my_xmax.text())
-            self.plot_ymin = float(self.my_ymin.text())
-            self.plot_ymax = float(self.my_ymax.text())
-        except:
-            pass
-
-        self.update_plots()
-
+    #---------------------------------------
+    # Dependent on 2D/3D
     def update_plots(self):
         # self.ax0.cla()
         # if self.substrates_checked_flag:
@@ -1213,28 +374,19 @@ class Vis(QWidget):
         # self.canvas.draw()
         return
 
-    def update_output_dir(self, dir_path):
-        self.output_dir = dir_path
-        return 
-        # if os.path.isdir(dir_path):
-        #     print("update_output_dir(): yes, it is a dir path", dir_path)
-        # else:
-        #     print("update_output_dir(): NO, it is NOT a dir path", dir_path)
-        # self.output_dir = dir_path
-        # self.output_folder.setText(dir_path)
 
-    def fill_substrates_combobox(self, substrate_list):
-        print("vis3D_tab.py: fill_substrates_combobox(): substrate_list =",substrate_list)
-        print("substrate_list = ",substrate_list )
-        self.substrate_name = substrate_list[0]
-        print("\n----------------------- fill_substrates_combobox(): self.substrate_name=",self.substrate_name) # e.g., oxygen
-        # sys.exit(1)
-        self.substrates_combobox.clear()
-        for s in substrate_list:
-            print(" --> ",s)
-            self.substrates_combobox.addItem(s)
-        # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
+    # def update_output_dir(self, dir_path):
+    #     self.output_dir = dir_path
+    #     return 
+    #     # if os.path.isdir(dir_path):
+    #     #     print("update_output_dir(): yes, it is a dir path", dir_path)
+    #     # else:
+    #     #     print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+    #     # self.output_dir = dir_path
+    #     # self.output_folder.setText(dir_path)
 
+
+    #------------------------------------------------
     def xy_slice_toggle_cb(self,flag):
         self.show_xy_slice = flag
         if flag:
@@ -1673,16 +825,6 @@ class Vis(QWidget):
             pass
         # self.update_plots()
 
-    def cmin_cmax_cb(self):
-        print("----- cmin_cmax_cb:")
-        try:  # due to the initial callback
-            self.cmin_value = float(self.cmin.text())
-            self.cmax_value = float(self.cmax.text())
-            # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
-        except:
-            pass
-        self.update_plots()
-
     def fix_cmap_toggle_cb(self,bval):
         print("fix_cmap_toggle_cb():")
         self.fix_cmap_flag = bval
@@ -2046,7 +1188,6 @@ class Vis(QWidget):
         return lut
 
     #------------------------------------------------------------
-    # def plot_svg(self, frame, rdel=''):
     def plot_cells3D(self, frame):
         print("plot_cells3D:  self.output_dir= ",self.output_dir)
         print("plot_cells3D:  self.substrate_name= ",self.substrate_name)
@@ -2133,7 +1274,7 @@ class Vis(QWidget):
             # print(type(cell_type))
             # print(cell_type)
 
-            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
+            # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
             if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
                 unique_cell_type = np.unique(cell_scalar_val)
                 self.num_discrete_cell_val = len(unique_cell_type)
@@ -2181,7 +1322,7 @@ class Vis(QWidget):
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
                 # print("idx, cell_type[idx]= ",idx,cell_type[idx])
                 # self.tags.InsertNextValue(cell_type[idx])
-                self.tags.InsertNextValue(cell_scalar_val[idx])
+                self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
 
             self.cell_data.CopyComponent(0, self.radii, 0)
             self.cell_data.CopyComponent(1, self.tags, 0)
@@ -2218,7 +1359,7 @@ class Vis(QWidget):
             # self.glyph.SetScaleModeToDataScalingOn()
 
             # self.glyph.SetScaleModeToScaleByVector ()
-            # self.glyph.SetScaleModeToScaleByScalar ()
+            self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
             print("glyph range= ",self.glyph.GetRange())
             # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)

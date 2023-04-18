@@ -327,7 +327,7 @@ class PhysiCellXMLCreator(QWidget):
 
             self.tabWidget.addTab(self.run_tab,"Run")
 
-            self.vis_tab = Vis(self.nanohub_flag, self.run_tab)
+            self.vis_tab = Vis(self.nanohub_flag, self.run_tab, self.model3D_flag)
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.config_tab.vis_tab = self.vis_tab
