@@ -643,6 +643,7 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('auto')
     
     #-----------------------------------------------------
+    # 
     def plot_cell_scalar(self, frame):
 
         if self.disable_cell_scalar_cb:
@@ -729,8 +730,13 @@ class Vis(VisBase, QWidget):
                 self.timer.stop()
                 return
         
-            vmin = cell_scalar.min()
-            vmax = cell_scalar.max()
+                    
+            if self.fix_cells_cmap_flag:
+                vmin = self.cells_cmin_value
+                vmax = self.cells_cmax_value
+            else:
+                vmin = cell_scalar.min()
+                vmax = cell_scalar.max()
             
         num_cells = len(cell_scalar)
         # print("  len(cell_scalar) = ",len(cell_scalar))
@@ -806,6 +812,7 @@ class Vis(VisBase, QWidget):
                 ax2_divider = make_axes_locatable(self.ax0)
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
                 self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+
                 # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
                 # print(" self.figure.axes= ",self.figure.axes)
                 # self.axis_id_cellscalar = len(self.figure.axes) - 1

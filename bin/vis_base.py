@@ -435,9 +435,16 @@ class VisBase():
         self.substrates_combobox.setEnabled(False)
         self.field_dict = {}
         self.field_min_max = {}
+
+        # substrates min/max colorbar
         self.cmin_value = 0.0
         self.cmax_value = 1.0
         self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
+
+        # cells' scalars min/max colorbar
+        self.cells_cmin_value = 0.0
+        self.cells_cmax_value = 1.0
+
 
         self.substrates_cbar_combobox = QComboBox()
         self.substrates_cbar_combobox.addItem("viridis")
@@ -565,13 +572,6 @@ class VisBase():
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
 
-        # Skip this for 3D
-        # self.cells_edge_checkbox = QCheckBox('edge')
-        # self.cells_edge_checkbox.setChecked(True)
-        # self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
-        # self.cells_edge_checked_flag = True
-        # hbox.addWidget(self.cells_edge_checkbox) 
-
         self.vbox.addLayout(hbox)
         #------------------
         hbox = QHBoxLayout()
@@ -622,6 +622,65 @@ class VisBase():
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
 
+        #------
+        hbox = QHBoxLayout()
+        groupbox = QGroupBox()
+        # groupbox.setTitle("colorbar")
+        # vlayout = QVBoxLayout()
+        # groupbox.setLayout(hbox)
+        groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
+        # groupbox.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; left: 7px; padding: 0px 5px 0px 5px;}")
+        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black; title: }")
+#         QGroupBox::title {
+#     subcontrol-origin: margin;
+#     left: 7px;
+#     padding: 0px 5px 0px 5px;
+# }
+
+        self.fix_cells_cmap_checkbox = QCheckBox_custom('fix: ')
+        self.fix_cells_cmap_flag = False
+        self.fix_cells_cmap_checkbox.setEnabled(False)
+        self.fix_cells_cmap_checkbox.setChecked(self.fix_cells_cmap_flag)
+        self.fix_cells_cmap_checkbox.clicked.connect(self.fix_cells_cmap_toggle_cb)
+        hbox.addWidget(self.fix_cells_cmap_checkbox)
+
+        cvalue_width = 60
+        label = QLabel("cmin")
+        # label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(label)
+        self.cells_cmin = QLineEdit()
+        self.cells_cmin.setText('0.0')
+        self.cells_cmin.setEnabled(False)
+        # self.cmin.textChanged.connect(self.change_plot_range)
+        self.cells_cmin.returnPressed.connect(self.cells_cmin_cmax_cb)
+        self.cells_cmin.setFixedWidth(cvalue_width)
+        self.cells_cmin.setValidator(QtGui.QDoubleValidator())
+        # self.cmin.setEnabled(False)
+        hbox.addWidget(self.cells_cmin)
+
+        label = QLabel("cmax")
+        # label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hbox.addWidget(label)
+        self.cells_cmax = QLineEdit()
+        self.cells_cmax.setText('1.0')
+        self.cells_cmax.setEnabled(False)
+        self.cells_cmax.returnPressed.connect(self.cells_cmin_cmax_cb)
+        self.cells_cmax.setFixedWidth(cvalue_width)
+        self.cells_cmax.setValidator(QtGui.QDoubleValidator())
+        # self.cmax.setEnabled(False)
+        hbox.addWidget(self.cells_cmax)
+
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
+        self.vbox.addLayout(hbox)
+
+        label = QLabel("(press 'Enter' if cmin or cmax changes)")
+        label.setStyleSheet("border: 0px solid black; font: 11px; padding: 0px 5px 0px 5px; top: 0px")
+        self.vbox.addWidget(label)
+
         #------------------
         self.vbox.addWidget(QHLine())
 
@@ -656,9 +715,9 @@ class VisBase():
 #     padding: 0px 5px 0px 5px;
 # }
 
-        self.fix_cmap_checkbox = QCheckBox_custom('fix')
+        self.fix_cmap_checkbox = QCheckBox_custom('fix: ')
         self.fix_cmap_flag = False
-        # self.fix_cmap_checkbox.setEnabled(False)
+        self.fix_cmap_checkbox.setEnabled(False)
         self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
         self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
         hbox.addWidget(self.fix_cmap_checkbox)
@@ -671,6 +730,7 @@ class VisBase():
         hbox.addWidget(label)
         self.cmin = QLineEdit()
         self.cmin.setText('0.0')
+        self.cmin.setEnabled(False)
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
         self.cmin.setFixedWidth(cvalue_width)
@@ -684,6 +744,7 @@ class VisBase():
         hbox.addWidget(label)
         self.cmax = QLineEdit()
         self.cmax.setText('1.0')
+        self.cmax.setEnabled(False)
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
         self.cmax.setValidator(QtGui.QDoubleValidator())
@@ -695,6 +756,13 @@ class VisBase():
         self.vbox.addLayout(hbox)
 
         label = QLabel("(press 'Enter' if cmin or cmax changes)")
+        # label.setStyleSheet("border: 1px solid black; font: 11px; padding: 0px 5px 0px 5px")
+        label.setStyleSheet("border: 0px solid black; font: 11px; padding: 0px 5px 0px 5px; top: 0px")
+                # font: bold 14px;
+                # min-width: 10em;
+                # padding: 6px;
+#     left: 7px;
+#     padding: 0px 5px 0px 5px;
         self.vbox.addWidget(label)
 
         #------------------
@@ -1144,6 +1212,10 @@ class VisBase():
             self.cell_scalar_cbar_combobox.setEnabled(False)
             self.all_button.setEnabled(False)
             self.limit_button.setEnabled(False)
+
+            self.fix_cells_cmap_checkbox.setEnabled(False)
+            self.cells_cmin.setEnabled(False)
+            self.cells_cmax.setEnabled(False)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(False)
             # self.fix_cmap_checkbox.setEnabled(bval)
@@ -1160,6 +1232,10 @@ class VisBase():
             self.cell_scalar_cbar_combobox.setEnabled(True)
             self.all_button.setEnabled(True)
             self.limit_button.setEnabled(True)
+
+            self.fix_cells_cmap_checkbox.setEnabled(True)
+            self.cells_cmin.setEnabled(True)
+            self.cells_cmax.setEnabled(True)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
@@ -1229,6 +1305,15 @@ class VisBase():
         except:
             pass
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
+        self.update_plots()
+
+    def cells_cmin_cmax_cb(self):
+        # print("----- cells_cmin_cmax_cb:")
+        try:  # due to the initial callback
+            self.cells_cmin_value = float(self.cells_cmin.text())
+            self.cells_cmax_value = float(self.cells_cmax.text())
+        except:
+            pass
         self.update_plots()
 
     def cmin_cmax_cb(self):
@@ -1646,6 +1731,12 @@ class VisBase():
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
+
+    def fix_cells_cmap_toggle_cb(self,bval):
+        # print("fix_cells_cmap_toggle_cb():")
+        self.fix_cells_cmap_flag = bval
+        self.cells_cmin.setEnabled(bval)
+        self.cells_cmax.setEnabled(bval)
 
     def fix_cmap_toggle_cb(self,bval):
         # print("fix_cmap_toggle_cb():")
