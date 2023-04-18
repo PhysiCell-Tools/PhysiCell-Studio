@@ -639,7 +639,8 @@ class VisBase():
 
         self.fix_cells_cmap_checkbox = QCheckBox_custom('fix: ')
         self.fix_cells_cmap_flag = False
-        self.fix_cells_cmap_checkbox.setEnabled(False)
+        if not self.model3D_flag:
+            self.fix_cells_cmap_checkbox.setEnabled(False)
         self.fix_cells_cmap_checkbox.setChecked(self.fix_cells_cmap_flag)
         self.fix_cells_cmap_checkbox.clicked.connect(self.fix_cells_cmap_toggle_cb)
         hbox.addWidget(self.fix_cells_cmap_checkbox)
@@ -652,7 +653,8 @@ class VisBase():
         hbox.addWidget(label)
         self.cells_cmin = QLineEdit()
         self.cells_cmin.setText('0.0')
-        self.cells_cmin.setEnabled(False)
+        if not self.model3D_flag:
+            self.cells_cmin.setEnabled(False)
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cells_cmin.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmin.setFixedWidth(cvalue_width)
@@ -666,7 +668,8 @@ class VisBase():
         hbox.addWidget(label)
         self.cells_cmax = QLineEdit()
         self.cells_cmax.setText('1.0')
-        self.cells_cmax.setEnabled(False)
+        if not self.model3D_flag:
+            self.cells_cmax.setEnabled(False)
         self.cells_cmax.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmax.setFixedWidth(cvalue_width)
         self.cells_cmax.setValidator(QtGui.QDoubleValidator())
@@ -1737,6 +1740,9 @@ class VisBase():
         self.fix_cells_cmap_flag = bval
         self.cells_cmin.setEnabled(bval)
         self.cells_cmax.setEnabled(bval)
+
+        self.update_plots()
+
 
     def fix_cmap_toggle_cb(self,bval):
         # print("fix_cmap_toggle_cb():")
