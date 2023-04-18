@@ -719,6 +719,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 self.run_tab.config_xml_name.setText(self.current_xml_file)
 
             self.show_sample_model()
+            self.vis_tab.update_output_dir(self.config_tab.folder.text())
             # self.reset_xml_root()   #rwh - done in show_sample_model
 
         else:
