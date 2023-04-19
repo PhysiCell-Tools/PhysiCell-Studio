@@ -144,7 +144,7 @@ class SvgWidget(QSvgWidget):
             renderer.render(painter, QRectF(0, 0, length, ratio * length))
             painter.end()
 
-class Legend(QWidget):
+class Legend(QWidget):  # the tab version; instanced in studio.py
     # def __init__(self, doc_absolute_path, nanohub_flag):
     def __init__(self, nanohub_flag):
         super().__init__()
@@ -173,11 +173,11 @@ class Legend(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.scroll)
 
-    def clear_legend(self):
+    def clear_legend(self):  # tab version
         legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
         self.svgView.load(legend_file)
 
-    def reload_legend(self):
+    def reload_legend(self):  # tab version
         print('reload_legend(): self.output_dir = ',self.output_dir)
         for idx in range(4):
             print("waiting for creation of legend.svg ...",idx)
@@ -203,19 +203,61 @@ class Legend(QWidget):
 
 #------------------------------
 class LegendPlotWindow(QWidget):
-    def __init__(self):
+    def __init__(self, output_dir):
         super().__init__()
+
+        self.output_dir = output_dir
+        
+        #-------------------------------------------
+        self.scroll = QScrollArea()  # might contain centralWidget
+
+        self.svg_view = SvgWidget()
+        # self.svg_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        try:
+            full_fname = os.path.join(self.output_dir, "legend.svg")
+            # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
+            # print("LegendPlotWindow: full_fname = ",full_fname)
+            self.svg_view.load(full_fname)
+            self.svg_view.renderer().setAspectRatioMode(Qt.KeepAspectRatio)
+        except:
+            # path = Path(self.current_dir,self.output_dir,"legend.svg")
+            # time.sleep(1)
+            print("LegendPlotWindow: error trying to load legend.svg ")
+
         self.layout = QVBoxLayout()
-        # self.label = QLabel("Cell populations")
-        # self.layout.addWidget(self.label)
 
-        self.figure = plt.figure()
-        self.canvas = FigureCanvasQTAgg(self.figure)
-        self.canvas.setStyleSheet("background-color:transparent;")
-        self.ax0 = self.figure.add_subplot(111, adjustable='box')
-        self.layout.addWidget(self.canvas)
+        self.svg_view.setFixedSize(500, 500)
+        # self.svgView.setLayout(self.vbox)
+        # self.layout.addWidget(self.svg_view)
+
+        self.close_button = QPushButton("Close")
+        self.close_button.setStyleSheet("background-color: lightgreen;")
+        # self.close_button.setFixedWidth(150)
+        self.close_button.clicked.connect(self.close_legend_cb)
+
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setWidgetResizable(True)
+        # self.scroll.setFixedWidth(self.scroll.scrollAreaWidgetContents.minimumSizeHint().width())
+
+        # self.scroll.setWidgetResizable(False)
+
+        self.scroll.setWidget(self.svg_view) 
+        # self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.scroll)
+        self.layout.addWidget(self.close_button)
+        # self.layout.setStretch(0,1000)
+
+
         self.setLayout(self.layout)
+        self.resize(250, 250)
 
+    def close_legend_cb(self):
+        self.close()
+
+
+#------------------------------
 class PopulationPlotWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -273,6 +315,7 @@ class VisBase():
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.population_plot = None
+        self.legend_svg_plot = None
         self.celltype_name = []
         self.celltype_color = []
 
@@ -811,6 +854,11 @@ class VisBase():
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         self.vbox.addWidget(self.cell_counts_button)
 
+        self.legend_svg_button = QPushButton("Legend (.svg)")
+        self.legend_svg_button.setFixedWidth(200)
+        self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
+        self.vbox.addWidget(self.legend_svg_button)
+
         #-----------
         self.physiboss_qline = None
         self.physiboss_hbox_1 = None
@@ -893,16 +941,16 @@ class VisBase():
         return True
 
 
-    def get_cell_types_from_legend(self):
+    def get_cell_types_from_legend(self):   # used by cell_counts_cb()
+        # print("--get_cell_types_from_legend():  assumes legend.svg")
         legend_file = os.path.join(self.output_dir, "legend.svg")
-        # print("--get_cell_types():  legend=",legend_file)
         self.celltype_name.clear()
         self.celltype_color.clear()
 
         try:
             self.tree = ET.parse(legend_file)
             self.xml_root = self.tree.getroot()
-            print("xml_root=",self.xml_root)
+            # print("xml_root=",self.xml_root)
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -916,7 +964,7 @@ class VisBase():
                 ctname = var.text.strip()
                 # print("-- ctname=",ctname)
                 self.celltype_name.append(ctname)
-            print(self.celltype_name)
+            # print("      self.celltype_name= ",self.celltype_name)
 
             idx = 0
             for var in self.xml_root.findall('{http://www.w3.org/2000/svg}circle'):
@@ -926,6 +974,7 @@ class VisBase():
                     # print("-- cattr['fill']=",cattr['fill'])
                     self.celltype_color.append(cattr['fill'])
                 idx += 1
+            # print("      self.celltype_color= ",self.celltype_color)
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -937,8 +986,20 @@ class VisBase():
         return True
 
 
+    def legend_svg_plot_cb(self):
+        # print("---- legend_svg_plot_cb():")
+        if not self.get_cell_types_from_legend():
+            return
+
+        # if not self.legend_svg_plot:
+        self.legend_svg_plot = LegendPlotWindow(self.output_dir)
+
+        # self.legend_svg_plot.ax0.cla()
+        self.legend_svg_plot.show()
+
+
     def cell_counts_cb(self):
-        print("---- cell_counts_cb(): --> window for 2D population plots")
+        # print("---- cell_counts_cb(): --> window for 2D population plots")
         # self.analysis_data_wait.value = 'compute n of N ...'
 
         if not self.get_cell_types_from_legend():
@@ -981,22 +1042,22 @@ class VisBase():
         # ctype_plot = []
         lw = 2
         # for itype, ctname in enumerate(self.celltypes_list):
-        print("  self.celltype_name=",self.celltype_name)
+        # print("  self.celltype_name=",self.celltype_name)
         for itype in range(len(self.celltype_name)):
             ctname = self.celltype_name[itype]
             try:
                 ctcolor = self.celltype_color[itype]
             except:
                 ctcolor = 'C' + str(itype)   # use random colors from matplotlib
-            print("  ctcolor=",ctcolor)
+            # print("  ctcolor=",ctcolor)
             if 'rgb' in ctcolor:
                 rgb = ctcolor.replace('rgb','')
                 rgb = rgb.replace('(','')
                 rgb = rgb.replace(')','')
                 rgb = rgb.split(',')
-                print("--- rgb after split=",rgb)
+                # print("--- rgb after split=",rgb)
                 ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
-                print("--- converted rgb=",ctcolor)
+                # print("--- converted rgb=",ctcolor)
             yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
             # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
             # print("  yval=",yval)

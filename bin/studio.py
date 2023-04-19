@@ -39,7 +39,7 @@ from user_params_tab import UserParams
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
-from legend_tab import Legend 
+# from legend_tab import Legend 
 
 try:
     from simulariumio import UnitData, MetaData, DisplayData, DISPLAY_TYPE, ModelMetaData
@@ -97,10 +97,10 @@ class PhysiCellXMLCreator(QWidget):
 
         self.ics_tab_index = 4
         self.plot_tab_index = 6
-        self.legend_tab_index = 7
+        # self.legend_tab_index = 7
         if self.rules_flag:
             self.plot_tab_index += 1
-            self.legend_tab_index += 1
+            # self.legend_tab_index += 1
 
         # self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
@@ -340,21 +340,21 @@ class PhysiCellXMLCreator(QWidget):
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
             # self.vis_tab.view_shading = self.view_shading
 
-            self.legend_tab = Legend(self.nanohub_flag)
-            self.vis_tab.legend_tab = self.legend_tab
-            self.legend_tab.current_dir = self.current_dir
-            self.legend_tab.studio_config_dir = self.studio_config_dir
+            # self.legend_tab = Legend(self.nanohub_flag)
+            # self.vis_tab.legend_tab = self.legend_tab
+            # self.legend_tab.current_dir = self.current_dir
+            # self.legend_tab.studio_config_dir = self.studio_config_dir
             self.run_tab.vis_tab = self.vis_tab
             self.tabWidget.addTab(self.vis_tab,"Plot")
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
             self.enablePlotTab(True)
 
-            self.tabWidget.addTab(self.legend_tab,"Legend")
-            self.enableLegendTab(False)
-            self.enableLegendTab(True)
+            # self.tabWidget.addTab(self.legend_tab,"Legend")
+            # self.enableLegendTab(False)
+            # self.enableLegendTab(True)
             self.run_tab.vis_tab = self.vis_tab
-            self.run_tab.legend_tab = self.legend_tab
+            # self.run_tab.legend_tab = self.legend_tab
             logging.debug(f'studio.py: calling vis_tab.substrates_cbox_changed_cb(2)')
             self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
@@ -362,10 +362,10 @@ class PhysiCellXMLCreator(QWidget):
 
             # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
-            self.legend_tab.output_dir = self.config_tab.folder.text()
-            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
-            if Path(legend_file).is_file():
-                self.legend_tab.reload_legend()
+            # self.legend_tab.output_dir = self.config_tab.folder.text()
+            # legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+            # if Path(legend_file).is_file():
+            #     self.legend_tab.reload_legend()
 
             self.vis_tab.reset_model()
             
@@ -443,10 +443,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.tabWidget.setTabEnabled(5, bval)
         self.tabWidget.setTabEnabled(self.plot_tab_index, bval)
 
-    def enableLegendTab(self, bval):
-        # self.tabWidget.setTabEnabled(6, bval)   
-        # self.tabWidget.setTabEnabled(6, bval)   
-        self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
+    # def enableLegendTab(self, bval):
+    #     # self.tabWidget.setTabEnabled(6, bval)   
+    #     # self.tabWidget.setTabEnabled(6, bval)   
+    #     self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
 
     def menu(self):
@@ -1156,7 +1156,7 @@ def main():
             model3D_flag = True
             # print("done with args.three")
         if args.bare:
-            logging.debug(f'studio.py: bare model editing, no ICs,Run,Plot,Legend tabs')
+            logging.debug(f'studio.py: bare model editing, no ICs,Run,Plot tabs')
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
