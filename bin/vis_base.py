@@ -241,7 +241,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, nanohub_flag, run_tab, model3D_flag, **kw):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -256,6 +256,7 @@ class VisBase():
         self.mech_voxel_size = 30
 
         self.nanohub_flag = nanohub_flag
+        self.config_tab = config_tab
         self.run_tab = run_tab
         self.legend_tab = None
 

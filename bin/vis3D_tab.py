@@ -30,14 +30,14 @@ from pyMCDS import pyMCDS
 #----------------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, nanohub_flag, run_tab, model3D_flag):
-        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab, model3D_flag=model3D_flag)
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag):
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab,  config_tab=config_tab, model3D_flag=model3D_flag)
 
         self.figure = None
 
         self.model3D_flag = model3D_flag
 
-        self.config_tab = None
+        # self.config_tab = None
         self.run_tab = run_tab
 
         self.population_plot = None
@@ -77,11 +77,11 @@ class Vis(VisBase, QWidget):
 
         # self.show_domain_outline()
 
-        xmax = 100
+        xmax = float(self.config_tab.xmax.text())
         xmin = -xmax
-        ymax = 100
+        ymax = float(self.config_tab.ymax.text())
         ymin = -ymax
-        zmax = 100
+        zmax = float(self.config_tab.zmax.text())
         zmin = -zmax
         lineSource = vtkLineSource()
         lineSource.SetPoint1(xmin, ymin, zmin)
@@ -503,12 +503,13 @@ class Vis(VisBase, QWidget):
                 print("------- showing axes_actor")
                 self.ren.RemoveActor(self.axes_actor)
                 self.axes_actor = vtkAxesActor()
-                self.axes_actor.SetShaftTypeToCylinder()
+                # self.axes_actor.SetShaftTypeToCylinder()
                 # subjective scaling
                 # cradius = self.ymax * 0.001
                 cradius = self.ymax * 0.0005
-                self.axes_actor.SetCylinderRadius(cradius)
-                self.axes_actor.SetConeRadius(cradius*9)
+                print("\n-----  axes cradius= ",cradius)
+                # self.axes_actor.SetCylinderRadius(cradius)
+                # self.axes_actor.SetConeRadius(cradius*9)
                 # laxis = self.ymax + self.ymax * 0.2
                 laxis = self.ymax + self.ymax * 0.05
                 self.axes_actor.SetTotalLength(laxis,laxis,laxis)
@@ -1666,12 +1667,12 @@ class Vis(VisBase, QWidget):
             print("------- showing axes_actor")
             self.ren.RemoveActor(self.axes_actor)
             self.axes_actor = vtkAxesActor()
-            self.axes_actor.SetShaftTypeToCylinder()
+            # self.axes_actor.SetShaftTypeToCylinder()
             # subjective scaling
             # cradius = self.ymax * 0.001
             cradius = self.ymax * 0.0005
-            self.axes_actor.SetCylinderRadius(cradius)
-            self.axes_actor.SetConeRadius(cradius*10)
+            # self.axes_actor.SetCylinderRadius(cradius)
+            # self.axes_actor.SetConeRadius(cradius*10)
 
             # laxis = self.ymax + self.ymax * 0.2
             laxis = self.ymax + self.ymax * 0.05

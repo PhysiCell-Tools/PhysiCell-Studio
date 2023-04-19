@@ -59,10 +59,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, nanohub_flag, run_tab, model3D_flag):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag):
         # super().__init__()
         # super(Vis,self).__init__(a=a,b=b,c=c)
-        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab, model3D_flag=model3D_flag)
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, config_tab=config_tab, run_tab=run_tab, model3D_flag=model3D_flag)
         # self.d=d
         # super().__init__(nanohub_flag, run_tab, model3D_flag)
         # global self.config_params
