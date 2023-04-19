@@ -556,85 +556,27 @@ class Vis(VisBase, QWidget):
         xvals = np.array(xlist)
         yvals = np.array(ylist)
         rvals = np.array(rlist)
-        # rgbs = np.array(rgb_list)
         rgbas = np.array(rgba_list)
         # print("xvals[0:5]=",xvals[0:5])
         # print("rvals[0:5]=",rvals[0:5])
         # print("rvals.min, max=",rvals.min(),rvals.max())
 
-        # rwh - is this where I change size of render window?? (YES - yipeee!)
-        #   plt.figure(figsize=(6, 6))
-        #   plt.cla()
-        # if (self.substrates_toggle.value):
         self.title_str += " (" + str(num_cells) + " agents)"
-            # title_str = " (" + str(num_cells) + " agents)"
-        # else:
-            # mins= round(int(float(root.find(".//current_time").text)))  # TODO: check units = mins
-            # hrs = int(mins/60)
-            # days = int(hrs/24)
-            # title_str = '%dd, %dh, %dm' % (int(days),(hrs%24), mins - (hrs*60))
-        # plt.title(self.title_str)
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
-        # self.ax0.set_title(self.title_str, prop={'size':'small'})
 
-        # plt.xlim(self.xmin, self.xmax)
-        # plt.ylim(self.ymin, self.ymax)
-
-        # print("plot_svg(): plot_xmin,xmax, ymin,ymax= ",self.plot_xmin,self.plot_xmax,self.plot_ymin,self.plot_ymax)
-        # set xrange & yrange of plots
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        # self.ax0.set_xlim(-450, self.xmax)
-
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        # self.ax0.set_ylim(0.0, self.ymax)
+
         self.ax0.tick_params(labelsize=self.fontsize)
 
         self.ax0.set_facecolor(self.bgcolor)
 
-        # self.ax0.colorbar(collection)
-
-        #   plt.xlim(axes_min,axes_max)
-        #   plt.ylim(axes_min,axes_max)
-        #   plt.scatter(xvals,yvals, s=rvals*scale_radius, c=rgbs)
-
-        # TODO: make figsize a function of plot_size? What about non-square plots?
-        # self.fig = plt.figure(figsize=(9, 9))
-
-#        axx = plt.axes([0, 0.05, 0.9, 0.9])  # left, bottom, width, height
-#        axx = fig.gca()
-#        print('fig.dpi=',fig.dpi) # = 72
-
-        #   im = ax.imshow(f.reshape(100,100), interpolation='nearest', cmap=cmap, extent=[0,20, 0,20])
-        #   ax.xlim(axes_min,axes_max)
-        #   ax.ylim(axes_min,axes_max)
-
-        # convert radii to radii in pixels
-        # ax1 = self.fig.gca()
-        # N = len(xvals)
-        # rr_pix = (ax1.transData.transform(np.vstack([rvals, rvals]).T) -
-        #             ax1.transData.transform(np.vstack([np.zeros(N), np.zeros(N)]).T))
-        # rpix, _ = rr_pix.T
-
-        # markers_size = (144. * rpix / self.fig.dpi)**2   # = (2*rpix / fig.dpi * 72)**2
-        # markers_size = markers_size/4000000.
-        # print('max=',markers_size.max())
-
-        #rwh - temp fix - Ah, error only occurs when "edges" is toggled on
-        # if (self.show_edge):
         if (self.cells_edge_checked_flag):
             try:
-                # plt.scatter(xvals,yvals, s=markers_size, c=rgbs, edgecolor='black', linewidth=0.5)
-                # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha, edgecolor='black', linewidth=0.5)
-                # print("--- plotting circles with edges!!")
                 self.circles(xvals,yvals, s=rvals, color=rgbas,  edgecolor='black', linewidth=0.5)
-                # cell_circles = self.circles(xvals,yvals, s=rvals, color=rgbs, edgecolor='black', linewidth=0.5)
-                # plt.sci(cell_circles)
             except (ValueError):
                 pass
         else:
-            # plt.scatter(xvals,yvals, s=markers_size, c=rgbs)
-            # self.circles(xvals,yvals, s=rvals, color=rgbas, alpha=self.alpha)
-            # print("--- plotting circles without edges!!")
             self.circles(xvals,yvals, s=rvals, color=rgbas )
 
         if self.view_aspect_square:
@@ -645,7 +587,6 @@ class Vis(VisBase, QWidget):
     #-----------------------------------------------------
     # 
     def plot_cell_scalar(self, frame):
-
         if self.disable_cell_scalar_cb:
             return
             
@@ -665,17 +606,8 @@ class Vis(VisBase, QWidget):
             print("ERROR: file not found",xml_file)
             return
 
-        #   if (os.path.isfile(fname) == False):
-        #     print("File does not exist: ",fname)
-        #     return
-
-        # mcds = pyMCDS(fname, '../tmpdir', microenv=False, graph=False, verbose=True)
-        # temporary hack to debug plotting without doing Run first
-        # mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=True)
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-        # mcds = pyMCDS(xml_file_root, "tmpdir", microenv=False, graph=False, verbose=True)
         total_min = mcds.get_time()
-        # print("    time=",total_min)
         
         if self.physiboss_vis_flag:
             try:

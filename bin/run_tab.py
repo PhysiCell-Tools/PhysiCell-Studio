@@ -158,13 +158,14 @@ class RunModel(QWidget):
         logging.debug(f'===========  run_model_cb():  ============')
         self.celldef_tab.check_valid_cell_defs()
 
-        if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setText("Warning")
-            msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
-            msg.setWindowTitle("Warning")
-            msg.exec_()
+        if self.config_tab.save_svg.isChecked() and self.config_tab.save_full.isChecked():
+            if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Warning")
+                msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
+                msg.setWindowTitle("Warning")
+                msg.exec_()
 
         self.run_button.setEnabled(False)
 

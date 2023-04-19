@@ -271,6 +271,7 @@ class VisBase():
 
         self.xml_root = None
         self.current_svg_frame = 0
+        self.current_frame = 0   # used in vis3D_tab.py
         self.timer = QtCore.QTimer()
         # self.t.timeout.connect(self.task)
         self.timer.timeout.connect(self.play_plot_cb)
@@ -567,6 +568,7 @@ class VisBase():
         # self.cell_scalar_combobox = QComboBox()
         self.cell_scalar_combobox = ExtendedComboBox()
         self.cell_scalar_combobox.setFixedWidth(270)
+        self.cell_scalar_combobox.addItem('cell_type')
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
@@ -582,28 +584,28 @@ class VisBase():
         self.vbox.addLayout(hbox)
 
 
-        # self.all_button = QPushButton("append custom data")
-        # self.all_button.setFixedWidth(150)
-        # # self.all_button.setStyleSheet("background-color : lightgreen")
+        # self.full_list_button = QPushButton("append custom data")
+        # self.full_list_button.setFixedWidth(150)
+        # # self.full_list_button.setStyleSheet("background-color : lightgreen")
         # # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.all_button.clicked.connect(self.append_custom_cb)
-        # self.vbox.addWidget(self.all_button)
+        # self.full_list_button.clicked.connect(self.append_custom_cb)
+        # self.vbox.addWidget(self.full_list_button)
 
         hbox = QHBoxLayout()
-        self.all_button = QPushButton("all")   # old: refresh
-        self.all_button.setFixedWidth(100)
-        self.all_button.setEnabled(True)
-        # self.all_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.full_list_button = QPushButton("full list")   # old: refresh
+        self.full_list_button.setFixedWidth(100)
+        self.full_list_button.setEnabled(True)
+        # self.full_list_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.all_button.clicked.connect(self.append_custom_cb)
-        self.all_button.clicked.connect(self.add_default_cell_vars)
-        hbox.addWidget(self.all_button)
+        # self.full_list_button.clicked.connect(self.append_custom_cb)
+        self.full_list_button.clicked.connect(self.add_default_cell_vars)
+        hbox.addWidget(self.full_list_button)
 
-        self.limit_button = QPushButton("limit")
-        self.limit_button.setFixedWidth(100)
-        # self.limit_button.setEnabled(False)
-        self.limit_button.clicked.connect(self.add_limit_cell_vars)
-        hbox.addWidget(self.limit_button)
+        self.partial_button = QPushButton("partial")
+        self.partial_button.setFixedWidth(100)
+        # self.partial_button.setEnabled(False)
+        self.partial_button.clicked.connect(self.add_partial_cell_vars)
+        hbox.addWidget(self.partial_button)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
@@ -826,6 +828,7 @@ class VisBase():
         self.scroll_plot.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scroll_plot.setWidgetResizable(True)
 
+        # done in subclasses now
         # self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
 
         self.stackw.addWidget(self.controls1)
@@ -1213,8 +1216,8 @@ class VisBase():
             self.plot_cells_svg = True
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
-            self.all_button.setEnabled(False)
-            self.limit_button.setEnabled(False)
+            self.full_list_button.setEnabled(False)
+            self.partial_button.setEnabled(False)
 
             self.fix_cells_cmap_checkbox.setEnabled(False)
             self.cells_cmin.setEnabled(False)
@@ -1233,8 +1236,8 @@ class VisBase():
             self.plot_cells_svg = False
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
-            self.all_button.setEnabled(True)
-            self.limit_button.setEnabled(True)
+            self.full_list_button.setEnabled(True)
+            self.partial_button.setEnabled(True)
 
             self.fix_cells_cmap_checkbox.setEnabled(True)
             self.cells_cmin.setEnabled(True)
@@ -1302,10 +1305,15 @@ class VisBase():
             #         self.layout.removeWidget(widget)
             #         widget.deleteLater()
 
+
     def change_frame_count_cb(self):
+        # print("vis_base >>> change_frame_count_cb()")
         try:  # due to the initial callback
             self.current_svg_frame = int(self.frame_count.text())
+            self.current_frame = self.current_svg_frame
+            # print("           self.current_svg_frame= ",self.current_svg_frame)
         except:
+            # print("vis_base >>> change_frame_count_cb(): got exception")
             pass
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
@@ -1516,6 +1524,7 @@ class VisBase():
 
         # and plot 1st frame (.svg)
         self.current_svg_frame = 0
+        self.current_frame = 0
         # self.forward_plot_cb("")  
 
         print("         sub_names= ",sub_names)
@@ -1552,6 +1561,7 @@ class VisBase():
 
         # and plot 1st frame (.svg)
         self.current_svg_frame = 0
+        self.current_frame = 0
         # self.forward_plot_cb("")  
 
 
@@ -1565,6 +1575,7 @@ class VisBase():
             self.reset_model_flag = False
 
         self.current_svg_frame = 0
+        self.current_frame = 0
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -1615,7 +1626,10 @@ class VisBase():
         self.current_svg_frame = last_xml
         if last_svg < last_xml:
             self.current_svg_frame = last_svg
+
+        self.current_frame = self.current_svg_frame
         self.update_plots()
+
 
     def back_plot_cb(self, text):
         if self.reset_model_flag:
@@ -1624,7 +1638,9 @@ class VisBase():
 
         self.current_svg_frame -= 1
         if self.current_svg_frame < 0:
-            self.current_svg_frame = 0
+           self.current_svg_frame = 0
+
+        self.current_frame = self.current_svg_frame
         # print('back_plot_cb(): svg # ',self.current_svg_frame)
 
         self.update_plots()
@@ -1635,7 +1651,8 @@ class VisBase():
             self.reset_model()
             self.reset_model_flag = False
 
-        self.current_svg_frame += 1
+        self.current_svg_frame+= 1
+        self.current_frame = self.current_svg_frame
         # print('svg # ',self.current_svg_frame)
 
         self.update_plots()
@@ -1648,6 +1665,7 @@ class VisBase():
     def play_plot_cb(self):
         for idx in range(1):
             self.current_svg_frame += 1
+            self.current_frame = self.current_svg_frame
             # print('svg # ',self.current_svg_frame)
 
             fname = "snapshot%08d.svg" % self.current_svg_frame
@@ -1661,6 +1679,8 @@ class VisBase():
                 # print("play_plot_cb():  Reached the end (or no output files found).")
                 # self.timer.stop()
                 self.current_svg_frame -= 1
+                self.current_frame -= 1
+
                 self.animating_flag = True
                 # self.current_svg_frame = 0
                 self.animate()
@@ -1776,16 +1796,6 @@ class VisBase():
 
     def add_default_cell_vars(self):
         # print("\n-------  add_default_cell_vars():   self.output_dir= ",self.output_dir)
-
-        self.disable_cell_scalar_cb = True
-        self.cell_scalar_combobox.clear()
-
-        # -- old way (limit choices)
-        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        # for idx in range(len(default_var_l)):
-        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
-        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
-
         xml_file_root = "output%08d.xml" % 0
         xml_file = os.path.join(self.output_dir, xml_file_root)
         if not Path(xml_file).is_file():
@@ -1796,6 +1806,15 @@ class VisBase():
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return
+
+        self.disable_cell_scalar_cb = True
+        self.cell_scalar_combobox.clear()
+
+        # -- old way (limit choices)
+        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
+        # for idx in range(len(default_var_l)):
+        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
+        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
 
@@ -1832,22 +1851,23 @@ class VisBase():
         self.update_plots()
 
 
-    def add_limit_cell_vars(self):
-        print("\n-------  vis_base:  add_limit_cell_vars():   self.output_dir= ",self.output_dir)
-
-        self.disable_cell_scalar_cb = True
-        self.cell_scalar_combobox.clear()
+    def add_partial_cell_vars(self):
+        print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
 
         xml_file_root = "output%08d.xml" % 0
         xml_file = os.path.join(self.output_dir, xml_file_root)
         if not Path(xml_file).is_file():
-            print("add_limit_cell_vars(): ERROR: file not found",xml_file)
+            print("add_partial_cell_vars(): ERROR: file not found",xml_file)
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
             msgBox.setText("Could not find file " + xml_file)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return
+
+        self.disable_cell_scalar_cb = True
+        self.cell_scalar_combobox.clear()
+
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         self.cell_scalars_l.clear()
@@ -1895,6 +1915,7 @@ class VisBase():
 
     def prepare_plot_cb(self, text):
         self.current_svg_frame += 1
+        self.current_frame += 1
         print('\n\n   ====>     prepare_plot_cb(): svg # ',self.current_svg_frame)
 
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])

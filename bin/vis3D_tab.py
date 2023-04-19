@@ -70,6 +70,34 @@ class Vis(VisBase, QWidget):
 
         # -------------  VTK pipeline  --------------
         #------  Setup for the cells (rendered as 3D glyphs (spheres))
+        # self.outline = vtkOutlineFilter()
+        # self.outline.SetInputConnection(source.GetOutputPort())  # self.substrate_data
+        # self.outline_mapper = vtkPolyDataMapper()
+        # self.outline_mapper.SetInputConnection(self.outline.GetOutputPort())
+
+        # self.show_domain_outline()
+
+        xmax = 100
+        xmin = -xmax
+        ymax = 100
+        ymin = -ymax
+        zmax = 100
+        zmin = -zmax
+        lineSource = vtkLineSource()
+        lineSource.SetPoint1(xmin, ymin, zmin)
+        lineSource.SetPoint2(xmax, ymax, zmax)
+
+        self.outline = vtkOutlineFilter()
+        self.outline.SetInputConnection(lineSource.GetOutputPort())
+
+        # Now we'll look at it.
+        self.domain_boundary_mapper = vtkPolyDataMapper()
+        self.domain_boundary_mapper.SetInputConnection(self.outline.GetOutputPort())
+        self.domain_boundary_actor = vtkActor()
+        self.domain_boundary_actor.SetMapper(self.domain_boundary_mapper)
+        self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
+
+        #-------------
         self.points = vtkPoints()
 
         self.radii = vtkFloatArray()
@@ -246,11 +274,11 @@ class Vis(VisBase, QWidget):
         self.scalar_bar_cells.GetTitleTextProperty().SetColor(0,0,0)
 
         #-----
-        self.domain_outline = vtkOutlineFilter()
-        self.domain_outline_mapper = vtkPolyDataMapper()
-        self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
-        self.domain_outline_actor = vtkActor()
-        self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
+        # self.domain_outline = vtkOutlineFilter()
+        # self.domain_outline_mapper = vtkPolyDataMapper()
+        # self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
+        # self.domain_outline_actor = vtkActor()
+        # self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
 
 
         #--------------------------------------------------
@@ -329,7 +357,39 @@ class Vis(VisBase, QWidget):
         self.canvas = None
         self.create_figure()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
+        # self.scroll_plot.resize(800,800)
+        self.scroll_plot.setMinimumSize(700, 600)  #width, height of window
 
+
+    #-------------------------------
+    # def show_domain_outline(self):
+    #     # array of 8 3-tuples of float representing the vertices of a cube:
+    #     xmax = 100
+    #     xmin = -xmax
+    #     ymax = 100
+    #     ymin = -ymax
+    #     zmax = 100
+    #     zmin = -zmax
+    #     corner_pts = [ (xmin, ymin, zmin), (xmax, ymin, zmin),  (xmin, ymax, zmin), (xmax, ymax, zmin),  
+    #                     (xmin, ymin, zmax), (xmax, ymin, zmax),  (xmin, ymax, zmax), (xmax, ymax, zmax) ] 
+
+    #     # We'll create the building blocks of polydata including data attributes.
+    #     self.domain_boundary_pd = vtkPolyData()
+    #     self.domain_boundary_pts = vtkPoints()
+
+    #     # Load the point, cell, and data attributes.
+    #     for i, xi in enumerate(corner_pts):
+    #         self.domain_boundary_pts.InsertPoint(i, xi)
+
+    #     # We now assign the pieces to the vtkPolyData.
+    #     self.domain_boundary_pd.SetPoints(self.domain_boundary_pts)
+
+    #     # Now we'll look at it.
+    #     self.domain_boundary_mapper = vtkPolyDataMapper()
+    #     self.domain_boundary_mapper.SetInputData(self.domain_boundary_pd)
+    #     self.domain_boundary_actor = vtkActor()
+    #     self.domain_boundary_actor.SetMapper(self.domain_boundary_mapper)
+    #     self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
 
     #-------------------------------
     def disable_physiboss_info(self):
@@ -445,10 +505,12 @@ class Vis(VisBase, QWidget):
                 self.axes_actor = vtkAxesActor()
                 self.axes_actor.SetShaftTypeToCylinder()
                 # subjective scaling
-                cradius = self.ymax * 0.001
+                # cradius = self.ymax * 0.001
+                cradius = self.ymax * 0.0005
                 self.axes_actor.SetCylinderRadius(cradius)
-                self.axes_actor.SetConeRadius(cradius*10)
-                laxis = self.ymax + self.ymax * 0.2
+                self.axes_actor.SetConeRadius(cradius*9)
+                # laxis = self.ymax + self.ymax * 0.2
+                laxis = self.ymax + self.ymax * 0.05
                 self.axes_actor.SetTotalLength(laxis,laxis,laxis)
                 # Change the font size to something reasonable
                 # Ref: http://vtk.1045678.n5.nabble.com/VtkAxesActor-Problem-td4311250.html
@@ -561,7 +623,7 @@ class Vis(VisBase, QWidget):
         self.cell_scalar_max = -self.cell_scalar_min
         for frame in range(len(xml_files)):
             xml_file = "output%08d.xml" % frame
-            mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=True)
+            mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
             scalar_data = mcds.data['discrete_cells']['data'][choice]
             smin = scalar_data.min()
             smax = scalar_data.max()
@@ -810,20 +872,15 @@ class Vis(VisBase, QWidget):
             self.update_plots()
 
 
-    def cells_toggle_cb(self,bval):
-        self.cells_checked_flag = bval
-        self.update_plots()
-
-    def substrates_toggle_cb(self,bval):
-        self.substrates_checked_flag = bval
-        self.update_plots()
-
+    # overriden method from vis_base
     def change_frame_count_cb(self):
+        print("vis_base >>> change_frame_count_cb()")
         try:  # due to the initial callback
-            self.current_svg_frame = int(self.frame_count.text())
+            self.current_frame = int(self.frame_count.text())
+            print("           self.current_frame= ",self.current_frame)
         except:
             pass
-        # self.update_plots()
+        self.update_plots()
 
     def fix_cmap_toggle_cb(self,bval):
         print("fix_cmap_toggle_cb():")
@@ -912,10 +969,11 @@ class Vis(VisBase, QWidget):
 
         self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
 
+        # self.vtkWidget.GetRenderWindow().SetSize(1200,1200)  # has no visible effect
         self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
 
         self.text_title_actor = vtkTextActor()
-        self.text_title_actor.SetInput('Dummy title')
+        self.text_title_actor.SetInput('Welcome to PhysiCell Studio (3D)')
         self.text_title_actor.GetTextProperty().SetColor(0,0,0)
         # self.text_title_actor.GetTextProperty().SetFontSize(6)  # just select the title to resize it
 
@@ -930,20 +988,8 @@ class Vis(VisBase, QWidget):
         self.text_widget.SelectableOff()
         self.text_widget.On()
 
+        self.ren.AddActor(self.domain_boundary_actor)
 
-        # Create source
-        source = vtkSphereSource()
-        source.SetCenter(0, 0, 0)
-        source.SetRadius(0.0001)  # tiny, nearly invisible actor
-
-        # Create a mapper
-        mapper = vtkPolyDataMapper()
-        mapper.SetInputConnection(source.GetOutputPort())
-
-        # Create an actor - temporary hack
-        actor = vtkActor()
-        actor.SetMapper(mapper)
-        self.ren.AddActor(actor)
         self.ren.ResetCamera()
         # self.frame.setLayout(self.vl)
         # self.setCentralWidget(self.frame)
@@ -952,75 +998,8 @@ class Vis(VisBase, QWidget):
         self.vtkWidget.GetRenderWindow().Render()
         self.iren.Start()
 
-        # self.figure = plt.figure()
-        # self.canvas = FigureCanvasQTAgg(self.figure)
-        # self.canvas.setStyleSheet("background-color:transparent;")
+        # self.reset_model()   # rwh - is this necessary??
 
-        # Adding one subplot for image
-        # self.ax0 = self.figure.add_subplot(111)
-        # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=1.2)
-        # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=self.aspect_ratio)
-        # self.ax0 = self.figure.add_subplot(111, adjustable='box')
-        
-        # self.ax0.get_xaxis().set_visible(False)
-        # self.ax0.get_yaxis().set_visible(False)
-        # plt.tight_layout()
-
-        self.reset_model()   # rwh - is this necessary??
-
-        # np.random.seed(19680801)  # for reproducibility
-        # N = 50
-        # x = np.random.rand(N) * 2000
-        # y = np.random.rand(N) * 2000
-        # colors = np.random.rand(N)
-        # area = (30 * np.random.rand(N))**2  # 0 to 15 point radii
-        # self.ax0.scatter(x, y, s=area, c=colors, alpha=0.5)
-
-        # if self.plot_svg_flag:
-        # if False:
-        #     self.plot_svg(self.current_frame)
-        # else:
-        #     self.plot_substrate(self.current_frame)
-
-        # print("create_figure(): ------- creating dummy contourf")
-        # xlist = np.linspace(-3.0, 3.0, 50)
-        # print("len(xlist)=",len(xlist))
-        # ylist = np.linspace(-3.0, 3.0, 50)
-        # X, Y = np.meshgrid(xlist, ylist)
-        # Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
-
-        # self.cmap = plt.cm.get_cmap("viridis")
-        # self.mysubstrate = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
-        # # if self.field_index > 4:
-        # #     # plt.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0])
-        # #     plt.contour(X, Y, Z, [0.0])
-
-        # self.cbar = self.figure.colorbar(self.mysubstrate, ax=self.ax0)
-        # self.cbar.ax.tick_params(labelsize=self.fontsize)
-
-        # # substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap='viridis')  # self.colormap_dd.value)
-
-        # print("------------create_figure():  # axes = ",len(self.figure.axes))
-
-        # # self.imageInit = [[255] * 320 for i in range(240)]
-        # # self.imageInit[0][0] = 0
-
-        # # Init image and add colorbar
-        # # self.image = self.ax0.imshow(self.imageInit, interpolation='none')
-        # # divider = make_axes_locatable(self.ax0)
-        # # cax = divider.new_vertical(size="5%", pad=0.05, pack_start=True)
-        # # self.colorbar = self.figure.add_axes(cax)
-        # # self.figure.colorbar(self.image, cax=cax, orientation='horizontal')
-
-        # # plt.subplots_adjust(left=0, bottom=0.05, right=1, top=1, wspace=0, hspace=0)
-
-        # # self.plot_substrate(self.current_frame)
-        # # self.plot_svg(self.current_frame)
-
-        # rwh - necessary?
-        # self.plot_cells3D(self.current_frame)
-
-        # # self.canvas.draw()
 
     #------------------------------------------------------------
     def get_jet_map(self):
@@ -1206,13 +1185,14 @@ class Vis(VisBase, QWidget):
         # if not os.path.exists("output/" + xml_file):
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
+            print(f"vis3D_tab.py: plot_cells3D(): full_fname {full_fname} does not exist, leaving!")
             return
 
         print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
         # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
-        mcds = pyMCDS(xml_file, self.output_dir, microenv=read_microenv_flag, graph=False, verbose=True)
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=read_microenv_flag, graph=False, verbose=False)
         current_time = mcds.get_time()
         print('time=', current_time )
         print("metadata keys=",mcds.data['metadata'].keys())
@@ -1222,6 +1202,9 @@ class Vis(VisBase, QWidget):
         current_time = round(current_time, 2)
         self.title_str = 'time '+ str(current_time) + ' min'
         # self.text_title_actor.SetInput(self.title_str)
+
+        # self.ren.RemoveActor(self.domain_boundary_actor)
+        # self.ren.AddActor(self.domain_boundary_actor)
 
         #-----------
         if self.cells_checked_flag:
@@ -1304,6 +1287,8 @@ class Vis(VisBase, QWidget):
 
             self.cell_data.SetNumberOfTuples(ncells)
 
+            self.cell_scalar_min = 1.e9
+            self.cell_scalar_max = -self.cell_scalar_min
             for idx in range(ncells):
                 x= mcds.data['discrete_cells']['data']['position_x'][idx]
                 y= mcds.data['discrete_cells']['data']['position_y'][idx]
@@ -1322,6 +1307,11 @@ class Vis(VisBase, QWidget):
                 # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
                 # print("idx, cell_type[idx]= ",idx,cell_type[idx])
                 # self.tags.InsertNextValue(cell_type[idx])
+                sval = cell_scalar_val[idx]
+                if sval < self.cell_scalar_min:
+                    self.cell_scalar_min = sval
+                if sval > self.cell_scalar_max:
+                    self.cell_scalar_max = sval
                 self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
 
             self.cell_data.CopyComponent(0, self.radii, 0)
@@ -1361,12 +1351,15 @@ class Vis(VisBase, QWidget):
             # self.glyph.SetScaleModeToScaleByVector ()
             self.glyph.SetScaleModeToScaleByScalar ()
             # self.glyph.SetColorModeToColorByVector ()
-            print("glyph range= ",self.glyph.GetRange())
+            # print("glyph range= ",self.glyph.GetRange())
             # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
             # self.cells_mapper.SetScalarRange(0,num_cell_types)
-            self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
-            print("--- set cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
+            if self.fix_cells_cmap_checkbox.isChecked():
+                self.cells_mapper.SetScalarRange(self.cells_cmin_value, self.cells_cmax_value)
+            else:
+                self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
+            # print("--- set cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
 
@@ -1424,12 +1417,11 @@ class Vis(VisBase, QWidget):
 
         #-------------------
         if self.substrates_checked_flag:
-            print("substrate names= ",mcds.get_substrate_names())
+            # print("substrate names= ",mcds.get_substrate_names())
 
             field_name = self.substrates_combobox.currentText()
-            print("plot_cells3D(): field_name= ",field_name)
-
-            print("plot_cells3D(): self.substrate_name= ",self.substrate_name)
+            # print("plot_cells3D(): field_name= ",field_name)
+            # print("plot_cells3D(): self.substrate_name= ",self.substrate_name)
             # sub_name = mcds.get_substrate_names()[0]
             # sub_name = mcds.get_substrate_names()[self.field_index]  # NOoo!
             # self.scalar_bar_substrate.SetTitle(sub_name)
@@ -1441,9 +1433,9 @@ class Vis(VisBase, QWidget):
 
             sub_dict = mcds.data['continuum_variables'][self.substrate_name]
             sub_concentration = sub_dict['data']
-            print("sub_concentration.shape= ",sub_concentration.shape)
-            print("np.min(sub_concentration)= ",np.min(sub_concentration))
-            print("np.max(sub_concentration)= ",np.max(sub_concentration))
+            # print("sub_concentration.shape= ",sub_concentration.shape)
+            # print("np.min(sub_concentration)= ",np.min(sub_concentration))
+            # print("np.max(sub_concentration)= ",np.max(sub_concentration))
             # print("sub_concentration = ",sub_concentration)
 
             # update VTK pipeline
@@ -1460,14 +1452,14 @@ class Vis(VisBase, QWidget):
             # nx,ny,nz = 12,12,12
             # nx,ny,nz = 3,3,3
             nx,ny,nz = sub_concentration.shape
-            print("nx,ny,nz = ",nx,ny,nz)
+            # print("nx,ny,nz = ",nx,ny,nz)
             self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
             # self.substrate_data.SetDimensions( nx, ny, nz )
             voxel_size = 20   # rwh: fix
             x0 = -(voxel_size * nx) / 2.0
             y0 = -(voxel_size * ny) / 2.0
             z0 = -(voxel_size * nz) / 2.0
-            print("x0,y0,z0 = ",x0,y0,z0)
+            # print("x0,y0,z0 = ",x0,y0,z0)
 
             # Check to see if the (possible) files in the output dir match that of the Config tab specs
             # rwh: more tests to do though (put all these in a function)
@@ -1535,8 +1527,7 @@ class Vis(VisBase, QWidget):
             # self.contMapper.Update()
             # self.contActor.Update()
 
-            # print("vmax= ",vmax)
-            print("---vmin,vmax= ",vmin,vmax)
+            # print("---vmin,vmax= ",vmin,vmax)
             # if 'internalized_total_substrates' in mcds.data['discrete_cells'].keys():
             #     print("intern_sub= ",mcds.data['discrete_cells']['internalized_total_substrates'])
 
@@ -1650,25 +1641,7 @@ class Vis(VisBase, QWidget):
                 self.scalar_bar_substrate.SetLookupTable(self.cutterXZMapper.GetLookupTable())
                 # self.ren.AddActor2D(self.scalar_bar_substrate)
 
-
             #-------------------
-            # self.domain_outline = vtkOutlineFilter()
-            self.domain_outline.SetInputData(self.substrate_data)
-            self.domain_outline.Update()
-            # self.domain_outline.SetInputConnection(sample.GetOutputPort())
-            # self.domain_outline.SetInputConnection(self.substrate_data.GetOutputPort())
-
-            # self.domain_outline_mapper.Update()
-            # # self.domain_outline_mapper = vtkPolyDataMapper()
-            # self.domain_outline_mapper.SetInputConnection(self.domain_outline.GetOutputPort())
-
-            # # self.domain_outline_actor = vtkActor()
-            # self.domain_outline_actor.SetMapper(self.domain_outline_mapper)
-            # self.domain_outline_actor.GetProperty().SetColor(0,0,0)
-            self.domain_outline_actor.GetProperty().SetColor(0, 0, 0)
-            self.ren.AddActor(self.domain_outline_actor)
-
-
             self.ren.RemoveActor2D(self.scalar_bar_substrate)
             if self.show_voxels or self.show_xy_slice or self.show_yz_slice or self.show_xz_slice:
                 # self.ren.RemoveActor2D(self.scalar_bar_substrate)
@@ -1684,9 +1657,8 @@ class Vis(VisBase, QWidget):
             self.ren.RemoveActor(self.cutterXZActor)
 
             # self.ren.RemoveActor(self.clipXYActor)
-            self.ren.RemoveActor(self.domain_outline_actor)
+            # self.ren.RemoveActor(self.domain_outline_actor)
             self.ren.RemoveActor2D(self.scalar_bar_substrate)
-
 
 
         # if self.axes_actor is None:
@@ -1696,10 +1668,13 @@ class Vis(VisBase, QWidget):
             self.axes_actor = vtkAxesActor()
             self.axes_actor.SetShaftTypeToCylinder()
             # subjective scaling
-            cradius = self.ymax * 0.001
+            # cradius = self.ymax * 0.001
+            cradius = self.ymax * 0.0005
             self.axes_actor.SetCylinderRadius(cradius)
             self.axes_actor.SetConeRadius(cradius*10)
-            laxis = self.ymax + self.ymax * 0.2
+
+            # laxis = self.ymax + self.ymax * 0.2
+            laxis = self.ymax + self.ymax * 0.05
             self.axes_actor.SetTotalLength(laxis,laxis,laxis)
             # Change the font size to something reasonable
             # Ref: http://vtk.1045678.n5.nabble.com/VtkAxesActor-Problem-td4311250.html
@@ -1723,23 +1698,3 @@ class Vis(VisBase, QWidget):
         self.vtkWidget.GetRenderWindow().Render()
     # renderWindowInteractor.Start()
         return
-
-    def make_axes_actor(self, scale, xyzLabels):
-        axes = vtkAxesActor()
-        axes.SetScale(scale[0], scale[1], scale[2])
-        axes.SetShaftTypeToCylinder()
-        axes.SetXAxisLabelText(xyzLabels[0])
-        axes.SetYAxisLabelText(xyzLabels[1])
-        axes.SetZAxisLabelText(xyzLabels[2])
-        axes.SetCylinderRadius(5. * axes.GetCylinderRadius())
-        axes.SetConeRadius(1.025 * axes.GetConeRadius())
-        axes.SetSphereRadius(10.5 * axes.GetSphereRadius())
-        tprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-        tprop.ItalicOff()
-        tprop.ShadowOn()
-        tprop.SetFontFamilyToTimes()
-        # Use the same text properties on the other two axes.
-        axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
-        axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
-        # return axes
-        self.axes_actor = axes
