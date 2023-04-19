@@ -283,6 +283,7 @@
                         <phagocytosis_rate name="neutrophil" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="worm" units="1/min">0</phagocytosis_rate>
                         <phagocytosis_rate name="farmer" units="1/min">0</phagocytosis_rate>
+                        <phagocytosis_rate name="ctype1" units="1/min">0</phagocytosis_rate>
                     </live_phagocytosis_rates>
                     <attack_rates>
                         <attack_rate name="bacteria" units="1/min">0</attack_rate>
@@ -294,6 +295,7 @@
                         <attack_rate name="neutrophil" units="1/min">0.0</attack_rate>
                         <attack_rate name="worm" units="1/min">0</attack_rate>
                         <attack_rate name="farmer" units="1/min">0</attack_rate>
+                        <attack_rate name="ctype1" units="1/min">0</attack_rate>
                     </attack_rates>
                     <damage_rate units="1/min">1</damage_rate>
                     <fusion_rates>
@@ -306,6 +308,7 @@
                         <fusion_rate name="neutrophil" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="worm" units="1/min">0</fusion_rate>
                         <fusion_rate name="farmer" units="1/min">0</fusion_rate>
+                        <fusion_rate name="ctype1" units="1/min">0</fusion_rate>
                     </fusion_rates>
                 </cell_interactions>
                 <cell_transformations>
@@ -319,6 +322,7 @@
                         <transformation_rate name="neutrophil" units="1/min">0.0</transformation_rate>
                         <transformation_rate name="worm" units="1/min">0</transformation_rate>
                         <transformation_rate name="farmer" units="1/min">0</transformation_rate>
+                        <transformation_rate name="ctype1" units="1/min">0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
             </phenotype>
@@ -1506,5 +1510,6 @@
         <number_of_CD8T_cells type="int" units="" description="">50</number_of_CD8T_cells>
         <number_of_neutrophils type="int" units="" description="">50</number_of_neutrophils>
         <max_stem_differentiation type="double" units="" description="maximum stem cell differentiation rate">0.0075</max_stem_differentiation>
+        <number_of_cells type="int" units="" description="">10</number_of_cells>
     </user_parameters>
 </PhysiCell_settings>
