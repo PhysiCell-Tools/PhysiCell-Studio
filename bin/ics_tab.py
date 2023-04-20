@@ -118,7 +118,7 @@ class ICs(QWidget):
         self.x0_value = 0.
         self.y0_value = 0.
         self.z0_value = 0.
-        self.r1_value = 100.
+        self.r1_value = 50.
         self.r2_value = 100.
         self.r3_value = 0.
 
