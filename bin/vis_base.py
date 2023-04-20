@@ -592,27 +592,27 @@ class VisBase():
         self.cells_checked_flag = True
         hbox.addWidget(self.cells_checkbox) 
 
-        # if self.vis2D:
+        # Need to create the following regardless of 2D/3D
+        self.cells_svg_rb = QRadioButton('.svg')
+        self.cells_svg_rb.setChecked(True)
+        self.cells_mat_rb = QRadioButton('.mat')
+        self.cells_edge_checkbox = QCheckBox_custom('edge')
+
         if not self.model3D_flag:
             # groupbox = QGroupBox()
             # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
             # hbox2 = QHBoxLayout()
             # groupbox.setLayout(hbox2)
-            self.cells_svg_rb = QRadioButton('.svg')
-            self.cells_svg_rb.setChecked(True)
-            self.cells_svg_rb.setEnabled(True)
             self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_svg_rb)
             hbox.addWidget(self.cells_svg_rb)
-            self.cells_mat_rb = QRadioButton('.mat')
-            # self.cells_mat_rb.setChecked(True)
+
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
             hbox.addWidget(self.cells_mat_rb)
             # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
             hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
             # hbox.addLayout(hbox2) 
 
-            self.cells_edge_checkbox = QCheckBox_custom('edge')
             self.cells_edge_checkbox.setChecked(True)
             self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
             self.cells_edge_checked_flag = True
@@ -915,7 +915,9 @@ class VisBase():
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + out_config_file)
+            msg = "get_cell_types_from_config(): Error opening or parsing " + out_config_file
+            msg += ". Either the file has not been created yet or something else is wrong."
+            msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
@@ -954,7 +956,10 @@ class VisBase():
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Error opening or parsing " + legend_file)
+            msg = "get_cell_types_from_legend(): Error opening or parsing " + legend_file
+            msg += ". Either the file has not been created yet or something else is wrong."
+            # msg += "If you are doing a Population plot, we will try to parse the config file instead and use random colors."
+            msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
             return False
