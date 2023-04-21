@@ -488,7 +488,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #----------------------------------------------------------------------
     # Set all the default params to what they are in PhysiCell (C++), e.g., *_standard_models.cpp, etc.
     def init_default_phenotype_params(self, cdname):
-        self.new_cycle_params(cdname)
+        self.new_cycle_params(cdname, True)
         self.new_death_params(cdname)
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname)
@@ -792,7 +792,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #--------------------------------------------------------
     def insert_hacky_blank_lines(self, glayout):
         idr = 4
-        for idx in range(11):  # rwh: hack solution to align rows
+        for idx in range(3):  # rwh: hack solution to align rows
             blank_line = QLabel("")
             idr += 1
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -1712,11 +1712,24 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # add it to this panel.
         self.vbox_cycle.addWidget(self.stacked_cycle)
 
+        self.reset_cycle_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_cycle_button.setFixedWidth(200)
+        self.reset_cycle_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_cycle_button.clicked.connect(self.reset_cycle_cb)
+        self.vbox_cycle.addWidget(self.reset_cycle_button)
+
         self.vbox_cycle.addStretch()
 
         self.params_cycle.setLayout(self.vbox_cycle)
 
         return self.params_cycle
+
+    #--------------------------------------------------------
+    def reset_cycle_cb(self):   # new_cycle_params
+        print("--- reset_cycle_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_cycle_params(self.current_cell_def, False)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
+
 
     #--------------------------------------------------------
     def create_death_tab(self):
@@ -2541,7 +2554,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.unmovable_w.setStyleSheet(self.checkbox_style)
         self.unmovable_w.setEnabled(True)   # disabled until implemented in C++?
         self.unmovable_w.setChecked(False)
-        self.unmovable_w.clicked.connect(self.unmovable_cb)
+        # self.unmovable_w.clicked.connect(self.unmovable_cb)
         idr = 0
         # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -4861,6 +4874,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     # --- mechanics
     def enable_mech_params(self, bval):
+        print("---- enable_mech_params()  bval= ",bval)
         self.cell_cell_adhesion_strength.setEnabled(bval)
         self.cell_cell_repulsion_strength.setEnabled(bval)
         self.relative_maximum_adhesion_distance.setEnabled(bval)
@@ -4871,10 +4885,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_absolute_equilibrium_distance.setEnabled(bval)
         self.set_absolute_equilibrium_distance_enabled.setEnabled(bval)
 
-    def unmovable_cb(self,bval):
-        # print("--------- unmovable_cb()  called!  bval=",bval)
-        self.param_d[self.current_cell_def]['is_movable'] = not bval  # uh, this isn't not confusing :/
-        self.enable_mech_params(not bval)
+    # def unmovable_cb(self,bval):
+    #     # print("--------- unmovable_cb()  called!  bval=",bval)
+    #     self.param_d[self.current_cell_def]['is_movable'] = not bval  # uh, this isn't not confusing :/
+    #     self.enable_mech_params(not bval)
 
     def cell_cell_adhesion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
@@ -6277,8 +6291,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
-    def new_cycle_params(self, cdname):
-        self.param_d[cdname]['cycle_choice_idx'] = 0
+    def new_cycle_params(self, cdname, reset_type_flag):
+        if reset_type_flag:
+            self.param_d[cdname]['cycle_choice_idx'] = 0
 
         self.param_d[cdname]['cycle_live_trate00'] = '0.00072'
 
@@ -6426,7 +6441,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def new_mechanics_params(self, cdname_new):  # rf. PhysiCell core/*_phenotype.cpp constructor
         sval = self.default_sval
 
-        self.param_d[cdname_new]['is_movable'] = False
+        # self.param_d[cdname_new]['is_movable'] = False
         # use defaults found in phenotype.cpp:Mechanics() instead of 0.0
         self.param_d[cdname_new]["mechanics_adhesion"] = '0.4'
         self.param_d[cdname_new]["mechanics_repulsion"] = '10.0'
@@ -6776,8 +6791,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
         cdname = self.current_cell_def
-        self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
-        self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
+        # self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
+        # self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
         self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
