@@ -16,12 +16,12 @@ from pathlib import Path
 # from ipywidgets import Layout, Label, Text, Checkbox, Button, BoundedIntText, HBox, VBox, Box, \
     # FloatText, Dropdown, SelectMultiple, RadioButtons, interactive
 # import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+# import matplotlib.colors as mplc
+from matplotlib.colors import BoundaryNorm, rgb2hex
 from matplotlib.ticker import MaxNLocator
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
-import matplotlib.colors as mplc
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
 from collections import deque
@@ -51,6 +51,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
+
+try:
+    from simulariumio import UnitData, MetaData, DisplayData, DISPLAY_TYPE, ModelMetaData
+    from simulariumio.physicell import PhysicellConverter, PhysicellData
+    simularium_installed = True
+except:
+    simularium_installed = False
+
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
@@ -2159,3 +2167,58 @@ class VisBase():
         #     except:
         #         print("--- ERROR in circles() doing plt.sci(collection)")
         return collection
+
+
+    def convert_to_simularium(self, xml_file):
+        print("\n-------------vis_base.py:  convert_to_simularium()")
+
+        hex_color = rgb2hex((0.1, 0.1, 0.1, 0.1), keep_alpha=True)
+
+        # sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
+        print("sim_output_dir = ",self.output_dir )
+
+        simularium_model_data = PhysicellData(
+            timestep=1.0,
+            path_to_output_dir=self.output_dir, 
+            meta_data=MetaData(
+                box_size=np.array([200.0, 200.0, 200.0]),
+                scale_factor=0.01,
+                trajectory_title="PhysiCell trajectory",
+                model_meta_data=ModelMetaData(
+                    title="PhysiCell_model",
+                    version="8.1",
+                    authors="PhysiCell modeler",
+                    description=(
+                        "A PhysiCell model run with some parameter set"
+                    ),
+                    doi="10.1016/j.bpj.2016.02.002",
+                    source_code_url="https://github.com/allen-cell-animated/simulariumio",
+                    source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
+                    input_data_url="https://allencell.org/path/to/native/engine/input/files",
+                    raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
+                ),
+            ),
+            nth_timestep_to_read=1,
+            display_data={
+                0: DisplayData(
+                    name="ctype1",
+                    color=rgb2hex([1.0, 1.0, 1.0]),
+                    display_type=DISPLAY_TYPE.SPHERE,
+                ),
+                1: DisplayData(
+                    name="ctype2",
+                    color=rgb2hex([1.0, 0.0, 0.0]),
+                    display_type=DISPLAY_TYPE.SPHERE,
+                ),
+            },
+            time_units=UnitData("m"),  # minutes
+        )
+
+        print("calling Simularium PhysicellConverter...\n")
+        # model_name = os.path.basename(self.current_xml_file)
+        model_name = os.path.basename(xml_file)
+        model_name = model_name[:-4]   # strip off .xml suffix
+        PhysicellConverter(simularium_model_data).save(model_name)
+        print(f"--> {model_name}.simularium")
+
+        print("Load this model at: https://simularium.allencell.org/viewer")

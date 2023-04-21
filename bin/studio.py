@@ -926,49 +926,57 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if returnValue == QMessageBox.Cancel:
             return
 
-        # self.vis_tab.output_dir = self.config_tab.folder.text()
-        sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
-        print("sim_output_dir = ",sim_output_dir )
+        self.vis_tab.convert_to_simularium(self.current_xml_file)
+        return
 
-        simularium_model_data = PhysicellData(
-            timestep=1.0,
-            path_to_output_dir=sim_output_dir, 
-            meta_data=MetaData(
-                box_size=np.array([1000.0, 1000.0, 20.0]),
-                scale_factor=0.01,
-                trajectory_title="Some parameter set",
-                model_meta_data=ModelMetaData(
-                    title="worm",
-                    version="8.1",
-                    authors="A Modeler",
-                    description=(
-                        "A PhysiCell model run with some parameter set"
-                    ),
-                    doi="10.1016/j.bpj.2016.02.002",
-                    source_code_url="https://github.com/allen-cell-animated/simulariumio",
-                    source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
-                    input_data_url="https://allencell.org/path/to/native/engine/input/files",
-                    raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
-                ),
-            ),
-            nth_timestep_to_read=1,
-            display_data={
-                0: DisplayData(
-                    name="cell type 0",
-                    color="#dfdacd",
-                ),
-                1: DisplayData(
-                    name="cell type 1",
-                    color="#0080ff",
-                ),
-            },
-            time_units=UnitData("m"),  # minutes
-        )
 
-        print("calling Simularium PhysicellConverter...\n")
-        PhysicellConverter(simularium_model_data).save("simularium_model")
+        # sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
+        # print("sim_output_dir = ",sim_output_dir )
 
-        print("Load this model at: https://simularium.allencell.org/viewer")
+        # simularium_model_data = PhysicellData(
+        #     timestep=1.0,
+        #     path_to_output_dir=sim_output_dir, 
+        #     meta_data=MetaData(
+        #         box_size=np.array([200.0, 200.0, 200.0]),
+        #         scale_factor=0.01,
+        #         trajectory_title="Some parameter set",
+        #         model_meta_data=ModelMetaData(
+        #             title="worm",
+        #             version="8.1",
+        #             authors="PhysiCell modeler",
+        #             description=(
+        #                 "A PhysiCell model run with some parameter set"
+        #             ),
+        #             doi="10.1016/j.bpj.2016.02.002",
+        #             source_code_url="https://github.com/allen-cell-animated/simulariumio",
+        #             source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
+        #             input_data_url="https://allencell.org/path/to/native/engine/input/files",
+        #             raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
+        #         ),
+        #     ),
+        #     nth_timestep_to_read=1,
+        #     display_data={
+        #         0: DisplayData(
+        #             name="ctype1",
+        #             color="#dfdacd",
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         1: DisplayData(
+        #             name="ctype2",
+        #             color="#0080ff",
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #     },
+        #     time_units=UnitData("m"),  # minutes
+        # )
+
+        # print("calling Simularium PhysicellConverter...\n")
+        # model_name = os.path.basename(self.current_xml_file)
+        # model_name = model_name[:-4]   # strip off .xml suffix
+        # PhysicellConverter(simularium_model_data).save(model_name)
+        # print(f"--> {model_name}.simularium")
+
+        # print("Load this model at: https://simularium.allencell.org/viewer")
 
 
     #----------------------

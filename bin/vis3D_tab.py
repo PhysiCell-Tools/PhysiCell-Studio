@@ -37,6 +37,8 @@ class Vis(VisBase, QWidget):
 
         self.model3D_flag = model3D_flag
 
+        self.plot_cells_svg = False  # used for PhysiBoSS checkbox
+
         # self.config_tab = None
         self.run_tab = run_tab
 
@@ -409,8 +411,8 @@ class Vis(VisBase, QWidget):
 
     #------------------------------
     # Dependent on 2D/3D (not available for 3D)
-    def build_physiboss_info(self, config_file):
-        pass
+    # def build_physiboss_info(self, config_file):
+    #     pass
         
 
     # def output_folder_cb(self):
