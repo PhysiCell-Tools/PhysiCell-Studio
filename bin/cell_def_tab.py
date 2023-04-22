@@ -45,7 +45,7 @@ import string
 import random
 # import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QDoubleValidator
@@ -823,19 +823,24 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # glayout = QGridLayout()
 
         #----------------------------
-        self.cycle_rate_duration_hbox = QHBoxLayout()
-        # self.cycle_rb1 = QRadioButton("transition rate(s)", self)
-        self.cycle_rb1 = QRadioButton("transition rate(s)")
+        hbox = QHBoxLayout()
+        hbox.setSpacing(0)
+        hbox.setContentsMargins(0, 0, 0, 0)
+        self.cycle_rb1 = QRadioButton("transition rate(s)      ")
         self.cycle_rb1.toggled.connect(self.cycle_phase_transition_cb)
-        self.cycle_rate_duration_hbox.addWidget(self.cycle_rb1)
+        hbox.addWidget(self.cycle_rb1)
 
-        # self.cycle_rb2 = QRadioButton("duration(s)", self)
         self.cycle_rb2 = QRadioButton("duration(s)")
         self.cycle_rb2.toggled.connect(self.cycle_phase_transition_cb)
-        self.cycle_rate_duration_hbox.addWidget(self.cycle_rb2)
+        hbox.addWidget(self.cycle_rb2)
 
-        self.cycle_rate_duration_hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-        self.vbox_cycle.addLayout(self.cycle_rate_duration_hbox)
+        hbox.addStretch(1)  # keeps buttons shoved to left (but border still too wide!)
+        radio_frame = QFrame()
+        radio_frame.setGeometry(QRect(10,10,100,20))
+        radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+        radio_frame.setLayout(hbox)
+        radio_frame.setFixedWidth(250)  # omg
+        self.vbox_cycle.addWidget(radio_frame)
 
         #----------------------------
         self.cycle_dropdown = QComboBox()
@@ -1712,6 +1717,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # add it to this panel.
         self.vbox_cycle.addWidget(self.stacked_cycle)
 
+        self.vbox_cycle.addWidget(QHLine())
+
         self.reset_cycle_button = QPushButton("Reset to PhysiCell defaults")
         self.reset_cycle_button.setFixedWidth(200)
         self.reset_cycle_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
@@ -1726,7 +1733,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def reset_cycle_cb(self):   # new_cycle_params
-        print("--- reset_cycle_cb:  self.current_cell_def= ",self.current_cell_def)
+        # print("--- reset_cycle_cb:  self.current_cell_def= ",self.current_cell_def)
         self.new_cycle_params(self.current_cell_def, False)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
@@ -1765,19 +1772,26 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #-------
-        self.apoptosis_group = QButtonGroup(self)
+        hbox = QHBoxLayout()
+        hbox.setSpacing(0)
+        hbox.setContentsMargins(0, 0, 0, 0)
 
-        self.apoptosis_rb1 = QRadioButton("transition rate", self)  # OMG, leave "self" for QButtonGroup
+        self.apoptosis_rb1 = QRadioButton("transition rate     ", self)  # OMG, leave "self" for QButtonGroup
         self.apoptosis_rb1.toggled.connect(self.apoptosis_phase_transition_cb)
-        idr += 1
-        glayout.addWidget(self.apoptosis_rb1, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_rb2 = QRadioButton("duration", self)
         self.apoptosis_rb2.toggled.connect(self.apoptosis_phase_transition_cb)
-        glayout.addWidget(self.apoptosis_rb2, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_group.addButton(self.apoptosis_rb1)
-        self.apoptosis_group.addButton(self.apoptosis_rb2)
+        hbox.addWidget(self.apoptosis_rb1)
+        hbox.addWidget(self.apoptosis_rb2)
+
+        radio_frame = QFrame()
+        radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+        radio_frame.setLayout(hbox)
+        radio_frame.setFixedWidth(210)  # omg
+        idr += 1
+        glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
+
 
         #-----
         # 	<model code="100" name="apoptosis"> 
@@ -1972,32 +1986,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #-------
-        self.necrosis_group = QButtonGroup(self)
-        # self.necrosis_group = QGroupBox(self)
-        # self.necrosis_group.setStyleSheet('''
-        #     QGroupBox {
-        #         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-        #                                           stop: 0 #E0E0E0, stop: 1 #FFFFFF);
-        #         border: 2px solid #999999;
-        #         border-radius: 5px;
-        #         margin-top: 2ex;  /*leave space at the top for the title */
-        #         font-size: 13px;
-        #         color: black;
-        #     }
-        # ''')
-        # self.necrosis_group.setGeometry(QRect(10,10,100,100))
+        hbox = QHBoxLayout()
+        hbox.setSpacing(0)
+        hbox.setContentsMargins(0, 0, 0, 0)
 
-        self.necrosis_rb1 = QRadioButton("transition rate", self)  # OMG, leave "self"
+        self.necrosis_rb1 = QRadioButton("transition rate     ", self)  # OMG, leave "self" for QButtonGroup
         self.necrosis_rb1.toggled.connect(self.necrosis_phase_transition_cb)
-        idr += 1
-        glayout.addWidget(self.necrosis_rb1, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.necrosis_rb2 = QRadioButton("duration", self)
         self.necrosis_rb2.toggled.connect(self.necrosis_phase_transition_cb)
-        glayout.addWidget(self.necrosis_rb2, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_group.addButton(self.necrosis_rb1)
-        self.necrosis_group.addButton(self.necrosis_rb2)
+        hbox.addWidget(self.necrosis_rb1)
+        hbox.addWidget(self.necrosis_rb2)
+
+        radio_frame = QFrame()
+        radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+        radio_frame.setLayout(hbox)
+        radio_frame.setFixedWidth(210)  # omg
+        idr += 1
+        glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
         #-----
         # 	<model code="100" name="apoptosis"> 
@@ -2210,15 +2217,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        #------
-#rwh
-        # for idx in range(11):  # rwh: hack solution to align rows
-        # for idx in range(0):  # rwh: hack solution to align rows
-        #     blank_line = QLabel("")
-        #     idr += 1
-        #     glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
-        #------
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
+        self.reset_death_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_death_button.setFixedWidth(200)
+        self.reset_death_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_death_button.clicked.connect(self.reset_death_cb)
+        # self.vbox_cycle.addWidget(self.reset_cycle_button)
+        idr += 1
+        glayout.addWidget(self.reset_death_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        #--------
         death_tab_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         death_tab_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         death_tab_scroll.setWidgetResizable(True)
@@ -2230,6 +2241,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # death_tab.setLayout(scroll_params)
         # return death_tab
         return death_tab_scroll
+
+    #--------------------------------------------------------
+    def reset_death_cb(self):
+        # print("--- reset_death_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_death_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def apoptosis_phase_transition_cb(self):
@@ -2526,6 +2543,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        self.reset_volume_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_volume_button.setFixedWidth(200)
+        self.reset_volume_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_volume_button.clicked.connect(self.reset_volume_cb)
+        idr += 1
+        glayout.addWidget(self.reset_volume_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         #------
         for idx in range(5):  # rwh: hack solution to align rows
             blank_line = QLabel("")
@@ -2536,6 +2564,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         volume_tab.setLayout(glayout)
         return volume_tab
+
+    #--------------------------------------------------------
+    def reset_volume_cb(self):
+        # print("--- reset_volume_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_volume_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def create_mechanics_tab(self):
@@ -2785,6 +2819,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        self.reset_mechanics_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_mechanics_button.setFixedWidth(200)
+        self.reset_mechanics_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_mechanics_button.clicked.connect(self.reset_mechanics_cb)
+        idr += 1
+        glayout.addWidget(self.reset_mechanics_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         #------
         for idx in range(5):  # rwh: hack solution to align rows
             blank_line = QLabel("")
@@ -2795,6 +2840,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         mechanics_tab.setLayout(glayout)
         return mechanics_tab
+
+    #--------------------------------------------------------
+    def reset_mechanics_cb(self):
+        # print("--- reset_mechanics_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_mechanics_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def create_motility_tab(self):
@@ -2974,6 +3025,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.chemo_sensitivity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.chemo_sensitivity, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        self.reset_motility_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_motility_button.setFixedWidth(200)
+        self.reset_motility_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_motility_button.clicked.connect(self.reset_motility_cb)
+        idr += 1
+        glayout.addWidget(self.reset_motility_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         #------
         for idx in range(8):  # rwh: hack solution to align rows
             blank_line = QLabel("")
@@ -2984,6 +3046,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         motility_tab.setLayout(glayout)
         return motility_tab
+
+    #--------------------------------------------------------
+    def reset_motility_cb(self):
+        # print("--- reset_motility_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_motility_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def create_secretion_tab(self):
@@ -3118,6 +3186,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        self.reset_secretion_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_secretion_button.setFixedWidth(200)
+        self.reset_secretion_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_secretion_button.clicked.connect(self.reset_secretion_cb)
+        idr += 1
+        glayout.addWidget(self.reset_secretion_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         #------
         for idx in range(11):  # rwh: hack solution to align rows
             blank_line = QLabel("")
@@ -3128,6 +3207,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         secretion_tab.setLayout(glayout)
         return secretion_tab
+
+    #--------------------------------------------------------
+    def reset_secretion_cb(self):
+        # print("--- reset_secretion_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_secretion_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
     def create_interaction_tab(self):
@@ -3312,6 +3397,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        #---------
+        idr += 1
+        glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
+
+        self.reset_interaction_button = QPushButton("Reset to PhysiCell defaults")
+        self.reset_interaction_button.setFixedWidth(200)
+        self.reset_interaction_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.reset_interaction_button.clicked.connect(self.reset_interaction_cb)
+        idr += 1
+        glayout.addWidget(self.reset_interaction_button, idr,0, 1,1) # w, row, column, rowspan, colspan
+
         #------
         for idx in range(11):  # rwh: hack solution to align rows
             blank_line = QLabel("")
@@ -3322,6 +3418,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         interaction_tab.setLayout(glayout)
         return interaction_tab
+
+    #--------------------------------------------------------
+    def reset_interaction_cb(self):
+        # print("--- reset_interaction_cb:  self.current_cell_def= ",self.current_cell_def)
+        self.new_interaction_params(self.current_cell_def)
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
+
+
 
     #--------------------------------------------------------
     def cell_adhesion_affinity_changed(self,text):
