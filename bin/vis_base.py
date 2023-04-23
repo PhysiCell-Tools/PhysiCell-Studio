@@ -335,11 +335,8 @@ class VisBase():
         self.current_svg_frame = 0
         self.current_frame = 0   # used in vis3D_tab.py
         self.timer = QtCore.QTimer()
-        # self.t.timeout.connect(self.task)
         self.timer.timeout.connect(self.play_plot_cb)
 
-        # self.tab = QWidget()
-        # self.tabs.resize(200,5)
         
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
@@ -408,39 +405,12 @@ class VisBase():
         self.figsize_width_2Dplot = basic_length
         self.figsize_height_2Dplot = basic_length
 
-        # self.width_substrate = basic_length  # allow extra for colormap
-        # self.height_substrate = basic_length
-
         self.figsize_width_svg = basic_length
         self.figsize_height_svg = basic_length
-
-
-        # self.output_dir = "/Users/heiland/dev/PhysiCell_V.1.8.0_release/output"
-        # self.output_dir = "output"
-        # self.output_dir = "../tmpdir"   # for nanoHUB
-        # self.output_dir = "tmpdir"   # for nanoHUB
-
-        # temporary debugging plotting without having to Run first
-        # if self.nanohub_flag:
-        #     self.output_dir = "."   # for nanoHUB
-        # else:
-        #     self.output_dir = "tmpdir"
 
         # stop the insanity!
         self.output_dir = "."   # for nanoHUB  (overwritten in studio.py, based on config_tab)
         # self.output_dir = "tmpdir"   # for nanoHUB
-
-
-        # do in create_figure()?
-        # xlist = np.linspace(-3.0, 3.0, 50)
-        # print("len(xlist)=",len(xlist))
-        # ylist = np.linspace(-3.0, 3.0, 50)
-        # X, Y = np.meshgrid(xlist, ylist)
-        # Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
-        # self.cmap = plt.cm.get_cmap("viridis")
-        # self.cs = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
-        # self.cbar = self.figure.colorbar(self.cs, ax=self.ax)
-
 
         #-------------------------------------------
         label_width = 110
@@ -517,17 +487,6 @@ class VisBase():
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
 
-        # Need to have the substrates_combobox before doing create_figure!
-        # self.create_figure()
-
-        # self.config_params = QWidget()
-
-        # self.main_layout = QVBoxLayout()
-
-        # self.vbox = QVBoxLayout()
-        # self.vbox.addStretch(0)
-        # self.create_vis_UI()
-
 
         splitter = QSplitter()
         self.scroll_params = QScrollArea()
@@ -581,14 +540,8 @@ class VisBase():
         #------
         self.play_button = QPushButton("Play")
         self.play_button.setFixedWidth(70)
-        # self.play_button.setStyleSheet("background-color : lightgreen")
-        # self.play_button.clicked.connect(self.play_plot_cb)
         self.play_button.clicked.connect(self.animate)
         self.vbox.addWidget(self.play_button)
-
-        # self.prepare_button = QPushButton("Prepare")
-        # self.prepare_button.clicked.connect(self.prepare_plot_cb)
-        # controls_hbox.addWidget(self.prepare_button)
 
         #------
         self.vbox.addWidget(QHLine())
@@ -603,28 +556,32 @@ class VisBase():
         # Need to create the following regardless of 2D/3D
         self.cells_svg_rb = QRadioButton('.svg')
         self.cells_svg_rb.setChecked(True)
+
         self.cells_mat_rb = QRadioButton('.mat')
         self.cells_edge_checkbox = QCheckBox_custom('edge')
 
-        if not self.model3D_flag:
-            # groupbox = QGroupBox()
-            # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-            # hbox2 = QHBoxLayout()
-            # groupbox.setLayout(hbox2)
+        if not self.model3D_flag:  # 2D vis
+            hbox2 = QHBoxLayout()
             self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
-            # hbox2.addWidget(self.cells_svg_rb)
-            hbox.addWidget(self.cells_svg_rb)
+            hbox2.addWidget(self.cells_svg_rb)
 
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
-            hbox.addWidget(self.cells_mat_rb)
-            # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            hbox2.addWidget(self.cells_mat_rb)
+            hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
             hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
-            # hbox.addLayout(hbox2) 
+
+            radio_frame = QFrame()
+            radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+            radio_frame.setLayout(hbox2)
+            radio_frame.setFixedWidth(130)  # omg
+            hbox.addWidget(radio_frame) 
 
             self.cells_edge_checkbox.setChecked(True)
             self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
             self.cells_edge_checked_flag = True
             hbox.addWidget(self.cells_edge_checkbox) 
+
 
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
@@ -637,35 +594,25 @@ class VisBase():
 
 
         self.vbox.addLayout(hbox)
+
         #------------------
         hbox = QHBoxLayout()
-        # self.add_default_cell_vars()
         self.disable_cell_scalar_cb = False
-        self.cell_scalar_combobox.setEnabled(True)   # for 3D
+        # self.cell_scalar_combobox.setEnabled(True)   # for 3D
+        self.cell_scalar_combobox.setEnabled(self.model3D_flag)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
         self.vbox.addLayout(hbox)
-
-
-        # self.full_list_button = QPushButton("append custom data")
-        # self.full_list_button.setFixedWidth(150)
-        # # self.full_list_button.setStyleSheet("background-color : lightgreen")
-        # # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.full_list_button.clicked.connect(self.append_custom_cb)
-        # self.vbox.addWidget(self.full_list_button)
 
         hbox = QHBoxLayout()
         self.full_list_button = QPushButton("full list")   # old: refresh
         self.full_list_button.setFixedWidth(100)
-        self.full_list_button.setEnabled(True)
-        # self.full_list_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        # self.play_button.clicked.connect(self.play_plot_cb)
-        # self.full_list_button.clicked.connect(self.append_custom_cb)
+        self.full_list_button.setEnabled(self.model3D_flag)
         self.full_list_button.clicked.connect(self.add_default_cell_vars)
         hbox.addWidget(self.full_list_button)
 
         self.partial_button = QPushButton("partial")
         self.partial_button.setFixedWidth(100)
-        # self.partial_button.setEnabled(False)
+        self.partial_button.setEnabled(self.model3D_flag)
         self.partial_button.clicked.connect(self.add_partial_cell_vars)
         hbox.addWidget(self.partial_button)
 
@@ -689,17 +636,7 @@ class VisBase():
         #------
         hbox = QHBoxLayout()
         groupbox = QGroupBox()
-        # groupbox.setTitle("colorbar")
-        # vlayout = QVBoxLayout()
-        # groupbox.setLayout(hbox)
         groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-        # groupbox.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; left: 7px; padding: 0px 5px 0px 5px;}")
-        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black; title: }")
-#         QGroupBox::title {
-#     subcontrol-origin: margin;
-#     left: 7px;
-#     padding: 0px 5px 0px 5px;
-# }
 
         self.fix_cells_cmap_checkbox = QCheckBox_custom('fix: ')
         self.fix_cells_cmap_flag = False
@@ -711,15 +648,12 @@ class VisBase():
 
         cvalue_width = 60
         label = QLabel("cmin")
-        # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
         self.cells_cmin = QLineEdit()
         self.cells_cmin.setText('0.0')
         if not self.model3D_flag:
             self.cells_cmin.setEnabled(False)
-        # self.cmin.textChanged.connect(self.change_plot_range)
         self.cells_cmin.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmin.setFixedWidth(cvalue_width)
         self.cells_cmin.setValidator(QtGui.QDoubleValidator())
@@ -727,7 +661,6 @@ class VisBase():
         hbox.addWidget(self.cells_cmin)
 
         label = QLabel("cmax")
-        # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox.addWidget(label)
         self.cells_cmax = QLineEdit()
@@ -737,7 +670,6 @@ class VisBase():
         self.cells_cmax.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmax.setFixedWidth(cvalue_width)
         self.cells_cmax.setValidator(QtGui.QDoubleValidator())
-        # self.cmax.setEnabled(False)
         hbox.addWidget(self.cells_cmax)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
@@ -751,36 +683,22 @@ class VisBase():
         #------------------
         self.vbox.addWidget(QHLine())
 
-        # hbox = QHBoxLayout()
         self.substrates_checkbox = QCheckBox_custom('substrates')
         self.substrates_checkbox.setChecked(False)
-        # self.substrates_checkbox.setEnabled(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
         self.substrates_checked_flag = False
-        # hbox.addWidget(self.substrates_checkbox)
         self.vbox.addWidget(self.substrates_checkbox)
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
-        # hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
         self.vbox.addLayout(hbox)
 
         #------
         hbox = QHBoxLayout()
-        groupbox = QGroupBox()
-        # groupbox.setTitle("colorbar")
-        # vlayout = QVBoxLayout()
-        # groupbox.setLayout(hbox)
-        groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-        # groupbox.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; left: 7px; padding: 0px 5px 0px 5px;}")
-        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black; title: }")
-#         QGroupBox::title {
-#     subcontrol-origin: margin;
-#     left: 7px;
-#     padding: 0px 5px 0px 5px;
-# }
+        # groupbox = QGroupBox()
+        # groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
 
         self.fix_cmap_checkbox = QCheckBox_custom('fix: ')
         self.fix_cmap_flag = False
