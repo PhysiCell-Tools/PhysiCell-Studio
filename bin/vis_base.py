@@ -1835,7 +1835,8 @@ class VisBase():
 
         # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
         self.cell_scalars_l.remove('ID')
-        self.cell_scalars_l.reverse()
+        # self.cell_scalars_l.reverse()
+        self.cell_scalars_l.sort()
         # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
 
         # for idx in range(0, len(keys_l)):
@@ -1881,16 +1882,21 @@ class VisBase():
         # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
         self.cell_scalars_l.remove('ID')
         self.cell_scalars_l.reverse()
+
+        # determine how to just extract the custom data vars
         for idx in range(len(self.cell_scalars_l)):
             if self.cell_scalars_l[idx].find("transformation_rates") >= 0:
                 break
         # print("   post: idx=",idx)
         self.cell_scalars_l = self.cell_scalars_l[0:idx]
         print("\n   post only custom data: ",self.cell_scalars_l)
-        self.cell_scalars_l.extend(['cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase','pressure','damage'])
+
+        # then append some preferred scalar values, alphabetically
+        self.cell_scalars_l.extend(['cell_type','cycle_model','current_phase','damage','elapsed_time_in_phase','pressure'])
         print("   post append typical: ",self.cell_scalars_l)
 
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
+        self.cell_scalar_combobox.insertSeparator(idx)
 
         self.disable_cell_scalar_cb = False
         self.update_plots()
