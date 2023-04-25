@@ -37,6 +37,8 @@ class Vis(VisBase, QWidget):
 
         self.model3D_flag = model3D_flag
 
+        self.voxel_size = None
+
         self.plot_cells_svg = False  # used for PhysiBoSS checkbox
 
         # self.config_tab = None
@@ -60,6 +62,21 @@ class Vis(VisBase, QWidget):
         self.show_xy_clip = False
         self.show_yz_clip = False
         self.show_xz_clip = False
+
+        self.xy_flip = False
+        self.xz_flip = False
+        self.yz_flip = False
+
+        # TODO: assumes centroid is at origin; fix
+        self.xy_slice_z0 = 0.
+        self.yz_slice_x0 = 0.
+        self.xz_slice_y0 = 0.
+
+        self.xy_clip_z0 = 0.
+        self.yz_clip_x0 = 0.
+        self.xz_clip_y0 = 0.
+
+        self.line_width = 3
 
         self.substrate_name = ""
         self.lut_jet = self.get_jet_map()
@@ -85,12 +102,12 @@ class Vis(VisBase, QWidget):
         ymin = -ymax
         zmax = float(self.config_tab.zmax.text())
         zmin = -zmax
-        lineSource = vtkLineSource()
-        lineSource.SetPoint1(xmin, ymin, zmin)
-        lineSource.SetPoint2(xmax, ymax, zmax)
+        self.domain_diagonal = vtkLineSource()
+        self.domain_diagonal.SetPoint1(xmin, ymin, zmin)
+        self.domain_diagonal.SetPoint2(xmax, ymax, zmax)
 
         self.outline = vtkOutlineFilter()
-        self.outline.SetInputConnection(lineSource.GetOutputPort())
+        self.outline.SetInputConnection(self.domain_diagonal.GetOutputPort())
 
         # Now we'll look at it.
         self.domain_boundary_mapper = vtkPolyDataMapper()
@@ -98,6 +115,7 @@ class Vis(VisBase, QWidget):
         self.domain_boundary_actor = vtkActor()
         self.domain_boundary_actor.SetMapper(self.domain_boundary_mapper)
         self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
+        self.domain_boundary_actor.GetProperty().SetLineWidth(self.line_width)
 
         #-------------
         self.points = vtkPoints()
@@ -221,6 +239,19 @@ class Vis(VisBase, QWidget):
 
         self.cutterXZActor = vtkActor()
         self.cutterXZActor.SetMapper(self.cutterXZMapper)
+
+        #------------------------
+        self.planeXY_clip = vtkPlane()
+        self.planeXY_clip.SetOrigin(0,0,0)
+        self.planeXY_clip.SetNormal(0, 0, 1)
+
+        self.planeYZ_clip = vtkPlane()
+        self.planeYZ_clip.SetOrigin(0,0,0)
+        self.planeYZ_clip.SetNormal(1, 0, 0)
+
+        self.planeXZ_clip = vtkPlane()
+        self.planeXZ_clip.SetOrigin(0,0,0)
+        self.planeXZ_clip.SetNormal(0, 1, 0)
 
         #-----
         # self.cutterXYEdges = vtkFeatureEdges()
@@ -362,6 +393,23 @@ class Vis(VisBase, QWidget):
         # self.scroll_plot.resize(800,800)
         self.scroll_plot.setMinimumSize(700, 600)  #width, height of window
 
+    def reset_domain_box(self):
+        self.xmin = float(self.config_tab.xmin.text())
+        self.xmax = float(self.config_tab.xmax.text())
+
+        self.ymin = float(self.config_tab.ymin.text())
+        self.ymax = float(self.config_tab.ymax.text())
+
+        self.zmin = float(self.config_tab.zmin.text())
+        self.zmax = float(self.config_tab.zmax.text())
+
+        # self.domain_diagonal = vtkLineSource()
+        self.domain_diagonal.SetPoint1(self.xmin, self.ymin, self.zmin)
+        self.domain_diagonal.SetPoint2(self.xmax, self.ymax, self.zmax)
+
+        self.outline.Update()
+        # self.outline = vtkOutlineFilter()
+        # self.outline.SetInputConnection(self.domain_diagonal.GetOutputPort())
 
     #-------------------------------
     # def show_domain_outline(self):
@@ -457,6 +505,12 @@ class Vis(VisBase, QWidget):
             self.ren.RemoveActor(self.cutterXYActor)
         self.vtkWidget.GetRenderWindow().Render()
 
+    def xy_slice_value_cb(self,val):
+        print("vis3D_tab: xy_slice_value_cb: val=",val)
+        self.xy_slice_z0 = val
+        self.update_plots()
+
+    #--------
     def yz_slice_toggle_cb(self,flag):
         self.show_yz_slice = flag
         if flag:
@@ -465,6 +519,12 @@ class Vis(VisBase, QWidget):
             self.ren.RemoveActor(self.cutterYZActor)
         self.vtkWidget.GetRenderWindow().Render()
 
+    def yz_slice_value_cb(self,val):
+        print("vis3D_tab: yz_slice_value_cb: val=",val)
+        self.yz_slice_x0 = val
+        self.update_plots()
+
+    #--------
     def xz_slice_toggle_cb(self,flag):
         self.show_xz_slice = flag
         if flag:
@@ -473,20 +533,54 @@ class Vis(VisBase, QWidget):
             self.ren.RemoveActor(self.cutterXZActor)
         self.vtkWidget.GetRenderWindow().Render()
 
-    #---------
+    def xz_slice_value_cb(self,val):
+        print("vis3D_tab: xz_slice_value_cb: val=",val)
+        self.xz_slice_y0 = val
+        self.update_plots()
+
+    #--------------------------------
     def xy_clip_toggle_cb(self,flag):
         self.show_xy_clip = flag
         print("xy_clip_toggle_cb(): show_xy_clip=",self.show_xy_clip)
         self.update_plots()
 
+    def xy_clip_value_cb(self,val):
+        print("vis3D_tab: xy_clip_value_cb: val=",val)
+        self.xy_clip_z0 = val
+        self.update_plots()
+
+    def xy_flip_toggle_cb(self,flag):
+        self.xy_flip = flag
+        self.update_plots()
+
+    #--------
     def yz_clip_toggle_cb(self,flag):
         self.show_yz_clip = flag
         print("yz_clip_toggle_cb(): show_yz_clip=",self.show_yz_clip)
         self.update_plots()
 
+    def yz_clip_value_cb(self,val):
+        print("vis3D_tab: yz_clip_value_cb: val=",val)
+        self.yz_clip_x0 = val
+        self.update_plots()
+
+    def yz_flip_toggle_cb(self,flag):
+        self.yz_flip = flag
+        self.update_plots()
+
+    #--------
     def xz_clip_toggle_cb(self,flag):
         self.show_xz_clip = flag
         print("xz_clip_toggle_cb(): show_xz_clip=",self.show_xz_clip)
+        self.update_plots()
+
+    def xz_clip_value_cb(self,val):
+        print("vis3D_tab: xz_clip_value_cb: val=",val)
+        self.xz_clip_y0 = val
+        self.update_plots()
+
+    def xz_flip_toggle_cb(self,flag):
+        self.xz_flip = flag
         self.update_plots()
 
     #---------
@@ -501,6 +595,7 @@ class Vis(VisBase, QWidget):
     def axes_toggle_cb(self,flag):
         self.show_axes = flag
         if flag:
+            self.reset_domain_box()
             if self.axes_actor is None:
                 print("------- showing axes_actor")
                 self.ren.RemoveActor(self.axes_actor)
@@ -529,6 +624,10 @@ class Vis(VisBase, QWidget):
                 self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
                 self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
                 self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+                # self.axes_actor.GetProperty().SetLineWidth(self.line_width)
+                # self.axes_actor.SetShaftType(vtkAxesActor.CYLINDER_SHAFT)
+                # self.axes_actor.SetCylinderRadius(0.01)
                 # self.ren.AddActor(self.axes_actor)
             self.ren.AddActor(self.axes_actor)
         else:
@@ -866,9 +965,9 @@ class Vis(VisBase, QWidget):
                 # print("Once output files are generated, click the slider.")   
                 print("play_plot_cb():  Reached the end (or no output files found).")
                 # self.timer.stop()
-                # self.current_frame -= 1
+                self.current_frame -= 1
                 self.animating_flag = True
-                self.current_frame = 0
+                # self.current_frame = 0
                 self.animate()
                 return
 
@@ -1170,10 +1269,47 @@ class Vis(VisBase, QWidget):
         return lut
 
     #------------------------------------------------------------
+    def get_domain_params(self):
+        # xml_file = "output%08d.xml" % frame
+        xml_file = "initial.xml"
+        full_fname = os.path.join(self.output_dir, xml_file)
+        if not os.path.exists(full_fname):
+            print(f"vis3D_tab.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            return
+
+        print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=True, graph=False, verbose=True)
+        print("         mcds.data.keys()= ",mcds.data.keys())
+        print("\n         mcds.data['continuum_variables'].keys()= ",mcds.data['continuum_variables'].keys())
+
+        # field_name = self.substrates_combobox.currentText()
+        # if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
+        #     print(f" ---  ERROR: substrate={self.substrate_name} is not valid.")
+        #     return
+
+
+        # sub_dict = mcds.data['continuum_variables'][self.substrate_name]
+        # print("get_domain_params(): sub_dict.keys() = ",sub_dict.keys())
+        # sub_concentration = sub_dict['data']
+        # self.nx,self.ny,self.nz = sub_concentration.shape
+        # print("get_domain_params(): nx,ny,nz = ",self.nx,self.ny,self.nz)
+        # self.substrate_data.SetDimensions( self.nx+1, self.ny+1, self.nz+1 )
+
+        # rwh ??
+        # self.voxel_size = 20   # rwh: fix hard-coded
+        # self.x0 = -(self.voxel_size * self.nx) / 2.0
+        # self.y0 = -(self.voxel_size * self.ny) / 2.0
+        # self.z0 = -(self.voxel_size * self.nz) / 2.0
+
+        self.x0 = 0.
+        self.y0 = 0.
+        self.z0 = 0.
+
+    #------------------------------------------------------------
     def plot_cells3D(self, frame):
-        print("plot_cells3D:  self.output_dir= ",self.output_dir)
-        print("plot_cells3D:  self.substrate_name= ",self.substrate_name)
-        print("plot_cells3D:  frame= ",frame)
+        # print("plot_cells3D:  self.output_dir= ",self.output_dir)
+        # print("plot_cells3D:  self.substrate_name= ",self.substrate_name)
+        # print("plot_cells3D:  frame= ",frame)
         self.frame_count.setText(str(frame))
 
         read_microenv_flag = self.substrates_checkbox.isChecked()
@@ -1181,7 +1317,7 @@ class Vis(VisBase, QWidget):
         # xml_file = Path(self.output_dir, "output00000000.xml")
         # xml_file = "output00000000.xml"
         xml_file = "output%08d.xml" % frame
-        print("plot_cells3D: xml_file = ",xml_file)
+        # print("plot_cells3D: xml_file = ",xml_file)
         # mcds = pyMCDS_cells(xml_file, '.')  
 
         # if not os.path.exists("tmpdir/" + xml_file):
@@ -1191,16 +1327,16 @@ class Vis(VisBase, QWidget):
             print(f"vis3D_tab.py: plot_cells3D(): full_fname {full_fname} does not exist, leaving!")
             return
 
-        print("\n\n------------- plot_cells3D: pyMCDS reading info from ",xml_file)
+        print("------------- plot_cells3D: pyMCDS reading info from ",full_fname)
         # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
         mcds = pyMCDS(xml_file, self.output_dir, microenv=read_microenv_flag, graph=False, verbose=False)
         current_time = mcds.get_time()
-        print('time=', current_time )
-        print("metadata keys=",mcds.data['metadata'].keys())
+        # print('time=', current_time )
+        # print("metadata keys=",mcds.data['metadata'].keys())
         current_time = mcds.data['metadata']['current_time']
-        print('time(verbose)=', current_time )
+        # print('time(verbose)=', current_time )
 
         current_time = round(current_time, 2)
         self.title_str = 'time '+ str(current_time) + ' min'
@@ -1219,7 +1355,7 @@ class Vis(VisBase, QWidget):
 
             # ncells = len(mcds.data['discrete_cells']['ID'])
             ncells = len(mcds.data['discrete_cells']['data']['ID'])
-            print('ncells=', ncells)
+            # print('ncells=', ncells)
             if ncells == 0:
                 return
             self.title_str += ", # cells=" + str(ncells)
@@ -1241,19 +1377,19 @@ class Vis(VisBase, QWidget):
 
             ymin = min(xyz[:,1])
             ymax = max(xyz[:,1])
-            print("ymin = ",ymin)
-            print("ymax = ",ymax)
+            # print("ymin = ",ymin)
+            # print("ymax = ",ymax)
 
             zmin = min(xyz[:,2])
             zmax = max(xyz[:,2])
-            print("zmin = ",zmin)
-            print("zmax = ",zmax)
+            # print("zmin = ",zmin)
+            # print("zmax = ",zmax)
 
             # cell_type = mcds.data['discrete_cells']['cell_type']
             cell_scalar_str = self.cell_scalar_combobox.currentText()
             if len(cell_scalar_str) == 0:
                 cell_scalar_str = 'cell_type'
-            print("\n------- cell_scalar_str= ",cell_scalar_str)
+            # print("\n------- cell_scalar_str= ",cell_scalar_str)
             self.scalar_bar_cells.SetTitle(cell_scalar_str)
             # cell_type = mcds.data['discrete_cells']['data']['cell_type']
             cell_scalar_val = mcds.data['discrete_cells']['data'][cell_scalar_str]
@@ -1264,8 +1400,8 @@ class Vis(VisBase, QWidget):
             if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
                 unique_cell_type = np.unique(cell_scalar_val)
                 self.num_discrete_cell_val = len(unique_cell_type)
-                print("\nunique_cell_type = ",unique_cell_type )
-                print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
+                # print("\nunique_cell_type = ",unique_cell_type )
+                # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
                 # lut = self.get_diverging_lut1()
                 lut = self.get_cell_type_colors_lut(self.num_discrete_cell_val)
@@ -1376,11 +1512,25 @@ class Vis(VisBase, QWidget):
             # if we are clipping the cells using a clip plane
             clipped_cells_flag = False
             polydata = self.glyph.GetOutput()
+
+            if self.voxel_size is None:
+                self.get_domain_params()
+            # self.voxel_size = 20   # rwh: fix hard-coded
+            # x0 = -(self.voxel_size * self.nx) / 2.0
+            # y0 = -(self.voxel_size * self.ny) / 2.0
+            # z0 = -(self.voxel_size * self.nz) / 2.0
+            print(f"---- vis3D: self.x0,self.y0,self.z0= {self.x0},{self.y0},{self.z0}")
+
             if self.show_xy_clip:
                 clipped_cells_flag = True
                 self.clipXY.SetInputData(self.glyph.GetOutput())
                 # self.planeXY.SetOrigin(x0,y0,0)
-                self.clipXY.SetClipFunction(self.planeXY)
+                self.planeXY_clip.SetOrigin(self.x0,self.y0, self.xy_clip_z0)
+                if self.xy_flip:
+                    self.planeXY_clip.SetNormal(0,0, -1)
+                else:
+                    self.planeXY_clip.SetNormal(0,0, 1)
+                self.clipXY.SetClipFunction(self.planeXY_clip)
                 self.clipXY.Update()
                 polydata = self.clipXY.GetOutput()
                 self.cells_mapper.SetInputConnection(self.clipXY.GetOutputPort())
@@ -1388,7 +1538,13 @@ class Vis(VisBase, QWidget):
                 clipped_cells_flag = True
                 self.clipYZ.SetInputData(polydata)
                 # self.planeYZ.SetOrigin(0,0,0)
-                self.clipYZ.SetClipFunction(self.planeYZ)
+                print("self.planeYZ_clip.SetOrigin=",self.yz_clip_x0,self.y0,self.z0)
+                self.planeYZ_clip.SetOrigin(self.yz_clip_x0,self.y0,self.z0)
+                if self.yz_flip:
+                    self.planeYZ_clip.SetNormal(-1,0,0)
+                else:
+                    self.planeYZ_clip.SetNormal(1,0,0)
+                self.clipYZ.SetClipFunction(self.planeYZ_clip)
                 self.clipYZ.Update()
                 polydata = self.clipYZ.GetOutput()
                 self.cells_mapper.SetInputConnection(self.clipYZ.GetOutputPort())
@@ -1396,7 +1552,12 @@ class Vis(VisBase, QWidget):
                 clipped_cells_flag = True
                 self.clipXZ.SetInputData(polydata)
                 # self.planeXZ.SetOrigin(0,0,0)
-                self.clipXZ.SetClipFunction(self.planeXZ)
+                self.planeXZ_clip.SetOrigin(self.x0,self.xz_clip_y0,self.z0)
+                if self.xz_flip:
+                    self.planeXZ_clip.SetNormal(0,-1,0)
+                else:
+                    self.planeXZ_clip.SetNormal(0,1,0)
+                self.clipXZ.SetClipFunction(self.planeXZ_clip)
                 # polydata = self.clipXZ.GetOutput()
                 self.clipXZ.Update()
                 self.cells_mapper.SetInputConnection(self.clipXZ.GetOutputPort())
@@ -1452,13 +1613,15 @@ class Vis(VisBase, QWidget):
             # self.tags.Reset()
 
             # print("\n\n---------  doing 3D substrate as vtkStructuredPoints\n")
+
+            # Can/should probably just do this once, at the approp place...
             # nx,ny,nz = 12,12,12
             # nx,ny,nz = 3,3,3
             nx,ny,nz = sub_concentration.shape
             # print("nx,ny,nz = ",nx,ny,nz)
             self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
             # self.substrate_data.SetDimensions( nx, ny, nz )
-            voxel_size = 20   # rwh: fix
+            voxel_size = 20   # rwh: fix hard-coded
             x0 = -(voxel_size * nx) / 2.0
             y0 = -(voxel_size * ny) / 2.0
             z0 = -(voxel_size * nz) / 2.0
@@ -1560,7 +1723,8 @@ class Vis(VisBase, QWidget):
 
                 self.cutterXY.SetInputData(self.substrate_data)
                 # self.cutterXY.SetInputData(self.glyph.GetOutput())
-                self.planeXY.SetOrigin(x0,y0,0)
+                # self.planeXY.SetOrigin(x0,y0,0)
+                self.planeXY.SetOrigin(x0,y0, self.xy_slice_z0)
                 self.cutterXY.SetCutFunction(self.planeXY)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterXY.Update()
@@ -1603,7 +1767,8 @@ class Vis(VisBase, QWidget):
                 # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterYZ.SetInputData(self.substrate_data)
-                self.planeYZ.SetOrigin(0,y0,z0)
+                # self.planeYZ.SetOrigin(0,y0,z0)
+                self.planeYZ.SetOrigin(self.yz_slice_x0,y0,z0)
                 self.cutterYZ.SetCutFunction(self.planeYZ)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterYZ.Update()
@@ -1626,7 +1791,8 @@ class Vis(VisBase, QWidget):
                 # self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
                 self.cutterXZ.SetInputData(self.substrate_data)
-                self.planeXZ.SetOrigin(x0,0,z0)
+                # self.planeXZ.SetOrigin(x0,0,z0)
+                self.planeXZ.SetOrigin(x0,self.xz_slice_y0,z0)
                 self.cutterXZ.SetCutFunction(self.planeXZ)
                 # self.cutterXY.SetInputData(self.substrate_data.GetCellData())  # error; reqs vtkDO
                 self.cutterXZ.Update()
@@ -1693,6 +1859,10 @@ class Vis(VisBase, QWidget):
             self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().SetTextScaleMode(vtkTextActor.TEXT_SCALE_MODE_NONE)
             self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().SetFontSize(fsize)
             self.axes_actor.GetZAxisCaptionActor2D().GetTextActor().GetTextProperty().ShadowOn()
+
+            # self.axes_actor.SetShaftType(vtkAxesActor.CYLINDER_SHAFT)
+            # self.axes_actor.SetCylinderRadius(5.0)
+            # self.axes_actor.SetCylinderRadius(0.01)
             self.ren.AddActor(self.axes_actor)
 
     # renderWindow.SetWindowName('PhysiCell model')

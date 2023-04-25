@@ -449,6 +449,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #     # self.tabWidget.setTabEnabled(6, bval)   
     #     self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
+    def filterUI_cb(self):
+        print("filterUI_cb")
+        self.vis_tab.filterUI_cb()
 
     def menu(self):
         menubar = QMenuBar(self)
@@ -577,40 +580,42 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-            xy_act = view3D_menu.addAction("XY slice")
-            xy_act.setCheckable(True)
-            xy_act.setChecked(True)
+            vis3D_filterUI_act = view3D_menu.addAction("3D Filters", self.filterUI_cb)
 
-            yz_act = view3D_menu.addAction("YZ slice")
-            yz_act.setCheckable(True)
-            yz_act.setChecked(True)
+            # xy_act = view3D_menu.addAction("XY slice")
+            # xy_act.setCheckable(True)
+            # xy_act.setChecked(True)
 
-            xz_act = view3D_menu.addAction("XZ slice")
-            xz_act.setCheckable(True)
-            xz_act.setChecked(True)
+            # yz_act = view3D_menu.addAction("YZ slice")
+            # yz_act.setCheckable(True)
+            # yz_act.setChecked(True)
 
-            voxels_act = view3D_menu.addAction("All voxels")
-            voxels_act.setCheckable(True)
-            voxels_act.setChecked(False)
-            view3D_menu.addSeparator()
+            # xz_act = view3D_menu.addAction("XZ slice")
+            # xz_act.setCheckable(True)
+            # xz_act.setChecked(True)
 
-            # actions for cell clipping/cropping
-            xy_clip_act = view3D_menu.addAction("XY clip")
-            xy_clip_act.setCheckable(True)
-            xy_clip_act.setChecked(False)
+            # voxels_act = view3D_menu.addAction("All voxels")
+            # voxels_act.setCheckable(True)
+            # voxels_act.setChecked(False)
+            # view3D_menu.addSeparator()
 
-            yz_clip_act = view3D_menu.addAction("YZ clip")
-            yz_clip_act.setCheckable(True)
-            yz_clip_act.setChecked(False)
+            # # actions for cell clipping/cropping
+            # xy_clip_act = view3D_menu.addAction("XY clip")
+            # xy_clip_act.setCheckable(True)
+            # xy_clip_act.setChecked(False)
 
-            xz_clip_act = view3D_menu.addAction("XZ clip")
-            xz_clip_act.setCheckable(True)
-            xz_clip_act.setChecked(False)
-            view3D_menu.addSeparator()
+            # yz_clip_act = view3D_menu.addAction("YZ clip")
+            # yz_clip_act.setCheckable(True)
+            # yz_clip_act.setChecked(False)
 
-            axes_act = view3D_menu.addAction("Axes")
-            axes_act.setCheckable(True)
-            axes_act.setChecked(False)
+            # xz_clip_act = view3D_menu.addAction("XZ clip")
+            # xz_clip_act.setCheckable(True)
+            # xz_clip_act.setChecked(False)
+            # view3D_menu.addSeparator()
+
+            # axes_act = view3D_menu.addAction("Axes")
+            # axes_act.setCheckable(True)
+            # axes_act.setChecked(False)
 
             # contour_act = view3D_menu.addAction("contour")
             # contour_act.setCheckable(True)
@@ -645,7 +650,17 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 item.setCheckable(True)
                 item.setChecked(False)
 
+
+        help_menu = menubar.addMenu('&Help')
+        help_menu.triggered.connect(self.open_help_url)
+        guide_act = help_menu.addAction("User Guide(link)", self.open_help_url)
+
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
+
+    def open_help_url(self):
+        url = QtCore.QUrl('https://github.com/rheiland/PhysiCell-Studio/blob/main/user-guide/README.md')
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open URL')
 
     def reset_xml_root(self):
         self.celldef_tab.clear_custom_data_tab()
@@ -667,6 +682,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.rules_tab.fill_gui()
 
         self.config_tab.fill_gui()
+        if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
+            print("You're running a 3D Studio, but the model is 2D")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('The model has been loaded; however, it is 2D and you are running the 3D (plotting) Studio. You may want to run a new Studio without 3D, i.e., no "-3", for this 2D model.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         self.microenv_tab.clear_gui()
         self.microenv_tab.populate_tree()
@@ -696,6 +718,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
         self.setWindowTitle(self.title_prefix + self.config_file)
+        if self.model3D_flag:
+            self.vis_tab.reset_domain_box()
 
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')

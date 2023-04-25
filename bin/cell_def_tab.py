@@ -2975,7 +2975,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox = QHBoxLayout()
         hbox.addWidget(self.chemotaxis_direction_towards)
         hbox.addWidget(self.chemotaxis_direction_against)
-        glayout.addLayout(hbox, idr,1, 1,1) # w, row, column, rowspan, colspan
+        # glayout.addLayout(hbox, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        radio_frame = QFrame()
+        radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+        radio_frame.setLayout(hbox)
+        radio_frame.setFixedWidth(170)  # omg
+        glayout.addWidget(radio_frame, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         #---
             # <advanced_chemotaxis>
