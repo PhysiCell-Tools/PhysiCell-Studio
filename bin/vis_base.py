@@ -1668,6 +1668,44 @@ class VisBase():
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
+    #------------------------------------------------------------
+    # Not exactly sure if we need this or what it should do. Overridden in vis3D_tab?
+    def get_domain_params(self):
+        # xml_file = "output%08d.xml" % frame
+        xml_file = "initial.xml"
+        full_fname = os.path.join(self.output_dir, xml_file)
+        if not os.path.exists(full_fname):
+            print(f"vis3D_tab.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            return
+
+        # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=True, graph=False, verbose=False)
+        # print("         mcds.data.keys()= ",mcds.data.keys())
+        # print("\n         mcds.data['continuum_variables'].keys()= ",mcds.data['continuum_variables'].keys())
+
+        # field_name = self.substrates_combobox.currentText()
+        # if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
+        #     print(f" ---  ERROR: substrate={self.substrate_name} is not valid.")
+        #     return
+
+
+        # sub_dict = mcds.data['continuum_variables'][self.substrate_name]
+        # print("get_domain_params(): sub_dict.keys() = ",sub_dict.keys())
+        # sub_concentration = sub_dict['data']
+        # self.nx,self.ny,self.nz = sub_concentration.shape
+        # print("get_domain_params(): nx,ny,nz = ",self.nx,self.ny,self.nz)
+        # self.substrate_data.SetDimensions( self.nx+1, self.ny+1, self.nz+1 )
+
+        # rwh ??
+        # self.voxel_size = 20   # rwh: fix hard-coded
+        # self.x0 = -(self.voxel_size * self.nx) / 2.0
+        # self.y0 = -(self.voxel_size * self.ny) / 2.0
+        # self.z0 = -(self.voxel_size * self.nz) / 2.0
+
+        self.x0 = 0.
+        self.y0 = 0.
+        self.z0 = 0.
+
 
     def init_plot_range(self, config_tab):
         print("vis_base:----- init_plot_range:")
