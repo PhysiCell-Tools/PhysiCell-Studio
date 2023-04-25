@@ -77,7 +77,7 @@ class Vis(VisBase, QWidget):
 
         self.nanohub_flag = nanohub_flag
         self.run_tab = run_tab
-        self.legend_tab = None
+        # self.legend_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 

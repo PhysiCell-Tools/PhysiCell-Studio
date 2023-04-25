@@ -461,62 +461,62 @@ class SvgWidget(QSvgWidget):
             renderer.render(painter, QRectF(0, 0, length, ratio * length))
             painter.end()
 
-class Legend(QWidget):  # the tab version; instanced in studio.py
-    # def __init__(self, doc_absolute_path, nanohub_flag):
-    def __init__(self, nanohub_flag):
-        super().__init__()
+# class Legend(QWidget):  # the tab version; instanced in studio.py
+#     # def __init__(self, doc_absolute_path, nanohub_flag):
+#     def __init__(self, nanohub_flag):
+#         super().__init__()
 
-        # self.doc_absolute_path = doc_absolute_path
+#         # self.doc_absolute_path = doc_absolute_path
 
-        self.process = None
-        self.output_dir = '.'   # set in pmb.py
-        self.current_dir = '.'   # reset in pmb.py
-        self.pmb_data_dir = ''   # reset in pmb.py
+#         self.process = None
+#         self.output_dir = '.'   # set in pmb.py
+#         self.current_dir = '.'   # reset in pmb.py
+#         self.pmb_data_dir = ''   # reset in pmb.py
         
-        #-------------------------------------------
-        self.scroll = QScrollArea()  # might contain centralWidget
+#         #-------------------------------------------
+#         self.scroll = QScrollArea()  # might contain centralWidget
 
-        self.svgView = SvgWidget()
-        self.vbox = QVBoxLayout()
+#         self.svgView = SvgWidget()
+#         self.vbox = QVBoxLayout()
 
-        self.svgView.setLayout(self.vbox)
+#         self.svgView.setLayout(self.vbox)
 
-        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll.setWidgetResizable(True)
-        # self.scroll.setWidgetResizable(False)
+#         self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+#         self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+#         self.scroll.setWidgetResizable(True)
+#         # self.scroll.setWidgetResizable(False)
 
-        self.scroll.setWidget(self.svgView) 
-        self.layout = QVBoxLayout(self)
-        self.layout.addWidget(self.scroll)
+#         self.scroll.setWidget(self.svgView) 
+#         self.layout = QVBoxLayout(self)
+#         self.layout.addWidget(self.scroll)
 
-    def clear_legend(self):  # tab version
-        legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
-        self.svgView.load(legend_file)
+#     def clear_legend(self):  # tab version
+#         legend_file = os.path.join(self.pmb_data_dir, 'empty_legend.svg')
+#         self.svgView.load(legend_file)
 
-    def reload_legend(self):  # tab version
-        print('reload_legend(): self.output_dir = ',self.output_dir)
-        for idx in range(4):
-            print("waiting for creation of legend.svg ...",idx)
-            # path = Path("legend.svg")
-            path = Path(self.output_dir,"legend.svg")
-            # path = Path(self.current_dir,self.output_dir,"legend.svg")
-            print("path = ",path)
-            if path.is_file():
-            # try:
-                # self.svgView.load("legend.svg")
-                full_fname = os.path.join(self.output_dir, "legend.svg")
-                # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
-                print("legend_tab.py: full_fname = ",full_fname)
-                self.svgView.load(full_fname)
-                break
-            # except:
-            #     path = Path(self.current_dir,self.output_dir,"legend.svg")
-            #     time.sleep(1)
-            else:
-                path = Path(self.output_dir,"legend.svg")
-                # path = Path(self.current_dir,self.output_dir,"legend.svg")
-                time.sleep(1)
+#     def reload_legend(self):  # tab version
+#         print('reload_legend(): self.output_dir = ',self.output_dir)
+#         for idx in range(4):
+#             print("waiting for creation of legend.svg ...",idx)
+#             # path = Path("legend.svg")
+#             path = Path(self.output_dir,"legend.svg")
+#             # path = Path(self.current_dir,self.output_dir,"legend.svg")
+#             print("path = ",path)
+#             if path.is_file():
+#             # try:
+#                 # self.svgView.load("legend.svg")
+#                 full_fname = os.path.join(self.output_dir, "legend.svg")
+#                 # full_fname = os.path.join(self.current_dir,self.output_dir, "legend.svg")
+#                 print("legend_tab.py: full_fname = ",full_fname)
+#                 self.svgView.load(full_fname)
+#                 break
+#             # except:
+#             #     path = Path(self.current_dir,self.output_dir,"legend.svg")
+#             #     time.sleep(1)
+#             else:
+#                 path = Path(self.output_dir,"legend.svg")
+#                 # path = Path(self.current_dir,self.output_dir,"legend.svg")
+#                 time.sleep(1)
 
 #------------------------------
 class LegendPlotWindow(QWidget):
@@ -633,7 +633,7 @@ class VisBase():
         self.nanohub_flag = nanohub_flag
         self.config_tab = config_tab
         self.run_tab = run_tab
-        self.legend_tab = None
+        # self.legend_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -945,7 +945,7 @@ class VisBase():
         self.cell_scalar_cbar_combobox.addItem("viridis")
         self.cell_scalar_cbar_combobox.addItem("YlOrRd")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
-        self.cell_scalar_cbar_combobox.setEnabled(True)  # for 3D
+        self.cell_scalar_cbar_combobox.setEnabled(self.model3D_flag)  # for 3D
         hbox.addWidget(self.cell_scalar_cbar_combobox)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -1525,12 +1525,12 @@ class VisBase():
             print("select_plot_output_cb():  dir_path is valid")
             self.output_dir = dir_path
             self.output_folder.setText(dir_path)
-            self.legend_tab.output_dir = dir_path
+            # self.legend_tab.output_dir = dir_path
             legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
-            if Path(legend_file).is_file():
-                self.legend_tab.reload_legend()
-            else:
-                self.legend_tab.clear_legend()
+            # if Path(legend_file).is_file():
+            #     self.legend_tab.reload_legend()
+            # else:
+            #     self.legend_tab.clear_legend()
 
             self.reset_model()
             self.update_plots()
@@ -1540,6 +1540,7 @@ class VisBase():
 
 
     def cells_svg_mat_cb(self):
+        # print("\n---------cells_svg_mat_cb(self)")
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
@@ -1596,7 +1597,7 @@ class VisBase():
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
             self.plot_ymax = float(self.ymax)
-            print("-------- reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            print("--------vis_base() reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
         except:
             pass
 
@@ -1814,7 +1815,7 @@ class VisBase():
         self.reset_model()
 
     def reset_model(self):
-        print("\n--------- vis_base: reset_model ----------")
+        print("--------- vis_base: reset_model ----------")
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
@@ -1899,7 +1900,7 @@ class VisBase():
         self.current_frame = 0
         # self.forward_plot_cb("")  
 
-        print("         sub_names= ",sub_names)
+        # print("         sub_names= ",sub_names)
         self.fill_substrates_combobox(sub_names)
 
 
@@ -2084,9 +2085,32 @@ class VisBase():
     #----------------------------------------------
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval
+
+        # these widgets reflect the toggle
         self.cells_svg_rb.setEnabled(bval)
         self.cells_mat_rb.setEnabled(bval)
         self.cells_edge_checkbox.setEnabled(bval)
+
+        # these widgets depend on whether we're using .mat (scalars)
+        if bval:
+            # print("--- cells_toggle_cb:  conditional block 1")
+            self.cell_scalar_combobox.setEnabled(not self.plot_cells_svg)
+            self.cell_scalar_cbar_combobox.setEnabled(not self.plot_cells_svg)
+            self.full_list_button.setEnabled(not self.plot_cells_svg)
+            self.partial_button.setEnabled(not self.plot_cells_svg)
+            self.fix_cells_cmap_checkbox.setEnabled(not self.plot_cells_svg)
+            self.cells_cmin.setEnabled(not self.plot_cells_svg)
+            self.cells_cmax.setEnabled(not self.plot_cells_svg)
+        else:
+            # print("--- cells_toggle_cb:  conditional block 2")
+            self.cell_scalar_combobox.setEnabled(False)
+            self.cell_scalar_cbar_combobox.setEnabled(False)
+            self.full_list_button.setEnabled(False)
+            self.partial_button.setEnabled(False)
+            self.fix_cells_cmap_checkbox.setEnabled(False)
+            self.cells_cmin.setEnabled(False)
+            self.cells_cmax.setEnabled(False)
+
 
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
@@ -2099,6 +2123,7 @@ class VisBase():
             
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
+
 
     def cells_edge_toggle_cb(self,bval):
         self.cells_edge_checked_flag = bval
@@ -2225,7 +2250,7 @@ class VisBase():
 
 
     def add_partial_cell_vars(self):
-        print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
+        # print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
 
         xml_file_root = "output%08d.xml" % 0
         xml_file = os.path.join(self.output_dir, xml_file_root)
@@ -2244,7 +2269,7 @@ class VisBase():
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         self.cell_scalars_l.clear()
-        print("   post clear(): cell_scalars_l= ",self.cell_scalars_l)
+        # print("   post clear(): cell_scalars_l= ",self.cell_scalars_l)
 
         self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
 
@@ -2258,11 +2283,11 @@ class VisBase():
                 break
         # print("   post: idx=",idx)
         self.cell_scalars_l = self.cell_scalars_l[0:idx]
-        print("\n   post only custom data: ",self.cell_scalars_l)
+        # print("\n   post only custom data: ",self.cell_scalars_l)
 
         # then append some preferred scalar values, alphabetically
         self.cell_scalars_l.extend(['cell_type','cycle_model','current_phase','damage','elapsed_time_in_phase','pressure'])
-        print("   post append typical: ",self.cell_scalars_l)
+        # print("   post append typical: ",self.cell_scalars_l)
 
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
         self.cell_scalar_combobox.insertSeparator(idx)
