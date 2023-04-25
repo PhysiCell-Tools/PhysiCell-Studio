@@ -622,7 +622,10 @@ class VisBase():
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
 
-        self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity','dead']  # check for discrete type scalar, ugh.
+        if not self.model3D_flag:
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity','dead']  # check for discrete type scalar, ugh.
+        else:
+            self.discrete_cell_scalars = ['cell_type', 'is_motile','current_death_model','dead','number_of_nuclei','polarity','dead']  # check for discrete type scalar, ugh.
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
         self.mech_voxel_size = 30

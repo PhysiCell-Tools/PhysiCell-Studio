@@ -976,10 +976,10 @@ class Vis(VisBase, QWidget):
 
     # overriden method from vis_base
     def change_frame_count_cb(self):
-        print("vis_base >>> change_frame_count_cb()")
+        # print("vis3D (override)>>> change_frame_count_cb()")
         try:  # due to the initial callback
             self.current_frame = int(self.frame_count.text())
-            print("           self.current_frame= ",self.current_frame)
+            # print("           self.current_frame= ",self.current_frame)
         except:
             pass
         self.update_plots()
@@ -1252,7 +1252,7 @@ class Vis(VisBase, QWidget):
     # discrete color map
     def get_cell_type_colors_lut(self, num_cell_types):
         # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
-        print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
+        # print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
         lut = vtkLookupTable()
         lut.SetNumberOfTableValues(num_cell_types)
         lut.Build()
@@ -1277,10 +1277,10 @@ class Vis(VisBase, QWidget):
             print(f"vis3D_tab.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
-        print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
-        mcds = pyMCDS(xml_file, self.output_dir, microenv=True, graph=False, verbose=True)
-        print("         mcds.data.keys()= ",mcds.data.keys())
-        print("\n         mcds.data['continuum_variables'].keys()= ",mcds.data['continuum_variables'].keys())
+        # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
+        mcds = pyMCDS(xml_file, self.output_dir, microenv=True, graph=False, verbose=False)
+        # print("         mcds.data.keys()= ",mcds.data.keys())
+        # print("\n         mcds.data['continuum_variables'].keys()= ",mcds.data['continuum_variables'].keys())
 
         # field_name = self.substrates_combobox.currentText()
         # if (len(self.substrate_name) == 0) or (self.substrate_name not in mcds.data['continuum_variables']):
@@ -1327,7 +1327,7 @@ class Vis(VisBase, QWidget):
             print(f"vis3D_tab.py: plot_cells3D(): full_fname {full_fname} does not exist, leaving!")
             return
 
-        print("------------- plot_cells3D: pyMCDS reading info from ",full_fname)
+        # print("------------- plot_cells3D: pyMCDS reading info from ",full_fname)
         # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
         # mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
@@ -1519,7 +1519,7 @@ class Vis(VisBase, QWidget):
             # x0 = -(self.voxel_size * self.nx) / 2.0
             # y0 = -(self.voxel_size * self.ny) / 2.0
             # z0 = -(self.voxel_size * self.nz) / 2.0
-            print(f"---- vis3D: self.x0,self.y0,self.z0= {self.x0},{self.y0},{self.z0}")
+            # print(f"---- vis3D: plot_cells3D(): self.x0,self.y0,self.z0= {self.x0},{self.y0},{self.z0}")
 
             if self.show_xy_clip:
                 clipped_cells_flag = True
@@ -1832,7 +1832,7 @@ class Vis(VisBase, QWidget):
 
         # if self.axes_actor is None:
         if self.show_axes:
-            print("------- showing axes_actor")
+            # print("------- showing axes_actor")
             self.ren.RemoveActor(self.axes_actor)
             self.axes_actor = vtkAxesActor()
             # self.axes_actor.SetShaftTypeToCylinder()

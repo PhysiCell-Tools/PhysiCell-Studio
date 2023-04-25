@@ -582,44 +582,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
             vis3D_filterUI_act = view3D_menu.addAction("3D Filters", self.filterUI_cb)
 
-            # xy_act = view3D_menu.addAction("XY slice")
-            # xy_act.setCheckable(True)
-            # xy_act.setChecked(True)
-
-            # yz_act = view3D_menu.addAction("YZ slice")
-            # yz_act.setCheckable(True)
-            # yz_act.setChecked(True)
-
-            # xz_act = view3D_menu.addAction("XZ slice")
-            # xz_act.setCheckable(True)
-            # xz_act.setChecked(True)
-
-            # voxels_act = view3D_menu.addAction("All voxels")
-            # voxels_act.setCheckable(True)
-            # voxels_act.setChecked(False)
-            # view3D_menu.addSeparator()
-
-            # # actions for cell clipping/cropping
-            # xy_clip_act = view3D_menu.addAction("XY clip")
-            # xy_clip_act.setCheckable(True)
-            # xy_clip_act.setChecked(False)
-
-            # yz_clip_act = view3D_menu.addAction("YZ clip")
-            # yz_clip_act.setCheckable(True)
-            # yz_clip_act.setChecked(False)
-
-            # xz_clip_act = view3D_menu.addAction("XZ clip")
-            # xz_clip_act.setCheckable(True)
-            # xz_clip_act.setChecked(False)
-            # view3D_menu.addSeparator()
-
             # axes_act = view3D_menu.addAction("Axes")
             # axes_act.setCheckable(True)
             # axes_act.setChecked(False)
-
-            # contour_act = view3D_menu.addAction("contour")
-            # contour_act.setCheckable(True)
-            # contour_act.setChecked(False)
 
         else:  # just 2D view
             if self.studio_flag:
