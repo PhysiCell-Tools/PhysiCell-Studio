@@ -47,6 +47,7 @@ class Vis(VisBase, QWidget):
         self.population_plot = None
         self.celltype_name = []
         self.celltype_color = []
+        self.lut_discrete = None
 
         self.cell_scalars_l = []
         self.cell_scalar_min = 0.0
@@ -138,7 +139,7 @@ class Vis(VisBase, QWidget):
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
         self.sphereSource = vtkSphereSource()
-        nres = 20
+        nres = 8   # 2,4,8,10,20?   Make editable in Filters3D eventually
         self.sphereSource.SetPhiResolution(nres)
         self.sphereSource.SetThetaResolution(nres)
         self.sphereSource.SetRadius(1.0)  # 0.5, 1.0 ?
@@ -393,23 +394,26 @@ class Vis(VisBase, QWidget):
         # self.scroll_plot.resize(800,800)
         self.scroll_plot.setMinimumSize(700, 600)  #width, height of window
 
-    def reset_domain_box(self):
-        self.xmin = float(self.config_tab.xmin.text())
-        self.xmax = float(self.config_tab.xmax.text())
+    # def reset_domain_box_3D(self):
+    #     print("\n------ vis3D: reset_domain_box()")
+    #     self.lut_discrete = None
 
-        self.ymin = float(self.config_tab.ymin.text())
-        self.ymax = float(self.config_tab.ymax.text())
+    #     self.xmin = float(self.config_tab.xmin.text())
+    #     self.xmax = float(self.config_tab.xmax.text())
 
-        self.zmin = float(self.config_tab.zmin.text())
-        self.zmax = float(self.config_tab.zmax.text())
+    #     self.ymin = float(self.config_tab.ymin.text())
+    #     self.ymax = float(self.config_tab.ymax.text())
 
-        # self.domain_diagonal = vtkLineSource()
-        self.domain_diagonal.SetPoint1(self.xmin, self.ymin, self.zmin)
-        self.domain_diagonal.SetPoint2(self.xmax, self.ymax, self.zmax)
+    #     self.zmin = float(self.config_tab.zmin.text())
+    #     self.zmax = float(self.config_tab.zmax.text())
 
-        self.outline.Update()
-        # self.outline = vtkOutlineFilter()
-        # self.outline.SetInputConnection(self.domain_diagonal.GetOutputPort())
+    #     # self.domain_diagonal = vtkLineSource()
+    #     self.domain_diagonal.SetPoint1(self.xmin, self.ymin, self.zmin)
+    #     self.domain_diagonal.SetPoint2(self.xmax, self.ymax, self.zmax)
+
+    #     self.outline.Update()
+    #     # self.outline = vtkOutlineFilter()
+    #     # self.outline.SetInputConnection(self.domain_diagonal.GetOutputPort())
 
     #-------------------------------
     # def show_domain_outline(self):
@@ -809,6 +813,10 @@ class Vis(VisBase, QWidget):
         self.y_range = self.ymax - self.ymin
         self.plot_ymin = self.ymin
         self.plot_ymax = self.ymax
+
+
+        self.zmin = float(bds[2])
+        self.zmax = float(bds[5])
 
         xcoords_str = xml_root.find(".//microenvironment//domain//mesh//x_coordinates").text
         xcoords = xcoords_str.split()
@@ -1252,7 +1260,7 @@ class Vis(VisBase, QWidget):
     # discrete color map
     def get_cell_type_colors_lut(self, num_cell_types):
         # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
-        # print("\n---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
+        print("---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
         lut = vtkLookupTable()
         lut.SetNumberOfTableValues(num_cell_types)
         lut.Build()
@@ -1260,11 +1268,46 @@ class Vis(VisBase, QWidget):
         # ics_tab.py uses:
         # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
 
-        lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
-        lut.SetTableValue(1, 1, 0, 0, 1)  # red
+        # rf. PhysiCell modules/P*_pathology.cpp: std::vector<std::string> paint_by_number_cell_coloring( Cell* pCell )
+
+        colors = vtkNamedColors()
+        cell_colors = [list(colors.GetColor3d('Gray'))+[1], list(colors.GetColor3d('Red'))+[1], list(colors.GetColor3d('Yellow'))+[1] ]
+        # print("cell_colors = ",cell_colors)
+        # lut.SetTableValue(0, [0.5, 0.5, 0.5, 1])  # darker gray
+        # Colour transfer function.
+        # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        # lut.SetTableValue(0,   # darker gray; append opacity=1 to tuple
+        # print("Gray=",colors.GetColor3d('Gray'))
+        # print("type=",type(colors.GetColor3d('Gray')))
+
+        # lut.SetTableValue(1, 1, 0, 0, 1)  # red
+
+        for idx in range(13):
+            # print(" idx=",idx)
+            lut.SetTableValue(idx, cell_colors[idx])
+            if idx >= num_cell_types-1:
+                break
+
         np.random.seed(42)
-        for idx in range(2,num_cell_types):  # random beyond those hard-coded
+        for idx in range(13,num_cell_types):  # random beyond those hard-coded
             lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
+
+        # lut.SetTableValue(1, colors.GetColor3d('Red')+[0])
+
+        # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
+        # lut.SetTableValue(3, 0, 1, 0, 1)  # green
+        # lut.SetTableValue(4, 0, 0, 1, 1)  # blue
+        # lut.SetTableValue(5, 1, 0, 1, 1)  # magenta
+        # lut.SetTableValue(6, 1, 0.65, 0, 1)  # orange
+        # lut.SetTableValue(7, 0.2, 0.8, 0.2, 1)  # lime
+        # lut.SetTableValue(8, 0, 0, 1, 1)  # cyan
+        # lut.SetTableValue(9, 1, 0.41, 0.71, 1)  # hotpink
+        # lut.SetTableValue(10, 1, 0.85, 0.73, 1)  # peachpuff
+        # lut.SetTableValue(11, 143/255.,188/255.,143/255., 1)  # darkseagreen
+        # lut.SetTableValue(12, 135/255.,206/255.,250/255., 1)  # lightskyblue
+        # np.random.seed(42)
+        # for idx in range(13,num_cell_types):  # random beyond those hard-coded
+        #     lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
 
         return lut
 
@@ -1404,8 +1447,9 @@ class Vis(VisBase, QWidget):
                 # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
                 # lut = self.get_diverging_lut1()
-                lut = self.get_cell_type_colors_lut(self.num_discrete_cell_val)
-                self.cells_mapper.SetLookupTable(lut)
+                if self.lut_discrete is None:
+                    self.lut_discrete = self.get_cell_type_colors_lut(self.num_discrete_cell_val)  # TODO: only call when necessary
+                    self.cells_mapper.SetLookupTable(self.lut_discrete)
             else:
                 self.cells_mapper.SetLookupTable(self.lut_viridis)
 
@@ -1617,15 +1661,32 @@ class Vis(VisBase, QWidget):
             # Can/should probably just do this once, at the approp place...
             # nx,ny,nz = 12,12,12
             # nx,ny,nz = 3,3,3
-            nx,ny,nz = sub_concentration.shape
+
+            # Ugh. this is confusing. Swap x,y shapes
+            # nx,ny,nz = sub_concentration.shape
+            ny,nx,nz = sub_concentration.shape
             # print("nx,ny,nz = ",nx,ny,nz)
             self.substrate_data.SetDimensions( nx+1, ny+1, nz+1 )
             # self.substrate_data.SetDimensions( nx, ny, nz )
+
+
+            # TODO: Hard-coded voxel_size, plus assuming centered at origin!
             voxel_size = 20   # rwh: fix hard-coded
-            x0 = -(voxel_size * nx) / 2.0
-            y0 = -(voxel_size * ny) / 2.0
-            z0 = -(voxel_size * nz) / 2.0
-            # print("x0,y0,z0 = ",x0,y0,z0)
+            # x0 = -(voxel_size * nx) / 2.0
+            # y0 = -(voxel_size * ny) / 2.0
+            # z0 = -(voxel_size * nz) / 2.0
+
+            # rf. reset_model() in vis_base
+            x0 = self.xmin
+            y0 = self.ymin
+            z0 = self.zmin
+            print("plot_cells3D(): x0,y0,z0 = ",x0,y0,z0)
+
+            # Use this info in initial.xml instead!
+            # <microenvironment>
+            # <domain name="microenvironment">
+			# <mesh type="Cartesian" uniform="true" regular="true" units="micron">
+			# 	<bounding_box type="axis-aligned" units="micron">-300.000000 -100.000000 -50.000000 200.000000 100.000000 50.000000</bounding_box>
 
             # Check to see if the (possible) files in the output dir match that of the Config tab specs
             # rwh: more tests to do though (put all these in a function)
@@ -1639,7 +1700,7 @@ class Vis(VisBase, QWidget):
                 print(f'vis3D_tab.py: Error: z0 {z0} is different than the Config tab {self.config_tab.zmin.text()}.')
                 return
 
-            self.substrate_data.SetOrigin( x0, y0, z0 )
+            self.substrate_data.SetOrigin( x0, y0, z0 )  # lower-left-front point of domain bounding box
             self.substrate_data.SetSpacing( voxel_size, voxel_size, voxel_size )
             vmin = 1.e30
             vmax = -vmin
@@ -1655,7 +1716,7 @@ class Vis(VisBase, QWidget):
                         # val = sub_concentration[x,y,z] + x
 
                         # val = sub_concentration[x,y,z]
-                        val = sub_concentration[y,x,z]
+                        val = sub_concentration[y,x,z]   # yes, it's confusingly swapped :/
                         # print(kount,x,y,z,val)
                         # if z==1:
                             # val = 0.0

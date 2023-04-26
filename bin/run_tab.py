@@ -227,6 +227,7 @@ class RunModel(QWidget):
             # if auto_load_params:
 
             if self.vis_tab:
+                self.vis_tab.reset_domain_box()
                 # self.vis_tab.reset_axes()
                 self.vis_tab.reset_model_flag = True
                 self.vis_tab.reset_plot_range()

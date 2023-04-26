@@ -40,7 +40,7 @@ locale_en_US = QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedState
 
 import numpy as np
 import scipy.io
-from pyMCDS_cells import pyMCDS_cells 
+# from pyMCDS_cells import pyMCDS_cells 
 from pyMCDS import pyMCDS
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -697,6 +697,11 @@ class VisBase():
         self.ymax = 100
         self.ydel = 20
         self.y_range = self.ymax - self.ymin
+
+        self.zmin = -10
+        self.zmax = 10
+        self.xdel = 20
+        self.z_range = self.zmax - self.zmin
 
         self.aspect_ratio = 0.7
 
@@ -1586,6 +1591,29 @@ class VisBase():
         self.output_dir = dir_path
         self.output_folder.setText(dir_path)
 
+
+    def reset_domain_box(self):
+        print("\n------ vis3D: reset_domain_box()")
+        self.lut_discrete = None
+
+        self.xmin = float(self.config_tab.xmin.text())
+        self.xmax = float(self.config_tab.xmax.text())
+
+        self.ymin = float(self.config_tab.ymin.text())
+        self.ymax = float(self.config_tab.ymax.text())
+
+        self.zmin = float(self.config_tab.zmin.text())
+        self.zmax = float(self.config_tab.zmax.text())
+
+        if self.model3D_flag:
+            # self.domain_diagonal = vtkLineSource()
+            self.domain_diagonal.SetPoint1(self.xmin, self.ymin, self.zmin)
+            self.domain_diagonal.SetPoint2(self.xmax, self.ymax, self.zmax)
+
+            self.outline.Update()
+            # self.outline = vtkOutlineFilter()
+            # self.outline.SetInputConnection(self.domain_diagonal.GetOutputPort())
+
     def reset_plot_range(self):
         try:  # due to the initial callback
             self.my_xmin.setText(str(self.xmin))
@@ -1814,6 +1842,7 @@ class VisBase():
         self.output_dir_w.setText(self.output_dir)
         self.reset_model()
 
+
     def reset_model(self):
         print("--------- vis_base: reset_model ----------")
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
@@ -1857,6 +1886,9 @@ class VisBase():
         self.plot_ymin = self.ymin
         self.plot_ymax = self.ymax
 
+        self.zmin = float(bds[2])
+        self.zmax = float(bds[5])
+
         xcoords_str = xml_root.find(".//microenvironment//domain//mesh//x_coordinates").text
         xcoords = xcoords_str.split()
         # print('reset_model(): xcoords=',xcoords)
@@ -1870,6 +1902,8 @@ class VisBase():
         self.numy =  len(ycoords)
         # print("-------------- vis_tab.py: reset_model() -------------------")
         # print("reset_model(): self.numx, numy = ",self.numx,self.numy)
+
+        self.reset_domain_box()
 
         #-------------------
         vars_uep = xml_root.find(".//microenvironment//domain//variables")
@@ -2487,19 +2521,129 @@ class VisBase():
         return collection
 
 
+    #  for Simularium, among other reasons later
+    def get_simularium_info(self):
+        print("--------- vis_base: get_simularium_info----------")
+        xml_file = Path(self.output_dir, "initial.xml")
+        if not os.path.isfile(xml_file):
+            print("vis_base: get_simularium_info(): Warning: Expecting initial.xml, but does not exist.")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error: Missing 'initial.xml' in " + self.output_dir)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return None
+
+        tree = ET.parse(Path(self.output_dir, "initial.xml"))
+        xml_root = tree.getroot()
+
+        bds_str = xml_root.find(".//microenvironment//domain//mesh//bounding_box").text
+        bds = bds_str.split()
+        print('bds=',bds)
+        self.xmin = float(bds[0])
+        self.xmax = float(bds[3])
+        print(' self.xmin, xmax=',self.xmin, self.xmax)
+        self.x_range = self.xmax - self.xmin
+        # self.plot_xmin = self.xmin
+        # self.plot_xmax = self.xmax
+        # print("--------- self.plot_xmax = ",self.plot_xmax)
+
+        self.ymin = float(bds[1])
+        self.ymax = float(bds[4])
+        self.y_range = self.ymax - self.ymin
+        print(' self.ymin, ymax=',self.ymin, self.ymax)
+        # self.plot_ymin = self.ymin
+        # self.plot_ymax = self.ymax
+
+        self.zmin = float(bds[2])
+        self.zmax = float(bds[5])
+        self.z_range = self.zmax - self.zmin
+        print(' self.zmin, zmax=',self.zmin, self.zmax)
+
+        #-------
+        my_display_data = {}
+        basename = "output00000000.xml"
+        try:
+            mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=True)
+            print(mcds.data['discrete_cells']['data'].keys())
+            print("--- cell_type=",mcds.data['discrete_cells']['data']['cell_type'])
+        except:
+            print("Error reading ",basename, "in ",self.output_dir)
+            return None
+        cell_colors = ([0.8,0.8,0.8], [1,0,0], [1,1,0], [0,1,0], [0,0,1])
+        my_display_data = {0:DisplayData(name="cell"+str(0),color=rgb2hex(cell_colors[0]),display_type=DISPLAY_TYPE.SPHERE,),
+            1:DisplayData(name="cell"+str(1),color=rgb2hex(cell_colors[1]),display_type=DISPLAY_TYPE.SPHERE,),
+            2:DisplayData(name="cell"+str(2),color=rgb2hex(cell_colors[2]),display_type=DISPLAY_TYPE.SPHERE,),
+        }
+            # 3:DisplayData(name="cell"+str(3),color=rgb2hex(cell_colors[3]),display_type=DISPLAY_TYPE.SPHERE,),
+
+        # uep = xml_root.find(".//cell_definitions")  # no, would need to know config file name. Arg.
+        # id_cell = 0
+        # for cell_def in uep:
+        #     print(f'----- cell_def.tag= {cell_def.tag}')
+        #     my_display_data[id_cell] = DisplayData(name=cell_def.tag, display_type=DISPLAY_TYPE.SPHERE,)
+        #     id_cell += 1
+
+        # my_display_data = {
+        #         0: DisplayData(
+        #             name="ctype1",
+        #             color=rgb2hex([0.8, 0.8, 0.8]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         1: DisplayData(
+        #             name="ctype2",
+        #             color=rgb2hex([1.0, 0.0, 0.0]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         2: DisplayData(
+        #             name="ctype3",
+        #             color=rgb2hex([1.0, 1.0, 0.0]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #     }
+
+        return my_display_data 
+
+
     def convert_to_simularium(self, xml_file):
         print("\n-------------vis_base.py:  convert_to_simularium()")
 
-        hex_color = rgb2hex((0.1, 0.1, 0.1, 0.1), keep_alpha=True)
+        # hex_color = rgb2hex((0.1, 0.1, 0.1, 0.1), keep_alpha=True)
 
         # sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
         print("sim_output_dir = ",self.output_dir )
+
+        my_display_data = self.get_simularium_info()
+        if my_display_data is None:
+            return
+
+        my_xrange = self.xmax - self.xmin
+        my_yrange = self.ymax - self.ymin
+        my_zrange = self.zmax - self.zmin
+
+        # my_display_data = {
+        #         0: DisplayData(
+        #             name="ctype1",
+        #             color=rgb2hex([0.8, 0.8, 0.8]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         1: DisplayData(
+        #             name="ctype2",
+        #             color=rgb2hex([1.0, 0.0, 0.0]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         2: DisplayData(
+        #             name="ctype3",
+        #             color=rgb2hex([1.0, 1.0, 0.0]),
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #     }
 
         simularium_model_data = PhysicellData(
             timestep=1.0,
             path_to_output_dir=self.output_dir, 
             meta_data=MetaData(
-                box_size=np.array([200.0, 200.0, 200.0]),
+                box_size=np.array([my_xrange, my_yrange, my_zrange]),
                 scale_factor=0.01,
                 trajectory_title="PhysiCell trajectory",
                 model_meta_data=ModelMetaData(
@@ -2516,21 +2660,51 @@ class VisBase():
                     raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
                 ),
             ),
-            nth_timestep_to_read=1,
-            display_data={
-                0: DisplayData(
-                    name="ctype1",
-                    color=rgb2hex([1.0, 1.0, 1.0]),
-                    display_type=DISPLAY_TYPE.SPHERE,
-                ),
-                1: DisplayData(
-                    name="ctype2",
-                    color=rgb2hex([1.0, 0.0, 0.0]),
-                    display_type=DISPLAY_TYPE.SPHERE,
-                ),
-            },
+            display_data = my_display_data,
+            #     0: DisplayData(
+            #         name="ctype1",
+            #         color=rgb2hex([1.0, 1.0, 1.0]),
+            #         display_type=DISPLAY_TYPE.SPHERE,
+            #     ),
+            #     1: DisplayData(
+            #         name="ctype2",
+            #         color=rgb2hex([1.0, 0.0, 0.0]),
+            #         display_type=DISPLAY_TYPE.SPHERE,
+            #     ),
+            # },
             time_units=UnitData("m"),  # minutes
         )
+
+        # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        # lut.SetTableValue(1, 1, 0, 0, 1)  # red
+        # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
+        # lut.SetTableValue(3, 0, 1, 0, 1)  # green
+        # lut.SetTableValue(4, 0, 0, 1, 1)  # blue
+        # lut.SetTableValue(5, 1, 0, 1, 1)  # magenta
+        # lut.SetTableValue(6, 1, 0.65, 0, 1)  # orange
+        # lut.SetTableValue(7, 0.2, 0.8, 0.2, 1)  # lime
+        # lut.SetTableValue(8, 0, 0, 1, 1)  # cyan
+        # lut.SetTableValue(9, 1, 0.41, 0.71, 1)  # hotpink
+        # lut.SetTableValue(10, 1, 0.85, 0.73, 1)  # peachpuff
+        # lut.SetTableValue(11, 143/255.,188/255.,143/255., 1)  # darkseagreen
+        # lut.SetTableValue(12, 135/255.,206/255.,250/255., 1)  # lightskyblue
+        # np.random.seed(42)
+        # for idx in range(13,num_cell_types):  # random beyond those hard-coded
+        #     lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
+
+            # nth_timestep_to_read=1,
+            # display_data={
+            #     0: DisplayData(
+            #         name="ctype1",
+            #         color=rgb2hex([1.0, 1.0, 1.0]),
+            #         display_type=DISPLAY_TYPE.SPHERE,
+            #     ),
+            #     1: DisplayData(
+            #         name="ctype2",
+            #         color=rgb2hex([1.0, 0.0, 0.0]),
+            #         display_type=DISPLAY_TYPE.SPHERE,
+            #     ),
+            # },
 
         print("calling Simularium PhysicellConverter...\n")
         # model_name = os.path.basename(self.current_xml_file)
