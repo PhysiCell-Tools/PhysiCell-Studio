@@ -289,12 +289,25 @@ class FilterUIWindow(QWidget):
         glayout.addWidget(self.axes_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
 
-        glayout.addWidget(QLabel("Sphere res(3-20):"), idx_row,1,1,1) # w, row, column, rowspan, colspan
+        hbox = QHBoxLayout()
+        hbox.addWidget(QLabel("Sphere res(3-20):"))
+
         self.sphere_res_w = QLineEdit()
         self.sphere_res_w.setValidator(QtGui.QIntValidator(3,20))
         self.sphere_res_w.returnPressed.connect(self.sphere_res_cb)
         self.sphere_res_w.setText('8')   # match what's defined in vis3D_tab
-        glayout.addWidget(self.sphere_res_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        hbox.addWidget(self.sphere_res_w)
+        glayout.addLayout(hbox, idx_row,2,1,2) # w, row, column, rowspan, colspan
+
+        #-----------
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,3) # w, row, column, rowspan, colspan
+        idx_row += 1
+        glayout.addWidget(QLabel("Keypress j (joystick) vs. t (trackball) "), idx_row,0,1,3) 
+        idx_row += 1
+        glayout.addWidget(QLabel("Keypress r (reset view)"), idx_row,0,1,3) # w, row, column, rowspan, colspan
+        idx_row += 1
+        glayout.addWidget(QLabel("(Help menu -> User Guide: Plot 3D for more)"), idx_row,0,1,3)
 
         #-----------------------
         self.vbox.addLayout(glayout)

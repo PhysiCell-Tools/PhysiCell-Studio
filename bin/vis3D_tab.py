@@ -716,14 +716,13 @@ class Vis(VisBase, QWidget):
             return
 
         xml_files = glob.glob(self.output_dir+'/output*.xml')  # cross-platform OK?
-        print('xml_files = ',xml_files)
+        # print('xml_files = ',xml_files)
         # xml_files = Path(self.output_dir, "initial.xml")
         if len(xml_files) == 0:
             return
         # xml_files.sort()
         # svg_files = glob.glob('snapshot*.svg')
         # svg_files.sort()
-        print('xml_files = ',xml_files)
 
         # xml_file = "output%08d.xml" % frame
         # print("plot_cells3D: xml_file = ",xml_file)

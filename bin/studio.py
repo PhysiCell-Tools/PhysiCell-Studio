@@ -618,7 +618,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         help_menu = menubar.addMenu('&Help')
         help_menu.triggered.connect(self.open_help_url)
-        guide_act = help_menu.addAction("User Guide(link)", self.open_help_url)
+        guide_act = help_menu.addAction("User Guide (link)", self.open_help_url)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
@@ -773,6 +773,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.tree.write(self.current_xml_file)
             print("studio.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
+
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Note: this will not change the config file in the Run tab.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
