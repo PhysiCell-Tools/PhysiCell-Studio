@@ -59,6 +59,7 @@ class Vis(VisBase, QWidget):
         self.show_xz_slice = True
         self.show_voxels = False
         self.show_axes = False
+        self.sphere_res = 8
 
         self.show_xy_clip = False
         self.show_yz_clip = False
@@ -139,9 +140,9 @@ class Vis(VisBase, QWidget):
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
         self.sphereSource = vtkSphereSource()
-        nres = 8   # 2,4,8,10,20?   Make editable in Filters3D eventually
-        self.sphereSource.SetPhiResolution(nres)
-        self.sphereSource.SetThetaResolution(nres)
+        # nres = 8   # 2,4,8,10,20?   Make editable in Filters3D eventually
+        self.sphereSource.SetPhiResolution(self.sphere_res)
+        self.sphereSource.SetThetaResolution(self.sphere_res)
         self.sphereSource.SetRadius(1.0)  # 0.5, 1.0 ?
 
         self.glyph = vtkGlyph3D()
@@ -637,6 +638,13 @@ class Vis(VisBase, QWidget):
         else:
             self.ren.RemoveActor(self.axes_actor)
         self.vtkWidget.GetRenderWindow().Render()
+
+    def sphere_res_cb(self,res_ival):
+        # print("----- sphere_res_cb: res=",res_ival)
+        self.sphere_res = res_ival
+        self.sphereSource.SetPhiResolution(self.sphere_res)
+        self.sphereSource.SetThetaResolution(self.sphere_res)
+        self.update_plots()
 
     def colorbar_combobox_changed_cb(self,idx):
         self.update_plots()
@@ -1271,7 +1279,31 @@ class Vis(VisBase, QWidget):
         # rf. PhysiCell modules/P*_pathology.cpp: std::vector<std::string> paint_by_number_cell_coloring( Cell* pCell )
 
         colors = vtkNamedColors()
-        cell_colors = [list(colors.GetColor3d('Gray'))+[1], list(colors.GetColor3d('Red'))+[1], list(colors.GetColor3d('Yellow'))+[1] ]
+        # cell_colors = [ list(colors.GetColor3d('Gray'))+[1], list(colors.GetColor3d('Red'))+[1]], list(colors.GetColor3d('Yellow'))+[1] ]
+
+        # cf. vis_base:
+                # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        # lut.SetTableValue(1, 1, 0, 0, 1)  # red
+        # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
+        # lut.SetTableValue(3, 0, 1, 0, 1)  # green
+        # lut.SetTableValue(4, 0, 0, 1, 1)  # blue
+        # lut.SetTableValue(5, 1, 0, 1, 1)  # magenta
+        # lut.SetTableValue(6, 1, 0.65, 0, 1)  # orange
+        # lut.SetTableValue(7, 0.2, 0.8, 0.2, 1)  # lime
+        # lut.SetTableValue(8, 0, 0, 1, 1)  # cyan
+        # lut.SetTableValue(9, 1, 0.41, 0.71, 1)  # hotpink
+        # lut.SetTableValue(10, 1, 0.85, 0.73, 1)  # peachpuff
+        # lut.SetTableValue(11, 143/255.,188/255.,143/255., 1)  # darkseagreen
+        # lut.SetTableValue(12, 135/255.,206/255.,250/255., 1)  # lightskyblue
+
+            #    cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+            #             [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
+            #             [1, 0.85, 0.73], [143/255.,188/255.,143/255.], [135/255.,206/255.,250/255.])
+
+        # But VTK requires 4th (opacity) value too.
+        cell_colors = [list(colors.GetColor3d('Gray'))+[1], list(colors.GetColor3d('Red'))+[1], list(colors.GetColor3d('Yellow'))+[1], list(colors.GetColor3d('Green'))+[1], list(colors.GetColor3d('Blue'))+[1], list(colors.GetColor3d('Magenta'))+[1], list(colors.GetColor3d('Orange'))+[1], list(colors.GetColor3d('Lime'))+[1], list(colors.GetColor3d('Cyan'))+[1], list(colors.GetColor3d('HotPink'))+[1], list(colors.GetColor3d('PeachPuff'))+[1], list(colors.GetColor3d('DarkSeaGreen'))+[1], list(colors.GetColor3d('LightSkyBlue'))+[1] ]
+        
+        # list(colors.GetColor3d('Cyan'))+[1], list(colors.GetColor3d('Magenta'))+[1], list(colors.GetColor3d('Blue'))+[1], list(colors.GetColor3d('Brown'))+[1], list(colors.GetColor3d('Black'))+[1], list(colors.GetColor3d('Orange'))+[1], list(colors.GetColor3d('SeaGreen'))+[1], list(colors.GetColor3d('Gold'))+[1]  ]
         # print("cell_colors = ",cell_colors)
         # lut.SetTableValue(0, [0.5, 0.5, 0.5, 1])  # darker gray
         # Colour transfer function.

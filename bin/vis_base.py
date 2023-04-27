@@ -288,6 +288,14 @@ class FilterUIWindow(QWidget):
         idx_row += 1
         glayout.addWidget(self.axes_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
+
+        glayout.addWidget(QLabel("Sphere res(3-20):"), idx_row,1,1,1) # w, row, column, rowspan, colspan
+        self.sphere_res_w = QLineEdit()
+        self.sphere_res_w.setValidator(QtGui.QIntValidator(3,20))
+        self.sphere_res_w.returnPressed.connect(self.sphere_res_cb)
+        self.sphere_res_w.setText('8')   # match what's defined in vis3D_tab
+        glayout.addWidget(self.sphere_res_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
         #-----------------------
         self.vbox.addLayout(glayout)
 
@@ -441,6 +449,11 @@ class FilterUIWindow(QWidget):
     def axes_cb(self):
         # print("vis_base: axes_cb(): self.axes_checkbox.isChecked()= ",self.axes_checkbox.isChecked())
         self.vis_tab.axes_toggle_cb(self.axes_checkbox.isChecked())
+    #----------
+    def sphere_res_cb(self):
+        text = self.sphere_res_w.text()
+        # print("vis_base: sphere_res_cb(): = ",int(text))
+        self.vis_tab.sphere_res_cb(int(text))
 
     #----------
     def close_filterUI_cb(self):
@@ -2566,41 +2579,69 @@ class VisBase():
         try:
             mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=True)
             print(mcds.data['discrete_cells']['data'].keys())
-            print("--- cell_type=",mcds.data['discrete_cells']['data']['cell_type'])
+
+            # TODO: find better way to determine the cell types. Could parse the config file, 
+            # but that assumes we know the config file name in the output dir :/
+
+            # uep = xml_root.find(".//cell_definitions")  # need to know config file name. Arg.
+            # id_cell = 0
+            # for cell_def in uep:
+
+            cell_types = mcds.data['discrete_cells']['data']['cell_type']
+            # print("--- ALL cell_type=",cell_types)  # --- cell_type= [0. 0. 0. 0. 0. 1. 1. 1. 1. 1.]
+
+            # NOTE! this only gets us the cell types in the 0th file! May be more types appear later.
+            unique_cell_types = np.unique(cell_types)
+            print("--- unique cell_type=",unique_cell_types)  # --- [0. 1.]
+            # NOTE: this *should* be sequential integers, starting with 0. We'll convert to ints below.
+
         except:
             print("Error reading ",basename, "in ",self.output_dir)
             return None
-        cell_colors = ([0.8,0.8,0.8], [1,0,0], [1,1,0], [0,1,0], [0,0,1])
-        my_display_data = {0:DisplayData(name="cell"+str(0),color=rgb2hex(cell_colors[0]),display_type=DISPLAY_TYPE.SPHERE,),
-            1:DisplayData(name="cell"+str(1),color=rgb2hex(cell_colors[1]),display_type=DISPLAY_TYPE.SPHERE,),
-            2:DisplayData(name="cell"+str(2),color=rgb2hex(cell_colors[2]),display_type=DISPLAY_TYPE.SPHERE,),
-        }
-            # 3:DisplayData(name="cell"+str(3),color=rgb2hex(cell_colors[3]),display_type=DISPLAY_TYPE.SPHERE,),
+        
+        # hard-coding colors (as is done in PhysiCell for "paint by cell type")
+        # cell_colors = list( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+        cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+                        [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
+                        [1, 0.85, 0.73], [143/255.,188/255.,143/255.], [135/255.,206/255.,250/255.])
+        # print("# hard-coded cell type colors= ",len(cell_colors))
+        cell_colors = list(cell_colors)
+        # print("# (post convert to list)= ",len(cell_colors))
+        np.random.seed(42)
+        for idx in range(200):  # TODO: avoid hard-coding max # of cell types
+            rgb = [np.random.uniform(), np.random.uniform(), np.random.uniform()]
+            cell_colors.append(rgb)
+        # print("with appended random colors= ",cell_colors)
 
-        # uep = xml_root.find(".//cell_definitions")  # no, would need to know config file name. Arg.
+        # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        # lut.SetTableValue(1, 1, 0, 0, 1)  # red
+        # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
+        # lut.SetTableValue(3, 0, 1, 0, 1)  # green
+        # lut.SetTableValue(4, 0, 0, 1, 1)  # blue
+        # lut.SetTableValue(5, 1, 0, 1, 1)  # magenta
+        # lut.SetTableValue(6, 1, 0.65, 0, 1)  # orange
+        # lut.SetTableValue(7, 0.2, 0.8, 0.2, 1)  # lime
+        # lut.SetTableValue(8, 0, 0, 1, 1)  # cyan
+        # lut.SetTableValue(9, 1, 0.41, 0.71, 1)  # hotpink
+        # lut.SetTableValue(10, 1, 0.85, 0.73, 1)  # peachpuff
+        # lut.SetTableValue(11, 143/255.,188/255.,143/255., 1)  # darkseagreen
+        # lut.SetTableValue(12, 135/255.,206/255.,250/255., 1)  # lightskyblue
+        # np.random.seed(42)
+        # for idx in range(13,num_cell_types):  # random beyond those hard-coded
+        #     lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
+        my_display_data = {}
+        icell = 0   # want ints
+        for cellID in unique_cell_types:
+            my_display_data[icell] = DisplayData(name="cell"+str(icell),color=rgb2hex(cell_colors[icell]),display_type=DISPLAY_TYPE.SPHERE,)
+            icell += 1
+
+        # uep = xml_root.find(".//cell_definitions")  # need to know config file name. Arg.
         # id_cell = 0
         # for cell_def in uep:
         #     print(f'----- cell_def.tag= {cell_def.tag}')
         #     my_display_data[id_cell] = DisplayData(name=cell_def.tag, display_type=DISPLAY_TYPE.SPHERE,)
         #     id_cell += 1
 
-        # my_display_data = {
-        #         0: DisplayData(
-        #             name="ctype1",
-        #             color=rgb2hex([0.8, 0.8, 0.8]),
-        #             display_type=DISPLAY_TYPE.SPHERE,
-        #         ),
-        #         1: DisplayData(
-        #             name="ctype2",
-        #             color=rgb2hex([1.0, 0.0, 0.0]),
-        #             display_type=DISPLAY_TYPE.SPHERE,
-        #         ),
-        #         2: DisplayData(
-        #             name="ctype3",
-        #             color=rgb2hex([1.0, 1.0, 0.0]),
-        #             display_type=DISPLAY_TYPE.SPHERE,
-        #         ),
-        #     }
 
         return my_display_data 
 
@@ -2672,7 +2713,7 @@ class VisBase():
             #         display_type=DISPLAY_TYPE.SPHERE,
             #     ),
             # },
-            time_units=UnitData("m"),  # minutes
+            time_units=UnitData("m"),  # minutes; trying to just use "frame" --> undefined error, 
         )
 
         # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
