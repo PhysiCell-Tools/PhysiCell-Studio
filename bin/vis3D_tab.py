@@ -83,11 +83,17 @@ class Vis(VisBase, QWidget):
         self.colors = vtkNamedColors()
 
         self.substrate_name = ""
-        self.lut_jet = self.get_jet_map()
-        self.lut_viridis = self.get_viridis_map()
-        self.lut_ylorrd = self.get_ylorrd_map()
+        self.lut_jet = self.get_jet_map(False)
+        self.lut_jet_r = self.get_jet_map(True)
+
+        self.lut_viridis = self.get_viridis_map(False)
+        self.lut_viridis_r = self.get_viridis_map(True)
+
+        self.lut_ylorrd = self.get_ylorrd_map(False)
+        self.lut_ylorrd_r = self.get_ylorrd_map(True)
         # self.lut_substrate = self.get_jet_map()
 
+        # default
         self.lut_substrate = self.lut_jet
         self.lut_cells = self.lut_jet
 
@@ -643,7 +649,7 @@ class Vis(VisBase, QWidget):
         # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
         self.field_index = idx # substrate (0th -> 4 in the .mat)
         self.substrate_name = self.substrates_combobox.currentText()
-        print("\n>>> substrates_combobox_changed_cb(): self.substrate_name= ", self.substrate_name)
+        # print("\n>>> substrates_combobox_changed_cb(): self.substrate_name= ", self.substrate_name)
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -651,19 +657,22 @@ class Vis(VisBase, QWidget):
         # print("----- vis3D_tab.py: substrates_combobox_changed_cb: idx = ",idx)
         # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
         cbar_name = self.substrates_cbar_combobox.currentText()
-        print("\n>---------------->> substrates_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
-        if cbar_name.find("jet") >= 0:
-            print(" -------  cbar_name=  jet_map")
-            # self.lut_substrate = self.get_jet_map()
-            self.lut_substrate = self.lut_jet
-        elif cbar_name.find("viridis") >= 0:
-            print(" -------  cbar_name=  viridis_map")
-            # self.lut_substrate = self.get_viridis_map()
-            self.lut_substrate = self.lut_viridis
-        elif cbar_name.find("YlOrRd") >= 0:
-            print(" -------  cbar_name=  ylorrd")
-            # self.lut_substrate = self.get_viridis_map()
-            self.lut_substrate = self.lut_ylorrd
+        # print("\n>vis3D  ---------------->> substrates_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+
+        if cbar_name.find("_r") >= 0:   # reverse (inverted)
+            if cbar_name.find("jet") >= 0:
+                self.lut_substrate = self.lut_jet_r
+            elif cbar_name.find("viridis") >= 0:
+                self.lut_substrate = self.lut_viridis_r
+            elif cbar_name.find("YlOrRd") >= 0:
+                self.lut_substrate = self.lut_ylorrd_r
+        else:
+            if cbar_name.find("jet") >= 0:
+                self.lut_substrate = self.lut_jet
+            elif cbar_name.find("viridis") >= 0:
+                self.lut_substrate = self.lut_viridis
+            elif cbar_name.find("YlOrRd") >= 0:
+                self.lut_substrate = self.lut_ylorrd
 
         self.update_plots()
 
@@ -742,16 +751,21 @@ class Vis(VisBase, QWidget):
     def cell_scalar_cbar_combobox_changed_cb(self,idx):
         # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
         cbar_name = self.cell_scalar_cbar_combobox.currentText()
-        print("\n>---------------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
-        if cbar_name.find("jet") >= 0:
-            print(" -------  cbar_name=  jet_map")
-            self.lut_cells = self.lut_jet
-        elif cbar_name.find("viridis") >= 0:
-            print(" -------  cbar_name=  viridis_map")
-            self.lut_cells = self.lut_viridis
-        elif cbar_name.find("YlOrRd") >= 0:
-            print(" -------  cbar_name=  ylorrd")
-            self.lut_cells = self.lut_ylorrd
+        # print("\n>vis3D: ---------------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+        if cbar_name.find("_r") >= 0:   # reversed map
+            if cbar_name.find("jet") >= 0:
+                self.lut_cells = self.lut_jet_r
+            elif cbar_name.find("viridis") >= 0:
+                self.lut_cells = self.lut_viridis_r
+            elif cbar_name.find("YlOrRd") >= 0:
+                self.lut_cells = self.lut_ylorrd_r
+        else:
+            if cbar_name.find("jet") >= 0:
+                self.lut_cells = self.lut_jet
+            elif cbar_name.find("viridis") >= 0:
+                self.lut_cells = self.lut_viridis
+            elif cbar_name.find("YlOrRd") >= 0:
+                self.lut_cells = self.lut_ylorrd
 
         self.update_plots()
 
@@ -1108,13 +1122,15 @@ class Vis(VisBase, QWidget):
 
 
     #------------------------------------------------------------
-    def get_jet_map(self):
+    def get_jet_map(self, invert_flag):
         # table_size = 512
         table_size = 256
         lut = vtkLookupTable()
         lut.SetNumberOfTableValues(table_size)
-        # lut.SetHueRange(0.0, 0.667)  # red-to-blue
-        lut.SetHueRange( 0.667, 0.)  # blue-to-red
+        if invert_flag:
+            lut.SetHueRange(0.0, 0.667)  # red-to-blue
+        else:
+            lut.SetHueRange( 0.667, 0.)  # blue-to-red
         lut.Build()
         return lut
 
@@ -1122,7 +1138,7 @@ class Vis(VisBase, QWidget):
     # https://matplotlib.org/3.1.1/tutorials/colors/colormap-manipulation.html
     # >>> viridis = cm.get_cmap('viridis', 32)
     # >>> viridis(np.linspace(0, 1, 32))
-    def get_viridis_map(self):
+    def get_viridis_map(self, invert_flag):
         table_size = 32
 
         lut = vtkLookupTable()
@@ -1164,19 +1180,21 @@ class Vis(VisBase, QWidget):
             [0.993248, 0.906157, 0.143936, 1.      ]])
         
        # rgb.shape = (12, 4)
-        idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
-        for i in range(table_size):
-            lut.SetTableValue(i,
-                           rgb[i, 0],
-                           rgb[i, 1],
-                           rgb[i, 2],
-                           1)
+        # idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
+        # print(f"get_viridis_map(): invert_flag={invert_flag}, idxs={idxs} ")
+        if invert_flag:
+            kdx = table_size - 1
+            for i in range(table_size):
+                lut.SetTableValue(kdx-i,rgb[i,0], rgb[i,1], rgb[i,2], 1)
+        else:
+            for i in range(table_size):
+                lut.SetTableValue(i,rgb[i,0], rgb[i,1], rgb[i,2], 1)
 
         # lut.Build()
         return lut
 
     #------------------------------------------------------------
-    def get_ylorrd_map(self):
+    def get_ylorrd_map(self, invert_flag):
         table_size = 32
 
         lut = vtkLookupTable()
@@ -1217,13 +1235,14 @@ class Vis(VisBase, QWidget):
        [0.56369386, 0.        , 0.14901961, 1.        ],
        [0.50196078, 0.        , 0.14901961, 1.        ]])
        # rgb.shape = (12, 4)
-        idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
-        for i in range(table_size):
-            lut.SetTableValue(i,
-                           rgb[i, 0],
-                           rgb[i, 1],
-                           rgb[i, 2],
-                           1)
+        # idxs = np.round(np.linspace(0, table_size-1, table_size)).astype(int)
+        if invert_flag:
+            kdx = table_size - 1
+            for i in range(table_size):
+                lut.SetTableValue(kdx-i,rgb[i,0], rgb[i,1], rgb[i,2], 1)
+        else:
+            for i in range(table_size):
+                lut.SetTableValue(i,rgb[i,0], rgb[i,1], rgb[i,2], 1)
 
         # lut.Build()
         return lut
@@ -1455,7 +1474,8 @@ class Vis(VisBase, QWidget):
                     self.lut_discrete = self.get_cell_type_colors_lut(self.num_discrete_cell_val)  # TODO: only call when necessary
                     self.cells_mapper.SetLookupTable(self.lut_discrete)
             else:
-                self.cells_mapper.SetLookupTable(self.lut_viridis)
+                # self.cells_mapper.SetLookupTable(self.lut_viridis)
+                self.cells_mapper.SetLookupTable(self.lut_cells)
 
             #------------
             # colors = vtkNamedColors()
@@ -1681,7 +1701,7 @@ class Vis(VisBase, QWidget):
             x0 = self.xmin
             y0 = self.ymin
             z0 = self.zmin
-            print("plot_cells3D(): x0,y0,z0 = ",x0,y0,z0)
+            # print("plot_cells3D(): x0,y0,z0 = ",x0,y0,z0)
 
             # Use this info in initial.xml instead!
             # <microenvironment>

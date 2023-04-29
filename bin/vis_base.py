@@ -828,10 +828,10 @@ class VisBase():
 
 
         self.substrates_cbar_combobox = QComboBox()
-        self.substrates_cbar_combobox.addItem("viridis")
-        self.substrates_cbar_combobox.addItem("viridis_r")
         self.substrates_cbar_combobox.addItem("jet")
         self.substrates_cbar_combobox.addItem("jet_r")
+        self.substrates_cbar_combobox.addItem("viridis")
+        self.substrates_cbar_combobox.addItem("viridis_r")
         self.substrates_cbar_combobox.addItem("YlOrRd")
         self.substrates_cbar_combobox.addItem("YlOrRd_r")
         self.substrates_cbar_combobox.setEnabled(False)
@@ -983,6 +983,7 @@ class VisBase():
         self.cell_scalar_cbar_combobox.addItem("YlOrRd_r")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(self.model3D_flag)  # for 3D
+        # self.cell_scalar_cbar_combobox.setEnabled(self.vis.cell_scalar_cbar_combobox_changed_cb)  # for 3D
         hbox.addWidget(self.cell_scalar_cbar_combobox)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -1161,7 +1162,7 @@ class VisBase():
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
         self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
-        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
 
         #==================================================================
         self.scroll_plot.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
