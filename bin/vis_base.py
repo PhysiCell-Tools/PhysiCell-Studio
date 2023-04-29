@@ -912,21 +912,25 @@ class VisBase():
         self.cells_edge_checkbox = QCheckBox_custom('edge')
 
         if not self.model3D_flag:  # 2D vis
-            hbox2 = QHBoxLayout()
+
+            # Apparently, the physiboss UI causes the radio btns to disappear in a QFrame, so skip for now.
+            # hbox2 = QHBoxLayout()
             self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
-            hbox2.addWidget(self.cells_svg_rb)
+            # hbox2.addWidget(self.cells_svg_rb)
+            hbox.addWidget(self.cells_svg_rb)
 
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
-            hbox2.addWidget(self.cells_mat_rb)
-            hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            # hbox2.addWidget(self.cells_mat_rb)
+            hbox.addWidget(self.cells_mat_rb)
+            # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
-            hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+            # radio_frame = QFrame()
+            # # radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
+            # radio_frame.setLayout(hbox2)
+            # radio_frame.setFixedWidth(130)  # omg
+            # hbox.addWidget(radio_frame) 
 
-            radio_frame = QFrame()
-            radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
-            radio_frame.setLayout(hbox2)
-            radio_frame.setFixedWidth(130)  # omg
-            hbox.addWidget(radio_frame) 
+            # hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
             self.cells_edge_checkbox.setChecked(True)
             self.cells_edge_checkbox.clicked.connect(self.cells_edge_toggle_cb)
@@ -942,7 +946,6 @@ class VisBase():
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
-
 
         self.vbox.addLayout(hbox)
 
@@ -1597,7 +1600,10 @@ class VisBase():
             # self.fix_cmap_checkbox.setEnabled(bval)
 
             if self.cax2:
-                self.cax2.remove()
+                try:   # otherwise, physiboss UI can crash
+                    self.cax2.remove()
+                except:
+                    pass
                 self.cax2 = None
 
         else:
@@ -1628,7 +1634,7 @@ class VisBase():
 
 
     def reset_domain_box(self):
-        print("\n------ vis3D: reset_domain_box()")
+        print("\n------ vis_base: reset_domain_box()")
         self.lut_discrete = None
 
         self.xmin = float(self.config_tab.xmin.text())

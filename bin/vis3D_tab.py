@@ -457,19 +457,6 @@ class Vis(VisBase, QWidget):
         else:
             print("vis_tab: ------- self.physiboss_vis_checkbox is None")
 
-    #------------------------------
-    # Dependent on 2D/3D (not available for 3D)
-    # def build_physiboss_info(self, config_file):
-    #     pass
-        
-
-    # def output_folder_cb(self):
-    #     # print(f"output_folder_cb(): old={self.output_dir}")
-    #     self.output_dir = self.output_folder.text()
-    #     # print(f"                    new={self.output_dir}")
-
-
-
     #---------------------------------------
     # Dependent on 2D/3D
     def update_plots(self):

@@ -585,7 +585,11 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('auto')
     
     #-----------------------------------------------------
-    # 
+    # def cell_scalar_cbar_combobox_changed_cb(self,idx):
+    #     # print("\n>vis_tab-------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
+    #     self.update_plots()
+
+    #-----------------------------------------------------
     def plot_cell_scalar(self, frame):
         if self.disable_cell_scalar_cb:
             return
@@ -779,6 +783,7 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('equal')
         else:
             self.ax0.set_aspect('auto')
+
 
     #------------------------------------------------------------
     def plot_substrate(self, frame):
