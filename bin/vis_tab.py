@@ -656,7 +656,7 @@ class Vis(VisBase, QWidget):
                 print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
                 msgBox = QMessageBox()
                 msgBox.setIcon(QMessageBox.Information)
-                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You probably need to refresh the cell scalar dropdown combobox."
+                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
                 msgBox.setText(msg)
                 msgBox.setStandardButtons(QMessageBox.Ok)
                 msgBox.exec()
@@ -664,6 +664,9 @@ class Vis(VisBase, QWidget):
                 self.animating_flag = False
                 self.play_button.setText("Play")
                 self.timer.stop()
+
+                self.cells_svg_rb.setChecked(True)
+                self.plot_cells_svg = True
                 return
         
                     

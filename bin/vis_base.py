@@ -696,6 +696,8 @@ class VisBase():
 
         self.cell_scalars_l = []
 
+        self.cell_scalars_filled = False
+
         # self.plot_svg_flag = False
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
@@ -1607,7 +1609,10 @@ class VisBase():
                 self.cax2 = None
 
         else:
-            self.add_default_cell_vars()   # rwh: just do once? Nah, but add a "refresh" button
+            if not self.cell_scalars_filled: 
+                # self.add_default_cell_vars()   # rwh: just do once? 
+                self.add_partial_cell_vars()   # rwh: just do once? 
+                self.cell_scalars_filled = True
 
             self.plot_cells_svg = False
             self.cell_scalar_combobox.setEnabled(True)
@@ -1620,6 +1625,7 @@ class VisBase():
             self.cells_cmax.setEnabled(True)
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
+
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -1873,6 +1879,8 @@ class VisBase():
 
     def reset_model(self):
         print("--------- vis_base: reset_model ----------")
+        self.cell_scalars_filled = False
+
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
