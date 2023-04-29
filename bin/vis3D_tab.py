@@ -80,6 +80,8 @@ class Vis(VisBase, QWidget):
 
         self.line_width = 3
 
+        self.colors = vtkNamedColors()
+
         self.substrate_name = ""
         self.lut_jet = self.get_jet_map()
         self.lut_viridis = self.get_viridis_map()
@@ -130,7 +132,7 @@ class Vis(VisBase, QWidget):
         self.tags.SetName("tag")
 
         self.cell_data = vtkFloatArray()
-        self.cell_data.SetNumberOfComponents(2)
+        self.cell_data.SetNumberOfComponents(2)  # (radius, tag)
         self.cell_data.SetName("cell_data")
 
         # construct the unstruct "grid" to contain the cell info
@@ -139,11 +141,16 @@ class Vis(VisBase, QWidget):
         self.ugrid.GetPointData().AddArray(self.cell_data)
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
+        self.ugrid_clipped = None
+
         self.sphereSource = vtkSphereSource()
-        # nres = 8   # 2,4,8,10,20?   Make editable in Filters3D eventually
         self.sphereSource.SetPhiResolution(self.sphere_res)
         self.sphereSource.SetThetaResolution(self.sphere_res)
-        self.sphereSource.SetRadius(1.0)  # 0.5, 1.0 ?
+        self.sphereSource.SetRadius(1.0)
+
+        self.extract_cells_XY = vtkExtractPoints()
+        self.extract_cells_YZ = vtkExtractPoints()
+        self.extract_cells_XZ = vtkExtractPoints()
 
         self.glyph = vtkGlyph3D()
         self.glyph.SetSourceConnection(self.sphereSource.GetOutputPort())
@@ -186,6 +193,7 @@ class Vis(VisBase, QWidget):
         self.substrate_actor.SetMapper(self.substrate_mapper)
 
         #-----
+        # for substrate slicing
         self.planeXY = vtkPlane()
         self.planeXY.SetOrigin(0,0,0)
         self.planeXY.SetNormal(0, 0, 1)
@@ -243,6 +251,7 @@ class Vis(VisBase, QWidget):
         self.cutterXZActor.SetMapper(self.cutterXZMapper)
 
         #------------------------
+        # for cells (glyphs) extraction/clipping/cropping (but leaving entire spherical glyph intact, not cut)
         self.planeXY_clip = vtkPlane()
         self.planeXY_clip.SetOrigin(0,0,0)
         self.planeXY_clip.SetNormal(0, 0, 1)
@@ -256,31 +265,11 @@ class Vis(VisBase, QWidget):
         self.planeXZ_clip.SetNormal(0, 1, 0)
 
         #-----
-        # self.cutterXYEdges = vtkFeatureEdges()
-        # self.cutterXYEdgesMapper= vtkPolyDataMapper()
-        # self.cutterXYEdgesMapper.SetInputConnection(self.cutterXY.GetOutputPort())
-        # self.cutterXYEdges.BoundaryEdgesOn()
-        # self.cutterXYEdges.FeatureEdgesOn()
-        # self.cutterXYEdges.ManifoldEdgesOff()
-        # self.cutterXYEdges.NonManifoldEdgesOff()
-        # self.cutterXYEdges.ColoringOn()
+        # self.clipXY = vtkClipPolyData()
+        # self.clipYZ = vtkClipPolyData()
+        # self.clipXZ = vtkClipPolyData()
 
-        # self.cutterXYEdgesActor = vtkActor()
-        # self.cutterXYEdgesActor.SetMapper(self.cutterXYEdgesMapper)
 
-        #------------
-        # self.contour = vtkContourFilter()
-        # self.contMapper = vtkPolyDataMapper()
-        # self.contMapper.SetInputConnection(self.contour.GetOutputPort())
-        # # self.contMapper.SetScalarRange(0.0, 1.0)
-        # self.contMapper.ScalarVisibilityOff()
-        # self.contActor = vtkActor()
-        # self.contActor.SetMapper(self.contMapper)
-
-        #-----
-        self.clipXY = vtkClipPolyData()
-        self.clipYZ = vtkClipPolyData()
-        self.clipXZ = vtkClipPolyData()
 
         #-----
         # -- For substrate
@@ -922,7 +911,7 @@ class Vis(VisBase, QWidget):
         xml_files.sort()
         # svg_files = glob.glob('snapshot*.svg')
         # svg_files.sort()
-        print('xml_files = ',xml_files)
+        # print('xml_files = ',xml_files)
         # num_xml = len(xml_files)
         # print('svg_files = ',svg_files)
         # num_svg = len(svg_files)
@@ -1242,6 +1231,7 @@ class Vis(VisBase, QWidget):
     # rf. https://kitware.github.io/vtk-examples/site/Python/PolyData/CurvaturesDemo/
     def get_diverging_lut1(self):
         colors = vtkNamedColors()
+        # self.colors = vtkNamedColors()
         # Colour transfer function.
         ctf = vtkColorTransferFunction()
         ctf.SetColorSpaceToDiverging()
@@ -1281,7 +1271,7 @@ class Vis(VisBase, QWidget):
         # cell_colors = [ list(colors.GetColor3d('Gray'))+[1], list(colors.GetColor3d('Red'))+[1]], list(colors.GetColor3d('Yellow'))+[1] ]
 
         # cf. vis_base:
-                # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
+        # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
         # lut.SetTableValue(1, 1, 0, 0, 1)  # red
         # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
         # lut.SetTableValue(3, 0, 1, 0, 1)  # green
@@ -1322,23 +1312,6 @@ class Vis(VisBase, QWidget):
         np.random.seed(42)
         for idx in range(13,num_cell_types):  # random beyond those hard-coded
             lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
-
-        # lut.SetTableValue(1, colors.GetColor3d('Red')+[0])
-
-        # lut.SetTableValue(2, 1, 1, 0, 1)  # yellow
-        # lut.SetTableValue(3, 0, 1, 0, 1)  # green
-        # lut.SetTableValue(4, 0, 0, 1, 1)  # blue
-        # lut.SetTableValue(5, 1, 0, 1, 1)  # magenta
-        # lut.SetTableValue(6, 1, 0.65, 0, 1)  # orange
-        # lut.SetTableValue(7, 0.2, 0.8, 0.2, 1)  # lime
-        # lut.SetTableValue(8, 0, 0, 1, 1)  # cyan
-        # lut.SetTableValue(9, 1, 0.41, 0.71, 1)  # hotpink
-        # lut.SetTableValue(10, 1, 0.85, 0.73, 1)  # peachpuff
-        # lut.SetTableValue(11, 143/255.,188/255.,143/255., 1)  # darkseagreen
-        # lut.SetTableValue(12, 135/255.,206/255.,250/255., 1)  # lightskyblue
-        # np.random.seed(42)
-        # for idx in range(13,num_cell_types):  # random beyond those hard-coded
-        #     lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
 
         return lut
 
@@ -1584,9 +1557,9 @@ class Vis(VisBase, QWidget):
             self.glyph.Update()
 
             #----------------------------------------------
-            # if we are clipping the cells using a clip plane
+            # if we are clipping (extracting) the cells using a clip plane
             clipped_cells_flag = False
-            polydata = self.glyph.GetOutput()
+            # polydata = self.glyph.GetOutput()
 
             if self.voxel_size is None:
                 self.get_domain_params()
@@ -1596,53 +1569,50 @@ class Vis(VisBase, QWidget):
             # z0 = -(self.voxel_size * self.nz) / 2.0
             # print(f"---- vis3D: plot_cells3D(): self.x0,self.y0,self.z0= {self.x0},{self.y0},{self.z0}")
 
+            self.ugrid_clipped = self.ugrid   # original
+
             if self.show_xy_clip:
-                clipped_cells_flag = True
-                self.clipXY.SetInputData(self.glyph.GetOutput())
-                # self.planeXY.SetOrigin(x0,y0,0)
                 self.planeXY_clip.SetOrigin(self.x0,self.y0, self.xy_clip_z0)
                 if self.xy_flip:
                     self.planeXY_clip.SetNormal(0,0, -1)
                 else:
                     self.planeXY_clip.SetNormal(0,0, 1)
-                self.clipXY.SetClipFunction(self.planeXY_clip)
-                self.clipXY.Update()
-                polydata = self.clipXY.GetOutput()
-                self.cells_mapper.SetInputConnection(self.clipXY.GetOutputPort())
+
+                self.extract_cells_XY.SetInputData(self.ugrid_clipped)
+                self.extract_cells_XY.SetImplicitFunction(self.planeXY_clip)
+                self.extract_cells_XY.Update()
+                self.ugrid_clipped = self.extract_cells_XY.GetOutput()   # update ugrid
+
             if self.show_yz_clip:
-                clipped_cells_flag = True
-                self.clipYZ.SetInputData(polydata)
-                # self.planeYZ.SetOrigin(0,0,0)
-                print("self.planeYZ_clip.SetOrigin=",self.yz_clip_x0,self.y0,self.z0)
                 self.planeYZ_clip.SetOrigin(self.yz_clip_x0,self.y0,self.z0)
                 if self.yz_flip:
                     self.planeYZ_clip.SetNormal(-1,0,0)
                 else:
                     self.planeYZ_clip.SetNormal(1,0,0)
-                self.clipYZ.SetClipFunction(self.planeYZ_clip)
-                self.clipYZ.Update()
-                polydata = self.clipYZ.GetOutput()
-                self.cells_mapper.SetInputConnection(self.clipYZ.GetOutputPort())
+                    
+                self.extract_cells_YZ.SetInputData(self.ugrid_clipped)
+                self.extract_cells_YZ.SetImplicitFunction(self.planeYZ_clip)
+                self.extract_cells_YZ.Update()
+                self.ugrid_clipped = self.extract_cells_YZ.GetOutput()   # update ugrid
+
             if self.show_xz_clip:
-                clipped_cells_flag = True
-                self.clipXZ.SetInputData(polydata)
-                # self.planeXZ.SetOrigin(0,0,0)
                 self.planeXZ_clip.SetOrigin(self.x0,self.xz_clip_y0,self.z0)
                 if self.xz_flip:
                     self.planeXZ_clip.SetNormal(0,-1,0)
                 else:
                     self.planeXZ_clip.SetNormal(0,1,0)
-                self.clipXZ.SetClipFunction(self.planeXZ_clip)
-                # polydata = self.clipXZ.GetOutput()
-                self.clipXZ.Update()
-                self.cells_mapper.SetInputConnection(self.clipXZ.GetOutputPort())
+                    
+                self.extract_cells_XZ.SetInputData(self.ugrid_clipped)
+                self.extract_cells_XZ.SetImplicitFunction(self.planeXZ_clip)
+                self.extract_cells_XZ.Update()
+                self.ugrid_clipped = self.extract_cells_XZ.GetOutput()   # update ugrid
 
-            if not clipped_cells_flag:
-                # self.cells_mapper = vtkPolyDataMapper()
-                self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
 
+            self.glyph.SetInputData(self.ugrid_clipped)
+            self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
             self.cells_actor.SetMapper(self.cells_mapper)
 
+            #-------
             self.scalar_bar_cells.SetLookupTable(self.cells_mapper.GetLookupTable())
 
             self.ren.AddActor(self.cells_actor)
@@ -1654,7 +1624,7 @@ class Vis(VisBase, QWidget):
 
         self.text_title_actor.SetInput(self.title_str)
 
-        #-------------------
+        #-------------------------------------------------------------------
         if self.substrates_checked_flag:
             # print("substrate names= ",mcds.get_substrate_names())
 
@@ -1832,7 +1802,8 @@ class Vis(VisBase, QWidget):
                 # self.cutterXYMapper.SetScalarModeToUseCellData()
                 # self.cutterXYActor.SetMapper(self.cutterXYMapper)
 
-                self.cutterXYActor.GetProperty().EdgeVisibilityOn()
+                # self.cutterXYActor.GetProperty().SetInterpolationToFlat()
+                # self.cutterXYActor.GetProperty().EdgeVisibilityOn()
                 self.cutterXYActor.GetProperty().EdgeVisibilityOff()
                 # self.cutterXYActor.GetProperty().SetEdgeColor(0,0,0)
 

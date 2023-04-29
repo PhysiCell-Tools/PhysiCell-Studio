@@ -1152,7 +1152,8 @@ class VisBase():
         self.physiboss_cell_type_combobox = None
         self.physiboss_node_combobox = None
         #-----------
-        self.frame_count.textChanged.connect(self.change_frame_count_cb)
+        # self.frame_count.textChanged.connect(self.change_frame_count_cb)   # too annoying
+        self.frame_count.returnPressed.connect(self.change_frame_count_cb)
 
         #-------------------
         self.substrates_combobox.currentIndexChanged.connect(self.substrates_combobox_changed_cb)
