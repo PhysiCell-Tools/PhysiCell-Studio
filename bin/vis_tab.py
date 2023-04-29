@@ -56,7 +56,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
-
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
@@ -83,7 +82,6 @@ class Vis(VisBase, QWidget):
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.population_plot = None
-        self.physiboss_population_plot = None
         self.celltype_name = []
         self.celltype_color = []
 
@@ -125,8 +123,7 @@ class Vis(VisBase, QWidget):
 
         # self.config_file = "mymodel.xml"
         self.physiboss_node_dict = {}
-        self.physiboss_previous_node = None
-        self.physiboss_previous_cells = None
+        
         self.reset_model_flag = True
         self.xmin = -80
         self.xmax = 80
@@ -237,12 +234,10 @@ class Vis(VisBase, QWidget):
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
-
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
 
     #--------------------------------------
     # Dependent on 2D/3D
-
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
         # for line in traceback.format_stack():
@@ -672,6 +667,7 @@ class Vis(VisBase, QWidget):
 
                 self.cells_svg_rb.setChecked(True)
                 self.plot_cells_svg = True
+                self.disable_cell_scalar_widgets()
                 return
         
                     

@@ -1584,29 +1584,51 @@ class VisBase():
             print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
 
 
+    def disable_cell_scalar_widgets(self):
+        self.cell_scalar_combobox.setEnabled(False)
+        self.cell_scalar_cbar_combobox.setEnabled(False)
+        self.full_list_button.setEnabled(False)
+        self.partial_button.setEnabled(False)
+
+        self.fix_cells_cmap_checkbox.setEnabled(False)
+        self.cells_cmin.setEnabled(False)
+        self.cells_cmax.setEnabled(False)
+        if self.physiboss_vis_checkbox is not None:
+            self.physiboss_vis_checkbox.setEnabled(False)
+        # self.fix_cmap_checkbox.setEnabled(bval)
+
+        if self.cax2:
+            try:   # otherwise, physiboss UI can crash
+                self.cax2.remove()
+            except:
+                pass
+            self.cax2 = None
+
     def cells_svg_mat_cb(self):
         # print("\n---------cells_svg_mat_cb(self)")
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
             self.plot_cells_svg = True
-            self.cell_scalar_combobox.setEnabled(False)
-            self.cell_scalar_cbar_combobox.setEnabled(False)
-            self.full_list_button.setEnabled(False)
-            self.partial_button.setEnabled(False)
+            self.disable_cell_scalar_widgets()
 
-            self.fix_cells_cmap_checkbox.setEnabled(False)
-            self.cells_cmin.setEnabled(False)
-            self.cells_cmax.setEnabled(False)
-            if self.physiboss_vis_checkbox is not None:
-                self.physiboss_vis_checkbox.setEnabled(False)
-            # self.fix_cmap_checkbox.setEnabled(bval)
+            # self.cell_scalar_combobox.setEnabled(False)
+            # self.cell_scalar_cbar_combobox.setEnabled(False)
+            # self.full_list_button.setEnabled(False)
+            # self.partial_button.setEnabled(False)
 
-            if self.cax2:
-                try:   # otherwise, physiboss UI can crash
-                    self.cax2.remove()
-                except:
-                    pass
-                self.cax2 = None
+            # self.fix_cells_cmap_checkbox.setEnabled(False)
+            # self.cells_cmin.setEnabled(False)
+            # self.cells_cmax.setEnabled(False)
+            # if self.physiboss_vis_checkbox is not None:
+            #     self.physiboss_vis_checkbox.setEnabled(False)
+            # # self.fix_cmap_checkbox.setEnabled(bval)
+
+            # if self.cax2:
+            #     try:   # otherwise, physiboss UI can crash
+            #         self.cax2.remove()
+            #     except:
+            #         pass
+            #     self.cax2 = None
 
         else:
             if not self.cell_scalars_filled: 
