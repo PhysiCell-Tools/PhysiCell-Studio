@@ -1162,6 +1162,7 @@ class VisBase():
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
         self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
+        # self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.vis.cell_scalar_cbar_combobox_changed_cb)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
 
         #==================================================================
@@ -1845,23 +1846,10 @@ class VisBase():
         self.update_plots()
 
     def substrates_cbar_combobox_changed_cb(self,idx):
-        # print("-----  substrates_combobox_changed_cb: idx = ",idx)
-        # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
-        cbar_name = self.substrates_cbar_combobox.currentText()
-        print("\n>---------------->> substrates_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
-        # if cbar_name.find("jet") >= 0:
-        #     print(" -------  cbar_name=  jet_map")
-        #     # self.lut_substrate = self.get_jet_map()
-        #     self.lut_substrate = self.lut_jet
-        # elif cbar_name.find("viridis") >= 0:
-        #     print(" -------  cbar_name=  viridis_map")
-        #     # self.lut_substrate = self.get_viridis_map()
-        #     self.lut_substrate = self.lut_viridis
-        # elif cbar_name.find("YlOrRd") >= 0:
-        #     print(" -------  cbar_name=  ylorrd")
-        #     # self.lut_substrate = self.get_viridis_map()
-        #     self.lut_substrate = self.lut_ylorrd
+        self.update_plots()
 
+    def cell_scalar_cbar_combobox_changed_cb(self,idx):
+        # print("\n>vis_base---------------->> cell_scalar_cbar_combobox_changed_cb():")
         self.update_plots()
 
     def open_directory_cb(self):
