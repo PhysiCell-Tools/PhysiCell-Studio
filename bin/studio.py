@@ -39,7 +39,7 @@ from user_params_tab import UserParams
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
-from legend_tab import Legend 
+# from legend_tab import Legend 
 
 try:
     from simulariumio import UnitData, MetaData, DisplayData, DISPLAY_TYPE, ModelMetaData
@@ -97,10 +97,10 @@ class PhysiCellXMLCreator(QWidget):
 
         self.ics_tab_index = 4
         self.plot_tab_index = 6
-        self.legend_tab_index = 7
+        # self.legend_tab_index = 7
         if self.rules_flag:
             self.plot_tab_index += 1
-            self.legend_tab_index += 1
+            # self.legend_tab_index += 1
 
         # self.dark_mode = False
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
@@ -327,7 +327,8 @@ class PhysiCellXMLCreator(QWidget):
 
             self.tabWidget.addTab(self.run_tab,"Run")
 
-            self.vis_tab = Vis(self.nanohub_flag, self.run_tab)
+            # config_tab needed for 3D domain boundary outline
+            self.vis_tab = Vis(self.nanohub_flag, self.config_tab, self.run_tab, self.model3D_flag)
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.config_tab.vis_tab = self.vis_tab
@@ -339,21 +340,21 @@ class PhysiCellXMLCreator(QWidget):
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
             # self.vis_tab.view_shading = self.view_shading
 
-            self.legend_tab = Legend(self.nanohub_flag)
-            self.vis_tab.legend_tab = self.legend_tab
-            self.legend_tab.current_dir = self.current_dir
-            self.legend_tab.studio_config_dir = self.studio_config_dir
+            # self.legend_tab = Legend(self.nanohub_flag)
+            # self.vis_tab.legend_tab = self.legend_tab
+            # self.legend_tab.current_dir = self.current_dir
+            # self.legend_tab.studio_config_dir = self.studio_config_dir
             self.run_tab.vis_tab = self.vis_tab
             self.tabWidget.addTab(self.vis_tab,"Plot")
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
             self.enablePlotTab(True)
 
-            self.tabWidget.addTab(self.legend_tab,"Legend")
-            self.enableLegendTab(False)
-            self.enableLegendTab(True)
+            # self.tabWidget.addTab(self.legend_tab,"Legend")
+            # self.enableLegendTab(False)
+            # self.enableLegendTab(True)
             self.run_tab.vis_tab = self.vis_tab
-            self.run_tab.legend_tab = self.legend_tab
+            # self.run_tab.legend_tab = self.legend_tab
             logging.debug(f'studio.py: calling vis_tab.substrates_cbox_changed_cb(2)')
             self.vis_tab.fill_substrates_combobox(self.celldef_tab.substrate_list)
             # self.vis_tab.substrates_cbox_changed_cb(2)   # doesn't accomplish it; need to set index, but not sure when
@@ -361,10 +362,10 @@ class PhysiCellXMLCreator(QWidget):
 
             # self.vis_tab.output_dir = self.config_tab.folder.text()
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
-            self.legend_tab.output_dir = self.config_tab.folder.text()
-            legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
-            if Path(legend_file).is_file():
-                self.legend_tab.reload_legend()
+            # self.legend_tab.output_dir = self.config_tab.folder.text()
+            # legend_file = os.path.join(self.vis_tab.output_dir, 'legend.svg')  # hardcoded filename :(
+            # if Path(legend_file).is_file():
+            #     self.legend_tab.reload_legend()
 
             self.vis_tab.reset_model()
             
@@ -424,7 +425,8 @@ PhysiCell Studio is a tool to provide graphical editing of a PhysiCell model and
 NOTE: When loading a model (.xml configuration file), it must be a "flat" format for the  cell_definitions, i.e., all parameters need to be defined. &nbsp; Many legacy PhysiCell models used a hierarchical format in which a cell_definition could inherit from a parent. &nbsp; The hierarchical format is not supported in the Studio.<br><br>
 
 For more information:<br>
-<a href="https://github.com/PhysiCell-Tools/PhysiCell-model-builder">github.com/PhysiCell-Tools/PhysiCell-model-builder</a><br>
+<a href="https://github.com/PhysiCell-Tools/PhysiCell-Studio">github.com/PhysiCell-Tools/PhysiCell-Studio</a><br>
+<a href="https://github.com/rheiland/PhysiCell-Studio/blob/main/user-guide/README.md">Studio User Guide (draft)</a><br>
 <a href="https://github.com/MathCancer/PhysiCell">https://github.com/MathCancer/PhysiCell</a><br>
 <br>
 PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no event shall the Authors be liable for any damages whatsoever.<br>
@@ -442,11 +444,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.tabWidget.setTabEnabled(5, bval)
         self.tabWidget.setTabEnabled(self.plot_tab_index, bval)
 
-    def enableLegendTab(self, bval):
-        # self.tabWidget.setTabEnabled(6, bval)   
-        # self.tabWidget.setTabEnabled(6, bval)   
-        self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
+    # def enableLegendTab(self, bval):
+    #     # self.tabWidget.setTabEnabled(6, bval)   
+    #     # self.tabWidget.setTabEnabled(6, bval)   
+    #     self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
+    def filterUI_cb(self):
+        print("filterUI_cb")
+        self.vis_tab.filterUI_cb()
 
     def menu(self):
         menubar = QMenuBar(self)
@@ -575,44 +580,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-            xy_act = view3D_menu.addAction("XY slice")
-            xy_act.setCheckable(True)
-            xy_act.setChecked(True)
+            vis3D_filterUI_act = view3D_menu.addAction("3D Filters", self.filterUI_cb)
 
-            yz_act = view3D_menu.addAction("YZ slice")
-            yz_act.setCheckable(True)
-            yz_act.setChecked(True)
-
-            xz_act = view3D_menu.addAction("XZ slice")
-            xz_act.setCheckable(True)
-            xz_act.setChecked(True)
-
-            voxels_act = view3D_menu.addAction("All voxels")
-            voxels_act.setCheckable(True)
-            voxels_act.setChecked(False)
-            view3D_menu.addSeparator()
-
-            # actions for cell clipping/cropping
-            xy_clip_act = view3D_menu.addAction("XY clip")
-            xy_clip_act.setCheckable(True)
-            xy_clip_act.setChecked(False)
-
-            yz_clip_act = view3D_menu.addAction("YZ clip")
-            yz_clip_act.setCheckable(True)
-            yz_clip_act.setChecked(False)
-
-            xz_clip_act = view3D_menu.addAction("XZ clip")
-            xz_clip_act.setCheckable(True)
-            xz_clip_act.setChecked(False)
-            view3D_menu.addSeparator()
-
-            axes_act = view3D_menu.addAction("Axes")
-            axes_act.setCheckable(True)
-            axes_act.setChecked(False)
-
-            # contour_act = view3D_menu.addAction("contour")
-            # contour_act.setCheckable(True)
-            # contour_act.setChecked(False)
+            # axes_act = view3D_menu.addAction("Axes")
+            # axes_act.setCheckable(True)
+            # axes_act.setChecked(False)
 
         else:  # just 2D view
             if self.studio_flag:
@@ -643,7 +615,17 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 item.setCheckable(True)
                 item.setChecked(False)
 
+
+        help_menu = menubar.addMenu('&Help')
+        help_menu.triggered.connect(self.open_help_url)
+        guide_act = help_menu.addAction("User Guide (link)", self.open_help_url)
+
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
+
+    def open_help_url(self):
+        url = QtCore.QUrl('https://github.com/rheiland/PhysiCell-Studio/blob/main/user-guide/README.md')
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open URL')
 
     def reset_xml_root(self):
         self.celldef_tab.clear_custom_data_tab()
@@ -665,6 +647,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.rules_tab.fill_gui()
 
         self.config_tab.fill_gui()
+        if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
+            print("You're running a 3D Studio, but the model is 2D")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('The model has been loaded; however, it is 2D and you are running the 3D (plotting) Studio. You may want to run a new Studio without 3D, i.e., no "-3", for this 2D model.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         self.microenv_tab.clear_gui()
         self.microenv_tab.populate_tree()
@@ -694,6 +683,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.xml_root = self.tree.getroot()
         self.reset_xml_root()
         self.setWindowTitle(self.title_prefix + self.config_file)
+        if self.model3D_flag:
+            self.vis_tab.reset_domain_box()
 
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
@@ -719,6 +710,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 self.run_tab.config_xml_name.setText(self.current_xml_file)
 
             self.show_sample_model()
+            self.vis_tab.update_output_dir(self.config_tab.folder.text())
             # self.reset_xml_root()   #rwh - done in show_sample_model
 
         else:
@@ -781,6 +773,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.tree.write(self.current_xml_file)
             print("studio.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
+
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Note: this will not change the config file in the Run tab.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
@@ -924,49 +922,57 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if returnValue == QMessageBox.Cancel:
             return
 
-        # self.vis_tab.output_dir = self.config_tab.folder.text()
-        sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
-        print("sim_output_dir = ",sim_output_dir )
+        self.vis_tab.convert_to_simularium(self.current_xml_file)
+        return
 
-        simularium_model_data = PhysicellData(
-            timestep=1.0,
-            path_to_output_dir=sim_output_dir, 
-            meta_data=MetaData(
-                box_size=np.array([1000.0, 1000.0, 20.0]),
-                scale_factor=0.01,
-                trajectory_title="Some parameter set",
-                model_meta_data=ModelMetaData(
-                    title="worm",
-                    version="8.1",
-                    authors="A Modeler",
-                    description=(
-                        "A PhysiCell model run with some parameter set"
-                    ),
-                    doi="10.1016/j.bpj.2016.02.002",
-                    source_code_url="https://github.com/allen-cell-animated/simulariumio",
-                    source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
-                    input_data_url="https://allencell.org/path/to/native/engine/input/files",
-                    raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
-                ),
-            ),
-            nth_timestep_to_read=1,
-            display_data={
-                0: DisplayData(
-                    name="cell type 0",
-                    color="#dfdacd",
-                ),
-                1: DisplayData(
-                    name="cell type 1",
-                    color="#0080ff",
-                ),
-            },
-            time_units=UnitData("m"),  # minutes
-        )
 
-        print("calling Simularium PhysicellConverter...\n")
-        PhysicellConverter(simularium_model_data).save("simularium_model")
+        # sim_output_dir = os.path.realpath(os.path.join('.', self.config_tab.folder.text()))
+        # print("sim_output_dir = ",sim_output_dir )
 
-        print("Load this model at: https://simularium.allencell.org/viewer")
+        # simularium_model_data = PhysicellData(
+        #     timestep=1.0,
+        #     path_to_output_dir=sim_output_dir, 
+        #     meta_data=MetaData(
+        #         box_size=np.array([200.0, 200.0, 200.0]),
+        #         scale_factor=0.01,
+        #         trajectory_title="Some parameter set",
+        #         model_meta_data=ModelMetaData(
+        #             title="worm",
+        #             version="8.1",
+        #             authors="PhysiCell modeler",
+        #             description=(
+        #                 "A PhysiCell model run with some parameter set"
+        #             ),
+        #             doi="10.1016/j.bpj.2016.02.002",
+        #             source_code_url="https://github.com/allen-cell-animated/simulariumio",
+        #             source_code_license_url="https://github.com/allen-cell-animated/simulariumio/blob/main/LICENSE",
+        #             input_data_url="https://allencell.org/path/to/native/engine/input/files",
+        #             raw_output_data_url="https://allencell.org/path/to/native/engine/output/files",
+        #         ),
+        #     ),
+        #     nth_timestep_to_read=1,
+        #     display_data={
+        #         0: DisplayData(
+        #             name="ctype1",
+        #             color="#dfdacd",
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #         1: DisplayData(
+        #             name="ctype2",
+        #             color="#0080ff",
+        #             display_type=DISPLAY_TYPE.SPHERE,
+        #         ),
+        #     },
+        #     time_units=UnitData("m"),  # minutes
+        # )
+
+        # print("calling Simularium PhysicellConverter...\n")
+        # model_name = os.path.basename(self.current_xml_file)
+        # model_name = model_name[:-4]   # strip off .xml suffix
+        # PhysicellConverter(simularium_model_data).save(model_name)
+        # print(f"--> {model_name}.simularium")
+
+        # print("Load this model at: https://simularium.allencell.org/viewer")
 
 
     #----------------------
@@ -1154,7 +1160,7 @@ def main():
             model3D_flag = True
             # print("done with args.three")
         if args.bare:
-            logging.debug(f'studio.py: bare model editing, no ICs,Run,Plot,Legend tabs')
+            logging.debug(f'studio.py: bare model editing, no ICs,Run,Plot tabs')
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")

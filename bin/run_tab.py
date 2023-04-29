@@ -49,7 +49,7 @@ class RunModel(QWidget):
         self.user_params_tab = None
         self.rules_tab = None
         self.vis_tab = None
-        self.legend_tab = None
+        # self.legend_tab = None
 
         self.tree = None
 
@@ -158,13 +158,14 @@ class RunModel(QWidget):
         logging.debug(f'===========  run_model_cb():  ============')
         self.celldef_tab.check_valid_cell_defs()
 
-        if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Critical)
-            msg.setText("Warning")
-            msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
-            msg.setWindowTitle("Warning")
-            msg.exec_()
+        if self.config_tab.save_svg.isChecked() and self.config_tab.save_full.isChecked():
+            if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText("Warning")
+                msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
+                msg.setWindowTitle("Warning")
+                msg.exec_()
 
         self.run_button.setEnabled(False)
 
@@ -226,6 +227,7 @@ class RunModel(QWidget):
             # if auto_load_params:
 
             if self.vis_tab:
+                self.vis_tab.reset_domain_box()
                 # self.vis_tab.reset_axes()
                 self.vis_tab.reset_model_flag = True
                 self.vis_tab.reset_plot_range()
@@ -233,7 +235,7 @@ class RunModel(QWidget):
                 self.vis_tab.output_folder.setText(self.output_dir) 
 
                 self.vis_tab.output_dir = self.output_dir
-                self.legend_tab.output_dir = self.output_dir
+                # self.legend_tab.output_dir = self.output_dir
                 self.vis_tab.reset_model()
                 self.vis_tab.update_plots()
 
@@ -250,7 +252,7 @@ class RunModel(QWidget):
             if self.p is None:  # No process running.
                 self.enable_run(False)
                 self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
-                self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
+                # self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
                 self.message("Executing process")
                 self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
                 self.p.readyReadStandardOutput.connect(self.handle_stdout)
@@ -271,7 +273,7 @@ class RunModel(QWidget):
                     # self.p.start(exec_str, ["output/config.xml"])
                 # self.p = None  # No, don't do this
 
-                self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
+                # self.legend_tab.reload_legend()  # new, not sure about timing - creation vs. display
 
             else:
                 # logging.debug(f'self.p is not None???')

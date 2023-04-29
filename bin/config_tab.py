@@ -703,14 +703,16 @@ class Config(QWidget):
         self.xml_root.find(".//full_data//interval").text = self.full_interval.text()
         # self.xml_root.find(".//full_data//interval").text = self.svg_interval.text()
 
+        if self.xml_root.find(".//initial_conditions") is None: 
+            print("\n ===  Warning: Original XML is missing <initial_conditions> block.")
+            print("        Will not insert into saved file.\n")
+            return
+
         if self.cells_csv.isChecked():
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
         else:
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'false'
 
-        if self.xml_root.find(".//initial_conditions") is None: 
-            print("\n ===  ERROR: Original XML is missing <initial_conditions> block\n")
-            return
 
         # self.xml_root.find(".//initial_conditions//cell_positions/folder").text = './data'
         self.xml_root.find(".//initial_conditions//cell_positions/folder").text = self.csv_folder.text()
