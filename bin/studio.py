@@ -35,7 +35,10 @@ from config_tab import Config
 from cell_def_tab import CellDef, CellDefException
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
-# from rules_tab import Rules
+try:
+    from rules_tab import Rules
+except:
+    pass
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 

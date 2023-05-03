@@ -67,84 +67,8 @@ class FilterUI2DWindow(QWidget):
         if reset:
             self.reset_filters()
 
-                # item = view_menu.addAction("1:1 aspect")
-                # item.setCheckable(True)
-                # item.setChecked(True)
-
-                # # self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-                # # self.view_shading.setEnabled(False)
-                # item = view_menu.addAction("smooth shading")
-                # item.setCheckable(True)
-                # item.setChecked(False)
-
-                # # view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
-                # # view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
-                # # if not self.nanohub_flag:
-                # #     view_menu.addSeparator()
-                # #     view_menu.addAction("Select output dir", self.select_plot_output_cb)
-                # # self.vis_tab.view_menu = view_menu
-                # item = view_menu.addAction("voxel grid")
-                # item.setCheckable(True)
-                # item.setChecked(False)
-
-                # item = view_menu.addAction("mechanics grid")
-                # item.setCheckable(True)
-                # item.setChecked(False)
-
-
         #------------
-        # (checkbox_w,down_w,val_w,up_w) = self.create_row('XY slice: ')
         idx_row = 0
-        # glayout.addWidget(QLabel('Substrate: (press Enter after value change)'), idx_row,0,1,3) # w, row, column, rowspan, colspan
-
-        self.aspect_11_checkbox = QCheckBox_custom('1:1 aspect')
-        self.aspect_11_checkbox.setChecked(True)
-        self.aspect_11_checkbox.clicked.connect(self.aspect_11_cb)
-        # idx_row += 1
-        glayout.addWidget(self.aspect_11_checkbox, idx_row,0,1,3) # w, row, column, rowspan, colspan
-
-        # self.xy_slice_w = QLineEdit()
-        # self.xy_slice_w.setValidator(QtGui.QDoubleValidator())
-        # # val.textChanged[str].connect(self.xy_slice_val_cb)
-        # self.xy_slice_w.returnPressed.connect(self.xy_slice_val_cb)
-        # self.xy_slice_w.setText(str(self.xy_slice_value))
-        # glayout.addWidget(self.xy_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
-
-        self.shading_checkbox = QCheckBox_custom('shading')
-        # self.shading_checkbox.setChecked(self.shading_flag)
-        self.shading_checkbox.clicked.connect(self.shading_cb)
-        # idx_row += 1
-        glayout.addWidget(self.shading_checkbox, idx_row,4,1,1) # w, row, column, rowspan, colspan
-
-        # self.yz_slice_w = QLineEdit()
-        # self.yz_slice_w.setValidator(QtGui.QDoubleValidator())
-        # self.yz_slice_w.returnPressed.connect(self.yz_slice_val_cb)
-        # self.yz_slice_w.setText(str(self.yz_slice_value))
-        # glayout.addWidget(self.yz_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
-
-        #--------------------------
-        self.voxel_grid_checkbox = QCheckBox_custom('voxel grid')
-        # self.voxel_grid_checkbox.setChecked(self.voxel_grid_flag)
-        self.voxel_grid_checkbox.clicked.connect(self.voxel_grid_cb)
-        idx_row += 1
-        glayout.addWidget(self.voxel_grid_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
-
-        # self.xz_slice_w = QLineEdit()
-        # self.xz_slice_w.setValidator(QtGui.QDoubleValidator())
-        # self.xz_slice_w.returnPressed.connect(self.xz_slice_val_cb)
-        # self.xz_slice_w.setText(str(self.xz_slice_value))
-        # glayout.addWidget(self.xz_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.mech_grid_checkbox = QCheckBox_custom('mech grid')
-        # self.mech_grid_checkbox.setChecked(self.mech_grid_flag)
-        self.mech_grid_checkbox.clicked.connect(self.mech_grid_cb)
-        # idx_row += 1
-        glayout.addWidget(self.mech_grid_checkbox, idx_row,4,1,1) # w, row, column, rowspan, colspan
-        # voxels_act = view3D_menu.addAction("All voxels")
-        # voxels_act.setChecked(False)
-
-        #------
         self.cell_edge_checkbox = QCheckBox_custom('cell edge')
         self.cell_edge_checkbox.setChecked(True)
         self.cell_edge_checkbox.clicked.connect(self.cell_edge_cb)
@@ -157,8 +81,49 @@ class FilterUI2DWindow(QWidget):
         glayout.addWidget(self.cell_fill_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
         #--------------------------------
 
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        idx_row += 1
+        glayout.addWidget(QLabel("Substrate contours:"), idx_row,0,1,2) # w, row, column, rowspan, colspan
+
+        #----------
+        idx_row += 1
+        # self.shading_checkbox = QCheckBox_custom('shading')
+        self.contour_mesh_checkbox = QCheckBox_custom('mesh')
+        self.contour_mesh_checkbox.setChecked(True)
+        self.contour_mesh_checkbox.clicked.connect(self.contour_mesh_cb)
+        glayout.addWidget(self.contour_mesh_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.contour_smooth_checkbox = QCheckBox_custom('smooth')
+        self.contour_smooth_checkbox.clicked.connect(self.contour_smooth_cb)
+        glayout.addWidget(self.contour_smooth_checkbox, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        self.contour_lines_checkbox = QCheckBox_custom('lines')
+        self.contour_lines_checkbox.setChecked(False)
+        self.contour_lines_checkbox.clicked.connect(self.contour_lines_cb)
+        glayout.addWidget(self.contour_lines_checkbox, idx_row,3,1,1) # w, row, column, rowspan, colspan
+
         #-----------------------
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        idx_row += 1
         self.vbox.addLayout(glayout)
+        self.aspect_11_checkbox = QCheckBox_custom('1:1 aspect')
+        self.aspect_11_checkbox.setChecked(True)
+        self.aspect_11_checkbox.clicked.connect(self.aspect_11_cb)
+        # idx_row += 1
+        glayout.addWidget(self.aspect_11_checkbox, idx_row,0,1,3) # w, row, column, rowspan, colspan
+
+        #--------------------------
+        self.voxel_grid_checkbox = QCheckBox_custom('voxel grid')
+        self.voxel_grid_checkbox.clicked.connect(self.voxel_grid_cb)
+        idx_row += 1
+        glayout.addWidget(self.voxel_grid_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+
+        #------
+        self.mech_grid_checkbox = QCheckBox_custom('mech grid')
+        self.mech_grid_checkbox.clicked.connect(self.mech_grid_cb)
+        glayout.addWidget(self.mech_grid_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #--------------------
         # axes_act = view3D_menu.addAction("Axes")
@@ -209,12 +174,31 @@ class FilterUI2DWindow(QWidget):
         self.axes_flag = False
 
     #--------
+    def cell_edge_cb(self):
+        self.vis_tab.cell_edge_cb(self.cell_edge_checkbox.isChecked())
+
+    def cell_fill_cb(self):
+        self.vis_tab.cell_fill_cb(self.cell_fill_checkbox.isChecked())
+
+    def contour_mesh_cb(self):
+        bval = self.contour_mesh_checkbox.isChecked()
+        if bval:
+            self.contour_smooth_checkbox.setEnabled(True)
+        else:
+            self.contour_smooth_checkbox.setEnabled(False)
+
+        self.vis_tab.contour_mesh_cb(bval)
+
+    def contour_smooth_cb(self):
+        # self.vis_tab.shading_cb(self.contour_smooth_checkbox.isChecked())
+        self.vis_tab.contour_smooth_cb(self.contour_smooth_checkbox.isChecked())
+
+    def contour_lines_cb(self):
+        self.vis_tab.contour_lines_cb(self.contour_lines_checkbox.isChecked())
+
     def aspect_11_cb(self):
         # print("filters2D: aspect_11_cb()  self.aspect_11_checkbox.isChecked()= ",self.aspect_11_checkbox.isChecked())
         self.vis_tab.view_aspect_cb(self.aspect_11_checkbox.isChecked())   # vis_base
-
-    def shading_cb(self):
-        self.vis_tab.shading_cb(self.shading_checkbox.isChecked())
 
     def voxel_grid_cb(self):
         self.vis_tab.voxel_grid_cb(self.voxel_grid_checkbox.isChecked())
@@ -222,12 +206,6 @@ class FilterUI2DWindow(QWidget):
     def mech_grid_cb(self):
         self.vis_tab.mech_grid_cb(self.mech_grid_checkbox.isChecked())
         
-    def cell_edge_cb(self):
-        self.vis_tab.cell_edge_cb(self.cell_edge_checkbox.isChecked())
-
-    def cell_fill_cb(self):
-        self.vis_tab.cell_fill_cb(self.cell_fill_checkbox.isChecked())
-
     #--------
     def yz_slice_cb(self):
         self.vis_tab.yz_slice_toggle_cb(self.yz_slice_checkbox.isChecked())
