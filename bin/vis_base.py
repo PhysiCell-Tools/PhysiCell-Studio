@@ -352,6 +352,8 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
+        self.contour_mesh = True
+        self.contour_lines = False
         self.num_contours = 50
         self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
 
@@ -402,7 +404,7 @@ class VisBase():
         self.aspect_ratio = 0.7
 
         self.view_aspect_square = True
-        self.view_smooth_shading = False
+        # self.view_smooth_shading = False
 
         self.show_voxel_grid = False
         self.show_mechanics_grid = False
@@ -1826,17 +1828,37 @@ class VisBase():
 
             self.update_plots()
 
-    #----- View menu items
-    def view_aspect_cb(self,bval):
-        self.view_aspect_square = bval
-        print("vis_tab.py: self.view_aspect_square = ",self.view_aspect_square)
+    #----- View menu: Plot options 
+    def cell_edge_cb(self,bval):
+        self.cell_edge = bval
         self.update_plots()
 
-    def shading_cb(self,bval):
+    def cell_fill_cb(self,bval):
+        self.cell_fill = bval
+        self.update_plots()
+
+    #----
+    # def shading_cb(self,bval):
+    def contour_mesh_cb(self,bval):
+        self.contour_mesh = bval
+        self.update_plots()
+
+    def contour_smooth_cb(self,bval):
         if bval:
             self.shading_choice = 'gouraud'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
         else:
             self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        self.update_plots()
+
+    def contour_lines_cb(self,bval):
+        self.contour_lines = bval
+        self.update_plots()
+
+
+    #----
+    def view_aspect_cb(self,bval):
+        self.view_aspect_square = bval
+        print("vis_tab.py: self.view_aspect_square = ",self.view_aspect_square)
         self.update_plots()
 
     def voxel_grid_cb(self,bval):
@@ -1847,13 +1869,6 @@ class VisBase():
         self.show_mechanics_grid = bval
         self.update_plots()
 
-    def cell_edge_cb(self,bval):
-        self.cell_edge = bval
-        self.update_plots()
-
-    def cell_fill_cb(self,bval):
-        self.cell_fill = bval
-        self.update_plots()
 
     #----------------------------------------------
     def cells_toggle_cb(self,bval):

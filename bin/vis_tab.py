@@ -143,7 +143,7 @@ class Vis(VisBase, QWidget):
         self.aspect_ratio = 0.7
 
         self.view_aspect_square = True
-        self.view_smooth_shading = False
+        # self.view_smooth_shading = False
 
         self.show_voxel_grid = False
         self.show_mechanics_grid = False
@@ -881,46 +881,42 @@ class Vis(VisBase, QWidget):
         # print("zvals.min() = ",zvals.min())
         # print("zvals.max() = ",zvals.max())
 
-        # self.num_contours = 15
-
-        # if (self.colormap_fixed_toggle.value):
-        #     try:
-        #         # vmin = 0
-        #         # vmax = 10
-        #         # levels = MaxNLocator(nbins=30).tick_values(vmin, vmax)
-        #         num_contours = 15
-        #         levels = MaxNLocator(nbins=num_contours).tick_values(self.colormap_min.value, self.colormap_max.value)
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-        #     except:
-        #         contour_ok = False
-        #         # print('got error on contourf 1.')
-        # else:    
-        #     try:
-        #         substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), num_contours, cmap=self.colormap_dd.value)
-        #     except:
-        #         contour_ok = False
-        #             # print('got error on contourf 2.')
 
         contour_ok = True
         # if (self.colormap_fixed_toggle.value):
         # self.field_index = 4
 
-        if (self.fix_cmap_flag):
-            try:
-                # self.fixed_contour_levels = MaxNLocator(nbins=self.num_contours).tick_values(self.cmin_value, self.cmax_value)
-                # substrate_plot = self.ax0.contourf(xgrid, ygrid, M[self.field_index, :].reshape(self.numy, self.numx), levels=levels, extend='both', cmap=self.colormap_dd.value, fontsize=self.fontsize)
-                # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, levels=self.fixed_contour_levels, extend='both', cmap=cbar_name)
-                substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
-            except:
-                contour_ok = False
-                print('\nWARNING: exception with fixed colormap range. Will not update plot.')
-        else:    
-            try:
-                # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
-                substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
-            except:
-                contour_ok = False
-                print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
+        if (self.contour_mesh):
+            if (self.fix_cmap_flag):
+                try:
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
+                except:
+                    contour_ok = False
+                    print('\nWARNING: exception with fixed colormap range. Will not update plot.')
+            else:    
+                try:
+                    # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
+
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
+                except:
+                    contour_ok = False
+                    print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
+
+        if (self.contour_lines):
+            if (self.fix_cmap_flag):
+                try:
+                    delstep = (self.cmax_value - self.cmin_value) / 8
+                    levels = np.arange(self.cmin_value + delstep, self.cmax_value, delstep)
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
+                except:
+                    print("vis_tab: No contour levels were found within the data range.")
+                    return
+            else:    
+                try:
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
+                except:
+                    print("vis_tab: No contour levels were found within the data range.")
+                    return
 
         # in case we want to plot a "0.0" contour line
         # if self.field_index > 4:
@@ -938,14 +934,21 @@ class Vis(VisBase, QWidget):
             #ppp
             ax1_divider = make_axes_locatable(self.ax0)
             self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
-            self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            try:
+                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            except:
+                print("vis_tab: No contour levels were found within the data range.")
             # print("\n# axes(redraw substrate) = ",len(self.figure.axes))
             # print(" self.figure.axes= ",self.figure.axes)
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
         else:
             ax1_divider = make_axes_locatable(self.ax0)
             self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
-            self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            try:
+                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            except:
+                print("vis_tab: No contour levels were found within the data range.")
+                return
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
             # print("(init substrate) self.figure.axes= ",self.figure.axes)
 
