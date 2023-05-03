@@ -35,7 +35,7 @@ from config_tab import Config
 from cell_def_tab import CellDef, CellDefException
 from microenv_tab import SubstrateDef 
 from user_params_tab import UserParams 
-# from rules_tab import Rules
+from rules_tab import Rules
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
@@ -237,7 +237,9 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
-        print("studio.py: ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        # print("\nstudio.py: .//cell_definitions//cell_rules --> ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        print("\nstudio.py: .//cell_rules --> ",self.xml_root.find(".//cell_rules"))
+        # sys.exit(1)
         # if self.xml_root.find(".//cell_definitions//cell_rules"):
 
         #------------------
@@ -281,6 +283,7 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
             self.rules_tab.fill_gui()
+            self.celldef_tab.rules_tab = self.rules_tab  # needed for updating cell type combobox when name changes
 
 
         if self.studio_flag:
@@ -450,7 +453,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #     self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
     def filterUI_cb(self):
-        print("studio.py: filterUI_cb")
+        print("filterUI_cb")
         self.vis_tab.filterUI_cb()
 
     def menu(self):
@@ -580,7 +583,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-            vis3D_filterUI_act = view3D_menu.addAction("Plot options", self.filterUI_cb)
+            vis3D_filterUI_act = view3D_menu.addAction("3D Filters", self.filterUI_cb)
 
             # axes_act = view3D_menu.addAction("Axes")
             # axes_act.setCheckable(True)
@@ -591,8 +594,29 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 view_menu = menubar.addMenu('&View')
                 view_menu.triggered.connect(self.view2D_cb)
 
-                vis2D_filterUI_act = view_menu.addAction("Plot options", self.filterUI_cb)
+                item = view_menu.addAction("1:1 aspect")
+                item.setCheckable(True)
+                item.setChecked(True)
 
+                # self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
+                # self.view_shading.setEnabled(False)
+                item = view_menu.addAction("smooth shading")
+                item.setCheckable(True)
+                item.setChecked(False)
+
+                # view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
+                # view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
+                # if not self.nanohub_flag:
+                #     view_menu.addSeparator()
+                #     view_menu.addAction("Select output dir", self.select_plot_output_cb)
+                # self.vis_tab.view_menu = view_menu
+                item = view_menu.addAction("voxel grid")
+                item.setCheckable(True)
+                item.setChecked(False)
+
+                item = view_menu.addAction("mechanics grid")
+                item.setCheckable(True)
+                item.setChecked(False)
 
 
         help_menu = menubar.addMenu('&Help')
@@ -1110,7 +1134,7 @@ def main():
     config_file = None
     studio_flag = True
     model3D_flag = False
-    rules_flag = False
+    rules_flag = True
     skip_validate_flag = False
     nanohub_flag = False
     is_movable_flag = False
@@ -1119,7 +1143,7 @@ def main():
 
         parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
-        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
@@ -1143,9 +1167,9 @@ def main():
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
-        if args.rules:
-            logging.debug(f'studio.py: Show Rules tab')
-            rules_flag = True
+        # if args.rules:
+        #     logging.debug(f'studio.py: Show Rules tab')
+        #     rules_flag = True
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
@@ -1233,14 +1257,7 @@ def main():
     # studio_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
 
-    # rules_flag = False
-    if rules_flag:
-        try:
-            from rules_tab import Rules
-        except:
-            rules_flag = False
-            print("Warning: Rules module not found.\n")
-
+    rules_flag = True
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)

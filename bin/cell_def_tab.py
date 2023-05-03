@@ -137,6 +137,8 @@ class CellDef(QWidget):
         self.default_time_units = "min"
         self.default_rate_units = "1/min"
 
+        self.rules_tab = None   # update in studio.py
+
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
@@ -739,6 +741,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # ICs
         if self.ics_tab:
             self.ics_tab.celltype_combobox.removeItem(item_idx)
+
+        if self.rules_tab:
+            self.rules_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
         logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
@@ -6224,6 +6229,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         if self.ics_tab:
             self.ics_tab.celltype_combobox.addItem(name)
+        if self.rules_tab:
+            self.rules_tab.celltype_combobox.addItem(name)
 
     #-----------------------------------------------------------------------------------------
     # def delete_substrate(self, item_idx):
@@ -6341,7 +6348,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a cell type in this tab, we need to update all 
-    # data structures (e.g., QComboBox) that reference it.
+    # data structures (e.g., QComboBox) that reference it.  Including Rules tab(!)
     def renamed_celltype(self, old_name,new_name):
 
         self.cell_adhesion_affinity_celltype = new_name
@@ -6374,6 +6381,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
             if self.ics_tab and (old_name == self.ics_tab.celltype_combobox.itemText(idx)):
                 self.ics_tab.celltype_combobox.setItemText(idx, new_name)
+            if self.rules_tab and (old_name == self.rules_tab.celltype_combobox.itemText(idx)):
+                self.rules_tab.celltype_combobox.setItemText(idx, new_name)
 
         # 2) OMG, also update all param_d dicts that involve cell def names
         logging.debug(f'--- renaming all dicts with cell defs')

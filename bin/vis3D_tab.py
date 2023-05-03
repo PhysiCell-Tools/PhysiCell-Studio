@@ -1745,7 +1745,7 @@ class Vis(VisBase, QWidget):
                 # vmax = self.cmax_value
                 vmin = float(self.cmin.text())
                 vmax = float(self.cmax.text())
-                print("fixed cmap vmin,vmax = ",vmin,vmax)
+                # print("fixed cmap vmin,vmax = ",vmin,vmax)
 
             # rwh - so which is correct?
             self.substrate_data.GetCellData().SetScalars( self.substrate_voxel_scalars )
@@ -1775,7 +1775,7 @@ class Vis(VisBase, QWidget):
             if self.show_voxels:
                 self.ren.RemoveActor(self.substrate_actor)
 
-                print("----- show_voxels: vmin,vmax= ",vmin,vmax)
+                # print("----- show_voxels: vmin,vmax= ",vmin,vmax)
                 self.substrate_mapper.SetScalarRange(vmin, vmax)
                 # self.substrate_mapper.SetScalarModeToUseCellData()
                 self.substrate_mapper.Update()
