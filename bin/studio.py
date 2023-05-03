@@ -450,7 +450,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #     self.tabWidget.setTabEnabled(self.legend_tab_index, bval)
 
     def filterUI_cb(self):
-        print("filterUI_cb")
+        print("studio.py: filterUI_cb")
         self.vis_tab.filterUI_cb()
 
     def menu(self):
@@ -580,7 +580,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             view3D_menu = menubar.addMenu('&View')
             view3D_menu.triggered.connect(self.view3D_cb)
 
-            vis3D_filterUI_act = view3D_menu.addAction("3D Filters", self.filterUI_cb)
+            vis3D_filterUI_act = view3D_menu.addAction("Plot options", self.filterUI_cb)
 
             # axes_act = view3D_menu.addAction("Axes")
             # axes_act.setCheckable(True)
@@ -591,29 +591,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 view_menu = menubar.addMenu('&View')
                 view_menu.triggered.connect(self.view2D_cb)
 
-                item = view_menu.addAction("1:1 aspect")
-                item.setCheckable(True)
-                item.setChecked(True)
+                vis2D_filterUI_act = view_menu.addAction("Plot options", self.filterUI_cb)
 
-                # self.view_shading = view_menu.addAction("toggle shading", self.toggle_2D_shading_cb, QtGui.QKeySequence('Ctrl+g'))
-                # self.view_shading.setEnabled(False)
-                item = view_menu.addAction("smooth shading")
-                item.setCheckable(True)
-                item.setChecked(False)
-
-                # view_menu.addAction("toggle voxel grid", self.toggle_2D_voxel_grid_cb)
-                # view_menu.addAction("toggle mech grid", self.toggle_2D_mech_grid_cb)
-                # if not self.nanohub_flag:
-                #     view_menu.addSeparator()
-                #     view_menu.addAction("Select output dir", self.select_plot_output_cb)
-                # self.vis_tab.view_menu = view_menu
-                item = view_menu.addAction("voxel grid")
-                item.setCheckable(True)
-                item.setChecked(False)
-
-                item = view_menu.addAction("mechanics grid")
-                item.setCheckable(True)
-                item.setChecked(False)
 
 
         help_menu = menubar.addMenu('&Help')
@@ -1140,7 +1119,7 @@ def main():
 
         parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
-        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
@@ -1164,9 +1143,9 @@ def main():
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
-        # if args.rules:
-        #     logging.debug(f'studio.py: Show Rules tab')
-        #     rules_flag = True
+        if args.rules:
+            logging.debug(f'studio.py: Show Rules tab')
+            rules_flag = True
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
@@ -1254,7 +1233,14 @@ def main():
     # studio_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
 
-    rules_flag = False
+    # rules_flag = False
+    if rules_flag:
+        try:
+            from rules_tab import Rules
+        except:
+            rules_flag = False
+            print("Warning: Rules module not found.\n")
+
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)

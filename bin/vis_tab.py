@@ -93,7 +93,12 @@ class Vis(VisBase, QWidget):
         self.timer.timeout.connect(self.play_plot_cb)
 
         self.fix_cmap_flag = False
-        self.cells_edge_checked_flag = True
+        # self.cells_edge_checked_flag = True
+        self.cell_edge = True
+        self.cell_fill = True
+        self.cell_line_width = 0.5
+        self.cell_line_width2 = 0.8
+        self.cell_alpha = 0.5
 
         self.num_contours = 50
         self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
@@ -235,6 +240,14 @@ class Vis(VisBase, QWidget):
         self.canvas = None
         self.create_figure()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
+
+    #--------------------------------------
+    # def aspect_11_cb(self,bval):
+    #     print("vis_tab: aspect_11_cb()  self.aspect_11_checkbox.isChecked()= ",self.aspect_11_checkbox.isChecked())
+    #     # self.vis_tab.aspect_11_cb(self.aspect_11_checkbox.isChecked())
+    #     # self.view_aspect_square = bval
+    #     self.view_aspect_toggle_cb(bval)
+
 
     #--------------------------------------
     # Dependent on 2D/3D
@@ -571,13 +584,17 @@ class Vis(VisBase, QWidget):
 
         self.ax0.set_facecolor(self.bgcolor)
 
-        if (self.cells_edge_checked_flag):
-            try:
-                self.circles(xvals,yvals, s=rvals, color=rgbas,  edgecolor='black', linewidth=0.5)
-            except (ValueError):
-                pass
-        else:
-            self.circles(xvals,yvals, s=rvals, color=rgbas )
+        if (self.cell_fill):
+            if (self.cell_edge):
+                try:
+                    self.circles(xvals,yvals, s=rvals, color=rgbas,  edgecolor='black', linewidth=self.cell_line_width)
+                except (ValueError):
+                    pass
+            else:
+                self.circles(xvals,yvals, s=rvals, color=rgbas )
+        else:  # transparent cells, but with (thicker) edges
+            self.circles(xvals,yvals, s=rvals, color=(1,1,1,0),  edgecolor=rgbas, linewidth=self.cell_line_width2) 
+
 
         if self.view_aspect_square:
             self.ax0.set_aspect('equal')
@@ -726,14 +743,24 @@ class Vis(VisBase, QWidget):
         axes_min = mcds.get_mesh()[0][0][0][0]
         axes_max = mcds.get_mesh()[0][0][-1][0]
 
-        if (self.cells_edge_checked_flag):
-            try:
-                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=0.5, cmap=cbar_name, vmin=vmin, vmax=vmax)
-            except (ValueError):
-                print("\n------ ERROR: Exception from circles with edges\n")
-                pass
-        else:
-            cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name)
+        if (self.cell_fill):
+            if (self.cell_edge):
+                try:
+                    cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=self.cell_line_width, cmap=cbar_name, vmin=vmin, vmax=vmax)
+                    # cell_plot = self.circles(xvals,yvals, s=cell_radii, edgecolor=cell_scalar, linewidth=0.5, cmap=cbar_name, vmin=vmin, vmax=vmax)
+                except (ValueError):
+                    print("\n------ ERROR: Exception from circles with edges\n")
+                    pass
+            else:
+                # cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name)
+                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
+
+        else:  # semi-trransparent cell, but with (thicker) edge  (TODO: how to make totally transparent?)
+            if (self.cell_edge):
+                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=self.cell_line_width2, cmap=cbar_name, vmin=vmin, vmax=vmax, alpha=self.cell_alpha)
+            else:
+                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax, alpha=self.cell_alpha)
+
 
         # print("------- plot_cell_scalar() -------------")
         num_axes =  len(self.figure.axes)
