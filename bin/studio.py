@@ -77,7 +77,7 @@ def quit_cb():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if model3D_flag:
             try:
@@ -85,8 +85,12 @@ class PhysiCellXMLCreator(QWidget):
             except:
                 print("\nError: Unable to `import vtk` for 3D visualization. \nYou can try to do `pip install vtk` from the command line and then and re-run the Studio, or run the Studio without the 3D visualization argument and settle for 2D vis.\n")
                 sys.exit(-1)
-
             from vis3D_tab import Vis 
+
+            # if tensor3D_flag:
+            #     try:
+            #         if tensor3D_flag:
+            #     except:
         else:
             from vis_tab import Vis 
 
@@ -95,6 +99,7 @@ class PhysiCellXMLCreator(QWidget):
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
         self.model3D_flag = model3D_flag 
+        self.tensor_flag = tensor_flag 
         self.nanohub_flag = nanohub_flag 
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
@@ -331,7 +336,7 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.run_tab,"Run")
 
             # config_tab needed for 3D domain boundary outline
-            self.vis_tab = Vis(self.nanohub_flag, self.config_tab, self.run_tab, self.model3D_flag)
+            self.vis_tab = Vis(self.nanohub_flag, self.config_tab, self.run_tab, self.model3D_flag, self.tensor_flag)
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.config_tab.vis_tab = self.vis_tab
@@ -624,9 +629,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
         self.user_params_tab.xml_root = self.xml_root
-        if self.rules_flag:
-            self.rules_tab.xml_root = self.xml_root
-            self.rules_tab.fill_gui()
 
         self.config_tab.fill_gui()
         if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
@@ -645,6 +647,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
 
         self.celldef_tab.fill_celltypes_comboboxes()
+
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.fill_gui()   # do *after* populate_cell_defs() 
 
         if self.studio_flag:
             self.ics_tab.reset_info()
@@ -765,6 +771,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_as_cb(): Error: Please finish the definition before saving.")
 
+
     def save_cb(self):
         self.celldef_tab.check_valid_cell_defs()
 
@@ -794,6 +801,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
+
 
     def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
@@ -1113,15 +1121,17 @@ def main():
     config_file = None
     studio_flag = True
     model3D_flag = False
+    tensor_flag = False
     rules_flag = False
     skip_validate_flag = False
     nanohub_flag = False
     is_movable_flag = False
     try:
-        parser = argparse.ArgumentParser(description='PhysiCell Model Builder (and optional Studio).')
+        parser = argparse.ArgumentParser(description='PhysiCell Studio.')
 
         parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
+        parser.add_argument("-t", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
         parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
@@ -1141,6 +1151,9 @@ def main():
             logging.debug(f'studio.py: Assume a 3D model')
             model3D_flag = True
             # print("done with args.three")
+        if args.tensor:
+            logging.debug(f'studio.py: Assume tensors (e.g., ellipsoid 3D cells)')
+            tensor_flag = True
         if args.bare:
             logging.debug(f'studio.py: bare model editing, no ICs,Run,Plot tabs')
             studio_flag = False
@@ -1244,7 +1257,7 @@ def main():
             rules_flag = False
             print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, exec_file, nanohub_flag, is_movable_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)
     # print("width=",ex.size())
