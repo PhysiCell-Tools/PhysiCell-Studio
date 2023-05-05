@@ -304,7 +304,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, **kw):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -315,11 +315,12 @@ class VisBase():
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
+        self.tensor_flag = tensor_flag 
 
         if not self.model3D_flag:
-            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity','dead']  # check for discrete type scalar, ugh.
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
         else:
-            self.discrete_cell_scalars = ['cell_type', 'is_motile','current_death_model','dead','number_of_nuclei','polarity','dead']  # check for discrete type scalar, ugh.
+            self.discrete_cell_scalars = ['cell_type', 'is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
         self.mech_voxel_size = 30
@@ -2074,7 +2075,7 @@ class VisBase():
         # print("\n   post only custom data: ",self.cell_scalars_l)
 
         # then append some preferred scalar values, alphabetically
-        self.cell_scalars_l.extend(['cell_type','cycle_model','current_phase','damage','elapsed_time_in_phase','pressure'])
+        self.cell_scalars_l.extend(['cell_type','current_phase','cycle_model','damage','elapsed_time_in_phase','pressure'])
         # print("   post append typical: ",self.cell_scalars_l)
 
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)

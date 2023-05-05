@@ -1,6 +1,12 @@
 """
 vis3D_tab.py - provide 3D visualization on Plot tab. Still a work in progress. Requires vtk module (pip installable).
 
+    This module uses (Python-wrapped) VTK to perform visualization. If you want to contribute and are 
+    unfamiliar with VTK, just approach it as you would any library - read intro docs, find some simple tutorials, 
+    and build up your knowledge. In a nutshell, it uses pipelines: data -> filter -> mapper -> actor -> vis.
+    The Python API makes things much easier than C++. Also, reach out to the vast VTK community on discourse.
+    
+
 Authors:
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
@@ -21,7 +27,7 @@ from vtk import *
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel
+from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel,QMessageBox
 
 import numpy as np
 import scipy.io
@@ -30,19 +36,19 @@ from pyMCDS import pyMCDS
 #----------------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag):
-        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab,  config_tab=config_tab, model3D_flag=model3D_flag)
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag):
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab,  config_tab=config_tab, model3D_flag=model3D_flag, tensor_flag=tensor_flag)
 
         self.figure = None
 
-        self.model3D_flag = model3D_flag
+        # self.model3D_flag = model3D_flag
 
         self.voxel_size = None
 
         self.plot_cells_svg = False  # used for PhysiBoSS checkbox
 
         # self.config_tab = None
-        self.run_tab = run_tab
+        # self.run_tab = run_tab
 
         self.population_plot = None
         self.celltype_name = []
@@ -130,15 +136,26 @@ class Vis(VisBase, QWidget):
         #-------------
         self.points = vtkPoints()
 
-        self.radii = vtkFloatArray()
-        self.radii.SetName("radius")
+        if not self.tensor_flag:
+            self.radii = vtkFloatArray()
+            self.radii.SetName("radius")
+        else:
+            self.tensors = vtkFloatArray()
+            self.tensors.SetNumberOfComponents(9)
+            # self.tensors.SetNumberOfTuples(2)
+            # tensors.InsertTuple9(0,  1,0,0,  0,1,0,  0,0,1)
+            # tensors.InsertTuple9(1,  1,0,0,  0,2,0,  0,0,3)
+
 
         # define the colors for the spheres
         self.tags = vtkFloatArray()
         self.tags.SetName("tag")
 
         self.cell_data = vtkFloatArray()
-        self.cell_data.SetNumberOfComponents(2)  # (radius, tag)
+        if not self.tensor_flag:
+            self.cell_data.SetNumberOfComponents(2)  # (radius, tag)
+        else:
+            self.cell_data.SetNumberOfComponents(1)  # (tag)
         self.cell_data.SetName("cell_data")
 
         # construct the unstruct "grid" to contain the cell info
@@ -146,6 +163,8 @@ class Vis(VisBase, QWidget):
         self.ugrid.SetPoints(self.points)
         self.ugrid.GetPointData().AddArray(self.cell_data)
         self.ugrid.GetPointData().SetActiveScalars("cell_data")
+        if self.tensor_flag:
+            self.ugrid.GetPointData().SetTensors(self.tensors)
 
         self.ugrid_clipped = None
 
@@ -158,16 +177,30 @@ class Vis(VisBase, QWidget):
         self.extract_cells_YZ = vtkExtractPoints()
         self.extract_cells_XZ = vtkExtractPoints()
 
-        self.glyph = vtkGlyph3D()
+        if not self.tensor_flag:
+            self.glyph = vtkGlyph3D()
+            self.glyph.ClampingOff()
+            self.glyph.SetScaleModeToScaleByScalar()
+            self.glyph.SetColorModeToColorByScalar()
+        else:
+            self.glyph = vtkTensorGlyph()
+            self.glyph.ColorGlyphsOn()
+            self.glyph.ThreeGlyphsOff()
+            # if you disable ExtractEigenvalues, the columns of the tensor are taken to be the major/minor axes.
+            self.glyph.ExtractEigenvaluesOff()
+
         self.glyph.SetSourceConnection(self.sphereSource.GetOutputPort())
         self.glyph.SetInputData(self.ugrid)
-        self.glyph.ClampingOff()
-        self.glyph.SetScaleModeToScaleByScalar()
         self.glyph.SetScaleFactor(1.0)
-        self.glyph.SetColorModeToColorByScalar()
 
         self.cells_mapper = vtkPolyDataMapper()
-        self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
+        if not self.tensor_flag:
+            self.cells_mapper.SetInputConnection(self.glyph.GetOutputPort())
+        else:
+            self.normals = vtkPolyDataNormals()
+            self.normals.SetInputConnection(self.glyph.GetOutputPort())
+            self.cells_mapper.SetInputConnection(self.normals.GetOutputPort())
+
         # self.cells_mapper.ScalarVisibilityOff()
         self.cells_mapper.ScalarVisibilityOn()
         self.cells_mapper.SetLookupTable(self.lut_cells)
@@ -1470,7 +1503,11 @@ class Vis(VisBase, QWidget):
             # update VTK pipeline
             self.points.Reset()
             # self.cellID.Reset()
-            self.radii.Reset()
+            if not self.tensor_flag:
+                self.radii.Reset()
+            else:
+                self.tensors.Reset()
+
             self.cell_data.Reset()
             self.tags.Reset()
             # self.colors.Reset()
@@ -1483,41 +1520,103 @@ class Vis(VisBase, QWidget):
 
             self.cell_scalar_min = 1.e9
             self.cell_scalar_max = -self.cell_scalar_min
-            for idx in range(ncells):
-                x= mcds.data['discrete_cells']['data']['position_x'][idx]
-                y= mcds.data['discrete_cells']['data']['position_y'][idx]
-                z= mcds.data['discrete_cells']['data']['position_z'][idx]
-                # id = mcds.data['discrete_cells']['data']['cell_type'][idx]
-                id_type = mcds.data['discrete_cells']['data']['cell_type'][idx]
-                self.points.InsertNextPoint(x, y, z)
-                total_volume = mcds.data['discrete_cells']['data']['total_volume'][idx]
 
-                rval = (total_volume * 0.2387) ** 0.333333
-                # print(idx,") total_volume= ", total_volume, ", rval=",rval )
-                # self.cellID.InsertNextValue(id)
-                self.radii.InsertNextValue(rval)
-                # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; jet/heatmap across all cells
+            try:
+                xval = mcds.data['discrete_cells']['data']['position_x']
+                yval = mcds.data['discrete_cells']['data']['position_y']
+                zval = mcds.data['discrete_cells']['data']['position_z']
+                total_vol = mcds.data['discrete_cells']['data']['total_volume']
+                # cid = mcds.data['discrete_cells']['data']['ID']
+            except:
+                print("vis3D_tab: Error: trying to access position_x,_y,_z, or total_volume vectors.")
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Error: Unable to access position_x,_y,_z, or total_volume vectors.")
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                sys.exit(1)
 
-                # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
-                # print("idx, cell_type[idx]= ",idx,cell_type[idx])
-                # self.tags.InsertNextValue(cell_type[idx])
-                sval = cell_scalar_val[idx]
-                if sval < self.cell_scalar_min:
-                    self.cell_scalar_min = sval
-                if sval > self.cell_scalar_max:
-                    self.cell_scalar_max = sval
-                self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
+            if not self.tensor_flag:   # typical spheres
+                # self.points.SetNumberOfTuples(ncells)   # faster?
+                for idx in range(ncells):
+                    # x= mcds.data['discrete_cells']['data']['position_x'][idx]
+                    # y= mcds.data['discrete_cells']['data']['position_y'][idx]
+                    # z= mcds.data['discrete_cells']['data']['position_z'][idx]
+                    x = xval[idx]
+                    y = yval[idx]
+                    z = zval[idx]
+                    # id = mcds.data['discrete_cells']['data']['cell_type'][idx]
+                    # id_type = mcds.data['discrete_cells']['data']['cell_type'][idx]
+                    self.points.InsertNextPoint(x, y, z)
+                    # self.points.InsertPoint(idx, x, y, z)  # faster?
+                    # total_volume = mcds.data['discrete_cells']['data']['total_volume'][idx]
+                    total_volume = total_vol[idx]
 
-            self.cell_data.CopyComponent(0, self.radii, 0)
-            self.cell_data.CopyComponent(1, self.tags, 0)
-            # self.ugrid.SetPoints(self.points)
-            # self.ugrid.GetPointData().AddArray(self.cell_data)
-            # self.ugrid.GetPointData().SetActiveScalars("cell_data")
+                    rval = (total_volume * 0.2387) ** 0.333333
+                    # print(idx,") total_volume= ", total_volume, ", rval=",rval )
+                    # self.cellID.InsertNextValue(id)
+                    self.radii.InsertNextValue(rval)   # probably faster ways to do this; alloc/fill full array 
+                    # self.tags.InsertNextValue(float(idx)/ncells)   # multicolored; jet/heatmap across all cells
 
-            # self.polydata.SetPoints(self.points)
-            # self.polydata.GetPointData().SetScalars(self.cellVolume)
-            # # self.polydata.GetPointData().SetScalars(self.cellID)
-            # # self.polydata.GetPointData().SetScalars(self.colors)
+                    # self.tags.InsertNextValue(1.0 - cell_type[idx])   # hacky 2-colors based on colormap
+                    # print("idx, cell_type[idx]= ",idx,cell_type[idx])
+                    # self.tags.InsertNextValue(cell_type[idx])
+                    sval = cell_scalar_val[idx]
+                    if sval < self.cell_scalar_min:
+                        self.cell_scalar_min = sval
+                    if sval > self.cell_scalar_max:
+                        self.cell_scalar_max = sval
+                    self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
+
+                self.cell_data.CopyComponent(0, self.radii, 0)
+                self.cell_data.CopyComponent(1, self.tags, 0)
+                # self.ugrid.SetPoints(self.points)
+                # self.ugrid.GetPointData().AddArray(self.cell_data)
+                # self.ugrid.GetPointData().SetActiveScalars("cell_data")
+
+            else:   # ellipsoids
+                self.tensors.SetNumberOfTuples(ncells)
+                try:
+                    axis_a = mcds.get_cell_df()['axis_a']  # these are req'd in <custom_data>
+                    axis_b = mcds.get_cell_df()['axis_b']
+                    axis_c = mcds.get_cell_df()['axis_c']
+                except:
+                    print("vis3D_tab: Error: trying to access axis_a,axis_b,axis_c custom data vars.")
+                    msgBox = QMessageBox()
+                    msgBox.setIcon(QMessageBox.Information)
+                    msgBox.setText("Error: Unable to access axis_a (_b,_c) as custom data. Perhaps you are trying to run the Studio with --tensor, but there are no tensors saved by the model.")
+                    msgBox.setStandardButtons(QMessageBox.Ok)
+                    msgBox.exec()
+                    sys.exit(1)
+
+                for idx in range(ncells):
+                    x = xval[idx]
+                    y = yval[idx]
+                    z = zval[idx]
+                    # x= mcds.data['discrete_cells']['data']['position_x'][idx]
+                    # y= mcds.data['discrete_cells']['data']['position_y'][idx]
+                    # z= mcds.data['discrete_cells']['data']['position_z'][idx]
+                    # id_type = mcds.data['discrete_cells']['data']['cell_type'][idx]
+                    # cell_id = mcds.data['discrete_cells']['data']['ID'][idx]
+                    # self.points.InsertNextPoint(x, y, z)
+                    self.points.InsertNextPoint(xval[idx], yval[idx], zval[idx])
+
+                    total_volume = mcds.data['discrete_cells']['data']['total_volume'][idx]
+                    rval = (total_volume * 0.2387) ** 0.333333
+
+                    # self.tensors.InsertTuple9(idx,  axis_a[idx]*rval,0,0,  0,axis_b[idx]*rval,0,  0,0,axis_c[idx]*rval) 
+                    self.tensors.InsertTuple9(idx,  axis_a[idx],0,0,  0,axis_b[idx],0,  0,0,axis_c[idx]) 
+                    # print(f"cell_id={cell_id}, cell_type={id_type}, volume={total_volume}, rval={rval},axis_a={axis_a[idx]},axis_b={axis_b[idx]},axis_c={axis_c[idx]}")
+
+                    sval = cell_scalar_val[idx]
+                    if sval < self.cell_scalar_min:
+                        self.cell_scalar_min = sval
+                    if sval > self.cell_scalar_max:
+                        self.cell_scalar_max = sval
+                    self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
+
+                self.cell_data.CopyComponent(0, self.tags, 0)
+
 
             cellID_color_dict = {}
             # for idx in range(ncells):
@@ -1542,11 +1641,12 @@ class Vis(VisBase, QWidget):
 
             # self.glyph.SetScaleModeToDataScalingOn()
 
-            # self.glyph.SetScaleModeToScaleByVector ()
-            self.glyph.SetScaleModeToScaleByScalar ()
-            # self.glyph.SetColorModeToColorByVector ()
-            # print("glyph range= ",self.glyph.GetRange())
-            # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
+            if not self.tensor_flag:   # typical spheres
+                # self.glyph.SetScaleModeToScaleByVector ()
+                self.glyph.SetScaleModeToScaleByScalar ()
+                # self.glyph.SetColorModeToColorByVector ()
+                # print("glyph range= ",self.glyph.GetRange())
+                # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
             # self.cells_mapper.SetScalarRange(0,num_cell_types)
             if self.fix_cells_cmap_checkbox.isChecked():
