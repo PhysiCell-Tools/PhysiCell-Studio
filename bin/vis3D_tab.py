@@ -59,6 +59,8 @@ class Vis(VisBase, QWidget):
         self.cell_scalar_min = 0.0
         self.cell_scalar_max = 1.0
 
+        self.boundary_checked_flag = True
+
         self.axes_actor = None
         self.show_xy_slice = True
         self.show_yz_slice = True
@@ -654,6 +656,16 @@ class Vis(VisBase, QWidget):
             self.ren.RemoveActor(self.axes_actor)
         self.vtkWidget.GetRenderWindow().Render()
 
+
+    def boundary_toggle_cb(self,flag):
+        self.show_boundary = flag
+        if flag:
+            self.ren.AddActor(self.domain_boundary_actor)
+        else:
+            self.ren.RemoveActor(self.domain_boundary_actor)
+        self.vtkWidget.GetRenderWindow().Render()
+
+
     def sphere_res_cb(self,res_ival):
         # print("----- sphere_res_cb: res=",res_ival)
         self.sphere_res = res_ival
@@ -1128,7 +1140,8 @@ class Vis(VisBase, QWidget):
         self.text_widget.SelectableOff()
         self.text_widget.On()
 
-        self.ren.AddActor(self.domain_boundary_actor)
+        if self.boundary_checked_flag:
+            self.ren.AddActor(self.domain_boundary_actor)
 
         self.ren.ResetCamera()
         # self.frame.setLayout(self.vl)
@@ -1428,8 +1441,11 @@ class Vis(VisBase, QWidget):
         self.title_str = 'time '+ str(current_time) + ' min'
         # self.text_title_actor.SetInput(self.title_str)
 
-        # self.ren.RemoveActor(self.domain_boundary_actor)
-        # self.ren.AddActor(self.domain_boundary_actor)
+        if self.boundary_checked_flag:
+            self.ren.RemoveActor(self.domain_boundary_actor)
+            self.ren.AddActor(self.domain_boundary_actor)
+        else:
+            self.ren.RemoveActor(self.domain_boundary_actor)
 
         #-----------
         if self.cells_checked_flag:
