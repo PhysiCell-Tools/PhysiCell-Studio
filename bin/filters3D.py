@@ -75,47 +75,47 @@ class FilterUI3DWindow(QWidget):
         self.xy_slice_checkbox.setChecked(self.xy_slice_flag)
         self.xy_slice_checkbox.clicked.connect(self.xy_slice_cb)
         idx_row += 1
-        glayout.addWidget(self.xy_slice_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xy_slice_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.xy_slice_w = QLineEdit()
         self.xy_slice_w.setValidator(QtGui.QDoubleValidator())
         # val.textChanged[str].connect(self.xy_slice_val_cb)
         self.xy_slice_w.returnPressed.connect(self.xy_slice_val_cb)
         self.xy_slice_w.setText(str(self.xy_slice_value))
-        glayout.addWidget(self.xy_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xy_slice_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
         self.yz_slice_checkbox = QCheckBox_custom('YZ slice:  X= ')
         self.yz_slice_checkbox.setChecked(self.yz_slice_flag)
         self.yz_slice_checkbox.clicked.connect(self.yz_slice_cb)
         idx_row += 1
-        glayout.addWidget(self.yz_slice_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.yz_slice_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.yz_slice_w = QLineEdit()
         self.yz_slice_w.setValidator(QtGui.QDoubleValidator())
         self.yz_slice_w.returnPressed.connect(self.yz_slice_val_cb)
         self.yz_slice_w.setText(str(self.yz_slice_value))
-        glayout.addWidget(self.yz_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.yz_slice_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
         self.xz_slice_checkbox = QCheckBox_custom('XZ slice:  Y= ')
         self.xz_slice_checkbox.setChecked(self.xz_slice_flag)
         self.xz_slice_checkbox.clicked.connect(self.xz_slice_cb)
         idx_row += 1
-        glayout.addWidget(self.xz_slice_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xz_slice_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.xz_slice_w = QLineEdit()
         self.xz_slice_w.setValidator(QtGui.QDoubleValidator())
         self.xz_slice_w.returnPressed.connect(self.xz_slice_val_cb)
         self.xz_slice_w.setText(str(self.xz_slice_value))
-        glayout.addWidget(self.xz_slice_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xz_slice_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #------
         self.voxels_checkbox = QCheckBox_custom('All voxels')
         self.voxels_checkbox.setChecked(self.voxels_flag)
         self.voxels_checkbox.clicked.connect(self.voxels_cb)
         idx_row += 1
-        glayout.addWidget(self.voxels_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
+        # glayout.addWidget(self.voxels_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
         # voxels_act = view3D_menu.addAction("All voxels")
         # voxels_act.setChecked(False)
 
@@ -130,54 +130,54 @@ class FilterUI3DWindow(QWidget):
         self.xy_clip_checkbox.setChecked(self.xy_clip_flag)
         self.xy_clip_checkbox.clicked.connect(self.xy_clip_cb)
         idx_row += 1
-        glayout.addWidget(self.xy_clip_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xy_clip_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.xy_clip_w = QLineEdit()
         self.xy_clip_w.setValidator(QtGui.QDoubleValidator())
         self.xy_clip_w.returnPressed.connect(self.xy_clip_val_cb)
         self.xy_clip_w.setText('0.0')
-        glayout.addWidget(self.xy_clip_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xy_clip_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         self.xy_flip_checkbox = QCheckBox_custom('flip')
         self.xy_flip_checkbox.setChecked(self.xy_flip_flag)
         self.xy_flip_checkbox.clicked.connect(self.xy_flip_cb)
-        glayout.addWidget(self.xy_flip_checkbox, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xy_flip_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
         self.yz_clip_checkbox = QCheckBox_custom('YZ clip:  X=')
         self.yz_clip_checkbox.setChecked(self.yz_clip_flag)
         self.yz_clip_checkbox.clicked.connect(self.yz_clip_cb)
         idx_row += 1
-        glayout.addWidget(self.yz_clip_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.yz_clip_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.yz_clip_w = QLineEdit()
         self.yz_clip_w.setValidator(QtGui.QDoubleValidator())
         self.yz_clip_w.returnPressed.connect(self.yz_clip_val_cb)
         self.yz_clip_w.setText('0.0')
-        glayout.addWidget(self.yz_clip_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.yz_clip_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         self.yz_flip_checkbox = QCheckBox_custom('flip')
         self.yz_flip_checkbox.setChecked(self.yz_flip_flag)
         self.yz_flip_checkbox.clicked.connect(self.yz_flip_cb)
-        glayout.addWidget(self.yz_flip_checkbox, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.yz_flip_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
         self.xz_clip_checkbox = QCheckBox_custom('XZ clip:  Y=')
         self.xz_clip_checkbox.setChecked(self.xz_clip_flag)
         self.xz_clip_checkbox.clicked.connect(self.xz_clip_cb)
         idx_row += 1
-        glayout.addWidget(self.xz_clip_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xz_clip_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.xz_clip_w = QLineEdit()
         self.xz_clip_w.setValidator(QtGui.QDoubleValidator())
         self.xz_clip_w.returnPressed.connect(self.xz_clip_val_cb)
         self.xz_clip_w.setText('0.0')
-        glayout.addWidget(self.xz_clip_w, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xz_clip_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         self.xz_flip_checkbox = QCheckBox_custom('flip')
         self.xz_flip_checkbox.setChecked(self.xz_flip_flag)
         self.xz_flip_checkbox.clicked.connect(self.xz_flip_cb)
-        glayout.addWidget(self.xz_flip_checkbox, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.xz_flip_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #------
         idx_row += 1
@@ -189,16 +189,23 @@ class FilterUI3DWindow(QWidget):
         idx_row += 1
         glayout.addWidget(self.axes_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
+        self.boundary_checkbox = QCheckBox_custom('BBox')
+        self.boundary_checkbox.setChecked(self.boundary_flag)
+        self.boundary_checkbox.clicked.connect(self.boundary_cb)
+        glayout.addWidget(self.boundary_checkbox, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
+
+        #------
         hbox = QHBoxLayout()
-        hbox.addWidget(QLabel("Sphere res(3-20):"))
+        hbox.addWidget(QLabel("Sphere res(3-42):"))
 
         self.sphere_res_w = QLineEdit()
-        self.sphere_res_w.setValidator(QtGui.QIntValidator(3,20))
+        self.sphere_res_w.setValidator(QtGui.QIntValidator(3,42))
         self.sphere_res_w.returnPressed.connect(self.sphere_res_cb)
         self.sphere_res_w.setText('8')   # match what's defined in vis3D_tab
         hbox.addWidget(self.sphere_res_w)
-        glayout.addLayout(hbox, idx_row,2,1,2) # w, row, column, rowspan, colspan
+        idx_row += 1
+        glayout.addLayout(hbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
 
         #-----------
         idx_row += 1
@@ -260,6 +267,7 @@ class FilterUI3DWindow(QWidget):
         self.yz_flip_flag = False
 
         self.axes_flag = False
+        self.boundary_flag = True
 
     #--------
     def xy_slice_cb(self):
@@ -363,6 +371,8 @@ class FilterUI3DWindow(QWidget):
     def axes_cb(self):
         # print("vis_base: axes_cb(): self.axes_checkbox.isChecked()= ",self.axes_checkbox.isChecked())
         self.vis_tab.axes_toggle_cb(self.axes_checkbox.isChecked())
+    def boundary_cb(self):
+        self.vis_tab.boundary_toggle_cb(self.boundary_checkbox.isChecked())
     #----------
     def sphere_res_cb(self):
         text = self.sphere_res_w.text()

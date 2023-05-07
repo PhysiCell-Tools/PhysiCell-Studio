@@ -59,10 +59,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag):
         # super().__init__()
         # super(Vis,self).__init__(a=a,b=b,c=c)
-        super(Vis,self).__init__(nanohub_flag=nanohub_flag, config_tab=config_tab, run_tab=run_tab, model3D_flag=model3D_flag)
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, config_tab=config_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag)
         # self.d=d
         # super().__init__(nanohub_flag, run_tab, model3D_flag)
         # global self.config_params
@@ -70,18 +70,19 @@ class Vis(VisBase, QWidget):
         self.figure = None
 
         # self.vis2D = True
-        self.model3D_flag = model3D_flag
+        # self.model3D_flag = model3D_flag
+        # self.tensor_flag = tensor_flag
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
         self.mech_voxel_size = 30
 
-        self.nanohub_flag = nanohub_flag
-        self.run_tab = run_tab
+        # self.nanohub_flag = nanohub_flag
+        # self.run_tab = run_tab
         # self.legend_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
-        self.population_plot = None
+        # self.population_plot = None
         self.celltype_name = []
         self.celltype_color = []
 
