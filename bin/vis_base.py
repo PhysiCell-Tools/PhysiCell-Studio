@@ -1309,6 +1309,7 @@ class VisBase():
         else:
             if not self.cell_scalars_filled: 
                 # self.add_default_cell_vars()   # rwh: just do once? 
+                # print("\nvis_base:---------cells_svg_mat_cb(self):  calling add_partial_cell_vars()")
                 self.add_partial_cell_vars()   # rwh: just do once? 
                 self.cell_scalars_filled = True
 
@@ -2039,7 +2040,7 @@ class VisBase():
 
 
     def add_partial_cell_vars(self):
-        # print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
+        print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
 
         xml_file_root = "output%08d.xml" % 0
         xml_file = os.path.join(self.output_dir, xml_file_root)
@@ -2082,6 +2083,7 @@ class VisBase():
         self.cell_scalar_combobox.insertSeparator(idx)
 
         self.disable_cell_scalar_cb = False
+        # print("\n-------  vis_base:  add_partial_cell_vars():   calling update_plots()")
         self.update_plots()
 
 

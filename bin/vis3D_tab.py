@@ -20,6 +20,7 @@ import random
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
 import glob
+import inspect
 
 from vis_base import VisBase
 
@@ -66,6 +67,7 @@ class Vis(VisBase, QWidget):
         self.show_yz_slice = True
         self.show_xz_slice = True
         self.show_voxels = False
+        self.show_contour = False
         self.show_axes = False
         self.sphere_res = 8
 
@@ -86,24 +88,50 @@ class Vis(VisBase, QWidget):
         self.yz_clip_x0 = 0.
         self.xz_clip_y0 = 0.
 
+        self.contour_value = 1.0
+
         self.line_width = 3
 
         self.colors = vtkNamedColors()
 
         self.substrate_name = ""
-        self.lut_jet = self.get_jet_map(False)
-        self.lut_jet_r = self.get_jet_map(True)
+        # self.lut_jet = self.get_jet_map(False)
+        # self.lut_jet_r = self.get_jet_map(True)
 
-        self.lut_viridis = self.get_viridis_map(False)
-        self.lut_viridis_r = self.get_viridis_map(True)
+        # self.lut_viridis = self.get_viridis_map(False)
+        # self.lut_viridis_r = self.get_viridis_map(True)
 
-        self.lut_ylorrd = self.get_ylorrd_map(False)
-        self.lut_ylorrd_r = self.get_ylorrd_map(True)
-        # self.lut_substrate = self.get_jet_map()
+        # self.lut_ylorrd = self.get_ylorrd_map(False)
+        # self.lut_ylorrd_r = self.get_ylorrd_map(True)
+        # # self.lut_substrate = self.get_jet_map()
+
+        #------------
+        self.lut_substrate_jet = self.get_jet_map(False)
+        self.lut_substrate_jet_r = self.get_jet_map(True)
+
+        self.lut_substrate_viridis = self.get_viridis_map(False)
+        self.lut_substrate_viridis_r = self.get_viridis_map(True)
+
+        self.lut_substrate_ylorrd = self.get_ylorrd_map(False)
+        self.lut_substrate_ylorrd_r = self.get_ylorrd_map(True)
 
         # default
-        self.lut_substrate = self.lut_jet
-        self.lut_cells = self.lut_jet
+        self.lut_substrate = self.lut_substrate_jet
+
+        #------------
+        self.lut_cells = self.get_jet_map(False)
+        self.lut_cells_jet = self.get_jet_map(False)
+        self.lut_cells = self.lut_substrate_jet
+        self.lut_cells_jet_r = self.get_jet_map(True)
+
+        self.lut_cells_viridis = self.get_viridis_map(False)
+        self.lut_cells_viridis_r = self.get_viridis_map(True)
+
+        self.lut_cells_ylorrd = self.get_ylorrd_map(False)
+        self.lut_cells_ylorrd_r = self.get_ylorrd_map(True)
+
+        # default
+        self.lut_cells = self.lut_cells_jet
 
         # -------------  VTK pipeline  --------------
         #------  Setup for the cells (rendered as 3D glyphs (spheres))
@@ -290,6 +318,29 @@ class Vis(VisBase, QWidget):
 
         self.cutterXZActor = vtkActor()
         self.cutterXZActor.SetMapper(self.cutterXZMapper)
+
+        #-----
+        # for substrate isosurface (contour)
+        self.c2p = vtkCellDataToPointData()
+
+        self.contour = vtkContourFilter()
+        self.contour.SetInputData(self.c2p.GetOutput())
+        # self.contour.SetInputData(self.c2p.GetOutput())
+        # self.contour.SetValue(0, self.contour_value)
+
+        # self.contour_mapper = vtkDataSetMapper()
+        self.contour_mapper = vtkPolyDataMapper()
+        self.contour_mapper.SetInputConnection(self.contour.GetOutputPort())
+        self.contour_mapper.ScalarVisibilityOn()
+        self.contour_mapper.SetLookupTable(self.lut_substrate)
+        # self.contour_mapper.SetScalarModeToUseCellData()
+        self.contour_mapper.SetScalarModeToUsePointData()
+
+        self.contour_actor = vtkActor()
+        self.contour_actor.SetMapper(self.contour_mapper)
+
+        #-----
+        self.writer = vtkStructuredPointsWriter()
 
         #------------------------
         # for cells (glyphs) extraction/clipping/cropping (but leaving entire spherical glyph intact, not cut)
@@ -478,9 +529,9 @@ class Vis(VisBase, QWidget):
 
     #-------------------------------
     def disable_physiboss_info(self):
-        print("vis_tab: ------- disable_physiboss_info()")
+        print("vis3D_tab: ------- disable_physiboss_info()")
         if self.physiboss_vis_checkbox is not None:
-            print("vis_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
+            print("vis3D_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
             try:
                 self.physiboss_vis_checkbox.setChecked(False)
                 self.physiboss_vis_checkbox.setEnabled(False)
@@ -490,7 +541,7 @@ class Vis(VisBase, QWidget):
                 print("ERROR: Exception disabling physiboss widgets")
                 pass
         else:
-            print("vis_tab: ------- self.physiboss_vis_checkbox is None")
+            print("vis3D_tab: ------- self.physiboss_vis_checkbox is None")
 
     #---------------------------------------
     # Dependent on 2D/3D
@@ -498,6 +549,7 @@ class Vis(VisBase, QWidget):
         # self.ax0.cla()
         # if self.substrates_checked_flag:
         #     self.plot_substrate(self.current_frame)
+        # print("vis3D_tab: ------- update_plots() - just calling plot_cells3D()")
         self.plot_cells3D(self.current_frame)
         # if self.cells_checked_flag:
         #     self.plot_svg(self.current_frame)
@@ -558,6 +610,21 @@ class Vis(VisBase, QWidget):
     def xz_slice_value_cb(self,val):
         print("vis3D_tab: xz_slice_value_cb: val=",val)
         self.xz_slice_y0 = val
+        self.update_plots()
+
+    #--------
+    def contour_toggle_cb(self,flag):
+        self.show_contour = flag
+        # if flag:
+        #     self.ren.AddActor(self.contour_actor)
+        # else:
+        #     self.ren.RemoveActor(self.contour_actor)
+        # self.vtkWidget.GetRenderWindow().Render()
+        self.update_plots()
+
+    def contour_value_cb(self,val):
+        print("vis3D_tab: contour_value_cb: val=",val)
+        self.contour_value = val
         self.update_plots()
 
     #--------------------------------
@@ -673,8 +740,8 @@ class Vis(VisBase, QWidget):
         self.sphereSource.SetThetaResolution(self.sphere_res)
         self.update_plots()
 
-    def colorbar_combobox_changed_cb(self,idx):
-        self.update_plots()
+    # def colorbar_combobox_changed_cb(self,idx):
+    #     self.update_plots()
 
     def substrates_combobox_changed_cb(self,idx):
         # print("----- vis3D_tab.py: substrates_combobox_changed_cb: idx = ",idx)
@@ -693,18 +760,18 @@ class Vis(VisBase, QWidget):
 
         if cbar_name.find("_r") >= 0:   # reverse (inverted)
             if cbar_name.find("jet") >= 0:
-                self.lut_substrate = self.lut_jet_r
+                self.lut_substrate = self.lut_substrate_jet_r
             elif cbar_name.find("viridis") >= 0:
-                self.lut_substrate = self.lut_viridis_r
+                self.lut_substrate = self.lut_substrate_viridis_r
             elif cbar_name.find("YlOrRd") >= 0:
-                self.lut_substrate = self.lut_ylorrd_r
+                self.lut_substrate = self.lut_substrate_ylorrd_r
         else:
             if cbar_name.find("jet") >= 0:
-                self.lut_substrate = self.lut_jet
+                self.lut_substrate = self.lut_substrate_jet
             elif cbar_name.find("viridis") >= 0:
-                self.lut_substrate = self.lut_viridis
+                self.lut_substrate = self.lut_substrate_viridis
             elif cbar_name.find("YlOrRd") >= 0:
-                self.lut_substrate = self.lut_ylorrd
+                self.lut_substrate = self.lut_substrate_ylorrd
 
         self.update_plots()
 
@@ -775,8 +842,7 @@ class Vis(VisBase, QWidget):
             if smax > self.cell_scalar_max:
                 self.cell_scalar_max = smax
 
-        print("    min,max= ",self.cell_scalar_min,', ',self.cell_scalar_max)
-
+        print("cell_scalar_combobox_changed_cb():    min,max= ",self.cell_scalar_min,', ',self.cell_scalar_max)
         self.update_plots()
 
 
@@ -786,18 +852,18 @@ class Vis(VisBase, QWidget):
         # print("\n>vis3D: ---------------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
         if cbar_name.find("_r") >= 0:   # reversed map
             if cbar_name.find("jet") >= 0:
-                self.lut_cells = self.lut_jet_r
+                self.lut_cells = self.lut_cells_jet_r
             elif cbar_name.find("viridis") >= 0:
-                self.lut_cells = self.lut_viridis_r
+                self.lut_cells = self.lut_cells_viridis_r
             elif cbar_name.find("YlOrRd") >= 0:
-                self.lut_cells = self.lut_ylorrd_r
+                self.lut_cells = self.lut_cells_ylorrd_r
         else:
             if cbar_name.find("jet") >= 0:
-                self.lut_cells = self.lut_jet
+                self.lut_cells = self.lut_cells_jet
             elif cbar_name.find("viridis") >= 0:
-                self.lut_cells = self.lut_viridis
+                self.lut_cells = self.lut_cells_viridis
             elif cbar_name.find("YlOrRd") >= 0:
-                self.lut_cells = self.lut_ylorrd
+                self.lut_cells = self.lut_cells_ylorrd
 
         self.update_plots()
 
@@ -1500,6 +1566,7 @@ class Vis(VisBase, QWidget):
 
             # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
             if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
+                # print("------------- plot_cells3D: have discrete cell scalars")
                 unique_cell_type = np.unique(cell_scalar_val)
                 self.num_discrete_cell_val = len(unique_cell_type)
                 # print("\nunique_cell_type = ",unique_cell_type )
@@ -1511,6 +1578,7 @@ class Vis(VisBase, QWidget):
                     self.cells_mapper.SetLookupTable(self.lut_discrete)
             else:
                 # self.cells_mapper.SetLookupTable(self.lut_viridis)
+                # print("------------- plot_cells3D: have continuous (non-discrete) cell scalars. lut_cells=",self.lut_cells)
                 self.cells_mapper.SetLookupTable(self.lut_cells)
 
             #------------
@@ -1582,7 +1650,8 @@ class Vis(VisBase, QWidget):
                         self.cell_scalar_min = sval
                     if sval > self.cell_scalar_max:
                         self.cell_scalar_max = sval
-                    self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
+                    # self.tags.InsertNextValue(cell_scalar_val[idx])  # analogous to "plot_cell_scalar" in 2D plotting
+                    self.tags.InsertNextValue(sval)  # analogous to "plot_cell_scalar" in 2D plotting
 
                 self.cell_data.CopyComponent(0, self.radii, 0)
                 self.cell_data.CopyComponent(1, self.tags, 0)
@@ -1590,7 +1659,7 @@ class Vis(VisBase, QWidget):
                 # self.ugrid.GetPointData().AddArray(self.cell_data)
                 # self.ugrid.GetPointData().SetActiveScalars("cell_data")
 
-            else:   # ellipsoids
+            else:   # ellipsoids  ----------------------------------------
                 self.tensors.SetNumberOfTuples(ncells)
                 try:
                     axis_a = mcds.get_cell_df()['axis_a']  # these are req'd in <custom_data>
@@ -1669,10 +1738,11 @@ class Vis(VisBase, QWidget):
                 self.cells_mapper.SetScalarRange(self.cells_cmin_value, self.cells_cmax_value)
             else:
                 self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
-            # print("--- set cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
+            # print(inspect.stack()[0][3],"--- cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
             # self.glyph.SetRange(0.0, 0.11445075055913652)
             # self.glyph.SetScaleFactor(3.0)
 
+            # print("self.cells_mapper.GetLookupTable()= ",self.cells_mapper.GetLookupTable())
             self.scalar_bar_cells.SetLookupTable(self.cells_mapper.GetLookupTable())
 
             # glyph.ScalingOn()
@@ -1888,17 +1958,17 @@ class Vis(VisBase, QWidget):
             # else:
             #     self.ren.RemoveActor2D(self.scalar_bar_substrate)
 
-            if self.show_voxels:
-                self.ren.RemoveActor(self.substrate_actor)
+            # if self.show_voxels:
+            #     self.ren.RemoveActor(self.substrate_actor)
 
-                # print("----- show_voxels: vmin,vmax= ",vmin,vmax)
-                self.substrate_mapper.SetScalarRange(vmin, vmax)
-                # self.substrate_mapper.SetScalarModeToUseCellData()
-                self.substrate_mapper.Update()
+            #     # print("----- show_voxels: vmin,vmax= ",vmin,vmax)
+            #     self.substrate_mapper.SetScalarRange(vmin, vmax)
+            #     # self.substrate_mapper.SetScalarModeToUseCellData()
+            #     self.substrate_mapper.Update()
 
-                # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
-                self.ren.AddActor(self.substrate_actor)
-                self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
+            #     # self.substrate_actor.GetProperty().SetRepresentationToWireframe()
+            #     self.ren.AddActor(self.substrate_actor)
+            #     self.scalar_bar_substrate.SetLookupTable(self.substrate_mapper.GetLookupTable())
 
 
             if self.show_xy_slice:
@@ -1995,6 +2065,40 @@ class Vis(VisBase, QWidget):
                 self.ren.AddActor(self.cutterXZActor)
                 self.scalar_bar_substrate.SetLookupTable(self.cutterXZMapper.GetLookupTable())
                 # self.ren.AddActor2D(self.scalar_bar_substrate)
+
+
+            if self.show_contour:
+                print("------- show_contour!")
+                self.c2p.SetInputData(self.substrate_data)  # contour filter *requires* point (not VTK cell) data
+                self.c2p.Update()
+
+                self.contour.SetInputData(self.c2p.GetOutput())
+                self.contour.SetValue(0, self.contour_value)
+                self.contour.Update()
+
+                self.contour_mapper.SetInputConnection(self.contour.GetOutputPort())
+                self.contour_mapper.SetScalarRange(vmin, vmax)
+                self.contour_mapper.SetLookupTable(self.lut_substrate)
+
+                # substrate_actor.GetProperty().SetAmbient(1.)
+                # self.contour_mapper.SetScalarRange(0, vmax)
+                # hmm, seems to be no difference in either of these
+                # self.contour_mapper.SetScalarModeToUseCellData()
+                self.contour_mapper.SetScalarModeToUsePointData()
+
+                self.ren.RemoveActor(self.contour_actor)
+                self.ren.AddActor(self.contour_actor)
+
+                # self.writer.SetInputData(self.substrate_data)
+                # self.writer.SetInputData(self.substrate_data.GetPointData())
+                # self.writer.SetInputData(self.substrate_data.GetData())
+                # fname = 'sp_data_cells.vtk'
+                # print("--> ",fname)
+                # self.writer.SetFileName(fname)
+                # self.writer.Update()
+
+            else:
+                self.ren.RemoveActor(self.contour_actor)
 
             #-------------------
             self.ren.RemoveActor2D(self.scalar_bar_substrate)
