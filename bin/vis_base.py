@@ -318,9 +318,12 @@ class VisBase():
         self.tensor_flag = tensor_flag 
 
         if not self.model3D_flag:
-            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
+            # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead']
         else:
-            self.discrete_cell_scalars = ['cell_type', 'is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
+            # self.discrete_cell_scalars = ['cell_type', 'is_motile','current_death_model','dead','number_of_nuclei']
+            # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
+            self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead']
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
         self.mech_voxel_size = 30
@@ -332,7 +335,58 @@ class VisBase():
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
-        self.population_plot = None
+        # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
+
+# 	// currently recognized cell cycle models 
+# 	static const int advanced_Ki67_cycle_model= 0;
+# 	static const int basic_Ki67_cycle_model=1;
+# 	static const int flow_cytometry_cycle_model=2;
+# 	static const int live_apoptotic_cycle_model=3;
+# 	static const int total_cells_cycle_model=4;
+# 	static const int live_cells_cycle_model = 5; 
+# 	static const int flow_cytometry_separated_cycle_model = 6; 
+# 	static const int cycling_quiescent_model = 7; 
+        cycle_model_l = [ival for ival in range(0, 8)]
+
+# // cycle phases
+# static const int Ki67_positive_premitotic=0;
+# static const int Ki67_positive_postmitotic=1;
+# static const int Ki67_positive=2;
+# static const int Ki67_negative=3;
+# static const int G0G1_phase=4;
+# static const int G0_phase=5;
+# static const int G1_phase=6;
+# static const int G1a_phase=7;
+# static const int G1b_phase=8;
+# static const int G1c_phase=9;
+# static const int S_phase=10;
+# static const int G2M_phase=11;
+# static const int G2_phase=12;
+# static const int M_phase=13;
+# static const int live=14;
+# static const int G1pm_phase = 15;
+# static const int G1ps_phase = 16;
+# static const int cycling = 17;
+# static const int quiescent = 18;
+# static const int custom_phase = 9999;
+        cycle_phase_l = [ival for ival in range(0, 19)]
+
+    #     	// currently recognized death models 
+	# static const int apoptosis_death_model = 100; 
+	# static const int necrosis_death_model = 101; 
+	# static const int autophagy_death_model = 102; 
+
+# double polarity is a dimensionless number between 0 and 1 to indicate how polarized the cell is
+# along its basal-to-apical axis. If the polarity is zero, the cell has no discernible polarity. Note that
+# polarity should be set to one for 2-D simulations.
+        # self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1], "number_of_nuclei":0}
+        self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1]}
+
+        # self.population_plot = None
+        # self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None, "number_of_nuclei":None }
+        self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None}
+
+        self.discrete_scalar = 'cell_type'
         self.legend_svg_plot = None
         self.filterUI = None
 
@@ -805,14 +859,32 @@ class VisBase():
 
         self.vbox.addWidget(QHLine())
 
+        hbox = QHBoxLayout()
         self.cell_counts_button = QPushButton("Population plot")
         # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        self.cell_counts_button.setFixedWidth(200)
+        bwidth = 120
+        self.cell_counts_button.setFixedWidth(bwidth)
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
-        self.vbox.addWidget(self.cell_counts_button)
+        hbox.addWidget(self.cell_counts_button)
+        # self.vbox.addWidget(self.cell_counts_button)
+
+        # self.discrete_cell_scalars = [‘cell_type’, ‘cycle_model’, ‘current_phase’,‘is_motile’,‘current_death_model’,‘dead’,‘number_of_nuclei’,‘polarity’,‘dead’]  # check for discrete type scalar, ugh.
+
+        self.discrete_cells_combobox = QComboBox()
+
+        # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 , "polarity":2}
+        # self.discrete_cells_combobox.addItems(self.discrete_cell_scalars)
+        # self.discrete_cells_combobox.addItems(list(self.discrete_scalar_len.keys()) )
+        self.discrete_cells_combobox.addItems(list(self.discrete_scalar_vals.keys()) )
+        # self.discrete_cells_combobox.setEnabled(False)
+        self.discrete_cells_combobox.currentIndexChanged.connect(self.population_choice_cb)
+        hbox.addWidget(self.discrete_cells_combobox)
+
+        self.vbox.addLayout(hbox)
+
 
         self.legend_svg_button = QPushButton("Legend (.svg)")
-        self.legend_svg_button.setFixedWidth(200)
+        self.legend_svg_button.setFixedWidth(bwidth)
         self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
         self.vbox.addWidget(self.legend_svg_button)
 
@@ -976,6 +1048,11 @@ class VisBase():
         self.legend_svg_plot.show()
 
 
+    def population_choice_cb(self):
+        self.discrete_scalar = self.discrete_cells_combobox.currentText()
+        # print("vis_base: population_choice_cb()  discrete_scalar= ",self.discrete_scalar)
+
+
     def cell_counts_cb(self):
         # print("---- cell_counts_cb(): --> window for 2D population plots")
         # self.analysis_data_wait.value = 'compute n of N ...'
@@ -1012,45 +1089,95 @@ class VisBase():
 
         # self.yval4 = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['cell_type'] == 4) & (mcds[idx].data['discrete_cells']['cycle_model'] < 100.) == True)) for idx in range(ds_count)] )
 
-        if not self.population_plot:
-            self.population_plot = PopulationPlotWindow()
+        #--------
+        if self.discrete_scalar == 'cell_type':   # number not known until run time
+            # if not self.population_plot[self.discrete_scalar]:
+            if self.population_plot[self.discrete_scalar] is None:
+                self.population_plot[self.discrete_scalar] = PopulationPlotWindow()
 
-        self.population_plot.ax0.cla()
+            self.population_plot[self.discrete_scalar].ax0.cla()
 
-        # ctype_plot = []
-        lw = 2
-        # for itype, ctname in enumerate(self.celltypes_list):
-        # print("  self.celltype_name=",self.celltype_name)
-        for itype in range(len(self.celltype_name)):
-            ctname = self.celltype_name[itype]
-            try:
-                ctcolor = self.celltype_color[itype]
-            except:
+            # ctype_plot = []
+            lw = 2
+            # for itype, ctname in enumerate(self.celltypes_list):
+            # print("  self.celltype_name=",self.celltype_name)
+            for itype in range(len(self.celltype_name)):
+                ctname = self.celltype_name[itype]
+                try:
+                    ctcolor = self.celltype_color[itype]
+                except:
+                    ctcolor = 'C' + str(itype)   # use random colors from matplotlib
+                # print("  ctcolor=",ctcolor)
+                if 'rgb' in ctcolor:
+                    rgb = ctcolor.replace('rgb','')
+                    rgb = rgb.replace('(','')
+                    rgb = rgb.replace(')','')
+                    rgb = rgb.split(',')
+                    # print("--- rgb after split=",rgb)
+                    ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
+                    # print("--- converted rgb=",ctcolor)
+                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
+                # print("  yval=",yval)
+
+                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
+
+
+            self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
+            self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
+            self.population_plot[self.discrete_scalar].ax0.set_title("cell_type", fontsize=10)
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            self.population_plot[self.discrete_scalar].canvas.update()
+            self.population_plot[self.discrete_scalar].canvas.draw()
+            # self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            self.population_plot[self.discrete_scalar].show()
+
+        #--------
+        elif self.discrete_scalar == '"number_of_nuclei"':   # is it used yet?
+            pass
+        #--------
+        else:  # number is fixed for these (cycle_model, current_phase, is_motile, current_death_model, dead)
+
+            # [‘cell_type’, ‘cycle_model’, ‘current_phase’,‘is_motile’,‘current_death_model’,‘dead’,‘number_of_nuclei’,‘polarity’]
+            # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
+
+            self.population_plot[self.discrete_scalar] = PopulationPlotWindow()
+            self.population_plot[self.discrete_scalar].ax0.cla()
+
+            # print("---- generate plot for ",self.discrete_scalar)
+            # ctype_plot = []
+            lw = 2
+            # for itype, ctname in enumerate(self.celltypes_list):
+            # print("  self.celltype_name=",self.celltype_name)
+            # for itype in range(self.discrete_scalar_len[self.discrete_scalar]):
+            for itype in self.discrete_scalar_vals[self.discrete_scalar]:
+                # print("  cell_counts_cb(): itype= ",itype)
                 ctcolor = 'C' + str(itype)   # use random colors from matplotlib
-            # print("  ctcolor=",ctcolor)
-            if 'rgb' in ctcolor:
-                rgb = ctcolor.replace('rgb','')
-                rgb = rgb.replace('(','')
-                rgb = rgb.replace(')','')
-                rgb = rgb.split(',')
-                # print("--- rgb after split=",rgb)
-                ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
-                # print("--- converted rgb=",ctcolor)
-            yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
-            # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
-            # print("  yval=",yval)
+                # print("  ctcolor=",ctcolor)
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
 
-            self.population_plot.ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) ) for idx in range(len(mcds))) ] )
+
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) ) for idx in range(len(mcds)))] )
+                # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & True) for idx in range(len(mcds)))] )
+
+                # TODO: fix this hackiness. Do we want to avoid counting dead cells??
+                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                # print("  yval=",yval)
+
+                mylabel = str(itype)
+                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=mylabel, linewidth=lw, color=ctcolor)
+                # self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, linewidth=lw, color=ctcolor)
 
 
-        self.population_plot.ax0.set_xlabel('time (mins)')
-        self.population_plot.ax0.set_ylabel('# of cells')
-        self.population_plot.ax0.set_title("cell populations", fontsize=10)
-        self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
-        self.population_plot.canvas.update()
-        self.population_plot.canvas.draw()
-        # self.population_plot.ax0.legend(loc='center right', prop={'size': 8})
-        self.population_plot.show()
+            self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
+            self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
+            self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar, fontsize=10)
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            self.population_plot[self.discrete_scalar].canvas.update()
+            self.population_plot[self.discrete_scalar].canvas.draw()
+            self.population_plot[self.discrete_scalar].show()
 
 
     def disable_physiboss_info(self):

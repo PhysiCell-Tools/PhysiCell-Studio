@@ -51,7 +51,7 @@ class Vis(VisBase, QWidget):
         # self.config_tab = None
         # self.run_tab = run_tab
 
-        self.population_plot = None
+        # self.population_plot = None
         self.celltype_name = []
         self.celltype_color = []
         self.lut_discrete = None
