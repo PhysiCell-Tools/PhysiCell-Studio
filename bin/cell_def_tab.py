@@ -742,9 +742,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.ics_tab:
             self.ics_tab.celltype_combobox.removeItem(item_idx)
 
-        if self.rules_tab:
-            self.rules_tab.celltype_combobox.removeItem(item_idx)
-
         # But ALSO remove from the dicts:
         logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
         # print("--- cell_adhesion_affinity= ",self.param_d[cdef]['cell_adhesion_affinity'])
@@ -764,8 +761,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     if old_name == self.cell_transformation_dropdown.itemText(idx):
         #         self.cell_transformation_dropdown.setItemText(idx, new_name)
 
-        # rwh: is this safe?
+        # TODO: is this safe? Seems so.
         del self.param_d[self.current_cell_def]
+
+        # do *after* removing from param_d keys.
+        if self.rules_tab:
+            self.rules_tab.delete_celltype(item_idx)
+
 
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
@@ -6142,7 +6144,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.ics_tab:
             self.ics_tab.celltype_combobox.addItem(name)
         if self.rules_tab:
-            self.rules_tab.celltype_combobox.addItem(name)
+            self.rules_tab.add_new_celltype(name)
+
 
     #-----------------------------------------------------------------------------------------
     # def delete_substrate(self, item_idx):
@@ -6608,7 +6611,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def new_custom_data_params(self, cdname):
         logging.debug(f'------- new_custom_data_params() -----')
-        print(f'------- new_custom_data_params() -----')
+        # print(f'------- new_custom_data_params() -----')
         sval = self.default_sval
         if 'custom_data' not in self.param_d[cdname].keys():
             return
