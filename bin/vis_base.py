@@ -1084,6 +1084,10 @@ class VisBase():
             # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
             mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
 
+        if self.discrete_scalar not in mcds[0].data['discrete_cells']['data'].keys():
+            print(f"\ncell_counts_cb(): {self.discrete_scalar} is not saved in the output. See the Full list above. Exiting.")
+            return
+
         tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
         # print("  max tval=",tval)
 
@@ -1269,6 +1273,7 @@ class VisBase():
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
+        print("physiboss_node_dict :",self.physiboss_node_dict)
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))

@@ -288,6 +288,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
+            self.celldef_tab.rules_tab = self.rules_tab
             self.rules_tab.fill_gui()
 
 
