@@ -559,15 +559,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # When a cell type is selected(via double-click) and renamed
     def tree_item_changed_cb(self, it,col):
         logging.debug(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  # col 0 is name; 1 is ID
-        print(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  
+        # print(f'--------- tree_item_changed_cb(): {it}, {col}, {it.text(col)}')  
         currentIndex= self.tree.currentIndex()
-        print(f'currentIndex= {currentIndex}')
+        # print(f'currentIndex= {currentIndex}')
         # print("dir= ",dir(currentIndex))
         row = currentIndex.row()
-        print(f'currentIndex.row()= {currentIndex.row()}')
+        # print(f'currentIndex.row()= {currentIndex.row()}')
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-        print(f'item_idx= {item_idx}')
+        # print(f'item_idx= {item_idx}')
 
         if col == 1:  # ID
             cdname = it.text(0)
@@ -576,11 +576,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         prev_name = self.current_cell_def
         logging.debug(f'prev_name= {prev_name}')
-        print(f'prev_name= {prev_name}')
+        # print(f'prev_name= {prev_name}')
         # new_name = it.text(col)
         new_name = it.text(0)
         id_num = it.text(1)
-        print(self.param_d.keys())
+        print("cell_def_tab:  tree_item_changed_cb(): keys=", self.param_d.keys())
 
         while True:
             if new_name in self.param_d.keys():
@@ -592,7 +592,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 msgBox.setStandardButtons(QMessageBox.Ok)
                 returnValue = msgBox.exec()
                 new_name = self.random_name(new_name+"_",3)
-                print("----- new_name (after append suffix) = ",new_name)
+                # print("----- new_name (after append suffix) = ",new_name)
 
                 treeitem = QTreeWidgetItem([new_name, id_num])
                 treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
@@ -618,7 +618,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.current_cell_def = new_name
         logging.debug(f'new name= {self.current_cell_def}')
-        print(f'new name= {self.current_cell_def}')
+        # print(f'new name= {self.current_cell_def}')
         self.param_d[self.current_cell_def] = self.param_d.pop(prev_name)  # sweet
 
         self.live_phagocytosis_celltype = self.current_cell_def
@@ -626,7 +626,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.fusion_rate_celltype = self.current_cell_def
         self.transformation_rate_celltype = self.current_cell_def
 
-        print(f'before calling renamed_celltype(): prev_name= {prev_name}')
+        # print(f'before calling renamed_celltype(): prev_name= {prev_name}')
         self.renamed_celltype(prev_name, self.current_cell_def)
 
     #----------------------------------------------------------------------
@@ -5116,109 +5116,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['net_export_rate'] = text
 
     #--------------------------------------------------------
-    # def custom_data_clicked_cb(self, item):
-    #     row = self.custom_data_table.currentRow()
-    #     col = self.custom_data_table.currentColumn()
-    #     if item.checkState() == QtCore.Qt.Checked:
-    #         self.custom_var_conserved = True
-    #         print('"custom_data_clicked_cb(): %s" clicked/Checked' % item.text())
-    #         # self._list.append(item.row())
-    #         # print(self._list)
-    #     elif item.checkState() == QtCore.Qt.Unchecked:
-    #         self.custom_var_conserved = False
-    #         print('"custom_data_clicked_cb(): %s" clicked/Unchecked' % item.text())
-    #     else:
-    #         # print('"custom_data_clicked_cb(): %s" Clicked' % item.text())
-    #         print("custom_data_clicked_cb(): %s Clicked" % item.text())
-    #     print("     clicked: row,col= ",row,col)
-
-    #     return
-
-        # item = self.custom_data_table.item(row, column)
-        # lastState = item.data(LastStateRole)
-        # currentState = item.checkState()
-        # if currentState != lastState:
-        #     print("changed: ")
-        #     if currentState == QtCore.Qt.Checked:
-        #         print("checked")
-        #     else:
-        #         print("unchecked")
-        #     item.setData(LastStateRole, currentState)
-
-    #--------------------------------------------------------
-    # def custom_data_changed_cb(self, item):
-    def custom_data_changed_cb_old(self, row,col):
-        # row = self.custom_data_table.currentRow()
-        # col = self.custom_data_table.currentColumn()
-        # if item.checkState() == QtCore.Qt.Checked:
-        #     print('"custom_data_changed_cb(): %s" changed/Checked' % item.text())
-        #     # self._list.append(item.row())
-        #     # print(self._list)
-        # elif item.checkState() == QtCore.Qt.Unchecked:
-        #     print('"custom_data_changed_cb(): %s" changed/Unchecked' % item.text())
-        # else:
-        #     # print('"custom_data_changed_cb(): %s" Clicked' % item.text())
-        # print("custom_data_changed_cb(): %s changed" % item.text())
-        # print(f"custom_data_changed_cb(): item={item}")
-        # print("------     changed: row,col= ",row,col)
-        # if col == 0:  # Conserve checkbox
-        varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
-        print("len(varname)=",len(varname))
-        if len(varname) == 0:
-            self.custom_data_table.item(row, col).setCheckState(0)
-            print("HEY! define the variable name first!")
-            return
-
-        if col == self.custom_icol_conserved:  # Conserve checkbox
-            # if self.custom_data_table.cellWidget(row,0) is None:
-            #     print("-- returning")
-            #     return
-            # if item.checkState() == QtCore.Qt.Checked:
-            # print(self.custom_data_table.cellWidget(row,0))
-
-            # checked = self.custom_data_table.cellWidget(row,0).isChecked()
-            # if item.checkState() == QtCore.Qt.Checked:
-            # if checked:
-            #     print("checked")
-            # else:
-            #     print("unchecked")
-
-            # print("ischecked val= ",self.custom_data_table.cellWidget(row, col).isChecked())
-            # print("ischecked val= ",self.custom_data_table.item(row, col).isChecked())
-            # print("state val= ",self.custom_data_table.item(row, col).checkState())
-            # self.custom_data_table.setItem(irow, 0, item)   # the 0th col is the "Conserve" checkbox
-
-            # OMG, about 3 hrs to figure out how to do this!!!  GUI dev will destroy your soul.
-            print("custom_data_changed_cb():  checkState()=", self.custom_data_table.item(row, col).checkState())
-
-            # self.custom_var_conserved = False
-            # varname = self.custom_data_table.cellWidget(row,1).text()
-            varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
-            print("len(varname)=",len(varname))
-            if len(varname) == 0:
-                self.custom_data_table.item(row, col).setCheckState(0)
-                print("HEY! define the variable name first!")
-                return
-            # print(" varname= ",varname)
-            # # print("before:")
-            # print(self.param_d[self.current_cell_def]['custom_data'][varname])
-
-            # ...current_cell_def]['custom_data'][vname] = [text, conserved_flag, units_val]
-
-            if self.custom_data_table.item(row, col).checkState() > 0:
-                self.param_d[self.current_cell_def]['custom_data'][varname][1] = True
-            else:
-                self.param_d[self.current_cell_def]['custom_data'][varname][1] = False
-            # print(self.param_d[self.current_cell_def]['custom_data'][varname])
-
-            # if item.checkState() == QtCore.Qt.Checked:
-            # print('"custom_data_changed_cb(): %s" changed/Checked' % item.text())
-            # print("after:")
-            # self.param_d[self.current_cell_def]['custom_data'][])
-            # print(self.param_d[self.current_cell_def]['custom_data'][varname])
-
-
-    #--------------------------------------------------------
     def clear_all_var_name_prev(self):
         # print("---clear_all_var_name_prev()")
         for irow in range(self.max_custom_data_rows):
@@ -5310,8 +5207,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def delete_custom_data_cb(self):
         debug_me = False
         row = self.custom_data_table.currentRow()
-        # print("------------- delete_custom_data_cb(), row=",row)
-        varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
+        print("------------- delete_custom_data_cb(), row=",row)
+        try:
+            varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
+        except:
+            return
         if debug_me:
             print(" custom var name= ",varname)
             print(" master_custom_var_d.keys()= ",self.master_custom_var_d.keys())
@@ -5375,16 +5275,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.custom_data_search.textChanged.connect(self.custom_data_search_cb)
         hlayout.addWidget(self.custom_data_search)
 
-        delete_custom_data_btn = QPushButton("Delete row")
-        delete_custom_data_btn.clicked.connect(self.delete_custom_data_cb)
-        delete_custom_data_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        hlayout.addWidget(delete_custom_data_btn)
+        # delete_custom_data_btn = QPushButton("Delete row")
+        # delete_custom_data_btn.clicked.connect(self.delete_custom_data_cb)
+        # delete_custom_data_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        # hlayout.addWidget(delete_custom_data_btn)
 
-        hlayout.addWidget(QLabel("(click row #)"))
+        # hlayout.addWidget(QLabel("(click row #)"))
 
         hlayout.addStretch()
         vlayout.addLayout(hlayout)
 
+        #-------
         self.custom_data_table = QTableWidget()
         # self.custom_data_table.cellClicked.connect(self.custom_data_cell_was_clicked)
         self.max_custom_data_rows = 100
@@ -5507,10 +5408,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.custom_data_table.itemClicked.connect(self.custom_data_clicked_cb)
         # self.custom_data_table.cellChanged.connect(self.custom_data_changed_cb)
 
-
-
         vlayout.addWidget(self.custom_data_table)
 
+        #----------
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(QLabel("click row # to "))
+
+        delete_custom_data_btn = QPushButton("Delete parameter")
+        delete_custom_data_btn.clicked.connect(self.delete_custom_data_cb)
+        delete_custom_data_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        hlayout.addWidget(delete_custom_data_btn)
+
+        hlayout.addStretch()
+        vlayout.addLayout(hlayout)
+
+        #--------------
         self.layout = QVBoxLayout(self)
         # self.layout.addLayout(self.controls_hbox)
 
@@ -6343,6 +6255,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         if old_name == self.current_secretion_substrate:
             self.current_secretion_substrate = new_name
+
+        if self.rules_tab:
+            # print("     calling self.rules_tab.substrate_rename")
+            self.rules_tab.substrate_rename(idx,old_name,new_name)
+
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 
@@ -6355,8 +6272,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         logging.debug(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
-        # print("       old_name = ",old_name)
-        # print("       new_name = ",new_name)
+        # print(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
         logging.debug(f'    self.celltypes_list= {self.celltypes_list}')
         # print()
@@ -6367,7 +6283,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 1) update all dropdown widgets containing the cell def names
         for idx in range(len(self.celltypes_list)):
-            # print("idx,old,new = ",idx, old_name,new_name)
+            # print("     idx,old,new = ",idx, old_name,new_name)
             # if old_name in self.motility_substrate_dropdown.itemText(idx):
             if old_name == self.live_phagocytosis_dropdown.itemText(idx):
                 self.live_phagocytosis_dropdown.setItemText(idx, new_name)
@@ -6381,10 +6297,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
             if self.ics_tab and (old_name == self.ics_tab.celltype_combobox.itemText(idx)):
                 self.ics_tab.celltype_combobox.setItemText(idx, new_name)
-            if self.rules_tab and (old_name == self.rules_tab.celltype_combobox.itemText(idx)):
-                self.rules_tab.celltype_combobox.setItemText(idx, new_name)
 
-        # 2) OMG, also update all param_d dicts that involve cell def names
+            if self.rules_tab and (old_name == self.rules_tab.celltype_combobox.itemText(idx)):
+                # print("    calling self.rules_tab.celltype_combobox.setItemText")
+                # self.rules_tab.celltype_combobox.setItemText(idx, new_name)
+                self.rules_tab.cell_def_rename(idx,old_name,new_name)
+
+        # 2) also update all param_d dicts that involve cell def names
         logging.debug(f'--- renaming all dicts with cell defs')
         for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
             logging.debug(f'--- cdname = {cdname}')
@@ -6645,7 +6564,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["intracellular"] = None
 
 
-    def add_new_substrate(self, sub_name):
+    def add_new_substrate(self, sub_name):  # called for both "New" and "Copy" of substrate/signal
         self.add_new_substrate_comboboxes(sub_name)
 
         sval = self.default_sval
@@ -6668,6 +6587,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 
+        if self.rules_tab:
+            self.rules_tab.add_new_substrate(sub_name)
+
+
     def add_new_celltype(self, cdname):
         self.add_new_celltype_comboboxes(cdname)
         self.physiboss_update_list_signals()
@@ -6685,7 +6608,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def new_custom_data_params(self, cdname):
         logging.debug(f'------- new_custom_data_params() -----')
-        # print(f'------- new_custom_data_params() -----')
+        print(f'------- new_custom_data_params() -----')
         sval = self.default_sval
         if 'custom_data' not in self.param_d[cdname].keys():
             return
