@@ -103,11 +103,15 @@ class PhysiCellXMLCreator(QWidget):
         self.nanohub_flag = nanohub_flag 
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
-        self.ics_tab_index = 4
+        self.rules_tab_index = None
+
+        # Hardcode tab indices for now
+        # self.ics_tab_index = 4
         self.plot_tab_index = 6
         # self.legend_tab_index = 7
         if self.rules_flag:
-            self.plot_tab_index += 1
+            self.rules_tab_index = 4
+            self.plot_tab_index = 7
             # self.legend_tab_index += 1
 
         # self.dark_mode = False
@@ -399,6 +403,13 @@ class PhysiCellXMLCreator(QWidget):
         #     studio_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
         if index == self.microenv_tab_index: # microenv_tab
             self.microenv_tab.update_3D()
+
+        elif self.rules_tab_index and (index == self.rules_tab_index): 
+            if self.rules_tab.update_rules_for_custom_data:
+                print("studio.py: need to update Rules comboboxes for changed custom data")
+                self.rules_tab.fill_signals_widget()
+                self.rules_tab.fill_responses_widget()
+                self.rules_tab.update_rules_for_custom_data = False
 
     def about_pyqt(self):
         msgBox = QMessageBox()

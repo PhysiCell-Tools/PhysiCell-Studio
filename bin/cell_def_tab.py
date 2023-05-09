@@ -123,7 +123,6 @@ class MyQLineEdit(QLineEdit):
 class CellDef(QWidget):
     def __init__(self):
         super().__init__()
-        # global self.params_cell_def
 
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
@@ -5491,6 +5490,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
         # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
+        if self.rules_tab:
+            self.rules_tab.update_rules_for_custom_data = True
+
         debug_me = False
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
