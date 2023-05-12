@@ -3882,8 +3882,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # Here we should remap the clicked method to have the proper id
         for i, mutant in enumerate(self.physiboss_mutants):
             name, value, button, _ = mutant
-            name.curremtIndexChanged.disconnect()
-            name.curremtIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+            name.currentIndexChanged.disconnect()
+            name.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(i, text))
             button.clicked.disconnect()
