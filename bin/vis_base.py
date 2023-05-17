@@ -393,6 +393,23 @@ class VisBase():
         self.celltype_name = []
         self.celltype_color = []
 
+        # hard-coding colors (as is done in PhysiCell for "paint by cell type")
+        # self.cell_colors = list( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+        # self.cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,0.84,0], [0,1,0], [0,0,1], 
+        # self.cell_colors = ( [0.5,0.5,0.5], [1,0,0], [0.80,0.80,0], [0,1,0], [0,0,1], 
+        self.cell_colors = ( [0.5,0.5,0.5], [1,0,0], [0.10,0.10,0], [0,1,0], [0,0,1], 
+                        [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
+                        [1, 0.85, 0.73], [143/255.,188/255.,143/255.], [135/255.,206/255.,250/255.])
+        # print("# hard-coded cell type colors= ",len(self.self.cell_colors))
+        self.cell_colors = list(self.cell_colors)
+        # print("# (post convert to list)= ",len(self.cell_colors))
+        np.random.seed(42)
+        for idx in range(200):  # TODO: avoid hard-coding max # of cell types
+            rgb = [np.random.uniform(), np.random.uniform(), np.random.uniform()]
+            self.cell_colors.append(rgb)
+        # print("with appended random colors= ",self.cell_colors)
+
+
         self.animating_flag = False
 
         self.called_from_update = False
@@ -850,9 +867,9 @@ class VisBase():
 
         # label = QLabel("(then 'Enter')")
         # hbox.addWidget(label)
-        output_folder_button = QPushButton("Select")
-        output_folder_button.clicked.connect(self.output_folder_cb)
-        hbox.addWidget(output_folder_button)
+        self.output_folder_button = QPushButton("Select")
+        self.output_folder_button.clicked.connect(self.output_folder_cb)
+        hbox.addWidget(self.output_folder_button)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -1084,6 +1101,10 @@ class VisBase():
             # mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
             mcds.append(pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False))
 
+        if self.discrete_scalar not in mcds[0].data['discrete_cells']['data'].keys():
+            print(f"\ncell_counts_cb(): {self.discrete_scalar} is not saved in the output. See the Full list above. Exiting.")
+            return
+
         tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
         # print("  max tval=",tval)
 
@@ -1105,9 +1126,13 @@ class VisBase():
                 ctname = self.celltype_name[itype]
                 try:
                     ctcolor = self.celltype_color[itype]
+                    # print("  cell_counts_cb(): ctcolor (1)=",ctcolor)
+                    if ctcolor == "yellow":   # can't see yellow on white
+                        ctcolor = "gold"
+                        # print("  now cell_counts_cb(): ctcolor (1)=",ctcolor)
                 except:
-                    ctcolor = 'C' + str(itype)   # use random colors from matplotlib
-                # print("  ctcolor=",ctcolor)
+                    ctcolor = 'C' + str(itype)   # use random colors from matplotlib; rwh TODO: avoid yellow, etc
+                    # print("  cell_counts_cb(): ctcolor (2)=",ctcolor)
                 if 'rgb' in ctcolor:
                     rgb = ctcolor.replace('rgb','')
                     rgb = rgb.replace('(','')
@@ -1269,6 +1294,7 @@ class VisBase():
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
+        print("physiboss_node_dict :",self.physiboss_node_dict)
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
@@ -2470,19 +2496,19 @@ class VisBase():
             print("Error reading ",basename, "in ",self.output_dir)
             return None
         
-        # hard-coding colors (as is done in PhysiCell for "paint by cell type")
-        # cell_colors = list( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
-        cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
-                        [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
-                        [1, 0.85, 0.73], [143/255.,188/255.,143/255.], [135/255.,206/255.,250/255.])
-        # print("# hard-coded cell type colors= ",len(cell_colors))
-        cell_colors = list(cell_colors)
-        # print("# (post convert to list)= ",len(cell_colors))
-        np.random.seed(42)
-        for idx in range(200):  # TODO: avoid hard-coding max # of cell types
-            rgb = [np.random.uniform(), np.random.uniform(), np.random.uniform()]
-            cell_colors.append(rgb)
-        # print("with appended random colors= ",cell_colors)
+        # # hard-coding colors (as is done in PhysiCell for "paint by cell type")
+        # # self.self.cell_colors = list( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+        # self.cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
+        #                 [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
+        #                 [1, 0.85, 0.73], [143/255.,188/255.,143/255.], [135/255.,206/255.,250/255.])
+        # # print("# hard-coded cell type colors= ",len(self.self.cell_colors))
+        # self.cell_colors = list(self.cell_colors)
+        # # print("# (post convert to list)= ",len(self.cell_colors))
+        # np.random.seed(42)
+        # for idx in range(200):  # TODO: avoid hard-coding max # of cell types
+        #     rgb = [np.random.uniform(), np.random.uniform(), np.random.uniform()]
+        #     self.cell_colors.append(rgb)
+        # # print("with appended random colors= ",self.cell_colors)
 
         # lut.SetTableValue(0, 0.5, 0.5, 0.5, 1)  # darker gray
         # lut.SetTableValue(1, 1, 0, 0, 1)  # red
@@ -2503,7 +2529,7 @@ class VisBase():
         my_display_data = {}
         icell = 0   # want ints
         for cellID in unique_cell_types:
-            my_display_data[icell] = DisplayData(name="cell"+str(icell),color=rgb2hex(cell_colors[icell]),display_type=DISPLAY_TYPE.SPHERE,)
+            my_display_data[icell] = DisplayData(name="cell"+str(icell),color=rgb2hex(self.cell_colors[icell]),display_type=DISPLAY_TYPE.SPHERE,)
             icell += 1
 
         # uep = xml_root.find(".//cell_definitions")  # need to know config file name. Arg.

@@ -142,13 +142,13 @@ class UserParams(QWidget):
         self.name_search.textChanged.connect(self.search_user_param_cb)
         hlayout.addWidget(self.name_search)
 
-        delete_row_btn = QPushButton("Delete row")
-        delete_row_btn.setFixedWidth(100)
-        delete_row_btn.clicked.connect(self.delete_user_param_cb)
-        delete_row_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        hlayout.addWidget(delete_row_btn)
+        # delete_row_btn = QPushButton("Delete row")
+        # delete_row_btn.setFixedWidth(100)
+        # delete_row_btn.clicked.connect(self.delete_user_param_cb)
+        # delete_row_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        # hlayout.addWidget(delete_row_btn)
 
-        hlayout.addWidget(QLabel("(after selecting a row #)"))
+        # hlayout.addWidget(QLabel("(after selecting a row #)"))
 
         hlayout.addStretch()
         self.main_layout.addLayout(hlayout)
@@ -237,6 +237,18 @@ class UserParams(QWidget):
         # self.main_layout.addWidget(QLabel("(Note: we do not currently validate Type and Value)"))
         self.main_layout.addWidget(QLabel("(Note: validation check performed at Save or Run)"))
         self.main_layout.addWidget(self.utable)
+
+
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(QLabel("click row # to "))
+        delete_row_btn = QPushButton("Delete")
+        delete_row_btn.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        delete_row_btn.setFixedWidth(100)
+        delete_row_btn.clicked.connect(self.delete_user_param_cb)
+        hlayout.addWidget(delete_row_btn)
+        hlayout.addStretch()
+        self.main_layout.addLayout(hlayout)
+
 
         #==================================================================
         self.user_params.setLayout(self.main_layout)
@@ -330,8 +342,12 @@ class UserParams(QWidget):
     def delete_user_param_cb(self, s):
         debug_me = True
         row = self.utable.currentRow()
+        # print("------------- delete_user_param_cb(), row=",row)  # = -1
 
-        varname = self.utable.cellWidget(row,self.var_icol_name).text()
+        try:
+            varname = self.utable.cellWidget(row,self.var_icol_name).text()
+        except:
+            return
         if debug_me:
             print("------------- delete_user_param_cb(), row=",row)
             print("    var name= ",varname)

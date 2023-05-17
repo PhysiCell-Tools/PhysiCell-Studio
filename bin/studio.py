@@ -103,11 +103,15 @@ class PhysiCellXMLCreator(QWidget):
         self.nanohub_flag = nanohub_flag 
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
-        self.ics_tab_index = 4
+        self.rules_tab_index = None
+
+        # Hardcode tab indices for now
+        # self.ics_tab_index = 4
         self.plot_tab_index = 6
         # self.legend_tab_index = 7
         if self.rules_flag:
-            self.plot_tab_index += 1
+            self.rules_tab_index = 4
+            self.plot_tab_index = 7
             # self.legend_tab_index += 1
 
         # self.dark_mode = False
@@ -144,8 +148,11 @@ class PhysiCellXMLCreator(QWidget):
         print("self.current_dir = ",self.current_dir)
         logging.debug(f'self.current_dir = {self.current_dir}')
         self.studio_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        # self.studio_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-        self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
+        if self.nanohub_flag:
+            # self.studio_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+            self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        else:
+            self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
         print("self.studio_root_dir = ",self.studio_root_dir)
         logging.debug(f'self.studio_root_dir = {self.studio_root_dir}')
 
@@ -167,10 +174,10 @@ class PhysiCellXMLCreator(QWidget):
             print("got config_file=",config_file)
             # sys.exit()
         else:
-            # model_name = "interactions"  # for testing latest xml
-            model_name = "template"
+            model_name = "interactions"  # for testing latest xml
+            # model_name = "rules"
             if self.nanohub_flag:
-                model_name = "biorobots_flat"
+                model_name = "rules"
             self.current_xml_file = os.path.join(self.studio_config_dir, model_name + ".xml")
 
 
@@ -201,9 +208,8 @@ class PhysiCellXMLCreator(QWidget):
             print("studio.py: ---- TRUE nanohub_flag: updating config_tab folder")
             self.config_tab.folder.setText('tmpdir')
             self.config_tab.folder.setEnabled(False)
-            self.config_tab.csv_folder.setText('')
+            # self.config_tab.csv_folder.setText('')
             self.config_tab.csv_folder.setEnabled(False)
-            self.config_tab.folder.setText('tmpdir')
         else:
             print("studio.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
@@ -284,10 +290,11 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            self.rules_tab = Rules(self.microenv_tab, self.celldef_tab)
+            self.rules_tab = Rules(self.nanohub_flag, self.microenv_tab, self.celldef_tab)
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
+            self.celldef_tab.rules_tab = self.rules_tab
             self.rules_tab.fill_gui()
 
 
@@ -312,12 +319,25 @@ class PhysiCellXMLCreator(QWidget):
 
             self.homedir = os.getcwd()
             print("studio.py: self.homedir = ",self.homedir)
+            if self.nanohub_flag:
+                try:
+                    # cachedir = os.environ['CACHEDIR']
+                    toolpath = os.environ['TOOLPATH']
+                    print("studio.py: toolpath= ",toolpath)
+                    # full_path = os.path.join(toolpath, "data")
+                    self.homedir = os.path.join(toolpath, "data")
+                except:
+                    print("studio.py: exception doing os.environ('TOOLPATH')")
+
             self.run_tab.homedir = self.homedir
 
             # self.run_tab.config_xml_name.setText(current_xml_file)
             # self.run_tab.exec_name.setText(exec_file)
             # self.run_tab.exec_name.setText(str(Path(exec_file)))
-            self.run_tab.exec_name.setText(os.path.join(self.homedir, exec_file))
+            if not self.nanohub_flag:
+                self.run_tab.exec_name.setText(os.path.join(self.homedir, exec_file))
+            else:
+                self.run_tab.exec_name.setText(os.path.join(self.homedir, "bin", exec_file))
 
             self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.current_dir = os.getcwd()
@@ -337,12 +357,14 @@ class PhysiCellXMLCreator(QWidget):
 
             # config_tab needed for 3D domain boundary outline
             self.vis_tab = Vis(self.nanohub_flag, self.config_tab, self.run_tab, self.model3D_flag, self.tensor_flag)
+            # if not self.nanohub_flag:
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.config_tab.vis_tab = self.vis_tab
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
                 self.vis_tab.output_folder.setText('tmpdir')
                 self.vis_tab.output_folder.setEnabled(False)
+                self.vis_tab.output_folder_button.setEnabled(False)
 
             self.vis_tab.config_tab = self.config_tab
             # self.vis_tab.output_dir = self.config_tab.plot_folder.text()
@@ -398,6 +420,13 @@ class PhysiCellXMLCreator(QWidget):
         #     studio_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
         if index == self.microenv_tab_index: # microenv_tab
             self.microenv_tab.update_3D()
+
+        elif self.rules_tab_index and (index == self.rules_tab_index): 
+            if self.rules_tab.update_rules_for_custom_data:
+                print("studio.py: need to update Rules comboboxes for changed custom data")
+                self.rules_tab.fill_signals_widget()
+                self.rules_tab.fill_responses_widget()
+                self.rules_tab.update_rules_for_custom_data = False
 
     def about_pyqt(self):
         msgBox = QMessageBox()
@@ -486,10 +515,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         #-----
         file_menu = menubar.addMenu('&File')
         if self.nanohub_flag:
-            model_menu = menubar.addMenu('&Model')
-            model_menu.addAction("biorobots", self.biorobots_nanohub_cb)
-            model_menu.addAction("celltypes3", self.celltypes3_nanohub_cb)
-            model_menu.addAction("pred_prey_farmer", self.pred_prey_nanohub_cb)
+            # model_menu = menubar.addMenu('&Model')
+            # model_menu.addAction("biorobots", self.biorobots_nanohub_cb)
+            # model_menu.addAction("celltypes3", self.celltypes3_nanohub_cb)
+            # model_menu.addAction("pred_prey_farmer", self.pred_prey_nanohub_cb)
+            pass
 
         #--------------
         else:
@@ -1132,7 +1162,7 @@ def main():
         parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
         parser.add_argument("-t", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
-        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
@@ -1143,10 +1173,17 @@ def main():
 
         # args = parser.parse_args()
         args, unknown = parser.parse_known_args()
+        print("args=",args)
+        print("unknown=",unknown)
         if unknown:
-            print("invalid argument: ",unknown)
-            sys.exit(-1)
+            if unknown[0] == "--rules":
+                print("studio.py: setting rules_flag = True")
+                rules_flag = True
+            else:
+                print("invalid argument: ",unknown)
+                sys.exit(-1)
 
+        print("-- continue after if unknown...")
         if args.three:
             logging.debug(f'studio.py: Assume a 3D model')
             model3D_flag = True
@@ -1159,9 +1196,9 @@ def main():
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
-        if args.rules:
-            logging.debug(f'studio.py: Show Rules tab')
-            rules_flag = True
+        # if args.rules:
+        #     logging.debug(f'studio.py: Show Rules tab')
+        #     rules_flag = True
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
@@ -1257,6 +1294,7 @@ def main():
             rules_flag = False
             print("Warning: Rules module not found.\n")
 
+    # print("calling PhysiCellXMLCreator with rules_flag= ",rules_flag)
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)
