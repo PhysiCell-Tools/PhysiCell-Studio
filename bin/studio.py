@@ -290,7 +290,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            self.rules_tab = Rules(self.microenv_tab, self.celldef_tab)
+            self.rules_tab = Rules(self.nanohub_flag, self.microenv_tab, self.celldef_tab)
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
