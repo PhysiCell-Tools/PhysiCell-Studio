@@ -364,6 +364,7 @@ class Rules(QWidget):
 
         self.rule_base_val = QLineEdit()
         self.rule_base_val.setEnabled(False)
+        self.rule_base_val.setStyleSheet("background-color: lightgray")
         # self.rule_base_val.setText('1.e-5')
         self.rule_base_val.setText('0.1')
         self.rule_base_val.setValidator(QtGui.QDoubleValidator())
