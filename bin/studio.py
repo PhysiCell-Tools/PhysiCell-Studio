@@ -1165,7 +1165,7 @@ def main():
         # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
-        parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
+        # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
         parser.add_argument("-c", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec", type=str, help="executable model")
 
@@ -1202,8 +1202,8 @@ def main():
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
-        if args.is_movable:
-            is_movable_flag = True
+        # if args.is_movable:
+        #     is_movable_flag = True
         if args.skip_validate:
             logging.debug(f'studio.py: Do not validate the config file (.xml)')
             skip_validate_flag = True
