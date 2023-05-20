@@ -1016,6 +1016,22 @@ class Rules(QWidget):
         return z/(1.0 + z); 
 
     def plot_new_rule_cb(self):
+        try:
+            # print("\n------------- plot_new_rule_cb()")
+            signal = self.signal_combobox.currentText()
+            # print("------------- plot_new_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.response_combobox.currentText()
+            # print("n------------- plot_new_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
         if not self.rules_plot:
             self.rules_plot = RulesPlotWindow()
         # if not self.reuse_plot_w.isChecked():
@@ -1305,7 +1321,31 @@ class Rules(QWidget):
     #--------------------------------------------------------
     # plot the selected rule in the table
     def plot_rule_cb(self):
+
         irow = self.rules_table.currentRow()
+        if irow < 0:
+            self.show_warning( "Select (click on) a row to plot.")
+            return
+
+        try:
+            print("\n------------- plot_rule_cb():  irow=",irow)
+            signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+            print("\n------------- plot_rule_cb():  signal=",signal)
+            # print("------------- plot_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+            print("\n------------- plot_rule_cb():  behavior=",behavior)
+            # print("n------------- plot_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- plot_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
+
         
         if (irow < 0) or (self.num_rules == 0):
             msg = "You need to select a row in the table"
