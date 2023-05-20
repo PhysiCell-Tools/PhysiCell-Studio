@@ -1055,7 +1055,38 @@ class Rules(QWidget):
 
 
     #-----------------------------------------------------------
+    def valid_signal(self, signal):
+        if signal in self.signal_l:
+            return True
+        else:
+            return False
+    #-----------------------------------------------------------
+    def valid_behavior(self, behavior):
+        if behavior in self.response_l:
+            return True
+        else:
+            return False
+
+    #-----------------------------------------------------------
     def add_rule_cb(self):
+
+        try:
+            # print("\n------------- add_rule_cb()")
+            signal = self.signal_combobox.currentText()
+            # print("------------- add_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.response_combobox.currentText()
+            # print("n------------- add_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
+
         # old: create csv string
 
         # v2 syntax: cell type, signal,increases/decreases, behavior, param value at max response, half max, hill power, applies to dead?
