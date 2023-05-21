@@ -131,6 +131,7 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
+#----------------------------------------------------------------------
 class Rules(QWidget):
     # def __init__(self, nanohub_flag):
     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
@@ -143,6 +144,10 @@ class Rules(QWidget):
 
         self.microenv_tab = microenv_tab
         self.celldef_tab = celldef_tab
+
+        self.celltype_name = None
+        self.signal = None
+        self.behavior = None
 
         self.max_rule_table_rows = 99
 
@@ -244,6 +249,7 @@ class Rules(QWidget):
 
         self.celltype_combobox = QComboBox()
         self.celltype_combobox.setFixedWidth(200)
+        self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
         # self.celltype_combobox.setFixedWidth(300)
         # self.celltype_combobox.setAlignment(QtCore.Qt.AlignLeft)
         # hlayout.addWidget(self.celltype_combobox,1) # w, expand, align
@@ -334,6 +340,7 @@ class Rules(QWidget):
         self.response_combobox = ExtendedCombo()
         self.response_combobox.setModel(self.response_model)
         self.response_combobox.setModelColumn(0)
+        self.response_combobox.currentIndexChanged.connect(self.response_combobox_changed_cb)  
 
         # self.response_combobox.setFixedWidth(300)
         # hbox.addWidget(self.response_combobox) 
@@ -363,7 +370,7 @@ class Rules(QWidget):
         hlayout.addWidget(label) 
 
         self.rule_base_val = QLineEdit()
-        self.rule_base_val.setEnabled(False)
+        # self.rule_base_val.setEnabled(False)
         self.rule_base_val.setStyleSheet("background-color: lightgray")
         # self.rule_base_val.setText('1.e-5')
         self.rule_base_val.setText('0.1')
@@ -582,7 +589,8 @@ class Rules(QWidget):
 
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(100)
-        self.save_button.setStyleSheet("background-color: lightgreen")
+        # self.save_button.setStyleSheet("background-color: lightgreen")
+        self.save_button.setStyleSheet("background-color: yellow")
         self.save_button.clicked.connect(self.save_rules_cb)
         # hbox.addWidget(self.save_button) 
         hlayout.addWidget(self.save_button) 
@@ -881,9 +889,83 @@ class Rules(QWidget):
 
 
     #-----------------------------------------------------------
+    def celltype_combobox_changed_cb(self, idx):
+        self.celltype_name = self.celltype_combobox.currentText()
+        print("----------- celltype_combobox_changed_cb(): ", self.celltype_name)
+        if self.signal:
+            print("        signal= ", self.signal)
+        print("          ", self.celldef_tab.param_d.keys())
+
+    #-----------------------------------------------------------
+    # ---- Behaviors:
+    # [s + " secretion”], [s + " secretion target”], [s + " uptake"], [s + " export"], where s = substrate/signal name
+    # ["cycle entry”]
+    # ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
+    # ["apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time"]
+    # ["chemotactic response to " + s]
+    # ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
+    # Each ct = cell type name: ["adhesive affinity to " + ct]
+    # ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+    # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
+    # ["is_movable", "cell attachment rate", "cell detachment rate", "maximum number of cell attachments"]
+    # Each cv = custom var name: ["custom:" + cv]
+
+        # for s in self.substrates:
+        #     self.response_l.append(s + " export")
+        # self.response_l.append("cycle entry")
+        # for idx in range(6):  # TODO: hardwired
+        #     self.response_l.append("exit from cycle phase " + str(idx))
+        # self.response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
+
+    def update_base_value(self):
+        print("\n-------update_base_value(self)")
+
+        # rwh: create this list once
+        # static_names = []
+        static_names = ["cycle entry"]
+
+        static_names += ["apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time"]
+        # static_names += ["chemotactic response to " + s]
+        static_names += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
+        # Each ct = cell type name: ["adhesive affinity to " + ct]
+        static_names += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+        static_names += ["is_movable", "cell attachment rate", "cell detachment rate", "maximum number of cell attachments"]
+
+        # static_names = ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
+        # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
+
+        if self.signal in self.substrates:
+            print("--- signal is substrate")
+        if self.behavior in static_names:
+            print("--- behavior is static: ",self.behavior)
+
+    #-----------------------------------------------------------
     def signal_combobox_changed_cb(self, idx):
-        name = self.signal_combobox.currentText()
-        self.signal = name
+
+        self.signal = self.signal_combobox.currentText()
+        print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print(f"    '{self.celltype_name}' keys= {self.celldef_tab.param_d[self.celltype_name].keys()}")
+
+        # self.update_base_value()
+
+    #   * param_d[cell_type]['custom_data'][custom_var_name] = [value, conserved_flag]
+        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
+        # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
+        #     self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+        # else:
+        #     self.cell_adhesion_affinity.setText(self.default_affinity)
+
+        # if idx == -1:
+        #     return
+
+    #-----------------------------------------------------------
+    def response_combobox_changed_cb(self, idx):
+
+        self.behavior = self.response_combobox.currentText()
+        print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print(f"    {self.celltype_name} params= {self.celldef_tab.param_d[self.celltype_name]}")
+
+        self.update_base_value()
 
         # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
@@ -1455,6 +1537,7 @@ class Rules(QWidget):
     def save_rules_cb(self):
         folder_name = self.rules_folder.text()
         file_name = self.rules_file.text()
+        print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
         # full_rules_fname = os.path.join(folder_name, file_name)
         full_rules_fname = os.path.abspath(os.path.join(".",folder_name, file_name))
         # if os.path.isfile(full_rules_fname):
@@ -1802,10 +1885,12 @@ class Rules(QWidget):
 
             rfolder = ET.SubElement(ruleset, 'folder')
             rfolder.text = self.rules_folder.text()
+            print(f"-------- rules_tab:  fill_xml(): rules folder={rfolder.text}")
             rfolder.tail = indent8
 
             rfile = ET.SubElement(ruleset, 'filename')
             rfile.text = self.rules_file.text()
+            print(f"-------- rules_tab:  fill_xml(): rules file={rfile.text}")
             rfile.tail = indent8
 
             uep.insert(0,elm)
