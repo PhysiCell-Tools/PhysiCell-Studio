@@ -131,6 +131,7 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
+#----------------------------------------------------------------------
 class Rules(QWidget):
     # def __init__(self, nanohub_flag):
     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
@@ -143,6 +144,10 @@ class Rules(QWidget):
 
         self.microenv_tab = microenv_tab
         self.celldef_tab = celldef_tab
+
+        self.celltype_name = None
+        self.signal = None
+        self.behavior = None
 
         self.max_rule_table_rows = 99
 
@@ -244,6 +249,7 @@ class Rules(QWidget):
 
         self.celltype_combobox = QComboBox()
         self.celltype_combobox.setFixedWidth(200)
+        self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
         # self.celltype_combobox.setFixedWidth(300)
         # self.celltype_combobox.setAlignment(QtCore.Qt.AlignLeft)
         # hlayout.addWidget(self.celltype_combobox,1) # w, expand, align
@@ -284,14 +290,39 @@ class Rules(QWidget):
 
         #--------------
         hlayout = QHBoxLayout()
-        # hlayout.addStretch(0)
 
-        label = QLabel("Signal")
-        label.setFixedWidth(50)
+        lwidth = 250
+        label = QLabel("----- Signal -----")
+        label.setFixedWidth(lwidth)
         label.setAlignment(QtCore.Qt.AlignCenter)
         # label.setAlignment(QtCore.Qt.AlignLeft)
         # label.setAlignment(QtCore.Qt.AlignRight)
         hlayout.addWidget(label) 
+
+        label = QLabel("")
+        label.setFixedWidth(50)
+        hlayout.addWidget(label) 
+
+        label = QLabel("----- Behavior -----")
+        label.setFixedWidth(lwidth)
+        label.setFixedWidth(150)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        hlayout.addWidget(label) 
+
+        self.up_down_combobox = QComboBox()
+        self.up_down_combobox.setFixedWidth(110)
+        self.up_down_combobox.addItem("increases")
+        self.up_down_combobox.addItem("decreases")
+        hlayout.addWidget(self.up_down_combobox)
+
+        hlayout.addStretch(1)
+        self.rules_tab_layout.addLayout(hlayout) 
+
+        #----------------------------
+        hlayout = QHBoxLayout()
+        # hlayout.addStretch(0)
 
         # self.signal_combobox = QComboBox()
         self.signal_model = QStandardItemModel()
@@ -303,43 +334,80 @@ class Rules(QWidget):
         self.signal_combobox.currentIndexChanged.connect(self.signal_combobox_changed_cb)  
         hlayout.addWidget(self.signal_combobox)
 
-        self.rules_tab_layout.addLayout(hlayout) 
+        #----
+        # Behavior combobox
+        self.response_model = QStandardItemModel()
+        self.response_combobox = ExtendedCombo()
+        self.response_combobox.setModel(self.response_model)
+        self.response_combobox.setModelColumn(0)
+        self.response_combobox.currentIndexChanged.connect(self.response_combobox_changed_cb)  
+
+        # self.response_combobox.setFixedWidth(300)
+        # hbox.addWidget(self.response_combobox) 
+        hlayout.addWidget(self.response_combobox) 
+
+        hlayout.addStretch(1)
+        self.rules_tab_layout.addLayout(hlayout)
 
         #------------
         lwidth = 30
-        # label = QLabel("Min")
-        # label.setFixedWidth(lwidth)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
+
+        #----------------------------------
+        hlayout = QHBoxLayout()
+
+        label = QLabel("")
+        lwidth = 300
+        label.setFixedWidth(lwidth)
+        # label.setAlignment(QtCore.Qt.AlignRight)
         # label.setAlignment(QtCore.Qt.AlignCenter)
-        # # label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # horiz,vert
-        # label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        # # label.setStyleSheet("QLabel {background-color: red;}")
-        # hlayout.addWidget(label) 
+        hlayout.addWidget(label) 
 
-        # self.rule_min_val = QLineEdit()
-        # self.rule_min_val.setText('0.')
-        # self.rule_min_val.setValidator(QtGui.QDoubleValidator())
-        # hlayout.addWidget(self.rule_min_val)
-
-        #------------
-        # label = QLabel("Base")
-        # label.setFixedWidth(lwidth)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # hlayout.addWidget(label) 
-
-        # self.rule_base_val = QLineEdit()
-        # # self.rule_base_val.setText('1.e-5')
-        # self.rule_base_val.setText('0.1')
-        # self.rule_base_val.setValidator(QtGui.QDoubleValidator())
-        # hlayout.addWidget(self.rule_base_val)
-
-        #------------
-        label = QLabel("Max")
+        label = QLabel("Base")
+        lwidth = 30
         label.setFixedWidth(lwidth)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
+
+        self.rule_base_val = QLineEdit()
+        # self.rule_base_val.setEnabled(False)
+        self.rule_base_val.setStyleSheet("background-color: lightgray")
+        # self.rule_base_val.setText('1.e-5')
+        self.rule_base_val.setText('0.1')
+        self.rule_base_val.setValidator(QtGui.QDoubleValidator())
+        hlayout.addWidget(self.rule_base_val)
+
+        hlayout.addStretch(1)
+        self.rules_tab_layout.addLayout(hlayout)
+
+        #-------------------------------------
+        hlayout = QHBoxLayout()
+        lwidth = 60
+        label = QLabel("Half-max")
+        label.setFixedWidth(lwidth)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hlayout.addWidget(label) 
+
+        self.rule_half_max = QLineEdit()
+        self.rule_half_max.setText('0.5')
+        self.rule_half_max.setFixedWidth(100)
+        self.rule_half_max.setValidator(QtGui.QDoubleValidator())
+        hlayout.addWidget(self.rule_half_max)
+
+        #---
+        label = QLabel("")
+        lwidth = 120
+        label.setFixedWidth(lwidth)
+        hlayout.addWidget(label) 
+
+        #---
+        label = QLabel("Max")
+        label.setFixedWidth(30)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hlayout.addWidget(label) 
+
         self.rule_max_val = QLineEdit()
         # self.rule_max_val.setText('3.e-4')
         self.rule_max_val.setText('1.0')
@@ -349,63 +417,94 @@ class Rules(QWidget):
         hlayout.addStretch(1)
         self.rules_tab_layout.addLayout(hlayout) 
 
-        #------------
+        #---------------------
         hlayout = QHBoxLayout()
 
-        hbox = QHBoxLayout()
-        label = QLabel("Behavior")
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        hbox.addWidget(label) 
-
-        # self.response_combobox = QComboBox()
-        self.response_model = QStandardItemModel()
-        self.response_combobox = ExtendedCombo()
-        self.response_combobox.setModel(self.response_model)
-        self.response_combobox.setModelColumn(0)
-
-        # self.response_combobox.setFixedWidth(300)
-        hbox.addWidget(self.response_combobox) 
-        # self.response_combobox.currentIndexChanged.connect(self.signal_combobox_changed_cb)  
-
-        hlayout.addLayout(hbox)
-
-        # self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
-        #--------------
-        self.up_down_combobox = QComboBox()
-        self.up_down_combobox.setFixedWidth(110)
-        self.up_down_combobox.addItem("increases")
-        self.up_down_combobox.addItem("decreases")
-        hlayout.addWidget(self.up_down_combobox)
-
-        lwidth = 60
-        label = QLabel("Half-max")
-        label.setFixedWidth(lwidth)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        hlayout.addWidget(label) 
-        self.rule_half_max = QLineEdit()
-        self.rule_half_max.setText('0.5')
-        self.rule_half_max.setFixedWidth(100)
-        self.rule_half_max.setValidator(QtGui.QDoubleValidator())
-        hlayout.addWidget(self.rule_half_max)
-
         label = QLabel("Hill power")
-        label.setFixedWidth(lwidth)
+        label.setFixedWidth(60)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
+
         self.rule_hill_power = QLineEdit()
         self.rule_hill_power.setText('4')
         self.rule_hill_power.setFixedWidth(30)
         self.rule_hill_power.setValidator(QtGui.QIntValidator())
         hlayout.addWidget(self.rule_hill_power)
 
+        #---
+        label = QLabel()
+        label.setFixedWidth(210)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hlayout.addWidget(label) 
+
+        #---
         self.dead_cells_rule = False
-        self.dead_cells_checkbox = MyQCheckBox("applies to dead cells")
+        self.dead_cells_checkbox = MyQCheckBox("apply to dead")
         hlayout.addWidget(self.dead_cells_checkbox)
 
         self.rules_tab_layout.addLayout(hlayout) 
+
+
+        #------------------------- OLD -------------------
+        # hlayout = QHBoxLayout()
+
+        # hbox = QHBoxLayout()
+        # label = QLabel("Behavior")
+        # # label.setAlignment(QtCore.Qt.AlignLeft)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # hbox.addWidget(label) 
+
+        # # self.response_combobox = QComboBox()
+        # self.response_model = QStandardItemModel()
+        # self.response_combobox = ExtendedCombo()
+        # self.response_combobox.setModel(self.response_model)
+        # self.response_combobox.setModelColumn(0)
+
+        # # self.response_combobox.setFixedWidth(300)
+        # hbox.addWidget(self.response_combobox) 
+        # # self.response_combobox.currentIndexChanged.connect(self.signal_combobox_changed_cb)  
+
+        # hlayout.addLayout(hbox)
+
+        # # self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
+        # #--------------
+        # self.up_down_combobox = QComboBox()
+        # self.up_down_combobox.setFixedWidth(110)
+        # self.up_down_combobox.addItem("increases")
+        # self.up_down_combobox.addItem("decreases")
+        # hlayout.addWidget(self.up_down_combobox)
+
+        # lwidth = 60
+        # label = QLabel("Half-max")
+        # label.setFixedWidth(lwidth)
+        # # label.setAlignment(QtCore.Qt.AlignRight)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # hlayout.addWidget(label) 
+
+        # self.rule_half_max = QLineEdit()
+        # self.rule_half_max.setText('0.5')
+        # self.rule_half_max.setFixedWidth(100)
+        # self.rule_half_max.setValidator(QtGui.QDoubleValidator())
+        # hlayout.addWidget(self.rule_half_max)
+
+        # label = QLabel("Hill power")
+        # label.setFixedWidth(lwidth)
+        # # label.setAlignment(QtCore.Qt.AlignRight)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # hlayout.addWidget(label) 
+
+        # self.rule_hill_power = QLineEdit()
+        # self.rule_hill_power.setText('4')
+        # self.rule_hill_power.setFixedWidth(30)
+        # self.rule_hill_power.setValidator(QtGui.QIntValidator())
+        # hlayout.addWidget(self.rule_hill_power)
+
+        # self.dead_cells_rule = False
+        # self.dead_cells_checkbox = MyQCheckBox("applies to dead cells")
+        # hlayout.addWidget(self.dead_cells_checkbox)
+
+        # self.rules_tab_layout.addLayout(hlayout) 
 
         #---------------------------------------------------------
         #----------------------
@@ -490,7 +589,8 @@ class Rules(QWidget):
 
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(100)
-        self.save_button.setStyleSheet("background-color: lightgreen")
+        # self.save_button.setStyleSheet("background-color: lightgreen")
+        self.save_button.setStyleSheet("background-color: yellow")
         self.save_button.clicked.connect(self.save_rules_cb)
         # hbox.addWidget(self.save_button) 
         hlayout.addWidget(self.save_button) 
@@ -789,9 +889,83 @@ class Rules(QWidget):
 
 
     #-----------------------------------------------------------
+    def celltype_combobox_changed_cb(self, idx):
+        self.celltype_name = self.celltype_combobox.currentText()
+        print("----------- celltype_combobox_changed_cb(): ", self.celltype_name)
+        if self.signal:
+            print("        signal= ", self.signal)
+        print("          ", self.celldef_tab.param_d.keys())
+
+    #-----------------------------------------------------------
+    # ---- Behaviors:
+    # [s + " secretion”], [s + " secretion target”], [s + " uptake"], [s + " export"], where s = substrate/signal name
+    # ["cycle entry”]
+    # ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
+    # ["apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time"]
+    # ["chemotactic response to " + s]
+    # ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
+    # Each ct = cell type name: ["adhesive affinity to " + ct]
+    # ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+    # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
+    # ["is_movable", "cell attachment rate", "cell detachment rate", "maximum number of cell attachments"]
+    # Each cv = custom var name: ["custom:" + cv]
+
+        # for s in self.substrates:
+        #     self.response_l.append(s + " export")
+        # self.response_l.append("cycle entry")
+        # for idx in range(6):  # TODO: hardwired
+        #     self.response_l.append("exit from cycle phase " + str(idx))
+        # self.response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
+
+    def update_base_value(self):
+        print("\n-------update_base_value(self)")
+
+        # rwh: create this list once
+        # static_names = []
+        static_names = ["cycle entry"]
+
+        static_names += ["apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time"]
+        # static_names += ["chemotactic response to " + s]
+        static_names += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
+        # Each ct = cell type name: ["adhesive affinity to " + ct]
+        static_names += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+        static_names += ["is_movable", "cell attachment rate", "cell detachment rate", "maximum number of cell attachments"]
+
+        # static_names = ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
+        # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
+
+        if self.signal in self.substrates:
+            print("--- signal is substrate")
+        if self.behavior in static_names:
+            print("--- behavior is static: ",self.behavior)
+
+    #-----------------------------------------------------------
     def signal_combobox_changed_cb(self, idx):
-        name = self.signal_combobox.currentText()
-        self.signal = name
+
+        self.signal = self.signal_combobox.currentText()
+        print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print(f"    '{self.celltype_name}' keys= {self.celldef_tab.param_d[self.celltype_name].keys()}")
+
+        # self.update_base_value()
+
+    #   * param_d[cell_type]['custom_data'][custom_var_name] = [value, conserved_flag]
+        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
+        # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
+        #     self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+        # else:
+        #     self.cell_adhesion_affinity.setText(self.default_affinity)
+
+        # if idx == -1:
+        #     return
+
+    #-----------------------------------------------------------
+    def response_combobox_changed_cb(self, idx):
+
+        self.behavior = self.response_combobox.currentText()
+        print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print(f"    {self.celltype_name} params= {self.celldef_tab.param_d[self.celltype_name]}")
+
+        self.update_base_value()
 
         # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
@@ -924,6 +1098,22 @@ class Rules(QWidget):
         return z/(1.0 + z); 
 
     def plot_new_rule_cb(self):
+        try:
+            # print("\n------------- plot_new_rule_cb()")
+            signal = self.signal_combobox.currentText()
+            # print("------------- plot_new_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.response_combobox.currentText()
+            # print("n------------- plot_new_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
         if not self.rules_plot:
             self.rules_plot = RulesPlotWindow()
         # if not self.reuse_plot_w.isChecked():
@@ -964,7 +1154,38 @@ class Rules(QWidget):
 
 
     #-----------------------------------------------------------
+    def valid_signal(self, signal):
+        if signal in self.signal_l:
+            return True
+        else:
+            return False
+    #-----------------------------------------------------------
+    def valid_behavior(self, behavior):
+        if behavior in self.response_l:
+            return True
+        else:
+            return False
+
+    #-----------------------------------------------------------
     def add_rule_cb(self):
+
+        try:
+            # print("\n------------- add_rule_cb()")
+            signal = self.signal_combobox.currentText()
+            # print("------------- add_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.response_combobox.currentText()
+            # print("n------------- add_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
+
         # old: create csv string
 
         # v2 syntax: cell type, signal,increases/decreases, behavior, param value at max response, half max, hill power, applies to dead?
@@ -1182,7 +1403,31 @@ class Rules(QWidget):
     #--------------------------------------------------------
     # plot the selected rule in the table
     def plot_rule_cb(self):
+
         irow = self.rules_table.currentRow()
+        if irow < 0:
+            self.show_warning( "Select (click on) a row to plot.")
+            return
+
+        try:
+            print("\n------------- plot_rule_cb():  irow=",irow)
+            signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+            print("\n------------- plot_rule_cb():  signal=",signal)
+            # print("------------- plot_rule_cb(): signal= ",signal)
+            if not self.valid_signal(signal):
+                self.show_warning( "Invalid signal: " + signal)
+                return
+            behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+            print("\n------------- plot_rule_cb():  behavior=",behavior)
+            # print("n------------- plot_rule_cb(): behavior= ",behavior)
+            if not self.valid_behavior(behavior):
+                self.show_warning("Invalid behavior: " + behavior)
+                return
+        except:
+            print("\n------------- plot_rule_cb(): got exception validating signal, behavior. Return.")
+            return
+
+
         
         if (irow < 0) or (self.num_rules == 0):
             msg = "You need to select a row in the table"
@@ -1292,6 +1537,7 @@ class Rules(QWidget):
     def save_rules_cb(self):
         folder_name = self.rules_folder.text()
         file_name = self.rules_file.text()
+        print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
         # full_rules_fname = os.path.join(folder_name, file_name)
         full_rules_fname = os.path.abspath(os.path.join(".",folder_name, file_name))
         # if os.path.isfile(full_rules_fname):
@@ -1639,10 +1885,12 @@ class Rules(QWidget):
 
             rfolder = ET.SubElement(ruleset, 'folder')
             rfolder.text = self.rules_folder.text()
+            print(f"-------- rules_tab:  fill_xml(): rules folder={rfolder.text}")
             rfolder.tail = indent8
 
             rfile = ET.SubElement(ruleset, 'filename')
             rfile.text = self.rules_file.text()
+            print(f"-------- rules_tab:  fill_xml(): rules file={rfile.text}")
             rfile.tail = indent8
 
             uep.insert(0,elm)
