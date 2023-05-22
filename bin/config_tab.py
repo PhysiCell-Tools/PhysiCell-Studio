@@ -540,7 +540,8 @@ class Config(QWidget):
         
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
-        self.folder.setText(self.xml_root.find(".//folder").text)
+        self.folder.setText(self.xml_root.find(".//save//folder").text)
+        # print("\n----------------config_tab: fill_gui(): folder= ",self.folder.text())
         # if self.studio_flag:
         #     self.plot_folder.setText(self.xml_root.find(".//folder").text)
         
