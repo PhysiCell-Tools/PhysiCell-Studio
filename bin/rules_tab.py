@@ -1135,13 +1135,15 @@ class Rules(QWidget):
             # base_val = float(self.rule_base_val.text())
             min_val = float(self.rule_base_val.text())
         else:
-            min_val = 0.1
-        max_val = float(self.rule_max_val.text())
-        # X = np.linspace(base_val,max_val, 101) 
-        X = np.linspace(min_val,max_val, 101) 
+            # min_val = 0.1
+            min_val = 0.0
+        # max_val = float(self.rule_max_val.text())
 
         half_max = float(self.rule_half_max.text())
         hill_power = int(self.rule_hill_power.text())
+
+        # X = np.linspace(base_val,max_val, 101) 
+        X = np.linspace(min_val,2.0 * half_max, 101) 
 
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
         if "decreases" in self.up_down_combobox.currentText():
