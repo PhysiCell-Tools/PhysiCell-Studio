@@ -32,7 +32,7 @@ class RulesPlotWindow(QWidget):
         super().__init__()
         self.layout = QVBoxLayout()
         self.label = QLabel("Rule Plot")
-        self.layout.addWidget(self.label)
+        # self.layout.addWidget(self.label)
 
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
@@ -40,7 +40,16 @@ class RulesPlotWindow(QWidget):
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
         self.layout.addWidget(self.canvas)
 
+        self.close_button = QPushButton("Close")
+        self.close_button.setStyleSheet("background-color: lightgreen;")
+        # self.close_button.setFixedWidth(150)
+        self.close_button.clicked.connect(self.close_plot_cb)
+        self.layout.addWidget(self.close_button)
+
         self.setLayout(self.layout)
+
+    def close_plot_cb(self):
+        self.close()
 #---------------------
 
 class ExtendedCombo( QComboBox ):
@@ -1121,17 +1130,21 @@ class Rules(QWidget):
         self.rules_plot.ax0.cla()
 
         # min_val = float(self.rule_min_val.text())
-        if False:  # TODO: fix
-            # base_val = float(self.rule_base_val.text())
-            min_val = float(self.rule_base_val.text())
-        else:
-            min_val = 0.1
-        max_val = float(self.rule_max_val.text())
+        # if False:  # TODO: fix
+        #     # base_val = float(self.rule_base_val.text())
+        #     min_val = float(self.rule_base_val.text())
+        # else:
+        #     # min_val = 0.1
+        #     min_val = 0.0
+        # max_val = float(self.rule_max_val.text())
         # X = np.linspace(base_val,max_val, 101) 
-        X = np.linspace(min_val,max_val, 101) 
+        # X = np.linspace(min_val,max_val, 101) 
 
         half_max = float(self.rule_half_max.text())
         hill_power = int(self.rule_hill_power.text())
+
+        # X = np.linspace(min_val,2.0 * half_max, 101)   # guess max = 2 * half-max
+        X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
         if "decreases" in self.up_down_combobox.currentText():
@@ -1139,7 +1152,7 @@ class Rules(QWidget):
 
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
-        title = "cell type: " + self.celltype_combobox.currentText()
+        title = "[New rule] cell type: " + self.celltype_combobox.currentText()
         self.rules_plot.ax0.set_xlabel('signal: ' + self.signal_combobox.currentText())
         self.rules_plot.ax0.set_ylabel('response: ' + self.response_combobox.currentText())
         self.rules_plot.ax0.set_title(title, fontsize=10)
@@ -1451,16 +1464,18 @@ class Rules(QWidget):
         min_val = 0.0  # TODO - fix
         # base_val = float(self.rule_base_val.text())
         max_val = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
-        X = np.linspace(min_val,max_val, 101) 
+        # X = np.linspace(min_val,max_val, 101) 
 
         half_max = float(self.rules_table.cellWidget(irow, self.rules_halfmax_idx).text())
+        X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
+
         hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
         if "decreases" in self.rules_table.cellWidget(irow, self.rules_direction_idx).text():
             Y = 1.0 - Y
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
-        title = "cell type: " + self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+        title = "Rule " + str(irow+1) + ": cell type: " + self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
         self.rules_plot.ax0.set_xlabel('signal: ' + self.rules_table.cellWidget(irow, self.rules_signal_idx).text())
         self.rules_plot.ax0.set_ylabel('response: ' + self.rules_table.cellWidget(irow, self.rules_response_idx).text())
         self.rules_plot.ax0.set_title(title, fontsize=10)
@@ -1793,7 +1808,14 @@ class Rules(QWidget):
             #     self.fill_rules(full_path_rules_name)
             # else:
             #     self.fill_rules(full_rules_fname)
-            self.fill_rules(full_rules_fname)
+
+            if self.nanohub_flag:  # sigh
+                full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
+                self.fill_rules(full_rules_fname)
+            else:
+                self.fill_rules(full_rules_fname)
+
+            # self.fill_rules(full_rules_fname)
             # self.fill_rules(folder_name, file_name)
 
             # if os.path.isfile(full_rules_fname):

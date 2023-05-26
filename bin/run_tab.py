@@ -185,7 +185,12 @@ class RunModel(QWidget):
                         tname = tempfile.mkdtemp(suffix='.bak', prefix='tmpdir_', dir='.')
                         shutil.move('tmpdir', tname)
                     os.makedirs('tmpdir')
+
+                    # write the default config file to tmpdir
+                    # new_config_file = "tmpdir/config.xml"  # use Path; work on Windows?
                     tdir = os.path.abspath('tmpdir')
+                    new_config_file = Path(tdir,"config.xml")
+                    self.output_dir = '.'
                 else:
                     self.output_dir = self.config_tab.folder.text()
                     os.system('rm -rf ' + self.output_dir)
@@ -247,7 +252,6 @@ class RunModel(QWidget):
                     self.vis_tab.disable_physiboss_info()
                     # self.vis_tab.physiboss_vis_hide
 
-            print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
 
             if self.p is None:  # No process running.
                 self.enable_run(False)
