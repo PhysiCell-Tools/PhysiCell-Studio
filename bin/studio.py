@@ -18,6 +18,7 @@ import platform
 import sys
 import argparse
 import logging
+import traceback
 import shutil # for possible copy of file
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -1176,14 +1177,16 @@ def main():
         print("args=",args)
         print("unknown=",unknown)
         if unknown:
-            if unknown[0] == "--rules":
+            print("len(unknown)= ",len(unknown))
+            if unknown[0] == "--rules" and len(unknown)==1:
                 print("studio.py: setting rules_flag = True")
                 rules_flag = True
             else:
-                print("invalid argument: ",unknown)
+                print("Invalid argument(s): ",unknown)
+                print("Use '--help' to see options.")
                 sys.exit(-1)
 
-        print("-- continue after if unknown...")
+        # print("-- continue after if unknown...")
         if args.three:
             logging.debug(f'studio.py: Assume a 3D model')
             model3D_flag = True
@@ -1290,9 +1293,16 @@ def main():
     if rules_flag:
         try:
             from rules_tab import Rules
+        except ImportError as ie:
+            print("importerror ",ie)
+            traceback.print_exc()
         except:
             rules_flag = False
-            print("Warning: Rules module not found.\n")
+            traceback.print_exc()
+            # for line in traceback.format_stack():
+            #     print(line.strip())
+            sys.exit(1)
+            # print("Warning: Rules module not found.\n")
 
     # print("calling PhysiCellXMLCreator with rules_flag= ",rules_flag)
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag)
