@@ -150,6 +150,7 @@ class Rules(QWidget):
 
         self.nanohub_flag = nanohub_flag
         self.homedir = '.'  # reset in studio.py
+        self.absolute_data_dir = None   # updated in studio.py
 
         self.microenv_tab = microenv_tab
         self.celldef_tab = celldef_tab
@@ -406,13 +407,13 @@ class Rules(QWidget):
 
         #---
         label = QLabel("")
-        lwidth = 120
+        lwidth = 60
         label.setFixedWidth(lwidth)
         hlayout.addWidget(label) 
 
         #---
-        label = QLabel("Max")
-        label.setFixedWidth(30)
+        label = QLabel("Max response")
+        label.setFixedWidth(90)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
