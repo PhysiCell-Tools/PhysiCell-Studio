@@ -133,6 +133,25 @@ class PhysiCellXMLCreator(QWidget):
             if "home/nanohub" in os.environ['HOME']:
                 self.nanohub_flag = True
 
+        if self.nanohub_flag:
+            try:
+                tool_dir = os.environ['TOOLPATH']
+                dataDirectory = os.path.join(tool_dir,'data')
+            except:
+                binDirectory = os.path.dirname(os.path.abspath(__file__))
+                dataDirectory = os.path.join(binDirectory,'..','data')
+                print("-------- dataDirectory (relative) =",dataDirectory)
+            self.absolute_data_dir = os.path.abspath(dataDirectory)
+            print("-------- absolute_data_dir =",self.absolute_data_dir)
+
+            # NOTE: if your C++ needs to also have an absolute path to data dir, do so via an env var
+            # os.environ['KIDNEY_DATA_PATH'] = self.absolute_data_dir
+
+            # docDirectory = os.path.join(binDirectory,'..','doc')
+            # self.absolute_doc_dir = os.path.abspath(docDirectory)
+            # print("-------- absolute_doc_dir =",self.absolute_doc_dir)
+            # read_file = os.path.join(self.absolute_data_dir, model_name + ".xml")
+
         self.p = None # Necessary to download files!
 
         # Menus
@@ -178,7 +197,8 @@ class PhysiCellXMLCreator(QWidget):
             model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
             if self.nanohub_flag:
-                model_name = "rules"
+                # model_name = "rules"
+                model_name = "template"
             self.current_xml_file = os.path.join(self.studio_config_dir, model_name + ".xml")
 
 
@@ -207,8 +227,9 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.nanohub_flag:  # rwh - test if works on nanoHUB
             print("studio.py: ---- TRUE nanohub_flag: updating config_tab folder")
-            self.config_tab.folder.setText('tmpdir')
-            self.config_tab.folder.setEnabled(False)
+            # self.config_tab.folder.setText('tmpdir')
+            self.config_tab.folder.setText('.')
+            # self.config_tab.folder.setEnabled(False)
             # self.config_tab.csv_folder.setText('')
             self.config_tab.csv_folder.setEnabled(False)
         else:
@@ -296,8 +317,12 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
             self.celldef_tab.rules_tab = self.rules_tab
+            if self.nanohub_flag:
+                self.rules_tab.absolute_data_dir = self.absolute_data_dir
             self.rules_tab.fill_gui()
 
+            if self.nanohub_flag:
+                self.rules_tab.rules_folder.setText(self.absolute_data_dir)
 
         if self.studio_flag:
             logging.debug(f'studio.py: creating ICs, Run, and Plot tabs')
@@ -307,7 +332,13 @@ class PhysiCellXMLCreator(QWidget):
 
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
                 print("studio.py: ---- TRUE nanohub_flag: updating ics_tab folder")
-                self.ics_tab.csv_folder.setText('')
+                # self.ics_tab.csv_folder.setText('')
+                self.config_tab.csv_folder.setText(self.absolute_data_dir)
+                self.config_tab.csv_folder.setEnabled(False)
+                self.config_tab.csv_file.setText("mycells.csv")
+
+                self.ics_tab.csv_folder.setText(self.absolute_data_dir)
+                self.ics_tab.output_file.setText("mycells.csv")
                 self.ics_tab.csv_folder.setEnabled(False)
             else:
                 print("studio.py: ---- FALSE nanohub_flag: NOT updating ics_tab folder")
@@ -338,7 +369,8 @@ class PhysiCellXMLCreator(QWidget):
             if not self.nanohub_flag:
                 self.run_tab.exec_name.setText(os.path.join(self.homedir, exec_file))
             else:
-                self.run_tab.exec_name.setText(os.path.join(self.homedir, "bin", exec_file))
+                # self.run_tab.exec_name.setText(os.path.join(self.homedir, "bin", exec_file))
+                self.run_tab.exec_name.setText(os.path.join(exec_file))
 
             self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.current_dir = os.getcwd()
@@ -363,8 +395,9 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.update_output_dir(self.config_tab.folder.text())
             self.config_tab.vis_tab = self.vis_tab
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
-                self.vis_tab.output_folder.setText('tmpdir')
-                self.vis_tab.output_folder.setEnabled(False)
+                # self.vis_tab.output_folder.setText('tmpdir')
+                self.vis_tab.output_folder.setText('.')
+                # self.vis_tab.output_folder.setEnabled(False)
                 self.vis_tab.output_folder_button.setEnabled(False)
 
             self.vis_tab.config_tab = self.config_tab
@@ -516,11 +549,17 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         #-----
         file_menu = menubar.addMenu('&File')
         if self.nanohub_flag:
-            # model_menu = menubar.addMenu('&Model')
+            model_menu = menubar.addMenu('&Model')
+            model_menu.addAction("template", self.template_cb)
+            model_menu.addAction("biorobots", self.biorobots_cb)
+            model_menu.addAction("tumor_immune", self.tumor_immune_cb)   # was "rules"
+
+            # model_menu.addAction("celltypes3", self.celltypes3_nanohub_cb)
+            # model_menu.addAction("pred_prey_farmer", self.pred_prey_nanohub_cb)
             # model_menu.addAction("biorobots", self.biorobots_nanohub_cb)
             # model_menu.addAction("celltypes3", self.celltypes3_nanohub_cb)
             # model_menu.addAction("pred_prey_farmer", self.pred_prey_nanohub_cb)
-            pass
+            # pass
 
         #--------------
         else:
@@ -607,6 +646,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if self.nanohub_flag:
             self.download_menu = file_menu.addMenu('Download')
             self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
+            self.download_rules_item = self.download_menu.addAction("Download rules.csv", self.download_rules_cb)
             self.download_svg_item = self.download_menu.addAction("Download SVG", self.download_svg_cb)
             self.download_mat_item = self.download_menu.addAction("Download binary (.mat) data", self.download_full_cb)
             # self.download_menu_item.setEnabled(False)
@@ -651,7 +691,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.celldef_tab.current_cell_def = None
         self.celldef_tab.cell_adhesion_affinity_celltype = None
 
-        # self.microenv_tab.param_d.clear()
+        self.microenv_tab.param_d.clear()
 
         print(f"\nreset_xml_root() self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
@@ -681,6 +721,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         if self.rules_flag:
             self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.clear_rules()
             self.rules_tab.fill_gui()   # do *after* populate_cell_defs() 
 
         if self.studio_flag:
@@ -1003,9 +1044,16 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.exec_name.setText('./project')
 
     def biorobots_cb(self):
+        # self.load_model("biorobots")
+        # self.load_model("biorobots_flat")
         self.load_model("biorobots")
         if self.studio_flag:
             self.run_tab.exec_name.setText('./biorobots')
+
+    def tumor_immune_cb(self):
+        self.load_model("tumor_immune")
+        if self.studio_flag:
+            self.run_tab.exec_name.setText('./project')
 
     def cancer_biorobots_cb(self):
         self.load_model("cancer_biorobots")
@@ -1094,55 +1142,142 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def download_config_cb(self):
         if self.nanohub_flag:
-            if self.p is None:  # No process running.
-                self.p = QProcess()
-                self.p.readyReadStandardOutput.connect(self.handle_stdout)
-                self.p.readyReadStandardError.connect(self.handle_stderr)
-                self.p.stateChanged.connect(self.handle_state)
-                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+            try:
+                if self.p is None:  # No process running.
+                    self.debug_tab.add_msg("   self.p is None; create QProcess()")
+                    self.debug_tab.add_msg("  cwd= " + os.getcwd())
+                    self.debug_tab.add_msg("doing: exportfile config.xml")
+                    self.p = QProcess()
+                    self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                    self.p.readyReadStandardError.connect(self.handle_stderr)
+                    self.p.stateChanged.connect(self.handle_state)
+                    self.p.finished.connect(self.process_finished)  # Clean up once complete.
+                    self.p.start("exportfile config.xml")
+                else:
+                    self.debug_tab.add_msg("   self.p is NOT None; just return!")
+            except:
+                self.message("Unable to download config.xml")
+                print("Unable to download config.xml")
+                self.p = None
+        return
 
-                self.p.start("exportfile config.xml")
+    def download_rules_cb(self):
+        if self.nanohub_flag:
+            try:
+                if self.p is None:  # No process running.
+                    self.p = QProcess()
+                    self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                    self.p.readyReadStandardError.connect(self.handle_stderr)
+                    self.p.stateChanged.connect(self.handle_state)
+                    self.p.finished.connect(self.process_finished)  # Clean up once complete.
+
+                    self.p.start("exportfile rules.csv")
+                else:
+                    self.debug_tab.add_msg(" download_rules_cb():  self.p is NOT None; just return!")
+            except:
+                self.message("Unable to download rules.csv")
+                print("Unable to download rules.csv")
+                self.p = None
         return
 
     def download_svg_cb(self):
         if self.nanohub_flag:
-            if self.p is None:  # No process running.
-                self.p = QProcess()
-                self.p.readyReadStandardOutput.connect(self.handle_stdout)
-                self.p.readyReadStandardError.connect(self.handle_stderr)
-                self.p.stateChanged.connect(self.handle_state)
-                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+            try:
+                if self.p is None:  # No process running.
+                    self.p = QProcess()
+                    self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                    self.p.readyReadStandardError.connect(self.handle_stderr)
+                    self.p.stateChanged.connect(self.handle_state)
+                    self.p.finished.connect(self.process_finished)  # Clean up once complete.
 
-                # file_str = os.path.join(self.output_dir, '*.svg')
-                file_str = "*.svg"
-                print('-------- download_svg_cb(): zip up all ',file_str)
-                with zipfile.ZipFile('svg.zip', 'w') as myzip:
-                    for f in glob.glob(file_str):
-                        myzip.write(f, os.path.basename(f))   # 2nd arg avoids full filename 
-                self.p.start("exportfile svg.zip")
+                    # file_str = os.path.join(self.output_dir, '*.svg')
+                    file_str = "*.svg"
+                    print('-------- download_svg_cb(): zip up all ',file_str)
+                    with zipfile.ZipFile('svg.zip', 'w') as myzip:
+                        for f in glob.glob(file_str):
+                            myzip.write(f, os.path.basename(f))   # 2nd arg avoids full filename 
+                    self.p.start("exportfile svg.zip")
+                else:
+                    # self.debug_tab.add_msg(" download_svg_cb():  self.p is NOT None; just return!")
+                    print(" download_svg_cb():  self.p is NOT None; just return!")
+            except:
+                self.message("Unable to download svg.zip")
+                print("Unable to download svg.zip")
+                self.p = None
         return
 
     def download_full_cb(self):
         if self.nanohub_flag:
-            if self.p is None:  # No process running.
-                self.p = QProcess()
-                self.p.readyReadStandardOutput.connect(self.handle_stdout)
-                self.p.readyReadStandardError.connect(self.handle_stderr)
-                self.p.stateChanged.connect(self.handle_state)
-                self.p.finished.connect(self.process_finished)  # Clean up once complete.
+            try:
+                if self.p is None:  # No process running.
+                    self.p = QProcess()
+                    self.p.readyReadStandardOutput.connect(self.handle_stdout)
+                    self.p.readyReadStandardError.connect(self.handle_stderr)
+                    self.p.stateChanged.connect(self.handle_state)
+                    self.p.finished.connect(self.process_finished)  # Clean up once complete.
 
-                # file_xml = os.path.join(self.output_dir, '*.xml')
-                # file_mat = os.path.join(self.output_dir, '*.mat')
-                file_xml = '*.xml'
-                file_mat = '*.mat'
-                print('-------- download_full_cb(): zip up all .xml and .mat')
-                with zipfile.ZipFile('mcds.zip', 'w') as myzip:
-                    for f in glob.glob(file_xml):
-                        myzip.write(f, os.path.basename(f)) # 2nd arg avoids full filename path in the archive
-                    for f in glob.glob(file_mat):
-                        myzip.write(f, os.path.basename(f))
-                self.p.start("exportfile mcds.zip")
+                    # file_xml = os.path.join(self.output_dir, '*.xml')
+                    # file_mat = os.path.join(self.output_dir, '*.mat')
+                    file_xml = '*.xml'
+                    file_mat = '*.mat'
+                    print('-------- download_full_cb(): zip up all .xml and .mat')
+                    with zipfile.ZipFile('mcds.zip', 'w') as myzip:
+                        for f in glob.glob(file_xml):
+                            myzip.write(f, os.path.basename(f)) # 2nd arg avoids full filename path in the archive
+                        for f in glob.glob(file_mat):
+                            myzip.write(f, os.path.basename(f))
+                    self.p.start("exportfile mcds.zip")
+                else:
+                    # self.debug_tab.add_msg(" download_full_cb():  self.p is NOT None; just return!")
+                    print(" download_full_cb():  self.p is NOT None; just return!")
+            except:
+                self.message("Unable to download mcds.zip")
+                print("Unable to download mcds.zip")
+                self.p = None
         return
+
+    def biorobots_nanohub_cb(self):
+        print("\n\n\n================ copy/load sample ======================================")
+        os.chdir(self.homedir)
+        name = "biorobots_flat"
+        # sample_file = Path("data", name + ".xml")
+        # sample_file = Path(self.absolute_data_dir, name + ".xml")
+        sample_file = Path(self.pmb_data_dir, name + ".xml")
+        copy_file = "copy_" + name + ".xml"
+        shutil.copy(sample_file, copy_file)
+
+        # self.add_new_model(copy_file, True)
+        # self.config_file = "config_samples/" + name + ".xml"
+        self.config_file = copy_file
+        # self.show_sample_model()
+        # self.run_tab.exec_name.setText('../biorobots')
+
+        try:
+            print("biorobots_nanohub_cb():------------- copying ",sample_file," to ",copy_file)
+            shutil.copy(sample_file, copy_file)
+        except:
+            print("biorobots_nanohub_cb(): Unable to copy file(1).")
+            sys.exit(1)
+
+        try:
+            print("biorobots_nanohub_cb():------------- copying ",sample_file," to config.xml")
+            shutil.copy(sample_file, "config.xml")
+        except:
+            print("biorobots_nanohub_cb(): Unable to copy file(2).")
+            sys.exit(1)
+
+        self.add_new_model(copy_file, True)
+        self.config_file = copy_file
+        print("biorobots_nanohub_cb:   self.config_file = ",self.config_file)
+
+        self.show_sample_model()
+        if self.nanohub_flag:
+            self.run_tab.exec_name.setText('biorobots')
+        else:
+            self.run_tab.exec_name.setText('../biorobots')
+        self.vis_tab.show_edge = False
+        self.vis_tab.bgcolor = [1,1,1,1]
+
     #-----------------------------------------------------------------
 
 studio_app = None
