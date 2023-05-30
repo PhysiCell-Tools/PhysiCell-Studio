@@ -334,9 +334,11 @@ class Rules(QWidget):
         hlayout = QHBoxLayout()
         # hlayout.addStretch(0)
 
+        wwidth = 300
         # self.signal_combobox = QComboBox()
         self.signal_model = QStandardItemModel()
         self.signal_combobox = ExtendedCombo()
+        self.signal_combobox.setFixedWidth(wwidth)
         self.signal_combobox.setModel(self.signal_model)
         self.signal_combobox.setModelColumn(0)
 
@@ -348,6 +350,7 @@ class Rules(QWidget):
         # Behavior combobox
         self.response_model = QStandardItemModel()
         self.response_combobox = ExtendedCombo()
+        self.response_combobox.setFixedWidth(wwidth)
         self.response_combobox.setModel(self.response_model)
         self.response_combobox.setModelColumn(0)
         self.response_combobox.currentIndexChanged.connect(self.response_combobox_changed_cb)  
@@ -585,6 +588,8 @@ class Rules(QWidget):
         # person_groupbox.setLayout(form_layout)
 
         self.import_rules_button = QPushButton("Import")
+        if self.nanohub_flag:
+            self.import_rules_button.setEnabled(False)
         self.import_rules_button.setFixedWidth(100)
         self.import_rules_button.setStyleSheet("background-color: lightgreen")
         self.import_rules_button.clicked.connect(self.import_rules_cb)
@@ -598,6 +603,8 @@ class Rules(QWidget):
         # hlayout.addWidget(self.load_button) 
 
         self.save_button = QPushButton("Save")
+        if self.nanohub_flag:
+            self.save_button.setEnabled(False)
         self.save_button.setFixedWidth(100)
         # self.save_button.setStyleSheet("background-color: lightgreen")
         self.save_button.setStyleSheet("background-color: yellow")
@@ -612,6 +619,8 @@ class Rules(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox1.addWidget(label) 
         self.rules_folder = QLineEdit()
+        # if self.nanohub_flag:
+            # self.rules_folder.setEnabled(False)
         self.rules_folder.setFixedWidth(200)
         # self.rules_folder.setAlignment(QtCore.Qt.AlignLeft)
         hbox1.addWidget(self.rules_folder) 
@@ -624,6 +633,8 @@ class Rules(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox2.addWidget(label) 
         self.rules_file = QLineEdit()
+        if self.nanohub_flag:
+            self.rules_file.setEnabled(False)
         self.rules_file.setFixedWidth(200)
         hbox2.addWidget(self.rules_file) 
         hlayout.addLayout(hbox2) 
@@ -1641,9 +1652,22 @@ class Rules(QWidget):
         return
 
     #-----------------------------------------------------------
+    def clear_comboboxes(self):
+        # self.substrates.clear()
+        self.signal_l.clear()
+        self.response_l.clear()
+
+        self.celltype_combobox.clear()
+        self.signal_combobox.clear()
+        self.response_combobox.clear()
+
+    #-----------------------------------------------------------
     def fill_signals_widget(self):
         # print("\n rules_tab:-------------------fill_signals_widget()")
         self.signal_l.clear()
+        self.signal_combobox.clear()
+
+        # print("\n       fill_signals_widget(): self.substrates= ",self.substrates)
 
         for s in self.substrates:
             self.signal_l.append(s)
@@ -1681,6 +1705,7 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def fill_responses_widget(self):
         self.response_l.clear()
+        self.response_combobox.clear()
 
         # TODO: figure out how best to organize these responses
         for s in self.substrates:
@@ -1736,6 +1761,8 @@ class Rules(QWidget):
         # logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
         print(f'\n\n------------\nrules_tab.py: fill_gui():')
 
+        self.clear_comboboxes()
+
         # print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
         for key in self.celldef_tab.param_d.keys():
             # logging.debug(f'cell type ---> {key}')
@@ -1785,7 +1812,7 @@ class Rules(QWidget):
                 if folder_name == None:
                     msg += " rules file "
                 msg += " missing from .xml"
-                self.show_warning(msg)
+                # self.show_warning(msg)
 
                 self.rules_folder.setText("")
                 self.rules_file.setText("")
