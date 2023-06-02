@@ -714,7 +714,7 @@ class Rules(QWidget):
         # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
         # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Max','Half-max','Hill power','Apply to dead'])
+        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Max response','Half-max','Hill power','Apply to dead'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
