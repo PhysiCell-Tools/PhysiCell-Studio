@@ -85,6 +85,7 @@ class Vis(VisBase, QWidget):
         # self.population_plot = None
         self.celltype_name = []
         self.celltype_color = []
+        self.discrete_variable = None
 
         self.animating_flag = False
 
@@ -102,7 +103,8 @@ class Vis(VisBase, QWidget):
         self.cell_alpha = 0.5
 
         self.num_contours = 50
-        self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        # self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        self.shading_choice = 'gouraud'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
 
         self.fontsize = 7
         self.label_fontsize = 6
@@ -713,24 +715,28 @@ class Vis(VisBase, QWidget):
         # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
         # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
         
-        discrete_variable = None
         # print(cell_scalar_name, " - discrete: ", (cell_scalar % 1  == 0).all()) # Possible test if the variable is discrete or continuum variable (issue: in some time the continuum variable can be classified as discrete (example time=0))
         
         # if( cell_scalar_name == 'cell_type' or cell_scalar_name == 'current_phase'): discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
         if cell_scalar_name in self.discrete_cell_scalars: 
-            discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
+            if cell_scalar_name == "current_phase":   # and if "Fixed" range is checked
+                self.cycle_phases = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18, 100,101,102,103,104]
+                # if self.discrete_variable is None:
+                self.discrete_variable = self.cycle_phases
+            else:
+                self.discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
         # if( discrete_variable ): # Generic way: if variable is discrete
             self.cell_scalar_cbar_combobox.setEnabled(False)
             from_list = matplotlib.colors.LinearSegmentedColormap.from_list
-            discrete_variable.sort()
-            if (len(discrete_variable) == 1): 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(discrete_variable))
+            self.discrete_variable.sort()
+            if (len(self.discrete_variable) == 1): 
+                cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(self.discrete_variable))
             else: 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,len(discrete_variable))), len(discrete_variable))
+                cbar_name = from_list(None, plt.cm.Set1(range(0,len(self.discrete_variable))), len(self.discrete_variable))
             vmin = None
             vmax = None
             # Change the values between 0 and number of possible values
-            for i, value in enumerate(discrete_variable):
+            for i, value in enumerate(self.discrete_variable):
                 cell_scalar = cell_scalar.replace(value,i)
         else: 
             self.cell_scalar_cbar_combobox.setEnabled(True)
@@ -800,11 +806,11 @@ class Vis(VisBase, QWidget):
             except:
                 pass
         
-        if( discrete_variable ): # Generic way: if variable is discrete
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(discrete_variable)), cax=self.cax2, orientation="horizontal")
+        if( self.discrete_variable ): # Generic way: if variable is discrete
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
             # self.cbar2.ax.tick_params(length=0) # remove tick line
-            cell_plot.set_clim(vmin=-0.5,vmax=len(discrete_variable)-0.5) # scaling bar to the center of the ticks
-            self.cbar2.set_ticklabels(discrete_variable) # It's possible to give strings
+            cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
+            self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
             self.cbar2.ax.set_xlabel(cell_scalar_name)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
