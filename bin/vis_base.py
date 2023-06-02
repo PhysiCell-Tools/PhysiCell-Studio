@@ -427,7 +427,8 @@ class VisBase():
         self.contour_mesh = True
         self.contour_lines = False
         self.num_contours = 50
-        self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        # self.shading_choice = 'auto'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
+        self.shading_choice = 'gouraud'  # 'auto'(was 'flat') vs. 'gouraud' (smooth)
 
         self.fontsize = 7
         self.label_fontsize = 6
@@ -1814,8 +1815,8 @@ class VisBase():
                 # print("sub_names = ",sub_names)
                 self.substrates_combobox.addItems(sub_names)
 
-        self.cmin_value = 0.0
-        self.cmax_value = 1.0
+        # self.cmin_value = 0.0
+        # self.cmax_value = 1.0
 
         # and plot 1st frame (.svg)
         self.current_svg_frame = 0
