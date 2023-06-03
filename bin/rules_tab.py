@@ -375,8 +375,8 @@ class Rules(QWidget):
         # label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
-        label = QLabel("Base")
-        lwidth = 30
+        label = QLabel("Base value")
+        lwidth = 72
         label.setFixedWidth(lwidth)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -410,13 +410,13 @@ class Rules(QWidget):
 
         #---
         label = QLabel("")
-        lwidth = 60
+        lwidth = 95
         label.setFixedWidth(lwidth)
         hlayout.addWidget(label) 
 
         #---
-        label = QLabel("Max response")
-        label.setFixedWidth(90)
+        label = QLabel("Saturation value")
+        label.setFixedWidth(100)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
@@ -589,7 +589,7 @@ class Rules(QWidget):
 
         self.import_rules_button = QPushButton("Import")
         if self.nanohub_flag:
-            self.import_rules_button.setEnabled(False)
+            self.import_rules_button.setEnabled(True)
         self.import_rules_button.setFixedWidth(100)
         self.import_rules_button.setStyleSheet("background-color: lightgreen")
         self.import_rules_button.clicked.connect(self.import_rules_cb)
@@ -604,7 +604,7 @@ class Rules(QWidget):
 
         self.save_button = QPushButton("Save")
         if self.nanohub_flag:
-            self.save_button.setEnabled(False)
+            self.save_button.setEnabled(True)
         self.save_button.setFixedWidth(100)
         # self.save_button.setStyleSheet("background-color: lightgreen")
         self.save_button.setStyleSheet("background-color: yellow")
@@ -634,7 +634,7 @@ class Rules(QWidget):
         hbox2.addWidget(label) 
         self.rules_file = QLineEdit()
         if self.nanohub_flag:
-            self.rules_file.setEnabled(False)
+            self.rules_file.setEnabled(True)
         self.rules_file.setFixedWidth(200)
         hbox2.addWidget(self.rules_file) 
         hlayout.addLayout(hbox2) 
@@ -714,7 +714,7 @@ class Rules(QWidget):
         # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
         # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Max response','Half-max','Hill power','Apply to dead'])
+        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Saturation value','Half-max','Hill power','Apply to dead'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -1838,7 +1838,8 @@ class Rules(QWidget):
             #     self.fill_rules(full_rules_fname)
 
             if self.nanohub_flag:  # sigh
-                full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
+                # full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
+                full_rules_fname = os.path.join('.', file_name)
                 self.fill_rules(full_rules_fname)
             else:
                 self.fill_rules(full_rules_fname)
