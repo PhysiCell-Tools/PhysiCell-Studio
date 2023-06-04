@@ -940,6 +940,40 @@ class Rules(QWidget):
 
     def update_base_value(self):
         print("\n-------update_base_value(self)")
+        behavior = self.response_combobox.currentText()
+        key0 = self.celltype_name
+        print("     behavior=",behavior)
+        btokens = behavior.split()
+        if len(btokens) == 0:
+            return
+
+        if btokens[0] in self.substrates:
+            print(f"{btokens[0]} is a substrate")
+            # key1 = btokens[0]
+            key1 = 'secretion'
+            key2 = btokens[0]
+            if 'target' in btokens:
+                key3 = "secretion_target"
+            elif 'uptake' in btokens:
+                key3 = "uptake_rate"
+            elif 'export' in btokens:
+                key3 = "net_export_rate"
+            else:  # just "<substrate> secretion" which mean its rate
+                key3 = "secretion_rate"
+            try:
+                # print("\n---key0= ",self.celldef_tab.param_d[key0])
+                # print("\n---key1= ",self.celldef_tab.param_d[key0][key1])
+                # print("\n---key2= ",self.celldef_tab.param_d[key0][key1][key2])
+                base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
+                print("------- base_val= ",base_val)
+                self.rule_base_val.setText(base_val)
+            except:
+                print("---- got exception")
+                return
+
+        # print(self.celldef_tab.param_d.keys())
+        # for ct in self.celldef_tab.param_d.keys():
+            # print(self.celldef_tab.param_d[ct])
 
         # rwh: create this list once
         # static_names = []
@@ -964,7 +998,7 @@ class Rules(QWidget):
     def signal_combobox_changed_cb(self, idx):
 
         self.signal = self.signal_combobox.currentText()
-        print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
         # print(f"    '{self.celltype_name}' keys= {self.celldef_tab.param_d[self.celltype_name].keys()}")
 
         # self.update_base_value()
@@ -983,7 +1017,7 @@ class Rules(QWidget):
     def response_combobox_changed_cb(self, idx):
 
         self.behavior = self.response_combobox.currentText()
-        print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
         # print(f"    {self.celltype_name} params= {self.celldef_tab.param_d[self.celltype_name]}")
 
         self.update_base_value()
