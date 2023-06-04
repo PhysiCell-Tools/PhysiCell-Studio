@@ -947,6 +947,7 @@ class Rules(QWidget):
         if len(btokens) == 0:
             return
 
+        base_val = '??'
         if btokens[0] in self.substrates:
             print(f"{btokens[0]} is a substrate")
             # key1 = btokens[0]
@@ -966,10 +967,43 @@ class Rules(QWidget):
                 # print("\n---key2= ",self.celldef_tab.param_d[key0][key1][key2])
                 base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
                 print("------- base_val= ",base_val)
-                self.rule_base_val.setText(base_val)
             except:
                 print("---- got exception")
                 return
+        elif btokens[0] == 'apoptosis':
+            base_val = self.celldef_tab.param_d[key0]['apoptosis_death_rate']
+        elif btokens[0] == 'necrosis':
+            base_val = self.celldef_tab.param_d[key0]['necrosis_death_rate']
+        elif btokens[0] == 'migration':
+            if btokens[1] == 'speed':
+                base_val = self.celldef_tab.param_d[key0]['speed']
+            elif btokens[1] == 'bias':
+                base_val = self.celldef_tab.param_d[key0]['migration_bias']
+            elif btokens[1] == 'persistence':
+                base_val = self.celldef_tab.param_d[key0]['persistence_time']
+        elif btokens[0] == 'cell-cell':
+            if btokens[1] == 'adhesion':
+                if len(btokens)==2:
+                    base_val = self.celldef_tab.param_d[key0]['mechanics_adhesion']
+                elif btokens[2] == 'elastic':
+                    base_val = self.celldef_tab.param_d[key0]['mechanics_elastic_constant']
+            elif btokens[1] == 'repulsion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_repulsion']
+        elif btokens[0] == 'cell-BM':
+            if btokens[1] == 'adhesion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_adhesion']
+            elif btokens[1] == 'repulsion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_repulsion']
+        elif behavior == "relative maximum adhesion distance":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
+        elif behavior == "cell attachment rate":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_attachment_rate']
+        elif behavior == "cell detachment rate":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
+        # elif behavior == "maximum number of cell attachments":
+            
+
+        self.rule_base_val.setText(base_val)
 
         # print(self.celldef_tab.param_d.keys())
         # for ct in self.celldef_tab.param_d.keys():
