@@ -158,6 +158,7 @@ class Rules(QWidget):
         self.celltype_name = None
         self.signal = None
         self.behavior = None
+        self.scale_base_for_max = 2.0
 
         self.max_rule_table_rows = 99
 
@@ -421,7 +422,7 @@ class Rules(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
-        self.rule_max_val = QLineEdit()
+        self.rule_max_val = QLineEdit()  # saturation value for behavior
         # self.rule_max_val.setText('3.e-4')
         self.rule_max_val.setText('1.0')
         self.rule_max_val.setValidator(QtGui.QDoubleValidator())
@@ -1001,9 +1002,40 @@ class Rules(QWidget):
         elif behavior == "cell detachment rate":
             base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
         # elif behavior == "maximum number of cell attachments":
+
+        elif btokens[0] == "phagocytose":
+            print("--- handling phagocytose as token 0")
+            print(btokens)
+            if len(btokens)==3 and btokens[1] == "dead" and btokens[2] == "cell":
+                print("--- handling phagocytose dead cell")
+                base_val = self.celldef_tab.param_d[key0]['dead_phagocytosis_rate']
+            else:
+                cell_type = behavior[12:]   # length of "phagocytose" 
+                print("      cell_type (for phagocytose)=",cell_type)
+                base_val = self.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
+        elif btokens[0] == "attack":
+            cell_type = behavior[7:]
+            base_val = self.celldef_tab.param_d[key0]['attack_rate'][cell_type]
+        elif behavior[0:len("fuse to")] == "fuse to":
+            cell_type = behavior[len("fuse to")+1:]
+            base_val = self.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
+        elif behavior[0:len("transform to")] == "transform to":
+            cell_type = behavior[len("transform to")+1:]
+            base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
             
 
+        #---------------------
+        # Set the base value 
         self.rule_base_val.setText(base_val)
+
+        # Compute/set the saturation value 
+        if base_val == '??':
+            saturation_val = 1.0
+        else:
+            saturation_val = self.scale_base_for_max * float(base_val)
+            if abs(saturation_val) < 1.e-9:
+                saturation_val = 1.0
+        self.rule_max_val.setText(str(saturation_val))
 
         # print(self.celldef_tab.param_d.keys())
         # for ct in self.celldef_tab.param_d.keys():
@@ -1023,10 +1055,10 @@ class Rules(QWidget):
         # static_names = ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
         # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
 
-        if self.signal in self.substrates:
-            print("--- signal is substrate")
-        if self.behavior in static_names:
-            print("--- behavior is static: ",self.behavior)
+        # if self.signal in self.substrates:
+        #     print("--- signal is substrate")
+        # if self.behavior in static_names:
+        #     print("--- behavior is static: ",self.behavior)
 
     #-----------------------------------------------------------
     def signal_combobox_changed_cb(self, idx):
