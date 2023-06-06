@@ -902,7 +902,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             if mypath is not None:
                 cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = mypath.text
             else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = '10.0'
+                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = '0.0'
 
             mypath =  uep.find(mechanics_path+"detachment_rate")
             if mypath is not None:
