@@ -207,6 +207,16 @@
         </cell_positions>
     </initial_conditions>
 
+    <cell_rules>
+        <rulesets>
+            <ruleset protocol="CBHG" version="2.0" format="csv" enabled="true">
+                <folder>./config</folder>
+                <filename>rules0.csv</filename>
+            </ruleset>
+        </rulesets>
+        <settings />
+    </cell_rules>
+
     <user_parameters>
         <random_seed type="int" units="dimensionless" description="">0</random_seed>
         <number_of_cells type="int" units="none" description="initial number of cells (for each cell type)">5</number_of_cells>
