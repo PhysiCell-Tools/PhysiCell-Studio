@@ -158,6 +158,7 @@ class Rules(QWidget):
         self.celltype_name = None
         self.signal = None
         self.behavior = None
+        self.scale_base_for_max = 2.0
 
         self.max_rule_table_rows = 99
 
@@ -375,8 +376,8 @@ class Rules(QWidget):
         # label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
-        label = QLabel("Base")
-        lwidth = 30
+        label = QLabel("Base value")
+        lwidth = 72
         label.setFixedWidth(lwidth)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -410,18 +411,18 @@ class Rules(QWidget):
 
         #---
         label = QLabel("")
-        lwidth = 60
+        lwidth = 95
         label.setFixedWidth(lwidth)
         hlayout.addWidget(label) 
 
         #---
-        label = QLabel("Max response")
-        label.setFixedWidth(90)
+        label = QLabel("Saturation value")
+        label.setFixedWidth(100)
         # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
-        self.rule_max_val = QLineEdit()
+        self.rule_max_val = QLineEdit()  # saturation value for behavior
         # self.rule_max_val.setText('3.e-4')
         self.rule_max_val.setText('1.0')
         self.rule_max_val.setValidator(QtGui.QDoubleValidator())
@@ -589,7 +590,7 @@ class Rules(QWidget):
 
         self.import_rules_button = QPushButton("Import")
         if self.nanohub_flag:
-            self.import_rules_button.setEnabled(False)
+            self.import_rules_button.setEnabled(True)
         self.import_rules_button.setFixedWidth(100)
         self.import_rules_button.setStyleSheet("background-color: lightgreen")
         self.import_rules_button.clicked.connect(self.import_rules_cb)
@@ -604,7 +605,7 @@ class Rules(QWidget):
 
         self.save_button = QPushButton("Save")
         if self.nanohub_flag:
-            self.save_button.setEnabled(False)
+            self.save_button.setEnabled(True)
         self.save_button.setFixedWidth(100)
         # self.save_button.setStyleSheet("background-color: lightgreen")
         self.save_button.setStyleSheet("background-color: yellow")
@@ -634,7 +635,7 @@ class Rules(QWidget):
         hbox2.addWidget(label) 
         self.rules_file = QLineEdit()
         if self.nanohub_flag:
-            self.rules_file.setEnabled(False)
+            self.rules_file.setEnabled(True)
         self.rules_file.setFixedWidth(200)
         hbox2.addWidget(self.rules_file) 
         hlayout.addLayout(hbox2) 
@@ -714,7 +715,7 @@ class Rules(QWidget):
         # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
         # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Max response','Half-max','Hill power','Apply to dead'])
+        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Saturation value','Half-max','Hill power','Apply to dead'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -940,6 +941,105 @@ class Rules(QWidget):
 
     def update_base_value(self):
         print("\n-------update_base_value(self)")
+        behavior = self.response_combobox.currentText()
+        key0 = self.celltype_name
+        print("     behavior=",behavior)
+        btokens = behavior.split()
+        if len(btokens) == 0:
+            return
+
+        base_val = '??'
+        if btokens[0] in self.substrates:
+            print(f"{btokens[0]} is a substrate")
+            # key1 = btokens[0]
+            key1 = 'secretion'
+            key2 = btokens[0]
+            if 'target' in btokens:
+                key3 = "secretion_target"
+            elif 'uptake' in btokens:
+                key3 = "uptake_rate"
+            elif 'export' in btokens:
+                key3 = "net_export_rate"
+            else:  # just "<substrate> secretion" which mean its rate
+                key3 = "secretion_rate"
+            try:
+                # print("\n---key0= ",self.celldef_tab.param_d[key0])
+                # print("\n---key1= ",self.celldef_tab.param_d[key0][key1])
+                # print("\n---key2= ",self.celldef_tab.param_d[key0][key1][key2])
+                base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
+                print("------- base_val= ",base_val)
+            except:
+                print("---- got exception")
+                return
+        elif btokens[0] == 'apoptosis':
+            base_val = self.celldef_tab.param_d[key0]['apoptosis_death_rate']
+        elif btokens[0] == 'necrosis':
+            base_val = self.celldef_tab.param_d[key0]['necrosis_death_rate']
+        elif btokens[0] == 'migration':
+            if btokens[1] == 'speed':
+                base_val = self.celldef_tab.param_d[key0]['speed']
+            elif btokens[1] == 'bias':
+                base_val = self.celldef_tab.param_d[key0]['migration_bias']
+            elif btokens[1] == 'persistence':
+                base_val = self.celldef_tab.param_d[key0]['persistence_time']
+        elif btokens[0] == 'cell-cell':
+            if btokens[1] == 'adhesion':
+                if len(btokens)==2:
+                    base_val = self.celldef_tab.param_d[key0]['mechanics_adhesion']
+                elif btokens[2] == 'elastic':
+                    base_val = self.celldef_tab.param_d[key0]['mechanics_elastic_constant']
+            elif btokens[1] == 'repulsion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_repulsion']
+        elif btokens[0] == 'cell-BM':
+            if btokens[1] == 'adhesion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_adhesion']
+            elif btokens[1] == 'repulsion':
+                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_repulsion']
+        elif behavior == "relative maximum adhesion distance":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
+        elif behavior == "cell attachment rate":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_attachment_rate']
+        elif behavior == "cell detachment rate":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
+        # elif behavior == "maximum number of cell attachments":
+
+        elif btokens[0] == "phagocytose":
+            print("--- handling phagocytose as token 0")
+            print(btokens)
+            if len(btokens)==3 and btokens[1] == "dead" and btokens[2] == "cell":
+                print("--- handling phagocytose dead cell")
+                base_val = self.celldef_tab.param_d[key0]['dead_phagocytosis_rate']
+            else:
+                cell_type = behavior[12:]   # length of "phagocytose" 
+                print("      cell_type (for phagocytose)=",cell_type)
+                base_val = self.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
+        elif btokens[0] == "attack":
+            cell_type = behavior[7:]
+            base_val = self.celldef_tab.param_d[key0]['attack_rate'][cell_type]
+        elif behavior[0:len("fuse to")] == "fuse to":
+            cell_type = behavior[len("fuse to")+1:]
+            base_val = self.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
+        elif behavior[0:len("transform to")] == "transform to":
+            cell_type = behavior[len("transform to")+1:]
+            base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
+            
+
+        #---------------------
+        # Set the base value 
+        self.rule_base_val.setText(base_val)
+
+        # Compute/set the saturation value 
+        if base_val == '??':
+            saturation_val = 1.0
+        else:
+            saturation_val = self.scale_base_for_max * float(base_val)
+            if abs(saturation_val) < 1.e-9:
+                saturation_val = 1.0
+        self.rule_max_val.setText(str(saturation_val))
+
+        # print(self.celldef_tab.param_d.keys())
+        # for ct in self.celldef_tab.param_d.keys():
+            # print(self.celldef_tab.param_d[ct])
 
         # rwh: create this list once
         # static_names = []
@@ -955,16 +1055,16 @@ class Rules(QWidget):
         # static_names = ["exit from cycle phase " + str(idx)], idx=0,1,…,5   (isn’t “smart” to match cell type’s cycle)
         # [verb + ct] where verb=["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]
 
-        if self.signal in self.substrates:
-            print("--- signal is substrate")
-        if self.behavior in static_names:
-            print("--- behavior is static: ",self.behavior)
+        # if self.signal in self.substrates:
+        #     print("--- signal is substrate")
+        # if self.behavior in static_names:
+        #     print("--- behavior is static: ",self.behavior)
 
     #-----------------------------------------------------------
     def signal_combobox_changed_cb(self, idx):
 
         self.signal = self.signal_combobox.currentText()
-        print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
         # print(f"    '{self.celltype_name}' keys= {self.celldef_tab.param_d[self.celltype_name].keys()}")
 
         # self.update_base_value()
@@ -983,7 +1083,7 @@ class Rules(QWidget):
     def response_combobox_changed_cb(self, idx):
 
         self.behavior = self.response_combobox.currentText()
-        print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
+        # print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
         # print(f"    {self.celltype_name} params= {self.celldef_tab.param_d[self.celltype_name]}")
 
         self.update_base_value()
@@ -1838,7 +1938,8 @@ class Rules(QWidget):
             #     self.fill_rules(full_rules_fname)
 
             if self.nanohub_flag:  # sigh
-                full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
+                # full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
+                full_rules_fname = os.path.join('.', file_name)
                 self.fill_rules(full_rules_fname)
             else:
                 self.fill_rules(full_rules_fname)

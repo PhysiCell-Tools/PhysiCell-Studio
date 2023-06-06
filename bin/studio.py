@@ -179,11 +179,15 @@ class PhysiCellXMLCreator(QWidget):
         # assume running from a PhysiCell root dir, but change if not
         self.config_dir = os.path.realpath(os.path.join('.', 'config'))
 
+        running_from_physicell_root = True
         if self.current_dir == self.studio_root_dir:  # are we running from studio root dir?
             # self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
             self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
+            running_from_physicell_root = False
         print(f'self.config_dir =  {self.config_dir}')
         logging.debug(f'self.config_dir = {self.config_dir}')
+
+        # print("\n------ running_from_physicell_root = ",running_from_physicell_root)
 
         # self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         # print("studio.py: self.studio_config_dir = ",self.studio_config_dir)
@@ -193,6 +197,11 @@ class PhysiCellXMLCreator(QWidget):
             self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
             # sys.exit()
+        elif running_from_physicell_root:
+            self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
+            if not os.path.isfile(self.current_xml_file):
+                print("\n-- Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument).\n")
+                sys.exit(1)
         else:
             model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
@@ -646,9 +655,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if self.nanohub_flag:
             self.download_menu = file_menu.addMenu('Download')
             self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
-            self.download_rules_item = self.download_menu.addAction("Download rules.csv", self.download_rules_cb)
-            self.download_svg_item = self.download_menu.addAction("Download SVG", self.download_svg_cb)
-            self.download_mat_item = self.download_menu.addAction("Download binary (.mat) data", self.download_full_cb)
+            self.download_csv_item = self.download_menu.addAction("Download cells,rules (.csv) data", self.download_csv_cb)
+            self.download_rules_item = self.download_menu.addAction("Download rules.txt", self.download_rules_cb)
+            self.download_svg_item = self.download_menu.addAction("Download cell (.svg) data", self.download_svg_cb)
+            self.download_mat_item = self.download_menu.addAction("Download full (.mat) data", self.download_full_cb)
+            self.download_graph_item = self.download_menu.addAction("Download cell graph (.txt) data", self.download_graph_cb)
             # self.download_menu_item.setEnabled(False)
             # self.download_menu.setEnabled(False)
         else:
