@@ -94,7 +94,7 @@ class RunModel(QWidget):
         self.exec_name = QLineEdit()
         if self.nanohub_flag:
             self.exec_name.setText('myproj')
-            self.exec_name.setEnabled(False)
+            # self.exec_name.setEnabled(False)
         else:
             # self.exec_name.setText('../myproj')
             self.exec_name.setText('template')
@@ -291,8 +291,10 @@ class RunModel(QWidget):
     def cancel_model_cb(self):
         # logging.debug(f'===========  cancel_model_cb():  ============')
         if self.p:  # process running.
-            self.p.kill()
-            # self.p.terminate()
+            if self.nanohub_flag:
+                self.p.terminate()
+            else:
+                self.p.kill()   # I *think* this worked better for Windows (but still worked for other OSes, on the desktop)
             # self.run_button.setEnabled(True)
             self.enable_run(True)
 
