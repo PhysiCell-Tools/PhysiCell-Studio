@@ -384,7 +384,7 @@ class Rules(QWidget):
         hlayout.addWidget(label) 
 
         self.rule_base_val = QLineEdit()
-        # self.rule_base_val.setEnabled(False)
+        self.rule_base_val.setEnabled(False)
         self.rule_base_val.setStyleSheet("background-color: lightgray")
         # self.rule_base_val.setText('1.e-5')
         self.rule_base_val.setText('0.1')
@@ -620,8 +620,8 @@ class Rules(QWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox1.addWidget(label) 
         self.rules_folder = QLineEdit()
-        # if self.nanohub_flag:
-            # self.rules_folder.setEnabled(False)
+        if self.nanohub_flag:
+            self.rules_folder.setEnabled(False)
         self.rules_folder.setFixedWidth(200)
         # self.rules_folder.setAlignment(QtCore.Qt.AlignLeft)
         hbox1.addWidget(self.rules_folder) 
@@ -942,7 +942,8 @@ class Rules(QWidget):
     def update_base_value(self):
         print("\n-------update_base_value(self)")
         behavior = self.response_combobox.currentText()
-        key0 = self.celltype_name
+        # key0 = self.celltype_name
+        key0 = self.celltype_combobox.currentText()
         print("     behavior=",behavior)
         btokens = behavior.split()
         if len(btokens) == 0:
@@ -1019,6 +1020,10 @@ class Rules(QWidget):
         elif behavior[0:len("fuse to")] == "fuse to":
             cell_type = behavior[len("fuse to")+1:]
             base_val = self.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
+        elif btokens[0] == "immunogenicity":
+            base_val = '1.0'
+        elif btokens[0] == "is_movable":
+            base_val = '1.0'
         elif behavior[0:len("transform to")] == "transform to":
             cell_type = behavior[len("transform to")+1:]
             base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
@@ -1674,7 +1679,8 @@ class Rules(QWidget):
                 # rules_text = self.rules_text.toPlainText()
                 # f.write(rules_text )
                 # print("rules_tab.py: save_rules_cb(): self.num_rules= ",self.num_rules)
-                for irow in range(self.num_rules):
+                # for irow in range(self.num_rules):
+                for irow in range(100):   # rwh: hack
         # self.rules_celltype_idx = 0
         # self.rules_response_idx = 1
         # self.rules_minval_idx = 2
@@ -1686,6 +1692,9 @@ class Rules(QWidget):
         # self.rules_hillpower_idx = 8
         # self.rules_applydead_idx = 9
                     rule_str = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+                    print("   irow=",irow, ", col 1 text=",rule_str)
+                    if rule_str == '':
+                        break
                     rule_str += ','
                     rule_str += self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
                     rule_str += ','
