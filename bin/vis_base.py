@@ -304,7 +304,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, **kw):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -316,6 +316,7 @@ class VisBase():
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
+        self.ecm_flag = ecm_flag 
 
         if not self.model3D_flag:
             # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
@@ -1699,6 +1700,9 @@ class VisBase():
         # print('field_dict= ',self.field_dict)
         # print('field_min_max= ',self.field_min_max)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
+        if self.ecm_flag:
+            self.substrates_combobox.addItem('ECM anisotropy')
+            self.substrates_combobox.addItem('ECM density')
 
     def colorbar_combobox_changed_cb(self,idx):
         self.update_plots()
@@ -1811,9 +1815,9 @@ class VisBase():
                     substrate_name = var.attrib['name']
                     # print("substrate: ",substrate_name )
                     sub_names.append(substrate_name)
-                self.substrates_combobox.clear()
-                # print("sub_names = ",sub_names)
-                self.substrates_combobox.addItems(sub_names)
+                # self.substrates_combobox.clear()
+                # # print("sub_names = ",sub_names)
+                # self.substrates_combobox.addItems(sub_names)
 
         # self.cmin_value = 0.0
         # self.cmax_value = 1.0
