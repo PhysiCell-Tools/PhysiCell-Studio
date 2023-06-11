@@ -204,12 +204,12 @@ class PhysiCellXMLCreator(QWidget):
                 msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
                 print("\n"+msg+"\n")
                 # sys.exit(1)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText(msg)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            returnValue = msgBox.exec()
-            self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                returnValue = msgBox.exec()
+                self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
         else:
             model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
