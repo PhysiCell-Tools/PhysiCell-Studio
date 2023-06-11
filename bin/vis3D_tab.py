@@ -37,8 +37,8 @@ from pyMCDS import pyMCDS
 #----------------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag):
-        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab,  config_tab=config_tab, model3D_flag=model3D_flag, tensor_flag=tensor_flag)
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
+        super(Vis,self).__init__(nanohub_flag=nanohub_flag, run_tab=run_tab,  config_tab=config_tab, model3D_flag=model3D_flag, tensor_flag=tensor_flag, ecm_flag=ecm_flag)
 
         self.figure = None
 

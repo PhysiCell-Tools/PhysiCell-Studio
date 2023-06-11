@@ -83,6 +83,8 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                     height : 15px;
                     border-radius : 3px;
                 }
+                QCheckBox:disabled {background-color:lightgray;}
+                QCheckBox:indicator:disabled {background-color:lightgray;}
                 """
         self.setStyleSheet(checkbox_style)
 
@@ -304,7 +306,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, **kw):
+    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -316,6 +318,7 @@ class VisBase():
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
+        self.ecm_flag = ecm_flag 
 
         if not self.model3D_flag:
             # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
@@ -643,17 +646,17 @@ class VisBase():
         self.vbox.addWidget(QHLine())
 
         hbox = QHBoxLayout()
-        self.cells_checkbox = QCheckBox_custom('cells')
+        self.cells_checkbox = QCheckBox_custom("cells")
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
         self.cells_checked_flag = True
         hbox.addWidget(self.cells_checkbox) 
 
         # Need to create the following regardless of 2D/3D
-        self.cells_svg_rb = QRadioButton('.svg')
+        self.cells_svg_rb = QRadioButton(".svg")
         self.cells_svg_rb.setChecked(True)
 
-        self.cells_mat_rb = QRadioButton('.mat')
+        self.cells_mat_rb = QRadioButton(".mat")
         # self.cell_edge_checkbox = QCheckBox_custom('edge')
 
         if not self.model3D_flag:  # 2D vis
@@ -687,7 +690,7 @@ class VisBase():
         # self.cell_scalar_combobox = QComboBox()
         self.cell_scalar_combobox = ExtendedComboBox()
         self.cell_scalar_combobox.setFixedWidth(270)
-        self.cell_scalar_combobox.addItem('cell_type')
+        self.cell_scalar_combobox.addItem("cell_type")
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
@@ -757,6 +760,7 @@ class VisBase():
         self.cells_cmin.setText('0.0')
         if not self.model3D_flag:
             self.cells_cmin.setEnabled(False)
+            self.cells_cmin.setStyleSheet("background-color: lightgray;")
         self.cells_cmin.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmin.setFixedWidth(cvalue_width)
         self.cells_cmin.setValidator(QtGui.QDoubleValidator())
@@ -770,6 +774,7 @@ class VisBase():
         self.cells_cmax.setText('1.0')
         if not self.model3D_flag:
             self.cells_cmax.setEnabled(False)
+            self.cells_cmax.setStyleSheet("background-color: lightgray;")
         self.cells_cmax.returnPressed.connect(self.cells_cmin_cmax_cb)
         self.cells_cmax.setFixedWidth(cvalue_width)
         self.cells_cmax.setValidator(QtGui.QDoubleValidator())
@@ -819,6 +824,7 @@ class VisBase():
         self.cmin = QLineEdit()
         self.cmin.setText('0.0')
         self.cmin.setEnabled(False)
+        self.cmin.setStyleSheet("background-color: lightgray;")
         # self.cmin.textChanged.connect(self.change_plot_range)
         self.cmin.returnPressed.connect(self.cmin_cmax_cb)
         self.cmin.setFixedWidth(cvalue_width)
@@ -833,6 +839,7 @@ class VisBase():
         self.cmax = QLineEdit()
         self.cmax.setText('1.0')
         self.cmax.setEnabled(False)
+        self.cmax.setStyleSheet("background-color: lightgray;")
         self.cmax.returnPressed.connect(self.cmin_cmax_cb)
         self.cmax.setFixedWidth(cvalue_width)
         self.cmax.setValidator(QtGui.QDoubleValidator())
@@ -1422,7 +1429,9 @@ class VisBase():
 
         self.fix_cells_cmap_checkbox.setEnabled(False)
         self.cells_cmin.setEnabled(False)
+        self.cells_cmin.setStyleSheet("background-color: lightgray;")
         self.cells_cmax.setEnabled(False)
+        self.cells_cmax.setStyleSheet("background-color: lightgray;")
         if self.physiboss_vis_checkbox is not None:
             self.physiboss_vis_checkbox.setEnabled(False)
         # self.fix_cmap_checkbox.setEnabled(bval)
@@ -1475,7 +1484,9 @@ class VisBase():
 
             self.fix_cells_cmap_checkbox.setEnabled(True)
             self.cells_cmin.setEnabled(True)
+            self.cells_cmin.setStyleSheet("background-color: white;")
             self.cells_cmax.setEnabled(True)
+            self.cells_cmax.setStyleSheet("background-color: white;")
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
 
@@ -1699,6 +1710,9 @@ class VisBase():
         # print('field_dict= ',self.field_dict)
         # print('field_min_max= ',self.field_min_max)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
+        if self.ecm_flag:
+            self.substrates_combobox.addItem('ECM anisotropy')
+            self.substrates_combobox.addItem('ECM density')
 
     def colorbar_combobox_changed_cb(self,idx):
         self.update_plots()
@@ -1811,9 +1825,9 @@ class VisBase():
                     substrate_name = var.attrib['name']
                     # print("substrate: ",substrate_name )
                     sub_names.append(substrate_name)
-                self.substrates_combobox.clear()
-                # print("sub_names = ",sub_names)
-                self.substrates_combobox.addItems(sub_names)
+                # self.substrates_combobox.clear()
+                # # print("sub_names = ",sub_names)
+                # self.substrates_combobox.addItems(sub_names)
 
         # self.cmin_value = 0.0
         # self.cmax_value = 1.0
@@ -2044,7 +2058,9 @@ class VisBase():
             self.partial_button.setEnabled(not self.plot_cells_svg)
             self.fix_cells_cmap_checkbox.setEnabled(not self.plot_cells_svg)
             self.cells_cmin.setEnabled(not self.plot_cells_svg)
+            self.cells_cmin.setStyleSheet("background-color: white;")
             self.cells_cmax.setEnabled(not self.plot_cells_svg)
+            self.cells_cmax.setStyleSheet("background-color: white;")
         else:
             # print("--- cells_toggle_cb:  conditional block 2")
             self.cell_scalar_combobox.setEnabled(False)
@@ -2053,7 +2069,9 @@ class VisBase():
             self.partial_button.setEnabled(False)
             self.fix_cells_cmap_checkbox.setEnabled(False)
             self.cells_cmin.setEnabled(False)
+            self.cells_cmin.setStyleSheet("background-color: lightgray;")
             self.cells_cmax.setEnabled(False)
+            self.cells_cmax.setStyleSheet("background-color: lightgray;")
 
 
         if not self.cells_checked_flag:
@@ -2079,6 +2097,12 @@ class VisBase():
         self.fix_cmap_checkbox.setEnabled(bval)
         self.cmin.setEnabled(bval)
         self.cmax.setEnabled(bval)
+        if bval:
+            self.cmin.setStyleSheet("background-color: white;")
+            self.cmax.setStyleSheet("background-color: white;")
+        else:
+            self.cmin.setStyleSheet("background-color: lightgray;")
+            self.cmax.setStyleSheet("background-color: lightgray;")
         self.substrates_combobox.setEnabled(bval)
         self.substrates_cbar_combobox.setEnabled(bval)
 

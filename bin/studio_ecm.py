@@ -78,9 +78,11 @@ def quit_cb():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
-        if model3D_flag:
+        if ecm_flag:
+            from vis_tab_ecm import Vis 
+        elif model3D_flag:
             try:
                 import vtk
             except:
@@ -102,7 +104,7 @@ class PhysiCellXMLCreator(QWidget):
         self.model3D_flag = model3D_flag 
         self.tensor_flag = tensor_flag 
         self.nanohub_flag = nanohub_flag 
-        self.ecm_flag = False 
+        self.ecm_flag = ecm_flag 
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
         self.rules_tab_index = None
@@ -201,15 +203,8 @@ class PhysiCellXMLCreator(QWidget):
         elif running_from_physicell_root:
             self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
             if not os.path.isfile(self.current_xml_file):
-                msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
-                print("\n"+msg+"\n")
-                # sys.exit(1)
-                msgBox = QMessageBox()
-                msgBox.setIcon(QMessageBox.Information)
-                msgBox.setText(msg)
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                returnValue = msgBox.exec()
-                self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+                print("\n-- Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument).\n")
+                sys.exit(1)
         else:
             model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
@@ -449,6 +444,13 @@ class PhysiCellXMLCreator(QWidget):
             #     self.legend_tab.reload_legend()
 
             self.vis_tab.reset_model()
+
+            # if self.ecm_flag:  # custom "substrates" for ECM
+            #     # self.substrates_combobox.addItem(s)   # rf. vis_base.py
+            #     # self.field_dict[idx] = s   # e.g., self.field_dict = {0:'director signal', 1:'cargo signal'}
+            #     # self.field_min_max[s]= [0,1,False]
+            #     self.vis_tab.substrates_combobox.addItem('ECM anisotropy')
+            #     self.vis_tab.substrates_combobox.addItem('ECM density')
             
 
 
@@ -1307,7 +1309,8 @@ def main():
     studio_flag = True
     model3D_flag = False
     tensor_flag = False
-    rules_flag = False
+    rules_flag = True
+    ecm_flag = True
     skip_validate_flag = False
     nanohub_flag = False
     is_movable_flag = False
@@ -1335,6 +1338,9 @@ def main():
             if unknown[0] == "--rules" and len(unknown)==1:
                 print("studio.py: setting rules_flag = True")
                 rules_flag = True
+            elif unknown[0] == "--ecm" and len(unknown)==1:
+                print("studio.py: setting ecm_flag = True")
+                ecm_flag = True
             else:
                 print("Invalid argument(s): ",unknown)
                 print("Use '--help' to see options.")
@@ -1459,7 +1465,7 @@ def main():
             # print("Warning: Rules module not found.\n")
 
     # print("calling PhysiCellXMLCreator with rules_flag= ",rules_flag)
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)
     # print("width=",ex.size())
