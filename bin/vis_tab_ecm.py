@@ -402,7 +402,7 @@ class Vis(VisBase, QWidget):
         # self.current_frame = frame
         fname = "snapshot%08d.svg" % frame
         full_fname = os.path.join(self.output_dir, fname)
-        print("-- plot_svg(): full_fname= ",full_fname)
+        # print("-- plot_svg(): full_fname= ",full_fname)
         # try:
         #     print("   ==>>>>> plot_svg(): full_fname=",full_fname)
         # except:
@@ -839,7 +839,7 @@ class Vis(VisBase, QWidget):
     #---------------------------------------------------------------------------
     def create_quiver_plot(self, scaling_values: dict, x_mesh: dict, y_mesh: dict, x_orientation: dict, y_orientation: dict, quiver_options: dict=None):
         # Just always using None for nanoHUB
-        if quiver_options is None:
+        if quiver_options is None:   # we're doing this by default
             # print("create_quiver_plot(): _options= None. doing plt.quiver")
             mask = scaling_values > 0.0001
             ECM_x = np.multiply(x_orientation, scaling_values)
@@ -848,26 +848,32 @@ class Vis(VisBase, QWidget):
             alpha_val = 0.3
             alpha_val = 1.0
             # self.ax.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
-            plt.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
+            # plt.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
+            self.ax0.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
                            pivot='middle', angles='xy', scale_units='inches', scale=9.0, units='width', width=0.0025, headwidth=0,headlength=0, headaxislength=0, alpha = alpha_val)
         else:
+            # print("create_quiver_plot(): with quiver options")
             if quiver_options["scale_quiver"] is True:
+                # print("     scale_quiver is True")
                 sfact = 0.45   # rwh 0.6
                 scaling_values = scaling_values * sfact
                 ECM_x = np.multiply(x_orientation, scaling_values)
                 ECM_y = np.multiply(y_orientation, scaling_values)
             else:
+                # print("     scale_quiver is False")
                 ECM_x = x_orientation
                 ECM_y = y_orientation
 
             # mask out zero vectors
             mask = scaling_values > 0.0001
             if quiver_options["mask_quiver"] is True:
-                plt.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
+                # plt.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
+                self.ax0.quiver(x_mesh[mask], y_mesh[mask], ECM_x[mask], ECM_y[mask],
                                pivot='middle', angles='xy', scale_units='inches', scale=9.0, units='width', width=0.0025, headwidth=0,headlength=0, headaxislength=0, alpha = 0.3)
             else:
-                plt.quiver(x_mesh, y_mesh, ECM_x, ECM_y,
-                pivot='middle', angles='xy', scale_units='inches', scale=9.0, units='width', width=0.0025, headwidth=0,headlength=0, headaxislength=0, alpha = 0.3)
+                # plt.quiver(x_mesh, y_mesh, ECM_x, ECM_y,
+                self.ax0.quiver(x_mesh, y_mesh, ECM_x, ECM_y,
+                    pivot='middle', angles='xy', scale_units='inches', scale=9.0, units='width', width=0.0025, headwidth=0,headlength=0, headaxislength=0, alpha = 0.3)
 
     #---------------------------------------------------------------------------
     # def create_anisotropy_contour_plot(self, x_mesh: dict, y_mesh: dict, data_to_contour: dict, contour_options=None, options: dict=None):
@@ -990,26 +996,11 @@ class Vis(VisBase, QWidget):
 
         # -----------  if custom ECM "substrate"  ------------
         self.substrate_name = self.substrates_combobox.currentText()
-        print("--------- vis_tab_ecm: plot_substrate(), self.substrate_name=",self.substrate_name)
+        # print("--------- vis_tab_ecm: plot_substrate(), self.substrate_name=",self.substrate_name)
 
-        # if (self.field_index == 5) or self.show_vectors:
         self.show_vectors = False
-        # if (self.field_index == 5) or self.show_vectors:
-        # if (self.substrate_name.find('ECM') >= 0) or self.show_vectors:
-        #     xml_fname = "output%08d.xml" % frame
-        #     snapshot = xml_fname[:-4]
-        #     # self.mcds = pyMCDS(snapshot + '.xml', self.output_dir)
-        #     # self.mcds = pyMCDS(snapshot + '.xml', self.output_dir)
-        #     self.mcds = pyMCDS(snapshot+'.xml', self.output_dir, microenv=True, graph=False, verbose=True)
-        #     # self.mcds.load_ecm(snapshot + '_ECM.mat', self.output_dir)
-        #     self.mcds.load_ecm(snapshot + '_ECM.mat', self.output_dir)
-        #     self.xx_ecm, self.yy_ecm, self.ECM_anisotropy, self.ECM_density, self.ECM_x_orientation, self.ECM_y_orientation = self.retrieve_ECM_data()
-        #     print("vis_tab_ecm: plot_substrate(): called retrieve_ECM_data(): ")
-        #     print("        type(self.ECM_anisotropy)= ",type(self.ECM_anisotropy))
-        #     print("        self.ECM_anisotropy= ",self.ECM_anisotropy)
 
-
-            #--------------- normal substrate -------------------
+        #--------------- normal substrate -------------------
         try:
             xgrid = M[0, :].reshape(self.numy, self.numx)
             ygrid = M[1, :].reshape(self.numy, self.numx)
@@ -1019,123 +1010,113 @@ class Vis(VisBase, QWidget):
             return
 
         if self.substrate_name.find('ECM') < 0:   # Not ECM-related, just normal substrate
-            print("vis_tab_ecm.py:  handling normal substrate via field_index")
+            # print("vis_tab_ecm.py:  handling normal substrate via field_index")
             zvals = M[self.field_index,:].reshape(self.numy,self.numx)
-            print(    "zvals.shape=",zvals.shape)
+            # print(    "zvals.shape=",zvals.shape)
             # print("zvals.min() = ",zvals.min())
             # print("zvals.max() = ",zvals.max())
         else:
-            print("vis_tab_ecm.py:  handling ECM substrate")
+            # print("vis_tab_ecm.py:  handling ECM substrate")
             xml_fname = "output%08d.xml" % frame
             snapshot = xml_fname[:-4]
             # self.mcds = pyMCDS(snapshot + '.xml', self.output_dir)
             # self.mcds = pyMCDS(snapshot + '.xml', self.output_dir)
-            self.mcds = pyMCDS(snapshot+'.xml', self.output_dir, microenv=True, graph=False, verbose=True)
+            self.mcds = pyMCDS(snapshot+'.xml', self.output_dir, microenv=True, graph=False, verbose=False)
             # self.mcds.load_ecm(snapshot + '_ECM.mat', self.output_dir)
             self.mcds.load_ecm(snapshot + '_ECM.mat', self.output_dir)
             self.xx_ecm, self.yy_ecm, self.ECM_anisotropy, self.ECM_density, self.ECM_x_orientation, self.ECM_y_orientation = self.retrieve_ECM_data()
-            print("vis_tab_ecm: plot_substrate(): called retrieve_ECM_data(): ")
-            print("        type(self.ECM_anisotropy)= ",type(self.ECM_anisotropy))
-            print("        self.ECM_anisotropy= ",self.ECM_anisotropy)
+            # print("vis_tab_ecm: plot_substrate(): called retrieve_ECM_data(): ")
+            # print("        type(self.ECM_anisotropy)= ",type(self.ECM_anisotropy))
+            # print("        self.ECM_anisotropy= ",self.ECM_anisotropy)
 
             if self.substrate_name.find('anisotropy') >= 0:
                 zvals = self.ECM_anisotropy
-            elif self.substrate_name.find('dentisy') >= 0:
+            elif self.substrate_name.find('density') >= 0:
                 zvals = self.ECM_density
 
-            # if self.substrate_name.find('anisotropy') >= 0:
-            #     # self.create_anisotropy_contour_plot(x_mesh=self.xx_ecm, y_mesh=self.yy_ecm, data_to_contour=self.ECM_anisotropy)
-            #     print("       doing create_anisotropy_contour_plot()")
-            #     print("       self.ECM_anisotropy")
-            #     zvals = self.ECM_anisotropy.reshape(self.numy,self.numx)
-            #     # self.create_anisotropy_contour_plot(xgrid=self.xx_ecm, ygrid=self.yy_ecm, zvals=self.ECM_anisotropy)
-            #     self.create_anisotropy_contour_plot(xgrid=self.xx_ecm, ygrid=self.yy_ecm, zvals=self.ECM_anisotropy)
-
-            # else:   # density
-            #     # self.create_anisotropy_contour_plot(x_mesh=self.xx_ecm, y_mesh=self.yy_ecm, data_to_contour=self.ECM_density)
-            #     self.create_anisotropy_contour_plot(xgrid=self.xx_ecm, ygrid=self.yy_ecm, zvals=self.ECM_density)
+            self.show_vectors = True   # need to plot vectors last (below)
 
 
+        contour_ok = True
+        # if (self.colormap_fixed_toggle.value):
+        # self.field_index = 4
 
-            contour_ok = True
-            # if (self.colormap_fixed_toggle.value):
-            # self.field_index = 4
-
-            if (self.contour_mesh):
-                if (self.fix_cmap_flag):
-                    try:
-                        substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
-                    except:
-                        contour_ok = False
-                        print('\nWARNING: exception with fixed colormap range. Will not update plot.')
-                else:    
-                    try:
-                        # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
-
-                        print(f"        dynamic colormap range: xgrid={xgrid}\nygrid={ygrid}\nzvals={zvals} ")
-                        substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
-                    except:
-                        contour_ok = False
-                        print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
-
-            if (self.contour_lines):
-                if (self.fix_cmap_flag):
-                    try:
-                        delstep = (self.cmax_value - self.cmin_value) / 8
-                        levels = np.arange(self.cmin_value + delstep, self.cmax_value, delstep)
-                        substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
-                    except:
-                        print("vis_tab: No contour levels were found within the data range.")
-                        return
-                else:    
-                    try:
-                        substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
-                    except:
-                        print("vis_tab: No contour levels were found within the data range.")
-                        return
-
-            # in case we want to plot a "0.0" contour line
-            # if self.field_index > 4:
-            #     self.ax0.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0], linewidths=0.5)
-
-            # Do this funky stuff to prevent the colorbar from shrinking in height with each redraw.
-            # Except it doesn't seem to work when we use fixed ranges on the colorbar?!
-            # print("------- plot_substrate() -------------")
-            num_axes =  len(self.figure.axes)
-            # print("# axes = ",num_axes)
-            if self.cax1:
-                self.cax1.remove()  # replace/update the colorbar
-                # print("# axes(after substrate remove) = ",len(self.figure.axes))
-                # print(" self.figure.axes= ",self.figure.axes)
-                #ppp
-                ax1_divider = make_axes_locatable(self.ax0)
-                self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+        if (self.contour_mesh):
+            if (self.fix_cmap_flag):
                 try:
-                    self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
                 except:
-                    print("vis_tab: No contour levels were found within the data range.")
-                # print("\n# axes(redraw substrate) = ",len(self.figure.axes))
-                # print(" self.figure.axes= ",self.figure.axes)
-                self.cbar1.ax.tick_params(labelsize=self.fontsize)
-            else:
-                ax1_divider = make_axes_locatable(self.ax0)
-                self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+                    contour_ok = False
+                    print('\nWARNING: exception with fixed colormap range. Will not update plot.')
+            else:    
                 try:
-                    self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+                    # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
+
+                    # print(f"        dynamic colormap range: xgrid={xgrid}\nygrid={ygrid}\nzvals={zvals} ")
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
+                except:
+                    contour_ok = False
+                    print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
+
+        if (self.contour_lines):
+            if (self.fix_cmap_flag):
+                try:
+                    delstep = (self.cmax_value - self.cmin_value) / 8
+                    levels = np.arange(self.cmin_value + delstep, self.cmax_value, delstep)
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
                 except:
                     print("vis_tab: No contour levels were found within the data range.")
                     return
-                self.cbar1.ax.tick_params(labelsize=self.fontsize)
-                # print("(init substrate) self.figure.axes= ",self.figure.axes)
+            else:    
+                try:
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
+                except:
+                    print("vis_tab: No contour levels were found within the data range.")
+                    return
 
-            self.cbar1.set_label(self.substrate_name)
-            self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
-            self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-            self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
-        #-------------------------
+        if self.show_vectors:
+            self.create_quiver_plot(scaling_values=self.ECM_anisotropy, x_mesh=self.xx_ecm, y_mesh=self.yy_ecm, x_orientation=self.ECM_x_orientation, y_orientation=self.ECM_y_orientation, quiver_options=None)
 
-        #-------------------------
+        # in case we want to plot a "0.0" contour line
+        # if self.field_index > 4:
+        #     self.ax0.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0], linewidths=0.5)
+
+        # Do this funky stuff to prevent the colorbar from shrinking in height with each redraw.
+        # Except it doesn't seem to work when we use fixed ranges on the colorbar?!
+        # print("------- plot_substrate() -------------")
+        num_axes =  len(self.figure.axes)
+        # print("# axes = ",num_axes)
+        if self.cax1:
+            self.cax1.remove()  # replace/update the colorbar
+            # print("# axes(after substrate remove) = ",len(self.figure.axes))
+            # print(" self.figure.axes= ",self.figure.axes)
+            #ppp
+            ax1_divider = make_axes_locatable(self.ax0)
+            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            try:
+                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            except:
+                print("vis_tab: No contour levels were found within the data range.")
+            # print("\n# axes(redraw substrate) = ",len(self.figure.axes))
+            # print(" self.figure.axes= ",self.figure.axes)
+            self.cbar1.ax.tick_params(labelsize=self.fontsize)
+        else:
+            ax1_divider = make_axes_locatable(self.ax0)
+            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            try:
+                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            except:
+                print("vis_tab: No contour levels were found within the data range.")
+                return
+            self.cbar1.ax.tick_params(labelsize=self.fontsize)
+            # print("(init substrate) self.figure.axes= ",self.figure.axes)
+
+        self.cbar1.set_label(self.substrate_name)
+        self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
         if self.view_aspect_square:
             self.ax0.set_aspect('equal')
         else:
