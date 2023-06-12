@@ -1469,7 +1469,7 @@ class VisBase():
             #         pass
             #     self.cax2 = None
 
-        else:
+        else:   # doing ".mat", i.e., cell scalars, not svg
             if not self.cell_scalars_filled: 
                 # self.add_default_cell_vars()   # rwh: just do once? 
                 # print("\nvis_base:---------cells_svg_mat_cb(self):  calling add_partial_cell_vars()")
@@ -1484,9 +1484,14 @@ class VisBase():
 
             self.fix_cells_cmap_checkbox.setEnabled(True)
             self.cells_cmin.setEnabled(True)
-            self.cells_cmin.setStyleSheet("background-color: white;")
             self.cells_cmax.setEnabled(True)
-            self.cells_cmax.setStyleSheet("background-color: white;")
+            if self.fix_cells_cmap_checkbox.isChecked():
+                self.cells_cmin.setStyleSheet("background-color: white;")
+                self.cells_cmax.setStyleSheet("background-color: white;")
+            else:
+                self.cells_cmin.setStyleSheet("background-color: lightgray;")
+                self.cells_cmax.setStyleSheet("background-color: lightgray;")
+
             if self.physiboss_vis_checkbox is not None:
                 self.physiboss_vis_checkbox.setEnabled(True)
 
@@ -2043,6 +2048,7 @@ class VisBase():
     #----------------------------------------------
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval
+        # print("----- vis_base: cells_toggle_cb(): bval=",bval)
 
         # these widgets reflect the toggle
         self.cells_svg_rb.setEnabled(bval)
@@ -2057,10 +2063,20 @@ class VisBase():
             self.full_list_button.setEnabled(not self.plot_cells_svg)
             self.partial_button.setEnabled(not self.plot_cells_svg)
             self.fix_cells_cmap_checkbox.setEnabled(not self.plot_cells_svg)
-            self.cells_cmin.setEnabled(not self.plot_cells_svg)
-            self.cells_cmin.setStyleSheet("background-color: white;")
-            self.cells_cmax.setEnabled(not self.plot_cells_svg)
-            self.cells_cmax.setStyleSheet("background-color: white;")
+            self.cells_cmin.setEnabled(not self.plot_cells_svg)  # if plotting svg, do not enable cells_cmin
+            # self.cells_cmin.setStyleSheet("background-color: white;")
+            self.cells_cmax.setEnabled(not self.plot_cells_svg)  # if plotting svg, do not enable cells_cmax
+            # self.cells_cmax.setStyleSheet("background-color: white;")
+
+            if self.plot_cells_svg:
+                # self.fix_cells_cmap_checkbox.setEnabled(False)
+                # self.cells_cmin.setEnabled(False)
+                self.cells_cmin.setStyleSheet("background-color: lightgray;")
+                # self.cells_cmax.setEnabled(False)
+                self.cells_cmax.setStyleSheet("background-color: lightgray;")
+            else:
+                self.cells_cmin.setStyleSheet("background-color: white;")
+                self.cells_cmax.setStyleSheet("background-color: white;")
         else:
             # print("--- cells_toggle_cb:  conditional block 2")
             self.cell_scalar_combobox.setEnabled(False)
@@ -2097,10 +2113,10 @@ class VisBase():
         self.fix_cmap_checkbox.setEnabled(bval)
         self.cmin.setEnabled(bval)
         self.cmax.setEnabled(bval)
-        if bval:
+        if bval and self.fix_cmap_checkbox.isChecked():
             self.cmin.setStyleSheet("background-color: white;")
             self.cmax.setStyleSheet("background-color: white;")
-        else:
+        elif not bval:
             self.cmin.setStyleSheet("background-color: lightgray;")
             self.cmax.setStyleSheet("background-color: lightgray;")
         self.substrates_combobox.setEnabled(bval)
@@ -2125,6 +2141,12 @@ class VisBase():
         self.fix_cells_cmap_flag = bval
         self.cells_cmin.setEnabled(bval)
         self.cells_cmax.setEnabled(bval)
+        if bval:
+            self.cells_cmin.setStyleSheet("background-color: white;")
+            self.cells_cmax.setStyleSheet("background-color: white;")
+        else:
+            self.cells_cmin.setStyleSheet("background-color: lightgray;")
+            self.cells_cmax.setStyleSheet("background-color: lightgray;")
 
         self.update_plots()
 
@@ -2134,6 +2156,12 @@ class VisBase():
         self.fix_cmap_flag = bval
         self.cmin.setEnabled(bval)
         self.cmax.setEnabled(bval)
+        if bval:
+            self.cmin.setStyleSheet("background-color: white;")
+            self.cmax.setStyleSheet("background-color: white;")
+        else:
+            self.cmin.setStyleSheet("background-color: lightgray;")
+            self.cmax.setStyleSheet("background-color: lightgray;")
 
             # self.substrates_combobox.addItem(s)
         # field_name = self.field_dict[self.substrate_choice.value]
