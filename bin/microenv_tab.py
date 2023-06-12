@@ -650,8 +650,9 @@ class SubstrateDef(QWidget):
         self.param_d[subname]["enable_zmin"] = bval
         self.param_d[subname]["enable_zmax"] = bval
 
-        self.param_d["gradients"] = bval
-        self.param_d["track_in_agents"] = bval
+        # NOooo!
+        # self.param_d["gradients"] = bval
+        # self.param_d["track_in_agents"] = bval
 
         # print("\n ----- new dict:")
         # for k in self.param_d.keys():
