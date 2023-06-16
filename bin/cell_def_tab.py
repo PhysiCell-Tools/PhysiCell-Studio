@@ -3533,6 +3533,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for celltype in self.celltypes_list:
                 self.physiboss_signals.append("contact with " + celltype)
 
+            for custom_data in self.master_custom_var_d.keys():
+                self.physiboss_signals.append("custom:" + custom_data)
+
             self.physiboss_signals += ["contact with live cell", "contact with dead cell", "contact with basement membrane", "damage", "dead", "total attack time", "time"]
 
             for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
@@ -3569,9 +3572,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
             for substrate in self.substrate_list:
                 self.physiboss_behaviours.append(substrate + " export")
+
+            for custom_data in self.master_custom_var_d.keys():
+                self.physiboss_behaviours.append("custom:" + custom_data)
         
             self.physiboss_behaviours += [
-                "cycle entry", "exit from cycle phase 1", "exit from cycle phase 2", "exit from cycle phase 3", "exit from cycle phase 4", "exit from cycle phase 5", 
+                "cycle entry", "exit from cycle phase 0", "exit from cycle phase 1", "exit from cycle phase 2", "exit from cycle phase 3", "exit from cycle phase 4", "exit from cycle phase 5",
                 "apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time", "chemotactic response to oxygen", 
                 "cell-cell adhesion", "cell-cell adhesion elastic constant"
             ]
@@ -3591,7 +3597,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_behaviours.append("fuse " + celltype)
 
             for celltype in self.celltypes_list:
-                self.physiboss_behaviours.append("transform " + celltype)
+                self.physiboss_behaviours.append("transform to " + celltype)
 
 
             for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
