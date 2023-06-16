@@ -20,6 +20,7 @@ import argparse
 import logging
 import traceback
 import shutil # for possible copy of file
+import glob
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
@@ -597,6 +598,20 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 export_menu.setEnabled(False)
 
             #------
+            file_menu.addSeparator()
+            file_menu.addAction("Save user project", self.save_user_proj_cb)
+            file_menu.addAction("Load user project", self.load_user_proj_cb)
+            # user_proj_menu = file_menu.addMenu("User project")
+
+            # save_user_proj = QAction('Save', self)
+            # user_proj_menu.addAction(save_user_proj)
+            # save_user_proj.triggered.connect(self.save_user_proj_cb)
+
+            # load_user_proj = QAction('Load', self)
+            # user_proj_menu.addAction(load_user_proj)
+            # load_user_proj.triggered.connect(self.load_user_proj_cb)
+
+            #------
             # file_menu.addSeparator()
             # samples_menu = file_menu.addMenu("Samples")
 
@@ -812,6 +827,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 elem.tail = i
 
 
+    #---------------------------------
     def save_as_cb(self):
         # print("------ save_as_cb():")
         self.celldef_tab.check_valid_cell_defs()
@@ -893,7 +909,95 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
 
+    #---------------------------------
+    def save_user_proj_cb(self):
+        # print("------ save_user_proj_cb():")
+        # self.celldef_tab.check_valid_cell_defs()
+        
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.Directory)
+        folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
+        print("save_user_proj_cb():  folder_path=",folder_path)
+        # e.g., /Users/heiland/dev/PhysiCell_v1.12.0/user_projects/rwh3
 
+        # mkdir -p ./user_projects
+        # mkdir -p ./user_projects/rwh1
+        # mkdir -p ./user_projects/rwh1/custom_modules
+        # mkdir -p ./user_projects/rwh1/config
+        # cp main.cpp ./user_projects/rwh1
+        # cp Makefile ./user_projects/rwh1
+        # cp VERSION.txt ./user_projects/rwh1
+        # cp ./config/* ./user_projects/rwh1/config
+        # cp ./custom_modules/* ./user_projects/rwh1/custom_modules
+
+        for f in ["main.cpp", "Makefile", "VERSION.txt"]:
+            try:
+                shutil.copy(f, folder_path)
+            except:
+                print(f"--- Warning: cannot save {f}")
+
+        #---------
+        subdir = Path(folder_path, "config")
+        try:
+            os.makedirs(subdir)
+        except:
+            print(f"--- Warning: {subdir} already exists.")
+
+        try:
+            for f in glob.glob("config/*"):
+                shutil.copy(f, subdir)
+        except:
+            print(f"--- Warning: cannot copy config/*")
+
+        #---------
+        subdir = Path(folder_path, "custom_modules")
+        try:
+            os.makedirs(subdir)
+        except:
+            print(f"--- Warning: {dir1} already exists.")
+
+        try:
+            for f in glob.glob("custom_modules/*"):
+                shutil.copy(f, subdir)
+        except:
+            print(f"--- Warning: cannot copy custom_modules/*")
+
+    #---------------------------------
+    def load_user_proj_cb(self):
+        try:
+            dialog = QFileDialog(self)
+            dialog.setFileMode(QFileDialog.Directory)
+            folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
+            print("load_user_proj_cb():  folder_path=",folder_path)
+
+            # cp ./user_projects/rwh1/main.cpp .
+            # cp ./user_projects/rwh1/Makefile .
+            # cp ./user_projects/rwh1/config/* ./config/
+            # cp ./user_projects/rwh1/custom_modules/* ./custom_modules/
+
+            for f in ["main.cpp", "Makefile"]:
+                try:
+                    f2 = os.path.join(folder_path, f)
+                    shutil.copy(f2, '.')
+                    print(f"copy {f2} to root")
+                except:
+                    print(f"--- Warning: cannot copy {f2}")
+
+            for d in ["config", "custom_modules"]:
+                d1 = os.path.join(folder_path, d)
+                print(f"d1 = {d1}")
+                for f in glob.glob(str(d1) + "/*"):
+                    print(f"try copying {f} to {d}")
+                    shutil.copy(f, d)
+
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("load_user_proj_cb(): Possible failure. See terminal output.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
+    #---------------------------------
     def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
