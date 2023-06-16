@@ -2171,17 +2171,21 @@ class VisBase():
         # print("field_name= ",field_name)
         # print(self.cmap_fixed_toggle.value)
         # if (self.colormap_fixed_toggle.value):  # toggle on fixed range
-        if (bval):  # toggle on fixed range
-            # self.colormap_min.disabled = False
-            # self.colormap_max.disabled = False
-            self.field_min_max[field_name][0] = self.cmin.text
-            self.field_min_max[field_name][1] = self.cmax.text
-            self.field_min_max[field_name][2] = True
-            # self.save_min_max.disabled = False
-        else:  # toggle off fixed range
-            # self.colormap_min.disabled = True
-            # self.colormap_max.disabled = True
-            self.field_min_max[field_name][2] = False
+        # --- rwh: TODO
+        try:
+            if (bval):  # toggle on fixed range
+                # self.colormap_min.disabled = False
+                # self.colormap_max.disabled = False
+                self.field_min_max[field_name][0] = self.cmin.text
+                self.field_min_max[field_name][1] = self.cmax.text
+                self.field_min_max[field_name][2] = True
+                # self.save_min_max.disabled = False
+            else:  # toggle off fixed range
+                # self.colormap_min.disabled = True
+                # self.colormap_max.disabled = True
+                self.field_min_max[field_name][2] = False
+        except:
+            print("------- vis_base: fix_cmap_toggle_cb(): exception updating field_min_max for ",field_name)
 
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()

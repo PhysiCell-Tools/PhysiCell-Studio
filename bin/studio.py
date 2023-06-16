@@ -20,6 +20,7 @@ import argparse
 import logging
 import traceback
 import shutil # for possible copy of file
+import glob
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
@@ -598,63 +599,77 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
             #------
             file_menu.addSeparator()
-            samples_menu = file_menu.addMenu("Samples")
+            file_menu.addAction("Save user project", self.save_user_proj_cb)
+            file_menu.addAction("Load user project", self.load_user_proj_cb)
+            # user_proj_menu = file_menu.addMenu("User project")
 
-            template_act = QAction('template', self)
-            samples_menu.addAction(template_act)
-            template_act.triggered.connect(self.template_cb)
+            # save_user_proj = QAction('Save', self)
+            # user_proj_menu.addAction(save_user_proj)
+            # save_user_proj.triggered.connect(self.save_user_proj_cb)
 
-            biorobots_act = QAction('biorobots', self)
-            samples_menu.addAction(biorobots_act)
-            biorobots_act.triggered.connect(self.biorobots_cb)
+            # load_user_proj = QAction('Load', self)
+            # user_proj_menu.addAction(load_user_proj)
+            # load_user_proj.triggered.connect(self.load_user_proj_cb)
 
-            cancer_biorobots_act = QAction('cancer biorobots', self)
-            samples_menu.addAction(cancer_biorobots_act)
-            cancer_biorobots_act.triggered.connect(self.cancer_biorobots_cb)
+            #------
+            # file_menu.addSeparator()
+            # samples_menu = file_menu.addMenu("Samples")
 
-            hetero_act = QAction('heterogeneity', self)
-            samples_menu.addAction(hetero_act)
-            hetero_act.triggered.connect(self.hetero_cb)
+            # template_act = QAction('template', self)
+            # samples_menu.addAction(template_act)
+            # template_act.triggered.connect(self.template_cb)
 
-            pred_prey_act = QAction('predator-prey-farmer', self)
-            samples_menu.addAction(pred_prey_act)
-            pred_prey_act.triggered.connect(self.pred_prey_cb)
+            # biorobots_act = QAction('biorobots', self)
+            # samples_menu.addAction(biorobots_act)
+            # biorobots_act.triggered.connect(self.biorobots_cb)
 
-            virus_mac_act = QAction('virus-macrophage', self)
-            samples_menu.addAction(virus_mac_act)
-            virus_mac_act.triggered.connect(self.virus_mac_cb)
+            # cancer_biorobots_act = QAction('cancer biorobots', self)
+            # samples_menu.addAction(cancer_biorobots_act)
+            # cancer_biorobots_act.triggered.connect(self.cancer_biorobots_cb)
 
-            worm_act = QAction('worm', self)
-            samples_menu.addAction(worm_act)
-            worm_act.triggered.connect(self.worm_cb)
+            # hetero_act = QAction('heterogeneity', self)
+            # samples_menu.addAction(hetero_act)
+            # hetero_act.triggered.connect(self.hetero_cb)
 
-            interactions_act = QAction('interactions', self)
-            samples_menu.addAction(interactions_act)
-            interactions_act.triggered.connect(self.interactions_cb)
+            # pred_prey_act = QAction('predator-prey-farmer', self)
+            # samples_menu.addAction(pred_prey_act)
+            # pred_prey_act.triggered.connect(self.pred_prey_cb)
 
-            mechano_act = QAction('mechano', self)
-            samples_menu.addAction(mechano_act)
-            mechano_act.triggered.connect(self.mechano_cb)
+            # virus_mac_act = QAction('virus-macrophage', self)
+            # samples_menu.addAction(virus_mac_act)
+            # virus_mac_act.triggered.connect(self.virus_mac_cb)
 
-            cancer_immune_act = QAction('cancer immune (3D)', self)
-            samples_menu.addAction(cancer_immune_act)
-            cancer_immune_act.triggered.connect(self.cancer_immune_cb)
+            # worm_act = QAction('worm', self)
+            # samples_menu.addAction(worm_act)
+            # worm_act.triggered.connect(self.worm_cb)
 
-            physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
-            samples_menu.addAction(physiboss_cell_lines_act)
-            physiboss_cell_lines_act.triggered.connect(self.physiboss_cell_lines_cb)
+            # interactions_act = QAction('interactions', self)
+            # samples_menu.addAction(interactions_act)
+            # interactions_act.triggered.connect(self.interactions_cb)
 
-            subcell_act = QAction('subcellular', self)
-            # samples_menu.addAction(subcell_act)
-            subcell_act.triggered.connect(self.subcell_cb)
+            # mechano_act = QAction('mechano', self)
+            # samples_menu.addAction(mechano_act)
+            # mechano_act.triggered.connect(self.mechano_cb)
 
-            covid19_act = QAction('covid19_v5', self)
-            # samples_menu.addAction(covid19_act)
-            covid19_act.triggered.connect(self.covid19_cb)
+            # cancer_immune_act = QAction('cancer immune (3D)', self)
+            # samples_menu.addAction(cancer_immune_act)
+            # cancer_immune_act.triggered.connect(self.cancer_immune_cb)
 
-            test_gui_act = QAction('test-gui', self)
-            # samples_menu.addAction(test_gui_act)
-            test_gui_act.triggered.connect(self.test_gui_cb)
+            # physiboss_cell_lines_act = QAction('PhysiBoSS cell lines', self)
+            # samples_menu.addAction(physiboss_cell_lines_act)
+            # physiboss_cell_lines_act.triggered.connect(self.physiboss_cell_lines_cb)
+
+            # subcell_act = QAction('subcellular', self)
+            # # samples_menu.addAction(subcell_act)
+            # subcell_act.triggered.connect(self.subcell_cb)
+
+            # covid19_act = QAction('covid19_v5', self)
+            # # samples_menu.addAction(covid19_act)
+            # covid19_act.triggered.connect(self.covid19_cb)
+
+            # test_gui_act = QAction('test-gui', self)
+            # # samples_menu.addAction(test_gui_act)
+            # test_gui_act.triggered.connect(self.test_gui_cb)
 
         # else:
             # file_menu.addAction("Save as mymodel.xml", self.save_as_cb)
@@ -812,6 +827,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 elem.tail = i
 
 
+    #---------------------------------
     def save_as_cb(self):
         # print("------ save_as_cb():")
         self.celldef_tab.check_valid_cell_defs()
@@ -893,7 +909,95 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
 
+    #---------------------------------
+    def save_user_proj_cb(self):
+        # print("------ save_user_proj_cb():")
+        # self.celldef_tab.check_valid_cell_defs()
+        
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.Directory)
+        folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
+        print("save_user_proj_cb():  folder_path=",folder_path)
+        # e.g., /Users/heiland/dev/PhysiCell_v1.12.0/user_projects/rwh3
 
+        # mkdir -p ./user_projects
+        # mkdir -p ./user_projects/rwh1
+        # mkdir -p ./user_projects/rwh1/custom_modules
+        # mkdir -p ./user_projects/rwh1/config
+        # cp main.cpp ./user_projects/rwh1
+        # cp Makefile ./user_projects/rwh1
+        # cp VERSION.txt ./user_projects/rwh1
+        # cp ./config/* ./user_projects/rwh1/config
+        # cp ./custom_modules/* ./user_projects/rwh1/custom_modules
+
+        for f in ["main.cpp", "Makefile", "VERSION.txt"]:
+            try:
+                shutil.copy(f, folder_path)
+            except:
+                print(f"--- Warning: cannot save {f}")
+
+        #---------
+        subdir = Path(folder_path, "config")
+        try:
+            os.makedirs(subdir)
+        except:
+            print(f"--- Warning: {subdir} already exists.")
+
+        try:
+            for f in glob.glob("config/*"):
+                shutil.copy(f, subdir)
+        except:
+            print(f"--- Warning: cannot copy config/*")
+
+        #---------
+        subdir = Path(folder_path, "custom_modules")
+        try:
+            os.makedirs(subdir)
+        except:
+            print(f"--- Warning: {dir1} already exists.")
+
+        try:
+            for f in glob.glob("custom_modules/*"):
+                shutil.copy(f, subdir)
+        except:
+            print(f"--- Warning: cannot copy custom_modules/*")
+
+    #---------------------------------
+    def load_user_proj_cb(self):
+        try:
+            dialog = QFileDialog(self)
+            dialog.setFileMode(QFileDialog.Directory)
+            folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
+            print("load_user_proj_cb():  folder_path=",folder_path)
+
+            # cp ./user_projects/rwh1/main.cpp .
+            # cp ./user_projects/rwh1/Makefile .
+            # cp ./user_projects/rwh1/config/* ./config/
+            # cp ./user_projects/rwh1/custom_modules/* ./custom_modules/
+
+            for f in ["main.cpp", "Makefile"]:
+                try:
+                    f2 = os.path.join(folder_path, f)
+                    shutil.copy(f2, '.')
+                    print(f"copy {f2} to root")
+                except:
+                    print(f"--- Warning: cannot copy {f2}")
+
+            for d in ["config", "custom_modules"]:
+                d1 = os.path.join(folder_path, d)
+                print(f"d1 = {d1}")
+                for f in glob.glob(str(d1) + "/*"):
+                    print(f"try copying {f} to {d}")
+                    shutil.copy(f, d)
+
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("load_user_proj_cb(): Possible failure. See terminal output.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
+    #---------------------------------
     def validate_cb(self):  # not used currently
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
