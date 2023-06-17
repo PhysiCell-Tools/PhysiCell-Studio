@@ -935,15 +935,19 @@ class ICs(QWidget):
                 for xval in np.arange(x_min,x_max, x_spacing):
                     # xval_offset = xval + (y_idx%2) * self.cell_radius
                     xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
-
-                    xlist.append(xval_offset)
                     yval_offset = yval + self.y0_value
-                    ylist.append(yval_offset)
-                    # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
-                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset, zval, cell_type_index]],axis=0)
-                    rlist.append(rval)
-                    self.cell_radii.append(self.cell_radius)
-                    count+=1
+
+                    if xval_offset < self.plot_xmin or xval_offset > self.plot_xmax \
+                        or yval_offset < self.plot_ymin or yval_offset > self.plot_ymax:
+                        continue
+                    else:
+                        xlist.append(xval_offset)
+                        ylist.append(yval_offset)
+                        # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                        self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset, zval, cell_type_index]],axis=0)
+                        rlist.append(rval)
+                        self.cell_radii.append(self.cell_radius)
+                        count+=1
         else:   # 3D
 
             # for z in np.arange(z_min, z_max, z_spacing):
@@ -1072,14 +1076,19 @@ class ICs(QWidget):
                 #     # plt.plot(xval_offset,yval,'ro',markersize=30)
 
                     xval_offset += self.x0_value
-                    xlist.append(xval_offset)
                     yval_offset = yval + self.y0_value
-                    ylist.append(yval_offset)
-                    # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
-                    self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
-                    rlist.append(rval)
-                    self.cell_radii.append(self.cell_radius)
-                    count+=1
+
+                    if xval_offset < self.plot_xmin or xval_offset > self.plot_xmax \
+                        or yval_offset < self.plot_ymin or yval_offset > self.plot_ymax:
+                        continue
+                    else:
+                        xlist.append(xval_offset)
+                        ylist.append(yval_offset)
+                        # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                        self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
+                        rlist.append(rval)
+                        self.cell_radii.append(self.cell_radius)
+                        count+=1
 
         self.numcells_l.append(count)
 
