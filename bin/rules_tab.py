@@ -1972,11 +1972,16 @@ class Rules(QWidget):
             #     print(f'{full_rules_fname} is not a valid file')
             #     logging.error(f'{full_rules_fname} is not a valid file')
 
+        # if no rules are defined in the .xml, set default folder, file and enable them in the tab
         else:  # should empty the Rules tab
             # self.rules_text.setPlainText("")
-            self.rules_folder.setText("")
-            self.rules_file.setText("")
-            self.rules_enabled.setChecked(False)
+            # self.rules_folder.setText("")
+            # self.rules_file.setText("")
+            # self.rules_enabled.setChecked(False)
+            self.rules_folder.setText("config")
+            self.rules_file.setText("rules.csv")
+            self.rules_enabled.setChecked(True)
+
             # self.rules_table.clear()  # NO, this is not the droid you're looking for
             self.clear_rules()
         return
