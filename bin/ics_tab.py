@@ -409,8 +409,7 @@ class ICs(QWidget):
         self.import_button.setFixedWidth(230)
         self.import_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         self.import_button.clicked.connect(self.import_cb)
-        # hbox(self.import_button)
-        # self.vbox.addWidget(self.import_button)
+        self.vbox.addWidget(self.import_button)
 
         # self.plot_button2 = QPushButton("Plot")
         # self.plot_button2.setFixedWidth(btn_width)
@@ -883,17 +882,21 @@ class ICs(QWidget):
                 self.hex_pts_box()
 
     #------------------------------------------------------------
-    def plot_import_cb(self):
-        self.reset_plot_range()
-        # self.cell_radii = []
-        print("len(self.numcells_l)= ",len(self.numcells_l))
-        print("self.numcells_l= ",self.numcells_l)
+    # def plot_import_cb(self):
+    #     self.reset_plot_range()
+    #     # self.cell_radii = []
+    #     print("len(self.numcells_l)= ",len(self.numcells_l))
+    #     print("self.numcells_l= ",self.numcells_l)
 
     #------------------------------------------------------------
     def undo_cb(self):
         # print("----- undo_cb(): self.numcells_l = ",self.numcells_l)
         # nlast = self.numcells_l[-1]
-        nlast = self.numcells_l.pop()
+        try:
+            nlast = self.numcells_l.pop()
+        except:
+            print("Error self.numcells_l.pop()")
+            return
         ntotal = len(self.csv_array)
         
         self.reset_plot_range()
@@ -1525,49 +1528,63 @@ class ICs(QWidget):
                 states_reader = csv.reader(csvfile, delimiter=',')
                 count = 0
                 for row in states_reader:
-                    print(count,row)
+                    # print(count,row)
                     if count == 0:
-                        print("skipping header row")
+                        # print("skipping header row")
+                        # print("row[0]=",row[0])
+                        if row[0] != 'x':
+                            msgBox = QMessageBox()
+                            msgBox.setIcon(QMessageBox.Information)
+                            msgBox.setText("Invalid first row. Expecting 'x' in 1st column.")
+                            msgBox.setStandardButtons(QMessageBox.Ok)
+                            returnValue = msgBox.exec()
+                            return
+                        # count+=1
                     else:
                         xval = float(row[0])
                         yval = float(row[1])
                         # zval = float(row[2])
                         cell_type_name = row[3]
-                        cell_type_index = cell_types_l.index(cell_type_name )
-                        print('xval,yval=',xval,yval)
+                        try:
+                            cell_type_index = cell_types_l.index(cell_type_name)
+                        except:
+                            msgBox = QMessageBox()
+                            msgBox.setIcon(QMessageBox.Information)
+                            msgBox.setText(f"Invalid cell type name: {cell_type_name}")
+                            msgBox.setStandardButtons(QMessageBox.Ok)
+                            returnValue = msgBox.exec()
+                            return
+
+                        # print('xval,yval=',xval,yval)
                         # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
                         volume = float(self.celldef_tab.param_d[cell_type_name]["volume_total"])
                         rval = (volume * 0.75 / np.pi) ** (1./3)
 
-                        xlist.append(xval)
-                        ylist.append(yval)
-                        # self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
                         self.csv_array = np.append(self.csv_array,[[xval,yval, zval, cell_type_index]],axis=0)
-                        rlist.append(rval)
+                        # rlist.append(rval)
                         self.cell_radii.append(rval)
-                        count+=1
+                        # count+=1
 
-            self.numcells_l.append(count)
+                        if (self.cells_edge_checked_flag):
+                            try:
+                                # print(f"calling self.circles with {xval}, {yval}")
+                                self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            except (ValueError):
+                                print("Exception:  self.circles")
+                                pass
+                        else:
+                            self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
 
-            xvals = np.array(xlist)
-            yvals = np.array(ylist)
-            rvals = np.array(rlist)
-            # rgbas = np.array(rgba_list)
+                        self.numcells_l.append(1)
 
-            if (self.cells_edge_checked_flag):
-                try:
-                    self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                except (ValueError):
-                    pass
-            else:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+                    count+=1
+                    # self.numcells_l.append(count)
 
             self.ax0.set_aspect(1.0)
 
             self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
             self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
-            # self.update_plots()
             self.canvas.update()
             self.canvas.draw()
 
