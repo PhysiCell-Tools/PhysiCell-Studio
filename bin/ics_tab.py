@@ -11,6 +11,7 @@ import sys
 import os
 import logging
 import time
+import csv
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
 
@@ -89,7 +90,7 @@ class ICs(QWidget):
         self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
         self.alpha_value = 1.0
 
-        self.csv_array = np.empty([1,4])  # default floats
+        self.csv_array = np.empty([1,4])  # default floats (x,y,z,cell_type_index)
         self.csv_array = np.delete(self.csv_array,0,0)
         # print("--------------- csv_array= ",self.csv_array)
 
@@ -400,6 +401,27 @@ class ICs(QWidget):
 
         self.vbox.addLayout(hbox)
 
+        #---------------------
+        # self.vbox.addWidget(QHLine())
+
+        # hbox = QHBoxLayout()
+        self.import_button = QPushButton("Import (cell type name syntax only)")
+        self.import_button.setFixedWidth(230)
+        self.import_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.import_button.clicked.connect(self.import_cb)
+        self.vbox.addWidget(self.import_button)
+
+        # self.plot_button2 = QPushButton("Plot")
+        # self.plot_button2.setFixedWidth(btn_width)
+        # self.plot_button2.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # self.plot_button2.clicked.connect(self.plot_import_cb)
+        # hbox.addWidget(self.plot_button2)
+
+        # hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
+        # self.vbox.addLayout(hbox)
+
+        #---------------------
         # Maybe later provide a cute diagram explaining D1,D2
         # diagram = QLabel("pic")
         # pixmap = QPixmap('physicell_logo_200px.png')  # in root by default
@@ -825,6 +847,19 @@ class ICs(QWidget):
     def plot_cb(self):
         self.reset_plot_range()
         # self.cell_radii = []
+        print("len(self.numcells_l)= ",len(self.numcells_l))
+        print("self.numcells_l= ",self.numcells_l)
+
+        ncells = int(self.num_cells.text())
+        if ncells <= 0:
+            msg = "Invalid # of cells."
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+            return
 
         cdef = self.celltype_combobox.currentText()
         volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
@@ -847,10 +882,21 @@ class ICs(QWidget):
                 self.hex_pts_box()
 
     #------------------------------------------------------------
+    # def plot_import_cb(self):
+    #     self.reset_plot_range()
+    #     # self.cell_radii = []
+    #     print("len(self.numcells_l)= ",len(self.numcells_l))
+    #     print("self.numcells_l= ",self.numcells_l)
+
+    #------------------------------------------------------------
     def undo_cb(self):
         # print("----- undo_cb(): self.numcells_l = ",self.numcells_l)
         # nlast = self.numcells_l[-1]
-        nlast = self.numcells_l.pop()
+        try:
+            nlast = self.numcells_l.pop()
+        except:
+            print("Error self.numcells_l.pop()")
+            return
         ntotal = len(self.csv_array)
         
         self.reset_plot_range()
@@ -1441,3 +1487,106 @@ class ICs(QWidget):
             print("----- Writing v1 (with cell indices) .csv file for cells")
             print("----- full_fname=",full_fname)
             np.savetxt(full_fname, self.csv_array, delimiter=',')
+
+    #--------------------------------------------------
+    def import_cb(self):
+        # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+        filePath = QFileDialog.getOpenFileName(self,'',".")
+        full_path_rules_name = filePath[0]
+        # logging.debug(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
+        print(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
+        basename = os.path.basename(full_path_rules_name)
+        print(f'import_cb():  basename ={basename}')
+        dirname = os.path.dirname(full_path_rules_name)
+        print(f'import_cb():  dirname ={dirname}')
+        # if (len(full_path_rules_name) > 0) and Path(full_path_rules_name):
+        if (len(full_path_rules_name) > 0) and Path(full_path_rules_name).is_file():
+            print("import_cb():  filePath is valid")
+            # logging.debug(f'     filePath is valid')
+            print("len(full_path_rules_name) = ", len(full_path_rules_name) )
+
+            cell_types_l = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+            print(cell_types_l)
+
+            xlist = deque()
+            ylist = deque()
+            rlist = deque()
+            rgba_list = deque()
+
+            rval = self.cell_radius
+
+            colors = np.empty((0,4))
+            count = 0
+            # zval = 0.0
+            # cell_type_index = self.celltype_combobox.currentIndex()
+            # cell_type_name = self.celltype_combobox.currentText()
+
+            # x,y,z,type,volume,cycle entry,custom:GFP,custom:sample
+            # -49.52373671227464,-85.42875790157267,0.0,acell
+            zval = 0.0   # only doing 2D now
+            with open(full_path_rules_name, newline='') as csvfile:
+                states_reader = csv.reader(csvfile, delimiter=',')
+                count = 0
+                for row in states_reader:
+                    # print(count,row)
+                    if count == 0:
+                        # print("skipping header row")
+                        # print("row[0]=",row[0])
+                        if row[0] != 'x':
+                            msgBox = QMessageBox()
+                            msgBox.setIcon(QMessageBox.Information)
+                            msgBox.setText("Invalid first row. Expecting 'x' in 1st column.")
+                            msgBox.setStandardButtons(QMessageBox.Ok)
+                            returnValue = msgBox.exec()
+                            return
+                        # count+=1
+                    else:
+                        xval = float(row[0])
+                        yval = float(row[1])
+                        # zval = float(row[2])
+                        cell_type_name = row[3]
+                        try:
+                            cell_type_index = cell_types_l.index(cell_type_name)
+                        except:
+                            msgBox = QMessageBox()
+                            msgBox.setIcon(QMessageBox.Information)
+                            msgBox.setText(f"Invalid cell type name: {cell_type_name}")
+                            msgBox.setStandardButtons(QMessageBox.Ok)
+                            returnValue = msgBox.exec()
+                            return
+
+                        # print('xval,yval=',xval,yval)
+                        # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+                        volume = float(self.celldef_tab.param_d[cell_type_name]["volume_total"])
+                        rval = (volume * 0.75 / np.pi) ** (1./3)
+
+                        self.csv_array = np.append(self.csv_array,[[xval,yval, zval, cell_type_index]],axis=0)
+                        # rlist.append(rval)
+                        self.cell_radii.append(rval)
+                        # count+=1
+
+                        if (self.cells_edge_checked_flag):
+                            try:
+                                # print(f"calling self.circles with {xval}, {yval}")
+                                self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            except (ValueError):
+                                print("Exception:  self.circles")
+                                pass
+                        else:
+                            self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+
+                        self.numcells_l.append(1)
+
+                    count+=1
+                    # self.numcells_l.append(count)
+
+            self.ax0.set_aspect(1.0)
+
+            self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+            self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+            self.canvas.update()
+            self.canvas.draw()
+
+        else:
+            print("import_cb():  full_path_model_name is NOT valid")
