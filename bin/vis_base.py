@@ -576,12 +576,14 @@ class VisBase():
 
 
         self.substrates_cbar_combobox = QComboBox()
-        self.substrates_cbar_combobox.addItem("jet")
-        self.substrates_cbar_combobox.addItem("jet_r")
-        self.substrates_cbar_combobox.addItem("viridis")
-        self.substrates_cbar_combobox.addItem("viridis_r")
         self.substrates_cbar_combobox.addItem("YlOrRd")
         self.substrates_cbar_combobox.addItem("YlOrRd_r")
+        self.substrates_cbar_combobox.addItem("viridis")
+        self.substrates_cbar_combobox.addItem("viridis_r")
+        self.substrates_cbar_combobox.addItem("turbo")
+        self.substrates_cbar_combobox.addItem("plasma")
+        # self.substrates_cbar_combobox.addItem("jet")
+        # self.substrates_cbar_combobox.addItem("jet_r")
         self.substrates_cbar_combobox.setEnabled(False)
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
@@ -726,12 +728,14 @@ class VisBase():
         hbox = QHBoxLayout()
         self.cell_scalar_cbar_combobox = QComboBox()
         self.cell_scalar_cbar_combobox .setFixedWidth(120)
-        self.cell_scalar_cbar_combobox.addItem("jet")
-        self.cell_scalar_cbar_combobox.addItem("jet_r")
         self.cell_scalar_cbar_combobox.addItem("viridis")
         self.cell_scalar_cbar_combobox.addItem("viridis_r")
         self.cell_scalar_cbar_combobox.addItem("YlOrRd")
         self.cell_scalar_cbar_combobox.addItem("YlOrRd_r")
+        self.cell_scalar_cbar_combobox.addItem("turbo")
+        self.cell_scalar_cbar_combobox.addItem("plasma")
+        # self.cell_scalar_cbar_combobox.addItem("jet")
+        # self.cell_scalar_cbar_combobox.addItem("jet_r")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(self.model3D_flag)  # for 3D
         # self.cell_scalar_cbar_combobox.setEnabled(self.vis.cell_scalar_cbar_combobox_changed_cb)  # for 3D
