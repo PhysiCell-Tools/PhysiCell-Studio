@@ -48,6 +48,7 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
@@ -3571,6 +3572,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_behaviours.append(substrate + " uptake")
 
             for substrate in self.substrate_list:
+                self.physiboss_behaviours.append("chemotactic response to " + substrate)
+
+            for substrate in self.substrate_list:
                 self.physiboss_behaviours.append(substrate + " export")
 
             for custom_data in self.master_custom_var_d.keys():
@@ -3984,7 +3988,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_input(self):
 
         inputs_editor = QHBoxLayout()
-                
+
         inputs_signal_dropdown = QComboBox()
         inputs_signal_dropdown.setStyleSheet(self.combobox_stylesheet)
         inputs_signal_dropdown.setFixedWidth(200)
@@ -4003,8 +4007,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_action.setFixedWidth(100)
         inputs_action.addItem("activation")
         inputs_action.addItem("inhibition")
-        inputs_remove = QPushButton("Delete")
-
+        inputs_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
         id = len(self.physiboss_inputs)
         inputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
@@ -4018,7 +4021,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         
         inputs_threshold = QLineEdit("1.0")
         inputs_inact_threshold = QLineEdit("1.0")
-        inputs_smoothing = QLineEdit("0")        
+        inputs_smoothing = QLineEdit("0")
         inputs_threshold.textChanged.connect(lambda text: self.physiboss_inputs_threshold_changed(id, text))
         inputs_inact_threshold.textChanged.connect(lambda text: self.physiboss_inputs_inact_threshold_changed(id, text))
         inputs_smoothing.textChanged.connect(lambda text: self.physiboss_inputs_smoothing_changed(id, text))
@@ -4026,7 +4029,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_editor.addWidget(inputs_threshold)
         inputs_editor.addWidget(inputs_inact_threshold)
         inputs_editor.addWidget(inputs_smoothing)
-        
+
+        inputs_threshold.setFixedWidth(60)
+        inputs_inact_threshold.setFixedWidth(60)
+        inputs_smoothing.setFixedWidth(60)
         inputs_editor.addWidget(inputs_remove)
 
         self.physiboss_inputs_layout.addLayout(inputs_editor)
@@ -4127,7 +4133,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_action.setFixedWidth(100)
         outputs_action.addItem("activation")
         outputs_action.addItem("inhibition")
-        outputs_remove = QPushButton("Delete")
+        outputs_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
 
         id = len(self.physiboss_outputs)
@@ -4150,6 +4156,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_editor.addWidget(outputs_value)
         outputs_editor.addWidget(outputs_basal_value)
         outputs_editor.addWidget(outputs_smoothing)
+
+        outputs_value.setFixedWidth(70)
+        outputs_basal_value.setFixedWidth(70)
+        outputs_smoothing.setFixedWidth(70)
         
         outputs_editor.addWidget(outputs_remove)
 
@@ -4563,20 +4573,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_labels = QHBoxLayout()
 
         inputs_signal_label = QLabel("Signal")
-        inputs_signal_label.setFixedWidth(200)
         inputs_node_label = QLabel("Node")
-        inputs_node_label.setFixedWidth(150)
         inputs_action_label = QLabel("Action")
-        inputs_node_label.setFixedWidth(100)
-        inputs_threshold_label = QLabel("Threshold")
-        inputs_inact_threshold_label = QLabel("Inact. Threshold")
+        inputs_threshold_label = QLabel("Thr")
+        inputs_inact_threshold_label = QLabel("Inact. Thr")
         inputs_smoothing_label = QLabel("Smoothing")
+
         inputs_labels.addWidget(inputs_signal_label)
         inputs_labels.addWidget(inputs_action_label)
         inputs_labels.addWidget(inputs_node_label)
         inputs_labels.addWidget(inputs_threshold_label)
         inputs_labels.addWidget(inputs_inact_threshold_label)
         inputs_labels.addWidget(inputs_smoothing_label)
+
+        inputs_node_label.setFixedWidth(150)
+        inputs_action_label.setFixedWidth(100)
+        inputs_signal_label.setFixedWidth(200)
+        inputs_threshold_label.setFixedWidth(60)
+        inputs_inact_threshold_label.setFixedWidth(60)
+
+        print(str(inputs_node_label.x()), str(inputs_node_label.x()))
+
         self.physiboss_inputs_layout.addLayout(inputs_labels)
         inputs_groupbox.setLayout(self.physiboss_inputs_layout)
 
@@ -4594,21 +4611,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_labels = QHBoxLayout()
 
         outputs_signal_label = QLabel("Signal")
-        outputs_signal_label.setFixedWidth(200)
         outputs_node_label = QLabel("Node")
-        outputs_node_label.setFixedWidth(150)
-
         outputs_action_label = QLabel("Action")
-        outputs_action_label.setFixedWidth(100)
         outputs_value_label = QLabel("Value")
-        outputs_basal_value_label = QLabel("Base_value")
+        outputs_basal_value_label = QLabel("Base value")
         outputs_smoothing_label = QLabel("Smoothing")
+
         outputs_labels.addWidget(outputs_signal_label)
         outputs_labels.addWidget(outputs_action_label)
         outputs_labels.addWidget(outputs_node_label)
         outputs_labels.addWidget(outputs_value_label)
         outputs_labels.addWidget(outputs_basal_value_label)
         outputs_labels.addWidget(outputs_smoothing_label)
+
+        outputs_signal_label.setFixedWidth(200)
+        outputs_action_label.setFixedWidth(100)
+        outputs_node_label.setFixedWidth(150)
+        outputs_value_label.setFixedWidth(70)
+        outputs_basal_value_label.setFixedWidth(70)
+
         self.physiboss_outputs_layout.addLayout(outputs_labels)
         outputs_groupbox.setLayout(self.physiboss_outputs_layout)
 
