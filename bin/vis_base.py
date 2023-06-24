@@ -292,6 +292,9 @@ class PopulationPlotWindow(QWidget):
 
         self.setLayout(self.layout)
 
+        # self.hide()
+        # self.show()
+
     def close_plot_cb(self):
         self.close()
 
@@ -963,6 +966,7 @@ class VisBase():
 
     def filterUI_cb(self):
         print("---- vis_base: filterUI_cb()")
+        # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
         # self.filterUI = FilterUIWindow()
         if self.vis_filter_init_flag:
             if self.model3D_flag:
@@ -972,6 +976,9 @@ class VisBase():
                 pass
 
             self.vis_filter_init_flag = False
+
+        # hack to bring to foreground
+        self.filterUI.hide()
         self.filterUI.show()
 
 

@@ -267,6 +267,11 @@ class Vis(VisBase, QWidget):
             else:
                 self.plot_cell_scalar(self.current_svg_frame)
 
+        if self.show_voxel_grid:
+            self.plot_voxel_grid()
+        if self.show_mechanics_grid:
+            self.plot_mechanics_grid()
+
         self.called_from_update = True
         self.frame_count.setText(str(self.current_svg_frame))
         self.called_from_update = False
@@ -389,10 +394,10 @@ class Vis(VisBase, QWidget):
 
         # return
 
-        if self.show_voxel_grid:
-            self.plot_voxel_grid()
-        if self.show_mechanics_grid:
-            self.plot_mechanics_grid()
+        # if self.show_voxel_grid:
+        #     self.plot_voxel_grid()
+        # if self.show_mechanics_grid:
+        #     self.plot_mechanics_grid()
 
         # if self.show_vectors:
         #     self.plot_vecs()
@@ -621,10 +626,10 @@ class Vis(VisBase, QWidget):
         if self.disable_cell_scalar_cb:
             return
             
-        if self.show_voxel_grid:
-            self.plot_voxel_grid()
-        if self.show_mechanics_grid:
-            self.plot_mechanics_grid()
+        # if self.show_voxel_grid:
+        #     self.plot_voxel_grid()
+        # if self.show_mechanics_grid:
+        #     self.plot_mechanics_grid()
 
 
         xml_file_root = "output%08d.xml" % frame
