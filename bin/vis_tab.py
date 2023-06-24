@@ -267,6 +267,7 @@ class Vis(VisBase, QWidget):
             else:
                 self.plot_cell_scalar(self.current_svg_frame)
 
+        # show grid(s), but only if Cells or Substrates checked?
         if self.show_voxel_grid:
             self.plot_voxel_grid()
         if self.show_mechanics_grid:
