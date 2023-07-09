@@ -292,6 +292,9 @@ class PopulationPlotWindow(QWidget):
 
         self.setLayout(self.layout)
 
+        # self.hide()
+        # self.show()
+
     def close_plot_cb(self):
         self.close()
 
@@ -963,6 +966,7 @@ class VisBase():
 
     def filterUI_cb(self):
         print("---- vis_base: filterUI_cb()")
+        # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
         # self.filterUI = FilterUIWindow()
         if self.vis_filter_init_flag:
             if self.model3D_flag:
@@ -972,6 +976,9 @@ class VisBase():
                 pass
 
             self.vis_filter_init_flag = False
+
+        # hack to bring to foreground
+        self.filterUI.hide()
         self.filterUI.show()
 
 
@@ -1393,6 +1400,68 @@ class VisBase():
         self.update_plots()
         
     #-------------------------------------
+    def reset_xml_root(self):
+        self.celldef_tab.clear_custom_data_tab()
+        self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
+        self.celldef_tab.current_cell_def = None
+        self.celldef_tab.cell_adhesion_affinity_celltype = None
+
+        self.microenv_tab.param_d.clear()
+
+        print(f"\nreset_xml_root() self.tree = {self.tree}")
+        self.xml_root = self.tree.getroot()
+        print(f"reset_xml_root() self.xml_root = {self.xml_root}")
+        self.config_tab.xml_root = self.xml_root
+        self.microenv_tab.xml_root = self.xml_root
+        self.celldef_tab.xml_root = self.xml_root
+        self.user_params_tab.xml_root = self.xml_root
+
+        self.config_tab.fill_gui()
+        if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
+            print("You're running a 3D Studio, but the model is 2D")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('The model has been loaded; however, it is 2D and you are running the 3D (plotting) Studio. You may want to run a new Studio without 3D, i.e., no "-3", for this 2D model.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+
+        self.microenv_tab.clear_gui()
+        self.microenv_tab.populate_tree()
+
+        self.celldef_tab.config_path = self.current_xml_file
+        self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+
+        self.celldef_tab.fill_celltypes_comboboxes()
+
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.clear_rules()
+            self.rules_tab.fill_gui()   # do *after* populate_cell_defs() 
+
+        if self.studio_flag:
+            self.ics_tab.reset_info()
+
+        self.microenv_tab.celldef_tab = self.celldef_tab
+
+        self.user_params_tab.clear_gui()
+        self.user_params_tab.fill_gui()
+
+    #-------------------------------------
+    def show_sample_model(self, config_file):
+        # logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
+        print(f'\nvis_base.py: show_sample_model(): self.config_file = {config_file}')
+        self.tree = ET.parse(config_file)
+        print(f'studio: show_sample_model(): self.tree = {self.tree}')
+        if self.studio_flag:
+            self.run_tab.tree = self.tree  #rwh
+        # self.xml_root = self.tree.getroot()
+        self.reset_xml_root()
+        self.setWindowTitle(self.title_prefix + self.config_file)
+        if self.model3D_flag:
+            self.reset_domain_box()
+
+    #-------------------------------------
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
@@ -1421,8 +1490,25 @@ class VisBase():
             self.reset_model()
             self.update_plots()
 
+            # June 2023 - also attempt to read PhysiCell_settings.xml and repopulate the Studio 
+            # self.run_tab.config_file = self.current_xml_file
+            config_file = os.path.join(self.output_dir, "PhysiCell_settings.xml")
+            print(f"vis_base.py: select_plot_output_cb():  config_file is {config_file}")
+            if not Path(config_file).is_file():
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText(f"Unable to find a PhysiCell_settings.xml in {self.output_dir}, therefore parameters in the other GUI tabs will not be updated.")
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return
+            else:
+                self.run_tab.config_xml_name.setText(config_file)
+                self.show_sample_model(config_file)
+                # self.vis_tab.update_output_dir(self.config_tab.folder.text())
+
+
         else:
-            print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
+            print("vis_base.py: output_folder_cb():  full_path_model_name is NOT valid")
 
 
     def disable_cell_scalar_widgets(self):
@@ -1920,33 +2006,41 @@ class VisBase():
 
         xml_files.sort()
         # print('last_plot_cb():xml_files (after sort)= ',xml_files)
+        last_xml = int(xml_files[-1][-12:-4])
 
         # svg_pattern = "snapshot*.svg"
-        svg_pattern = self.output_dir + "/" + "snapshot*.svg"
-        svg_files = glob.glob(svg_pattern)   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
-        svg_files.sort()
-        # print('last_plot_cb(): svg_files (after sort)= ',svg_files)
-        num_xml = len(xml_files)
-        # print('svg_files = ',svg_files)
-        num_svg = len(svg_files)
-        if num_svg == 0:
-            print("Missing .svg file in output dir: ",self.output_dir)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Missing .svg file in output dir " + self.output_dir)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
 
-    #    print('num_xml, num_svg = ',num_xml, num_svg)
-        last_xml = int(xml_files[-1][-12:-4])
-        last_svg = int(svg_files[-1][-12:-4])
-        # print('last_xml, _svg = ',last_xml,last_svg)
-        self.current_svg_frame = last_xml
-        if last_svg < last_xml:
-            self.current_svg_frame = last_svg
+        if self.cells_svg_rb.isChecked():
+            svg_pattern = self.output_dir + "/" + "snapshot*.svg"
+            svg_files = glob.glob(svg_pattern)   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
+            svg_files.sort()
+            # print('last_plot_cb(): svg_files (after sort)= ',svg_files)
+            num_xml = len(xml_files)
+            # print('svg_files = ',svg_files)
+            num_svg = len(svg_files)
+            if num_svg == 0:
+                print("Missing .svg file in output dir: ",self.output_dir)
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Missing .svg file in output dir " + self.output_dir)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return
 
-        self.current_frame = self.current_svg_frame
+            # print('num_xml, num_svg = ',num_xml, num_svg)
+            # last_xml = int(xml_files[-1][-12:-4])
+            last_svg = int(svg_files[-1][-12:-4])
+            # print('last_xml, _svg = ',last_xml,last_svg)
+            self.current_svg_frame = last_xml
+            if last_svg < last_xml:
+                self.current_svg_frame = last_svg
+
+            self.current_frame = self.current_svg_frame
+
+        else:   # plotting .mat, not .svg
+            self.current_frame = last_xml
+            print('self.current_frame= ',self.current_frame)
+
         self.update_plots()
 
 
@@ -1959,7 +2053,11 @@ class VisBase():
         if self.current_svg_frame < 0:
            self.current_svg_frame = 0
 
-        self.current_frame = self.current_svg_frame
+        self.current_frame -= 1
+        if self.current_frame < 0:
+           self.current_frame = 0
+
+        # self.current_frame = self.current_svg_frame
         # print('back_plot_cb(): svg # ',self.current_svg_frame)
 
         self.update_plots()
@@ -1987,23 +2085,35 @@ class VisBase():
             self.current_frame = self.current_svg_frame
             # print('svg # ',self.current_svg_frame)
 
-            fname = "snapshot%08d.svg" % self.current_svg_frame
-            full_fname = os.path.join(self.output_dir, fname)
-            # print("full_fname = ",full_fname)
-            # with debug_view:
-                # print("plot_svg:", full_fname) 
-            # print("-- plot_svg:", full_fname) 
-            if not os.path.isfile(full_fname):
-                # print("Once output files are generated, click the slider.")   
-                # print("play_plot_cb():  Reached the end (or no output files found).")
-                # self.timer.stop()
-                self.current_svg_frame -= 1
-                self.current_frame -= 1
+            if self.cells_svg_rb.isChecked():
+                fname = "snapshot%08d.svg" % self.current_svg_frame
+                full_fname = os.path.join(self.output_dir, fname)
+                # print("full_fname = ",full_fname)
+                # with debug_view:
+                    # print("plot_svg:", full_fname) 
+                # print("-- plot_svg:", full_fname) 
+                if not os.path.isfile(full_fname):
+                    # print("Once output files are generated, click the slider.")   
+                    # print("play_plot_cb():  Reached the end (or no output files found).")
+                    # self.timer.stop()
+                    self.current_svg_frame -= 1
+                    self.current_frame -= 1
 
-                self.animating_flag = True
-                # self.current_svg_frame = 0
-                self.animate()
-                return
+                    self.animating_flag = True
+                    # self.current_svg_frame = 0
+                    self.animate()
+                    return
+            else:
+                fname = "output%08d.xml" % self.current_svg_frame
+                full_fname = os.path.join(self.output_dir, fname)
+                if not os.path.isfile(full_fname):
+                    self.current_svg_frame -= 1
+                    self.current_frame -= 1
+
+                    self.animating_flag = True
+                    # self.current_svg_frame = 0
+                    self.animate()
+                    return
 
             self.update_plots()
 
