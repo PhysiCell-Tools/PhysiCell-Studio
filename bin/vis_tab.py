@@ -90,7 +90,6 @@ class Vis(VisBase, QWidget):
         self.animating_flag = False
 
         self.xml_root = None
-        self.current_svg_frame = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.play_plot_cb)
 
@@ -110,12 +109,10 @@ class Vis(VisBase, QWidget):
         self.label_fontsize = 6
         self.title_fontsize = 10
 
-        # self.plot_svg_flag = True
         self.plot_cells_svg = True
 
         self.cell_scalars_l = []
 
-        # self.plot_svg_flag = False
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
 
@@ -260,12 +257,12 @@ class Vis(VisBase, QWidget):
         #     print(line.strip())
         self.ax0.cla()
         if self.substrates_checked_flag:  # do first so cells are plotted on top
-            self.plot_substrate(self.current_svg_frame)
+            self.plot_substrate(self.current_frame)
         if self.cells_checked_flag:
             if self.plot_cells_svg:
-                self.plot_svg(self.current_svg_frame)
+                self.plot_svg(self.current_frame)
             else:
-                self.plot_cell_scalar(self.current_svg_frame)
+                self.plot_cell_scalar(self.current_frame)
 
         # show grid(s), but only if Cells or Substrates checked?
         if self.show_voxel_grid:
@@ -274,7 +271,7 @@ class Vis(VisBase, QWidget):
             self.plot_mechanics_grid()
 
         self.called_from_update = True
-        self.frame_count.setText(str(self.current_svg_frame))
+        self.frame_count.setText(str(self.current_frame))
         self.called_from_update = False
 
         self.canvas.update()
@@ -310,7 +307,7 @@ class Vis(VisBase, QWidget):
     def plot_vecs(self):
         # global current_frame
 
-        fname = "output%08d.xml" % self.current_svg_frame
+        fname = "output%08d.xml" % self.current_frame
         # print("plot_vecs(): fname = ",fname)
         # full_fname = os.path.join(self.output_dir, fname)
         # mcds=pyMCDS_cells("output00000049.xml")

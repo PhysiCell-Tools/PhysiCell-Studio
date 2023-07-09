@@ -2006,33 +2006,41 @@ class VisBase():
 
         xml_files.sort()
         # print('last_plot_cb():xml_files (after sort)= ',xml_files)
+        last_xml = int(xml_files[-1][-12:-4])
 
         # svg_pattern = "snapshot*.svg"
-        svg_pattern = self.output_dir + "/" + "snapshot*.svg"
-        svg_files = glob.glob(svg_pattern)   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
-        svg_files.sort()
-        # print('last_plot_cb(): svg_files (after sort)= ',svg_files)
-        num_xml = len(xml_files)
-        # print('svg_files = ',svg_files)
-        num_svg = len(svg_files)
-        if num_svg == 0:
-            print("Missing .svg file in output dir: ",self.output_dir)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Missing .svg file in output dir " + self.output_dir)
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            return
 
-    #    print('num_xml, num_svg = ',num_xml, num_svg)
-        last_xml = int(xml_files[-1][-12:-4])
-        last_svg = int(svg_files[-1][-12:-4])
-        # print('last_xml, _svg = ',last_xml,last_svg)
-        self.current_svg_frame = last_xml
-        if last_svg < last_xml:
-            self.current_svg_frame = last_svg
+        if self.cells_svg_rb.isChecked():
+            svg_pattern = self.output_dir + "/" + "snapshot*.svg"
+            svg_files = glob.glob(svg_pattern)   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
+            svg_files.sort()
+            # print('last_plot_cb(): svg_files (after sort)= ',svg_files)
+            num_xml = len(xml_files)
+            # print('svg_files = ',svg_files)
+            num_svg = len(svg_files)
+            if num_svg == 0:
+                print("Missing .svg file in output dir: ",self.output_dir)
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Missing .svg file in output dir " + self.output_dir)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return
 
-        self.current_frame = self.current_svg_frame
+            # print('num_xml, num_svg = ',num_xml, num_svg)
+            # last_xml = int(xml_files[-1][-12:-4])
+            last_svg = int(svg_files[-1][-12:-4])
+            # print('last_xml, _svg = ',last_xml,last_svg)
+            self.current_svg_frame = last_xml
+            if last_svg < last_xml:
+                self.current_svg_frame = last_svg
+
+            self.current_frame = self.current_svg_frame
+
+        else:   # plotting .mat, not .svg
+            self.current_frame = last_xml
+            print('self.current_frame= ',self.current_frame)
+
         self.update_plots()
 
 
@@ -2045,7 +2053,11 @@ class VisBase():
         if self.current_svg_frame < 0:
            self.current_svg_frame = 0
 
-        self.current_frame = self.current_svg_frame
+        self.current_frame -= 1
+        if self.current_frame < 0:
+           self.current_frame = 0
+
+        # self.current_frame = self.current_svg_frame
         # print('back_plot_cb(): svg # ',self.current_svg_frame)
 
         self.update_plots()
@@ -2073,23 +2085,35 @@ class VisBase():
             self.current_frame = self.current_svg_frame
             # print('svg # ',self.current_svg_frame)
 
-            fname = "snapshot%08d.svg" % self.current_svg_frame
-            full_fname = os.path.join(self.output_dir, fname)
-            # print("full_fname = ",full_fname)
-            # with debug_view:
-                # print("plot_svg:", full_fname) 
-            # print("-- plot_svg:", full_fname) 
-            if not os.path.isfile(full_fname):
-                # print("Once output files are generated, click the slider.")   
-                # print("play_plot_cb():  Reached the end (or no output files found).")
-                # self.timer.stop()
-                self.current_svg_frame -= 1
-                self.current_frame -= 1
+            if self.cells_svg_rb.isChecked():
+                fname = "snapshot%08d.svg" % self.current_svg_frame
+                full_fname = os.path.join(self.output_dir, fname)
+                # print("full_fname = ",full_fname)
+                # with debug_view:
+                    # print("plot_svg:", full_fname) 
+                # print("-- plot_svg:", full_fname) 
+                if not os.path.isfile(full_fname):
+                    # print("Once output files are generated, click the slider.")   
+                    # print("play_plot_cb():  Reached the end (or no output files found).")
+                    # self.timer.stop()
+                    self.current_svg_frame -= 1
+                    self.current_frame -= 1
 
-                self.animating_flag = True
-                # self.current_svg_frame = 0
-                self.animate()
-                return
+                    self.animating_flag = True
+                    # self.current_svg_frame = 0
+                    self.animate()
+                    return
+            else:
+                fname = "output%08d.xml" % self.current_svg_frame
+                full_fname = os.path.join(self.output_dir, fname)
+                if not os.path.isfile(full_fname):
+                    self.current_svg_frame -= 1
+                    self.current_frame -= 1
+
+                    self.animating_flag = True
+                    # self.current_svg_frame = 0
+                    self.animate()
+                    return
 
             self.update_plots()
 
