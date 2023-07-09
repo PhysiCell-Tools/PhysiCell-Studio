@@ -1400,6 +1400,68 @@ class VisBase():
         self.update_plots()
         
     #-------------------------------------
+    def reset_xml_root(self):
+        self.celldef_tab.clear_custom_data_tab()
+        self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
+        self.celldef_tab.current_cell_def = None
+        self.celldef_tab.cell_adhesion_affinity_celltype = None
+
+        self.microenv_tab.param_d.clear()
+
+        print(f"\nreset_xml_root() self.tree = {self.tree}")
+        self.xml_root = self.tree.getroot()
+        print(f"reset_xml_root() self.xml_root = {self.xml_root}")
+        self.config_tab.xml_root = self.xml_root
+        self.microenv_tab.xml_root = self.xml_root
+        self.celldef_tab.xml_root = self.xml_root
+        self.user_params_tab.xml_root = self.xml_root
+
+        self.config_tab.fill_gui()
+        if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
+            print("You're running a 3D Studio, but the model is 2D")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('The model has been loaded; however, it is 2D and you are running the 3D (plotting) Studio. You may want to run a new Studio without 3D, i.e., no "-3", for this 2D model.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+
+        self.microenv_tab.clear_gui()
+        self.microenv_tab.populate_tree()
+
+        self.celldef_tab.config_path = self.current_xml_file
+        self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+
+        self.celldef_tab.fill_celltypes_comboboxes()
+
+        if self.rules_flag:
+            self.rules_tab.xml_root = self.xml_root
+            self.rules_tab.clear_rules()
+            self.rules_tab.fill_gui()   # do *after* populate_cell_defs() 
+
+        if self.studio_flag:
+            self.ics_tab.reset_info()
+
+        self.microenv_tab.celldef_tab = self.celldef_tab
+
+        self.user_params_tab.clear_gui()
+        self.user_params_tab.fill_gui()
+
+    #-------------------------------------
+    def show_sample_model(self, config_file):
+        # logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
+        print(f'\nvis_base.py: show_sample_model(): self.config_file = {config_file}')
+        self.tree = ET.parse(config_file)
+        print(f'studio: show_sample_model(): self.tree = {self.tree}')
+        if self.studio_flag:
+            self.run_tab.tree = self.tree  #rwh
+        # self.xml_root = self.tree.getroot()
+        self.reset_xml_root()
+        self.setWindowTitle(self.title_prefix + self.config_file)
+        if self.model3D_flag:
+            self.reset_domain_box()
+
+    #-------------------------------------
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
@@ -1428,8 +1490,25 @@ class VisBase():
             self.reset_model()
             self.update_plots()
 
+            # June 2023 - also attempt to read PhysiCell_settings.xml and repopulate the Studio 
+            # self.run_tab.config_file = self.current_xml_file
+            config_file = os.path.join(self.output_dir, "PhysiCell_settings.xml")
+            print(f"vis_base.py: select_plot_output_cb():  config_file is {config_file}")
+            if not Path(config_file).is_file():
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText(f"Unable to find a PhysiCell_settings.xml in {self.output_dir}, therefore parameters in the other GUI tabs will not be updated.")
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return
+            else:
+                self.run_tab.config_xml_name.setText(config_file)
+                self.show_sample_model(config_file)
+                # self.vis_tab.update_output_dir(self.config_tab.folder.text())
+
+
         else:
-            print("vis_tab: output_folder_cb():  full_path_model_name is NOT valid")
+            print("vis_base.py: output_folder_cb():  full_path_model_name is NOT valid")
 
 
     def disable_cell_scalar_widgets(self):
