@@ -62,6 +62,8 @@ except:
 from filters3D import FilterUI3DWindow
 from filters2D import FilterUI2DWindow
 
+from populate_tree_cell_defs import populate_tree_cell_defs
+
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
@@ -309,13 +311,21 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, nanohub_flag, config_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
 
 
         self.vis_filter_init_flag = True
+
+        self.studio_flag = studio_flag 
+        self.rules_flag = rules_flag 
+
+        self.microenv_tab = microenv_tab
+        self.celldef_tab = celldef_tab
+        self.user_params_tab = user_params_tab
+        self.ics_tab = ics_tab
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
@@ -1400,7 +1410,8 @@ class VisBase():
         self.update_plots()
         
     #-------------------------------------
-    def reset_xml_root(self):
+    # def reset_xml_root(self):
+    def reset_xml_root(self, config_file):
         self.celldef_tab.clear_custom_data_tab()
         self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
         self.celldef_tab.current_cell_def = None
@@ -1428,9 +1439,11 @@ class VisBase():
         self.microenv_tab.clear_gui()
         self.microenv_tab.populate_tree()
 
-        self.celldef_tab.config_path = self.current_xml_file
+        # self.celldef_tab.config_path = self.current_xml_file
+        self.celldef_tab.config_path = config_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        # populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, False)
 
         self.celldef_tab.fill_celltypes_comboboxes()
 
@@ -1456,8 +1469,12 @@ class VisBase():
         if self.studio_flag:
             self.run_tab.tree = self.tree  #rwh
         # self.xml_root = self.tree.getroot()
-        self.reset_xml_root()
-        self.setWindowTitle(self.title_prefix + self.config_file)
+        self.reset_xml_root(config_file)
+
+        title_prefix = "PhysiCell Model Builder: "
+        if self.studio_flag:
+            title_prefix = "PhysiCell Studio: "
+        self.setWindowTitle(title_prefix + config_file)
         if self.model3D_flag:
             self.reset_domain_box()
 

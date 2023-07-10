@@ -12,6 +12,7 @@ import sys
 import os
 import time
 import logging
+import shutil
 from pathlib import Path
 from pretty_print_xml import pretty_print
 from PyQt5 import QtCore, QtGui
@@ -132,6 +133,7 @@ class RunModel(QWidget):
     # replicate what we do in the "save" function in the main module
     def update_xml_from_gui(self):
         if not self.user_params_tab.validate_utable():
+            self.show_error_message(self, "run_tab.py update_xml_from_gui(): Error: invalid user params table.")
             self.enable_run(True)
             return False
 
@@ -217,6 +219,12 @@ class RunModel(QWidget):
                 self.tree.write(self.config_file)
                 # print("run_tab.py: ----> here 5")
                 pretty_print(self.config_file, self.config_file)
+
+                default_config_file = os.path.join(self.output_dir,"PhysiCell_settings.xml")
+                abs_default_config_file = os.path.abspath(default_config_file )
+                print(f"run_tab.py:  also copy to {abs_default_config_file }")
+                shutil.copy(self.config_file, default_config_file)
+
                 # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
                 # sys.exit(1)
 
