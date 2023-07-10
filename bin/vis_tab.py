@@ -62,9 +62,6 @@ class Vis(VisBase, QWidget):
     def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
 
         super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
-        # self.d=d
-        # super().__init__(nanohub_flag, run_tab, model3D_flag)
-        # global self.config_params
 
         self.figure = None
 
