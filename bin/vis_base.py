@@ -300,6 +300,20 @@ class PopulationPlotWindow(QWidget):
     def close_plot_cb(self):
         self.close()
 
+class PhysiBoSSStatesPopulationPlotWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("PhysiBoSS states populations")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.setStyleSheet("background-color:transparent;")
+        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.layout.addWidget(self.canvas)
+        self.setLayout(self.layout)
+        
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -404,6 +418,7 @@ class VisBase():
         self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None}
 
         self.discrete_scalar = 'cell_type'
+        self.physiboss_population_plot = None
         self.legend_svg_plot = None
         self.filterUI = None
 
@@ -943,6 +958,7 @@ class VisBase():
 
         self.physiboss_cell_type_combobox = None
         self.physiboss_node_combobox = None
+        self.physiboss_population_counts_button = None
         #-----------
         # self.frame_count.textChanged.connect(self.change_frame_count_cb)   # too annoying
         self.frame_count.returnPressed.connect(self.change_frame_count_cb)
@@ -1409,6 +1425,86 @@ class VisBase():
     def physiboss_vis_node_cb(self, idx):
         self.physiboss_selected_node = self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]][idx]
         self.update_plots()
+        
+        
+    def physiboss_state_counts_cb(self):
+        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+
+        xml_pattern = self.output_dir + "/" + "output*.xml"
+        xml_files = glob.glob(xml_pattern)
+
+        num_xml = len(xml_files)
+        if num_xml == 0:
+            print("last_plot_cb(): WARNING: no output*.xml files present")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        xml_files.sort()
+
+        cell_def_name = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
+        all_states = set()
+        states_pops = []
+        mcds = []
+        for i_frame, fname in enumerate(xml_files):
+            basename = os.path.basename(fname)
+            t_mcds = pyMCDS(basename, self.output_dir, microenv=False, graph=False, verbose=False)
+            mcds.append(t_mcds)
+
+            try:
+                cell_types = t_mcds.get_cell_df()["cell_type"]
+            except:
+                print("vis_tab.py: physiboss_state_counts_cb(): error performing mcds.get_cell_df()['cell_type']")
+                return
+
+
+            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
+
+            if not Path(physiboss_state_file).is_file():
+                print("vis_tab.py: physiboss_state_counts_cb(): error file not found ",physiboss_state_file)
+                return
+
+            states_pop = {}
+            with open(physiboss_state_file, newline='') as csvfile:
+                states_reader = csv.reader(csvfile, delimiter=',')
+                for row in states_reader:
+                    if row[0] != 'ID':
+                        ID = int(row[0])
+                        if cell_types[ID] == self.physiboss_selected_cell_line:
+                            if row[1] in states_pop.keys():
+                                states_pop[row[1]] += 1
+                            else:
+                                states_pop[row[1]] = 1
+
+            states_pops.append(states_pop)
+            all_states = all_states.union(set(states_pop.keys()))
+
+        pop_data = np.zeros((len(xml_files), len(all_states)))
+        states_index = {state:i for i, state in enumerate(all_states)}
+        for i_frame, fname in enumerate(xml_files):
+            for state, pop in states_pops[i_frame].items():
+                pop_data[i_frame, states_index[state]] = pop
+
+
+
+        tval = np.linspace(0, mcds[-1].get_time(), len(xml_files))
+        if not self.physiboss_population_plot:
+            self.physiboss_population_plot = PhysiBoSSStatesPopulationPlotWindow()
+
+        self.physiboss_population_plot.ax0.cla()
+        self.physiboss_population_plot.ax0.plot(tval, pop_data, label=states_index.keys())
+
+
+        self.physiboss_population_plot.ax0.set_xlabel('time (mins)')
+        self.physiboss_population_plot.ax0.set_ylabel('# of cells')
+        self.physiboss_population_plot.ax0.set_title("PhysiBoSS state populations of cell line " + cell_def_name, fontsize=10)
+        self.physiboss_population_plot.ax0.legend(loc='center right', prop={'size': 8})
+        self.physiboss_population_plot.canvas.update()
+        self.physiboss_population_plot.canvas.draw()
+        self.physiboss_population_plot.show()
         
     #-------------------------------------
     # def reset_xml_root(self):
