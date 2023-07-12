@@ -676,12 +676,12 @@ class VisBase():
         #------
         self.vbox.addWidget(QHLine())
 
-        hbox = QHBoxLayout()
+        self.cells_hbox = QHBoxLayout()
         self.cells_checkbox = QCheckBox_custom("cells")
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
         self.cells_checked_flag = True
-        hbox.addWidget(self.cells_checkbox) 
+        self.cells_hbox.addWidget(self.cells_checkbox) 
 
         # Need to create the following regardless of 2D/3D
         self.cells_svg_rb = QRadioButton(".svg")
@@ -689,18 +689,18 @@ class VisBase():
 
         self.cells_mat_rb = QRadioButton(".mat")
         # self.cell_edge_checkbox = QCheckBox_custom('edge')
-
+        
         if not self.model3D_flag:  # 2D vis
 
             # Apparently, the physiboss UI causes the radio btns to disappear in a QFrame, so skip for now.
             # hbox2 = QHBoxLayout()
             self.cells_svg_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_svg_rb)
-            hbox.addWidget(self.cells_svg_rb)
+            self.cells_hbox.addWidget(self.cells_svg_rb)
 
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_mat_rb)
-            hbox.addWidget(self.cells_mat_rb)
+            self.cells_hbox.addWidget(self.cells_mat_rb)
             # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
             # radio_frame = QFrame()
@@ -726,7 +726,7 @@ class VisBase():
 
         # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
-        self.vbox.addLayout(hbox)
+        self.vbox.addLayout(self.cells_hbox)
 
         #------------------
         hbox = QHBoxLayout()
@@ -948,13 +948,12 @@ class VisBase():
 
         #-----------
         self.physiboss_qline = None
-        self.physiboss_hbox_1 = None
         
-        self.physiboss_vis_checkbox = None
+        self.cells_physiboss_rb = None
         self.physiboss_vis_flag = False
         self.physiboss_selected_cell_line = None
         self.physiboss_selected_node = None
-        self.physiboss_hbox_2 = None
+        self.physiboss_hbox = None
 
         self.physiboss_cell_type_combobox = None
         self.physiboss_node_combobox = None
@@ -1253,11 +1252,9 @@ class VisBase():
 
     def disable_physiboss_info(self):
         print("vis_tab: ------- disable_physiboss_info()")
-        if self.physiboss_vis_checkbox is not None:
+        if self.physiboss_vis_flag:
             print("vis_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
             try:
-                self.physiboss_vis_checkbox.setChecked(False)
-                self.physiboss_vis_checkbox.setEnabled(False)
                 self.physiboss_cell_type_combobox.setEnabled(False)
                 self.physiboss_node_combobox.setEnabled(False)
                 self.physiboss_vis_hide()
@@ -1351,23 +1348,19 @@ class VisBase():
             
     def physiboss_vis_show(self):
 
-        if self.physiboss_vis_checkbox is None:
+        if not self.physiboss_vis_flag:
+            
+            self.physiboss_vis_flag = True
+                
+            self.cells_physiboss_rb = QRadioButton("physiboss")
+            self.cells_physiboss_rb.setChecked(False)
+            self.cells_physiboss_rb.clicked.connect(self.cells_svg_mat_cb)
+            self.cells_hbox.addWidget(self.cells_physiboss_rb)
                 
             self.physiboss_qline = QHLine()
             self.vbox.addWidget(self.physiboss_qline)
             
-            self.physiboss_hbox_1 = QHBoxLayout()
-            
-            self.physiboss_vis_checkbox = QCheckBox_custom('Color by PhysiBoSS node state')
-            self.physiboss_vis_flag = False
-            self.physiboss_vis_checkbox.setEnabled(not self.plot_cells_svg)
-            self.physiboss_vis_checkbox.setChecked(self.physiboss_vis_flag)
-            self.physiboss_vis_checkbox.clicked.connect(self.physiboss_vis_toggle_cb)
-            self.physiboss_hbox_1.addWidget(self.physiboss_vis_checkbox)
-            
-            self.vbox.addLayout(self.physiboss_hbox_1)
-            
-            self.physiboss_hbox_2 = QHBoxLayout()
+            self.physiboss_hbox = QHBoxLayout()
 
             self.physiboss_cell_type_combobox = QComboBox()
             self.physiboss_cell_type_combobox.setEnabled(False)
@@ -1375,28 +1368,41 @@ class VisBase():
             self.physiboss_node_combobox = QComboBox()
             self.physiboss_node_combobox.setEnabled(False)
             self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
-            self.physiboss_hbox_2.addWidget(self.physiboss_cell_type_combobox)
-            self.physiboss_hbox_2.addWidget(self.physiboss_node_combobox)
+            self.physiboss_hbox.addWidget(self.physiboss_cell_type_combobox)
+            self.physiboss_hbox.addWidget(self.physiboss_node_combobox)
 
-            self.vbox.addLayout(self.physiboss_hbox_2)
+            self.vbox.addLayout(self.physiboss_hbox)
+            
+            self.physiboss_population_counts_button = QPushButton("Boolean states plot")
+            self.physiboss_population_counts_button.setFixedWidth(200)
+            self.physiboss_population_counts_button.setEnabled(False)
+            self.physiboss_population_counts_button.clicked.connect(self.physiboss_state_counts_cb)
+            self.vbox.addWidget(self.physiboss_population_counts_button)
         
     def physiboss_vis_hide(self):
         print("\n--------- physiboss_vis_hide()")
 
-        if self.physiboss_vis_checkbox is not None:
-            self.physiboss_vis_checkbox.disconnect()
+        if self.physiboss_vis_flag:
+            self.physiboss_vis_flag = False
+            
+            self.cells_physiboss_rb.disconnect()
+            self.cells_physiboss_rb.deleteLater()
+            
             self.physiboss_cell_type_combobox.disconnect()
             self.physiboss_node_combobox.disconnect()
             self.physiboss_qline.deleteLater()
             
-            self.physiboss_vis_checkbox.deleteLater()
-            self.physiboss_hbox_1.deleteLater()
-
             self.physiboss_cell_type_combobox.deleteLater()
             self.physiboss_node_combobox.deleteLater()
 
-            self.physiboss_hbox_2.deleteLater()
-
+            self.physiboss_hbox.deleteLater()
+            
+            self.physiboss_population_counts_button.disconnect()
+            self.physiboss_population_counts_button.deleteLater()
+            
+            self.cells_svg_rb.setChecked(True)
+            self.cells_mat_rb.setChecked(False)
+            
     def fill_physiboss_cell_types_combobox(self, cell_types):
         self.physiboss_cell_type_combobox.clear()
         for s in cell_types:
@@ -1409,11 +1415,10 @@ class VisBase():
             self.physiboss_node_combobox.addItem(s)
 
     def physiboss_vis_toggle_cb(self, bval):
-        self.physiboss_vis_flag = bval
         self.physiboss_cell_type_combobox.setEnabled(bval)
         self.physiboss_node_combobox.setEnabled(bval)
-        self.cell_scalar_combobox.setEnabled(not bval)
-        self.cell_scalar_cbar_combobox.setEnabled(not bval)
+        self.physiboss_population_counts_button.setEnabled(bval)
+        
         self.update_plots()
         
     def physiboss_vis_cell_type_cb(self, idx):
@@ -1636,8 +1641,6 @@ class VisBase():
         self.cells_cmin.setStyleSheet("background-color: lightgray;")
         self.cells_cmax.setEnabled(False)
         self.cells_cmax.setStyleSheet("background-color: lightgray;")
-        if self.physiboss_vis_checkbox is not None:
-            self.physiboss_vis_checkbox.setEnabled(False)
         # self.fix_cmap_checkbox.setEnabled(bval)
 
         if self.cax2:
@@ -1651,6 +1654,8 @@ class VisBase():
         # print("\n---------cells_svg_mat_cb(self)")
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
+            if self.physiboss_vis_flag:
+                self.physiboss_vis_toggle_cb(False)
             self.plot_cells_svg = True
             self.disable_cell_scalar_widgets()
 
@@ -1662,9 +1667,7 @@ class VisBase():
             # self.fix_cells_cmap_checkbox.setEnabled(False)
             # self.cells_cmin.setEnabled(False)
             # self.cells_cmax.setEnabled(False)
-            # if self.physiboss_vis_checkbox is not None:
-            #     self.physiboss_vis_checkbox.setEnabled(False)
-            # # self.fix_cmap_checkbox.setEnabled(bval)
+            # self.fix_cmap_checkbox.setEnabled(bval)
 
             # if self.cax2:
             #     try:   # otherwise, physiboss UI can crash
@@ -1672,8 +1675,17 @@ class VisBase():
             #     except:
             #         pass
             #     self.cax2 = None
+        elif radioBtn.text() == "physiboss":
+            
+            self.plot_cells_svg = False
+            self.disable_cell_scalar_widgets()
+            self.physiboss_vis_toggle_cb(True)
 
+            
         else:   # doing ".mat", i.e., cell scalars, not svg
+            if self.physiboss_vis_flag:
+                self.physiboss_vis_toggle_cb(False)
+    
             if not self.cell_scalars_filled: 
                 # self.add_default_cell_vars()   # rwh: just do once? 
                 # print("\nvis_base:---------cells_svg_mat_cb(self):  calling add_partial_cell_vars()")
@@ -1695,9 +1707,6 @@ class VisBase():
             else:
                 self.cells_cmin.setStyleSheet("background-color: lightgray;")
                 self.cells_cmax.setStyleSheet("background-color: lightgray;")
-
-            if self.physiboss_vis_checkbox is not None:
-                self.physiboss_vis_checkbox.setEnabled(True)
 
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
@@ -2287,6 +2296,9 @@ class VisBase():
         self.cells_svg_rb.setEnabled(bval)
         self.cells_mat_rb.setEnabled(bval)
         # self.cell_edge_checkbox.setEnabled(bval)
+
+        if self.physiboss_vis_flag:
+            self.cells_physiboss_rb.setEnabled(bval)
 
         # these widgets depend on whether we're using .mat (scalars)
         if bval:

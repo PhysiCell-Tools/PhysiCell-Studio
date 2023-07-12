@@ -258,6 +258,8 @@ class Vis(VisBase, QWidget):
         if self.cells_checked_flag:
             if self.plot_cells_svg:
                 self.plot_svg(self.current_frame)
+            elif self.physiboss_vis_flag:
+                self.plot_cell_physiboss(self.current_frame)
             else:
                 self.plot_cell_scalar(self.current_frame)
 
