@@ -644,14 +644,19 @@ class Vis(VisBase, QWidget):
             return
         
         cell_scalar = {}
+        
+        name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
+        id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
+        
         with open(physiboss_state_file, newline='') as csvfile:
             states_reader = csv.reader(csvfile, delimiter=',')
                 
             for row in states_reader:
                 if row[0] != 'ID':
                     ID = int(row[0])
-                    if cell_types[ID] == self.physiboss_selected_cell_line:
-                        nodes = row[1].split(" -- ")                      
+                    if cell_types[ID] == id_cellline:
+                        nodes = row[1].split(" -- ")             
+
                         if self.physiboss_selected_node in nodes:
                             cell_scalar.update({ID: 2})      
                         else:
