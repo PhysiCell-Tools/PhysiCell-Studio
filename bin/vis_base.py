@@ -1415,6 +1415,7 @@ class VisBase():
             self.physiboss_node_combobox.addItem(s)
 
     def physiboss_vis_toggle_cb(self, bval):
+        self.physiboss_vis_flag = bval
         self.physiboss_cell_type_combobox.setEnabled(bval)
         self.physiboss_node_combobox.setEnabled(bval)
         self.physiboss_population_counts_button.setEnabled(bval)
