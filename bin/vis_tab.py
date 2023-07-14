@@ -25,6 +25,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
+import colorcet as cc
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
 from collections import deque
@@ -736,10 +737,12 @@ class Vis(VisBase, QWidget):
             self.cell_scalar_cbar_combobox.setEnabled(False)
             from_list = matplotlib.colors.LinearSegmentedColormap.from_list
             self.discrete_variable.sort()
-            if (len(self.discrete_variable) == 1): 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(self.discrete_variable))
-            else: 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,len(self.discrete_variable))), len(self.discrete_variable))
+            # if (len(self.discrete_variable) == 1): 
+                # cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(self.discrete_variable))
+            # else: 
+                # cbar_name = from_list(None, plt.cm.Set1(range(0,len(self.discrete_variable))), len(self.discrete_variable))
+            # usual categorical colormap on matplotlib has at max 20 colors (using colorcet the colormap glasbey_bw has n colors )
+            cbar_name = from_list(None, cc.glasbey_bw, len(self.discrete_variable))
             vmin = None
             vmax = None
             # Change the values between 0 and number of possible values
@@ -783,22 +786,37 @@ class Vis(VisBase, QWidget):
         # if self.axis_id_cellscalar:
         if not self.physiboss_vis_flag:
             if self.cax2:
-                try:
-                    self.cax2.remove()
-                except:
-                    pass
                 # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
                 # print(" self.figure.axes= ",self.figure.axes)
                 #ppp
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+                if( self.discrete_variable ): # Generic way: if variable is discrete
+                    try:
+                        self.cax2.remove()
+                    except:
+                        pass
+                    ax2_divider = make_axes_locatable(self.ax0)
+                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
+                    # self.cbar2.ax.tick_params(length=0) # remove tick line
+                    cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
+                    self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
+                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                    self.cbar2.ax.set_xlabel(cell_scalar_name)
+                    self.discrete_variable = None
+                else:
+                    try:
+                        self.cax2.remove()
+                    except:
+                        pass
+                    ax2_divider = make_axes_locatable(self.ax0)
+                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                    self.cbar2.ax.set_xlabel(cell_scalar_name)
 
                 # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
                 # print(" self.figure.axes= ",self.figure.axes)
                 # self.axis_id_cellscalar = len(self.figure.axes) - 1
-                self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                self.cbar2.ax.set_xlabel(cell_scalar_name)
             else:
                 ax2_divider = make_axes_locatable(self.ax0)
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
@@ -812,13 +830,6 @@ class Vis(VisBase, QWidget):
                     self.cax2.remove()
             except:
                 pass
-        
-        if( self.discrete_variable ): # Generic way: if variable is discrete
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
-            # self.cbar2.ax.tick_params(length=0) # remove tick line
-            cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
-            self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
