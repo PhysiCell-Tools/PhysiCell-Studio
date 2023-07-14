@@ -2085,8 +2085,8 @@ class VisBase():
             self.reset_model()
             self.reset_model_flag = False
 
-        self.current_svg_frame+= 1
-        self.current_frame = self.current_svg_frame
+        self.current_svg_frame += 1  # not even used anymore?
+        self.current_frame += 1
         # print('svg # ',self.current_svg_frame)
 
         self.update_plots()
