@@ -25,7 +25,8 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
-import colorcet as cc
+#import colorcet as cc
+import cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
 from collections import deque
@@ -737,17 +738,19 @@ class Vis(VisBase, QWidget):
             self.cell_scalar_cbar_combobox.setEnabled(False)
             from_list = matplotlib.colors.LinearSegmentedColormap.from_list
             self.discrete_variable.sort()
-            # if (len(self.discrete_variable) == 1): 
-                # cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(self.discrete_variable))
-            # else: 
-                # cbar_name = from_list(None, plt.cm.Set1(range(0,len(self.discrete_variable))), len(self.discrete_variable))
+            if (len(self.discrete_variable) == 1): 
+                cbar_name = from_list(None, cmaps.gray_gray[0:2], len(self.discrete_variable))  # annoying hack
+            else: 
+                cbar_name = from_list(None, cmaps.paint_clist[0:len(self.discrete_variable)], len(self.discrete_variable))
+
             # usual categorical colormap on matplotlib has at max 20 colors (using colorcet the colormap glasbey_bw has n colors )
-            cbar_name = from_list(None, cc.glasbey_bw, len(self.discrete_variable))
+            # cbar_name = from_list(None, cc.glasbey_bw, len(self.discrete_variable))
             vmin = None
             vmax = None
             # Change the values between 0 and number of possible values
             for i, value in enumerate(self.discrete_variable):
                 cell_scalar = cell_scalar.replace(value,i)
+                # print("cell_scalar=",cell_scalar)
         else: 
             self.cell_scalar_cbar_combobox.setEnabled(True)
 
@@ -763,6 +766,8 @@ class Vis(VisBase, QWidget):
         if (self.cell_fill):
             if (self.cell_edge):
                 try:
+                    # print("plot circles with vmin,vmax=",vmin,vmax)  # None,None
+                    # print("plot circles with cbar_name=",cbar_name)  # <matplotlib.colors.LinearSegmentedColormap object at 0x1690d5330>
                     cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=self.cell_line_width, cmap=cbar_name, vmin=vmin, vmax=vmax)
                     # cell_plot = self.circles(xvals,yvals, s=cell_radii, edgecolor=cell_scalar, linewidth=0.5, cmap=cbar_name, vmin=vmin, vmax=vmax)
                 except (ValueError):
