@@ -195,29 +195,46 @@ class PhysiCellXMLCreator(QWidget):
         # print("studio.py: self.studio_config_dir = ",self.studio_config_dir)
         # sys.exit(1)
 
-        if config_file:
+        if config_file:   # user specified config file on command line with "-c" arg
             self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
             # sys.exit()
         elif running_from_physicell_root:
-            self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
-            if not os.path.isfile(self.current_xml_file):
-                msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
-                print("\n"+msg+"\n")
-                # sys.exit(1)
-                msgBox = QMessageBox()
-                msgBox.setIcon(QMessageBox.Information)
-                msgBox.setText(msg)
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                returnValue = msgBox.exec()
-                self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
-        else:
-            model_name = "interactions"  # for testing latest xml
+            # 7/14/23: Paul requested to always startup with template.xml in the Studio /config dir
+            # self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+
+            # do equivalent of a "load project" to copy files from /studio 
+            proj_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'user_projects','studio_template'))
+            self.load_user_proj_studio_template(proj_path)
+            # self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+
+            # then load that .xml
+            # self.current_xml_file = os.path.join("config", "PhysiCell_settings.xml")
+            self.current_xml_file = os.path.realpath(os.path.join(".", "config","PhysiCell_settings.xml"))
+
+            # old way
+            # self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
+            # if not os.path.isfile(self.current_xml_file):
+            #     msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
+            #     print("\n"+msg+"\n")
+            #     # sys.exit(1)
+            #     msgBox = QMessageBox()
+            #     msgBox.setIcon(QMessageBox.Information)
+            #     msgBox.setText(msg)
+            #     msgBox.setStandardButtons(QMessageBox.Ok)
+            #     returnValue = msgBox.exec()
+            #     self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+
+        else:  # no config file specified and not running from a PhysiCell directory
+            # model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
+            model_name = "template"  # for testing latest xml
             if self.nanohub_flag:
                 # model_name = "rules"
                 model_name = "template"
             self.current_xml_file = os.path.join(self.studio_config_dir, model_name + ".xml")
+
+
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
@@ -827,6 +844,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         dialog.setFileMode(QFileDialog.Directory)
         folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
         print("save_user_proj_cb():  folder_path=",folder_path)
+        # print("save_user_proj_cb():  len(folder_path)=",len(folder_path))
+        if len(folder_path) == 0:   # User hit Cancel on dialog
+            print("Canceled - will not attempt to save project.")
+            return
         # e.g., /Users/heiland/dev/PhysiCell_v1.12.0/user_projects/rwh3
 
         for f in ["main.cpp", "Makefile", "VERSION.txt"]:
@@ -845,20 +866,69 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             for f in glob.glob("config/*"):
                 shutil.copy(f, subdir)
         except:
-            print(f"--- Warning: cannot copy config/*")
+            print(f"--- Warning: cannot copy files in config/*")
 
         #---------
         subdir = Path(folder_path, "custom_modules")
         try:
             os.makedirs(subdir)
         except:
-            print(f"--- Warning: {dir1} already exists.")
+            print(f"--- Warning: {subdir} already exists.")
 
         try:
             for f in glob.glob("custom_modules/*"):
                 shutil.copy(f, subdir)
         except:
             print(f"--- Warning: cannot copy custom_modules/*")
+
+
+    #---------------------------------
+    def load_user_proj_studio_template(self, proj_path):
+        try:
+            # dialog = QFileDialog(self)
+            # dialog.setFileMode(QFileDialog.Directory)
+            # folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
+            # print("load_user_proj_cb():  folder_path=",folder_path)
+            # if len(folder_path) == 0:   # User hit Cancel on dialog
+            #     print("Canceled - will not attempt to load project.")
+            #     return
+
+        # load_user_proj_cb():  folder_path= /Users/heiland/PhysiCell/user_projects/mine1
+
+            for f in ["main.cpp", "Makefile"]:
+                try:
+                    f2 = os.path.join(proj_path, f)
+                    shutil.copy(f2, '.')
+                    print(f"copy {f2} to root")
+                except:
+                    print(f"--- Warning: cannot copy {f2}")
+
+            old = os.path.join("config", "PhysiCell_settings.xml")
+            bkup = os.path.join("config", "PhysiCell_settings-backup.xml")
+            try:
+                shutil.copy(old, bkup)
+            except:
+                print(f"--- Warning: cannot copy {old} to {bkup}")
+
+            for d in ["config", "custom_modules"]:
+                d1 = os.path.join(proj_path, d)
+                print(f"d1 = {d1}")
+                for f in glob.glob(str(d1) + "/*"):
+                    print(f"copying {f} to {d}")
+                    shutil.copy(f, d)
+
+            # msgBox = QMessageBox()
+            # msgBox.setIcon(QMessageBox.Information)
+            # msgBox.setText("Loaded (copied) Studio template files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nUse File->Open to load the .xml configuration file.")
+            # msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            # returnValue = msgBox.exec()
+
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("load_user_proj_cb(): Possible failure. See terminal output.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
 
     #---------------------------------
     def load_user_proj_cb(self):
@@ -867,6 +937,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             dialog.setFileMode(QFileDialog.Directory)
             folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
             print("load_user_proj_cb():  folder_path=",folder_path)
+            if len(folder_path) == 0:   # User hit Cancel on dialog
+                print("Canceled - will not attempt to load project.")
+                return
 
             for f in ["main.cpp", "Makefile"]:
                 try:
@@ -880,8 +953,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 d1 = os.path.join(folder_path, d)
                 print(f"d1 = {d1}")
                 for f in glob.glob(str(d1) + "/*"):
-                    print(f"try copying {f} to {d}")
+                    print(f"copying {f} to {d}")
                     shutil.copy(f, d)
+
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nUse File->Open to load the .xml configuration file.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
 
         except:
             msgBox = QMessageBox()
@@ -1212,7 +1291,7 @@ def main():
     studio_flag = True
     model3D_flag = False
     tensor_flag = False
-    rules_flag = False
+    rules_flag = True
     skip_validate_flag = False
     nanohub_flag = False
     is_movable_flag = False
@@ -1222,7 +1301,7 @@ def main():
         parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
         parser.add_argument("-t", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
-        # parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
@@ -1237,13 +1316,13 @@ def main():
         print("unknown=",unknown)
         if unknown:
             print("len(unknown)= ",len(unknown))
-            if unknown[0] == "--rules" and len(unknown)==1:
-                print("studio.py: setting rules_flag = True")
-                rules_flag = True
-            else:
-                print("Invalid argument(s): ",unknown)
-                print("Use '--help' to see options.")
-                sys.exit(-1)
+            # if unknown[0] == "--rules" and len(unknown)==1:
+            #     print("studio.py: setting rules_flag = True")
+            #     rules_flag = True
+            # else:
+            print("Invalid argument(s): ",unknown)
+            print("Use '--help' to see options.")
+            sys.exit(-1)
 
         # print("-- continue after if unknown...")
         if args.three:
@@ -1258,9 +1337,9 @@ def main():
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
-        # if args.rules:
-        #     logging.debug(f'studio.py: Show Rules tab')
-        #     rules_flag = True
+        if args.rules:
+            logging.debug(f'studio.py: Show Rules tab')
+            rules_flag = True
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
