@@ -903,6 +903,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 except:
                     print(f"--- Warning: cannot copy {f2}")
 
+            old = os.path.join("config", "PhysiCell_settings.xml")
+            bkup = os.path.join("config", "PhysiCell_settings-backup.xml")
+            try:
+                shutil.copy(old, bkup)
+            except:
+                print(f"--- Warning: cannot copy {old} to {bkup}")
+
             for d in ["config", "custom_modules"]:
                 d1 = os.path.join(proj_path, d)
                 print(f"d1 = {d1}")
