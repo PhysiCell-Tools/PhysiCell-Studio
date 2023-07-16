@@ -311,7 +311,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -325,6 +325,7 @@ class VisBase():
         self.microenv_tab = microenv_tab
         self.celldef_tab = celldef_tab
         self.user_params_tab = user_params_tab
+        self.rules_tab = rules_tab
         self.ics_tab = ics_tab
 
         # self.vis2D = True
@@ -2684,7 +2685,7 @@ class VisBase():
             print("Error reading ",basename, "in ",self.output_dir)
             return None
         
-        # # hard-coding colors (as is done in PhysiCell for "paint by cell type")
+        # # hard-coding colors (as is done in PhysiCell /modulels/PhysiCell_pathology.cpp  "paint_by_number_cell_coloring")
         # # self.self.cell_colors = list( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
         # self.cell_colors = ( [0.5,0.5,0.5], [1,0,0], [1,1,0], [0,1,0], [0,0,1], 
         #                 [1,0,1], [1,0.65,0], [0.2,0.8,0.2], [0,1,1], [1, 0.41, 0.71],
