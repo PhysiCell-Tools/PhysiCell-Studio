@@ -59,9 +59,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
 
-        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
+        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
 
         self.figure = None
 
@@ -256,15 +256,15 @@ class Vis(VisBase, QWidget):
         #     print(line.strip())
         self.ax0.cla()
         if self.substrates_checked_flag:  # do first so cells are plotted on top
-            self.plot_substrate(self.current_svg_frame)
+            self.plot_substrate(self.current_frame)
         if self.cells_checked_flag:
             if self.plot_cells_svg:
-                self.plot_svg(self.current_svg_frame)
+                self.plot_svg(self.current_frame)
             else:
-                self.plot_cell_scalar(self.current_svg_frame)
+                self.plot_cell_scalar(self.current_frame)
 
         self.called_from_update = True
-        self.frame_count.setText(str(self.current_svg_frame))
+        self.frame_count.setText(str(self.current_frame))
         self.called_from_update = False
 
         self.canvas.update()
