@@ -868,6 +868,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         except:
             print(f"--- Warning: cannot copy files in config/*")
 
+        # Also copy the config file specified in the Run tab (it might not be in /config !)
+        try:
+            shutil.copy(self.current_xml_file, subdir)
+        except:
+            print(f"--- Warning: cannot copy {self.current_xml_file} to /config")
+
         #---------
         subdir = Path(folder_path, "custom_modules")
         try:
