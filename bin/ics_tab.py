@@ -119,9 +119,14 @@ class ICs(QWidget):
         self.x0_value = 0.
         self.y0_value = 0.
         self.z0_value = 0.
+
         self.r1_value = 50.
         self.r2_value = 100.
         self.r3_value = 0.
+
+        self.o1_value = 0.
+        self.o2_value = 360.
+        self.o3_value = 0.
 
         # self.config_file = "mymodel.xml"
         # self.reset_model_flag = True
@@ -214,6 +219,7 @@ class ICs(QWidget):
         self.geom_combobox.addItem("annulus/disk")
         # self.geom_combobox.addItem("annulus(2D)/shell(3D)")
         self.geom_combobox.addItem("box")
+        self.geom_combobox.addItem("ring")
         self.geom_combobox.setFixedWidth(180)
         self.geom_combobox.currentIndexChanged.connect(self.geom_combobox_changed_cb)
         hbox.addWidget(self.geom_combobox)
@@ -372,9 +378,70 @@ class ICs(QWidget):
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
 
-        self.enable_3Dwidgets(False)
+        #----
+        hbox = QHBoxLayout()
+
+        cvalue_width = 70
+        label = QLabel("o1")  # omega 1: starting angle for a "ring" of cells
+        label.setFixedWidth(30)
+        # label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.o1val = QLineEdit()
+        self.o1val.setFixedWidth(fixed_width_value)
+        self.o1val.setEnabled(True)
+        self.o1val.setText(str(self.o1_value))
+        # self.cmin.textChanged.connect(self.change_plot_range)
+        # self.r1val.returnPressed.connect(self.rval_cb)
+        self.o1val.textChanged.connect(self.oval_cb)
+        # self.r1val.setFixedWidth(cvalue_width)
+        self.o1val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.o1val)
+
+        #------
+        label = QLabel("o2")
+        label.setFixedWidth(30)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.o2val = QLineEdit()
+        self.o2val.setFixedWidth(fixed_width_value)
+        self.o2val.setEnabled(True)
+        self.o2val.setText(str(self.o2_value))
+        # self.r2val.returnPressed.connect(self.rval_cb)
+        self.o2val.textChanged.connect(self.oval_cb)
+        # self.r2val.setFixedWidth(cvalue_width)
+        self.o2val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.o2val)
+
+        #------
+        label = QLabel("o3")
+        label.setFixedWidth(30)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.o3val = QLineEdit()
+        self.o3val.setFixedWidth(fixed_width_value)
+        self.o3val.setEnabled(False)
+        # self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        self.o3val.setText(str(self.r3_value))
+        # self.r3val.returnPressed.connect(self.rval_cb)
+        self.o3val.textChanged.connect(self.oval_cb)
+        # self.r3val.setFixedWidth(cvalue_width)
+        self.o3val.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.o3val)
+
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+        self.vbox.addLayout(hbox)
+
 
         #----
+        self.enable_3Dwidgets(False)
+        self.enable_ring_params(False)
+
+        #----
+
         hbox = QHBoxLayout()
         btn_width = 80
         self.clear_button = QPushButton("Clear all")
@@ -576,6 +643,17 @@ class ICs(QWidget):
             pass
         # self.update_plots()
 
+    def oval_cb(self):
+        # print("----- oval_cb:")
+        try:  # due to the initial callback
+            self.o1_value = float(self.o1val.text())
+            self.o2_value = float(self.o2val.text())
+            self.o3_value = float(self.o3val.text())
+            # print(self.r1_value, self.r2_value)
+        except:
+            pass
+        # self.update_plots()
+
     def init_plot_range(self, config_tab):
         # print("----- init_plot_range:")
         try:
@@ -628,9 +706,26 @@ class ICs(QWidget):
         # print("----- celltype_combobox_changed_cb: idx = ",idx)
         # self.update_plots()
 
+    def enable_ring_params(self, bval):
+        self.o1val.setEnabled(bval)
+        self.o2val.setEnabled(bval)
+
+        # for now, until 3D even possible
+        self.o3val.setEnabled(False)
+        self.o3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+
+        if bval:
+            self.o1val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            self.o2val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+        else:
+            self.o1val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            self.o2val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+
     def enable_3Dwidgets(self, bval):
         print("----- enable_3Dwidgets: bval = ",bval)
         self.z0val.setEnabled(bval)
+        self.o3val.setEnabled(bval)
+
         if self.geom_combobox.currentText() == "box":
             self.r3val.setEnabled(False)
         else:
@@ -646,6 +741,7 @@ class ICs(QWidget):
             print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            self.o3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
         
     def set_to_origin(self):
         self.x0_value = self.y0_value = self.z0_value = 0.
@@ -664,13 +760,35 @@ class ICs(QWidget):
 
     def geom_combobox_changed_cb(self,idx):
         # print("----- geom_combobox_changed_cb: idx = ",idx)
+        # print("----- geom_combobox_changed_cb: geom_combobox.currentText() = ",self.geom_combobox.currentText())
+        sel_str = self.geom_combobox.currentText()
         if not self.zeq0.isChecked():
-            if self.geom_combobox.currentText() == "box":
+            if sel_str == "box":
                 self.r3val.setEnabled(True)
                 self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+                self.enable_ring_params(False)
+            elif sel_str == "ring":
+                self.enable_ring_params(True)
+                # self.r3val.setEnabled(True)
+                # self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             else:
                 self.r3val.setEnabled(False)
                 self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+                self.enable_ring_params(False)
+
+        if self.geom_combobox.currentText().find("ring") >= 0:
+            self.enable_ring_params(True)
+            # print("got ring!")
+            self.num_cells.setEnabled(False)
+            self.fill_combobox.setEnabled(False)
+            self.r1val.setEnabled(False)
+            self.r1val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            return
+        else:
+            self.enable_ring_params(False)
+            self.fill_combobox.setEnabled(True)
+            self.r1val.setEnabled(True)
+            self.r1val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
 
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
@@ -847,7 +965,7 @@ class ICs(QWidget):
     def plot_cb(self):
         self.reset_plot_range()
         # self.cell_radii = []
-        print("len(self.numcells_l)= ",len(self.numcells_l))
+        # print("len(self.numcells_l)= ",len(self.numcells_l))
         print("self.numcells_l= ",self.numcells_l)
 
         ncells = int(self.num_cells.text())
@@ -875,11 +993,14 @@ class ICs(QWidget):
             elif "hex" in self.fill_combobox.currentText():
                 self.hex_pts_annulus()
 
-        else:  # box
+        elif "box" in self.geom_combobox.currentText():
             if "random" in self.fill_combobox.currentText():
                 self.uniform_random_pts_box()
             elif "hex" in self.fill_combobox.currentText():
                 self.hex_pts_box()
+
+        elif "ring" in self.geom_combobox.currentText():
+            self.ring()
 
     #------------------------------------------------------------
     # def plot_import_cb(self):
@@ -1389,6 +1510,80 @@ class ICs(QWidget):
                 count+=1
                 if count == ncells:
                     break
+
+        xvals = np.array(xlist)
+        yvals = np.array(ylist)
+        rvals = np.array(rlist)
+        # rgbas = np.array(rgba_list)
+
+        if (self.cells_edge_checked_flag):
+            try:
+                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+            except (ValueError):
+                pass
+        else:
+            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+
+        self.ax0.set_aspect(1.0)
+
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+        # self.update_plots()
+        self.canvas.update()
+        self.canvas.draw()
+
+    #----------------------------------
+    def ring(self):
+        xlist = deque()
+        ylist = deque()
+        rlist = deque()
+        rgba_list = deque()
+
+        rval = self.cell_radius
+
+        colors = np.empty((0,4))
+        count = 0
+        zval = 0.0
+        cell_type_index = self.celltype_combobox.currentIndex()
+        # ncells = int(self.num_cells.text())
+        # print("self.r1_value= ", self.r1_value)
+
+        R = self.r2_value
+
+        cells_x = np.array([])
+        cells_y = np.array([])
+
+        xctr = 0.0
+        yctr = 0.0
+
+        y_idx = 0
+        start_radians = self.o1_value * np.pi/180.
+        end_radians = self.o2_value * np.pi/180.
+        # delta_radians = self.o2_value * np.pi/180.
+        delta_theta = np.arcsin(rval / R)
+        # print("delta_theta= ",delta_theta)
+
+        # for theta in np.arange(0, max_radians, np.pi/10.):
+        # for theta in np.arange(0, max_radians, delta_theta * np.pi/180):
+        for theta in np.arange(start_radians, end_radians, 2*delta_theta):
+            # print("theta= ",theta)
+            xval = self.x0_value + R * np.cos(theta)
+            yval = self.y0_value + R * np.sin(theta)
+
+            if xval < self.plot_xmin or xval > self.plot_xmax \
+                or yval < self.plot_ymin or yval > self.plot_ymax:
+                continue
+            else:
+                xlist.append(xval)
+                ylist.append(yval)
+                # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                rlist.append(rval)
+                self.cell_radii.append(self.cell_radius)
+                count+=1
+
+        self.numcells_l.append(count)
 
         xvals = np.array(xlist)
         yvals = np.array(ylist)
