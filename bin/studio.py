@@ -699,7 +699,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def show_sample_model(self):
         logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
         print(f'\nstudio: show_sample_model(): self.config_file = {self.config_file}')
-        self.tree = ET.parse(self.config_file)
+        try:
+            self.tree = ET.parse(self.config_file)
+        except:
+            self.show_error_message(f"Error: unable to parse XML file {self.config_file}")
+            return
+
         print(f'studio: show_sample_model(): self.tree = {self.tree}')
         if self.studio_flag:
             self.run_tab.tree = self.tree  #rwh
