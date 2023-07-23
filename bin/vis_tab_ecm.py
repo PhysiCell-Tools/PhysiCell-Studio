@@ -25,6 +25,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
+import cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
 from collections import deque
@@ -86,7 +87,7 @@ class Vis(VisBase, QWidget):
         self.animating_flag = False
 
         self.xml_root = None
-        self.current_svg_frame = 0
+        # self.current_svg_frame = 0
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.play_plot_cb)
 
@@ -263,6 +264,12 @@ class Vis(VisBase, QWidget):
             else:
                 self.plot_cell_scalar(self.current_frame)
 
+        # show grid(s), but only if Cells or Substrates checked?
+        if self.show_voxel_grid:
+            self.plot_voxel_grid()
+        if self.show_mechanics_grid:
+            self.plot_mechanics_grid()
+
         self.called_from_update = True
         self.frame_count.setText(str(self.current_frame))
         self.called_from_update = False
@@ -300,7 +307,8 @@ class Vis(VisBase, QWidget):
     def plot_vecs(self):
         # global current_frame
 
-        fname = "output%08d.xml" % self.current_svg_frame
+        # fname = "output%08d.xml" % self.current_svg_frame
+        fname = "output%08d.xml" % self.current_frame
         # print("plot_vecs(): fname = ",fname)
         # full_fname = os.path.join(self.output_dir, fname)
         # mcds=pyMCDS_cells("output00000049.xml")
@@ -385,10 +393,10 @@ class Vis(VisBase, QWidget):
 
         # return
 
-        if self.show_voxel_grid:
-            self.plot_voxel_grid()
-        if self.show_mechanics_grid:
-            self.plot_mechanics_grid()
+        # if self.show_voxel_grid:
+        #     self.plot_voxel_grid()
+        # if self.show_mechanics_grid:
+        #     self.plot_mechanics_grid()
 
         # if self.show_vectors:
         #     self.plot_vecs()
@@ -440,6 +448,13 @@ class Vis(VisBase, QWidget):
             tree = ET.parse(full_fname)
         except:
             print("------ plot_svg(): error trying to parse ",full_fname)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
+            msg = "plot_svg(): error parsing "+full_fname+". You may have a partially written .svg file due to a canceled simulation."
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
             return
         root = tree.getroot()
         #  print('--- root.tag ---')
@@ -610,10 +625,10 @@ class Vis(VisBase, QWidget):
         if self.disable_cell_scalar_cb:
             return
             
-        if self.show_voxel_grid:
-            self.plot_voxel_grid()
-        if self.show_mechanics_grid:
-            self.plot_mechanics_grid()
+        # if self.show_voxel_grid:
+        #     self.plot_voxel_grid()
+        # if self.show_mechanics_grid:
+        #     self.plot_mechanics_grid()
 
 
         xml_file_root = "output%08d.xml" % frame
@@ -727,9 +742,9 @@ class Vis(VisBase, QWidget):
             from_list = matplotlib.colors.LinearSegmentedColormap.from_list
             self.discrete_variable.sort()
             if (len(self.discrete_variable) == 1): 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,2)), len(self.discrete_variable))
+                cbar_name = from_list(None, cmaps.gray_gray[0:2], len(self.discrete_variable))  # annoying hack
             else: 
-                cbar_name = from_list(None, plt.cm.Set1(range(0,len(self.discrete_variable))), len(self.discrete_variable))
+                cbar_name = from_list(None, cmaps.paint_clist[0:len(self.discrete_variable)], len(self.discrete_variable))
             vmin = None
             vmax = None
             # Change the values between 0 and number of possible values
@@ -773,22 +788,34 @@ class Vis(VisBase, QWidget):
         # if self.axis_id_cellscalar:
         if not self.physiboss_vis_flag:
             if self.cax2:
-                try:
-                    self.cax2.remove()
-                except:
-                    pass
-                # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
-                # print(" self.figure.axes= ",self.figure.axes)
-                #ppp
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+                if( self.discrete_variable ): # Generic way: if variable is discrete
+                    try:
+                        self.cax2.remove()
+                    except:
+                        pass
+                    ax2_divider = make_axes_locatable(self.ax0)
+                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
+                    # self.cbar2.ax.tick_params(length=0) # remove tick line
+                    cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
+                    self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
+                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                    self.cbar2.ax.set_xlabel(cell_scalar_name)
+                    self.discrete_variable = None
+                else:
+                    try:
+                        self.cax2.remove()
+                    except:
+                        pass
+                    ax2_divider = make_axes_locatable(self.ax0)
+                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                    self.cbar2.ax.set_xlabel(cell_scalar_name)
 
                 # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
                 # print(" self.figure.axes= ",self.figure.axes)
                 # self.axis_id_cellscalar = len(self.figure.axes) - 1
-                self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                self.cbar2.ax.set_xlabel(cell_scalar_name)
             else:
                 ax2_divider = make_axes_locatable(self.ax0)
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
@@ -803,13 +830,6 @@ class Vis(VisBase, QWidget):
             except:
                 pass
         
-        if( self.discrete_variable ): # Generic way: if variable is discrete
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
-            # self.cbar2.ax.tick_params(length=0) # remove tick line
-            cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
-            self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
-   
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)

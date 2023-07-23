@@ -158,6 +158,14 @@ class RunModel(QWidget):
 
     def run_model_cb(self):
         logging.debug(f'===========  run_model_cb():  ============')
+
+        exec_file = self.exec_name.text()
+        # print("run_model_cb(): exec_file=",exec_file)
+        # if not os.path.is_file(Path(exec_file)):
+        if not Path(exec_file).is_file():
+            self.show_error_message(f"Exec file {exec_file} does not exist.")
+            return
+
         self.celldef_tab.check_valid_cell_defs()
 
         if self.config_tab.save_svg.isChecked() and self.config_tab.save_full.isChecked():
