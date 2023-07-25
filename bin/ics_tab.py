@@ -396,7 +396,7 @@ class ICs(QWidget):
         # self.r1val.returnPressed.connect(self.rval_cb)
         self.o1val.textChanged.connect(self.oval_cb)
         # self.r1val.setFixedWidth(cvalue_width)
-        self.o1val.setValidator(QtGui.QDoubleValidator(0.,360.,2))
+        self.o1val.setValidator(QtGui.QDoubleValidator(-360.,360.,2))
         hbox.addWidget(self.o1val)
 
         #------
@@ -412,7 +412,7 @@ class ICs(QWidget):
         # self.r2val.returnPressed.connect(self.rval_cb)
         self.o2val.textChanged.connect(self.oval_cb)
         # self.r2val.setFixedWidth(cvalue_width)
-        self.o2val.setValidator(QtGui.QDoubleValidator(0.,360.,2))
+        self.o2val.setValidator(QtGui.QDoubleValidator(-360.,360.,2))
         hbox.addWidget(self.o2val)
 
         #------
@@ -429,7 +429,7 @@ class ICs(QWidget):
         # self.r3val.returnPressed.connect(self.rval_cb)
         self.o3val.textChanged.connect(self.oval_cb)
         # self.r3val.setFixedWidth(cvalue_width)
-        self.o3val.setValidator(QtGui.QDoubleValidator(0.,360.,2))
+        self.o3val.setValidator(QtGui.QDoubleValidator(-360.,360.,2))
         hbox.addWidget(self.o3val)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
