@@ -262,14 +262,8 @@ class RunModel(QWidget):
 
                 # Problem with this is that it only looks at the currently selected cell type
                 # Also, build_physiboss_info will look into all cell types, and if they are no boolean network, will hide everything
-                # if self.celldef_tab.intracellular_type_dropdown.currentText().find("boolean") >= 0:
-                # print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
-                self.vis_tab.build_physiboss_info()
-                # else:
-                #     print("\n--- run_tab:  calling vis_tab.disable_physiboss_info()")
-                #     self.vis_tab.disable_physiboss_info()
-                #     # self.vis_tab.physiboss_vis_hide
-
+                print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
+                self.vis_tab.build_physiboss_info()              
 
             if self.p is None:  # No process running.
                 self.enable_run(False)

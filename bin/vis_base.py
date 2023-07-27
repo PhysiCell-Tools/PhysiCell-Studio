@@ -1249,23 +1249,6 @@ class VisBase():
             self.population_plot[self.discrete_scalar].canvas.draw()
             self.population_plot[self.discrete_scalar].show()
 
-
-    def disable_physiboss_info(self):
-        print("vis_tab: ------- disable_physiboss_info()")
-        if self.physiboss_vis_flag:
-            print("vis_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
-            try:
-                self.physiboss_cell_type_combobox.setEnabled(False)
-                self.physiboss_node_combobox.setEnabled(False)
-                self.physiboss_vis_hide()
-
-            except:
-                print("ERROR: Exception disabling physiboss widgets")
-                pass
-        else:
-            print("vis_tab: ------- self.physiboss_vis_checkbox is None")
-
-
     # ------ overridden for 3D (vis3D_tab.py)
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()

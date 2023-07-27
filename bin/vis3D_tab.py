@@ -530,22 +530,6 @@ class Vis(VisBase, QWidget):
     #     self.domain_boundary_actor.SetMapper(self.domain_boundary_mapper)
     #     self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
 
-    #-------------------------------
-    def disable_physiboss_info(self):
-        print("vis3D_tab: ------- disable_physiboss_info()")
-        if self.physiboss_vis_checkbox is not None:
-            print("vis3D_tab: ------- self.physiboss_vis_checkbox is not None; try disabling")
-            try:
-                self.physiboss_vis_checkbox.setChecked(False)
-                self.physiboss_vis_checkbox.setEnabled(False)
-                self.physiboss_cell_type_combobox.setEnabled(False)
-                self.physiboss_node_combobox.setEnabled(False)
-            except:
-                print("ERROR: Exception disabling physiboss widgets")
-                pass
-        else:
-            print("vis3D_tab: ------- self.physiboss_vis_checkbox is None")
-
     #---------------------------------------
     # Dependent on 2D/3D
     def update_plots(self):
