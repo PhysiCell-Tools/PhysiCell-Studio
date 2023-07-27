@@ -1423,9 +1423,9 @@ class VisBase():
         self.update_plots()
         
     def physiboss_vis_cell_type_cb(self, idx):
-        if idx > 0:
-            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
+        if idx >= 0:
             self.physiboss_selected_cell_line = idx
+            self.fill_physiboss_nodes_combobox(self.physiboss_node_dict[list(self.physiboss_node_dict.keys())[idx]])
             self.update_plots()
             
     def physiboss_vis_node_cb(self, idx):
