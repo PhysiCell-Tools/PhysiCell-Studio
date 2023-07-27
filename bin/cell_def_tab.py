@@ -3795,7 +3795,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 initial_states_dropdown.addItem(node)
         initial_states_value = QLineEdit("1.0")
-        initial_states_remove = QPushButton("Delete")
+        initial_states_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
@@ -3863,7 +3863,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 mutants_node_dropdown.addItem(node)
         
         mutants_value = QLineEdit("0")
-        mutants_remove = QPushButton("Delete")
+        mutants_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         id = len(self.physiboss_mutants)
         mutants_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(id, index))
         mutants_value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(id, text))
@@ -3926,7 +3926,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for parameter in self.param_d[self.current_cell_def]["intracellular"]["list_parameters"]:
                 parameters_dropdown.addItem(parameter)
         parameters_value = QLineEdit("1.0")
-        parameters_remove = QPushButton("Delete")
+        parameters_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
        
         id = len(self.physiboss_parameters)
         parameters_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(id, index))
@@ -4266,7 +4266,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         node_inheritance_checkbox.setEnabled(True)
         node_inheritance_checkbox.setChecked(not self.physiboss_global_inheritance_flag)
         
-        node_inheritance_remove = QPushButton("Delete")
+        node_inheritance_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
 
         id = len(self.physiboss_node_specific_inheritance)
@@ -4274,10 +4274,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         node_inheritance_checkbox.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(id, bval))
         # outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
         node_inheritance_remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(id))
-
+        node_inheritance_remove.setFixedWidth(30)
         node_inheritance_editor.addWidget(node_inheritance_dropdown)
         node_inheritance_editor.addWidget(node_inheritance_checkbox)
         node_inheritance_editor.addWidget(node_inheritance_remove)
+        node_inheritance_editor.addStretch(1)
         
        
         self.physiboss_inheritance_layout.addLayout(node_inheritance_editor)
@@ -4682,6 +4683,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inheritance_value_label.setFixedWidth(150)
         inheritance_labels.addWidget(inheritance_node_label)
         inheritance_labels.addWidget(inheritance_value_label)
+        inheritance_labels.addStretch(1)
 
         self.physiboss_inheritance_layout.addLayout(inheritance_labels)
         inheritance_groupbox.setLayout(self.physiboss_inheritance_layout)
