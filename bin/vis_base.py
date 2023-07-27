@@ -1472,14 +1472,17 @@ class VisBase():
             if not Path(physiboss_state_file).is_file():
                 print("vis_tab.py: physiboss_state_counts_cb(): error file not found ",physiboss_state_file)
                 return
-
+    
+            name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
+            id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
+    
             states_pop = {}
             with open(physiboss_state_file, newline='') as csvfile:
                 states_reader = csv.reader(csvfile, delimiter=',')
                 for row in states_reader:
                     if row[0] != 'ID':
                         ID = int(row[0])
-                        if cell_types[ID] == self.physiboss_selected_cell_line:
+                        if cell_types[ID] == id_cellline:
                             if row[1] in states_pop.keys():
                                 states_pop[row[1]] += 1
                             else:
