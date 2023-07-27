@@ -2300,6 +2300,11 @@ class VisBase():
             # self.cells_cmin.setStyleSheet("background-color: white;")
             self.cells_cmax.setEnabled(not self.plot_cells_svg)  # if plotting svg, do not enable cells_cmax
             # self.cells_cmax.setStyleSheet("background-color: white;")
+            
+            if self.physiboss_widgets:
+                self.physiboss_cell_type_combobox.setEnabled(self.physiboss_vis_flag)
+                self.physiboss_node_combobox.setEnabled(self.physiboss_vis_flag)
+                self.physiboss_population_counts_button.setEnabled(self.physiboss_vis_flag)
 
             if self.plot_cells_svg:
                 # self.fix_cells_cmap_checkbox.setEnabled(False)
@@ -2321,7 +2326,10 @@ class VisBase():
             self.cells_cmin.setStyleSheet("background-color: lightgray;")
             self.cells_cmax.setEnabled(False)
             self.cells_cmax.setStyleSheet("background-color: lightgray;")
-
+            if self.physiboss_widgets:
+                self.physiboss_cell_type_combobox.setEnabled(False)
+                self.physiboss_node_combobox.setEnabled(False)
+                self.physiboss_population_counts_button.setEnabled(False)
 
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
