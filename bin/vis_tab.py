@@ -147,9 +147,8 @@ class Vis(VisBase, QWidget):
         self.show_mechanics_grid = False
         self.show_vectors = False
 
-        self.show_nucleus = False
-        # self.show_edge = False
         self.show_edge = True
+        self.show_nucleus = False
         self.alpha = 0.7
 
         basic_length = 12.0

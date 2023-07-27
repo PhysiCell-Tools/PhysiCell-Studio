@@ -2144,6 +2144,11 @@ class VisBase():
         self.cell_fill = bval
         self.update_plots()
 
+    def cell_nucleus_cb(self,bval):
+        self.cell_nucleus = bval
+        self.show_nucleus = bval
+        self.update_plots()
+
     #----
     # def shading_cb(self,bval):
     def contour_mesh_cb(self,bval):
