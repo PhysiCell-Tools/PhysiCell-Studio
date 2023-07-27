@@ -1504,7 +1504,7 @@ class VisBase():
             self.physiboss_population_plot = PhysiBoSSStatesPopulationPlotWindow()
 
         self.physiboss_population_plot.ax0.cla()
-        self.physiboss_population_plot.ax0.plot(tval, pop_data, label=states_index.keys())
+        self.physiboss_population_plot.ax0.plot(tval, pop_data, label=[label if len(label) < 100 else label[0:100] + "..." for label in states_index.keys()])
 
 
         self.physiboss_population_plot.ax0.set_xlabel('time (mins)')
