@@ -643,7 +643,7 @@ class Vis(VisBase, QWidget):
             print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
             return
         
-        cell_scalar = {id: 9 for id in range(mcds.get_cell_df().shape[0])}
+        cell_scalar = {id: 9 for id in mcds.get_cell_df().index}
         
         name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
         id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
