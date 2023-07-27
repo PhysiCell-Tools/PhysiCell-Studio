@@ -951,6 +951,7 @@ class VisBase():
         
         self.cells_physiboss_rb = None
         self.physiboss_vis_flag = False
+        self.physiboss_widgets = False
         self.physiboss_selected_cell_line = None
         self.physiboss_selected_node = None
         self.physiboss_hbox = None
@@ -1331,9 +1332,9 @@ class VisBase():
             
     def physiboss_vis_show(self):
 
-        if not self.physiboss_vis_flag:
+        if not self.physiboss_widgets:
             
-            self.physiboss_vis_flag = True
+            self.physiboss_widgets = True
                 
             self.cells_physiboss_rb = QRadioButton("physiboss")
             self.cells_physiboss_rb.setChecked(False)
@@ -1365,8 +1366,8 @@ class VisBase():
     def physiboss_vis_hide(self):
         print("\n--------- physiboss_vis_hide()")
 
-        if self.physiboss_vis_flag:
-            self.physiboss_vis_flag = False
+        if self.physiboss_widgets:
+            self.physiboss_widgets = False
             
             self.cells_physiboss_rb.disconnect()
             self.cells_physiboss_rb.deleteLater()
@@ -1641,7 +1642,7 @@ class VisBase():
         # print("\n---------cells_svg_mat_cb(self)")
         radioBtn = self.sender()
         if "svg" in radioBtn.text():
-            if self.physiboss_vis_flag:
+            if self.physiboss_widgets:
                 self.physiboss_vis_toggle_cb(False)
             self.plot_cells_svg = True
             self.disable_cell_scalar_widgets()
@@ -1670,7 +1671,7 @@ class VisBase():
 
             
         else:   # doing ".mat", i.e., cell scalars, not svg
-            if self.physiboss_vis_flag:
+            if self.physiboss_widgets:
                 self.physiboss_vis_toggle_cb(False)
     
             if not self.cell_scalars_filled: 
@@ -2284,7 +2285,7 @@ class VisBase():
         self.cells_mat_rb.setEnabled(bval)
         # self.cell_edge_checkbox.setEnabled(bval)
 
-        if self.physiboss_vis_flag:
+        if self.physiboss_widgets:
             self.cells_physiboss_rb.setEnabled(bval)
 
         # these widgets depend on whether we're using .mat (scalars)
