@@ -1219,9 +1219,9 @@ class Rules(QWidget):
         return
 
     #-----------------------------------------------------------
-    def hill(self, x, half_max = 0.5 , hill_power = 2 ):
+    def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
-        return z/(1.0 + z); 
+        return base_val + (saturation_val-base_val)*(z/(1.0 + z)); 
 
     def plot_new_rule_cb(self):
         try:
@@ -1236,6 +1236,19 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
+            # Check if saturation value is compatible with increase/decrease behaviour
+            direction = self.up_down_combobox.currentText()
+            base_val = self.rule_base_val.text()
+            if base_val == '??': base_val = 0.0
+            else: base_val = float(base_val)
+            saturation_val = float(self.rule_max_val.text())
+            print(base_val,saturation_val, direction)            
+            if ( (saturation_val < base_val) and self.up_down_combobox.currentText() != "decreases" ): 
+                self.show_warning("Error: Behavior cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value]." + behavior)
+                return
+            if ( (saturation_val > base_val) and self.up_down_combobox.currentText() != "increases" ): 
+                self.show_warning("Error: Behavior cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value]." + behavior)
+                return  
         except:
             print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
             return
@@ -1259,13 +1272,17 @@ class Rules(QWidget):
 
         half_max = float(self.rule_half_max.text())
         hill_power = int(self.rule_hill_power.text())
+        base_val = self.rule_base_val.text()
+        if base_val == '??': base_val = 0.0
+        else: base_val = float(base_val)
+        saturation_val = float(self.rule_max_val.text())
 
         # X = np.linspace(min_val,2.0 * half_max, 101)   # guess max = 2 * half-max
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
-        Y = self.hill(X, half_max=half_max, hill_power=hill_power)
-        if "decreases" in self.up_down_combobox.currentText():
-            Y = 1.0 - Y
+        Y = self.hill(X, base_val=base_val, saturation_val=saturation_val, half_max=half_max, hill_power=hill_power)
+        # if "decreases" in self.up_down_combobox.currentText():
+        #     Y = 1.0 - Y
 
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
@@ -1273,6 +1290,7 @@ class Rules(QWidget):
         self.rules_plot.ax0.set_xlabel('signal: ' + self.signal_combobox.currentText())
         self.rules_plot.ax0.set_ylabel('response: ' + self.response_combobox.currentText())
         self.rules_plot.ax0.set_title(title, fontsize=10)
+        self.rules_plot.ax0.ticklabel_format(style='sci', axis='y', scilimits=[-2,2], useOffset=False)
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
         self.rules_plot.show()
@@ -1311,6 +1329,19 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
+            # Check if saturation value is compatible with increase/decrease behaviour
+            direction = self.up_down_combobox.currentText()
+            base_val = self.rule_base_val.text()
+            if base_val == '??': base_val = 0.0
+            else: base_val = float(base_val)
+            saturation_val = float(self.rule_max_val.text())
+            print(base_val,saturation_val, direction)            
+            if ( (saturation_val < base_val) and self.up_down_combobox.currentText() != "decreases" ): 
+                self.show_warning("Error: Behavior cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value]." + behavior)
+                return
+            if ( (saturation_val > base_val) and self.up_down_combobox.currentText() != "increases" ): 
+                self.show_warning("Error: Behavior cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value]." + behavior)
+                return  
         except:
             print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
             return
