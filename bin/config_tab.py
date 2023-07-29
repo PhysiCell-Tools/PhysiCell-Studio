@@ -54,6 +54,8 @@ class Config(QWidget):
 
         self.xml_root = None
 
+        self.sync_output = True
+
         qlineedit_style = """
         QLineEdit: disabled {
             background-color:#ff0000;
@@ -199,6 +201,12 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
+        add_day_btn = QPushButton("+ 1 day")
+        add_day_btn.setFixedWidth(100)
+        add_day_btn.setStyleSheet("background-color: lightgreen; color: black")
+        add_day_btn.clicked.connect(self.add_day_cb)
+        self.config_tab_layout.addWidget(add_day_btn, idx_row,3,1,1) # w, row, column, rowspan, colspan
+
         label = QLabel("Diffusion dt")
         label.setAlignment(QtCore.Qt.AlignRight)
         idx_row += 1
@@ -311,49 +319,44 @@ class Config(QWidget):
         self.save_svg.setFixedWidth(cbox_width)
         self.save_svg.setChecked(True)
         self.save_svg.clicked.connect(self.svg_clicked)
-        icol += 2
-        # self.config_tab_layout.addWidget(self.save_svg, idx_row,icol,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(self.save_svg)
 
         self.svg_interval = QLineEdit()
         self.svg_interval.setFixedWidth(100)
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
-        icol += 1
-        # self.config_tab_layout.addWidget(self.svg_interval, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+        self.svg_interval.textChanged.connect(self.svg_interval_changed)
         hbox.addWidget(self.svg_interval)
 
         label = QLabel(self.default_time_units)
         label.setFixedWidth(100)
-        # self.config_tab_layout.addWidget(label, idx_row,4,1,2) # w, row, column, rowspan, colspan
-        icol += 1
-        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(label)
 
         #------
         self.save_full = QCheckBox_custom("Full")
         self.save_full.setFixedWidth(cbox_width)
         self.save_full.clicked.connect(self.full_clicked)
-        icol += 2
-        # self.config_tab_layout.addWidget(self.save_full, idx_row,icol,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(self.save_full)
-
-        # label = QLabel("every")
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # icol += 1
-        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
 
         self.full_interval = QLineEdit()
         self.full_interval.setFixedWidth(100)
         self.full_interval.setValidator(QtGui.QDoubleValidator())
-        icol += 1
-        # self.config_tab_layout.addWidget(self.full_interval, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+        self.full_interval.textChanged.connect(self.full_interval_changed)
         hbox.addWidget(self.full_interval)
 
         label = QLabel(self.default_time_units)
-        icol += 1
-        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(label)
 
+        #------
+        label = QLabel("      ")
+        hbox.addWidget(label)
+
+        self.sync_svg_mat = QCheckBox_custom("Sync")
+        self.sync_svg_mat.setFixedWidth(cbox_width)
+        self.sync_svg_mat.setChecked(self.sync_output)
+        self.sync_svg_mat.clicked.connect(self.sync_clicked)
+        hbox.addWidget(self.sync_svg_mat)
+
+        #------
         hbox.addStretch()
         vbox.addLayout(hbox)
 
@@ -362,8 +365,6 @@ class Config(QWidget):
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        idx_row += 1
-        # self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
         vbox.addWidget(label)
 
 
@@ -407,8 +408,6 @@ class Config(QWidget):
         label.setFixedHeight(label_height)
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        idx_row += 1
-        # self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
         vbox.addWidget(label)
         vbox.addLayout(hbox)
         idx_row += 1
@@ -423,14 +422,11 @@ class Config(QWidget):
         self.virtual_walls = QCheckBox_custom("virtual walls")
         self.virtual_walls.setFixedWidth(cbox_width)
         self.virtual_walls.setChecked(True)
-        idx_row += 1
-        # self.config_tab_layout.addWidget(self.virtual_walls, idx_row,1,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(self.virtual_walls)
 
         self.disable_auto_springs = QCheckBox_custom("disable springs")
         self.disable_auto_springs.setFixedWidth(cbox_width)
         self.disable_auto_springs.setChecked(True)
-        # self.config_tab_layout.addWidget(self.disable_auto_springs, idx_row,2,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(self.disable_auto_springs)
 
         vbox.addLayout(hbox)
@@ -455,6 +451,12 @@ class Config(QWidget):
         self.layout = QVBoxLayout(self)  # leave this!
         self.layout.addWidget(self.scroll)
 
+
+    def add_day_cb(self):
+        max_time = float(self.max_time.text())
+        print("max_time=",max_time)
+        max_time += 1440
+        self.max_time.setText(f"{max_time}")
 
     # def folder_name_cb(self):
     #     try:  # due to the initial callback
@@ -484,12 +486,33 @@ class Config(QWidget):
         else:
             self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
 
+    def svg_interval_changed(self, val):
+        # print("svg_interval_changed(): val=",val)
+        if self.sync_output:
+            self.full_interval.setText(val)
+
+
     def full_clicked(self, bval):
         self.full_interval.setEnabled(bval)
         if bval:
             self.full_interval.setStyleSheet("background-color: white; color: black")
         else:
             self.full_interval.setStyleSheet("background-color: lightgray; color: black")
+
+    def full_interval_changed(self, val):
+        # print("full_interval_changed(): val=",val)
+        if self.sync_output:
+            self.svg_interval.setText(val)
+
+
+    def sync_clicked(self, bval):
+        self.sync_output = bval
+
+        if bval:
+            if self.save_svg.isChecked():
+                self.full_interval.setText(self.svg_interval.text())
+            else:
+                self.svg_interval.setText(self.full_interval.text())
 
     def cells_csv_clicked(self, bval):
         self.csv_folder.setEnabled(bval)
@@ -689,7 +712,7 @@ class Config(QWidget):
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//save//folder").text = self.folder.text()
-        # print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
+        print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'
