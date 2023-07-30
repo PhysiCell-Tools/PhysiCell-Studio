@@ -1219,9 +1219,9 @@ class Rules(QWidget):
         return
 
     #-----------------------------------------------------------
-    def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
+    def hill(self, x, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
-        return base_val + (saturation_val-base_val)*(z/(1.0 + z)); 
+        return z/(1.0 + z); 
 
     def plot_new_rule_cb(self):
         try:
@@ -1236,19 +1236,6 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
-            # Check if saturation value is compatible with increase/decrease behaviour
-            direction = self.up_down_combobox.currentText()
-            base_val = self.rule_base_val.text()
-            if base_val == '??': base_val = 0.0
-            else: base_val = float(base_val)
-            saturation_val = float(self.rule_max_val.text())
-            print(base_val,saturation_val, direction)            
-            if ( (saturation_val < base_val) and self.up_down_combobox.currentText() != "decreases" ): 
-                self.show_warning("Error: Behavior cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value]." + behavior)
-                return
-            if ( (saturation_val > base_val) and self.up_down_combobox.currentText() != "increases" ): 
-                self.show_warning("Error: Behavior cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value]." + behavior)
-                return  
         except:
             print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
             return
@@ -1272,17 +1259,14 @@ class Rules(QWidget):
 
         half_max = float(self.rule_half_max.text())
         hill_power = int(self.rule_hill_power.text())
-        base_val = self.rule_base_val.text()
-        if base_val == '??': base_val = 0.0
-        else: base_val = float(base_val)
-        saturation_val = float(self.rule_max_val.text())
 
         # X = np.linspace(min_val,2.0 * half_max, 101)   # guess max = 2 * half-max
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
-        Y = self.hill(X, base_val=base_val, saturation_val=saturation_val, half_max=half_max, hill_power=hill_power)
-        # if "decreases" in self.up_down_combobox.currentText():
-        #     Y = 1.0 - Y
+        Y = self.hill(X, half_max=half_max, hill_power=hill_power)
+        print("Y=",Y)
+        if "decreases" in self.up_down_combobox.currentText():
+            Y = 1.0 - Y
 
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
@@ -1290,9 +1274,11 @@ class Rules(QWidget):
         self.rules_plot.ax0.set_xlabel('signal: ' + self.signal_combobox.currentText())
         self.rules_plot.ax0.set_ylabel('response: ' + self.response_combobox.currentText())
         self.rules_plot.ax0.set_title(title, fontsize=10)
-        self.rules_plot.ax0.ticklabel_format(style='sci', axis='y', scilimits=[-2,2], useOffset=False)
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
+
+        # hack to bring to foreground
+        self.rules_plot.hide()
         self.rules_plot.show()
 
         # self.myscroll.setWidget(self.canvas) # self.config_params = QWidget()
@@ -1329,19 +1315,6 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
-            # Check if saturation value is compatible with increase/decrease behaviour
-            direction = self.up_down_combobox.currentText()
-            base_val = self.rule_base_val.text()
-            if base_val == '??': base_val = 0.0
-            else: base_val = float(base_val)
-            saturation_val = float(self.rule_max_val.text())
-            print(base_val,saturation_val, direction)            
-            if ( (saturation_val < base_val) and self.up_down_combobox.currentText() != "decreases" ): 
-                self.show_warning("Error: Behavior cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value]." + behavior)
-                return
-            if ( (saturation_val > base_val) and self.up_down_combobox.currentText() != "increases" ): 
-                self.show_warning("Error: Behavior cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value]." + behavior)
-                return  
         except:
             print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
             return
@@ -1376,12 +1349,18 @@ class Rules(QWidget):
         print("add_rule_cb():---> ",rule_str)
 
         irow = self.num_rules
-        print("add_rule_cb():self.num_rules= ",self.num_rules)
+        # print("add_rule_cb():self.num_rules= ",self.num_rules)
 
         # v2 synax:
         # cell type, signal, increases/decreases,behavior, param value at max response, half max, hill power, applies to dead?
 
-        self.rules_table.cellWidget(irow, self.rules_celltype_idx).setText( self.celltype_combobox.currentText() )
+        try:
+            self.rules_table.cellWidget(irow, self.rules_celltype_idx).setText( self.celltype_combobox.currentText() )
+        except:
+            msg = f'add_rule_cb() Error: irow={irow}, idx={self.rules_celltype_idx}, widget={self.rules_table.cellWidget(irow, self.rules_celltype_idx)}.'
+            self.show_warning(msg)
+            return 
+
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_response_idx).setText( self.response_combobox.currentText() )  # behavior
@@ -1396,7 +1375,7 @@ class Rules(QWidget):
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
 
         self.num_rules += 1
-        print("add_rule_cb(): post-incr, self.num_rules= ",self.num_rules)
+        # print("add_rule_cb(): post-incr, self.num_rules= ",self.num_rules)
 
         # self.rules_text.appendPlainText(rule_str)
         return
@@ -1406,7 +1385,7 @@ class Rules(QWidget):
         # row_num = self.max_custom_data_rows - 1
         self.rules_table.insertRow(row_num)
         for irow in [row_num]:
-            print("=== add_row_rules_table(): irow=",irow)
+            # print("=== add_row_rules_table(): irow=",irow)
             # ------- CellType
             w_me = MyQLineEdit()
             w_me.setFrame(False)
@@ -1525,7 +1504,12 @@ class Rules(QWidget):
     # Delete an entire rule. 
     def delete_rule_cb(self):
         row = self.rules_table.currentRow()
-        print("------------- delete_rule_cb(), row=",row)
+        # print(f'------------- delete_rule_cb(), row={row}, self.num_rules={self.num_rules}')
+        # if row < 0:
+        if (row < 0) or (row+1 > self.num_rules) or (self.num_rules <= 0):
+            msg = f'Error: Select a row with a rule before deleting.'
+            self.show_warning(msg)
+            return
         # varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
         # print(" custom var name= ",varname)
         # print(" master_custom_var_d= ",self.master_custom_var_d)
@@ -1547,7 +1531,12 @@ class Rules(QWidget):
             # print("---- decrement wrow in irow=",irow)
             # self.rules_celltype_idx = 0
             # self.rules_response_idx = 1
-            self.rules_table.cellWidget(irow,self.rules_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
+            try:
+                self.rules_table.cellWidget(irow,self.rules_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
+            except:
+                msg = f'Warning: could not decrement row {irow} from the Rules table. Select a row before deleting.'
+                self.show_warning(msg)
+                return
 
             # print(f"   after removing {varname}, master_custom_var_d= ",self.master_custom_var_d)
 
@@ -1557,6 +1546,7 @@ class Rules(QWidget):
         # self.enable_all_custom_data()
 
         self.num_rules -= 1
+        # print("---- num_rules=",self.num_rules)
 
         # print(" 2)master_custom_var_d= ",self.master_custom_var_d)
         # print("------------- LEAVING  delete_custom_data_cb")
@@ -1618,9 +1608,11 @@ class Rules(QWidget):
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
         hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
         if "decreases" in self.rules_table.cellWidget(irow, self.rules_direction_idx).text():
             Y = 1.0 - Y
+        # print("Y=",Y)
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
         title = "Rule " + str(irow+1) + ": cell type: " + self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
@@ -1630,7 +1622,12 @@ class Rules(QWidget):
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
 
+        # self.rules_plot.show()
+
+        # hack to bring to foreground
+        self.rules_plot.hide()
         self.rules_plot.show()
+
         return
 
     #-----------------------------------------------------------
@@ -1857,6 +1854,7 @@ class Rules(QWidget):
         for s in self.substrates:
             self.response_l.append(s + " export")
         self.response_l.append("cycle entry")
+        self.response_l.append("damage rate")
         for idx in range(6):  # TODO: hardwired
             self.response_l.append("exit from cycle phase " + str(idx))
 
