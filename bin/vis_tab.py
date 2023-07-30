@@ -147,9 +147,8 @@ class Vis(VisBase, QWidget):
         self.show_mechanics_grid = False
         self.show_vectors = False
 
-        self.show_nucleus = False
-        # self.show_edge = False
         self.show_edge = True
+        self.show_nucleus = False
         self.alpha = 0.7
 
         basic_length = 12.0
@@ -259,6 +258,8 @@ class Vis(VisBase, QWidget):
         if self.cells_checked_flag:
             if self.plot_cells_svg:
                 self.plot_svg(self.current_frame)
+            elif self.physiboss_vis_flag:
+                self.plot_cell_physiboss(self.current_frame)
             else:
                 self.plot_cell_scalar(self.current_frame)
 
@@ -618,6 +619,99 @@ class Vis(VisBase, QWidget):
     #     self.update_plots()
 
     #-----------------------------------------------------
+    def plot_cell_physiboss(self, frame):
+        
+        xml_file_root = "output%08d.xml" % frame
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        
+        if not Path(xml_file).is_file():
+            print("vis_tab.py: plot_cell_physiboss(): error file not found ",xml_file)
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        total_min = mcds.get_time()
+        
+        try:
+            cell_types = mcds.get_cell_df()["cell_type"]
+        except:
+            print("vis_tab.py: plot_cell_physiboss(): error performing mcds.get_cell_df()['cell_type']")
+            return
+            
+        physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+        
+        if not Path(physiboss_state_file).is_file():
+            print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
+            return
+        
+        cell_scalar = {id: 9 for id in mcds.get_cell_df().index}
+        
+        name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
+        id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
+        
+        with open(physiboss_state_file, newline='') as csvfile:
+            states_reader = csv.reader(csvfile, delimiter=',')
+                
+            for row in states_reader:
+                if row[0] != 'ID':
+                    ID = int(row[0])
+                    if cell_types[ID] == id_cellline:
+                        nodes = row[1].split(" -- ")             
+
+                        if self.physiboss_selected_node in nodes:
+                            cell_scalar.update({ID: 2})      
+                        else:
+                            cell_scalar.update({ID: 0})
+                    else:
+                        cell_scalar.update({ID: 9})
+                        
+        cell_scalar = pandas.Series(cell_scalar)
+            
+        # To plot green/red/grey cells, we use a qualitative cell map called Set1
+        cbar_name = "Set1"
+        vmin = 0
+        vmax = 9
+        
+        num_cells = len(cell_scalar)
+        cell_vol = mcds.get_cell_df()['total_volume']
+        
+        four_thirds_pi =  4.188790204786391
+        cell_radii = np.divide(cell_vol, four_thirds_pi)
+        cell_radii = np.power(cell_radii, 0.333333333333333333333333333333333333333)
+
+        xvals = mcds.get_cell_df()['position_x']
+        yvals = mcds.get_cell_df()['position_y']
+
+        mins = total_min
+        hrs = int(mins/60)
+        days = int(hrs/24)
+        self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
+        self.title_str += " (" + str(num_cells) + " agents)"
+
+        if (self.cell_edge):
+            try:
+                cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, edgecolor='black', linewidth=self.cell_line_width, cmap=cbar_name, vmin=vmin, vmax=vmax)
+            except (ValueError):
+                print("\n------ ERROR: Exception from circles with edges\n")
+                pass
+        else:
+            cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
+
+        if self.cax2:
+            try:
+                self.cax2.remove()
+            except:
+                pass
+   
+        self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
+        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+        if self.view_aspect_square:
+            self.ax0.set_aspect('equal')
+        else:
+            self.ax0.set_aspect('auto')
+    
+    
     def plot_cell_scalar(self, frame):
         if self.disable_cell_scalar_cb:
             return
@@ -640,72 +734,35 @@ class Vis(VisBase, QWidget):
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         total_min = mcds.get_time()
-        
-        if self.physiboss_vis_flag:
-            try:
-                cell_types = mcds.get_cell_df()["cell_type"]
-            except:
-                print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()['cell_type']")
-                return
-            
-            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
-            
-            if not Path(physiboss_state_file).is_file():
-                print("vis_tab.py: plot_cell_scalar(): error file not found ",physiboss_state_file)
-                return
-            
-            cell_scalar = {}
-            with open(physiboss_state_file, newline='') as csvfile:
-                states_reader = csv.reader(csvfile, delimiter=',')
-                    
-                for row in states_reader:
-                    if row[0] != 'ID':
-                        ID = int(row[0])
-                        if cell_types[ID] == self.physiboss_selected_cell_line:
-                            nodes = row[1].split(" -- ")                      
-                            if self.physiboss_selected_node in nodes:
-                                cell_scalar.update({ID: 2})      
-                            else:
-                                cell_scalar.update({ID: 0})
-                        else:
-                            cell_scalar.update({ID: 9})
-                            
-            cell_scalar = pandas.Series(cell_scalar)
-            
-            # To plot green/red/grey cells, we use a qualitative cell map called Set1
-            cbar_name = "Set1"
-            vmin = 0
-            vmax = 9
-            
-        else:
-            try:
-                cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-            except:
-                print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
-                msgBox = QMessageBox()
-                msgBox.setIcon(QMessageBox.Information)
-                # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
-                msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
-                msgBox.setText(msg)
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                msgBox.exec()
-                # kill any animation ("Play" button) happening
-                self.animating_flag = False
-                self.play_button.setText("Play")
-                self.timer.stop()
+    
+        try:
+            cell_scalar = mcds.get_cell_df()[cell_scalar_name]
+        except:
+            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
+            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            # kill any animation ("Play" button) happening
+            self.animating_flag = False
+            self.play_button.setText("Play")
+            self.timer.stop()
 
-                # self.cells_svg_rb.setChecked(True)
-                # self.plot_cells_svg = True
-                # self.disable_cell_scalar_widgets()
-                return
-        
-                    
-            if self.fix_cells_cmap_flag:
-                vmin = self.cells_cmin_value
-                vmax = self.cells_cmax_value
-            else:
-                vmin = cell_scalar.min()
-                vmax = cell_scalar.max()
+            # self.cells_svg_rb.setChecked(True)
+            # self.plot_cells_svg = True
+            # self.disable_cell_scalar_widgets()
+            return
+    
+                
+        if self.fix_cells_cmap_flag:
+            vmin = self.cells_cmin_value
+            vmax = self.cells_cmax_value
+        else:
+            vmin = cell_scalar.min()
+            vmax = cell_scalar.max()
             
         num_cells = len(cell_scalar)
         # print("  len(cell_scalar) = ",len(cell_scalar))
@@ -789,52 +846,46 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-        if not self.physiboss_vis_flag:
-            if self.cax2:
-                # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
-                # print(" self.figure.axes= ",self.figure.axes)
-                #ppp
-                if( self.discrete_variable ): # Generic way: if variable is discrete
-                    try:
-                        self.cax2.remove()
-                    except:
-                        pass
-                    ax2_divider = make_axes_locatable(self.ax0)
-                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
-                    # self.cbar2.ax.tick_params(length=0) # remove tick line
-                    cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
-                    self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
-                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                    self.cbar2.ax.set_xlabel(cell_scalar_name)
-                    self.discrete_variable = None
-                else:
-                    try:
-                        self.cax2.remove()
-                    except:
-                        pass
-                    ax2_divider = make_axes_locatable(self.ax0)
-                    self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                    self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
-                    self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                    self.cbar2.ax.set_xlabel(cell_scalar_name)
-
-                # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
-                # print(" self.figure.axes= ",self.figure.axes)
-                # self.axis_id_cellscalar = len(self.figure.axes) - 1
-            else:
+        if self.cax2:
+            # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
+            # print(" self.figure.axes= ",self.figure.axes)
+            #ppp
+            if( self.discrete_variable ): # Generic way: if variable is discrete
+                try:
+                    self.cax2.remove()
+                except:
+                    pass
                 ax2_divider = make_axes_locatable(self.ax0)
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+                self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
+                # self.cbar2.ax.tick_params(length=0) # remove tick line
+                cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
+                self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
                 self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                # print(" self.figure.axes= ",self.figure.axes)
                 self.cbar2.ax.set_xlabel(cell_scalar_name)
-        
-        elif self.cax2:
-            try:
+                self.discrete_variable = None
+            else:
+                try:
                     self.cax2.remove()
-            except:
-                pass
+                except:
+                    pass
+                ax2_divider = make_axes_locatable(self.ax0)
+                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+                self.cbar2.ax.tick_params(labelsize=self.fontsize)
+                self.cbar2.ax.set_xlabel(cell_scalar_name)
+
+            # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
+            # print(" self.figure.axes= ",self.figure.axes)
+            # self.axis_id_cellscalar = len(self.figure.axes) - 1
+        else:
+            ax2_divider = make_axes_locatable(self.ax0)
+            self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+            self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+            self.cbar2.ax.tick_params(labelsize=self.fontsize)
+            # print(" self.figure.axes= ",self.figure.axes)
+            self.cbar2.ax.set_xlabel(cell_scalar_name)
+        
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)

@@ -163,8 +163,10 @@ class PhysiCellXMLCreator(QWidget):
         vlayout.addWidget(menuWidget)
 
         self.setLayout(vlayout)
-        self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(1100, 770)  #width, height of window
+
+        # do later, otherwise problems sometimes
+        # self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
+        # self.setMinimumSize(1100, 770)  #width, height of window
 
         self.current_dir = os.getcwd()
         print("self.current_dir = ",self.current_dir)
@@ -189,7 +191,7 @@ class PhysiCellXMLCreator(QWidget):
         print(f'self.config_dir =  {self.config_dir}')
         logging.debug(f'self.config_dir = {self.config_dir}')
 
-        # print("\n------ running_from_physicell_root = ",running_from_physicell_root)
+        print(f'\nrunning_from_physicell_root =  {running_from_physicell_root}\n')
 
         # self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
         # print("studio.py: self.studio_config_dir = ",self.studio_config_dir)
@@ -203,14 +205,63 @@ class PhysiCellXMLCreator(QWidget):
             # 7/14/23: Paul requested to always startup with template.xml in the Studio /config dir
             # self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
 
-            # do equivalent of a "load project" to copy files from /studio 
-            proj_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'user_projects','studio_template'))
-            self.load_user_proj_studio_template(proj_path)
-            # self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+            # Do equivalent of a "load project" to copy files from /studio 
+            # NO! this is confusing and may lead to loss of a user's config/PhysiCell_settings.xml
+            # proj_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'user_projects','studio_template'))
+            # self.load_user_proj_studio_template(proj_path)
+
+
+            self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
+            rules_file = os.path.join(self.studio_config_dir, "rules0.csv")
+
+            msg="You did not specify a .xml configuration file (using either the '-c' or '-p' argument), therefore we will attempt to copy an original template.xml and rules0.csv into the config folder and use the template model. If you have already have a modified config/template.xml, it will be overwritten. Continue?"
+            print("\n"+msg+"\n")
+            # sys.exit(1)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(msg)
+            # msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+            if returnValue == QMessageBox.Ok:
+                try:
+                    shutil.copy(self.current_xml_file, 'config')
+                    shutil.copy(rules_file, 'config')
+                except:
+                    msg="Unable to perform the copy."
+                    print("\n"+msg+"\n")
+                    # sys.exit(1)
+                    msgBox = QMessageBox()
+                    msgBox.setIcon(QMessageBox.Information)
+                    msgBox.setText(msg)
+                    msgBox.setStandardButtons(QMessageBox.Ok)
+                    returnValue = msgBox.exec()
+            else:
+                sys.exit(-1)
+
+
+            # self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
+            # if not os.path.isfile(self.current_xml_file):
+            #     msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
+            #     print("\n"+msg+"\n")
+            #     # sys.exit(1)
+            #     msgBox = QMessageBox()
+            #     msgBox.setIcon(QMessageBox.Information)
+            #     msgBox.setText(msg)
+            #     msgBox.setStandardButtons(QMessageBox.Ok)
+            #     returnValue = msgBox.exec()
+            #     self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
 
             # then load that .xml
             # self.current_xml_file = os.path.join("config", "PhysiCell_settings.xml")
-            self.current_xml_file = os.path.realpath(os.path.join(".", "config","PhysiCell_settings.xml"))
+            # self.current_xml_file = os.path.realpath(os.path.join(".", "config","PhysiCell_settings.xml"))
+
+
+            self.current_xml_file = os.path.realpath(os.path.join(".", "config","template.xml"))
+            print("\n----> current_xml_file= ",self.current_xml_file)
+            # self.config_file = self.current_xml_file
+            # self.show_sample_model()
+
 
             # old way
             # self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
@@ -226,6 +277,7 @@ class PhysiCellXMLCreator(QWidget):
             #     self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
 
         else:  # no config file specified and not running from a PhysiCell directory
+            # Admittedly this is strange - we're going to edit the template.xml in the studio /config dir
             # model_name = "interactions"  # for testing latest xml
             # model_name = "rules"
             model_name = "template"  # for testing latest xml
@@ -308,7 +360,7 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
-        print("studio.py: ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        print("studio.py: cell_rules (in xml_root)= ",self.xml_root.find(".//cell_definitions//cell_rules"))
         # if self.xml_root.find(".//cell_definitions//cell_rules"):
 
         #------------------
@@ -473,6 +525,10 @@ class PhysiCellXMLCreator(QWidget):
 
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
+
+        # self.setFixedSize(vlayout.sizeHint())  # manually force/fix size to fit all of GUI widgets!!
+        self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
+        self.setMinimumSize(1100, 770)  #width, height of window
 
         if self.model3D_flag:
             self.tabWidget.setCurrentIndex(self.plot_tab_index)
@@ -1309,15 +1365,16 @@ def main():
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Studio.')
 
-        parser.add_argument("-b", "--bare", "--basic", help="no plotting, etc ", action="store_true")
-        parser.add_argument("-3", "--three", "--3D", help="assume a 3D model", action="store_true")
-        parser.add_argument("-t", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
-        parser.add_argument("-r", "--rules", "--Rules", help="display Rules tab" , action="store_true")
-        parser.add_argument("-x", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
+        parser.add_argument("-b ", "--bare", "--basic", help="no plotting, etc ", action="store_true")
+        parser.add_argument("-3 ", "--three", "--3D", help="assume a 3D model", action="store_true")
+        parser.add_argument("-t ", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
+        parser.add_argument("-r ", "--rules", "--Rules", help="display Rules tab" , action="store_true")
+        parser.add_argument("-x ", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
-        parser.add_argument("-c", "--config", type=str, help="config file (.xml)")
-        parser.add_argument("-e", "--exec", type=str, help="executable model")
+        parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
+        parser.add_argument("-e ", "--exec", type=str, help="executable model")
+        parser.add_argument("-p ", "--pconfig", help="use config/PhysiCell_settings.xml", action="store_true")
 
         exec_file = 'project'  # for template sample
 
@@ -1380,6 +1437,13 @@ def main():
                 print("exec_file exists")
             else:
                 print("exec_file is NOT valid: ", args.exec)
+                sys.exit()
+        if args.pconfig:
+            config_file = "config/PhysiCell_settings.xml"
+            if Path(config_file).is_file():
+                print("config/PhysiCell_settings.xml is valid")
+            else:
+                print("config_file is NOT valid: ", config_file)
                 sys.exit()
     except:
         # print("Error parsing command line args.")

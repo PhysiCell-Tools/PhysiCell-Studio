@@ -48,6 +48,7 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
@@ -3533,6 +3534,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for celltype in self.celltypes_list:
                 self.physiboss_signals.append("contact with " + celltype)
 
+            for custom_data in self.master_custom_var_d.keys():
+                self.physiboss_signals.append("custom:" + custom_data)
+
             self.physiboss_signals += ["contact with live cell", "contact with dead cell", "contact with basement membrane", "damage", "dead", "total attack time", "time"]
 
             for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
@@ -3568,10 +3572,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_behaviours.append(substrate + " uptake")
 
             for substrate in self.substrate_list:
+                self.physiboss_behaviours.append("chemotactic response to " + substrate)
+
+            for substrate in self.substrate_list:
                 self.physiboss_behaviours.append(substrate + " export")
+
+            for custom_data in self.master_custom_var_d.keys():
+                self.physiboss_behaviours.append("custom:" + custom_data)
         
             self.physiboss_behaviours += [
-                "cycle entry", "exit from cycle phase 1", "exit from cycle phase 2", "exit from cycle phase 3", "exit from cycle phase 4", "exit from cycle phase 5", 
+                "cycle entry", "exit from cycle phase 0", "exit from cycle phase 1", "exit from cycle phase 2", "exit from cycle phase 3", "exit from cycle phase 4", "exit from cycle phase 5",
                 "apoptosis", "necrosis", "migration speed", "migration bias", "migration persistence time", "chemotactic response to oxygen", 
                 "cell-cell adhesion", "cell-cell adhesion elastic constant"
             ]
@@ -3591,7 +3601,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_behaviours.append("fuse " + celltype)
 
             for celltype in self.celltypes_list:
-                self.physiboss_behaviours.append("transform " + celltype)
+                self.physiboss_behaviours.append("transform to " + celltype)
 
 
             for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_outputs):
@@ -3785,7 +3795,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 initial_states_dropdown.addItem(node)
         initial_states_value = QLineEdit("1.0")
-        initial_states_remove = QPushButton("Delete")
+        initial_states_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
@@ -3853,7 +3863,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 mutants_node_dropdown.addItem(node)
         
         mutants_value = QLineEdit("0")
-        mutants_remove = QPushButton("Delete")
+        mutants_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         id = len(self.physiboss_mutants)
         mutants_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(id, index))
         mutants_value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(id, text))
@@ -3882,8 +3892,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # Here we should remap the clicked method to have the proper id
         for i, mutant in enumerate(self.physiboss_mutants):
             name, value, button, _ = mutant
-            name.curremtIndexChanged.disconnect()
-            name.curremtIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+            name.currentIndexChanged.disconnect()
+            name.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
             value.textChanged.disconnect()
             value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(i, text))
             button.clicked.disconnect()
@@ -3916,7 +3926,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for parameter in self.param_d[self.current_cell_def]["intracellular"]["list_parameters"]:
                 parameters_dropdown.addItem(parameter)
         parameters_value = QLineEdit("1.0")
-        parameters_remove = QPushButton("Delete")
+        parameters_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
        
         id = len(self.physiboss_parameters)
         parameters_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(id, index))
@@ -3978,27 +3988,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_input(self):
 
         inputs_editor = QHBoxLayout()
-                
+
         inputs_signal_dropdown = QComboBox()
         inputs_signal_dropdown.setStyleSheet(self.combobox_stylesheet)
-        inputs_signal_dropdown.setFixedWidth(200)
+
         for signal in self.physiboss_signals:
             inputs_signal_dropdown.addItem(signal)
         
         inputs_node_dropdown = QComboBox()
         inputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
-        inputs_node_dropdown.setFixedWidth(150)
+
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 inputs_node_dropdown.addItem(node)
         
         inputs_action = QComboBox()
         inputs_action.setStyleSheet(self.combobox_stylesheet)
-        inputs_action.setFixedWidth(100)
+
         inputs_action.addItem("activation")
         inputs_action.addItem("inhibition")
-        inputs_remove = QPushButton("Delete")
 
+        inputs_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
         id = len(self.physiboss_inputs)
         inputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
@@ -4007,21 +4017,30 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_input(id))
 
         inputs_editor.addWidget(inputs_signal_dropdown)
+        inputs_editor.setStretch(0, 1)
         inputs_editor.addWidget(inputs_action)
+        inputs_editor.setStretch(1, 1)
         inputs_editor.addWidget(inputs_node_dropdown)
+        inputs_editor.setStretch(2, 1)
         
         inputs_threshold = QLineEdit("1.0")
         inputs_inact_threshold = QLineEdit("1.0")
-        inputs_smoothing = QLineEdit("0")        
+        inputs_smoothing = QLineEdit("0")
         inputs_threshold.textChanged.connect(lambda text: self.physiboss_inputs_threshold_changed(id, text))
         inputs_inact_threshold.textChanged.connect(lambda text: self.physiboss_inputs_inact_threshold_changed(id, text))
         inputs_smoothing.textChanged.connect(lambda text: self.physiboss_inputs_smoothing_changed(id, text))
         
         inputs_editor.addWidget(inputs_threshold)
+        inputs_threshold.setFixedWidth(70)
         inputs_editor.addWidget(inputs_inact_threshold)
+        inputs_inact_threshold.setFixedWidth(70)
         inputs_editor.addWidget(inputs_smoothing)
-        
+        inputs_smoothing.setFixedWidth(70)
+
+
+        inputs_remove.setFixedWidth(30)
         inputs_editor.addWidget(inputs_remove)
+
 
         self.physiboss_inputs_layout.addLayout(inputs_editor)
         self.physiboss_inputs.append((inputs_signal_dropdown, inputs_node_dropdown, inputs_action, inputs_threshold, inputs_inact_threshold, inputs_smoothing, inputs_remove, inputs_editor))#, inputs_editor_2))
@@ -4105,23 +4124,24 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_editor = QHBoxLayout()
         outputs_behaviour_dropdown = QComboBox()
         outputs_behaviour_dropdown.setStyleSheet(self.combobox_stylesheet)
-        outputs_behaviour_dropdown.setFixedWidth(200)
+
         for behaviour in self.physiboss_behaviours:
             outputs_behaviour_dropdown.addItem(behaviour)
         
         outputs_node_dropdown = QComboBox()
         outputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
-        outputs_node_dropdown.setFixedWidth(150)
+
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 outputs_node_dropdown.addItem(node)
         
         outputs_action = QComboBox()
         outputs_action.setStyleSheet(self.combobox_stylesheet)
-        outputs_action.setFixedWidth(100)
+
         outputs_action.addItem("activation")
         outputs_action.addItem("inhibition")
-        outputs_remove = QPushButton("Delete")
+        outputs_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
+        outputs_remove.setFixedWidth(30)
 
 
         id = len(self.physiboss_outputs)
@@ -4131,8 +4151,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_output(id))
 
         outputs_editor.addWidget(outputs_behaviour_dropdown)
+        outputs_editor.setStretch(0, 1)
         outputs_editor.addWidget(outputs_action)
+        outputs_editor.setStretch(1, 1)
         outputs_editor.addWidget(outputs_node_dropdown)
+        outputs_editor.setStretch(2, 1)
         
         outputs_value = QLineEdit("1.0")
         outputs_basal_value = QLineEdit("0.0")
@@ -4144,6 +4167,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_editor.addWidget(outputs_value)
         outputs_editor.addWidget(outputs_basal_value)
         outputs_editor.addWidget(outputs_smoothing)
+
+        outputs_value.setFixedWidth(70)
+        outputs_basal_value.setFixedWidth(70)
+        outputs_smoothing.setFixedWidth(70)
         
         outputs_editor.addWidget(outputs_remove)
 
@@ -4239,7 +4266,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         node_inheritance_checkbox.setEnabled(True)
         node_inheritance_checkbox.setChecked(not self.physiboss_global_inheritance_flag)
         
-        node_inheritance_remove = QPushButton("Delete")
+        node_inheritance_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
 
         id = len(self.physiboss_node_specific_inheritance)
@@ -4247,10 +4274,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         node_inheritance_checkbox.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(id, bval))
         # outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
         node_inheritance_remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(id))
-
+        node_inheritance_remove.setFixedWidth(30)
         node_inheritance_editor.addWidget(node_inheritance_dropdown)
         node_inheritance_editor.addWidget(node_inheritance_checkbox)
         node_inheritance_editor.addWidget(node_inheritance_remove)
+        node_inheritance_editor.addStretch(1)
         
        
         self.physiboss_inheritance_layout.addLayout(node_inheritance_editor)
@@ -4554,23 +4582,34 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_groupbox = QGroupBox("Inputs")
 
         self.physiboss_inputs_layout = QVBoxLayout()
+        self.physiboss_inputs_layout.setAlignment(Qt.AlignTop)
         inputs_labels = QHBoxLayout()
 
         inputs_signal_label = QLabel("Signal")
-        inputs_signal_label.setFixedWidth(200)
         inputs_node_label = QLabel("Node")
-        inputs_node_label.setFixedWidth(150)
         inputs_action_label = QLabel("Action")
-        inputs_node_label.setFixedWidth(100)
-        inputs_threshold_label = QLabel("Threshold")
-        inputs_inact_threshold_label = QLabel("Inact. Threshold")
+        inputs_threshold_label = QLabel("Thr")
+        inputs_inact_threshold_label = QLabel("Inact. Thr")
         inputs_smoothing_label = QLabel("Smoothing")
+
+
         inputs_labels.addWidget(inputs_signal_label)
+        inputs_signal_label.setMinimumWidth(240)
+        inputs_labels.setStretch(0, 1)
         inputs_labels.addWidget(inputs_action_label)
+        inputs_action_label.setMinimumWidth(50)
+        inputs_labels.setStretch(1, 1)
         inputs_labels.addWidget(inputs_node_label)
+        inputs_node_label.setMinimumWidth(50)
+        inputs_labels.setStretch(2, 1)
         inputs_labels.addWidget(inputs_threshold_label)
+        inputs_threshold_label.setFixedWidth(70)
         inputs_labels.addWidget(inputs_inact_threshold_label)
+        inputs_inact_threshold_label.setFixedWidth(70)
         inputs_labels.addWidget(inputs_smoothing_label)
+        inputs_smoothing_label.setFixedWidth(70)
+        inputs_labels.addSpacing(35)
+
         self.physiboss_inputs_layout.addLayout(inputs_labels)
         inputs_groupbox.setLayout(self.physiboss_inputs_layout)
 
@@ -4588,21 +4627,28 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_labels = QHBoxLayout()
 
         outputs_signal_label = QLabel("Signal")
-        outputs_signal_label.setFixedWidth(200)
         outputs_node_label = QLabel("Node")
-        outputs_node_label.setFixedWidth(150)
-
         outputs_action_label = QLabel("Action")
-        outputs_action_label.setFixedWidth(100)
         outputs_value_label = QLabel("Value")
-        outputs_basal_value_label = QLabel("Base_value")
+        outputs_basal_value_label = QLabel("Base value")
         outputs_smoothing_label = QLabel("Smoothing")
+
         outputs_labels.addWidget(outputs_signal_label)
+        outputs_signal_label.setMinimumWidth(250)
+        outputs_labels.setStretch(0, 1)
         outputs_labels.addWidget(outputs_action_label)
+        outputs_action_label.setMinimumWidth(40)
+        outputs_labels.setStretch(1, 1)
         outputs_labels.addWidget(outputs_node_label)
+        outputs_node_label.setMinimumWidth(50)
+        outputs_labels.setStretch(2, 1)
         outputs_labels.addWidget(outputs_value_label)
+        outputs_value_label.setFixedWidth(70)
         outputs_labels.addWidget(outputs_basal_value_label)
+        outputs_basal_value_label.setFixedWidth(70)
         outputs_labels.addWidget(outputs_smoothing_label)
+        outputs_labels.addSpacing(40)
+
         self.physiboss_outputs_layout.addLayout(outputs_labels)
         outputs_groupbox.setLayout(self.physiboss_outputs_layout)
 
@@ -4637,6 +4683,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inheritance_value_label.setFixedWidth(150)
         inheritance_labels.addWidget(inheritance_node_label)
         inheritance_labels.addWidget(inheritance_value_label)
+        inheritance_labels.addStretch(1)
 
         self.physiboss_inheritance_layout.addLayout(inheritance_labels)
         inheritance_groupbox.setLayout(self.physiboss_inheritance_layout)
