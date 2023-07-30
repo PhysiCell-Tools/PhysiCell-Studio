@@ -1349,12 +1349,18 @@ class Rules(QWidget):
         print("add_rule_cb():---> ",rule_str)
 
         irow = self.num_rules
-        print("add_rule_cb():self.num_rules= ",self.num_rules)
+        # print("add_rule_cb():self.num_rules= ",self.num_rules)
 
         # v2 synax:
         # cell type, signal, increases/decreases,behavior, param value at max response, half max, hill power, applies to dead?
 
-        self.rules_table.cellWidget(irow, self.rules_celltype_idx).setText( self.celltype_combobox.currentText() )
+        try:
+            self.rules_table.cellWidget(irow, self.rules_celltype_idx).setText( self.celltype_combobox.currentText() )
+        except:
+            msg = f'add_rule_cb() Error: irow={irow}, idx={self.rules_celltype_idx}, widget={self.rules_table.cellWidget(irow, self.rules_celltype_idx)}.'
+            self.show_warning(msg)
+            return 
+
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_response_idx).setText( self.response_combobox.currentText() )  # behavior
@@ -1369,7 +1375,7 @@ class Rules(QWidget):
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
 
         self.num_rules += 1
-        print("add_rule_cb(): post-incr, self.num_rules= ",self.num_rules)
+        # print("add_rule_cb(): post-incr, self.num_rules= ",self.num_rules)
 
         # self.rules_text.appendPlainText(rule_str)
         return
@@ -1379,7 +1385,7 @@ class Rules(QWidget):
         # row_num = self.max_custom_data_rows - 1
         self.rules_table.insertRow(row_num)
         for irow in [row_num]:
-            print("=== add_row_rules_table(): irow=",irow)
+            # print("=== add_row_rules_table(): irow=",irow)
             # ------- CellType
             w_me = MyQLineEdit()
             w_me.setFrame(False)
@@ -1498,7 +1504,12 @@ class Rules(QWidget):
     # Delete an entire rule. 
     def delete_rule_cb(self):
         row = self.rules_table.currentRow()
-        print("------------- delete_rule_cb(), row=",row)
+        # print(f'------------- delete_rule_cb(), row={row}, self.num_rules={self.num_rules}')
+        # if row < 0:
+        if (row < 0) or (row+1 > self.num_rules) or (self.num_rules <= 0):
+            msg = f'Error: Select a row with a rule before deleting.'
+            self.show_warning(msg)
+            return
         # varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
         # print(" custom var name= ",varname)
         # print(" master_custom_var_d= ",self.master_custom_var_d)
@@ -1520,7 +1531,12 @@ class Rules(QWidget):
             # print("---- decrement wrow in irow=",irow)
             # self.rules_celltype_idx = 0
             # self.rules_response_idx = 1
-            self.rules_table.cellWidget(irow,self.rules_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
+            try:
+                self.rules_table.cellWidget(irow,self.rules_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
+            except:
+                msg = f'Warning: could not decrement row {irow} from the Rules table. Select a row before deleting.'
+                self.show_warning(msg)
+                return
 
             # print(f"   after removing {varname}, master_custom_var_d= ",self.master_custom_var_d)
 
@@ -1530,6 +1546,7 @@ class Rules(QWidget):
         # self.enable_all_custom_data()
 
         self.num_rules -= 1
+        # print("---- num_rules=",self.num_rules)
 
         # print(" 2)master_custom_var_d= ",self.master_custom_var_d)
         # print("------------- LEAVING  delete_custom_data_cb")
