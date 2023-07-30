@@ -1264,6 +1264,7 @@ class Rules(QWidget):
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
+        print("Y=",Y)
         if "decreases" in self.up_down_combobox.currentText():
             Y = 1.0 - Y
 
@@ -1275,6 +1276,9 @@ class Rules(QWidget):
         self.rules_plot.ax0.set_title(title, fontsize=10)
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
+
+        # hack to bring to foreground
+        self.rules_plot.hide()
         self.rules_plot.show()
 
         # self.myscroll.setWidget(self.canvas) # self.config_params = QWidget()
@@ -1587,9 +1591,11 @@ class Rules(QWidget):
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
         hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+
         Y = self.hill(X, half_max=half_max, hill_power=hill_power)
         if "decreases" in self.rules_table.cellWidget(irow, self.rules_direction_idx).text():
             Y = 1.0 - Y
+        # print("Y=",Y)
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
         title = "Rule " + str(irow+1) + ": cell type: " + self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
@@ -1599,7 +1605,12 @@ class Rules(QWidget):
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
 
+        # self.rules_plot.show()
+
+        # hack to bring to foreground
+        self.rules_plot.hide()
         self.rules_plot.show()
+
         return
 
     #-----------------------------------------------------------
@@ -1826,6 +1837,7 @@ class Rules(QWidget):
         for s in self.substrates:
             self.response_l.append(s + " export")
         self.response_l.append("cycle entry")
+        self.response_l.append("damage rate")
         for idx in range(6):  # TODO: hardwired
             self.response_l.append("exit from cycle phase " + str(idx))
 
