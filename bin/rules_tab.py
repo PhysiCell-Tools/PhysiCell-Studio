@@ -950,31 +950,7 @@ class Rules(QWidget):
             return
 
         base_val = '??'
-        if btokens[0] in ["cycle", "exit"]:
-            cycle_model_idx = self.celldef_tab.param_d[key0]['cycle_choice_idx']
-            # print(behavior, cycle_model_idx )
-            #{0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
-            if (behavior == 'cycle entry' or behavior == 'exit from cycle phase 0'):
-                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_trate00']
-                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate01']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate01']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate01']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate01']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate01']
-            elif (behavior == 'exit from cycle phase 1'):
-                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate10']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate12']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate12']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate12']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate10']
-            elif (behavior == 'exit from cycle phase 2'):
-                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate20']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate20']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate23']
-            elif (behavior == 'exit from cycle phase 3'):
-                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
-                        
-        elif btokens[0] in self.substrates:
+        if btokens[0] in self.substrates:
             print(f"{btokens[0]} is a substrate")
             # key1 = btokens[0]
             key1 = 'secretion'
@@ -1051,12 +1027,7 @@ class Rules(QWidget):
         elif behavior[0:len("transform to")] == "transform to":
             cell_type = behavior[len("transform to")+1:]
             base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
-        elif behavior == "damage rate":
-            base_val = self.celldef_tab.param_d[key0]["damage_rate"]
-        elif "custom:" in btokens[0]:
-            custom_data_name = btokens[0].split(':')[-1] # return string after colon
-            print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
-            base_val = self.celldef_tab.param_d[key0]['custom_data'][custom_data_name][0]
+            
 
         #---------------------
         # Set the base value 
