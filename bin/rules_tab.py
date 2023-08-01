@@ -158,13 +158,14 @@ class Rules(QWidget):
         self.celltype_name = None
         self.signal = None
         self.behavior = None
-        self.scale_base_for_max = 2.0
+        self.scale_base_for_max = 10.0
+        self.scale_base_for_min = 0.1
 
         self.max_rule_table_rows = 99
 
         self.update_rules_for_custom_data = True
 
-        self.max_rule_table_cols = 8   # v2: cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead
+        self.max_rule_table_cols = 9   # v2: cell type, signal, direction, behavior, baseval, max, half-max, Hill power, apply to dead
 
         # table columns' indices
         icol = 0
@@ -178,8 +179,8 @@ class Rules(QWidget):
         icol += 1
         # self.rules_minval_idx = icol
         # icol += 1
-        # self.rules_baseval_idx = icol
-        # icol += 1
+        self.rules_baseval_idx = icol
+        icol += 1
         self.rules_maxval_idx = icol
         icol += 1
         self.rules_halfmax_idx = icol
@@ -706,8 +707,9 @@ class Rules(QWidget):
         # self.rules_table.cellClicked.connect(self.rules_cell_was_clicked)
 
         # self.rules_table.setColumnCount(10)
-        self.rules_table.setColumnCount(8)
+        self.rules_table.setColumnCount(9)
         self.rules_table.setRowCount(self.max_rule_table_rows)
+        self.rules_table.setColumnHidden(4, True) # hidden column base value
 
         header = self.rules_table.horizontalHeader()       
         # header.setSectionResizeMode(0, QHeaderView.Stretch)
@@ -715,7 +717,7 @@ class Rules(QWidget):
         # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
         # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Saturation value','Half-max','Hill power','Apply to dead'])
+        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Base value', 'Saturation value','Half-max','Hill power','Apply to dead'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -780,18 +782,18 @@ class Rules(QWidget):
             # self.rules_table.setCellWidget(irow, self.rules_minval_idx, w_me)
             # # w_var_units.textChanged[str].connect(self.custom_data_units_changed)  # being explicit about passing a string 
 
-            # # ------- Base val
-            # w_me = MyQLineEdit()
-            # w_me.setFrame(False)
-            # # item = QTableWidgetItem('')
-            # w_me.vname = w_me  
-            # w_me.wrow = irow
-            # w_me.wcol = self.rules_baseval_idx
-            # # w_var_desc.idx = irow
-            # # w_varval.setValidator(QtGui.QDoubleValidator())
-            # # self.rules_table.setItem(irow, self.custom_icol_desc, item)
-            # self.rules_table.setCellWidget(irow, self.rules_baseval_idx, w_me)
-            # # w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
+            # ------- Base val
+            w_me = MyQLineEdit()
+            w_me.setFrame(False)
+            # item = QTableWidgetItem('')
+            w_me.vname = w_me  
+            w_me.wrow = irow
+            w_me.wcol = self.rules_baseval_idx
+            # w_var_desc.idx = irow
+            # w_varval.setValidator(QtGui.QDoubleValidator())
+            # self.rules_table.setItem(irow, self.custom_icol_desc, item)
+            self.rules_table.setCellWidget(irow, self.rules_baseval_idx, w_me)
+            # w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
 
             # ------- Max val
             w_me = MyQLineEdit()
@@ -950,7 +952,31 @@ class Rules(QWidget):
             return
 
         base_val = '??'
-        if btokens[0] in self.substrates:
+        if btokens[0] in ["cycle", "exit"]:
+            cycle_model_idx = self.celldef_tab.param_d[key0]['cycle_choice_idx']
+            # print(behavior, cycle_model_idx )
+            #{0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
+            if (behavior == 'cycle entry' or behavior == 'exit from cycle phase 0'):
+                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_trate00']
+                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate01']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate01']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate01']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate01']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate01']
+            elif (behavior == 'exit from cycle phase 1'):
+                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate10']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate12']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate12']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate12']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate10']
+            elif (behavior == 'exit from cycle phase 2'):
+                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate20']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate20']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate23']
+            elif (behavior == 'exit from cycle phase 3'):
+                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
+                        
+        elif btokens[0] in self.substrates:
             print(f"{btokens[0]} is a substrate")
             # key1 = btokens[0]
             key1 = 'secretion'
@@ -1027,19 +1053,27 @@ class Rules(QWidget):
         elif behavior[0:len("transform to")] == "transform to":
             cell_type = behavior[len("transform to")+1:]
             base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
-            
+        elif behavior == "damage rate":
+            base_val = self.celldef_tab.param_d[key0]["damage_rate"]
+        elif "custom:" in btokens[0]:
+            custom_data_name = btokens[0].split(':')[-1] # return string after colon
+            print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
+            base_val = self.celldef_tab.param_d[key0]['custom_data'][custom_data_name][0]
 
         #---------------------
         # Set the base value 
         self.rule_base_val.setText(base_val)
 
-        # Compute/set the saturation value 
+        # Compute/set the saturation value
         if base_val == '??':
-            saturation_val = 1.0
+            if "decreases" in self.up_down_combobox.currentText(): saturation_val = 0.0
+            else: saturation_val = 1.0
         else:
-            saturation_val = self.scale_base_for_max * float(base_val)
-            if abs(saturation_val) < 1.e-9:
-                saturation_val = 1.0
+            if "decreases" in self.up_down_combobox.currentText(): saturation_val = self.scale_base_for_min * float(base_val)
+            else: saturation_val = self.scale_base_for_max * float(base_val)
+            # behaviors with max response
+            if ( behavior == 'migration bias' and saturation_val > 1 ): saturation_val = 1.0
+            if ( behavior == 'is_movable' and saturation_val > 1 ): saturation_val = 1.0
         self.rule_max_val.setText(str(saturation_val))
 
         # print(self.celldef_tab.param_d.keys())
@@ -1219,9 +1253,9 @@ class Rules(QWidget):
         return
 
     #-----------------------------------------------------------
-    def hill(self, x, half_max = 0.5 , hill_power = 2 ):
+    def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
-        return z/(1.0 + z); 
+        return base_val + (saturation_val-base_val)*(z/(1.0 + z)); 
 
     def plot_new_rule_cb(self):
         try:
@@ -1236,6 +1270,21 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
+            # Check if saturation value is compatible with increase/decrease behaviour
+            direction = self.up_down_combobox.currentText()
+            base_val = self.rule_base_val.text()
+            if base_val == '??':
+                if "decreases" in self.up_down_combobox.currentText(): base_val = 1.0
+                else: base_val = 0.0
+            else: base_val = float(base_val)
+            saturation_val = float(self.rule_max_val.text())
+            # print(base_val,saturation_val, direction)            
+            if ( (saturation_val < base_val) and "increases" in self.up_down_combobox.currentText() ): 
+                self.show_warning(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
+                return
+            if ( (saturation_val > base_val) and "decreases" in self.up_down_combobox.currentText() ): 
+                self.show_warning(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
+                return  
         except:
             print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
             return
@@ -1259,14 +1308,17 @@ class Rules(QWidget):
 
         half_max = float(self.rule_half_max.text())
         hill_power = int(self.rule_hill_power.text())
+        base_val = self.rule_base_val.text()
+        if base_val == '??':
+            if "decreases" in self.up_down_combobox.currentText(): base_val = 1.0
+            else: base_val = 0.0
+        else: 
+            base_val = float(base_val)
+        saturation_val = float(self.rule_max_val.text())
 
-        # X = np.linspace(min_val,2.0 * half_max, 101)   # guess max = 2 * half-max
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
-        Y = self.hill(X, half_max=half_max, hill_power=hill_power)
-        print("Y=",Y)
-        if "decreases" in self.up_down_combobox.currentText():
-            Y = 1.0 - Y
+        Y = self.hill(X, base_val=base_val, saturation_val=saturation_val, half_max=half_max, hill_power=hill_power)
 
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
@@ -1274,6 +1326,7 @@ class Rules(QWidget):
         self.rules_plot.ax0.set_xlabel('signal: ' + self.signal_combobox.currentText())
         self.rules_plot.ax0.set_ylabel('response: ' + self.response_combobox.currentText())
         self.rules_plot.ax0.set_title(title, fontsize=10)
+        self.rules_plot.ax0.ticklabel_format(style='sci', axis='y', scilimits=[-2,2], useOffset=False)
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
 
@@ -1315,6 +1368,21 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
+            # Check if saturation value is compatible with increase/decrease behaviour
+            direction = self.up_down_combobox.currentText()
+            base_val = self.rule_base_val.text()
+            if base_val == '??':
+                if "decreases" in self.up_down_combobox.currentText(): base_val = 1.0
+                else: base_val = 0.0
+            else: base_val = float(base_val)
+            saturation_val = float(self.rule_max_val.text())
+            # print(base_val,saturation_val, direction)            
+            if ( (saturation_val < base_val) and "increases" in self.up_down_combobox.currentText() ): 
+                self.show_warning(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
+                return
+            if ( (saturation_val > base_val) and "decreases" in self.up_down_combobox.currentText() ): 
+                self.show_warning(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
+                return  
         except:
             print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
             return
@@ -1365,7 +1433,7 @@ class Rules(QWidget):
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_response_idx).setText( self.response_combobox.currentText() )  # behavior
         # self.rules_table.cellWidget(irow, self.rules_minval_idx).setText( self.rule_min_val.text() )
-        # self.rules_table.cellWidget(irow, self.rules_baseval_idx).setText( self.rule_base_val.text() )
+        self.rules_table.cellWidget(irow, self.rules_baseval_idx).setText( self.rule_base_val.text() )
         self.rules_table.cellWidget(irow, self.rules_maxval_idx).setText( self.rule_max_val.text() )
         self.rules_table.cellWidget(irow, self.rules_halfmax_idx).setText( self.rule_half_max.text() )
         self.rules_table.cellWidget(irow, self.rules_hillpower_idx).setText( self.rule_hill_power.text() )
@@ -1441,18 +1509,18 @@ class Rules(QWidget):
             # self.rules_table.setCellWidget(irow, self.rules_minval_idx, w_me)
             # # w_var_units.textChanged[str].connect(self.custom_data_units_changed)  # being explicit about passing a string 
 
-            # ------- Base val  (in v1, not v2)
-            # w_me = MyQLineEdit()
-            # w_me.setFrame(False)
-            # # item = QTableWidgetItem('')
-            # w_me.vname = w_me  
-            # w_me.wrow = irow
-            # w_me.wcol = self.rules_baseval_idx
-            # # w_var_desc.idx = irow
-            # # w_varval.setValidator(QtGui.QDoubleValidator())
-            # # self.rules_table.setItem(irow, self.custom_icol_desc, item)
-            # self.rules_table.setCellWidget(irow, self.rules_baseval_idx, w_me)
-            # # w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
+            # ------- Base val
+            w_me = MyQLineEdit()
+            w_me.setFrame(False)
+            # item = QTableWidgetItem('')
+            w_me.vname = w_me  
+            w_me.wrow = irow
+            w_me.wcol = self.rules_baseval_idx
+            # w_var_desc.idx = irow
+            # w_varval.setValidator(QtGui.QDoubleValidator())
+            # self.rules_table.setItem(irow, self.custom_icol_desc, item)
+            self.rules_table.setCellWidget(irow, self.rules_baseval_idx, w_me)
+            # w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
 
             # ------- Max val
             w_me = MyQLineEdit()
@@ -1599,26 +1667,28 @@ class Rules(QWidget):
             self.rules_plot = RulesPlotWindow()
         self.rules_plot.ax0.cla()
         # min_val = float(self.rules_table.cellWidget(irow, self.rules_minval_idx).text())
-        min_val = 0.0  # TODO - fix
-        # base_val = float(self.rule_base_val.text())
-        max_val = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
-        # X = np.linspace(min_val,max_val, 101) 
-
+        
         half_max = float(self.rules_table.cellWidget(irow, self.rules_halfmax_idx).text())
+        base_val = self.rules_table.cellWidget(irow, self.rules_baseval_idx).text()
+        hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+        if base_val == '??':
+            if "decreases" in self.rules_table.cellWidget(irow, self.rules_direction_idx).text(): base_val = 1.0
+            else: base_val = 0.0
+        else: 
+            base_val = float(base_val)
+        saturation_val = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
+        
         X = np.linspace(0.0, 2.0 * half_max, 101)   # guess max = 2 * half-max
 
-        hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
-
-        Y = self.hill(X, half_max=half_max, hill_power=hill_power)
-        if "decreases" in self.rules_table.cellWidget(irow, self.rules_direction_idx).text():
-            Y = 1.0 - Y
-        # print("Y=",Y)
+        Y = self.hill(X, base_val=base_val, saturation_val=saturation_val, half_max=half_max, hill_power=hill_power)
+    
         self.rules_plot.ax0.plot(X,Y,'r-')
         self.rules_plot.ax0.grid()
         title = "Rule " + str(irow+1) + ": cell type: " + self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
         self.rules_plot.ax0.set_xlabel('signal: ' + self.rules_table.cellWidget(irow, self.rules_signal_idx).text())
         self.rules_plot.ax0.set_ylabel('response: ' + self.rules_table.cellWidget(irow, self.rules_response_idx).text())
         self.rules_plot.ax0.set_title(title, fontsize=10)
+        self.rules_plot.ax0.ticklabel_format(style='sci', axis='y', scilimits=[-2,2], useOffset=False)
         self.rules_plot.canvas.update()
         self.rules_plot.canvas.draw()
 
