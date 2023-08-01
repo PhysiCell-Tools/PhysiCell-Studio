@@ -165,7 +165,7 @@ class Rules(QWidget):
 
         self.update_rules_for_custom_data = True
 
-        self.max_rule_table_cols = 9   # v2: cell type, signal, direction, behavior, baseval, max, half-max, Hill power, apply to dead
+        self.max_rule_table_cols = 9   # v2: cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead, baseval
 
         # table columns' indices
         icol = 0
@@ -179,8 +179,6 @@ class Rules(QWidget):
         icol += 1
         # self.rules_minval_idx = icol
         # icol += 1
-        self.rules_baseval_idx = icol
-        icol += 1
         self.rules_maxval_idx = icol
         icol += 1
         self.rules_halfmax_idx = icol
@@ -188,6 +186,8 @@ class Rules(QWidget):
         self.rules_hillpower_idx = icol
         icol += 1
         self.rules_applydead_idx = icol
+        icol += 1
+        self.rules_baseval_idx = icol
         icol += 1
 
         self.num_cols = icol
@@ -709,7 +709,7 @@ class Rules(QWidget):
         # self.rules_table.setColumnCount(10)
         self.rules_table.setColumnCount(9)
         self.rules_table.setRowCount(self.max_rule_table_rows)
-        self.rules_table.setColumnHidden(4, True) # hidden column base value
+        self.rules_table.setColumnHidden(8, True) # hidden column base value
 
         header = self.rules_table.horizontalHeader()       
         # header.setSectionResizeMode(0, QHeaderView.Stretch)
@@ -717,7 +717,7 @@ class Rules(QWidget):
         # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
         # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior','Base value', 'Saturation value','Half-max','Hill power','Apply to dead'])
+        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -1191,7 +1191,7 @@ class Rules(QWidget):
                         # irow = 0
                         print("elm= ",elm)
                         print("len(elm)= ",len(elm))
-                        if len(elm) == self.max_rule_table_cols:   # v2
+                        if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
 
                             cell_type = elm[0]
                             if cell_type not in self.celldef_tab.param_d.keys():
@@ -1200,12 +1200,13 @@ class Rules(QWidget):
                                 return
 
                                 # self.rules_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
-                            for icol in range(self.max_rule_table_cols-1): 
+                            for icol in range(self.max_rule_table_cols-2): 
                                 # print("icol=",icol)
                                 self.rules_table.cellWidget(irow, icol).setText(elm[icol])
+                            self.rules_table.cellWidget(irow, 8).setText('??') # load base value
 
                             # if int(elm[7]) == 0:  # hard-code
-                            if int(elm[self.max_rule_table_cols-1]) == 0:
+                            if int(elm[self.max_rule_table_cols-2]) == 0:
                                 print("setting dead checkbox False")
                                 self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
                             else:
