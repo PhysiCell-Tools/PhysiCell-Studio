@@ -832,6 +832,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("save_as_cb():  filePath is valid")
             print("len(full_path_model_name) = ", len(full_path_model_name) )
             # self.current_save_file = full_path_model_name
+            orig_file_name = self.current_xml_file
             self.current_xml_file = full_path_model_name
         else:
             return
@@ -850,7 +851,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             if self.rules_flag:
                 self.rules_tab.fill_xml()
             
-            self.setWindowTitle(self.title_prefix + self.current_xml_file)
+            # self.setWindowTitle(self.title_prefix + self.current_xml_file)  # No!
 
             # print("\n\n ===================================")
             print("studio.py:  save_as_cb: writing to: ",self.current_xml_file)
@@ -859,9 +860,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("studio.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
 
+            # Revert/retain original .xml file
+            self.current_xml_file = orig_file_name
+
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Note: this will not change the config file in the Run tab.")
+            msgBox.setText("Note: you need to File->Open this newly saved file to load it into the Studio.")
             msgBox.setStandardButtons(QMessageBox.Ok)
             returnValue = msgBox.exec()
 
@@ -1129,13 +1133,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #----------------------
     def simularium_cb(self):
         # print("---- Simularium export coming soon...")
+        print(f"---- begin Simularium file creation (simularium_installed={simularium_installed})...")
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
         # msgBox.setText("Simularium export coming soon." + "simularium_installed is " + str(simularium_installed))
         if not simularium_installed:
             msgBox.setText("The simulariumio module is not installed. You can try to: pip install simulariumio")
             msgBox.setStandardButtons(QMessageBox.Ok)
-            # returnValue = msgBox.exec()
+            returnValue = msgBox.exec()
             return
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
@@ -1147,6 +1152,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             return
 
         self.vis_tab.convert_to_simularium(self.current_xml_file)
+        print("---- Simularium file created.")
         return
 
     #-------  Leave these for nanoHUB ---------------
