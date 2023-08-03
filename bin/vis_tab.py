@@ -733,7 +733,7 @@ class Vis(VisBase, QWidget):
             return
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
-        total_min = mcds.get_time()
+        total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         try:
             cell_scalar = mcds.get_cell_df()[cell_scalar_name]
@@ -811,9 +811,10 @@ class Vis(VisBase, QWidget):
         else: 
             self.cell_scalar_cbar_combobox.setEnabled(True)
 
-        mins = total_min
+        mins = round(total_min)  # hack, assume we want integer mins
         hrs = int(mins/60)
         days = int(hrs/24)
+        # print(f"mins={mins}, hrs={hrs}, days={days}")
         self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
         self.title_str += " (" + str(num_cells) + " agents)"
 

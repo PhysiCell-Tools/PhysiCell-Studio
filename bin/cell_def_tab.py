@@ -48,8 +48,7 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
@@ -289,6 +288,10 @@ class CellDef(QWidget):
         items = []
         model = QtCore.QStringListModel()
         model.setStringList(["aaa","bbb"])
+
+
+        self.empty_frame = QFrame()
+        self.ode_sbml_frame = QFrame()
 
         self.cell_def_horiz_layout.addWidget(self.tree)
 
@@ -4324,8 +4327,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def intracellular_type_changed(self, index):
 
         self.physiboss_boolean_frame.hide()
+        self.ode_sbml_frame.hide()
+        self.empty_frame.show()
+
         if index == 0 and self.current_cell_def is not None:
             logging.debug(f'intracellular_type_changed(): {self.current_cell_def}')
+            # print(f'intracellular_type_changed(): {self.current_cell_def}')
+            self.empty_frame.show()
             if "intracellular" in self.param_d[self.current_cell_def].keys():
                 self.physiboss_bnd_file.setText("")
                 self.physiboss_cfg_file.setText("")
@@ -4391,11 +4399,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.physiboss_update_list_behaviours()
             self.physiboss_boolean_frame.show()
         elif index == 2:
-            logging.debug(f'intracellular is SBML ODEs')
+            # logging.debug(f'intracellular is SBML ODEs')
+            self.ode_sbml_frame.show()
         elif index == 3:
-            logging.debug(f'intracellular is FBA')
+            pass
+            # logging.debug(f'intracellular is FBA')
         else:
-            logging.debug(f'intracellular is Unkown')
+            pass
+            # logging.debug(f'intracellular is Unkown')
         
     #--------------------------------------------------------
     def create_intracellular_tab(self):
@@ -4421,11 +4432,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.intracellular_type_dropdown.addItem("boolean")
         self.intracellular_type_dropdown.addItem("odes")
         self.intracellular_type_dropdown.addItem("fba")
+        self.intracellular_type_dropdown.model().item(3).setEnabled(False)
         type_hbox.addWidget(self.intracellular_type_dropdown)
 
         # glayout.addLayout(type_hbox, idr,0, 1,1) # w, row, column, rowspan, colspan
         glayout.addLayout(type_hbox)#, idr,0, 1,1) # w, row, column, rowspan, colspan
 
+
+        # -------  PhysiBoSS Boolean  -------
 
         # self.boolean_frame = QFrame()
         ly = QVBoxLayout()
@@ -4700,6 +4714,32 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addStretch()
 
 
+        # -------  "None" intracellular frame  -------
+        vbox = QVBoxLayout()
+        self.empty_frame.setLayout(vbox)
+
+        hbox = QHBoxLayout()
+        empty_label = QLabel("")
+        hbox.addWidget(empty_label)
+        vbox.addLayout(hbox)
+
+        glayout.addWidget(self.empty_frame)
+        glayout.addStretch()
+
+        # -------  ODE SBML frame  -------
+        vbox = QVBoxLayout()
+        self.ode_sbml_frame.setLayout(vbox)
+
+        hbox = QHBoxLayout()
+        ode_label = QLabel("ODEs via SBML in preparation...")
+        ode_label.setFont(QFont('Arial', 30))
+        hbox.addWidget(ode_label)
+        vbox.addLayout(hbox)
+
+        glayout.addWidget(self.ode_sbml_frame)
+        glayout.addStretch()
+
+        #-------------------------------------------
         intracellular_tab_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         intracellular_tab_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         intracellular_tab_scroll.setWidgetResizable(True)
