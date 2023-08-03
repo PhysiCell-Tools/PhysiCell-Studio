@@ -429,6 +429,7 @@ class PhysiCellXMLCreator(QWidget):
                 self.ics_tab.csv_folder.setEnabled(False)
             else:
                 print("studio.py: ---- FALSE nanohub_flag: NOT updating ics_tab folder")
+                self.ics_tab.fill_gui()  # New Aug 2023
 
             self.celldef_tab.ics_tab = self.ics_tab
             # self.rules_tab.fill_gui()
@@ -721,6 +722,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.user_params_tab.xml_root = self.xml_root
 
         self.config_tab.fill_gui()
+        self.ics_tab.fill_gui()  # New Aug 2023
+
         if self.model3D_flag and self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
             print("You're running a 3D Studio, but the model is 2D")
             msgBox = QMessageBox()

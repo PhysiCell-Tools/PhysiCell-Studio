@@ -1785,3 +1785,7 @@ class ICs(QWidget):
 
         else:
             print("import_cb():  full_path_model_name is NOT valid")
+
+    def fill_gui(self):
+        self.csv_folder.setText(self.config_tab.csv_folder.text())
+        self.output_file.setText(self.config_tab.csv_file.text())
