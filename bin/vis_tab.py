@@ -814,7 +814,7 @@ class Vis(VisBase, QWidget):
         mins = round(total_min)  # hack, assume we want integer mins
         hrs = int(mins/60)
         days = int(hrs/24)
-        print(f"mins={mins}, hrs={hrs}, days={days}")
+        # print(f"mins={mins}, hrs={hrs}, days={days}")
         self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
         self.title_str += " (" + str(num_cells) + " agents)"
 
