@@ -497,12 +497,15 @@ class Vis(VisBase, QWidget):
         num_cells = 0
         #  print('------ search cells')
         for child in cells_parent:
-            #    print(child.tag, child.attrib)
-            #    print('attrib=',child.attrib)
+            # print(child.tag, child.attrib)
+            # print(f'------ attrib={child.attrib}\n')
             for circle in child:  # two circles in each child: outer + nucleus
                 #  circle.attrib={'cx': '1085.59','cy': '1225.24','fill': 'rgb(159,159,96)','r': '6.67717','stroke': 'rgb(159,159,96)','stroke-width': '0.5'}
                 #      print('  --- cx,cy=',circle.attrib['cx'],circle.attrib['cy'])
-                xval = float(circle.attrib['cx'])
+                try:
+                    xval = float(circle.attrib['cx'])
+                except:
+                    continue
 
                 # map SVG coords into comp domain
                 # xval = (xval-self.svg_xmin)/self.svg_xrange * self.x_range + self.xmin
