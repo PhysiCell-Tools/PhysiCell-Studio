@@ -719,7 +719,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # @QtCore.Slot()
     def delete_cell_def(self):
         num_items = self.tree.invisibleRootItem().childCount()
-        # print('------ delete_cell_def: num_items=',num_items)
+        print('------ delete_cell_def: num_items=',num_items)
         if num_items == 1:
             # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
@@ -729,7 +729,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_cell_def_count -= 1
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row() 
-        # print('------      item_idx=',item_idx)
+        print('------      item_idx=',item_idx)
         # delete celltype from dropdowns
 
         # remove from the dropdown widgets:
@@ -746,9 +746,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.ics_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
-        logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
-        # print("--- cell_adhesion_affinity= ",self.param_d[cdef]['cell_adhesion_affinity'])
+        # logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
+        # print(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
         logging.debug(f'--- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
+        print(f'\ndelete_cell_def(): ----- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
 
         # remove from the widgets
 
@@ -780,7 +781,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         for cdef in self.param_d.keys():
             # print(" ===>>> ",cdef, " : ", self.param_d[cdef])
             # Mechanics
+            print(f" pre-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
             self.param_d[cdef]['cell_adhesion_affinity'].pop(self.current_cell_def,0)  
+            print(f"\n post-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
 
             # Interactions
             self.param_d[cdef]['live_phagocytosis_rate'].pop(self.current_cell_def,0)
@@ -5919,13 +5922,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #---- in mechanics subtab
     def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
-        # print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
+        print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
         # self.param_d[self.current_cell_def]['cell_adhesion_affinity_celltype'] = celltype_name
         self.cell_adhesion_affinity_celltype = celltype_name
-        # print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
+        print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
 
         # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
@@ -6360,13 +6363,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # data structures (e.g., QComboBox) that reference it.  Including Rules tab(!)
     def renamed_celltype(self, old_name,new_name):
 
+        print(f'\ncell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.cell_adhesion_affinity_celltype = new_name
+        print(f'------- setting self.cell_adhesion_affinity_celltype= {new_name}')
 
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         logging.debug(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         # print(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
         logging.debug(f'    self.celltypes_list= {self.celltypes_list}')
+        print(f'    self.celltypes_list= {self.celltypes_list}')
         # print()
         logging.debug(f' ')
         for cdname in self.param_d.keys():
@@ -6921,6 +6927,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
+        print("---------- update_mechanics_params()")
+        # print("---------- update_mechanics_params(): param_d= ",self.param_d)
         cdname = self.current_cell_def
         # self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
         # self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
@@ -6937,7 +6945,28 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'key 0= {self.cell_adhesion_affinity_celltype}')
             logging.debug(f'keys 1= {self.param_d.keys()}')
             logging.debug(f'keys 2= {self.param_d[cdname]["cell_adhesion_affinity"].keys()}')
-            self.cell_adhesion_affinity.setText(self.param_d[cdname]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+
+            print(f'key 0= {self.cell_adhesion_affinity_celltype}')
+            print(f'keys 1= {self.param_d.keys()}')
+            print(f'keys 2= {self.param_d[cdname]["cell_adhesion_affinity"].keys()}')
+
+            if self.cell_adhesion_affinity_celltype is not None:
+                try:
+                    self.cell_adhesion_affinity.setText(self.param_d[cdname]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
+                except:
+                    error_msg = f'\nError: cell_def_tab.py: update_mechanics_params(): cdname={cdname}, cell_adhesion_affinity.setText, self.cell_adhesion_affinity_celltype={self.cell_adhesion_affinity_celltype}'
+                    print(error_msg)
+
+                    print(f'[{cdname}]["cell_adhesion_affinity"] = {self.param_d[cdname]["cell_adhesion_affinity"]}')
+
+                    # msgBox = QMessageBox()
+                    # msgBox.setIcon(QMessageBox.Information)
+                    # # msgBox.setText(error_msg)
+                    # msgBox.setText(f'Error: invalid self.cell_adhesion_affinity_celltype= {self.cell_adhesion_affinity_celltype}')
+                    # msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    # returnValue = msgBox.exec()
+
+                    self.cell_adhesion_affinity_celltype = None
 
         self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
         self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
@@ -7264,14 +7293,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
+        print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
         # print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
         # cdname = it.text(0)
         # if col > 0:  # only allow editing cell type name, not ID
             # return
         # self.current_cell_def = it.text(col)
         self.current_cell_def = it.text(0)
-        # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
+        print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
 
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
