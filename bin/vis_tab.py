@@ -801,7 +801,10 @@ class Vis(VisBase, QWidget):
             if (len(self.discrete_variable) == 1): 
                 cbar_name = from_list(None, cmaps.gray_gray[0:2], len(self.discrete_variable))  # annoying hack
             else: 
-                cbar_name = from_list(None, cmaps.paint_clist[0:len(self.discrete_variable)], len(self.discrete_variable))
+                try:
+                    cbar_name = from_list(None, cmaps.paint_clist[0:len(self.discrete_variable)], len(self.discrete_variable))
+                except:
+                    return
 
             # usual categorical colormap on matplotlib has at max 20 colors (using colorcet the colormap glasbey_bw has n colors )
             # cbar_name = from_list(None, cc.glasbey_bw, len(self.discrete_variable))
