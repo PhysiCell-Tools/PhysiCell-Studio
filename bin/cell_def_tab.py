@@ -6927,7 +6927,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
-        print("---------- update_mechanics_params()")
+        # print("---------- update_mechanics_params()")
         # print("---------- update_mechanics_params(): param_d= ",self.param_d)
         cdname = self.current_cell_def
         # self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
@@ -6946,9 +6946,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'keys 1= {self.param_d.keys()}')
             logging.debug(f'keys 2= {self.param_d[cdname]["cell_adhesion_affinity"].keys()}')
 
-            print(f'key 0= {self.cell_adhesion_affinity_celltype}')
-            print(f'keys 1= {self.param_d.keys()}')
-            print(f'keys 2= {self.param_d[cdname]["cell_adhesion_affinity"].keys()}')
+            # print(f'key 0= {self.cell_adhesion_affinity_celltype}')
+            # print(f'keys 1= {self.param_d.keys()}')
+            # print(f'keys 2= {self.param_d[cdname]["cell_adhesion_affinity"].keys()}')
 
             if self.cell_adhesion_affinity_celltype is not None:
                 try:
@@ -7293,14 +7293,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
+        # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
         # print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
         # cdname = it.text(0)
         # if col > 0:  # only allow editing cell type name, not ID
             # return
         # self.current_cell_def = it.text(col)
         self.current_cell_def = it.text(0)
-        print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
+        # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
 
         # for k in self.param_d.keys():
         #     print(" ===>>> ",k, " : ", self.param_d[k])
