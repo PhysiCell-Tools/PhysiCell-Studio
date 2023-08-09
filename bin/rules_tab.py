@@ -593,7 +593,8 @@ class Rules(QWidget):
         if self.nanohub_flag:
             self.import_rules_button.setEnabled(True)
         self.import_rules_button.setFixedWidth(100)
-        self.import_rules_button.setStyleSheet("background-color: lightgreen")
+        # self.import_rules_button.setStyleSheet("background-color: lightgreen")
+        self.import_rules_button.setStyleSheet("background-color: yellow")
         self.import_rules_button.clicked.connect(self.import_rules_cb)
         hlayout.addWidget(self.import_rules_button) 
         # hbox.addWidget(self.load_rules_button) 
@@ -1180,11 +1181,9 @@ class Rules(QWidget):
 
         if os.path.isfile(full_rules_fname):
             try:
-                # with open("config/rules.csv", 'rU') as f:
-                with open(full_rules_fname, 'rU') as csvfile:
+                with open(full_rules_fname, 'r') as csvfile:
                     csv_reader = csv.reader(self.strip_comments(csvfile))
                     # print("     fill_rules():  past csv.reader")
-                    # with open(full_rules_fname, 'rU') as f:
                     irow = self.num_rules  # append
                     for elm in csv_reader:
                         # csv_reader_obj = csv.reader(f)
@@ -1773,7 +1772,6 @@ class Rules(QWidget):
         full_rules_fname = os.path.abspath(os.path.join(".",folder_name, file_name))
         # if os.path.isfile(full_rules_fname):
         try:
-            # with open("config/rules.csv", 'rU') as f:
             with open(full_rules_fname, 'w') as f:
                 # rules_text = self.rules_text.toPlainText()
                 # f.write(rules_text )
@@ -2053,36 +2051,13 @@ class Rules(QWidget):
             else:
                 self.fill_rules(full_rules_fname)
 
-            # self.fill_rules(full_rules_fname)
-            # self.fill_rules(folder_name, file_name)
-
-            # if os.path.isfile(full_rules_fname):
-            #     try:
-            #         # with open("config/rules.csv", 'rU') as f:
-            #         with open(full_rules_fname, 'rU') as f:
-            #             text = f.read()
-            #             self.rules_text.setPlainText(text)
-            #     except Exception as e:
-            #     # self.dialog_critical(str(e))
-            #     # print("error opening config/cells_rules.csv")
-            #         print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
-            #         logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
-            #         # sys.exit(1)
-            # else:
-            #     print(f'{full_rules_fname} is not a valid file')
-            #     logging.error(f'{full_rules_fname} is not a valid file')
-
         # if no rules are defined in the .xml, set default folder, file and enable them in the tab
         else:  # should empty the Rules tab
             # self.rules_text.setPlainText("")
-            # self.rules_folder.setText("")
-            # self.rules_file.setText("")
-            # self.rules_enabled.setChecked(False)
             self.rules_folder.setText("config")
             self.rules_file.setText("rules.csv")
             self.rules_enabled.setChecked(True)
 
-            # self.rules_table.clear()  # NO, this is not the droid you're looking for
             self.clear_rules()
         return
 

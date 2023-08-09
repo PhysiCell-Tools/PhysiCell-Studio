@@ -80,6 +80,8 @@ class ICs(QWidget):
         super().__init__()
         # global self.config_params
 
+        self.create_point = False
+
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
 
@@ -126,7 +128,7 @@ class ICs(QWidget):
 
         self.o1_value = 0.
         self.o2_value = 360.
-        self.o3_value = 0.
+        self.odel_value = 0.
 
         # self.config_file = "mymodel.xml"
         # self.reset_model_flag = True
@@ -220,6 +222,7 @@ class ICs(QWidget):
         # self.geom_combobox.addItem("annulus(2D)/shell(3D)")
         self.geom_combobox.addItem("box")
         self.geom_combobox.addItem("ring")
+        self.geom_combobox.addItem("point")
         self.geom_combobox.setFixedWidth(180)
         self.geom_combobox.currentIndexChanged.connect(self.geom_combobox_changed_cb)
         hbox.addWidget(self.geom_combobox)
@@ -416,21 +419,20 @@ class ICs(QWidget):
         hbox.addWidget(self.o2val)
 
         #------
-        label = QLabel("o3")
+        label = QLabel("mod")
         label.setFixedWidth(30)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
 
-        self.o3val = QLineEdit()
-        self.o3val.setFixedWidth(fixed_width_value)
-        self.o3val.setEnabled(False)
+        self.odelw = QLineEdit()
+        self.odelw.setFixedWidth(fixed_width_value)
         # self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
-        self.o3val.setText(str(self.r3_value))
+        self.odelw.setText("1")
         # self.r3val.returnPressed.connect(self.rval_cb)
-        self.o3val.textChanged.connect(self.oval_cb)
+        self.odelw.textChanged.connect(self.odelw_cb)
         # self.r3val.setFixedWidth(cvalue_width)
-        self.o3val.setValidator(QtGui.QDoubleValidator(-360.,360.,2))
-        hbox.addWidget(self.o3val)
+        self.odelw.setValidator(QtGui.QIntValidator(1,99))
+        hbox.addWidget(self.odelw)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -501,7 +503,8 @@ class ICs(QWidget):
         hbox = QHBoxLayout()
         self.save_button = QPushButton("Save")
         self.save_button.setFixedWidth(btn_width)
-        self.save_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        # self.save_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.save_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         # self.plot_button.clicked.connect(self.uniform_random_pts_annulus_cb)
         self.save_button.clicked.connect(self.save_cb)
         hbox.addWidget(self.save_button)
@@ -639,16 +642,35 @@ class ICs(QWidget):
             self.r2_value = float(self.r2val.text())
             self.r3_value = float(self.r3val.text())
             # print(self.r1_value, self.r2_value)
+
+            # delta_theta = np.arcsin(self.cell_radius / self.r2_value)
+            # print("rval_cb(): delta_theta= ",delta_theta)
+            # self.odelw.setText(f'{delta_theta:.6f}')
         except:
             pass
         # self.update_plots()
 
+    def odelw_cb(self):
+        print("odelw_cb(): ",self.odelw.text())
+        try:
+            if int(self.odelw.text()) < 1:
+                self.odelw.setText("1")
+        except:
+            # self.odelw.setText("1")
+            pass
+
     def oval_cb(self):
         # print("----- oval_cb:")
+        rval = self.cell_radius
+        R = self.r2_value
+        # delta_theta = np.arcsin(rval / R)
+        # print("oval_cb(): delta_theta= ",delta_theta)
+        # self.odelw.setText(f'{delta_theta:.6f}')
+
         try:  # due to the initial callback
             self.o1_value = float(self.o1val.text())
             self.o2_value = float(self.o2val.text())
-            self.o3_value = float(self.o3val.text())
+            # self.odel_value = float(self.odelw.text())
             # print(self.r1_value, self.r2_value)
         except:
             pass
@@ -709,22 +731,30 @@ class ICs(QWidget):
     def enable_ring_params(self, bval):
         self.o1val.setEnabled(bval)
         self.o2val.setEnabled(bval)
+        self.odelw.setEnabled(bval)
 
         # for now, until 3D even possible
-        self.o3val.setEnabled(False)
-        self.o3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        # self.odelw.setEnabled(False)
+        # self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
 
         if bval:
             self.o1val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             self.o2val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            self.odelw.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+            # rval = self.cell_radius
+            # R = self.r2_value
+            # delta_theta = np.arcsin(rval / R)
+            # print("delta_theta= ",delta_theta)
+            # self.odelw.setText(f'{delta_theta:.6f}')
         else:
             self.o1val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.o2val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
 
     def enable_3Dwidgets(self, bval):
         print("----- enable_3Dwidgets: bval = ",bval)
         self.z0val.setEnabled(bval)
-        self.o3val.setEnabled(bval)
+        # self.odelw.setEnabled(bval)
 
         if self.geom_combobox.currentText() == "box":
             self.r3val.setEnabled(False)
@@ -741,7 +771,7 @@ class ICs(QWidget):
             print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
-            self.o3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+            self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
         
     def set_to_origin(self):
         self.x0_value = self.y0_value = self.z0_value = 0.
@@ -762,20 +792,30 @@ class ICs(QWidget):
         # print("----- geom_combobox_changed_cb: idx = ",idx)
         # print("----- geom_combobox_changed_cb: geom_combobox.currentText() = ",self.geom_combobox.currentText())
         sel_str = self.geom_combobox.currentText()
-        if not self.zeq0.isChecked():
-            if sel_str == "box":
-                self.r3val.setEnabled(True)
-                self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
-                self.enable_ring_params(False)
-            elif sel_str == "ring":
-                self.enable_ring_params(True)
-                # self.r3val.setEnabled(True)
-                # self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
-            else:
-                self.r3val.setEnabled(False)
-                self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
-                self.enable_ring_params(False)
+        # if not self.zeq0.isChecked():
+        #     self.create_point = False
+        #     if sel_str == "point":
+        #         self.create_point = True
+        #         print("------- setting 3D point")
+        #         return
+        #     elif sel_str == "box":
+        #         self.r3val.setEnabled(True)
+        #         self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+        #         self.enable_ring_params(False)
+        #     elif sel_str == "ring":
+        #         self.enable_ring_params(True)
+        #         # self.r3val.setEnabled(True)
+        #         # self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
+        #     else:
+        #         self.r3val.setEnabled(False)
+        #         self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
+        #         self.enable_ring_params(False)
 
+        self.create_point = False
+        if self.geom_combobox.currentText().find("point") >= 0:
+            self.create_point = True
+            # print("------- setting point")
+            return
         if self.geom_combobox.currentText().find("ring") >= 0:
             self.enable_ring_params(True)
             # print("got ring!")
@@ -841,10 +881,64 @@ class ICs(QWidget):
         self.canvas.draw()
 
 
+    def button_press(self,event):
+        if self.create_point:
+            # print("------ button_press()")
+            xval = event.xdata  # or "None" if outside plot domain
+            yval = event.ydata
+            zval = 0.0
+            # print("event.inaxes", event.inaxes)  # Axes(0.125,0.146794;0.775x0.696412)
+            # print("x", event.x)  # e.g.,750
+            # print("y", event.y)  # e.g., 562
+            # print("size=",self.canvas.size())
+
+            if self.create_point and (xval is not None):
+                xlist = deque()
+                ylist = deque()
+                rlist = deque()
+                rgba_list = deque()
+                rval = self.cell_radius
+
+                # print("event.xdata (xval)=", xval)
+                # print("event.ydata (yval)=", yval)
+                cell_type_index = self.celltype_combobox.currentIndex()
+                xlist.append(xval)
+                ylist.append(yval)
+                # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                rlist.append(rval)
+                self.cell_radii.append(self.cell_radius)
+
+                self.numcells_l.append(1)
+
+                xvals = np.array(xlist)
+                yvals = np.array(ylist)
+                rvals = np.array(rlist)
+                # rgbas = np.array(rgba_list)
+
+                if (self.cells_edge_checked_flag):
+                    try:
+                        self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                    except (ValueError):
+                        pass
+                else:
+                    self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+
+                self.ax0.set_aspect(1.0)
+
+                self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+                self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+                # self.update_plots()
+                self.canvas.update()
+                self.canvas.draw()
+
+
     def create_figure(self):
         # print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
+        self.canvas.mpl_connect("button_press_event", self.button_press)
         self.canvas.setStyleSheet("background-color:transparent;")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
@@ -966,7 +1060,11 @@ class ICs(QWidget):
         self.reset_plot_range()
         # self.cell_radii = []
         # print("len(self.numcells_l)= ",len(self.numcells_l))
-        print("self.numcells_l= ",self.numcells_l)
+        # print("plot_cb(): self.numcells_l= ",self.numcells_l)
+
+        # if self.create_point:
+        #     print("------- plot list of single points")
+        #     return
 
         ncells = int(self.num_cells.text())
         if ncells <= 0:
@@ -1540,7 +1638,6 @@ class ICs(QWidget):
         rlist = deque()
         rgba_list = deque()
 
-        rval = self.cell_radius
 
         colors = np.empty((0,4))
         count = 0
@@ -1549,7 +1646,22 @@ class ICs(QWidget):
         # ncells = int(self.num_cells.text())
         # print("self.r1_value= ", self.r1_value)
 
+        rval = self.cell_radius
         R = self.r2_value
+        delta_theta = np.arcsin(rval / R)
+
+        try:
+            rmod = int(self.odelw.text())
+        except:
+            msg = "Invalid ring modulo value"
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+            return
+        print("ring(): rmod= ",rmod)
 
         cells_x = np.array([])
         cells_y = np.array([])
@@ -1561,12 +1673,11 @@ class ICs(QWidget):
         start_radians = self.o1_value * np.pi/180.
         end_radians = self.o2_value * np.pi/180.
         # delta_radians = self.o2_value * np.pi/180.
-        delta_theta = np.arcsin(rval / R)
-        # print("delta_theta= ",delta_theta)
 
         # for theta in np.arange(0, max_radians, np.pi/10.):
         # for theta in np.arange(0, max_radians, delta_theta * np.pi/180):
-        for theta in np.arange(start_radians, end_radians, 2*delta_theta):
+        # for theta in np.arange(start_radians, end_radians, delta_theta):
+        for theta in np.arange(start_radians, end_radians, rmod*2*delta_theta):
             # print("theta= ",theta)
             xval = self.x0_value + R * np.cos(theta)
             yval = self.y0_value + R * np.sin(theta)
