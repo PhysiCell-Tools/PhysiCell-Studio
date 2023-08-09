@@ -222,7 +222,7 @@ class ICs(QWidget):
         # self.geom_combobox.addItem("annulus(2D)/shell(3D)")
         self.geom_combobox.addItem("box")
         self.geom_combobox.addItem("ring")
-        # self.geom_combobox.addItem("point")
+        self.geom_combobox.addItem("point")
         self.geom_combobox.setFixedWidth(180)
         self.geom_combobox.currentIndexChanged.connect(self.geom_combobox_changed_cb)
         hbox.addWidget(self.geom_combobox)
@@ -789,8 +789,8 @@ class ICs(QWidget):
             self.set_to_origin()
 
     def geom_combobox_changed_cb(self,idx):
-        print("----- geom_combobox_changed_cb: idx = ",idx)
-        print("----- geom_combobox_changed_cb: geom_combobox.currentText() = ",self.geom_combobox.currentText())
+        # print("----- geom_combobox_changed_cb: idx = ",idx)
+        # print("----- geom_combobox_changed_cb: geom_combobox.currentText() = ",self.geom_combobox.currentText())
         sel_str = self.geom_combobox.currentText()
         # if not self.zeq0.isChecked():
         #     self.create_point = False
@@ -811,9 +811,10 @@ class ICs(QWidget):
         #         self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
         #         self.enable_ring_params(False)
 
+        self.create_point = False
         if self.geom_combobox.currentText().find("point") >= 0:
             self.create_point = True
-            print("------- setting point")
+            # print("------- setting point")
             return
         if self.geom_combobox.currentText().find("ring") >= 0:
             self.enable_ring_params(True)
@@ -882,13 +883,56 @@ class ICs(QWidget):
 
     def button_press(self,event):
         if self.create_point:
-            print("------ button_press")
-            print("event.xdata", event.xdata)
-            print("event.ydata", event.ydata)
-            print("event.inaxes", event.inaxes)
-            print("x", event.x)
-            print("y", event.y)
-            print("size=",self.canvas.size())
+            # print("------ button_press()")
+            xval = event.xdata  # or "None" if outside plot domain
+            yval = event.ydata
+            zval = 0.0
+            # print("event.inaxes", event.inaxes)  # Axes(0.125,0.146794;0.775x0.696412)
+            # print("x", event.x)  # e.g.,750
+            # print("y", event.y)  # e.g., 562
+            # print("size=",self.canvas.size())
+
+            if self.create_point and (xval is not None):
+                xlist = deque()
+                ylist = deque()
+                rlist = deque()
+                rgba_list = deque()
+                rval = self.cell_radius
+
+                # print("event.xdata (xval)=", xval)
+                # print("event.ydata (yval)=", yval)
+                cell_type_index = self.celltype_combobox.currentIndex()
+                xlist.append(xval)
+                ylist.append(yval)
+                # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
+                self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
+                rlist.append(rval)
+                self.cell_radii.append(self.cell_radius)
+
+                self.numcells_l.append(1)
+
+                xvals = np.array(xlist)
+                yvals = np.array(ylist)
+                rvals = np.array(rlist)
+                # rgbas = np.array(rgba_list)
+
+                if (self.cells_edge_checked_flag):
+                    try:
+                        self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                    except (ValueError):
+                        pass
+                else:
+                    self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+
+                self.ax0.set_aspect(1.0)
+
+                self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+                self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+
+                # self.update_plots()
+                self.canvas.update()
+                self.canvas.draw()
+
 
     def create_figure(self):
         # print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
@@ -1016,11 +1060,11 @@ class ICs(QWidget):
         self.reset_plot_range()
         # self.cell_radii = []
         # print("len(self.numcells_l)= ",len(self.numcells_l))
-        print("self.numcells_l= ",self.numcells_l)
+        # print("plot_cb(): self.numcells_l= ",self.numcells_l)
 
-        if self.create_point:
-            print("------- plot list of single points")
-            return
+        # if self.create_point:
+        #     print("------- plot list of single points")
+        #     return
 
         ncells = int(self.num_cells.text())
         if ncells <= 0:
