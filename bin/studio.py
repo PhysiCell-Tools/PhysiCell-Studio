@@ -523,7 +523,6 @@ class PhysiCellXMLCreator(QWidget):
             self.vis_tab.reset_model()
             
 
-
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
 

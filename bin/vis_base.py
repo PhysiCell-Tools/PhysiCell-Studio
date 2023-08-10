@@ -342,6 +342,9 @@ class VisBase():
         self.rules_tab = rules_tab
         self.ics_tab = ics_tab
 
+        self.png_frame = 0
+        self.save_png= False
+
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
@@ -2851,6 +2854,7 @@ class VisBase():
 
         my_display_data = self.get_simularium_info()
         if my_display_data is None:
+            print("Error: get_simularium_info is None")
             return
 
         my_xrange = self.xmax - self.xmin
