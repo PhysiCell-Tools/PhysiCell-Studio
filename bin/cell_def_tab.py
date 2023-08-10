@@ -3416,6 +3416,28 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        #------
+        label = QLabel("immunogenicity")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        # idr += 1
+        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.immunogenicity_dropdown = QComboBox()
+        self.immunogenicity_dropdown.setStyleSheet(self.combobox_stylesheet)
+        glayout.addWidget(self.immunogenicity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
+        # self.immunogenicity_dropdown.currentIndexChanged.connect(self.immunogenicity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
+
+        # self.transformation_rate = QLineEdit_color()
+        # self.transformation_rate.textChanged.connect(self.transformation_rate_changed)
+        # self.transformation_rate.setValidator(QtGui.QDoubleValidator())
+        # glayout.addWidget(self.transformation_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        # units = QLabel(self.default_rate_units)
+        # units.setFixedWidth(self.units_width)
+        # units.setAlignment(QtCore.Qt.AlignLeft)
+        # glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
         #---------
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
@@ -3485,6 +3507,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def transformation_rate_changed(self,text):
         # print("transformation_rate_changed:  text=",text)
         celltype_name = self.cell_transformation_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
+        self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+    #--------------------------------------------------------
+    def immunogenicity_changed(self,text):
+        # print("transformation_rate_changed:  text=",text)
+        celltype_name = self.immunogenicity_dropdown.currentText()
         # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
 
@@ -6010,6 +6038,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if idx == -1:
             return
 
+    def immunogenicity_dropdown_changed_cb(self, idx):
+        # print('------ immunogenicity_dropdown_changed_cb(): idx = ',idx)
+        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
+
+        celltype_name = self.cell_transformation_dropdown.currentText()
+        # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
+        self.transformation_rate_celltype = celltype_name
+        # print("   self.transformation_rate_celltype= ",celltype_name)
+
+        if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
+            self.transformation_rate.setText(self.param_d[self.current_cell_def]["transformation_rate"][self.transformation_rate_celltype])
+        else:
+            self.transformation_rate.setText(self.default_sval)
+
+        if idx == -1:
+            return
+
 
     #---------------------------
     # @QtCore.Slot()
@@ -6198,6 +6243,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attack_rate_dropdown.clear()
         self.fusion_rate_dropdown.clear()
         self.cell_transformation_dropdown.clear()
+        self.immunogenicity_dropdown.clear()
 
         self.cell_adhesion_affinity_dropdown.clear()
         uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
@@ -6213,6 +6259,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.attack_rate_dropdown.addItem(name)
                 self.fusion_rate_dropdown.addItem(name)
                 self.cell_transformation_dropdown.addItem(name)
+                self.immunogenicity_dropdown.addItem(name)
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
@@ -6230,6 +6277,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attack_rate_dropdown.addItem(name)
         self.fusion_rate_dropdown.addItem(name)
         self.cell_transformation_dropdown.addItem(name)
+        self.immunogenicity_dropdown.addItem(name)
 
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
@@ -6391,6 +6439,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.fusion_rate_dropdown.setItemText(idx, new_name)
             if old_name == self.cell_transformation_dropdown.itemText(idx):
                 self.cell_transformation_dropdown.setItemText(idx, new_name)
+            if old_name == self.immunogenicity_dropdown.itemText(idx):
+                self.immunogenicity_dropdown.setItemText(idx, new_name)
+
             if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
             if self.ics_tab and (old_name == self.ics_tab.celltype_combobox.itemText(idx)):
@@ -7386,6 +7437,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
                 subelm2.text = self.param_d[cdef]['cycle_live_duration00']
+                live_duration = float(self.param_d[cdef]['cycle_live_duration00'])
+                if abs(live_duration) < 1.e-6:
+                    msg = f"WARNING: {cdef} has Cycle=live with duration ~= 0 which will result in unrealistically high proliferation!"
+                    print(msg)
+                    msgBox = QMessageBox()
+                    msgBox.setTextFormat(Qt.RichText)
+                    msgBox.setText(msg)
+                    msgBox.setStandardButtons(QMessageBox.Ok)
+                    returnValue = msgBox.exec()
+                    # sys.exit(-1)
                 subelm2.tail = self.indent12
 
             elif combo_widget_idx == 1:
@@ -8018,7 +8079,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def fill_xml_interactions(self,pheno,cdef):
         if self.debug_print_fill_xml:
             logging.debug(f'------------------- fill_xml_interactions():  cdef= {cdef}')
-            # print(f'------------------- fill_xml_interactions():  cdef= {cdef}')
+            print(f'------------------- fill_xml_interactions():  cdef= {cdef}')
 
         interactions = ET.SubElement(pheno, "cell_interactions")
         interactions.text = self.indent12  # affects indent of child
@@ -8037,12 +8098,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # print("live_phagocytosis_rate keys=",self.param_d[cdef]['live_phagocytosis_rate'].keys())
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
             logging.debug(f'  key in live_phagocytosis_rate= {key}')
-            # print(f'  key in live_phagocytosis_rate= {key}')
+            print(f'  key in live_phagocytosis_rate= {key}')
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
             logging.debug(f'{key}  --> {val}')
-            # print(f'{key}  --> {val}')
+            print(f'{key}  --> {val}')
             elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
