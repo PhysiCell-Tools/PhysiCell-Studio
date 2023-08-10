@@ -134,6 +134,12 @@ class FilterUI2DWindow(QWidget):
         self.mech_grid_checkbox.clicked.connect(self.mech_grid_cb)
         glayout.addWidget(self.mech_grid_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
+        #--------------------------
+        self.save_png_checkbox = QCheckBox_custom('save frame*.png')
+        self.save_png_checkbox.clicked.connect(self.save_png_cb)
+        idx_row += 1
+        glayout.addWidget(self.save_png_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+
         #--------------------
         # axes_act = view3D_menu.addAction("Axes")
 
@@ -217,6 +223,10 @@ class FilterUI2DWindow(QWidget):
 
     def mech_grid_cb(self):
         self.vis_tab.mech_grid_cb(self.mech_grid_checkbox.isChecked())
+
+    def save_png_cb(self):
+        self.vis_tab.png_frame = 0
+        self.vis_tab.save_png = self.save_png_checkbox.isChecked()
         
     #--------
     def yz_slice_cb(self):

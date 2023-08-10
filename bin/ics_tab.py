@@ -207,6 +207,7 @@ class ICs(QWidget):
         hbox.addWidget(label)
 
         self.celltype_combobox = QComboBox()
+        self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)
         # self.celltype_combobox.setStyleSheet(self.combobox_stylesheet)
         self.celltype_combobox.setFixedWidth(200)  # how wide is sufficient?
         hbox.addWidget(self.celltype_combobox)
@@ -724,8 +725,15 @@ class ICs(QWidget):
         # print('field_min_max= ',self.field_min_max)
         # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
 
-    # def celltype_combobox_changed_cb(self,idx):
-        # print("----- celltype_combobox_changed_cb: idx = ",idx)
+    def celltype_combobox_changed_cb(self,idx):
+        try:
+            # print("----- celltype_combobox_changed_cb: idx = ",idx)
+            cdef = self.celltype_combobox.currentText()
+            volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+            self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
+            # print("self.cell_radius= ",self.cell_radius)
+        except:
+            pass
         # self.update_plots()
 
     def enable_ring_params(self, bval):
@@ -897,6 +905,9 @@ class ICs(QWidget):
                 ylist = deque()
                 rlist = deque()
                 rgba_list = deque()
+                # cdef = self.celltype_combobox.currentText()
+                # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+                # self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
                 rval = self.cell_radius
 
                 # print("event.xdata (xval)=", xval)
@@ -1077,10 +1088,10 @@ class ICs(QWidget):
             returnValue = msgBox.exec()
             return
 
-        cdef = self.celltype_combobox.currentText()
-        volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
-        self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
-        logging.debug(f'ics_tab.py: volume= {volume}, radius= {self.cell_radius}')
+        # cdef = self.celltype_combobox.currentText()
+        # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+        # self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
+        # logging.debug(f'ics_tab.py: volume= {volume}, radius= {self.cell_radius}')
 
         if "annulus" in self.geom_combobox.currentText():
             if self.r2_value <= self.r1_value:
@@ -1863,8 +1874,9 @@ class ICs(QWidget):
 
                         # print('xval,yval=',xval,yval)
                         # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
-                        volume = float(self.celldef_tab.param_d[cell_type_name]["volume_total"])
-                        rval = (volume * 0.75 / np.pi) ** (1./3)
+                        # volume = float(self.celldef_tab.param_d[cell_type_name]["volume_total"])
+                        # rval = (volume * 0.75 / np.pi) ** (1./3)
+                        rval = self.cell_radius
 
                         self.csv_array = np.append(self.csv_array,[[xval,yval, zval, cell_type_index]],axis=0)
                         # rlist.append(rval)

@@ -66,6 +66,7 @@ class Vis(VisBase, QWidget):
         super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
 
         self.figure = None
+        # self.png_frame = 0
 
         # self.vis2D = True
         # self.model3D_flag = model3D_flag
@@ -275,6 +276,12 @@ class Vis(VisBase, QWidget):
 
         self.canvas.update()
         self.canvas.draw()
+
+        if self.save_png:
+            self.png_frame += 1
+            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
+            print("---->  ", png_file)
+            self.figure.savefig(png_file)
 
 
     #------------------------------
