@@ -63,6 +63,8 @@ class SubstrateDef(QWidget):
         self.default_rate_units = "1/min"
         self.dirichlet_units = "mmHG"
 
+        self.rules_tab = None   # update in studio.py
+
         # self.stacked_w = QStackedWidget()
         # self.stack_w = []
         # self.stack_w.append(QStackedWidget())
@@ -750,6 +752,11 @@ class SubstrateDef(QWidget):
 
         # rwh: BEWARE of mutating the dict?
         del self.param_d[self.current_substrate]
+
+        # do *after* removing from param_d keys.
+        if self.rules_tab:
+            # self.rules_tab.delete_substrate(item_idx)
+            self.rules_tab.delete_substrate(self.current_substrate)
 
         # may need to make a copy instead??
         # new_dict = {key:val for key, val in self.param_d.items() if key != 'Mani'}

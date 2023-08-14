@@ -403,6 +403,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
+            self.microenv_tab.rules_tab = self.rules_tab
             self.celldef_tab.rules_tab = self.rules_tab
             if self.nanohub_flag:
                 self.rules_tab.absolute_data_dir = self.absolute_data_dir
