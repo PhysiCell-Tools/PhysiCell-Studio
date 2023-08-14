@@ -884,6 +884,14 @@ class Rules(QWidget):
         self.fill_responses_widget()
 
     #-----------------------------------------------------------
+    def delete_substrate(self,name):
+        # print(f"-------- rules_tab.py: delete_substrate(), self.substrates = {self.substrates}")
+        # print(f"     name = {name}")
+        self.substrates.remove(name)
+        self.fill_signals_widget()
+        self.fill_responses_widget()
+
+    #-----------------------------------------------------------
     def add_new_substrate(self,name):
         # print("rules_tab: add_new_substrate(): name= ",name)
         self.substrates.append(name)
@@ -903,6 +911,7 @@ class Rules(QWidget):
         self.fill_signals_widget()
         self.fill_responses_widget()
 
+
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
         # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
@@ -916,7 +925,7 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def celltype_combobox_changed_cb(self, idx):
         self.celltype_name = self.celltype_combobox.currentText()
-        print("----------- celltype_combobox_changed_cb(): ", self.celltype_name)
+        # print("----------- celltype_combobox_changed_cb(): ", self.celltype_name)
         if self.signal:
             print("        signal= ", self.signal)
         print("          ", self.celldef_tab.param_d.keys())
@@ -978,7 +987,7 @@ class Rules(QWidget):
                 if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
                         
         elif btokens[0] in self.substrates:
-            print(f"{btokens[0]} is a substrate")
+            print(f"update_base_value(): {btokens[0]} is a substrate")
             # key1 = btokens[0]
             key1 = 'secretion'
             key2 = btokens[0]
@@ -995,9 +1004,9 @@ class Rules(QWidget):
                 # print("\n---key1= ",self.celldef_tab.param_d[key0][key1])
                 # print("\n---key2= ",self.celldef_tab.param_d[key0][key1][key2])
                 base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
-                print("------- base_val= ",base_val)
+                print("update_base_value(): ------- base_val= ",base_val)
             except:
-                print("---- got exception")
+                print("update_base_value(): ---- got exception")
                 return
         elif btokens[0] == 'apoptosis':
             base_val = self.celldef_tab.param_d[key0]['apoptosis_death_rate']
@@ -1121,6 +1130,7 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def response_combobox_changed_cb(self, idx):
+        print("------- response_combobox_changed_cb(): idx={idx}")
 
         self.behavior = self.response_combobox.currentText()
         # print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
