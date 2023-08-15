@@ -541,7 +541,7 @@ class PhysiCellXMLCreator(QWidget):
         # self.tabWidget.setCurrentIndex(2)  # rwh/debug: select Cell Types
 
     def tab_change_cb(self,index: int):
-        # print("\n-------- tab index=",index)
+        # print("\nstudio.py: -------- tab index=",index)
         # if index == 0:
         #     studio_app.resize(1101,770) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
         #     studio_app.resize(1101,970) # recall: print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
@@ -549,6 +549,7 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.update_3D()
 
         elif self.rules_tab_index and (index == self.rules_tab_index): 
+            self.rules_tab.update_base_value()
             if self.rules_tab.update_rules_for_custom_data:
                 print("studio.py: need to update Rules comboboxes for changed custom data")
                 self.rules_tab.fill_signals_widget()
