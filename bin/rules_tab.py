@@ -952,7 +952,7 @@ class Rules(QWidget):
         # self.response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
 
     def update_base_value(self):
-        print("\n-------update_base_value(self)")
+        # print("\n-------update_base_value(self)")
         behavior = self.response_combobox.currentText()
         # key0 = self.celltype_name
         key0 = self.celltype_combobox.currentText()
