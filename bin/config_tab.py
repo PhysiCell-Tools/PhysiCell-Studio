@@ -386,10 +386,10 @@ class Config(QWidget):
         self.plot_substrate_svg.clicked.connect(self.plot_substrate_svg_clicked)
         hbox.addWidget(self.plot_substrate_svg) # w, row, column, rowspan, colspan
 
-        self.svg_substrate_to_plot = QComboBox()
-        self.svg_substrate_to_plot.setFixedWidth(100)
-        self.svg_substrate_to_plot.setStyleSheet(self.combobox_stylesheet)
-        hbox.addWidget(self.svg_substrate_to_plot)
+        self.svg_substrate_to_plot_dropdown = QComboBox()
+        self.svg_substrate_to_plot_dropdown.setFixedWidth(200)
+        self.svg_substrate_to_plot_dropdown.setStyleSheet(self.combobox_stylesheet)
+        hbox.addWidget(self.svg_substrate_to_plot_dropdown)
 
         self.plot_substrate_limits = QCheckBox_custom("Limits enabled")
         self.plot_substrate_limits.setFixedWidth(130)
@@ -544,11 +544,11 @@ class Config(QWidget):
         self.svg_interval.setEnabled(bval)
         if bval:
             self.svg_interval.setStyleSheet("background-color: white; color: black")
-            self.svg_substrate_to_plot.setStyleSheet("background-color: white; color: black")
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
             # self.plot_substrate_svg.setStyleSheet("background-color: #ffffff")
         else:
             self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
-            self.svg_substrate_to_plot.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_limits.setChecked(False)
             self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
@@ -557,12 +557,12 @@ class Config(QWidget):
 
     def plot_substrate_svg_clicked(self, bval):
         # print("plot_substrate_svg_clicked: bval=",bval)
-        self.svg_substrate_to_plot.setEnabled(bval)
+        self.svg_substrate_to_plot_dropdown.setEnabled(bval)
         # come back to this to include substrate and cmin and cmax
         if bval:
-            self.svg_substrate_to_plot.setStyleSheet("background-color: white; color: black")
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
         else:
-            self.svg_substrate_to_plot.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
 
     def plot_substrate_limits_clicked(self, bval):
         # print("plot_substrate_limits_clicked: bval=",bval)
@@ -678,7 +678,7 @@ class Config(QWidget):
         self.svg_clicked(bval)
 
         if self.xml_root.find(".//SVG//plot_substrate//substrate") is not None:
-            self.svg_substrate_to_plot.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
+            self.svg_substrate_to_plot_dropdown.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
             # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
             bval = False
             uep = self.xml_root.find(".//SVG//plot_substrate")
@@ -687,7 +687,7 @@ class Config(QWidget):
             self.plot_substrate_svg.setChecked(bval)
             self.plot_substrate_svg_clicked(bval)
         else:
-            self.svg_substrate_to_plot.itemText(0)
+            self.svg_substrate_to_plot_dropdown.itemText(0)
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_svg_clicked(False)
 
@@ -869,7 +869,7 @@ class Config(QWidget):
             self.xml_root.find(".//SVG//plot_substrate").attrib['limits'] = 'true'
         else:
             self.xml_root.find(".//SVG//plot_substrate").attrib['limits'] = 'false'
-        self.xml_root.find(".//SVG//plot_substrate//substrate").text = self.svg_substrate_to_plot.text()
+        self.xml_root.find(".//SVG//plot_substrate//substrate").text = self.svg_substrate_to_plot_dropdown.currentText()
         if self.plot_substrate_limits.isChecked():
             if self.xml_root.find(".//SVG//plot_substrate//min_conc") is None:
                 elm = ET.Element("min_conc")
@@ -972,19 +972,31 @@ class Config(QWidget):
 
     def fill_substrates_comboboxes(self):
         logging.debug(f'cell_def_tab.py: ------- fill_substrates_comboboxes')
-        # print("self.substrate_list = ",self.substrate_list)
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
-        self.svg_substrate_to_plot.clear()
+        self.svg_substrate_to_plot_dropdown.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
-        # vp = []   # pointers to <variable> nodes
         if uep:
             idx = 0
             for var in uep.findall('variable'):
-                # vp.append(var)
                 logging.debug(f' --> {var.attrib["name"]}')
                 name = var.attrib['name']
                 self.substrate_list.append(name)
-                self.svg_substrate_to_plot.addItem(name) 
+                self.svg_substrate_to_plot_dropdown.addItem(name)
+
+    def add_new_substrate(self, sub_name):
+        self.substrate_list.append(sub_name)
+        self.svg_substrate_to_plot_dropdown.addItem(sub_name)
+
+    def delete_substrate(self, item_idx, new_substrate):
+        subname = self.svg_substrate_to_plot_dropdown.itemText(item_idx)
+        self.substrate_list.remove(subname)
+        self.svg_substrate_to_plot_dropdown.removeItem(item_idx)
+
+    def renamed_substrate(self, old_name,new_name):
+        self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
+        for idx in range(len(self.substrate_list)):
+            if old_name == self.svg_substrate_to_plot_dropdown.itemText(idx):
+                self.svg_substrate_to_plot_dropdown.setItemText(idx, new_name)
 
     #-----------------------------------------------------------------------------------------
     
