@@ -361,11 +361,7 @@ class Config(QWidget):
         vbox.addLayout(hbox)
 
         #------
-
-        # vbox = QVBoxLayout()
-        # vbox.addLayout(self.config_tab_layout)
-
-        #------------------
+        
         hbox = QHBoxLayout()
 
         label = QLabel("Plot substrate:")
@@ -374,11 +370,6 @@ class Config(QWidget):
         icol = 0
         # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
         hbox.addWidget(label)
-
-        # label = QLabel("plot substrate")
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idx_row += 1
-        # self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.plot_substrate_svg = QCheckBox_custom("enable")
         self.plot_substrate_svg.setFixedWidth(80)
@@ -420,12 +411,6 @@ class Config(QWidget):
         #------
         hbox.addStretch()
         vbox.addLayout(hbox)
-        
-        # self.plot_substrate_svg = QCheckBox_custom("plot substrate")
-        # self.plot_substrate_svg.setFixedWidth(120)
-        # self.plot_substrate_svg.setChecked(True)
-        # self.plot_substrate_svg.clicked.connect(self.plot_substrate_svg_clicked)
-        # hbox.addWidget(self.plot_substrate_svg)
 
         #============  Cells IC ================================
         label = QLabel("Initial conditions of cells (x,y,z, type)")
