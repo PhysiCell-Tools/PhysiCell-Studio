@@ -361,7 +361,7 @@ class Config(QWidget):
         vbox.addLayout(hbox)
 
         #------
-        
+
         hbox = QHBoxLayout()
 
         label = QLabel("Plot substrate:")
@@ -671,26 +671,37 @@ class Config(QWidget):
         self.save_svg.setChecked(bval)
         self.svg_clicked(bval)
 
-        self.svg_substrate_to_plot.setText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
-        # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
-        bval = False
-        uep = self.xml_root.find(".//SVG//plot_substrate")
-        # if self.xml_root.find(".//SVG//plot_substrate//enable").text.lower() == 'true':
-        if uep.attrib['enabled'].lower() == 'true':
-            bval = True
-        self.plot_substrate_svg.setChecked(bval)
-        self.plot_substrate_svg_clicked(bval)
+        try:
+            self.svg_substrate_to_plot.setText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
+            # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
+            bval = False
+            uep = self.xml_root.find(".//SVG//plot_substrate")
+            # if self.xml_root.find(".//SVG//plot_substrate//enable").text.lower() == 'true':
+            if uep.attrib['enabled'].lower() == 'true':
+                bval = True
+            self.plot_substrate_svg.setChecked(bval)
+            self.plot_substrate_svg_clicked(bval)
+        except:
+            self.svg_substrate_to_plot.setText('')
+            self.plot_substrate_svg.setChecked(False)
+            self.plot_substrate_svg_clicked(False)
 
-        self.svg_substrate_min.setText(self.xml_root.find(".//SVG//plot_substrate//min_conc").text)
-        self.svg_substrate_max.setText(self.xml_root.find(".//SVG//plot_substrate//max_conc").text)
-        # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
-        bval = False
+        limits_included = False
         uep = self.xml_root.find(".//SVG//plot_substrate")
-        # if self.xml_root.find(".//SVG//plot_substrate//enable").text.lower() == 'true':
-        if uep.attrib['limits'].lower() == 'true':
-            bval = True
-        self.plot_substrate_limits.setChecked(bval)
-        self.plot_substrate_limits_clicked(bval)
+        if (uep is not None) and (uep.attrib['limits'].lower() == 'true'):
+            limits_included = True
+
+        if limits_included:
+            if self.xml_root.find(".//SVG//plot_substrate//min_conc") is not None:
+                self.svg_substrate_min.setText(self.xml_root.find(".//SVG//plot_substrate//min_conc").text)
+            else:
+                limits_included = False
+            if self.xml_root.find(".//SVG//plot_substrate//max_conc") is not None:
+                self.svg_substrate_max.setText(self.xml_root.find(".//SVG//plot_substrate//max_conc").text)
+            else:
+                limits_included = False
+        self.plot_substrate_limits.setChecked(limits_included)
+        self.plot_substrate_limits_clicked(limits_included)
 
         self.full_interval.setText(self.xml_root.find(".//full_data//interval").text)
         bval = False
@@ -835,6 +846,15 @@ class Config(QWidget):
         else:
             self.xml_root.find(".//SVG//enable").text = 'false'
         self.xml_root.find(".//SVG//interval").text = self.svg_interval.text()
+
+        if self.xml_root.find(".//SVG//plot_substrate") is None:
+            # add this eleement if it does not exist
+            elm = ET.Element("plot_substrate",
+                                {"enabled":'false', "limits":'false'})
+            ET.SubElement(elm, 'substrate')
+            ET.SubElement(elm, 'min_conc')
+            ET.SubElement(elm, 'max_conc')
+            self.xml_root.find('.//save//SVG').insert(2,elm) # [interval, enable, plot_substrate]
 
         if self.plot_substrate_svg.isChecked():
             self.xml_root.find(".//SVG//plot_substrate").attrib['enabled'] = 'true'
