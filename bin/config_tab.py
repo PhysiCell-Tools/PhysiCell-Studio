@@ -567,7 +567,6 @@ class Config(QWidget):
             if self.plot_substrate_limits.isChecked():
                 self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
                 self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
-
         else:
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_limits.setChecked(False)
@@ -1010,5 +1009,7 @@ class Config(QWidget):
             if old_name == self.svg_substrate_to_plot_dropdown.itemText(idx):
                 self.svg_substrate_to_plot_dropdown.setItemText(idx, new_name)
 
+    def count_substrates(self):
+        return len(self.substrate_list)
     #-----------------------------------------------------------------------------------------
     

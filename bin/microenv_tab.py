@@ -483,6 +483,8 @@ class SubstrateDef(QWidget):
         # self.layout.addWidget(self.scroll_area)
         self.layout.addWidget(splitter)
 
+        self.new_substrate_count = self.config_tab.count_substrates()
+
         # self.layout.addWidget(self.vbox)
 
         # self.layout.addWidget(self.text)
