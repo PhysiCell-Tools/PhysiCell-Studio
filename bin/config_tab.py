@@ -67,6 +67,15 @@ class Config(QWidget):
         """
         self.setStyleSheet(qlineedit_style)
 
+        self.combobox_stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+
+        self.substrate_list = []
+        
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
         
@@ -377,9 +386,9 @@ class Config(QWidget):
         self.plot_substrate_svg.clicked.connect(self.plot_substrate_svg_clicked)
         hbox.addWidget(self.plot_substrate_svg) # w, row, column, rowspan, colspan
 
-        self.svg_substrate_to_plot = QLineEdit()
+        self.svg_substrate_to_plot = QComboBox()
         self.svg_substrate_to_plot.setFixedWidth(100)
-        self.svg_substrate_to_plot.textChanged.connect(self.svg_substrate_changed)
+        self.svg_substrate_to_plot.setStyleSheet(self.combobox_stylesheet)
         hbox.addWidget(self.svg_substrate_to_plot)
 
         self.plot_substrate_limits = QCheckBox_custom("Limits enabled")
@@ -572,11 +581,6 @@ class Config(QWidget):
         if self.sync_output:
             self.full_interval.setText(val)
 
-    def svg_substrate_changed(self, val):
-        # print("svg_substrate_changed(): val=",val)
-        if self.sync_output:
-            self.svg_substrate_to_plot.setText(val)
-
     def svg_substrate_min_changed(self, val):
         # print("svg_substrate_min_changed(): val=",val)
         if self.sync_output:
@@ -620,6 +624,8 @@ class Config(QWidget):
             self.csv_file.setStyleSheet("background-color: lightgray; color: black")
 
     def fill_gui(self):
+        self.fill_substrates_comboboxes()
+
         self.xmin.setText(self.xml_root.find(".//x_min").text)
         self.xmax.setText(self.xml_root.find(".//x_max").text)
         self.xdel.setText(self.xml_root.find(".//dx").text)
@@ -671,18 +677,17 @@ class Config(QWidget):
         self.save_svg.setChecked(bval)
         self.svg_clicked(bval)
 
-        try:
-            self.svg_substrate_to_plot.setText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
+        if self.xml_root.find(".//SVG//plot_substrate//substrate") is not None:
+            self.svg_substrate_to_plot.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
             # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
             bval = False
             uep = self.xml_root.find(".//SVG//plot_substrate")
-            # if self.xml_root.find(".//SVG//plot_substrate//enable").text.lower() == 'true':
             if uep.attrib['enabled'].lower() == 'true':
                 bval = True
             self.plot_substrate_svg.setChecked(bval)
             self.plot_substrate_svg_clicked(bval)
-        except:
-            self.svg_substrate_to_plot.setText('')
+        else:
+            self.svg_substrate_to_plot.itemText(0)
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_svg_clicked(False)
 
@@ -957,3 +962,22 @@ class Config(QWidget):
 
         else:
             print("import_seeding_cb():  full_path_model_name is NOT valid")
+
+    def fill_substrates_comboboxes(self):
+        logging.debug(f'cell_def_tab.py: ------- fill_substrates_comboboxes')
+        # print("self.substrate_list = ",self.substrate_list)
+        self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
+        self.svg_substrate_to_plot.clear()
+        uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
+        # vp = []   # pointers to <variable> nodes
+        if uep:
+            idx = 0
+            for var in uep.findall('variable'):
+                # vp.append(var)
+                logging.debug(f' --> {var.attrib["name"]}')
+                name = var.attrib['name']
+                self.substrate_list.append(name)
+                self.svg_substrate_to_plot.addItem(name) 
+
+    #-----------------------------------------------------------------------------------------
+    
