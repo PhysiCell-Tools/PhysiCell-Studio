@@ -373,8 +373,8 @@ class Config(QWidget):
 
         hbox = QHBoxLayout()
 
-        label = QLabel("Plot substrate:")
-        label.setFixedWidth(90)
+        label = QLabel("Plot SVG substrate:")
+        label.setFixedWidth(120)
         idx_row += 10
         icol = 0
         # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
@@ -540,29 +540,41 @@ class Config(QWidget):
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
 
     def svg_clicked(self, bval):
-        # print("svg_clicked: bval=",bval)
         self.svg_interval.setEnabled(bval)
+        self.plot_substrate_svg.setEnabled(bval)
         if bval:
             self.svg_interval.setStyleSheet("background-color: white; color: black")
-            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
-            # self.plot_substrate_svg.setStyleSheet("background-color: #ffffff")
+            if self.plot_substrate_svg.isChecked():
+                self.svg_substrate_to_plot_dropdown.setEnabled(True)
+                self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
         else:
             self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_to_plot_dropdown.setEnabled(False)
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_svg.setChecked(False)
+            self.plot_substrate_limits.setEnabled(False)
             self.plot_substrate_limits.setChecked(False)
+            self.svg_substrate_min.setEnabled(False)
+            self.svg_substrate_max.setEnabled(False)
             self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
             self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
-        self.plot_substrate_svg.setEnabled(bval)
 
     def plot_substrate_svg_clicked(self, bval):
-        # print("plot_substrate_svg_clicked: bval=",bval)
         self.svg_substrate_to_plot_dropdown.setEnabled(bval)
-        # come back to this to include substrate and cmin and cmax
+        self.plot_substrate_limits.setEnabled(bval)
         if bval:
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
+            if self.plot_substrate_limits.isChecked():
+                self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
+                self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
+
         else:
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
+            self.plot_substrate_limits.setChecked(False)
+            self.svg_substrate_min.setEnabled(False)
+            self.svg_substrate_max.setEnabled(False)
+            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
 
     def plot_substrate_limits_clicked(self, bval):
         # print("plot_substrate_limits_clicked: bval=",bval)
