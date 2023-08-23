@@ -865,8 +865,15 @@ class Config(QWidget):
         else:
             self.xml_root.find(".//SVG//plot_substrate").attrib['limits'] = 'false'
         self.xml_root.find(".//SVG//plot_substrate//substrate").text = self.svg_substrate_to_plot.text()
-        self.xml_root.find(".//SVG//plot_substrate//min_conc").text = self.svg_substrate_min.text()
-        self.xml_root.find(".//SVG//plot_substrate//max_conc").text = self.svg_substrate_max.text()
+        if self.plot_substrate_limits.isChecked():
+            if self.xml_root.find(".//SVG//plot_substrate//min_conc") is None:
+                elm = ET.Element("min_conc")
+                self.xml_root.find('.//save//SVG//plot_substrate').insert(1,elm)
+            self.xml_root.find(".//SVG//plot_substrate//min_conc").text = self.svg_substrate_min.text()
+            if self.xml_root.find(".//SVG//plot_substrate//max_conc") is None:
+                elm = ET.Element("max_conc")
+                self.xml_root.find('.//save//SVG//plot_substrate').insert(2,elm)
+            self.xml_root.find(".//SVG//plot_substrate//max_conc").text = self.svg_substrate_max.text()
         
         if self.save_full.isChecked():
             self.xml_root.find(".//full_data//enable").text = 'true'
