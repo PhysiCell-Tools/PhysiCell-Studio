@@ -348,10 +348,17 @@ class PhysiCellXMLCreator(QWidget):
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
         # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
 
-        # print("\n\n---- studio: post populate_tree_cell_defs():")
+        # self.celldef_tab.enable_interaction_callbacks()
+
+        # print("\n\n---- studio.py: post populate_tree_cell_defs():")
+        # for cdef in self.celldef_tab.param_d.keys():
+        #     print(f'{cdef} --> {self.celldef_tab.param_d[cdef]["transformation_rate"]}')
+
+        # print(self.celldef_tab.param_d)
         # print(self.celldef_tab.param_d)
 
         # self.celldef_tab.fill_substrates_comboboxes() # do before populate?
+        print("\n\n---- studio.py: calling celldef_tab.fill_celltypes_comboboxes()")
         self.celldef_tab.fill_celltypes_comboboxes()
 
         self.microenv_tab.celldef_tab = self.celldef_tab

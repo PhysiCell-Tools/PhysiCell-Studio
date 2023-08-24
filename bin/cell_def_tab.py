@@ -492,14 +492,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #----------------------------------------------------------------------
     # Set all the default params to what they are in PhysiCell (C++), e.g., *_standard_models.cpp, etc.
-    def init_default_phenotype_params(self, cdname):
+    def init_default_phenotype_params(self, cdname, reset_mapping):
+        print("----- init_default_phenotype_params(self, cdname): reset_mapping=",reset_mapping)
         self.new_cycle_params(cdname, True)
         self.new_death_params(cdname)
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname)
         self.new_motility_params(cdname)
         self.new_secretion_params(cdname)
-        self.new_interaction_params(cdname)
+        self.new_interaction_params(cdname, reset_mapping)
         self.new_intracellular_params(cdname)
         self.new_custom_data_params(cdname)
 
@@ -510,7 +511,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #----------------------------------------------------------------------
     # @QtCore.Slot()
     def new_cell_def(self):
-        # print('------ new_cell_def')
+        print('\n------ new_cell_def()')
         # cdname = "cell_def%02d" % self.new_cell_def_count
         # if cdname in self.param_d.keys():
         #     print('new_cell_def(): duplicate name, changing to a random string')
@@ -534,7 +535,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     print()
         # print()
 
-        self.init_default_phenotype_params(cdname)
+        self.init_default_phenotype_params(cdname, True)
 
         # print("\n ----- new dict:")
         # for k in self.param_d.keys():
@@ -643,7 +644,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # @QtCore.Slot()
     # Make a new cell_def (that's a copy of the currently selected one)
     def copy_cell_def(self):
-        # print('------ copy_cell_def()')
+        print('------ copy_cell_def()')
         # cdname_copy = "cell_def%02d" % self.new_cell_def_count
         prefix = "ctype_"
         cdname_copy = self.random_name(prefix,3)
@@ -781,9 +782,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         for cdef in self.param_d.keys():
             # print(" ===>>> ",cdef, " : ", self.param_d[cdef])
             # Mechanics
-            print(f" pre-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
+            # print(f" pre-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
             self.param_d[cdef]['cell_adhesion_affinity'].pop(self.current_cell_def,0)  
-            print(f"\n post-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
+            # print(f"\n post-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
 
             # Interactions
             self.param_d[cdef]['live_phagocytosis_rate'].pop(self.current_cell_def,0)
@@ -3417,15 +3418,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        label = QLabel("immunogenicity")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
+        # label = QLabel("immunogenicity")
+        # label.setFixedWidth(self.label_width)
+        # label.setAlignment(QtCore.Qt.AlignRight)
         # idr += 1
         # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.immunogenicity_dropdown = QComboBox()
-        self.immunogenicity_dropdown.setStyleSheet(self.combobox_stylesheet)
-        glayout.addWidget(self.immunogenicity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
+        # self.immunogenicity_dropdown = QComboBox()
+        # self.immunogenicity_dropdown.setStyleSheet(self.combobox_stylesheet)
+        # glayout.addWidget(self.immunogenicity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
+
         # self.immunogenicity_dropdown.currentIndexChanged.connect(self.immunogenicity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
         # self.transformation_rate = QLineEdit_color()
@@ -3458,12 +3460,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #------
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         interaction_tab.setLayout(glayout)
+
         return interaction_tab
+
+    #--------------------------------------------------------
+    # def enable_interaction_callbacks(self):
+    #     print("----- enable_interaction_callbacks()")
+    #     self.transformation_rate.textChanged.connect(self.transformation_rate_changed)
+    #     self.cell_transformation_dropdown.currentIndexChanged.connect(self.cell_transformation_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
     #--------------------------------------------------------
     def reset_interaction_cb(self):
         # print("--- reset_interaction_cb:  self.current_cell_def= ",self.current_cell_def)
-        self.new_interaction_params(self.current_cell_def)
+        self.new_interaction_params(self.current_cell_def, True)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
 
@@ -3505,16 +3514,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
-        # print("transformation_rate_changed:  text=",text)
+        # print("\n\n >>>>   transformation_rate_changed:  text=",text)
         celltype_name = self.cell_transformation_dropdown.currentText()
         # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+        # print(self.param_d[self.current_cell_def]['transformation_rate'])
+
     #--------------------------------------------------------
-    def immunogenicity_changed(self,text):
-        # print("transformation_rate_changed:  text=",text)
-        celltype_name = self.immunogenicity_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
-        self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+    # def immunogenicity_changed(self,text):
+    #     # print("transformation_rate_changed:  text=",text)
+    #     celltype_name = self.immunogenicity_dropdown.currentText()
+    #     # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
+    #     self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
 
 
     #--------------------------------------------------------
@@ -6010,6 +6021,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         celltype_name = self.fusion_rate_dropdown.currentText()
         # self.param_d[self.current_cell_def]['fusion_rate_celltype'] = celltype_name
+        # print("keys=",self.param_d[self.current_cell_def]['fusion_rate'].keys())
+        # print(self.param_d[self.current_cell_def]['fusion_rate'])
         self.fusion_rate_celltype = celltype_name
         # print("   self.fusion_rate_celltype = ",celltype_name)
 
@@ -6022,17 +6035,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return
 
     def cell_transformation_dropdown_changed_cb(self, idx):
-        # print('------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
+        # print('\n------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
         # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_transformation_dropdown.currentText()
         # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
         self.transformation_rate_celltype = celltype_name
-        # print("   self.transformation_rate_celltype= ",celltype_name)
+        # print("      self.transformation_rate_celltype= ",celltype_name)
+        # print(self.param_d[self.current_cell_def]["transformation_rate"].keys())
+        # print("       ",self.param_d[self.current_cell_def]["transformation_rate"])
 
         if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
+            # print("       setText for ", self.transformation_rate_celltype, " = ",self.default_sval)
             self.transformation_rate.setText(self.param_d[self.current_cell_def]["transformation_rate"][self.transformation_rate_celltype])
         else:
+            # print("       setText = (default)= ",self.default_sval)
             self.transformation_rate.setText(self.default_sval)
 
         if idx == -1:
@@ -6237,13 +6254,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # Fill them using the given model (the .xml)
     def fill_celltypes_comboboxes(self):
         logging.debug(f'cell_def_tab.py: ------- fill_celltypes_comboboxes')
+        # print(f'cell_def_tab.py: ------- fill_celltypes_comboboxes')
         # print("self.celltypes_list = ",self.celltypes_list)
         self.celltypes_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.live_phagocytosis_dropdown.clear()
         self.attack_rate_dropdown.clear()
         self.fusion_rate_dropdown.clear()
         self.cell_transformation_dropdown.clear()
-        self.immunogenicity_dropdown.clear()
+        # self.immunogenicity_dropdown.clear()
 
         self.cell_adhesion_affinity_dropdown.clear()
         uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
@@ -6259,7 +6277,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.attack_rate_dropdown.addItem(name)
                 self.fusion_rate_dropdown.addItem(name)
                 self.cell_transformation_dropdown.addItem(name)
-                self.immunogenicity_dropdown.addItem(name)
+                # self.immunogenicity_dropdown.addItem(name)
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
@@ -6277,7 +6295,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attack_rate_dropdown.addItem(name)
         self.fusion_rate_dropdown.addItem(name)
         self.cell_transformation_dropdown.addItem(name)
-        self.immunogenicity_dropdown.addItem(name)
+        # self.immunogenicity_dropdown.addItem(name)
 
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
@@ -6411,16 +6429,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # data structures (e.g., QComboBox) that reference it.  Including Rules tab(!)
     def renamed_celltype(self, old_name,new_name):
 
-        print(f'\ncell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
+        # print(f'\ncell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.cell_adhesion_affinity_celltype = new_name
-        print(f'------- setting self.cell_adhesion_affinity_celltype= {new_name}')
+        # print(f'------- setting self.cell_adhesion_affinity_celltype= {new_name}')
 
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         logging.debug(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         # print(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
         logging.debug(f'    self.celltypes_list= {self.celltypes_list}')
-        print(f'    self.celltypes_list= {self.celltypes_list}')
+        # print(f'    self.celltypes_list= {self.celltypes_list}')
         # print()
         logging.debug(f' ')
         for cdname in self.param_d.keys():
@@ -6439,8 +6457,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.fusion_rate_dropdown.setItemText(idx, new_name)
             if old_name == self.cell_transformation_dropdown.itemText(idx):
                 self.cell_transformation_dropdown.setItemText(idx, new_name)
-            if old_name == self.immunogenicity_dropdown.itemText(idx):
-                self.immunogenicity_dropdown.setItemText(idx, new_name)
+            # if old_name == self.immunogenicity_dropdown.itemText(idx):
+            #     self.immunogenicity_dropdown.setItemText(idx, new_name)
 
             if old_name == self.cell_adhesion_affinity_dropdown.itemText(idx):
                 self.cell_adhesion_affinity_dropdown.setItemText(idx, new_name)
@@ -6623,6 +6641,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["volume_rel_rupture_vol"] = '2'
 
     def new_mechanics_params(self, cdname_new):  # rf. PhysiCell core/*_phenotype.cpp constructor
+        print("---- new_mechanics_params(): cdname_new= ",cdname_new)
         sval = self.default_sval
 
         # self.param_d[cdname_new]['is_movable'] = False
@@ -6641,18 +6660,20 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
 
-        for cdname in self.param_d.keys():    # for each cell def
-            for cdname2 in self.param_d.keys():    # for each cell def
-                # print('cdname2= ',cdname2)
-                if (cdname == cdname_new) or (cdname2 == cdname_new): 
-                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-                    self.param_d[cdname]['attack_rate'][cdname2] = sval
-                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
-                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
+        # rwh 8/24/23: comment out - WHY was it here?
+        # for cdname in self.param_d.keys():    # for each cell def
+        #     for cdname2 in self.param_d.keys():    # for each cell def
+        #         # print('cdname2= ',cdname2)
+        #         if (cdname == cdname_new) or (cdname2 == cdname_new): 
+        #             self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+        #             self.param_d[cdname]['attack_rate'][cdname2] = sval
+        #             self.param_d[cdname]['fusion_rate'][cdname2] = sval
+        #             self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
-                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
+        #             self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
+        print("new_motility_params(): ",cdname)
         sval = self.default_sval
         self.param_d[cdname]["speed"] = '1.0'
         self.param_d[cdname]["persistence_time"] = '1.0'
@@ -6671,6 +6692,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["chemotactic_sensitivity"][substrate_name] = '0.0'
 
     def new_secretion_params(self, cdname):
+        print("new_secretion_params(): ",cdname)
         # print("new_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)
         # print("        self.param_d[cdname]['secretion'] = ",self.param_d[cdname]["secretion"])
         sval = self.default_sval
@@ -6680,8 +6702,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["secretion"][substrate_name]["uptake_rate"] = sval
             self.param_d[cdname]["secretion"][substrate_name]["net_export_rate"] = sval
 
-    def new_interaction_params(self, cdname_new):
-        logging.debug(f'\n--------new_interaction_params(): cdname_new= {cdname_new}')
+    def new_interaction_params(self, cdname_new, reset_mapping):
+        logging.debug(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
+        # print(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
         sval = self.default_sval
         self.param_d[cdname_new]["dead_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["damage_rate"] = '1.0'
@@ -6694,15 +6717,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     self.param_d[cdname]['fusion_rate'][cdname2] = sval
         #     self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
-        for cdname in self.param_d.keys():    # for each cell def
-            # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
-            for cdname2 in self.param_d.keys():    # for each cell def
-                # print('cdname2= ',cdname2)
-                if (cdname == cdname_new) or (cdname2 == cdname_new): 
-                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-                    self.param_d[cdname]['attack_rate'][cdname2] = sval
-                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
-                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
+        if reset_mapping:
+            for cdname in self.param_d.keys():    # for each cell def
+                # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
+                for cdname2 in self.param_d.keys():    # for each cell def
+                    # print('cdname2= ',cdname2)
+                    # if (cdname == cdname_new) or (cdname2 == cdname_new): 
+                    if (cdname == cdname_new):   #rwh 8/24/23
+                        self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+                        self.param_d[cdname]['attack_rate'][cdname2] = sval
+                        self.param_d[cdname]['fusion_rate'][cdname2] = sval
+                        self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
         # print("\n--------new_interaction_params(): param_d= ",self.param_d)
         # sys.exit(-1)
@@ -7125,6 +7150,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     def update_interaction_params(self):
+        # print("------ update_interaction_params():")
         cdname = self.current_cell_def
         self.dead_phagocytosis_rate.setText(self.param_d[cdname]["dead_phagocytosis_rate"])
         self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
