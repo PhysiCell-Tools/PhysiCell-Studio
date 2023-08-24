@@ -67,6 +67,15 @@ class Config(QWidget):
         """
         self.setStyleSheet(qlineedit_style)
 
+        self.combobox_stylesheet = """ 
+            QComboBox{
+                color: #000000;
+                background-color: #FFFFFF; 
+            }
+            """
+
+        self.substrate_list = []
+        
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
         
@@ -360,6 +369,58 @@ class Config(QWidget):
         hbox.addStretch()
         vbox.addLayout(hbox)
 
+        #------
+
+        hbox = QHBoxLayout()
+
+        label = QLabel("Plot SVG substrate:")
+        label.setFixedWidth(120)
+        idx_row += 10
+        icol = 0
+        # self.config_tab_layout.addWidget(label, idx_row,icol,1,1) # w, row, column, rowspan, colspan
+        hbox.addWidget(label)
+
+        self.plot_substrate_svg = QCheckBox_custom("enable")
+        self.plot_substrate_svg.setFixedWidth(80)
+        self.plot_substrate_svg.setChecked(True)
+        self.plot_substrate_svg.clicked.connect(self.plot_substrate_svg_clicked)
+        hbox.addWidget(self.plot_substrate_svg) # w, row, column, rowspan, colspan
+
+        self.svg_substrate_to_plot_dropdown = QComboBox()
+        self.svg_substrate_to_plot_dropdown.setFixedWidth(200)
+        self.svg_substrate_to_plot_dropdown.setStyleSheet(self.combobox_stylesheet)
+        hbox.addWidget(self.svg_substrate_to_plot_dropdown)
+
+        self.plot_substrate_limits = QCheckBox_custom("Limits enabled")
+        self.plot_substrate_limits.setFixedWidth(130)
+        self.plot_substrate_limits.setChecked(True)
+        self.plot_substrate_limits.clicked.connect(self.plot_substrate_limits_clicked)
+        hbox.addWidget(self.plot_substrate_limits) # w, row, column, rowspan, colspan
+
+        label = QLabel("min")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label) # w, row, column, rowspan, colspan
+
+        self.svg_substrate_min = QLineEdit()
+        self.svg_substrate_min.setFixedWidth(100)
+        self.svg_substrate_min.setValidator(QtGui.QDoubleValidator())
+        self.svg_substrate_min.textChanged.connect(self.svg_substrate_min_changed)
+        hbox.addWidget(self.svg_substrate_min)
+
+        label = QLabel("max")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label) # w, row, column, rowspan, colspan
+
+        self.svg_substrate_max = QLineEdit()
+        self.svg_substrate_max.setFixedWidth(100)
+        self.svg_substrate_max.setValidator(QtGui.QDoubleValidator())
+        self.svg_substrate_max.textChanged.connect(self.svg_substrate_max_changed)
+        hbox.addWidget(self.svg_substrate_max)
+
+        #------
+        hbox.addStretch()
+        vbox.addLayout(hbox)
+
         #============  Cells IC ================================
         label = QLabel("Initial conditions of cells (x,y,z, type)")
         label.setFixedHeight(label_height)
@@ -479,18 +540,68 @@ class Config(QWidget):
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
 
     def svg_clicked(self, bval):
-        # print("svg_clicked: bval=",bval)
         self.svg_interval.setEnabled(bval)
+        self.plot_substrate_svg.setEnabled(bval)
         if bval:
             self.svg_interval.setStyleSheet("background-color: white; color: black")
+            if self.plot_substrate_svg.isChecked():
+                self.svg_substrate_to_plot_dropdown.setEnabled(True)
+                self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
         else:
             self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_to_plot_dropdown.setEnabled(False)
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
+            self.plot_substrate_svg.setChecked(False)
+            self.plot_substrate_limits.setEnabled(False)
+            self.plot_substrate_limits.setChecked(False)
+            self.svg_substrate_min.setEnabled(False)
+            self.svg_substrate_max.setEnabled(False)
+            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
+
+    def plot_substrate_svg_clicked(self, bval):
+        self.svg_substrate_to_plot_dropdown.setEnabled(bval)
+        self.plot_substrate_limits.setEnabled(bval)
+        if bval:
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
+            if self.plot_substrate_limits.isChecked():
+                self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
+                self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
+
+        else:
+            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
+            self.plot_substrate_limits.setChecked(False)
+            self.svg_substrate_min.setEnabled(False)
+            self.svg_substrate_max.setEnabled(False)
+            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
+
+    def plot_substrate_limits_clicked(self, bval):
+        # print("plot_substrate_limits_clicked: bval=",bval)
+        self.svg_substrate_min.setEnabled(bval)
+        self.svg_substrate_max.setEnabled(bval)
+        # come back to this to include substrate and cmin and cmax
+        if bval:
+            self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
+            self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
+        else:
+            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
 
     def svg_interval_changed(self, val):
         # print("svg_interval_changed(): val=",val)
         if self.sync_output:
             self.full_interval.setText(val)
 
+    def svg_substrate_min_changed(self, val):
+        # print("svg_substrate_min_changed(): val=",val)
+        if self.sync_output:
+            self.svg_substrate_min.setText(val)
+
+    def svg_substrate_max_changed(self, val):
+        # print("svg_substrate_max_changed(): val=",val)
+        if self.sync_output:
+            self.svg_substrate_max.setText(val)
 
     def full_clicked(self, bval):
         self.full_interval.setEnabled(bval)
@@ -525,6 +636,8 @@ class Config(QWidget):
             self.csv_file.setStyleSheet("background-color: lightgray; color: black")
 
     def fill_gui(self):
+        self.fill_substrates_comboboxes()
+
         self.xmin.setText(self.xml_root.find(".//x_min").text)
         self.xmax.setText(self.xml_root.find(".//x_max").text)
         self.xdel.setText(self.xml_root.find(".//dx").text)
@@ -575,6 +688,37 @@ class Config(QWidget):
             bval = True
         self.save_svg.setChecked(bval)
         self.svg_clicked(bval)
+
+        if self.xml_root.find(".//SVG//plot_substrate//substrate") is not None:
+            self.svg_substrate_to_plot_dropdown.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
+            # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
+            bval = False
+            uep = self.xml_root.find(".//SVG//plot_substrate")
+            if uep.attrib['enabled'].lower() == 'true':
+                bval = True
+            self.plot_substrate_svg.setChecked(bval)
+            self.plot_substrate_svg_clicked(bval)
+        else:
+            self.svg_substrate_to_plot_dropdown.itemText(0)
+            self.plot_substrate_svg.setChecked(False)
+            self.plot_substrate_svg_clicked(False)
+
+        limits_included = False
+        uep = self.xml_root.find(".//SVG//plot_substrate")
+        if (uep is not None) and (uep.attrib['limits'].lower() == 'true'):
+            limits_included = True
+
+        if limits_included:
+            if self.xml_root.find(".//SVG//plot_substrate//min_conc") is not None:
+                self.svg_substrate_min.setText(self.xml_root.find(".//SVG//plot_substrate//min_conc").text)
+            else:
+                limits_included = False
+            if self.xml_root.find(".//SVG//plot_substrate//max_conc") is not None:
+                self.svg_substrate_max.setText(self.xml_root.find(".//SVG//plot_substrate//max_conc").text)
+            else:
+                limits_included = False
+        self.plot_substrate_limits.setChecked(limits_included)
+        self.plot_substrate_limits_clicked(limits_included)
 
         self.full_interval.setText(self.xml_root.find(".//full_data//interval").text)
         bval = False
@@ -720,6 +864,34 @@ class Config(QWidget):
             self.xml_root.find(".//SVG//enable").text = 'false'
         self.xml_root.find(".//SVG//interval").text = self.svg_interval.text()
 
+        if self.xml_root.find(".//SVG//plot_substrate") is None:
+            # add this eleement if it does not exist
+            elm = ET.Element("plot_substrate",
+                                {"enabled":'false', "limits":'false'})
+            ET.SubElement(elm, 'substrate')
+            ET.SubElement(elm, 'min_conc')
+            ET.SubElement(elm, 'max_conc')
+            self.xml_root.find('.//save//SVG').insert(2,elm) # [interval, enable, plot_substrate]
+
+        if self.plot_substrate_svg.isChecked():
+            self.xml_root.find(".//SVG//plot_substrate").attrib['enabled'] = 'true'
+        else:
+            self.xml_root.find(".//SVG//plot_substrate").attrib['enabled'] = 'false'
+        if self.plot_substrate_limits.isChecked():
+            self.xml_root.find(".//SVG//plot_substrate").attrib['limits'] = 'true'
+        else:
+            self.xml_root.find(".//SVG//plot_substrate").attrib['limits'] = 'false'
+        self.xml_root.find(".//SVG//plot_substrate//substrate").text = self.svg_substrate_to_plot_dropdown.currentText()
+        if self.plot_substrate_limits.isChecked():
+            if self.xml_root.find(".//SVG//plot_substrate//min_conc") is None:
+                elm = ET.Element("min_conc")
+                self.xml_root.find('.//save//SVG//plot_substrate').insert(1,elm)
+            self.xml_root.find(".//SVG//plot_substrate//min_conc").text = self.svg_substrate_min.text()
+            if self.xml_root.find(".//SVG//plot_substrate//max_conc") is None:
+                elm = ET.Element("max_conc")
+                self.xml_root.find('.//save//SVG//plot_substrate').insert(2,elm)
+            self.xml_root.find(".//SVG//plot_substrate//max_conc").text = self.svg_substrate_max.text()
+        
         if self.save_full.isChecked():
             self.xml_root.find(".//full_data//enable").text = 'true'
         else:
@@ -809,3 +981,34 @@ class Config(QWidget):
 
         else:
             print("import_seeding_cb():  full_path_model_name is NOT valid")
+
+    def fill_substrates_comboboxes(self):
+        logging.debug(f'cell_def_tab.py: ------- fill_substrates_comboboxes')
+        self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
+        self.svg_substrate_to_plot_dropdown.clear()
+        uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
+        if uep:
+            idx = 0
+            for var in uep.findall('variable'):
+                logging.debug(f' --> {var.attrib["name"]}')
+                name = var.attrib['name']
+                self.substrate_list.append(name)
+                self.svg_substrate_to_plot_dropdown.addItem(name)
+
+    def add_new_substrate(self, sub_name):
+        self.substrate_list.append(sub_name)
+        self.svg_substrate_to_plot_dropdown.addItem(sub_name)
+
+    def delete_substrate(self, item_idx, new_substrate):
+        subname = self.svg_substrate_to_plot_dropdown.itemText(item_idx)
+        self.substrate_list.remove(subname)
+        self.svg_substrate_to_plot_dropdown.removeItem(item_idx)
+
+    def renamed_substrate(self, old_name,new_name):
+        self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
+        for idx in range(len(self.substrate_list)):
+            if old_name == self.svg_substrate_to_plot_dropdown.itemText(idx):
+                self.svg_substrate_to_plot_dropdown.setItemText(idx, new_name)
+
+    #-----------------------------------------------------------------------------------------
+    

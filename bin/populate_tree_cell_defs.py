@@ -84,6 +84,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.new_cell_def_count += 1
             # print(cell_def.attrib['name'])
             cell_def_name = cell_def.attrib['name']
+
             if idx == 0:
                 cell_def_0th = cell_def_name
                 cell_def_tab.live_phagocytosis_celltype = cell_def_0th 
@@ -98,13 +99,13 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.param_d[cell_def_name]["secretion"] = {}
             cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
             cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
-            cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
             cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
             cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
             cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
+            cell_def_tab.param_d[cell_def_name]["transformation_rate"] = {}
 
             # fill this cell_def with default params (rf. C++ values)
-            cell_def_tab.init_default_phenotype_params(cell_def_name)
+            cell_def_tab.init_default_phenotype_params(cell_def_name, False)  #rwh 8/23/23: reset_mapping flag 
             # print("populate_(): ",cell_def_tab.param_d)
             # print("------   after populate ----------\n\n")
 
@@ -1252,13 +1253,16 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # # --------- cell_transformations  
             transformation_rates_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_transformations//transformation_rates"
             logging.debug(f'---- transformation_rates_path = {transformation_rates_path}')
+            print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
             trp = uep.find(transformation_rates_path)
             # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+
             if trp is None:
-                # print("---- No cell_transformations found.")
+                print("---- No cell_transformations found.")
                 # print("\nFor now, you need to manually enter these into your .xml\n")
                 # sys.exit(-1)
                 logging.debug(f'---- No cell_transformations found. Setting to default values')
+                print(f'---- No cell_transformations found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
@@ -1269,16 +1273,21 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 sval = '0.0'
                 for var in cds_uep.findall('cell_definition'):
                     logging.debug(f' --> {var.attrib["name"]}')
+                    print(f"ugh!---- setting {cell_def_name}'s cell_transformations for {name} = default=0.0")
                     name = var.attrib['name']
                     cell_def_tab.param_d[cell_def_name]["transformation_rate"][name] = sval
             else:
+                print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
                 for tr in trp.findall('transformation_rate'):
                     celltype_name = tr.attrib['name']
+                    # print("----------  celltype_name =",celltype_name)
                     val = tr.text
                     cell_def_tab.param_d[cell_def_name]['transformation_rate'][celltype_name] = val
+                    # print(cell_def_tab.param_d[cell_def_name]['transformation_rate'])
 
 
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
+            print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
 
             # sys.exit(-1)
