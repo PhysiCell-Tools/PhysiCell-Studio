@@ -663,6 +663,7 @@ class SubstrateDef(QWidget):
         self.new_substrate_count += 1
 
         self.celldef_tab.add_new_substrate(subname)
+        self.config_tab.add_new_substrate(subname)
         # self.celldef_tab.add_new_substrate_comboboxes(subname)
         # self.param_d[cell_def_name]["secretion"][substrate_name] = {}
 
@@ -710,6 +711,7 @@ class SubstrateDef(QWidget):
         # self.celldef_tab.add_new_substrate_comboboxes(subname)
 
         self.celldef_tab.add_new_substrate(subname)
+        self.config_tab.add_new_substrate(subname)
 
         self.current_substrate = subname
         # self.substrate_name.setText(subname)
@@ -776,6 +778,7 @@ class SubstrateDef(QWidget):
 
         # do this last
         self.celldef_tab.delete_substrate(item_idx, self.current_substrate)
+        self.config_tab.delete_substrate(item_idx, self.current_substrate)
 
 
     #----------------------------------------------------------------------
@@ -799,6 +802,7 @@ class SubstrateDef(QWidget):
         # print()
 
         self.celldef_tab.renamed_substrate(prev_name, self.current_substrate)
+        self.config_tab.renamed_substrate(prev_name, self.current_substrate)
 
     #----------------------------------------------------------------------
     def tree_item_sel_changed_cb(self, it,col):
