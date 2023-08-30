@@ -660,22 +660,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.param_d[cdname_copy]["ID"] = str(self.new_cell_def_count)  # rwh Note: we won't do this if we auto-generate the ID #s at "save"
 
-        # we need to add the newly created cell def into each cell def's interaction/transformation dicts, with values of the copy
-        sval = self.default_sval
-        # print('1) copy_cell_def(): param_d.keys=',self.param_d.keys())
-        for cdname in self.param_d.keys():    # for each cell def
-            # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
-            for cdname2 in self.param_d.keys():    # for each cell def
-                # print('cdname2= ',cdname2)
-                if (cdname == cdname_copy) or (cdname2 == cdname_copy): # use default if not available
-                    self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-                    self.param_d[cdname]['attack_rate'][cdname2] = sval
-                    self.param_d[cdname]['fusion_rate'][cdname2] = sval
-                    self.param_d[cdname]['transformation_rate'][cdname2] = sval
-
-                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
-                # else: # use values from copied cell def
-
         logging.debug(f'--> copy_cell_def():\n {self.param_d[cdname_copy]}')
         # print('2) copy_cell_def(): param_d.keys=',self.param_d.keys())
 
