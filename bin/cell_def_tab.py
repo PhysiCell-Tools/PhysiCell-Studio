@@ -530,6 +530,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
+        
+
         # for k in self.param_d.keys():
         #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
         #     print()
@@ -6653,16 +6655,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
 
         # rwh 8/24/23: comment out - WHY was it here?
-        # for cdname in self.param_d.keys():    # for each cell def
-        #     for cdname2 in self.param_d.keys():    # for each cell def
+        for cdname in self.param_d.keys():    # for each cell def
+            for cdname2 in self.param_d.keys():    # for each cell def
         #         # print('cdname2= ',cdname2)
-        #         if (cdname == cdname_new) or (cdname2 == cdname_new): 
+                if (cdname == cdname_new) or (cdname2 == cdname_new): 
         #             self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
         #             self.param_d[cdname]['attack_rate'][cdname2] = sval
         #             self.param_d[cdname]['fusion_rate'][cdname2] = sval
         #             self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
-        #             self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
+                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
         print("new_motility_params(): ",cdname)
@@ -6714,8 +6716,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
                 for cdname2 in self.param_d.keys():    # for each cell def
                     # print('cdname2= ',cdname2)
-                    # if (cdname == cdname_new) or (cdname2 == cdname_new): 
-                    if (cdname == cdname_new):   #rwh 8/24/23
+                    if (cdname == cdname_new) or (cdname2 == cdname_new): 
+                    # if (cdname == cdname_new):   #rwh 8/24/23
                         self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
                         self.param_d[cdname]['attack_rate'][cdname2] = sval
                         self.param_d[cdname]['fusion_rate'][cdname2] = sval
