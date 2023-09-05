@@ -4665,7 +4665,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_outputs_layout = QVBoxLayout()
         outputs_labels = QHBoxLayout()
 
-        outputs_signal_label = QLabel("Signal")
+        outputs_signal_label = QLabel("Behavior")
         outputs_node_label = QLabel("Node")
         outputs_action_label = QLabel("Action")
         outputs_value_label = QLabel("Value")
