@@ -417,6 +417,16 @@ class Config(QWidget):
         self.svg_substrate_max.textChanged.connect(self.svg_substrate_max_changed)
         hbox.addWidget(self.svg_substrate_max)
 
+        label = QLabel("colormap")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label) # w, row, column, rowspan, colspan
+
+        self.svg_substrate_colormap_dropdown = QComboBox()
+        self.svg_substrate_colormap_dropdown.setFixedWidth(100)
+        self.svg_substrate_colormap_dropdown.setStyleSheet(self.combobox_stylesheet)
+        hbox.addWidget(self.svg_substrate_colormap_dropdown)
+
+
         #------
         hbox.addStretch()
         vbox.addLayout(hbox)
@@ -547,10 +557,14 @@ class Config(QWidget):
             if self.plot_substrate_svg.isChecked():
                 self.svg_substrate_to_plot_dropdown.setEnabled(True)
                 self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
+                self.svg_substrate_colormap_dropdown.setEnabled(True)
+                self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: white; color: black")
         else:
             self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
             self.svg_substrate_to_plot_dropdown.setEnabled(False)
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_colormap_dropdown.setEnabled(False)
+            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_limits.setEnabled(False)
             self.plot_substrate_limits.setChecked(False)
@@ -561,15 +575,18 @@ class Config(QWidget):
 
     def plot_substrate_svg_clicked(self, bval):
         self.svg_substrate_to_plot_dropdown.setEnabled(bval)
+        self.svg_substrate_colormap_dropdown.setEnabled(bval)
         self.plot_substrate_limits.setEnabled(bval)
         if bval:
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
+            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: white; color: black")
             if self.plot_substrate_limits.isChecked():
                 self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
                 self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
 
         else:
             self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
+            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_limits.setChecked(False)
             self.svg_substrate_min.setEnabled(False)
             self.svg_substrate_max.setEnabled(False)
@@ -637,6 +654,7 @@ class Config(QWidget):
 
     def fill_gui(self):
         self.fill_substrates_comboboxes()
+        self.fill_substrate_colormap_comboboxes()
 
         self.xmin.setText(self.xml_root.find(".//x_min").text)
         self.xmax.setText(self.xml_root.find(".//x_max").text)
@@ -683,25 +701,31 @@ class Config(QWidget):
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
-        bval = False
+        is_plotting_svg = False
         if self.xml_root.find(".//SVG//enable").text.lower() == 'true':
-            bval = True
-        self.save_svg.setChecked(bval)
-        self.svg_clicked(bval)
+            is_plotting_svg = True
+        self.save_svg.setChecked(is_plotting_svg)
+        self.svg_clicked(is_plotting_svg)
 
+        is_plotting_substrate_on_svg = False
         if self.xml_root.find(".//SVG//plot_substrate//substrate") is not None:
             self.svg_substrate_to_plot_dropdown.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//substrate").text)
             # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
-            bval = False
-            uep = self.xml_root.find(".//SVG//plot_substrate")
-            if uep.attrib['enabled'].lower() == 'true':
-                bval = True
-            self.plot_substrate_svg.setChecked(bval)
-            self.plot_substrate_svg_clicked(bval)
+            if is_plotting_svg:
+                uep = self.xml_root.find(".//SVG//plot_substrate")
+                if uep.attrib['enabled'].lower() == 'true':
+                    is_plotting_substrate_on_svg = True
+                self.plot_substrate_svg.setChecked(is_plotting_substrate_on_svg)
+                self.plot_substrate_svg_clicked(is_plotting_substrate_on_svg)
         else:
             self.svg_substrate_to_plot_dropdown.itemText(0)
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_svg_clicked(False)
+
+        if self.xml_root.find(".//SVG//plot_substrate//colormap") is not None:
+            self.svg_substrate_colormap_dropdown.setCurrentText(self.xml_root.find(".//SVG//plot_substrate//colormap").text)
+        else:
+            self.svg_substrate_colormap_dropdown.itemText(0)
 
         limits_included = False
         uep = self.xml_root.find(".//SVG//plot_substrate")
@@ -871,6 +895,7 @@ class Config(QWidget):
             ET.SubElement(elm, 'substrate')
             ET.SubElement(elm, 'min_conc')
             ET.SubElement(elm, 'max_conc')
+            ET.SubElement(elm, 'colormap')
             self.xml_root.find('.//save//SVG').insert(2,elm) # [interval, enable, plot_substrate]
 
         if self.plot_substrate_svg.isChecked():
@@ -892,6 +917,13 @@ class Config(QWidget):
                 self.xml_root.find('.//save//SVG//plot_substrate').insert(2,elm)
             self.xml_root.find(".//SVG//plot_substrate//max_conc").text = self.svg_substrate_max.text()
         
+        if self.plot_substrate_svg.isChecked():
+            if self.xml_root.find(".//SVG//plot_substrate//colormap") is None:
+                elm = ET.Element("colormap")
+                self.xml_root.find('.//save//SVG//plot_substrate').insert(1,elm)
+            self.xml_root.find(".//SVG//plot_substrate//colormap").text = self.svg_substrate_colormap_dropdown.currentText()
+
+
         if self.save_full.isChecked():
             self.xml_root.find(".//full_data//enable").text = 'true'
         else:
@@ -994,6 +1026,19 @@ class Config(QWidget):
                 name = var.attrib['name']
                 self.substrate_list.append(name)
                 self.svg_substrate_to_plot_dropdown.addItem(name)
+
+    def fill_substrate_colormap_comboboxes(self):
+        logging.debug(f'cell_def_tab.py: ------- fill_substrate_colormap_comboboxes')
+        self.svg_substrate_colormap_dropdown.addItem("YlOrRd")
+        self.svg_substrate_colormap_dropdown.addItem("YlOrRd_r")
+        self.svg_substrate_colormap_dropdown.addItem("viridis")
+        self.svg_substrate_colormap_dropdown.addItem("viridis_r")
+        self.svg_substrate_colormap_dropdown.addItem("turbo")
+        self.svg_substrate_colormap_dropdown.addItem("turbo_r")
+        self.svg_substrate_colormap_dropdown.addItem("plasma")
+        self.svg_substrate_colormap_dropdown.addItem("plasma_r")
+        self.svg_substrate_colormap_dropdown.addItem("jet")
+        self.svg_substrate_colormap_dropdown.addItem("jet_r")
 
     def add_new_substrate(self, sub_name):
         self.substrate_list.append(sub_name)
