@@ -249,7 +249,7 @@ class Config(QWidget):
 
         self.minute_fraction_spin_box = QDoubleSpinBox()
 
-        self.minute_fraction_spin_box.setMinimum(0)
+        self.minute_fraction_spin_box.setMinimum(-1)
         self.minute_fraction_spin_box.setMaximum(1)
 
         self.minute_fraction_spin_box.setDecimals(2) # set to 2 by default, but listen to diffusion_dt
@@ -1101,17 +1101,13 @@ class Config(QWidget):
 
     def diffusion_dt_changed_cb(self):
         try:
-            print(f"trying... dt text is {self.diffusion_dt.text()}")
             diffusion_dt = float(self.diffusion_dt.text())
-            print(f"dt = {diffusion_dt}")
             if diffusion_dt > 0:
                 new_num_decimals = -floor(log10(diffusion_dt))
                 self.minute_fraction_spin_box.setDecimals(new_num_decimals)
                 self.minute_fraction_spin_box.setSingleStep(10**(-new_num_decimals))
-                print(f"new num decimals is {new_num_decimals}, step is {self.minute_fraction_spin_box.singleStep()}, should be {10**(-new_num_decimals)}")
             else:
                 self.minute_fraction_spin_box.setDecimals(2)
-
         except:
             self.minute_fraction_spin_box.setDecimals(2)
     #-----------------------------------------------------------------------------------------
