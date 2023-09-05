@@ -3581,7 +3581,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 else:
                     name.setCurrentIndex(-1)
         
-                name.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(i, index))
+                name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_signal_changed(i, index))
 
 
     def physiboss_update_list_behaviours(self):
@@ -3646,7 +3646,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 else:
                     name.setCurrentIndex(-1)
 
-                name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(i, index))
+                name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_behaviour_changed(i, index))
 
 
     def physiboss_update_list_nodes(self):
@@ -3675,7 +3675,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     node.clear()
                     for name in list_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
+                    node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_initial_value_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]["node"] in list_nodes
@@ -3693,7 +3693,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     node.clear()
                     for name in list_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+                    node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_mutants_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]["node"] in list_nodes
@@ -3712,7 +3712,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     node.clear()
                     for name in list_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
+                    node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]["node"] in list_nodes
@@ -3730,7 +3730,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     node.clear()
                     for name in list_nodes:
                         node.addItem(name)
-                    node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
+                    node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]["node"] in list_nodes
@@ -3779,7 +3779,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     param.clear()
                     for name in list_parameters:
                         param.addItem(name)
-                    param.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
+                    param.currentIndexChanged.connect(lambda index, i=i: self.physiboss_parameters_node_changed(i, index))
 
                     if (self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] is not None
                         and self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]["name"] in list_parameters
@@ -3828,9 +3828,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         initial_states_remove.setStyleSheet("QPushButton { color: black }")
 
         id = len(self.physiboss_initial_states)
-        initial_states_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(id, index))
-        initial_states_value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(id, text))
-        initial_states_remove.clicked.connect(lambda: self.physiboss_clicked_remove_initial_values(id))
+        initial_states_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_initial_value_node_changed(id, index))
+        initial_states_value.textChanged.connect(lambda text, id=id: self.physiboss_initial_value_value_changed(id, text))
+        initial_states_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_initial_values(id))
 
         initial_states_editor.addWidget(initial_states_dropdown)
         initial_states_editor.addWidget(initial_states_value)
@@ -3843,25 +3843,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_remove_initial_values(i)
         del self.param_d[self.current_cell_def]["intracellular"]["initial_values"][i]
 
-    def physiboss_remove_initial_values(self, i):
-        self.physiboss_initial_states[i][0].currentIndexChanged.disconnect()
-        self.physiboss_initial_states[i][0].deleteLater()
-        self.physiboss_initial_states[i][1].textChanged.disconnect()
-        self.physiboss_initial_states[i][1].deleteLater()
-        self.physiboss_initial_states[i][2].clicked.disconnect()
-        self.physiboss_initial_states[i][2].deleteLater()
-        self.physiboss_initial_states[i][3].deleteLater()
-        del self.physiboss_initial_states[i]
+    def physiboss_remove_initial_values(self, id):
+        self.physiboss_initial_states[id][0].currentIndexChanged.disconnect()
+        self.physiboss_initial_states[id][0].deleteLater()
+        self.physiboss_initial_states[id][1].textChanged.disconnect()
+        self.physiboss_initial_states[id][1].deleteLater()
+        self.physiboss_initial_states[id][2].clicked.disconnect()
+        self.physiboss_initial_states[id][2].deleteLater()
+        self.physiboss_initial_states[id][3].deleteLater()
+        del self.physiboss_initial_states[id]
         
         # Here we should remap the clicked method to have the proper id
         for i, initial_state in enumerate(self.physiboss_initial_states):
             node, value, button, _ = initial_state
             node.currentIndexChanged.disconnect()
-            node.currentIndexChanged.connect(lambda index: self.physiboss_initial_value_node_changed(i, index))
+            node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_initial_value_node_changed(i, index))
             value.textChanged.disconnect()
-            value.textChanged.connect(lambda text: self.physiboss_initial_value_value_changed(i, text))
+            value.textChanged.connect(lambda text, i=i: self.physiboss_initial_value_value_changed(i, text))
             button.clicked.disconnect()
-            button.clicked.connect(lambda: self.physiboss_clicked_remove_initial_values(i))
+            button.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_initial_values(i))
 
     def physiboss_clear_initial_values(self):
         for i, _ in reversed(list(enumerate(self.physiboss_initial_states))):
@@ -3894,9 +3894,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         mutants_value = QLineEdit("0")
         mutants_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         id = len(self.physiboss_mutants)
-        mutants_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(id, index))
-        mutants_value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(id, text))
-        mutants_remove.clicked.connect(lambda: self.physiboss_clicked_remove_mutant(id))
+        mutants_node_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_mutants_node_changed(id, index))
+        mutants_value.textChanged.connect(lambda text, id=id: self.physiboss_mutants_value_changed(id, text))
+        mutants_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_mutant(id))
 
         mutants_editor.addWidget(mutants_node_dropdown)
         mutants_editor.addWidget(mutants_value)
@@ -3908,25 +3908,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_remove_mutant(i)
         del self.param_d[self.current_cell_def]["intracellular"]["mutants"][i]
 
-    def physiboss_remove_mutant(self, i):
-        self.physiboss_mutants[i][0].currentIndexChanged.disconnect()
-        self.physiboss_mutants[i][0].deleteLater()
-        self.physiboss_mutants[i][1].textChanged.disconnect()
-        self.physiboss_mutants[i][1].deleteLater()
-        self.physiboss_mutants[i][2].clicked.disconnect()
-        self.physiboss_mutants[i][2].deleteLater()
-        self.physiboss_mutants[i][3].deleteLater()
-        del self.physiboss_mutants[i]
+    def physiboss_remove_mutant(self, id):
+        self.physiboss_mutants[id][0].currentIndexChanged.disconnect()
+        self.physiboss_mutants[id][0].deleteLater()
+        self.physiboss_mutants[id][1].textChanged.disconnect()
+        self.physiboss_mutants[id][1].deleteLater()
+        self.physiboss_mutants[id][2].clicked.disconnect()
+        self.physiboss_mutants[id][2].deleteLater()
+        self.physiboss_mutants[id][3].deleteLater()
+        del self.physiboss_mutants[id]
       
         # Here we should remap the clicked method to have the proper id
         for i, mutant in enumerate(self.physiboss_mutants):
             name, value, button, _ = mutant
             name.currentIndexChanged.disconnect()
-            name.currentIndexChanged.connect(lambda index: self.physiboss_mutants_node_changed(i, index))
+            name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_mutants_node_changed(i, index))
             value.textChanged.disconnect()
-            value.textChanged.connect(lambda text: self.physiboss_mutants_value_changed(i, text))
+            value.textChanged.connect(lambda text, i=i: self.physiboss_mutants_value_changed(i, text))
             button.clicked.disconnect()
-            button.clicked.connect(lambda: self.physiboss_clicked_remove_mutant(i))
+            button.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_mutant(i))
 
     def physiboss_clear_mutants(self):
         for i, _ in reversed(list(enumerate(self.physiboss_mutants))):
@@ -3958,9 +3958,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         parameters_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
        
         id = len(self.physiboss_parameters)
-        parameters_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(id, index))
-        parameters_value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(id, text))
-        parameters_remove.clicked.connect(lambda: self.physiboss_clicked_remove_parameter(id))
+        parameters_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_parameters_node_changed(id, index))
+        parameters_value.textChanged.connect(lambda text, id=id: self.physiboss_parameters_value_changed(id, text))
+        parameters_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_parameter(id))
 
         parameters_editor.addWidget(parameters_dropdown)
         parameters_editor.addWidget(parameters_value)
@@ -3972,25 +3972,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_remove_parameter(i)
         del self.param_d[self.current_cell_def]["intracellular"]["parameters"][i]
 
-    def physiboss_remove_parameter(self, i):
-        self.physiboss_parameters[i][0].currentIndexChanged.disconnect()
-        self.physiboss_parameters[i][0].deleteLater()
-        self.physiboss_parameters[i][1].textChanged.disconnect()
-        self.physiboss_parameters[i][1].deleteLater()
-        self.physiboss_parameters[i][2].clicked.disconnect()
-        self.physiboss_parameters[i][2].deleteLater()
-        self.physiboss_parameters[i][3].deleteLater()
-        del self.physiboss_parameters[i]
+    def physiboss_remove_parameter(self, id):
+        self.physiboss_parameters[id][0].currentIndexChanged.disconnect()
+        self.physiboss_parameters[id][0].deleteLater()
+        self.physiboss_parameters[id][1].textChanged.disconnect()
+        self.physiboss_parameters[id][1].deleteLater()
+        self.physiboss_parameters[id][2].clicked.disconnect()
+        self.physiboss_parameters[id][2].deleteLater()
+        self.physiboss_parameters[id][3].deleteLater()
+        del self.physiboss_parameters[id]
 
         # Here we should remap the clicked method to have the proper id
         for i, parameter in enumerate(self.physiboss_parameters):
             name, value, button, _ = parameter
             name.currentIndexChanged.disconnect()
-            name.currentIndexChanged.connect(lambda index: self.physiboss_parameters_node_changed(i, index))
+            name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_parameters_node_changed(i, index))
             value.textChanged.disconnect()
-            value.textChanged.connect(lambda text: self.physiboss_parameters_value_changed(i, text))
+            value.textChanged.connect(lambda text, i=i: self.physiboss_parameters_value_changed(i, text))
             button.clicked.disconnect()
-            button.clicked.connect(lambda: self.physiboss_clicked_remove_parameter(i))
+            button.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_parameter(i))
         
     def physiboss_clear_parameters(self):
         for i, _ in reversed(list(enumerate(self.physiboss_parameters))):
@@ -4040,10 +4040,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
         id = len(self.physiboss_inputs)
-        inputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(id, index))
-        inputs_signal_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_inputs_signal_changed(id, text))
-        inputs_action.currentIndexChanged.connect(lambda index: self.physiboss_inputs_action_changed(id, index))
-        inputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_input(id))
+        inputs_node_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_inputs_node_changed(id, index))
+        inputs_signal_dropdown.currentIndexChanged.connect(lambda text, id=id: self.physiboss_inputs_signal_changed(id, text))
+        inputs_action.currentIndexChanged.connect(lambda index, id=id: self.physiboss_inputs_action_changed(id, index))
+        inputs_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_input(id))
 
         inputs_editor.addWidget(inputs_signal_dropdown)
         inputs_editor.setStretch(0, 1)
@@ -4055,9 +4055,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         inputs_threshold = QLineEdit("1.0")
         inputs_inact_threshold = QLineEdit("1.0")
         inputs_smoothing = QLineEdit("0")
-        inputs_threshold.textChanged.connect(lambda text: self.physiboss_inputs_threshold_changed(id, text))
-        inputs_inact_threshold.textChanged.connect(lambda text: self.physiboss_inputs_inact_threshold_changed(id, text))
-        inputs_smoothing.textChanged.connect(lambda text: self.physiboss_inputs_smoothing_changed(id, text))
+        inputs_threshold.textChanged.connect(lambda text, id=id: self.physiboss_inputs_threshold_changed(id, text))
+        inputs_inact_threshold.textChanged.connect(lambda text, id=id: self.physiboss_inputs_inact_threshold_changed(id, text))
+        inputs_smoothing.textChanged.connect(lambda text, id=id: self.physiboss_inputs_smoothing_changed(id, text))
         
         inputs_editor.addWidget(inputs_threshold)
         inputs_threshold.setFixedWidth(70)
@@ -4098,40 +4098,40 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_remove_input(i)
         del self.param_d[self.current_cell_def]["intracellular"]["inputs"][i]
 
-    def physiboss_remove_input(self, i):
-        self.physiboss_inputs[i][0].currentIndexChanged.disconnect()
-        self.physiboss_inputs[i][0].deleteLater()
-        self.physiboss_inputs[i][1].currentIndexChanged.disconnect()
-        self.physiboss_inputs[i][1].deleteLater()
-        self.physiboss_inputs[i][2].currentIndexChanged.disconnect()
-        self.physiboss_inputs[i][2].deleteLater()
-        self.physiboss_inputs[i][3].textChanged.disconnect()
-        self.physiboss_inputs[i][3].deleteLater()
-        self.physiboss_inputs[i][4].textChanged.disconnect()
-        self.physiboss_inputs[i][4].deleteLater()
-        self.physiboss_inputs[i][5].textChanged.disconnect()
-        self.physiboss_inputs[i][5].deleteLater()
-        self.physiboss_inputs[i][6].clicked.disconnect()
-        self.physiboss_inputs[i][6].deleteLater()
-        del self.physiboss_inputs[i]
+    def physiboss_remove_input(self, id):
+        self.physiboss_inputs[id][0].currentIndexChanged.disconnect()
+        self.physiboss_inputs[id][0].deleteLater()
+        self.physiboss_inputs[id][1].currentIndexChanged.disconnect()
+        self.physiboss_inputs[id][1].deleteLater()
+        self.physiboss_inputs[id][2].currentIndexChanged.disconnect()
+        self.physiboss_inputs[id][2].deleteLater()
+        self.physiboss_inputs[id][3].textChanged.disconnect()
+        self.physiboss_inputs[id][3].deleteLater()
+        self.physiboss_inputs[id][4].textChanged.disconnect()
+        self.physiboss_inputs[id][4].deleteLater()
+        self.physiboss_inputs[id][5].textChanged.disconnect()
+        self.physiboss_inputs[id][5].deleteLater()
+        self.physiboss_inputs[id][6].clicked.disconnect()
+        self.physiboss_inputs[id][6].deleteLater()
+        del self.physiboss_inputs[id]
 
         # Here we should remap the clicked method to have the proper id
         for i, input in enumerate(self.physiboss_inputs):
             signal, node, action, threshold, inact_threshold, smoothing, button, _ = input
             signal.currentIndexChanged.disconnect()
-            signal.currentIndexChanged.connect(lambda index: self.physiboss_inputs_signal_changed(i, index))
+            signal.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_signal_changed(i, index))
             node.currentIndexChanged.disconnect()
-            node.currentIndexChanged.connect(lambda index: self.physiboss_inputs_node_changed(i, index))
+            node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_node_changed(i, index))
             action.currentIndexChanged.disconnect()
-            action.currentIndexChanged.connect(lambda index: self.physiboss_inputs_action_changed(i, index))
+            action.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_action_changed(i, index))
             threshold.textChanged.disconnect()
-            threshold.textChanged.connect(lambda text: self.physiboss_inputs_threshold_changed(i, text))
+            threshold.textChanged.connect(lambda text, i=i: self.physiboss_inputs_threshold_changed(i, text))
             inact_threshold.textChanged.disconnect()
-            inact_threshold.textChanged.connect(lambda text: self.physiboss_inputs_inact_threshold_changed(i, text))
+            inact_threshold.textChanged.connect(lambda text, i=i: self.physiboss_inputs_inact_threshold_changed(i, text))
             smoothing.textChanged.disconnect()
-            smoothing.textChanged.connect(lambda text: self.physiboss_inputs_smoothing_changed(i, text))
+            smoothing.textChanged.connect(lambda text, i=i: self.physiboss_inputs_smoothing_changed(i, text))
             button.clicked.disconnect()
-            button.clicked.connect(lambda: self.physiboss_clicked_remove_input(i))
+            button.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_input(i))
         
     def physiboss_clear_inputs(self):
         for i, _ in reversed(list(enumerate(self.physiboss_inputs))):
@@ -4174,10 +4174,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
         id = len(self.physiboss_outputs)
-        outputs_node_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(id, index))
-        outputs_behaviour_dropdown.currentIndexChanged.connect(lambda text: self.physiboss_outputs_behaviour_changed(id, text))
-        outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
-        outputs_remove.clicked.connect(lambda: self.physiboss_clicked_remove_output(id))
+        outputs_node_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_outputs_node_changed(id, index))
+        outputs_behaviour_dropdown.currentIndexChanged.connect(lambda text, id=id: self.physiboss_outputs_behaviour_changed(id, text))
+        outputs_action.currentIndexChanged.connect(lambda index, id=id: self.physiboss_outputs_action_changed(id, index))
+        outputs_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_output(id))
 
         outputs_editor.addWidget(outputs_behaviour_dropdown)
         outputs_editor.setStretch(0, 1)
@@ -4189,9 +4189,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         outputs_value = QLineEdit("1.0")
         outputs_basal_value = QLineEdit("0.0")
         outputs_smoothing = QLineEdit("0")        
-        outputs_value.textChanged.connect(lambda text: self.physiboss_outputs_value_changed(id, text))
-        outputs_basal_value.textChanged.connect(lambda text: self.physiboss_outputs_basal_value_changed(id, text))
-        outputs_smoothing.textChanged.connect(lambda text: self.physiboss_outputs_smoothing_changed(id, text))
+        outputs_value.textChanged.connect(lambda text, id=id: self.physiboss_outputs_value_changed(id, text))
+        outputs_basal_value.textChanged.connect(lambda text, id=id: self.physiboss_outputs_basal_value_changed(id, text))
+        outputs_smoothing.textChanged.connect(lambda text, id=id: self.physiboss_outputs_smoothing_changed(id, text))
         
         outputs_editor.addWidget(outputs_value)
         outputs_editor.addWidget(outputs_basal_value)
@@ -4230,41 +4230,41 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_remove_output(i)
         del self.param_d[self.current_cell_def]["intracellular"]["outputs"][i]
 
-    def physiboss_remove_output(self, i):
-        self.physiboss_outputs[i][0].currentIndexChanged.disconnect()
-        self.physiboss_outputs[i][0].deleteLater()
-        self.physiboss_outputs[i][1].currentIndexChanged.disconnect()
-        self.physiboss_outputs[i][1].deleteLater()
-        self.physiboss_outputs[i][2].currentIndexChanged.disconnect()
-        self.physiboss_outputs[i][2].deleteLater()
-        self.physiboss_outputs[i][3].textChanged.disconnect()
-        self.physiboss_outputs[i][3].deleteLater()
-        self.physiboss_outputs[i][4].textChanged.disconnect()
-        self.physiboss_outputs[i][4].deleteLater()
-        self.physiboss_outputs[i][5].textChanged.disconnect()
-        self.physiboss_outputs[i][5].deleteLater()
-        self.physiboss_outputs[i][6].clicked.disconnect()
-        self.physiboss_outputs[i][6].deleteLater()
-        del self.physiboss_outputs[i]
+    def physiboss_remove_output(self, id):
+        self.physiboss_outputs[id][0].currentIndexChanged.disconnect()
+        self.physiboss_outputs[id][0].deleteLater()
+        self.physiboss_outputs[id][1].currentIndexChanged.disconnect()
+        self.physiboss_outputs[id][1].deleteLater()
+        self.physiboss_outputs[id][2].currentIndexChanged.disconnect()
+        self.physiboss_outputs[id][2].deleteLater()
+        self.physiboss_outputs[id][3].textChanged.disconnect()
+        self.physiboss_outputs[id][3].deleteLater()
+        self.physiboss_outputs[id][4].textChanged.disconnect()
+        self.physiboss_outputs[id][4].deleteLater()
+        self.physiboss_outputs[id][5].textChanged.disconnect()
+        self.physiboss_outputs[id][5].deleteLater()
+        self.physiboss_outputs[id][6].clicked.disconnect()
+        self.physiboss_outputs[id][6].deleteLater()
+        del self.physiboss_outputs[id]
 
         # Here we should remap the clicked method to have the proper id
         for i, output in enumerate(self.physiboss_outputs):
             name, node, action, value, basal_value, smoothing, button, _ = output
             name.currentIndexChanged.disconnect()
-            name.currentIndexChanged.connect(lambda index: self.physiboss_outputs_behaviour_changed(i, index))
+            name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_behaviour_changed(i, index))
             node.currentIndexChanged.disconnect()
-            node.currentIndexChanged.connect(lambda index: self.physiboss_outputs_node_changed(i, index))
+            node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_node_changed(i, index))
             action.currentIndexChanged.disconnect()
-            action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(i, index))
+            action.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_action_changed(i, index))
             value.textChanged.disconnect()
-            value.textChanged.connect(lambda text: self.physiboss_outputs_value_changed(i, text))
+            value.textChanged.connect(lambda text, i=i: self.physiboss_outputs_value_changed(i, text))
             basal_value.textChanged.disconnect()
-            basal_value.textChanged.connect(lambda text: self.physiboss_outputs_basal_value_changed(i, text))
+            basal_value.textChanged.connect(lambda text, i=i: self.physiboss_outputs_basal_value_changed(i, text))
             smoothing.textChanged.disconnect()
-            smoothing.textChanged.connect(lambda text: self.physiboss_outputs_smoothing_changed(i, text))
+            smoothing.textChanged.connect(lambda text, i=i: self.physiboss_outputs_smoothing_changed(i, text))
             button.clicked.disconnect()
-            button.clicked.connect(lambda: self.physiboss_clicked_remove_output(i))
-        
+            button.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_output(i))
+            
     def physiboss_clear_outputs(self):
         for i, _ in reversed(list(enumerate(self.physiboss_outputs))):
             self.physiboss_remove_output(i)
@@ -4299,10 +4299,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
         id = len(self.physiboss_node_specific_inheritance)
-        node_inheritance_dropdown.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(id, index))
-        node_inheritance_checkbox.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(id, bval))
-        # outputs_action.currentIndexChanged.connect(lambda index: self.physiboss_outputs_action_changed(id, index))
-        node_inheritance_remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(id))
+        node_inheritance_dropdown.currentIndexChanged.connect(lambda index, id=id: self.physiboss_node_inheritance_node_changed(id, index))
+        node_inheritance_checkbox.clicked.connect(lambda bval, id=id: self.physiboss_node_inheritance_flag_changed(id, bval))
+        node_inheritance_remove.clicked.connect(lambda _, id=id: self.physiboss_clicked_remove_node_inheritance(id))
         node_inheritance_remove.setFixedWidth(30)
         node_inheritance_editor.addWidget(node_inheritance_dropdown)
         node_inheritance_editor.addWidget(node_inheritance_checkbox)
@@ -4314,26 +4313,26 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_node_specific_inheritance.append((node_inheritance_dropdown, node_inheritance_checkbox, node_inheritance_remove, node_inheritance_editor))
     
     
-    def physiboss_remove_node_inheritance(self, i):
-        self.physiboss_node_specific_inheritance[i][0].currentIndexChanged.disconnect()
-        self.physiboss_node_specific_inheritance[i][0].deleteLater()
-        self.physiboss_node_specific_inheritance[i][1].clicked.disconnect()
-        self.physiboss_node_specific_inheritance[i][1].deleteLater()
-        self.physiboss_node_specific_inheritance[i][2].clicked.disconnect()
-        self.physiboss_node_specific_inheritance[i][2].deleteLater()
-        self.physiboss_node_specific_inheritance[i][3].deleteLater()
-        del self.physiboss_node_specific_inheritance[i]
+    def physiboss_remove_node_inheritance(self, id):
+        self.physiboss_node_specific_inheritance[id][0].currentIndexChanged.disconnect()
+        self.physiboss_node_specific_inheritance[id][0].deleteLater()
+        self.physiboss_node_specific_inheritance[id][1].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[id][1].deleteLater()
+        self.physiboss_node_specific_inheritance[id][2].clicked.disconnect()
+        self.physiboss_node_specific_inheritance[id][2].deleteLater()
+        self.physiboss_node_specific_inheritance[id][3].deleteLater()
+        del self.physiboss_node_specific_inheritance[id]
     
     
         # Here we should remap the clicked method to have the proper id
         for i, node_inheritance in enumerate(self.physiboss_node_specific_inheritance):
             node, flag, remove, _ = node_inheritance
             node.currentIndexChanged.disconnect()
-            node.currentIndexChanged.connect(lambda index: self.physiboss_node_inheritance_node_changed(i, index))
+            node.currentIndexChanged.connect(lambda index, i=i: self.physiboss_node_inheritance_node_changed(i, index))
             flag.clicked.disconnect()
-            flag.clicked.connect(lambda bval: self.physiboss_node_inheritance_flag_changed(i, bval))
+            flag.clicked.connect(lambda bval, i=i: self.physiboss_node_inheritance_flag_changed(i, bval))
             remove.clicked.disconnect()
-            remove.clicked.connect(lambda: self.physiboss_clicked_remove_node_inheritance(i))
+            remove.clicked.connect(lambda _, i=i: self.physiboss_clicked_remove_node_inheritance(i))
       
     def physiboss_node_inheritance_node_changed(self, i, index):
         if index >= 0:
