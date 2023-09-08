@@ -497,7 +497,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_cycle_params(cdname, True)
         self.new_death_params(cdname)
         self.new_volume_params(cdname)
-        self.new_mechanics_params(cdname)
+        self.new_mechanics_params(cdname, reset_mapping)
         self.new_motility_params(cdname)
         self.new_secretion_params(cdname)
         self.new_interaction_params(cdname, reset_mapping)
@@ -6634,7 +6634,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["volume_calcif_rate"] = '0.0'
         self.param_d[cdname]["volume_rel_rupture_vol"] = '2'
 
-    def new_mechanics_params(self, cdname_new):  # rf. PhysiCell core/*_phenotype.cpp constructor
+    def new_mechanics_params(self, cdname_new, reset_mapping):  # rf. PhysiCell core/*_phenotype.cpp constructor
         print("---- new_mechanics_params(): cdname_new= ",cdname_new)
         sval = self.default_sval
 
@@ -6655,16 +6655,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
 
         # rwh 8/24/23: comment out - WHY was it here?
-        for cdname in self.param_d.keys():    # for each cell def
-            for cdname2 in self.param_d.keys():    # for each cell def
-        #         # print('cdname2= ',cdname2)
-                if (cdname == cdname_new) or (cdname2 == cdname_new): 
-        #             self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-        #             self.param_d[cdname]['attack_rate'][cdname2] = sval
-        #             self.param_d[cdname]['fusion_rate'][cdname2] = sval
-        #             self.param_d[cdname]['transformation_rate'][cdname2] = sval
+        if reset_mapping:
+            for cdname in self.param_d.keys():    # for each cell def
+                for cdname2 in self.param_d.keys():    # for each cell def
+            #         # print('cdname2= ',cdname2)
+                    if (cdname == cdname_new) or (cdname2 == cdname_new): 
+            #             self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
+            #             self.param_d[cdname]['attack_rate'][cdname2] = sval
+            #             self.param_d[cdname]['fusion_rate'][cdname2] = sval
+            #             self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
-                    self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
+                        self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
         print("new_motility_params(): ",cdname)
