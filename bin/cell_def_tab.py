@@ -121,10 +121,11 @@ class MyQLineEdit(QLineEdit):
 
 
 class CellDef(QWidget):
-    def __init__(self):
+    def __init__(self, pytest_flag):
         super().__init__()
 
         random.seed(42)   # for reproducibility (cough). Needed for pytest results.
+        self.pytest_flag = pytest_flag
 
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
@@ -624,6 +625,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 break
 
+        # For now, need to copy/paste this section into pytest code, 
         self.current_cell_def = new_name
         logging.debug(f'new name= {self.current_cell_def}')
         # print(f'new name= {self.current_cell_def}')
@@ -8492,7 +8494,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         continue
 
                 logging.debug(f'\n--- key in param_d.keys() = {cdef}')
-                if cdef in cdefs_in_tree:
+                if cdef in cdefs_in_tree or self.pytest_flag:
                     logging.debug(f'matched! {cdef}')
 
             # <cell_definition name="round cell" ID="0">
