@@ -124,6 +124,8 @@ class CellDef(QWidget):
     def __init__(self):
         super().__init__()
 
+        random.seed(42)   # for reproducibility (cough). Needed for pytest results.
+
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
@@ -2852,7 +2854,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #--------------------------------------------------------
     def reset_mechanics_cb(self):
         # print("--- reset_mechanics_cb:  self.current_cell_def= ",self.current_cell_def)
-        self.new_mechanics_params(self.current_cell_def)
+        self.new_mechanics_params(self.current_cell_def, True)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
@@ -6654,17 +6656,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
 
-        # rwh 8/24/23: comment out - WHY was it here?
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
                 for cdname2 in self.param_d.keys():    # for each cell def
             #         # print('cdname2= ',cdname2)
                     if (cdname == cdname_new) or (cdname2 == cdname_new): 
-            #             self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-            #             self.param_d[cdname]['attack_rate'][cdname2] = sval
-            #             self.param_d[cdname]['fusion_rate'][cdname2] = sval
-            #             self.param_d[cdname]['transformation_rate'][cdname2] = sval
-
                         self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
