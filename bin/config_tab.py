@@ -514,8 +514,11 @@ class Config(QWidget):
 
 
     def add_day_cb(self):
-        max_time = float(self.max_time.text())
-        print("max_time=",max_time)
+        if not self.max_time.text():
+            max_time = float(0.0)
+        else:
+            max_time = float(self.max_time.text())
+        print("max_time=", max_time)
         max_time += 1440
         self.max_time.setText(f"{max_time}")
 
