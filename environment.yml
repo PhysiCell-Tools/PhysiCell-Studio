@@ -1,4 +1,4 @@
-name: pmb
+name: studio
 channels:
   - conda-forge
   - defaults
