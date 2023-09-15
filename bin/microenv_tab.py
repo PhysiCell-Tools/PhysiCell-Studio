@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QDoubleValidator #, QTreeWidgetItemIterator
+from PyQt5.QtGui import QIcon, QDoubleValidator
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
@@ -152,10 +152,11 @@ class SubstrateDef(QWidget):
         # self.copy_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.copy_button)
 
-        self.delete_button = QPushButton("Delete")
+        self.delete_button = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         self.delete_button.clicked.connect(self.delete_substrate)
         self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        # self.delete_button.setFixedWidth(bwidth)
+        del_btn_width = 50
+        self.delete_button.setFixedWidth(del_btn_width)
         tree_w_hbox.addWidget(self.delete_button)
 
 
