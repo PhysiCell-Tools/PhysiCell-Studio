@@ -329,7 +329,8 @@ class CellDef(QWidget):
         self.delete_button = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         self.delete_button.clicked.connect(self.delete_cell_def)
         self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        # self.controls_hbox.addWidget(self.delete_button)
+        del_btn_width = 50
+        self.delete_button.setFixedWidth(del_btn_width)
         tree_w_hbox.addWidget(self.delete_button)
 
         #---------
