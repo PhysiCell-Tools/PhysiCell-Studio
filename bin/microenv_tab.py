@@ -616,7 +616,13 @@ class SubstrateDef(QWidget):
     # @QtCore.Slot()
     def new_substrate(self):
         # print('------ new_substrate')
-        subname = "substrate%02d" % self.new_substrate_count
+        while True:
+            subname = "substrate%02d" % self.new_substrate_count
+            if subname in self.config_tab.substrate_list:
+                self.new_substrate_count += 1
+            else:
+                break
+            
         # Make a new substrate (that's a copy of the currently selected one)
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
 
