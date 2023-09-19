@@ -6411,8 +6411,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if old_name == self.current_secretion_substrate:
             self.current_secretion_substrate = new_name
 
-        print("     calling self.rules_tab.substrate_rename")
         if self.rules_tab:
+            # print("     calling self.rules_tab.substrate_rename")
             self.rules_tab.substrate_rename(idx,old_name,new_name)
 
         self.physiboss_update_list_signals()
