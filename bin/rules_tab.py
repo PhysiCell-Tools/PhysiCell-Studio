@@ -2192,18 +2192,10 @@ class Rules(QWidget):
         return
     
     def find_and_replace_rule_cell(self, old_name, new_name, original_list, old_is_substring, s):
-        print("      checking if not old_is_substring...")
-        if old_is_substring is False:
-            return s.replace(old_name, new_name)
-        
-        # for now, deal with the case that the names have no spaces
-
-        print("      checking for exact match...")
         if s=="old_name":
             return new_name
         
         # now need to check if a name in the original list matches that contains old_name as a substring
-        print("      doing big check now...")
         if any([(x in s) and (old_name in x) and (old_name != x) for x in original_list]) is True:
             # in this case, we found an element in the original_list that was in the given string...
             # ...and the old_name was a substring of this element x in the list...
@@ -2213,6 +2205,24 @@ class Rules(QWidget):
             #       protecting against that would require curating a list of "protected words" that are used in the rules grammar
             #       but this list will grow and change over time, making it uncertain how well-maintained that list will be
             #       Instead, we will rely on the user to not name their substrate "with", "death", etc.
+            #       Another point, any substring of these would need to be protected against, e.g. "a", "cel", "lume", etc.
             return s
         
-        return s.replace(old_name, new_name)
+        # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
+        start = 0
+        while start < len(s):
+            ind = s.find(old_name, start)
+            start = ind+1 # update for next time through the loop (if there is a next time)
+            if ind == -1:
+                return s # got to the end of s without finding a good match, no replacements needed
+
+            if ind>0 and ~(s[ind-1].isspace()):
+                continue # previous character was not a space, so this was not a good match
+            
+            if ind < len(s)-len(old_name) and not (s[ind+len(old_name)].isspace()):
+                continue # next character was not a space, so this was not a good match
+
+            # if we get here, then we've found a good match starting at ind; break out and deal with it
+            break
+
+        return s[0:ind] + new_name + s[(ind+len(old_name)):]
