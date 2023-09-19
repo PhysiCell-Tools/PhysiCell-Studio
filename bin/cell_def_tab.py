@@ -326,10 +326,11 @@ class CellDef(QWidget):
         # self.controls_hbox.addWidget(self.copy_button)
         tree_w_hbox.addWidget(self.copy_button)
 
-        self.delete_button = QPushButton("Delete")
+        self.delete_button = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         self.delete_button.clicked.connect(self.delete_cell_def)
         self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        # self.controls_hbox.addWidget(self.delete_button)
+        del_btn_width = 50
+        self.delete_button.setFixedWidth(del_btn_width)
         tree_w_hbox.addWidget(self.delete_button)
 
         #---------
@@ -1795,12 +1796,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.apoptosis_rb2.toggled.connect(self.apoptosis_phase_transition_cb)
 
         hbox.addWidget(self.apoptosis_rb1)
+
         hbox.addWidget(self.apoptosis_rb2)
 
         radio_frame = QFrame()
         radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
         radio_frame.setLayout(hbox)
         radio_frame.setFixedWidth(210)  # omg
+        radio_frame.setFixedHeight(30)
         idr += 1
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
@@ -2015,6 +2018,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
         radio_frame.setLayout(hbox)
         radio_frame.setFixedWidth(210)  # omg
+        radio_frame.setFixedHeight(30)
         idr += 1
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
