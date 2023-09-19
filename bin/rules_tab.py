@@ -879,9 +879,13 @@ class Rules(QWidget):
     def substrate_rename(self,idx,old_name,new_name):
         # print("rules_tab: substrate_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
         # print("        self.substrates= ",self.substrates)
-        self.substrates = list(map(lambda x: x.replace(old_name, new_name), self.substrates))
+        original_list = self.substrates
+        # self.substrates = list(map(lambda x: x.replace(old_name, new_name), self.substrates))
+        idx = self.substrates.index(old_name)
+        self.substrates[idx] = new_name
         self.fill_signals_widget()
         self.fill_responses_widget()
+        self.find_and_replace_rules_table(old_name, new_name, original_list)
 
     #-----------------------------------------------------------
     def delete_substrate(self,name):
@@ -915,11 +919,12 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
         # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
+        original_list = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
         self.celltype_combobox.setItemText(idx, new_name)
-        all_items = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
         # print("rules_tab: cell_def_rename(): items in combobox= ",all_items)
         self.fill_signals_widget()
         self.fill_responses_widget()
+        self.find_and_replace_rules_table(old_name, new_name, original_list)
 
 
     #-----------------------------------------------------------
@@ -2168,3 +2173,56 @@ class Rules(QWidget):
         returnValue = msgBox.exec()
         # if returnValue == QMessageBox.Ok:
             # print('OK clicked')
+
+    #-------------------------
+    def find_and_replace_rules_table(self, old_name, new_name, original_list):
+        old_is_substring = any([(old_name in x) and (old_name != x) for x in original_list])
+        print(f"      using find and replace with old = {old_name} and new = {new_name}. Original list = {original_list}")
+        print(f"      so old_is_substring = {old_is_substring}")
+        for irow in range(self.num_rules):
+            self.find_and_replace_rule_row(old_name, new_name, original_list, irow, old_is_substring)
+        return
+    
+    def find_and_replace_rule_row(self, old_name, new_name, original_list, irow, old_is_substring):
+        column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
+        for icol in column_indices:
+            old_text = self.rules_table.cellWidget(irow, icol).text()
+            new_text = self.find_and_replace_rule_cell(old_name, new_name, original_list, old_is_substring, old_text)
+            self.rules_table.cellWidget(irow, icol).setText(new_text)
+        return
+    
+    def find_and_replace_rule_cell(self, old_name, new_name, original_list, old_is_substring, s):
+        if s=="old_name":
+            return new_name
+        
+        # now need to check if a name in the original list matches that contains old_name as a substring
+        if any([(x in s) and (old_name in x) and (old_name != x) for x in original_list]) is True:
+            # in this case, we found an element in the original_list that was in the given string...
+            # ...and the old_name was a substring of this element x in the list...
+            # ...and the element is NOT the old_name...
+            # ...then we conclude that the string has instructions for an element of our list that is NOT being renamed, so we skip
+            # NOTE: this does not protect against elements in the list being named "contact", "contact ", "intracellular", "volume", etc
+            #       protecting against that would require curating a list of "protected words" that are used in the rules grammar
+            #       but this list will grow and change over time, making it uncertain how well-maintained that list will be
+            #       Instead, we will rely on the user to not name their substrate "with", "death", etc.
+            #       Another point, any substring of these would need to be protected against, e.g. "a", "cel", "lume", etc.
+            return s
+        
+        # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
+        start = 0
+        while start < len(s):
+            ind = s.find(old_name, start)
+            start = ind+1 # update for next time through the loop (if there is a next time)
+            if ind == -1:
+                return s # got to the end of s without finding a good match, no replacements needed
+
+            if ind>0 and ~(s[ind-1].isspace()):
+                continue # previous character was not a space, so this was not a good match
+            
+            if ind < len(s)-len(old_name) and not (s[ind+len(old_name)].isspace()):
+                continue # next character was not a space, so this was not a good match
+
+            # if we get here, then we've found a good match starting at ind; break out and deal with it
+            break
+
+        return s[0:ind] + new_name + s[(ind+len(old_name)):]
