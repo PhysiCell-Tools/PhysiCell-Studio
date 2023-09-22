@@ -158,6 +158,8 @@ class ICs(QWidget):
         self.figsize_width_svg = basic_length
         self.figsize_height_svg = basic_length
 
+        self.mouse_on_axes = False
+
         # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
@@ -945,6 +947,7 @@ class ICs(QWidget):
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.mpl_connect("button_press_event", self.button_press)
+        self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
         self.canvas.mpl_connect('axes_enter_event', self.on_enter_axes)
         self.canvas.mpl_connect('axes_leave_event', self.on_leave_axes)
         self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
@@ -1918,13 +1921,23 @@ class ICs(QWidget):
         self.output_file.setText(self.config_tab.csv_file.text())
 
     def on_enter_axes(self, event):
+        self.mouse_on_axes = True
         current_location = self.getPos(event)
-        self.ax0.set_title(f"(x,y) = ({current_location[0]}, {current_location[1]})")
+        self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
         self.canvas.update()
         self.canvas.draw()
 
     def on_leave_axes(self, event):
+        self.mouse_on_axes = False
         self.ax0.set_title("")
+        self.canvas.update()
+        self.canvas.draw()
+
+    def mouseMoved(self, event):
+        if self.mouse_on_axes is False:
+            return
+        current_location = self.getPos(event)
+        self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
         self.canvas.update()
         self.canvas.draw()
 
