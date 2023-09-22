@@ -945,6 +945,9 @@ class ICs(QWidget):
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.mpl_connect("button_press_event", self.button_press)
+        self.canvas.mpl_connect('axes_enter_event', self.on_enter_axes)
+        self.canvas.mpl_connect('axes_leave_event', self.on_leave_axes)
+        self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
         self.canvas.setStyleSheet("background-color:transparent;")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
@@ -972,6 +975,12 @@ class ICs(QWidget):
         self.canvas.draw()
 
     #---------------------------------------------------------------------------
+    def getPos(self, event):
+        x = event.xdata  # or "None" if outside plot domain
+        y = event.ydata
+        z = 0.0
+        return x, y, z
+    
     def circles(self, x, y, s, c='b', vmin=None, vmax=None, **kwargs):
         """
         See https://gist.github.com/syrte/592a062c562cd2a98a83 
@@ -1907,3 +1916,15 @@ class ICs(QWidget):
     def fill_gui(self):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
+
+    def on_enter_axes(self, event):
+        current_location = self.getPos(event)
+        self.ax0.set_title(f"(x,y) = ({current_location[0]}, {current_location[1]})")
+        self.canvas.update()
+        self.canvas.draw()
+
+    def on_leave_axes(self, event):
+        self.ax0.set_title("")
+        self.canvas.update()
+        self.canvas.draw()
+
