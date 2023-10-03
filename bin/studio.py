@@ -710,7 +710,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
     def open_help_url(self):
-        url = QtCore.QUrl('https://github.com/rheiland/PhysiCell-Studio/blob/main/user-guide/README.md')
+        url = QtCore.QUrl('https://github.com/PhysiCell-Tools/Studio-Guide/blob/main/README.md')
         if not QtGui.QDesktopServices.openUrl(url):
             QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open URL')
 
