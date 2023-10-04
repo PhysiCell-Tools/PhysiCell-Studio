@@ -48,6 +48,7 @@ import numpy as np
 import scipy.io
 from pyMCDS_cells import pyMCDS_cells 
 from pyMCDS import pyMCDS
+import pcdl
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -741,8 +742,7 @@ class Vis(VisBase, QWidget):
         if not Path(xml_file).is_file():
             print("ERROR: file not found",xml_file)
             return
-
-        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        mcds = pcdl.TimeStep(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         try:
@@ -799,6 +799,9 @@ class Vis(VisBase, QWidget):
                 self.cycle_phases = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18, 100,101,102,103,104]
                 # if self.discrete_variable is None:
                 self.discrete_variable = self.cycle_phases
+            elif cell_scalar_name == "cell_type":
+                cell_type_dict = mcds.data['metadata']['cell_type']
+                self.discrete_variable = list(cell_type_dict.values())
             else:
                 self.discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
         # if( discrete_variable ): # Generic way: if variable is discrete
@@ -874,7 +877,7 @@ class Vis(VisBase, QWidget):
                 self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
                 # self.cbar2.ax.tick_params(length=0) # remove tick line
                 cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
-                self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
+                self.cbar2.set_ticklabels(self.discrete_variable,rotation=45) # It's possible to give strings
                 self.cbar2.ax.tick_params(labelsize=self.fontsize)
                 self.cbar2.ax.set_xlabel(cell_scalar_name)
                 self.discrete_variable = None
