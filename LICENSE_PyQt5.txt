@@ -1,4 +1,0 @@
-
-PyQt5 is released under the GPL v3 license and under a commercial license that allows for the development of proprietary applications.
-
-Rf. https://pypi.org/project/PyQt5/
