@@ -84,7 +84,8 @@ class ICs(QWidget):
         # self.mech_voxel_size = 30
 
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
-        self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+        # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+        self.color_by_celltype = ['gray','red','yellow','green','blue','magenta','orange','lime','cyan','hotpink','peachpuff','darkseagreen','lightskyblue']
         self.alpha_value = 1.0
 
         self.csv_array = np.empty([1,4])  # default floats (x,y,z,cell_type_index)
@@ -584,6 +585,11 @@ class ICs(QWidget):
 
         # self.create_figure()
 
+
+    def update_colors_list(self):
+        if len(self.celldef_tab.celltypes_list) >= len(self.color_by_celltype):
+            # print("ics_tab: update_colors_list(): exceeded # of colors. Grow it.")
+            self.color_by_celltype.append('white')  # match what's done in PhysiCell
 
     def fill_celltype_combobox(self):
         logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.celldef_tab.celltypes_list}')
@@ -1620,10 +1626,16 @@ class ICs(QWidget):
         rvals = np.array(rlist)
         # rgbas = np.array(rgba_list)
 
+        # print("idx, # celltypes=",cell_type_index , len(self.color_by_celltype[cell_type_index]))
+        # if cell_type_index >= len(self.color_by_celltype[cell_type_index]):
+        #     print("Error: exceeded # of colors. Grow it.")
+        #     self.color_by_celltype.append('red')
+
         if (self.cells_edge_checked_flag):
             try:
                 self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-            except (ValueError):
+            # except (ValueError):
+            except:
                 pass
         else:
             self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
