@@ -7855,6 +7855,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         volume.text = self.indent12  # affects indent of child
         volume.tail = "\n" + self.indent10
 
+        vol_total = float(self.param_d[cdef]['volume_total'])
+        vol_nuclear = float(self.param_d[cdef]['volume_nuclear'])
+        if vol_total < vol_nuclear:
+            msg = f"WARNING: {cdef} cell type has Volume total ({vol_total}) less than nuclear ({vol_nuclear})!"
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+
         elm = ET.SubElement(volume, 'total',{"units":"micron^3"})
         elm.text = self.param_d[cdef]['volume_total']
         elm.tail = self.indent12
