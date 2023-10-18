@@ -11,7 +11,8 @@ import os
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog
+# from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
@@ -480,15 +481,15 @@ class Config(QWidget):
         hbox = QHBoxLayout()
 
         cbox_width = 200
-        self.virtual_walls = QCheckBox_custom("virtual walls")
-        self.virtual_walls.setFixedWidth(cbox_width)
+        self.virtual_walls = QCheckBox_custom("virtual walls (nudge cells away from domain boundaries)")
+        self.virtual_walls.setFixedWidth(400)
         self.virtual_walls.setChecked(True)
         hbox.addWidget(self.virtual_walls)
 
-        self.disable_auto_springs = QCheckBox_custom("disable springs")
-        self.disable_auto_springs.setFixedWidth(cbox_width)
-        self.disable_auto_springs.setChecked(True)
-        hbox.addWidget(self.disable_auto_springs)
+        # self.disable_auto_springs = QCheckBox_custom("disable springs")
+        # self.disable_auto_springs.setFixedWidth(cbox_width)
+        # self.disable_auto_springs.setChecked(True)
+        # hbox.addWidget(self.disable_auto_springs)
 
         vbox.addLayout(hbox)
 
@@ -666,10 +667,20 @@ class Config(QWidget):
         else:
             print("\n\n---------virtual_wall_at_domain_edge is None !!!!!!!!!!!!1")
 
-        self.disable_auto_springs.setChecked(False)
-        if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
-            if self.xml_root.find(".//disable_automated_spring_adhesions").text.lower() == "true":
-                self.disable_auto_springs.setChecked(True)
+        # self.disable_auto_springs.setChecked(False)
+        # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
+        #     if self.xml_root.find(".//disable_automated_spring_adhesions").text.lower() == "true":
+        #         self.disable_auto_springs.setChecked(True)
+
+        # No, let's not do this
+        # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
+        #     msg = f"NOTE: disable_automated_spring_adhesions in .xml is deprecated."
+        #     print(msg)
+        #     msgBox = QMessageBox()
+        #     msgBox.setTextFormat(Qt.RichText)
+        #     msgBox.setText(msg)
+        #     msgBox.setStandardButtons(QMessageBox.Ok)
+        #     returnValue = msgBox.exec()
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         self.diffusion_dt.setText(self.xml_root.find(".//dt_diffusion").text)
