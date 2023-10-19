@@ -817,15 +817,15 @@ class Config(QWidget):
             subelm = ET.SubElement(uep, "virtual_wall_at_domain_edge")
             subelm.text = bval
 
-        bval = "false"
-        if self.disable_auto_springs.isChecked():
-            bval = "true"
-        if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
-            self.xml_root.find(".//disable_automated_spring_adhesions").text = bval
-        else:  # missing in original; insert it (happens at write)
-            uep = self.xml_root.find('.//options')
-            subelm = ET.SubElement(uep, "disable_automated_spring_adhesions")
-            subelm.text = bval
+        # bval = "false"
+        # if self.disable_auto_springs.isChecked():
+        #     bval = "true"
+        # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
+        #     self.xml_root.find(".//disable_automated_spring_adhesions").text = bval
+        # else:  # missing in original; insert it (happens at write)
+        #     uep = self.xml_root.find('.//options')
+        #     subelm = ET.SubElement(uep, "disable_automated_spring_adhesions")
+        #     subelm.text = bval
 
 
         # rwh: Not sure why I couldn't get this to work, i.e., to *insert* the element (just one time) if it didn't exist.
