@@ -2648,42 +2648,42 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #-----
         # self.new_stuff = False
         self.new_stuff = True
-        label = QLabel("cell-BM adhesion strength")
-        label.setEnabled(self.new_stuff)
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        # label = QLabel("cell-BM adhesion strength")
+        # label.setEnabled(self.new_stuff)
+        # label.setFixedWidth(self.label_width)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # idr += 1
+        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_bm_adhesion_strength = QLineEdit_color()
-        self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
-        self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.cell_bm_adhesion_strength.setEnabled(self.new_stuff)
+        # self.cell_bm_adhesion_strength = QLineEdit_color()
+        # self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
+        # self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
+        # glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        # self.cell_bm_adhesion_strength.setEnabled(self.new_stuff)
 
-        units = QLabel("micron/min")
-        units.setFixedWidth(self.units_width)
-        units.setAlignment(QtCore.Qt.AlignLeft)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        # units = QLabel("micron/min")
+        # units.setFixedWidth(self.units_width)
+        # units.setAlignment(QtCore.Qt.AlignLeft)
+        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        #---
-        label = QLabel("cell-BM repulsion strength")
-        label.setEnabled(self.new_stuff)
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        # #---
+        # label = QLabel("cell-BM repulsion strength")
+        # label.setEnabled(self.new_stuff)
+        # label.setFixedWidth(self.label_width)
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # idr += 1
+        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_bm_repulsion_strength = QLineEdit_color()
-        self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
-        self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.cell_bm_repulsion_strength.setEnabled(self.new_stuff)
+        # self.cell_bm_repulsion_strength = QLineEdit_color()
+        # self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
+        # self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
+        # glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        # self.cell_bm_repulsion_strength.setEnabled(self.new_stuff)
 
-        units = QLabel("micron/min")
-        units.setFixedWidth(self.units_width)
-        units.setAlignment(QtCore.Qt.AlignLeft)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        # units = QLabel("micron/min")
+        # units.setFixedWidth(self.units_width)
+        # units.setAlignment(QtCore.Qt.AlignLeft)
+        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #---
         label = QLabel("relative max adhesion distance")
@@ -5138,10 +5138,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def cell_cell_repulsion_strength_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_repulsion'] = text
 
-    def cell_bm_adhesion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_BM_adhesion'] = text
-    def cell_bm_repulsion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_BM_repulsion'] = text
+    # def cell_bm_adhesion_strength_changed(self, text):
+    #     self.param_d[self.current_cell_def]['mechanics_BM_adhesion'] = text
+    # def cell_bm_repulsion_strength_changed(self, text):
+    #     self.param_d[self.current_cell_def]['mechanics_BM_repulsion'] = text
     def relative_maximum_adhesion_distance_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_adhesion_distance'] = text
     def set_relative_equilibrium_distance_changed(self, text):
@@ -6301,6 +6301,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
         if self.ics_tab:
+            self.ics_tab.update_colors_list()
             self.ics_tab.celltype_combobox.addItem(name)
         if self.rules_tab:
             self.rules_tab.add_new_celltype(name)
@@ -7006,8 +7007,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
-        self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
-        self.cell_bm_repulsion_strength.setText(self.param_d[cdname]["mechanics_BM_repulsion"])
+        # self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
+        # self.cell_bm_repulsion_strength.setText(self.param_d[cdname]["mechanics_BM_repulsion"])
         self.relative_maximum_adhesion_distance.setText(self.param_d[cdname]["mechanics_adhesion_distance"])
 
         # print("update_mechanics_params(): param_d= ",self.param_d)
@@ -7854,6 +7855,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         volume.text = self.indent12  # affects indent of child
         volume.tail = "\n" + self.indent10
 
+        vol_total = float(self.param_d[cdef]['volume_total'])
+        vol_nuclear = float(self.param_d[cdef]['volume_nuclear'])
+        if vol_total < vol_nuclear:
+            msg = f"WARNING: {cdef} cell type has Volume total ({vol_total}) less than nuclear ({vol_nuclear})!"
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+
         elm = ET.SubElement(volume, 'total',{"units":"micron^3"})
         elm.text = self.param_d[cdef]['volume_total']
         elm.tail = self.indent12
@@ -7946,13 +7958,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         subelm.tail = self.indent12
 
         # new_stuff (June 2022) mechanics params
-        elm = ET.SubElement(mechanics, 'cell_BM_adhesion_strength',{"units":"micron/min"})
-        elm.text = self.param_d[cdef]["mechanics_BM_adhesion"]
-        elm.tail = self.indent12
+        # elm = ET.SubElement(mechanics, 'cell_BM_adhesion_strength',{"units":"micron/min"})
+        # elm.text = self.param_d[cdef]["mechanics_BM_adhesion"]
+        # elm.tail = self.indent12
 
-        elm = ET.SubElement(mechanics, 'cell_BM_repulsion_strength',{"units":"micron/min"})
-        elm.text = self.param_d[cdef]["mechanics_BM_repulsion"]
-        elm.tail = self.indent12
+        # elm = ET.SubElement(mechanics, 'cell_BM_repulsion_strength',{"units":"micron/min"})
+        # elm.text = self.param_d[cdef]["mechanics_BM_repulsion"]
+        # elm.tail = self.indent12
 
         elm = ET.SubElement(mechanics, 'attachment_elastic_constant',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_elastic_constant"]

@@ -1,0 +1,5 @@
+PhysiCell Studio is open source software. Since it currently uses PyQt5, it needs to adhere to the PyQt5 license (rf. https://pypi.org/project/PyQt5/):
+
+"PyQt5 is released under the GPL v3 license and under a commercial license that allows for the development of proprietary applications."
+
+(Note that it is a similar license situation with Qt: https://doc.qt.io/qt-6/licensing.html)

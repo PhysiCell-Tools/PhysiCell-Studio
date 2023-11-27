@@ -799,6 +799,11 @@ class Vis(VisBase, QWidget):
                 self.cycle_phases = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18, 100,101,102,103,104]
                 # if self.discrete_variable is None:
                 self.discrete_variable = self.cycle_phases
+            elif cell_scalar_name == "cell_type":
+                ct_low  = int(min(cell_scalar))
+                ct_high = int(max(cell_scalar))
+                # print("ct_low,ct_high=",ct_low,ct_high)
+                self.discrete_variable = list(range(ct_low,ct_high+1))
             else:
                 self.discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
         # if( discrete_variable ): # Generic way: if variable is discrete
