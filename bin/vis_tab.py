@@ -129,14 +129,8 @@ class Vis(VisBase, QWidget):
         self.physiboss_node_dict = {}
         
         self.reset_model_flag = True
-        self.xmin = -80
-        self.xmax = 80
-        self.xdel = 20
         self.x_range = self.xmax - self.xmin
 
-        self.ymin = -50
-        self.ymax = 100
-        self.ydel = 20
         self.y_range = self.ymax - self.ymin
 
         self.aspect_ratio = 0.7
@@ -365,6 +359,7 @@ class Vis(VisBase, QWidget):
         # ymin = self.ymin + yoffset
 
         xs = np.arange(self.xmin,self.xmax+1,self.xdel)  # DON'T try to use np.linspace!
+        # print("xmin,max,del=",self.xmin,self.xmax,self.xdel)
         # print("xs= ",xs)
         ys = np.arange(self.ymin,self.ymax+1,self.ydel)
         # print("ys= ",ys)

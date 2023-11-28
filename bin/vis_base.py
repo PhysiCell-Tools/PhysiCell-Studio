@@ -360,7 +360,7 @@ class VisBase():
             self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead']
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
-        self.mech_voxel_size = 30
+        self.mech_voxel_size = 30  # TODO? modify based on voxel size?
 
         self.nanohub_flag = nanohub_flag
         self.config_tab = config_tab
@@ -1714,17 +1714,20 @@ class VisBase():
 
 
     def reset_domain_box(self):
-        print("\n------ vis_base: reset_domain_box()")
+        # print("\n------ vis_base: reset_domain_box()")
         self.lut_discrete = None
 
         self.xmin = float(self.config_tab.xmin.text())
         self.xmax = float(self.config_tab.xmax.text())
+        self.xdel = float(self.config_tab.xdel.text())
 
         self.ymin = float(self.config_tab.ymin.text())
         self.ymax = float(self.config_tab.ymax.text())
+        self.ydel = float(self.config_tab.ydel.text())
 
         self.zmin = float(self.config_tab.zmin.text())
         self.zmax = float(self.config_tab.zmax.text())
+        self.zdel = float(self.config_tab.zdel.text())
 
         if self.model3D_flag:
             # self.domain_diagonal = vtkLineSource()
@@ -1746,7 +1749,7 @@ class VisBase():
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
             self.plot_ymax = float(self.ymax)
-            print("--------vis_base() reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            # print("--------vis_base() reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
         except:
             pass
 
@@ -1955,7 +1958,7 @@ class VisBase():
 
 
     def reset_model(self):
-        print("--------- vis_base: reset_model ----------")
+        # print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
