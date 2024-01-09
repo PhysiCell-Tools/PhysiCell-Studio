@@ -31,7 +31,7 @@ import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from PyQt5.QtWidgets import QCompleter, QSizePolicy
+from PyQt5.QtWidgets import QCompleter, QSizePolicy, QSpacerItem
 from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
@@ -622,9 +622,10 @@ class VisBase():
         self.scroll_plot = QScrollArea()  # might contain centralWidget
 
 
-        splitter = QSplitter()
+        splitter = QSplitter(self)
         self.scroll_params = QScrollArea()
-        splitter.addWidget(self.scroll_params)
+        self.scroll_params.setWidgetResizable(True)
+        self.scroll_params.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         #---------------------
         self.stackw = QStackedWidget()
@@ -635,6 +636,8 @@ class VisBase():
 
         self.vbox = QVBoxLayout()
         self.controls1.setLayout(self.vbox)
+        self.controls1.setStyleSheet(self.stylesheet)
+        self.controls1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         hbox = QHBoxLayout()
         arrow_button_width = 40
@@ -681,6 +684,9 @@ class VisBase():
         self.vbox.addWidget(QHLine())
 
         self.cells_hbox = QHBoxLayout()
+
+        self.hz_stretch_item = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
         self.cells_checkbox = QCheckBox_custom("cells")
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
@@ -705,6 +711,7 @@ class VisBase():
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_mat_rb)
             self.cells_hbox.addWidget(self.cells_mat_rb)
+            self.cells_hbox.addSpacerItem(self.hz_stretch_item)
             # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
             # radio_frame = QFrame()
@@ -738,6 +745,7 @@ class VisBase():
         # self.cell_scalar_combobox.setEnabled(True)   # for 3D
         self.cell_scalar_combobox.setEnabled(self.model3D_flag)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
+        hbox.addItem(self.hz_stretch_item)
         self.vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -837,6 +845,7 @@ class VisBase():
         hbox = QHBoxLayout()
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
+        hbox.addItem(self.hz_stretch_item)
 
         self.vbox.addLayout(hbox)
 
@@ -941,7 +950,7 @@ class VisBase():
         # self.discrete_cells_combobox.setEnabled(False)
         self.discrete_cells_combobox.currentIndexChanged.connect(self.population_choice_cb)
         hbox.addWidget(self.discrete_cells_combobox)
-
+        hbox.addItem(self.hz_stretch_item)
         self.vbox.addLayout(hbox)
 
 
@@ -984,10 +993,16 @@ class VisBase():
         # done in subclasses now
         # self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
 
+        self.stretch_widget = QWidget()
+        self.stretch_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.vbox.addWidget(self.stretch_widget)
+
         self.stackw.addWidget(self.controls1)
         self.stackw.setCurrentIndex(0)
 
-        self.scroll_params.setWidget(self.stackw)
+        self.scroll_params.setWidget(self.controls1)
+        splitter.addWidget(self.scroll_params)
         splitter.addWidget(self.scroll_plot)
 
         self.show_plot_range = False
@@ -1339,12 +1354,16 @@ class VisBase():
         if not self.physiboss_widgets:
             
             self.physiboss_widgets = True
-                
+
+            self.vbox.removeWidget(self.stretch_widget) #removes the placeholder for the "stretcher widget" to place it at the bottom
+            self.cells_hbox.removeItem(self.hz_stretch_item) #same as above
+
             self.cells_physiboss_rb = QRadioButton("physiboss")
             self.cells_physiboss_rb.setChecked(False)
             self.cells_physiboss_rb.clicked.connect(self.cells_svg_mat_cb)
             self.cells_hbox.addWidget(self.cells_physiboss_rb)
-                
+            self.cells_hbox.addItem(self.hz_stretch_item)
+
             self.physiboss_qline = QHLine()
             self.vbox.addWidget(self.physiboss_qline)
             
@@ -1358,6 +1377,7 @@ class VisBase():
             self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.physiboss_hbox.addWidget(self.physiboss_cell_type_combobox)
             self.physiboss_hbox.addWidget(self.physiboss_node_combobox)
+            self.physiboss_hbox.addItem(self.hz_stretch_item)
 
             self.vbox.addLayout(self.physiboss_hbox)
             
@@ -1366,7 +1386,8 @@ class VisBase():
             self.physiboss_population_counts_button.setEnabled(False)
             self.physiboss_population_counts_button.clicked.connect(self.physiboss_state_counts_cb)
             self.vbox.addWidget(self.physiboss_population_counts_button)
-        
+            self.vbox.addWidget(self.stretch_widget)
+
     def physiboss_vis_hide(self):
         print("\n--------- physiboss_vis_hide()")
 
