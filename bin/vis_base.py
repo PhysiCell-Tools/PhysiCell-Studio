@@ -843,6 +843,8 @@ class VisBase():
         self.vbox.addWidget(self.substrates_checkbox)
 
         hbox = QHBoxLayout()
+        self.substrates_combobox.setFixedWidth(120)
+        self.substrates_cbar_combobox.setFixedWidth(120)
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
         hbox.addItem(self.hz_stretch_item)
