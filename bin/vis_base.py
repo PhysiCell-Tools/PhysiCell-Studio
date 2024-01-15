@@ -1372,9 +1372,11 @@ class VisBase():
             self.physiboss_hbox = QHBoxLayout()
 
             self.physiboss_cell_type_combobox = QComboBox()
+            self.physiboss_cell_type_combobox.setFixedWidth(120)
             self.physiboss_cell_type_combobox.setEnabled(False)
             self.physiboss_cell_type_combobox.currentIndexChanged.connect(self.physiboss_vis_cell_type_cb)
             self.physiboss_node_combobox = QComboBox()
+            self.physiboss_node_combobox.setFixedWidth(120)
             self.physiboss_node_combobox.setEnabled(False)
             self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.physiboss_hbox.addWidget(self.physiboss_cell_type_combobox)
