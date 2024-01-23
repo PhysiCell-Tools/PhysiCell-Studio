@@ -619,6 +619,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         print("studio.py: filterUI_cb")
         self.vis_tab.filterUI_cb()
 
+    def run_model_cb(self):
+        print("studio.py: run_model_cb")
+        self.run_tab.run_model_cb()
+
     def menu(self):
         menubar = QMenuBar(self)
         menubar.setNativeMenuBar(False)
@@ -702,6 +706,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 vis2D_filterUI_act = view_menu.addAction("Plot options", self.filterUI_cb)
 
 
+        action_menu = menubar.addMenu('&Action')
+        action_menu.addAction("Run", self.run_model_cb, QtGui.QKeySequence('Ctrl+r'))
 
         help_menu = menubar.addMenu('&Help')
         help_menu.triggered.connect(self.open_help_url)

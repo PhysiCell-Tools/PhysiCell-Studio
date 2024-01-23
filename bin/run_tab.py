@@ -205,7 +205,10 @@ class RunModel(QWidget):
                     self.output_dir = self.config_tab.folder.text()
                     os.system('rm -rf ' + self.output_dir)
                     logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
-                    os.makedirs(self.output_dir)  # do 'mkdir output_dir'
+                    try:
+                        os.makedirs(self.output_dir)  # do 'mkdir output_dir'
+                    except:
+                        pass
                     time.sleep(1)
                     tdir = os.path.abspath(self.output_dir)
 
