@@ -371,10 +371,9 @@ class Vis(VisBase, QWidget):
 
     #------------------------------------------------------------
     def plot_mechanics_grid(self):
-        numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
-        numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
-        xs = np.linspace(self.xmin,self.xmax, numx)
-        ys = np.linspace(self.ymin,self.ymax, numy)
+        xs = np.arange(self.xmin,self.xmax+1,self.mech_voxel_size)  # DON'T try to use np.linspace!
+        ys = np.arange(self.ymin,self.ymax+1,self.mech_voxel_size)
+        # print(f'plot_mechanics_grid:  xs={xs} ,ys={ys}')
         hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
         vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
         grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
