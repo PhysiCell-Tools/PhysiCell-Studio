@@ -685,7 +685,10 @@ class VisBase():
 
         self.cells_hbox = QHBoxLayout()
 
-        self.hz_stretch_item = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_1 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_2 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_3 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_4 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self.cells_checkbox = QCheckBox_custom("cells")
         self.cells_checkbox.setChecked(True)
@@ -711,7 +714,7 @@ class VisBase():
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_mat_rb)
             self.cells_hbox.addWidget(self.cells_mat_rb)
-            self.cells_hbox.addSpacerItem(self.hz_stretch_item)
+            self.cells_hbox.addSpacerItem(self.hz_stretch_item_1)
             # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
             # radio_frame = QFrame()
@@ -745,7 +748,7 @@ class VisBase():
         # self.cell_scalar_combobox.setEnabled(True)   # for 3D
         self.cell_scalar_combobox.setEnabled(self.model3D_flag)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
-        hbox.addItem(self.hz_stretch_item)
+        hbox.addItem(self.hz_stretch_item_2)
         self.vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -847,7 +850,7 @@ class VisBase():
         self.substrates_cbar_combobox.setFixedWidth(120)
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
-        hbox.addItem(self.hz_stretch_item)
+        hbox.addItem(self.hz_stretch_item_3)
 
         self.vbox.addLayout(hbox)
 
@@ -952,7 +955,7 @@ class VisBase():
         # self.discrete_cells_combobox.setEnabled(False)
         self.discrete_cells_combobox.currentIndexChanged.connect(self.population_choice_cb)
         hbox.addWidget(self.discrete_cells_combobox)
-        hbox.addItem(self.hz_stretch_item)
+        hbox.addItem(self.hz_stretch_item_4)
         self.vbox.addLayout(hbox)
 
 
@@ -1358,13 +1361,14 @@ class VisBase():
             self.physiboss_widgets = True
 
             self.vbox.removeWidget(self.stretch_widget) #removes the placeholder for the "stretcher widget" to place it at the bottom
-            self.cells_hbox.removeItem(self.hz_stretch_item) #same as above
+            self.cells_hbox.removeItem(self.hz_stretch_item_1) #same as above
 
             self.cells_physiboss_rb = QRadioButton("physiboss")
             self.cells_physiboss_rb.setChecked(False)
             self.cells_physiboss_rb.clicked.connect(self.cells_svg_mat_cb)
             self.cells_hbox.addWidget(self.cells_physiboss_rb)
-            self.cells_hbox.addItem(self.hz_stretch_item)
+
+            self.cells_hbox.addItem(self.hz_stretch_item_1)
 
             self.physiboss_qline = QHLine()
             self.vbox.addWidget(self.physiboss_qline)
@@ -1381,7 +1385,8 @@ class VisBase():
             self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.physiboss_hbox.addWidget(self.physiboss_cell_type_combobox)
             self.physiboss_hbox.addWidget(self.physiboss_node_combobox)
-            self.physiboss_hbox.addItem(self.hz_stretch_item)
+            self.hz_stretch_item_5 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+            self.physiboss_hbox.addItem(self.hz_stretch_item_5)
 
             self.vbox.addLayout(self.physiboss_hbox)
             
