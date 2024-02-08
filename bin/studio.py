@@ -172,122 +172,15 @@ class PhysiCellXMLCreator(QWidget):
         self.current_dir = os.getcwd()
         print("self.current_dir = ",self.current_dir)
         logging.debug(f'self.current_dir = {self.current_dir}')
-        self.studio_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        if self.nanohub_flag:
-            # self.studio_data_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-            self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-        else:
-            self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
-        print("self.studio_root_dir = ",self.studio_root_dir)
-        logging.debug(f'self.studio_root_dir = {self.studio_root_dir}')
-
-        # assume running from a PhysiCell root dir, but change if not
-        self.config_dir = os.path.realpath(os.path.join('.', 'config'))
-
-        running_from_physicell_root = True
-        if self.current_dir == self.studio_root_dir:  # are we running from studio root dir?
-            # self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-            self.config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'config'))
-            running_from_physicell_root = False
-        print(f'self.config_dir =  {self.config_dir}')
-        logging.debug(f'self.config_dir = {self.config_dir}')
-
-        print(f'\nrunning_from_physicell_root =  {running_from_physicell_root}\n')
-
-        # self.studio_config_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-        # print("studio.py: self.studio_config_dir = ",self.studio_config_dir)
-        # sys.exit(1)
 
         if config_file:   # user specified config file on command line with "-c" arg
             self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
-            # sys.exit()
-        elif running_from_physicell_root:
-            # 7/14/23: Paul requested to always startup with template.xml in the Studio /config dir
-            # self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
-
-            # Do equivalent of a "load project" to copy files from /studio 
-            # NO! this is confusing and may lead to loss of a user's config/PhysiCell_settings.xml
-            # proj_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'user_projects','studio_template'))
-            # self.load_user_proj_studio_template(proj_path)
-
-
-            self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
-            rules_file = os.path.join(self.studio_config_dir, "rules0.csv")
-
-            msg="You did not specify a .xml configuration file (using either the '-c' or '-p' argument), therefore we will attempt to copy an original template.xml and rules0.csv into the config folder and use the template model. If you have already have a modified config/template.xml, it will be overwritten. Continue?"
-            print("\n"+msg+"\n")
-            # sys.exit(1)
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText(msg)
-            # msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            returnValue = msgBox.exec()
-            if returnValue == QMessageBox.Ok:
-                try:
-                    shutil.copy(self.current_xml_file, 'config')
-                    shutil.copy(rules_file, 'config')
-                except:
-                    msg="Unable to perform the copy."
-                    print("\n"+msg+"\n")
-                    # sys.exit(1)
-                    msgBox = QMessageBox()
-                    msgBox.setIcon(QMessageBox.Information)
-                    msgBox.setText(msg)
-                    msgBox.setStandardButtons(QMessageBox.Ok)
-                    returnValue = msgBox.exec()
-            else:
-                sys.exit(-1)
-
-
-            # self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
-            # if not os.path.isfile(self.current_xml_file):
-            #     msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
-            #     print("\n"+msg+"\n")
-            #     # sys.exit(1)
-            #     msgBox = QMessageBox()
-            #     msgBox.setIcon(QMessageBox.Information)
-            #     msgBox.setText(msg)
-            #     msgBox.setStandardButtons(QMessageBox.Ok)
-            #     returnValue = msgBox.exec()
-            #     self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
-
-            # then load that .xml
-            # self.current_xml_file = os.path.join("config", "PhysiCell_settings.xml")
-            # self.current_xml_file = os.path.realpath(os.path.join(".", "config","PhysiCell_settings.xml"))
-
-
-            self.current_xml_file = os.path.realpath(os.path.join(".", "config","template.xml"))
-            print("\n----> current_xml_file= ",self.current_xml_file)
-            # self.config_file = self.current_xml_file
-            # self.show_sample_model()
-
-
-            # old way
-            # self.current_xml_file = os.path.join(self.current_dir, "config","PhysiCell_settings.xml")
-            # if not os.path.isfile(self.current_xml_file):
-            #     msg="Error: cannot load default config/PhysiCell_settings.xml, you should try to use the -c argument (rf. --help argument). We will attempt to load the template config file from the Studio directory."
-            #     print("\n"+msg+"\n")
-            #     # sys.exit(1)
-            #     msgBox = QMessageBox()
-            #     msgBox.setIcon(QMessageBox.Information)
-            #     msgBox.setText(msg)
-            #     msgBox.setStandardButtons(QMessageBox.Ok)
-            #     returnValue = msgBox.exec()
-            #     self.current_xml_file = os.path.join(self.studio_config_dir, "template.xml")
-
-        else:  # no config file specified and not running from a PhysiCell directory
-            # Admittedly this is strange - we're going to edit the template.xml in the studio /config dir
-            # model_name = "interactions"  # for testing latest xml
-            # model_name = "rules"
-            model_name = "template"  # for testing latest xml
-            if self.nanohub_flag:
-                # model_name = "rules"
-                model_name = "template"
-            self.current_xml_file = os.path.join(self.studio_config_dir, model_name + ".xml")
-
-
+        else:
+            self.current_xml_file = os.path.join('.', 'config', 'PhysiCell_settings.xml')
+            if not Path(self.current_xml_file).is_file():
+                print("\n\nError: A default config/PhysiCell_settings.xml does not exist\n and you did not specify a config file using the '-c' argument.\n")
+                sys.exit(1)
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
@@ -1417,7 +1310,7 @@ def main():
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
         parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e ", "--exec", type=str, help="executable model")
-        parser.add_argument("-p ", "--pconfig", help="use config/PhysiCell_settings.xml", action="store_true")
+        # parser.add_argument("-p ", "--pconfig", help="use config/PhysiCell_settings.xml", action="store_true")
 
         exec_file = 'project'  # for template sample
 
@@ -1481,13 +1374,13 @@ def main():
             else:
                 print("exec_file is NOT valid: ", args.exec)
                 sys.exit()
-        if args.pconfig:
-            config_file = "config/PhysiCell_settings.xml"
-            if Path(config_file).is_file():
-                print("config/PhysiCell_settings.xml is valid")
-            else:
-                print("config_file is NOT valid: ", config_file)
-                sys.exit()
+        # if args.pconfig:
+        #     config_file = "config/PhysiCell_settings.xml"
+        #     if Path(config_file).is_file():
+        #         print("config/PhysiCell_settings.xml is valid")
+        #     else:
+        #         print("config_file is NOT valid: ", config_file)
+        #         sys.exit()
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
