@@ -885,44 +885,31 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-        if self.cax2:
-            # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            #ppp
-            try:
-                self.cax2.remove()
-            except:
-                pass
-
-            if( self.discrete_variable ): # Generic way: if variable is discrete
                 
-                # Coloring the cells as it used to be
-                cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
-                
-                # Creating empty plots to add the legend
-                lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
-                                        label="Feature {:g}".format(i), ls="", marker="o")[0]
-                handles = [lp(self.discrete_variable.index(i)) for i in self.discrete_variable_observed]
-                self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
+        if( self.discrete_variable ): # Generic way: if variable is discrete
+            # Then we don't need the cax2
+            if self.cax2 is not None:
+                try:
+                    self.cax2.remove()
+                except:
+                    pass
+            # Coloring the cells as it used to be
+            cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
+            
+            # Creating empty plots to add the legend
+            lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
+                                    label="Feature {:g}".format(i), ls="", marker="o")[0]
+            handles = [lp(self.discrete_variable.index(i)) for i in self.discrete_variable_observed]
+            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
 
-            else:
+        else:
+            # If it's not there, we create it
+            if self.cax2 is None:
                 ax2_divider = make_axes_locatable(self.ax0)
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
-                self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                self.cbar2.ax.set_xlabel(cell_scalar_name)
-
-            # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            # self.axis_id_cellscalar = len(self.figure.axes) - 1
-        else:
-            ax2_divider = make_axes_locatable(self.ax0)
-            self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            # print(" self.figure.axes= ",self.figure.axes)
             self.cbar2.ax.set_xlabel(cell_scalar_name)
-        
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
