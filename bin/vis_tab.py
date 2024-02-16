@@ -794,32 +794,32 @@ class Vis(VisBase, QWidget):
 
             if cell_scalar_name == "current_phase":   # and if "Fixed" range is checked
                 self.discrete_variable = list(self.cycle_phases.keys())
-                names_observed = [self.cycle_phases[i] for i in self.discrete_variable_observed if i in self.cycle_phases.keys()]
+                names_observed = [self.cycle_phases[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_phases.keys()]
 
             elif cell_scalar_name == "cell_type":
                 # I'm not sure I should be calling this every time. But I'm also not sure about the life cycle of celltype_name
                 self.get_cell_types_from_config()
                 self.discrete_variable = list(range(len(self.celltype_name)))
-                names_observed = [self.celltype_name[i] for i in self.discrete_variable_observed if i < len(self.celltype_name)]
+                names_observed = [self.celltype_name[i] for i in sorted(list(self.discrete_variable_observed)) if i < len(self.celltype_name)]
                 
             elif cell_scalar_name == "cycle_model":
                 self.discrete_variable = list(self.cycle_models.keys())
-                names_observed = [self.cycle_models[i] for i in self.discrete_variable_observed if i in self.cycle_models.keys()]
+                names_observed = [self.cycle_models[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_models.keys()]
 
             elif cell_scalar_name == "current_death_model":
                 self.discrete_variable = [0,1]
-                names_observed = ["phase #%d" % i for i in self.discrete_variable_observed if i in [0,1]]
+                names_observed = ["phase #%d" % i for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             
             elif cell_scalar_name == "is_motile":
                 self.discrete_variable = [0,1]
-                names_observed = ["motile" if i == 1 else "stationnary" for i in self.discrete_variable_observed if i in [0,1]]
+                names_observed = ["motile" if i == 1 else "stationnary" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
                 
             elif cell_scalar_name == "dead":
                 self.discrete_variable = [0,1]
-                names_observed = ["dead" if i == 1 else "alive" for i in self.discrete_variable_observed if i in [0,1]]
+                names_observed = ["dead" if i == 1 else "alive" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             else:
                 self.discrete_variable = [int(i) for i in list(set(cell_scalar))] # It's a set of possible value of the variable
-                names_observed = [str(int(i)) for i in self.discrete_variable_observed] 
+                names_observed = [str(int(i)) for i in sorted(list(self.discrete_variable_observed))] 
 
         # if( discrete_variable ): # Generic way: if variable is discrete
             self.cell_scalar_cbar_combobox.setEnabled(False)
@@ -896,7 +896,7 @@ class Vis(VisBase, QWidget):
             # Creating empty plots to add the legend
             lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
                                     label="Feature {:g}".format(i), ls="", marker="o")[0]
-            handles = [lp(self.discrete_variable.index(i)) for i in self.discrete_variable_observed if i in self.discrete_variable]
+            handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
             self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
 
         else:
