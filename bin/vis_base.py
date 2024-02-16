@@ -369,6 +369,8 @@ class VisBase():
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
+        self.discrete_variable_observed = set()
+
         # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
 
 # 	// currently recognized cell cycle models 
@@ -415,7 +417,45 @@ class VisBase():
 # polarity should be set to one for 2-D simulations.
         # self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1], "number_of_nuclei":0}
         self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1]}
-
+        
+        self.cycle_models = {
+            0: "Advanced Ki67",
+            1: "Basic Ki67",
+            2: "Flow cytometry",
+            3: "Live apoptotic",
+            4: "Total cells",
+            5: "Live cells",
+            6: "Flow cytometry separated",
+            7: "Cycling quiescent"
+        }
+        
+        self.cycle_phases = {
+            0: "Ki67+ premitotic",
+            1: "Ki67+ postmitotic",
+            2: "Ki67+",
+            3: "Ki67-",
+            4: "G0G1 phase",
+            5: "G0 phase",
+            6: "G1 phase",
+            7: "G1a phase",
+            8: "G1b phase",
+            9: "G1c phase",
+            10: "S phase",
+            11: "G2M phase",
+            12: "G2 phase",
+            13: "M phase",
+            14: "live",
+            15: "G1pm phase",
+            16: "G1ps phase",
+            17: "cycling",
+            18: "quiescent",
+            100: "apoptotic",
+            101: "necrotic swelling",
+            102: "necrotic lysed",
+            103: "necrotic",
+            104: "debris"
+        }
+        
         # self.population_plot = None
         # self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None, "number_of_nuclei":None }
         self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None}
@@ -986,7 +1026,7 @@ class VisBase():
         # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
-        self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
         # self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.vis.cell_scalar_cbar_combobox_changed_cb)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
 
@@ -1602,6 +1642,10 @@ class VisBase():
         if self.model3D_flag:
             self.reset_domain_box()
 
+    def cell_scalar_combobox_changed_cb(self, idx):
+        self.discrete_variable_observed = set()
+        self.update_plots()
+    
     #-------------------------------------
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
