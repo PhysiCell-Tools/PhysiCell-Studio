@@ -426,7 +426,9 @@ class VisBase():
             4: "Total cells",
             5: "Live cells",
             6: "Flow cytometry separated",
-            7: "Cycling quiescent"
+            7: "Cycling quiescent",
+            100: "Apoptosis",
+            101: "Necrosis"
         }
         
         self.cycle_phases = {
