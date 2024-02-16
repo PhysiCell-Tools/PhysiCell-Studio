@@ -797,12 +797,9 @@ class Vis(VisBase, QWidget):
                 names_observed = [self.cycle_phases[i] for i in self.discrete_variable_observed]
 
             elif cell_scalar_name == "cell_type":
-                ct_low  = int(min(cell_scalar))
-                ct_high = int(max(cell_scalar))
-                # print("ct_low,ct_high=",ct_low,ct_high)
-                self.discrete_variable = list(range(ct_low,ct_high+1))
                 # I'm not sure I should be calling this every time. But I'm also not sure about the life cycle of celltype_name
                 self.get_cell_types_from_config()
+                self.discrete_variable = list(range(len(self.celltype_name)))
                 names_observed = [self.celltype_name[i] for i in self.discrete_variable_observed]
                 
             elif cell_scalar_name == "cycle_model":
