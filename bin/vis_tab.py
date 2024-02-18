@@ -703,6 +703,7 @@ class Vis(VisBase, QWidget):
         if self.cax2:
             try:
                 self.cax2.remove()
+                self.cax2 = None
             except:
                 pass
    
@@ -888,6 +889,7 @@ class Vis(VisBase, QWidget):
             if self.cax2 is not None:
                 try:
                     self.cax2.remove()
+                    self.cax2 = None
                 except:
                     pass
             # Coloring the cells as it used to be
