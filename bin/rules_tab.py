@@ -1256,9 +1256,10 @@ class Rules(QWidget):
                 # logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # sys.exit(1)
         else:
-            print(f'\n\n!!!  WARNING: fill_rules(): {full_rules_fname} is not a valid file !!!\n')
-            msg = "fill_rules(): " + full_rules_fname + " not valid"
-            self.show_warning(msg)
+            if self.rules_enabled_attr:
+                print(f'\n\n!!!  WARNING: fill_rules(): {full_rules_fname} is not a valid file !!!\n')
+                msg = "fill_rules(): " + full_rules_fname + " not valid"
+                self.show_warning(msg)
             # logging.error(f'fill_rules(): {full_rules_fname} is not a valid file')
 
     # else:  # should empty the Rules tab
@@ -2046,8 +2047,10 @@ class Rules(QWidget):
             print("fill_rules():  os.getcwd()=",cwd)
             full_rules_fname = os.path.join(cwd, folder_name, file_name)
 
+            self.rules_enabled_attr = False
             if uep.attrib['enabled'].lower() == 'true':
                 self.rules_enabled.setChecked(True)
+                self.rules_enabled_attr = True
             else:
                 self.rules_enabled.setChecked(False)
 

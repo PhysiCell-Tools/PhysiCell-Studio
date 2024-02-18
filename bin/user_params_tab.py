@@ -122,7 +122,7 @@ class UserParams(QWidget):
 
         self.utable.setColumnCount(self.max_cols)
         self.utable.setRowCount(self.max_rows)
-        self.utable.setHorizontalHeaderLabels(['Name','Type','Value','Units','Desc'])
+        self.utable.setHorizontalHeaderLabels(['Name','Type','Value','Units','Description'])
 
         # self.user_params.setStyleSheet(stylesheet)
 
