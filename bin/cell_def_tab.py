@@ -5431,7 +5431,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.custom_data_table.setColumnCount(self.max_custom_data_cols)
         self.custom_data_table.setRowCount(self.max_custom_data_rows)
         # self.custom_data_table.setHorizontalHeaderLabels(['Conserve','Name','Value','Units','Desc'])
-        self.custom_data_table.setHorizontalHeaderLabels(['Name','Value','Conserve','Units','Desc'])
+        self.custom_data_table.setHorizontalHeaderLabels(['Name','Value','Conserve','Units','Description'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.custom_data_table.horizontalHeader()       

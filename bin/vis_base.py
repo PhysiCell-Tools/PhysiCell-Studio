@@ -31,7 +31,7 @@ import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from PyQt5.QtWidgets import QCompleter, QSizePolicy
+from PyQt5.QtWidgets import QCompleter, QSizePolicy, QSpacerItem
 from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
@@ -360,7 +360,7 @@ class VisBase():
             self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead']
 
         self.circle_radius = 100  # will be set in run_tab.py using the .xml
-        self.mech_voxel_size = 30
+        self.mech_voxel_size = 30  # TODO? modify based on voxel size?
 
         self.nanohub_flag = nanohub_flag
         self.config_tab = config_tab
@@ -368,6 +368,8 @@ class VisBase():
         # self.legend_tab = None
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
+
+        self.discrete_variable_observed = set()
 
         # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
 
@@ -415,7 +417,47 @@ class VisBase():
 # polarity should be set to one for 2-D simulations.
         # self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1], "number_of_nuclei":0}
         self.discrete_scalar_vals = {"cell_type":0, "cycle_model":cycle_model_l, "current_phase":cycle_phase_l, "is_motile":[0,1],"current_death_model":[100,101,102], "dead":[0,1]}
-
+        
+        self.cycle_models = {
+            0: "Advanced Ki67",
+            1: "Basic Ki67",
+            2: "Flow cytometry",
+            3: "Live apoptotic",
+            4: "Total cells",
+            5: "Live cells",
+            6: "Flow cytometry separated",
+            7: "Cycling quiescent",
+            100: "Apoptosis",
+            101: "Necrosis"
+        }
+        
+        self.cycle_phases = {
+            0: "Ki67+ premitotic",
+            1: "Ki67+ postmitotic",
+            2: "Ki67+",
+            3: "Ki67-",
+            4: "G0G1 phase",
+            5: "G0 phase",
+            6: "G1 phase",
+            7: "G1a phase",
+            8: "G1b phase",
+            9: "G1c phase",
+            10: "S phase",
+            11: "G2M phase",
+            12: "G2 phase",
+            13: "M phase",
+            14: "live",
+            15: "G1pm phase",
+            16: "G1ps phase",
+            17: "cycling",
+            18: "quiescent",
+            100: "apoptotic",
+            101: "necrotic swelling",
+            102: "necrotic lysed",
+            103: "necrotic",
+            104: "debris"
+        }
+        
         # self.population_plot = None
         # self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None, "number_of_nuclei":None }
         self.population_plot = {"cell_type":None, "cycle_model":None, "current_phase":None, "is_motile":None,"current_death_model":None, "dead":None}
@@ -622,9 +664,10 @@ class VisBase():
         self.scroll_plot = QScrollArea()  # might contain centralWidget
 
 
-        splitter = QSplitter()
+        splitter = QSplitter(self)
         self.scroll_params = QScrollArea()
-        splitter.addWidget(self.scroll_params)
+        self.scroll_params.setWidgetResizable(True)
+        self.scroll_params.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         #---------------------
         self.stackw = QStackedWidget()
@@ -635,6 +678,8 @@ class VisBase():
 
         self.vbox = QVBoxLayout()
         self.controls1.setLayout(self.vbox)
+        self.controls1.setStyleSheet(self.stylesheet)
+        self.controls1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         hbox = QHBoxLayout()
         arrow_button_width = 40
@@ -681,6 +726,12 @@ class VisBase():
         self.vbox.addWidget(QHLine())
 
         self.cells_hbox = QHBoxLayout()
+
+        self.hz_stretch_item_1 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_2 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_3 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hz_stretch_item_4 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+
         self.cells_checkbox = QCheckBox_custom("cells")
         self.cells_checkbox.setChecked(True)
         self.cells_checkbox.clicked.connect(self.cells_toggle_cb)
@@ -705,6 +756,7 @@ class VisBase():
             self.cells_mat_rb.clicked.connect(self.cells_svg_mat_cb)
             # hbox2.addWidget(self.cells_mat_rb)
             self.cells_hbox.addWidget(self.cells_mat_rb)
+            self.cells_hbox.addSpacerItem(self.hz_stretch_item_1)
             # hbox2.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
             # radio_frame = QFrame()
@@ -738,6 +790,7 @@ class VisBase():
         # self.cell_scalar_combobox.setEnabled(True)   # for 3D
         self.cell_scalar_combobox.setEnabled(self.model3D_flag)   # for 3D
         hbox.addWidget(self.cell_scalar_combobox)
+        hbox.addItem(self.hz_stretch_item_2)
         self.vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -835,8 +888,11 @@ class VisBase():
         self.vbox.addWidget(self.substrates_checkbox)
 
         hbox = QHBoxLayout()
+        self.substrates_combobox.setFixedWidth(120)
+        self.substrates_cbar_combobox.setFixedWidth(120)
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
+        hbox.addItem(self.hz_stretch_item_3)
 
         self.vbox.addLayout(hbox)
 
@@ -941,7 +997,7 @@ class VisBase():
         # self.discrete_cells_combobox.setEnabled(False)
         self.discrete_cells_combobox.currentIndexChanged.connect(self.population_choice_cb)
         hbox.addWidget(self.discrete_cells_combobox)
-
+        hbox.addItem(self.hz_stretch_item_4)
         self.vbox.addLayout(hbox)
 
 
@@ -972,7 +1028,7 @@ class VisBase():
         # self.substrates_cbar_combobox.currentIndexChanged.connect(self.update_plots)
         self.substrates_cbar_combobox.currentIndexChanged.connect(self.substrates_cbar_combobox_changed_cb)
 
-        self.cell_scalar_combobox.currentIndexChanged.connect(self.update_plots)
+        self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_combobox_changed_cb)
         # self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.vis.cell_scalar_cbar_combobox_changed_cb)
         self.cell_scalar_cbar_combobox.currentIndexChanged.connect(self.cell_scalar_cbar_combobox_changed_cb)
 
@@ -984,10 +1040,16 @@ class VisBase():
         # done in subclasses now
         # self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
 
+        self.stretch_widget = QWidget()
+        self.stretch_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.vbox.addWidget(self.stretch_widget)
+
         self.stackw.addWidget(self.controls1)
         self.stackw.setCurrentIndex(0)
 
-        self.scroll_params.setWidget(self.stackw)
+        self.scroll_params.setWidget(self.controls1)
+        splitter.addWidget(self.scroll_params)
         splitter.addWidget(self.scroll_plot)
 
         self.show_plot_range = False
@@ -1339,25 +1401,34 @@ class VisBase():
         if not self.physiboss_widgets:
             
             self.physiboss_widgets = True
-                
+
+            self.vbox.removeWidget(self.stretch_widget) #removes the placeholder for the "stretcher widget" to place it at the bottom
+            self.cells_hbox.removeItem(self.hz_stretch_item_1) #same as above
+
             self.cells_physiboss_rb = QRadioButton("physiboss")
             self.cells_physiboss_rb.setChecked(False)
             self.cells_physiboss_rb.clicked.connect(self.cells_svg_mat_cb)
             self.cells_hbox.addWidget(self.cells_physiboss_rb)
-                
+
+            self.cells_hbox.addItem(self.hz_stretch_item_1)
+
             self.physiboss_qline = QHLine()
             self.vbox.addWidget(self.physiboss_qline)
             
             self.physiboss_hbox = QHBoxLayout()
 
             self.physiboss_cell_type_combobox = QComboBox()
+            self.physiboss_cell_type_combobox.setFixedWidth(120)
             self.physiboss_cell_type_combobox.setEnabled(False)
             self.physiboss_cell_type_combobox.currentIndexChanged.connect(self.physiboss_vis_cell_type_cb)
             self.physiboss_node_combobox = QComboBox()
+            self.physiboss_node_combobox.setFixedWidth(120)
             self.physiboss_node_combobox.setEnabled(False)
             self.physiboss_node_combobox.currentIndexChanged.connect(self.physiboss_vis_node_cb)
             self.physiboss_hbox.addWidget(self.physiboss_cell_type_combobox)
             self.physiboss_hbox.addWidget(self.physiboss_node_combobox)
+            self.hz_stretch_item_5 = QSpacerItem(10, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+            self.physiboss_hbox.addItem(self.hz_stretch_item_5)
 
             self.vbox.addLayout(self.physiboss_hbox)
             
@@ -1366,7 +1437,8 @@ class VisBase():
             self.physiboss_population_counts_button.setEnabled(False)
             self.physiboss_population_counts_button.clicked.connect(self.physiboss_state_counts_cb)
             self.vbox.addWidget(self.physiboss_population_counts_button)
-        
+            self.vbox.addWidget(self.stretch_widget)
+
     def physiboss_vis_hide(self):
         print("\n--------- physiboss_vis_hide()")
 
@@ -1572,6 +1644,10 @@ class VisBase():
         if self.model3D_flag:
             self.reset_domain_box()
 
+    def cell_scalar_combobox_changed_cb(self, idx):
+        self.discrete_variable_observed = set()
+        self.update_plots()
+    
     #-------------------------------------
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
@@ -1714,17 +1790,20 @@ class VisBase():
 
 
     def reset_domain_box(self):
-        print("\n------ vis_base: reset_domain_box()")
+        # print("\n------ vis_base: reset_domain_box()")
         self.lut_discrete = None
 
         self.xmin = float(self.config_tab.xmin.text())
         self.xmax = float(self.config_tab.xmax.text())
+        self.xdel = float(self.config_tab.xdel.text())
 
         self.ymin = float(self.config_tab.ymin.text())
         self.ymax = float(self.config_tab.ymax.text())
+        self.ydel = float(self.config_tab.ydel.text())
 
         self.zmin = float(self.config_tab.zmin.text())
         self.zmax = float(self.config_tab.zmax.text())
+        self.zdel = float(self.config_tab.zdel.text())
 
         if self.model3D_flag:
             # self.domain_diagonal = vtkLineSource()
@@ -1746,7 +1825,7 @@ class VisBase():
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
             self.plot_ymax = float(self.ymax)
-            print("--------vis_base() reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
+            # print("--------vis_base() reset_plot_range(): plot_ymin,ymax=  ",self.plot_ymin,self.plot_ymax)
         except:
             pass
 
@@ -1955,7 +2034,7 @@ class VisBase():
 
 
     def reset_model(self):
-        print("--------- vis_base: reset_model ----------")
+        # print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml

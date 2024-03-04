@@ -129,14 +129,8 @@ class Vis(VisBase, QWidget):
         self.physiboss_node_dict = {}
         
         self.reset_model_flag = True
-        self.xmin = -80
-        self.xmax = 80
-        self.xdel = 20
         self.x_range = self.xmax - self.xmin
 
-        self.ymin = -50
-        self.ymax = 100
-        self.ydel = 20
         self.y_range = self.ymax - self.ymin
 
         self.aspect_ratio = 0.7
@@ -365,6 +359,7 @@ class Vis(VisBase, QWidget):
         # ymin = self.ymin + yoffset
 
         xs = np.arange(self.xmin,self.xmax+1,self.xdel)  # DON'T try to use np.linspace!
+        # print("xmin,max,del=",self.xmin,self.xmax,self.xdel)
         # print("xs= ",xs)
         ys = np.arange(self.ymin,self.ymax+1,self.ydel)
         # print("ys= ",ys)
@@ -376,10 +371,9 @@ class Vis(VisBase, QWidget):
 
     #------------------------------------------------------------
     def plot_mechanics_grid(self):
-        numx = int((self.xmax - self.xmin)/self.mech_voxel_size)
-        numy = int((self.ymax - self.ymin)/self.mech_voxel_size)
-        xs = np.linspace(self.xmin,self.xmax, numx)
-        ys = np.linspace(self.ymin,self.ymax, numy)
+        xs = np.arange(self.xmin,self.xmax+1,self.mech_voxel_size)  # DON'T try to use np.linspace!
+        ys = np.arange(self.ymin,self.ymax+1,self.mech_voxel_size)
+        # print(f'plot_mechanics_grid:  xs={xs} ,ys={ys}')
         hlines = np.column_stack(np.broadcast_arrays(xs[0], ys, xs[-1], ys))
         vlines = np.column_stack(np.broadcast_arrays(xs, ys[0], xs, ys[-1]))
         grid_lines = np.concatenate([hlines, vlines]).reshape(-1, 2, 2)
@@ -709,6 +703,7 @@ class Vis(VisBase, QWidget):
         if self.cax2:
             try:
                 self.cax2.remove()
+                self.cax2 = None
             except:
                 pass
    
@@ -795,17 +790,38 @@ class Vis(VisBase, QWidget):
         
         # if( cell_scalar_name == 'cell_type' or cell_scalar_name == 'current_phase'): discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
         if cell_scalar_name in self.discrete_cell_scalars: 
+
+            self.discrete_variable_observed = self.discrete_variable_observed.union(set([int(i) for i in np.unique(cell_scalar)]))
+
             if cell_scalar_name == "current_phase":   # and if "Fixed" range is checked
-                self.cycle_phases = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18, 100,101,102,103,104]
-                # if self.discrete_variable is None:
-                self.discrete_variable = self.cycle_phases
+                self.discrete_variable = list(self.cycle_phases.keys())
+                names_observed = [self.cycle_phases[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_phases.keys()]
+
             elif cell_scalar_name == "cell_type":
-                ct_low  = int(min(cell_scalar))
-                ct_high = int(max(cell_scalar))
-                # print("ct_low,ct_high=",ct_low,ct_high)
-                self.discrete_variable = list(range(ct_low,ct_high+1))
+                # I'm not sure I should be calling this every time. But I'm also not sure about the life cycle of celltype_name
+                self.get_cell_types_from_config()
+                self.discrete_variable = list(range(len(self.celltype_name)))
+                names_observed = [self.celltype_name[i] for i in sorted(list(self.discrete_variable_observed)) if i < len(self.celltype_name)]
+                
+            elif cell_scalar_name == "cycle_model":
+                self.discrete_variable = list(self.cycle_models.keys())
+                names_observed = [self.cycle_models[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_models.keys()]
+
+            elif cell_scalar_name == "current_death_model":
+                self.discrete_variable = [0,1]
+                names_observed = ["phase #%d" % i for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
+            
+            elif cell_scalar_name == "is_motile":
+                self.discrete_variable = [0,1]
+                names_observed = ["motile" if i == 1 else "stationnary" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
+                
+            elif cell_scalar_name == "dead":
+                self.discrete_variable = [0,1]
+                names_observed = ["dead" if i == 1 else "alive" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             else:
-                self.discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
+                self.discrete_variable = [int(i) for i in list(set(cell_scalar))] # It's a set of possible value of the variable
+                names_observed = [str(int(i)) for i in sorted(list(self.discrete_variable_observed))] 
+
         # if( discrete_variable ): # Generic way: if variable is discrete
             self.cell_scalar_cbar_combobox.setEnabled(False)
             from_list = matplotlib.colors.LinearSegmentedColormap.from_list
@@ -828,7 +844,9 @@ class Vis(VisBase, QWidget):
                 # print("cell_scalar=",cell_scalar)
         else: 
             self.cell_scalar_cbar_combobox.setEnabled(True)
-
+            self.discrete_variable = None
+            self.discrete_variable_observed = set()
+            
         mins = round(total_min)  # hack, assume we want integer mins
         hrs = int(mins/60)
         days = int(hrs/24)
@@ -865,46 +883,32 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-        if self.cax2:
-            # print("# axes(after cell_scalar remove) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            #ppp
-            if( self.discrete_variable ): # Generic way: if variable is discrete
+                
+        if( self.discrete_variable ): # Generic way: if variable is discrete
+            # Then we don't need the cax2
+            if self.cax2 is not None:
                 try:
                     self.cax2.remove()
+                    self.cax2 = None
                 except:
                     pass
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=range(0,len(self.discrete_variable)), cax=self.cax2, orientation="horizontal")
-                # self.cbar2.ax.tick_params(length=0) # remove tick line
-                cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) # scaling bar to the center of the ticks
-                self.cbar2.set_ticklabels(self.discrete_variable) # It's possible to give strings
-                self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                self.cbar2.ax.set_xlabel(cell_scalar_name)
-                self.discrete_variable = None
-            else:
-                try:
-                    self.cax2.remove()
-                except:
-                    pass
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
-                self.cbar2.ax.tick_params(labelsize=self.fontsize)
-                self.cbar2.ax.set_xlabel(cell_scalar_name)
+            # Coloring the cells as it used to be
+            cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
+            
+            # Creating empty plots to add the legend
+            lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
+                                    label="Feature {:g}".format(i), ls="", marker="o")[0]
+            handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
+            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
 
-            # print("\n# axes(redraw cell_scalar) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            # self.axis_id_cellscalar = len(self.figure.axes) - 1
         else:
-            ax2_divider = make_axes_locatable(self.ax0)
-            self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, cax=self.cax2, orientation="horizontal")
+            # If it's not there, we create it
+            if self.cax2 is None:
+                ax2_divider = make_axes_locatable(self.ax0)
+                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            # print(" self.figure.axes= ",self.figure.axes)
             self.cbar2.ax.set_xlabel(cell_scalar_name)
-        
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
