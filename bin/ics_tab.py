@@ -29,6 +29,9 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 
+from studio_classes import QHLine
+from bioinf_import_tab import BioinfImport
+
 import numpy as np
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -61,17 +64,9 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                 """
         self.setStyleSheet(checkbox_style)
 
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-        # self.setFrameShadow(QFrame.Plain)
-        self.setStyleSheet("border:1px solid black")
-
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab):
+    def __init__(self, config_tab, celldef_tab, bioinf_import_flag, bioinf_import_test, bioinf_import_test_spatial):
         super().__init__()
         # global self.config_params
 
@@ -79,6 +74,8 @@ class ICs(QWidget):
 
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
+
+        self.bioinf_import_flag = bioinf_import_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -164,10 +161,10 @@ class ICs(QWidget):
         # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
-        label_width = 110
-        value_width = 60
-        label_height = 20
-        units_width = 70
+        # label_width = 110
+        # value_width = 60
+        # label_height = 20
+        # units_width = 70
 
         self.combobox_stylesheet = """ 
             QComboBox{
@@ -187,6 +184,24 @@ class ICs(QWidget):
             }
             """
 
+        self.tab_widget = QTabWidget()
+        self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
+        if self.bioinf_import_flag:
+            self.bioinf_import_tab = BioinfImport(self.config_tab, self.celldef_tab, self, bioinf_import_test, bioinf_import_test_spatial)
+            self.tab_widget.addTab(self.bioinf_import_tab,"Bioinformatics Import")
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.tab_widget)
+        # if self.show_plot_range:
+        #     self.layout.addWidget(self.controls2)
+        # self.layout.addWidget(self.my_xmin)
+        # self.layout.addWidget(self.scroll_plot)
+        # self.layout.addWidget(splitter)
+        # self.layout.addStretch()
+
+        # self.create_figure()
+        
+    def create_base_ics_tab(self):
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
         # self.create_figure()
@@ -576,17 +591,10 @@ class ICs(QWidget):
         self.create_figure()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
         splitter.addWidget(self.scroll_plot)
-        self.layout = QVBoxLayout(self)
+        
         self.show_plot_range = False
-        # if self.show_plot_range:
-        #     self.layout.addWidget(self.controls2)
-        # self.layout.addWidget(self.my_xmin)
-        # self.layout.addWidget(self.scroll_plot)
-        self.layout.addWidget(splitter)
-        # self.layout.addStretch()
 
-        # self.create_figure()
-
+        return splitter
 
     def update_colors_list(self):
         if len(self.celldef_tab.celltypes_list) >= len(self.color_by_celltype):
@@ -1829,6 +1837,10 @@ class ICs(QWidget):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
         full_path_rules_name = filePath[0]
+
+        self.import_from_file(full_path_rules_name)
+
+    def import_from_file(self, full_path_rules_name):
         # logging.debug(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
         print(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
         basename = os.path.basename(full_path_rules_name)
@@ -1837,7 +1849,7 @@ class ICs(QWidget):
         print(f'import_cb():  dirname ={dirname}')
         # if (len(full_path_rules_name) > 0) and Path(full_path_rules_name):
         if (len(full_path_rules_name) > 0) and Path(full_path_rules_name).is_file():
-            print("import_cb():  filePath is valid")
+            print("import_from_file(full_path_rules_name):  filePath is valid")
             # logging.debug(f'     filePath is valid')
             print("len(full_path_rules_name) = ", len(full_path_rules_name) )
 
@@ -1931,6 +1943,8 @@ class ICs(QWidget):
     def fill_gui(self):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
+        if self.bioinf_import_flag:
+            self.bioinf_import_tab.fill_gui()
 
     def on_enter_axes(self, event):
         self.mouse_on_axes = True

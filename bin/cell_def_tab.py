@@ -530,6 +530,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 break
 
+        self.new_cell_def_named(cdname) # added by DRB to make it easier for BioinfImport to add a new cell type programmatically
+
+    def new_cell_def_named(self, cdname):
+
         # Make a new substrate (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
