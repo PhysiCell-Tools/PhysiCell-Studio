@@ -3,7 +3,9 @@ studio.py - driving module for the PhysiCell Studio to read in a PhysiCell confi
 
 Authors:
 Randy Heiland (heiland@iu.edu): lead designer and developer
-Vincent Noel, Institut Curie: Cell Types|Intracellular|boolean
+Dr. Vincent Noel, Institut Curie: Cell Types|Intracellular|boolean
+Marco Ruscone, Institut Curie: Cell Types|Intracellular|boolean
+Dr. Daniel Bergman, Johns Hopkins University: ICs bioinformatics
 Dr. Paul Macklin (macklinp@iu.edu): PI, funding and testing
 
 Macklin Lab members (grads & postdocs): testing, design, code contributions.
