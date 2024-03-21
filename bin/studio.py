@@ -605,13 +605,19 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         action_menu.addAction("Run", self.run_model_cb, QtGui.QKeySequence('Ctrl+r'))
 
         help_menu = menubar.addMenu('&Help')
-        help_menu.triggered.connect(self.open_help_url)
+        # help_menu.triggered.connect(self.open_help_url)
         guide_act = help_menu.addAction("User Guide (link)", self.open_help_url)
+        issues_act = help_menu.addAction("Create Issue (link)", self.create_issue_url)
 
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
 
     def open_help_url(self):
         url = QtCore.QUrl('https://github.com/PhysiCell-Tools/Studio-Guide/blob/main/README.md')
+        if not QtGui.QDesktopServices.openUrl(url):
+            QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open URL')
+
+    def create_issue_url(self):
+        url = QtCore.QUrl('https://github.com/PhysiCell-Tools/PhysiCell-Studio/issues')
         if not QtGui.QDesktopServices.openUrl(url):
             QtGui.QMessageBox.warning(self, 'Open Url', 'Could not open URL')
 

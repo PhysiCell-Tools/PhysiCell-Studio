@@ -2334,6 +2334,7 @@ class BioinfImport(QWidget):
             base_widget.setLayout(vbox)
             self.layout = QVBoxLayout(self)  # leave this!
             self.layout.addWidget(base_widget)
+            ics_tab.bioinf_import_flag = False # don't allow other tabs to proceed with doing biwt stuff
             return
 
         self.config_tab = config_tab
