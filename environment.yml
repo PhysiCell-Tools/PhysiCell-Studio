@@ -1,7 +1,10 @@
 name: studio
+channels:
+  - conda-forge
+  - defaults
 dependencies:
+  - paraview 
   - python
   - pip
   - pip:
     - -r requirements.txt
-    - simulariumio[physicell]
