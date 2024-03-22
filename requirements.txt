@@ -2,4 +2,5 @@ PyQt5
 matplotlib
 scipy
 pandas
-simulariumio
+simulariumio[physicell]
+anndata
