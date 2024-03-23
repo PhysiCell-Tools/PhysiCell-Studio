@@ -1,0 +1,13 @@
+The tumor_demo.zip an be copied into your PhysiCell /user_projects folder and unzipped there.
+Then from the PhysiCell root directory, do:
+
+make load PROJ=tumor_demo
+make 
+
+to create the "project" executable.
+
+Then run the Studio:
+
+python path-to-studio/bin/studio.py -e project   # uses the default config/PhysiCell_settings.xml
+
+(but there is also a backup copy of the config file: tumor_demo.xml)
