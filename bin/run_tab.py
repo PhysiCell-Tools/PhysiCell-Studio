@@ -133,7 +133,7 @@ class RunModel(QWidget):
     # replicate what we do in the "save" function in the main module
     def update_xml_from_gui(self):
         if not self.user_params_tab.validate_utable():
-            self.show_error_message(self, "run_tab.py update_xml_from_gui(): Error: invalid user params table.")
+            self.show_error_message("run_tab.py: update_xml_from_gui(): Error: invalid user params table.")
             self.enable_run(True)
             return False
 
