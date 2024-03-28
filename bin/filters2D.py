@@ -87,6 +87,12 @@ class FilterUI2DWindow(QWidget):
         self.cell_nucleus_checkbox.setChecked(False)
         self.cell_nucleus_checkbox.clicked.connect(self.cell_nucleus_cb)
         glayout.addWidget(self.cell_nucleus_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
+
+        idx_row += 1
+        self.cells_csv_button = QPushButton("Save snap.csv")
+        self.cells_csv_button.setStyleSheet("background-color: lightgreen;")
+        self.cells_csv_button.clicked.connect(self.cells_csv_cb)
+        glayout.addWidget(self.cells_csv_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
         #--------------------------------
 
         idx_row += 1
@@ -197,6 +203,9 @@ class FilterUI2DWindow(QWidget):
 
     def cell_nucleus_cb(self):
         self.vis_tab.cell_nucleus_cb(self.cell_nucleus_checkbox.isChecked())
+
+    def cells_csv_cb(self):
+        self.vis_tab.write_cells_csv_cb()
 
     def contour_mesh_cb(self):
         bval = self.contour_mesh_checkbox.isChecked()
