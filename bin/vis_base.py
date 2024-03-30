@@ -2325,6 +2325,9 @@ class VisBase():
         self.show_nucleus = bval
         self.update_plots()
 
+    # def write_cells_csv_cb(self,bval):
+    #     print("vis_base.py: write_cells_csv_cb")
+
     #----
     # def shading_cb(self,bval):
     def contour_mesh_cb(self,bval):

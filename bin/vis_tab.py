@@ -242,6 +242,36 @@ class Vis(VisBase, QWidget):
 
 
     #--------------------------------------
+    def write_cells_csv_cb(self):
+        print("vis_tab.py: write_cells_csv_cb")
+
+        xml_file_root = "output%08d.xml" % self.current_frame
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
+
+        # cell_scalar_name = self.cell_scalar_combobox.currentText()
+        if not Path(xml_file).is_file():
+            print("ERROR: file not found",xml_file)
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        # total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
+    
+        xvals = mcds.get_cell_df()['position_x']
+        yvals = mcds.get_cell_df()['position_y']
+        cell_types = mcds.get_cell_df()["cell_type"]
+        # print("len(xvals)=",len(xvals))
+        # print("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample")
+        self.get_cell_types_from_config()
+        # print("self.celltype_name=",self.celltype_name)
+        csv_file = open("snap.csv", "w")
+        csv_file.write("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n")
+        for idx in range(len(xvals)):
+            # print(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}')
+            csv_file.write(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}\n')
+        csv_file.close()
+
+    #--------------------------------------
     # Dependent on 2D/3D
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
