@@ -7,4 +7,9 @@ dependencies:
   - python
   - pip
   - pip:
-    - -r requirements.txt
+    - PyQt5
+    - matplotlib
+    - scipy
+    - pandas
+    - simulariumio[physicell]
+    - anndata
