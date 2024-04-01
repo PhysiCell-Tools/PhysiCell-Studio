@@ -153,6 +153,15 @@ class FilterUI2DWindow(QWidget):
         # self.svgView.setLayout(self.vbox)
         # self.layout.addWidget(self.svg_view)
 
+        #--------------------------------
+
+        # self.phenotype_button = QPushButton("Phenotype summary")
+        # self.phenotype_button.clicked.connect(self.phenotype_cb)
+        # idx_row += 1
+        # glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        # idx_row += 1
+        # glayout.addWidget(self.phenotype_button, idx_row,0,1,3) # w, row, column, rowspan, colspan
+
         #----------
         self.close_button = QPushButton("Close")
         self.close_button.setStyleSheet("background-color: lightgreen;")
@@ -206,6 +215,11 @@ class FilterUI2DWindow(QWidget):
 
     def cells_csv_cb(self):
         self.vis_tab.write_cells_csv_cb()
+
+    def phenotype_cb(self):
+        # self.vis_tab.write_cells_csv_cb()
+        self.vis_tab.phenotype_cb()
+        pass
 
     def contour_mesh_cb(self):
         bval = self.contour_mesh_checkbox.isChecked()

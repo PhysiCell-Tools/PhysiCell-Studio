@@ -8562,3 +8562,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     idx += 1
 
         logging.debug(f'----------- end cell_def_tab.py: fill_xml(): ----------')
+
+    #-------------------------------------------------------------------
+    # Simple text summary of cell types phenotypes
+    def summary(self, textW):
+        print("cell_def_tab.py: ----------------- summary() ---------------")
+        # textW.appendPlainText("mary had a liittle lamb\nhis fleece was white.")
+
+        # l.8489
+        uep = self.xml_root.find('.//cell_definitions')
+        for cdef in self.param_d.keys():
+            textW.appendPlainText(">>> "+cdef)
+            textW.appendPlainText("-- mechanics")
+            textW.appendPlainText(self.param_d[cdef]['mechanics_adhesion'])
+
+            # l.7447
+            # combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
+            # cycle = ET.SubElement(pheno, "cycle",
+            #     {"code":self.cycle_combo_idx_code[combo_widget_idx],
+            #         "name":self.cycle_combo_idx_name[combo_widget_idx] } )
+            # textW.appendPlainText(cycle)
