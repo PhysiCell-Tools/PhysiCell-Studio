@@ -61,6 +61,7 @@ except:
 
 from filters3D import FilterUI3DWindow
 from filters2D import FilterUI2DWindow
+from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
@@ -1073,6 +1074,14 @@ class VisBase():
         # hack to bring to foreground
         self.filterUI.hide()
         self.filterUI.show()
+
+    def phenotype_cb(self):
+        # print("---- vis_base: phenotype_cb()")
+        self.phenotypeUI = PhenotypeWindow(self.celldef_tab)
+
+        # hack to bring to foreground
+        self.phenotypeUI.hide()
+        self.phenotypeUI.show()
 
 
     def get_cell_types_from_config(self):
