@@ -1096,65 +1096,101 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     def template_cb(self):
         self.load_model("template")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./project')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./project.exe')
+            else:  
+                self.run_tab.exec_name.setText('./project')
 
     def biorobots_cb(self):
         # self.load_model("biorobots")
         # self.load_model("biorobots_flat")
         self.load_model("biorobots")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./biorobots')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./biorobots.exe')
+            else:  
+                self.run_tab.exec_name.setText('./biorobots')
 
     def tumor_immune_cb(self):
         self.load_model("tumor_immune")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./project')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./project.exe')
+            else:  
+                self.run_tab.exec_name.setText('./project')
 
     def cancer_biorobots_cb(self):
         self.load_model("cancer_biorobots")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./cancer_biorobots')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./cancer_biorobots.exe')
+            else:  
+                self.run_tab.exec_name.setText('./cancer_biorobots')
 
     def hetero_cb(self):
         self.load_model("heterogeneity")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./heterogeneity')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./heterogeneity.exe')
+            else:  
+                self.run_tab.exec_name.setText('./heterogeneity')
 
     def pred_prey_cb(self):
         self.load_model("pred_prey_farmer")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./pred_prey')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./pred_prey.exe')
+            else:  
+                self.run_tab.exec_name.setText('./pred_prey')
 
     def virus_mac_cb(self):
         self.load_model("virus_macrophage")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./virus-sample')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./virus-sample.exe')
+            else:  
+                self.run_tab.exec_name.setText('./virus-sample')
 
     def worm_cb(self):
         self.load_model("worm")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./worm')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./worm.exe')
+            else:  
+                self.run_tab.exec_name.setText('./worm')
 
     def interactions_cb(self):
         self.load_model("interactions")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./interaction_demo')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./interaction_demo.exe')
+            else:  
+                self.run_tab.exec_name.setText('./interaction_demo')
 
     def mechano_cb(self):
         self.load_model("mechano")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./mechano')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./mechano.exe')
+            else:  
+                self.run_tab.exec_name.setText('./mechano')
 
     def cancer_immune_cb(self):
         self.load_model("cancer_immune3D_flat")
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./cancer_immune_3D')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./cancer_immune_3D.exe')
+            else:  
+                self.run_tab.exec_name.setText('./cancer_immune_3D')
 
     def physiboss_cell_lines_cb(self):
         self.load_model("physiboss")
         # self.vis_tab.physiboss_vis_checkbox = None    # done in load_model
         if self.studio_flag:
-            self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
+            if platform.system() == "Windows":
+                self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines.exe')
+            else:  
+                self.run_tab.exec_name.setText('./PhysiBoSS_Cell_Lines')
 
     def subcell_cb(self):
         self.load_model("subcellular_flat")
@@ -1325,8 +1361,10 @@ def main():
         parser.add_argument("--bioinf_import", help="display bioinformatics import tab on ICs tab", action="store_true")
         parser.add_argument("--bioinf_import_test", help="immediately start loading anndata w/o spatial", action="store_true")
         parser.add_argument("--bioinf_import_test_spatial", help="immediately start loading spatial anndata", action="store_true")
-
-        exec_file = 'project'  # for template sample
+        if platform.system() == "Windows":
+            exec_file = 'project.exe'
+        else:
+            exec_file = 'project'  # for template sample
 
         # args = parser.parse_args()
         args, unknown = parser.parse_known_args()
