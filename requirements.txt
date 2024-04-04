@@ -4,3 +4,4 @@ scipy
 pandas
 simulariumio[physicell]
 anndata
+requests
