@@ -13,4 +13,5 @@ dependencies:
   - pip
   - pip:
     - simulariumio[physicell]
+    - requests
 
