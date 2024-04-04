@@ -5,11 +5,12 @@ channels:
 dependencies:
   - paraview 
   - python
+  - pyqt5-sip
+  - matplotlib
+  - scipy
+  - pandas
+  - anndata
   - pip
   - pip:
-    - PyQt5
-    - matplotlib
-    - scipy
-    - pandas
     - simulariumio[physicell]
-    - anndata
+
