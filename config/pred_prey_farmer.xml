@@ -1,5 +1,14 @@
 <PhysiCell_settings version="devel-version">
 
+    <cell_rules>
+        <rulesets>
+            <ruleset protocol="CBHG" version="2.0" format="csv" enabled="false">
+                <folder>config</folder>
+                <filename>rules.csv</filename>
+            </ruleset>
+        </rulesets>
+    </cell_rules>
+
     <domain>
         <x_min>-500</x_min>
         <x_max>500</x_max>
@@ -14,7 +23,7 @@
     </domain>
 
     <overall>
-        <max_time units="min">7200</max_time>
+        <max_time units="min">7200.0</max_time>
         <time_units>min</time_units>
         <space_units>micron</space_units>
         <dt_diffusion units="min">0.01</dt_diffusion>
@@ -23,18 +32,23 @@
     </overall>
 
     <parallel>
-        <omp_num_threads>4</omp_num_threads>
+        <omp_num_threads>1</omp_num_threads>
     </parallel>
 
     <save>
-        <folder>output</folder>
+        <folder>output_pred_prey_hope</folder>
         <full_data>
-            <interval units="min">30</interval>
+            <interval units="min">60</interval>
             <enable>true</enable>
         </full_data>
         <SVG>
-            <interval units="min">30</interval>
+            <interval units="min">60</interval>
             <enable>true</enable>
+            <plot_substrate enabled="false" limits="false">
+                <substrate>food</substrate>
+                <min_conc />
+                <max_conc />
+            </plot_substrate>
         </SVG>
         <legacy_data>
             <enable>false</enable>
@@ -43,7 +57,7 @@
 
     <options>
         <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
-        <virtual_wall_at_domain_edge>false</virtual_wall_at_domain_edge>
+        <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
     </options>
 
     <microenvironment_setup>
@@ -137,10 +151,10 @@
                             <duration index="1" fixed_duration="true">86400</duration>
                         </phase_durations>
                         <parameters>
-                            <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-                            <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-                            <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-                            <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+                            <unlysed_fluid_change_rate units="1/min">1.11667e-2</unlysed_fluid_change_rate>
+                            <lysed_fluid_change_rate units="1/min">8.33333e-4</lysed_fluid_change_rate>
+                            <cytoplasmic_biomass_change_rate units="1/min">5.33333e-5</cytoplasmic_biomass_change_rate>
+                            <nuclear_biomass_change_rate units="1/min">2.16667e-3</nuclear_biomass_change_rate>
                             <calcification_rate units="1/min">0</calcification_rate>
                             <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                         </parameters>
@@ -158,7 +172,7 @@
                     <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                 </volume>
                 <mechanics>
-                    <cell_cell_adhesion_strength units="micron/min">0</cell_cell_adhesion_strength>
+                    <cell_cell_adhesion_strength units="micron/min">0.</cell_cell_adhesion_strength>
                     <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
                     <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
                     <cell_adhesion_affinities>
@@ -170,10 +184,8 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
-                    <attachment_rate units="1/min">10.0</attachment_rate>
+                    <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
@@ -284,10 +296,10 @@
                             <duration index="1" fixed_duration="true">86400</duration>
                         </phase_durations>
                         <parameters>
-                            <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-                            <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-                            <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-                            <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+                            <unlysed_fluid_change_rate units="1/min">1.11667e-2</unlysed_fluid_change_rate>
+                            <lysed_fluid_change_rate units="1/min">8.33333e-4</lysed_fluid_change_rate>
+                            <cytoplasmic_biomass_change_rate units="1/min">5.33333e-5</cytoplasmic_biomass_change_rate>
+                            <nuclear_biomass_change_rate units="1/min">2.16667e-3</nuclear_biomass_change_rate>
                             <calcification_rate units="1/min">0</calcification_rate>
                             <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                         </parameters>
@@ -305,7 +317,7 @@
                     <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                 </volume>
                 <mechanics>
-                    <cell_cell_adhesion_strength units="micron/min">0</cell_cell_adhesion_strength>
+                    <cell_cell_adhesion_strength units="micron/min">0.</cell_cell_adhesion_strength>
                     <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
                     <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
                     <cell_adhesion_affinities>
@@ -317,10 +329,8 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
-                    <attachment_rate units="1/min">10.0</attachment_rate>
+                    <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
@@ -333,7 +343,7 @@
                         <chemotaxis>
                             <enabled>false</enabled>
                             <substrate>food</substrate>
-                            <direction>1</direction>
+                            <direction>-1</direction>
                         </chemotaxis>
                         <advanced_chemotaxis>
                             <enabled>false</enabled>
@@ -431,10 +441,10 @@
                             <duration index="1" fixed_duration="true">86400</duration>
                         </phase_durations>
                         <parameters>
-                            <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-                            <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-                            <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-                            <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
+                            <unlysed_fluid_change_rate units="1/min">1.11667e-2</unlysed_fluid_change_rate>
+                            <lysed_fluid_change_rate units="1/min">8.33333e-4</lysed_fluid_change_rate>
+                            <cytoplasmic_biomass_change_rate units="1/min">5.33333e-5</cytoplasmic_biomass_change_rate>
+                            <nuclear_biomass_change_rate units="1/min">2.16667e-3</nuclear_biomass_change_rate>
                             <calcification_rate units="1/min">0</calcification_rate>
                             <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                         </parameters>
@@ -452,7 +462,7 @@
                     <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
                 </volume>
                 <mechanics>
-                    <cell_cell_adhesion_strength units="micron/min">0</cell_cell_adhesion_strength>
+                    <cell_cell_adhesion_strength units="micron/min">0.</cell_cell_adhesion_strength>
                     <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
                     <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
                     <cell_adhesion_affinities>
@@ -464,10 +474,8 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
-                    <attachment_rate units="1/min">10.0</attachment_rate>
+                    <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
                 </mechanics>
                 <motility>
