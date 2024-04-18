@@ -194,15 +194,13 @@ class MainPlot(QMainWindow):
         self.canvas.draw()
 
 class CSVLoader(QWidget):
-    def __init__(self, csvFile=None, parent=None):
+    def __init__(self, csvFile=None, dataframe=None, parent=None):
         super().__init__()
         layout = QHBoxLayout()
         self.file_label = QLabel("No file loaded")
         self.dataframe = None
-        if csvFile:
-            print(csvFile)
-            self.file_label.setText(f"{csvFile}")
-            self.dataframe = pd.read_csv(csvFile, header=None)
+        if csvFile: self.file_label.setText(f"{csvFile}")
+        if isinstance(dataframe, pd.DataFrame): self.dataframe = dataframe
         # Button to load
         self.load_button = QPushButton("Load CSV")
         layout.addWidget(self.load_button)
@@ -210,8 +208,8 @@ class CSVLoader(QWidget):
         layout.addWidget(self.file_label)
         self.setLayout(layout)
 
-class MainWindow(QMainWindow):
-    def __init__(self, csvFile=None):
+class Window_plot_rules(QMainWindow):
+    def __init__(self, csvFile=None, dataframe=None):
         super().__init__()
 
         self.setWindowTitle("Plot multivariate rules")
@@ -230,7 +228,7 @@ class MainWindow(QMainWindow):
         self.layout_signals = QVBoxLayout(self.scroll_widget)
 
         # Button to load CSV file
-        self.CSV_loader = CSVLoader(csvFile)
+        self.CSV_loader = CSVLoader(csvFile=csvFile, dataframe=dataframe)
         self.layout.addWidget(self.CSV_loader)
         self.CSV_loader.load_button.clicked.connect(self.load_csv_file)
        
@@ -348,26 +346,10 @@ class MainWindow(QMainWindow):
                                                        (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
                                                        (self.CSV_loader.dataframe['signal'] == signal)]['hill_power'].item()
             self.layout_signals.addWidget( MyWidget_signal( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
+    
 
-def Window(csvFile=None):
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = MainWindow(csvFile) 
+    win = Window_plot_rules() 
     win.show()
     sys.exit(app.exec_())
-
-if __name__ == '__main__':  
-    # Oxygen increases cycle entry
-    dic_signals_pO2 = {'name':'cycle entry', 'base_v': 0.001, 'max_up': 0.042, 'max_down': 0.0,
-               'signals': [{'name': 'pO2', 'direction':'increases','half_max': 21.5, 'hillpower': 4}]} # oxygen half_max of 21.5 mmHg and hill power 4
-    # Oxygen increases cycle entry and Estrogen increases cycle entry
-    dic_signals_pO2_e = {'name':'cycle entry', 'base_v': 0.001, 'max_up': 0.042, 'max_down': 0.0,
-               'signals': [{'name': 'pO2', 'direction':'increases','half_max': 21.5, 'hillpower': 4}, # oxygen half_max of 21.5 mmHg and hill power 4
-                           {'name': 'estrogen','direction':'increases', 'half_max': 0.5, 'hillpower': 3}]} # estrogen half_max of 0.5 and hill power 3
-    # Oxygen increases cycle entry, Estrogen increases cycle entry, and Pressure decreases cycle entry
-    dic_signals_pO2_e_p = {'name':'cycle entry', 'base_v': 0.001, 'max_up': 0.042, 'max_down': 0.0,
-               'signals': [{'name': 'pO2', 'direction':'increases','half_max': 21.5, 'hillpower': 4}, # oxygen half_max of 21.5 mmHg and hill power 4
-                           {'name': 'estrogen','direction':'increases', 'half_max': 0.5, 'hillpower': 3}, # estrogen half_max of 0.5 and hill power 3
-                           {'name': 'pressure','direction':'decreases', 'half_max': 0.25, 'hillpower': 3}]} # pressure half_max of 0.25 and hill power 3
-    
-    Window()
-    

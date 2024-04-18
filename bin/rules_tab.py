@@ -26,6 +26,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
+from multivariate_rules import Window_plot_rules
 
 class RulesPlotWindow(QWidget):
     def __init__(self):
@@ -565,6 +566,12 @@ class Rules(QWidget):
         #-------
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
+
+        self.plot_rules_button = QPushButton("Plot rules")
+        self.plot_rules_button.setFixedWidth(150)
+        self.plot_rules_button.setStyleSheet("background-color: lightgreen")
+        self.plot_rules_button.clicked.connect(self.plot_rules)
+        hlayout2.addWidget(self.plot_rules_button) 
 
         self.clear_button = QPushButton("Clear table")
         self.clear_button.setFixedWidth(150)
@@ -1171,6 +1178,11 @@ class Rules(QWidget):
 
         # if idx == -1:
         #     return
+    #-----------------------------------------------------------
+    def plot_rules(self):
+        RulesWindow = Window_plot_rules()
+        RulesWindow.show()
+        print("Works", RulesWindow.isVisible())
 
     #-----------------------------------------------------------
     def clear_rules(self):
