@@ -25,6 +25,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from multivariate_rules import Window_plot_rules
 
@@ -1180,9 +1181,13 @@ class Rules(QWidget):
         #     return
     #-----------------------------------------------------------
     def plot_rules(self):
-        RulesWindow = Window_plot_rules()
-        RulesWindow.show()
-        print("Works", RulesWindow.isVisible())
+        df_test1 = pd.DataFrame(np.array([["cancer", 'pO2', 'increases', 'cycle entry', 0.042, 21.5, 4, 0, 0.001],
+                                      ["cancer", 'estrogen', 'increases', 'cycle entry', 0.042, 0.5, 3, 0, 0.001],
+                                      ["cancer", 'pressure', 'decreases', 'cycle entry', 0.0, 0.25, 3, 0, 0.001]]),
+                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+        df_test1 = df_test1.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+        self.RulesWindow = Window_plot_rules(dataframe=df_test1)
+        self.RulesWindow.show()
 
     #-----------------------------------------------------------
     def clear_rules(self):
