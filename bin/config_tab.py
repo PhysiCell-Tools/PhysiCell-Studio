@@ -205,9 +205,9 @@ class Config(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
-    
+
         self.max_time = QLineEdit()
-        self.max_time.setValidator(QtGui.QDoubleValidator())
+        self.max_time.setValidator(QtGui.QDoubleValidator(bottom=0))
         self.max_time.textChanged.connect(self.max_time_changed_cb)
         self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
@@ -1092,7 +1092,10 @@ class Config(QWidget):
         if self.update_max_time_flag:
             new_time = self.day_spin_box.value()*1440 + self.hour_spin_box.value()*60 + self.minute_spin_box.value() + self.minute_fraction_spin_box.value()
             new_time = max(0,new_time)
+            force_update = str(new_time) == self.max_time.text() # sometimes the value is the same, but the spinboxes have changes (like hour=-1 after max time at 0)
             self.max_time.setText(str(new_time))
+            if force_update:
+                self.max_time_changed_cb()
 
     def max_time_changed_cb(self):
         self.update_max_time_flag = False # disable QSpinBox cbs to update max time while setting these
@@ -1101,6 +1104,7 @@ class Config(QWidget):
             fraction_minutes = float(self.max_time.text()) - time
         except:
             time = 0
+            fraction_minutes = 0
         minutes = time % 60
         time -= minutes
         time = int(time/60)
