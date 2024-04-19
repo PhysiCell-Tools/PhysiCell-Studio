@@ -1181,12 +1181,38 @@ class Rules(QWidget):
         #     return
     #-----------------------------------------------------------
     def plot_rules(self):
-        df_test1 = pd.DataFrame(np.array([["cancer", 'pO2', 'increases', 'cycle entry', 0.042, 21.5, 4, 0, 0.001],
-                                      ["cancer", 'estrogen', 'increases', 'cycle entry', 0.042, 0.5, 3, 0, 0.001],
-                                      ["cancer", 'pressure', 'decreases', 'cycle entry', 0.0, 0.25, 3, 0, 0.001]]),
-                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
-        df_test1 = df_test1.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
-        self.RulesWindow = Window_plot_rules(dataframe=df_test1)
+        dataframe = pd.DataFrame(columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+        dataframe = dataframe.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+        for irow in range(self.max_rule_table_rows):
+            cell_irow = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+            if (cell_irow == ''): 
+                if irow == 0: return # No rules
+                else: break # empty line
+            signal_irow = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+            direction_irow = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+            behavior_irow = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+            saturation_irow = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
+            halfmax_irow = float(self.rules_table.cellWidget(irow, self.rules_halfmax_idx).text())
+            hillpower_irow = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+            if self.rules_table.cellWidget(irow,self.rules_applydead_idx).isChecked():
+                dead_irow = 1
+            else:
+                dead_irow = 0
+            # base value
+            self.update_base_value_by_name(behavior_irow, False) # It's not the better approach
+            base_behavior_irow = self.base_val
+
+            if base_behavior_irow == '??':  # don't think we ever have this now
+                if "decreases" in direction_irow: base_behavior_irow = 1.0
+                else: base_behavior_irow = 0.0
+            else: 
+                base_behavior_irow = float(base_behavior_irow)
+            # print({'cell':cell_irow, 'signal':signal_irow, 'direction':direction_irow, 'behavior':behavior_irow, 'saturation':saturation_irow, 
+            #                   'half_max':halfmax_irow, 'hill_power':hillpower_irow, 'dead':dead_irow, 'base_behavior':base_behavior_irow})
+            dataframe = dataframe._append({'cell':cell_irow, 'signal':signal_irow, 'direction':direction_irow, 'behavior':behavior_irow, 'saturation':saturation_irow, 
+                              'half_max':halfmax_irow, 'hill_power':hillpower_irow, 'dead':dead_irow, 'base_behavior':base_behavior_irow}, ignore_index = True)
+        # print(dataframe)
+        self.RulesWindow = Window_plot_rules(dataframe=dataframe)
         self.RulesWindow.show()
 
     #-----------------------------------------------------------
