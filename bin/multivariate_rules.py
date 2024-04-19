@@ -181,7 +181,7 @@ class MainPlot(QMainWindow):
         if (self.checkbox.checkState() == 0): 
             AxesFixed = False
         # Calculate the hill fucntion
-        if (len(listSigUpReg) > 0):
+        if ((len(listSigUpReg) > 0) | (len(listSigDownReg) > 0)):
             signal, H_U, H_D = Multivariate_hillFunc(listSigUpReg, listHalfMaxUpReg, listHillPowerUpReg, listSigDownReg, listHalfMaxDownReg, listHillPowerDownReg)
             self.canvas.axes.set_title(f"Behavior: {behavior_name}")
             self.canvas.axes.plot(signal, (b_0 + (b_M - b_0)*H_U)*(1-H_D) + H_D*b_m, 'r')
@@ -326,6 +326,9 @@ class Window_plot_rules(QMainWindow):
         # Sliders of behavior
         self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior )
         self.layout_behavior_sliders.addWidget( self.sliders_behavior )
+        # Disable sliders
+        if len(list_DownReg) == 0: self.sliders_behavior.slider_down_behavior.setEnabled(False)
+        if len(list_UpReg) == 0: self.sliders_behavior.slider_up_behavior.setEnabled(False)
 
         # Get the signals list
         list_signals = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
