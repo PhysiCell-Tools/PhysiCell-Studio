@@ -59,17 +59,17 @@ class LabeledSlider(QWidget):
         value = self.tickValue( self.slider.value() )
         self.label.setText(f"{self.description}: {value}")
 
-class MyWidget_behavior(QWidget):
+class BehaviorWidget(QWidget):
     def __init__(self, name, base_v, max_up , max_down):
         super().__init__()
         self.name = name
         frac_var = 1.0 # percentage of variation -/+ in the base, up, down sliders of behaviors
-        self.base_min = base_v*(1-frac_var)
-        self.base_max = base_v*(1+frac_var)
-        self.max_up_min = max_up*(1-frac_var)
-        self.max_up_max = max_up*(1+frac_var)
-        self.max_down_min = max_down*(1-frac_var)
-        self.max_down_max = max_down*(1-frac_var)
+        self.base_min = base_v*(1.0-frac_var)
+        self.base_max = base_v*(1.0+frac_var)
+        self.max_up_min = max_up*(1.0-frac_var)
+        self.max_up_max = max_up*(1.0+frac_var)
+        self.max_down_min = max_down*(1.0-frac_var)
+        self.max_down_max = max_down*(1.0-frac_var)
         self.init_ui()
     def init_ui(self):
         layout = QHBoxLayout()
@@ -77,8 +77,8 @@ class MyWidget_behavior(QWidget):
         Max_behavior_values = ["%e" % x for x in np.linspace(self.max_up_min,self.max_up_max, num=11, endpoint=True)]
         Min_behavior_values = ["%e" % x for x in np.linspace(self.max_down_min, self.max_down_max, num=11, endpoint=True)]
         self.slider_base_behavior = LabeledSlider("Base behavior", Base_behavior_values)
-        self.slider_up_behavior = LabeledSlider("Max up regularion", Max_behavior_values)
-        self.slider_down_behavior = LabeledSlider("Max down regulation", Min_behavior_values)
+        self.slider_up_behavior = LabeledSlider("Up regulation", Max_behavior_values)
+        self.slider_down_behavior = LabeledSlider("Down regulation", Min_behavior_values)
         # Set initial value
         self.slider_base_behavior.slider.setValue(round(0.5*len(Base_behavior_values)) -1 ) # start in the center of the bar
         self.slider_up_behavior.slider.setValue(round(0.5*len(Max_behavior_values)) -1 ) # start in the center of the bar
@@ -88,7 +88,7 @@ class MyWidget_behavior(QWidget):
         layout.addWidget(self.slider_down_behavior)
         self.setLayout(layout)
 
-class MyWidget_signal(QWidget):
+class SignalWidget(QWidget):
     def __init__(self, sig_name, sig_direction , sig_halfmax, sig_hillpower):
         super().__init__()
         self.sig_name = sig_name
@@ -194,13 +194,10 @@ class MainPlot(QMainWindow):
         self.canvas.draw()
 
 class CSVLoader(QWidget):
-    def __init__(self, csvFile=None, dataframe=None, parent=None):
+    def __init__(self, parent=None):
         super().__init__()
         layout = QHBoxLayout()
         self.file_label = QLabel("No file loaded")
-        self.dataframe = None
-        if csvFile: self.file_label.setText(f"{csvFile}")
-        if isinstance(dataframe, pd.DataFrame): self.dataframe = dataframe
         # Button to load
         self.load_button = QPushButton("Load CSV")
         layout.addWidget(self.load_button)
@@ -209,9 +206,9 @@ class CSVLoader(QWidget):
         self.setLayout(layout)
 
 class Window_plot_rules(QMainWindow):
-    def __init__(self, csvFile=None, dataframe=None):
+    def __init__(self, dataframe=None):
         super().__init__()
-
+        self.dataframe = dataframe
         self.setWindowTitle("Plot multivariate rules")
         self.setGeometry(100, 100, 600, 800)  # Set the initial size of the main window
 
@@ -227,11 +224,12 @@ class Window_plot_rules(QMainWindow):
         self.scroll_widget = QWidget()
         self.layout_signals = QVBoxLayout(self.scroll_widget)
 
-        # Button to load CSV file
-        self.CSV_loader = CSVLoader(csvFile=csvFile, dataframe=dataframe)
-        self.layout.addWidget(self.CSV_loader)
-        self.CSV_loader.load_button.clicked.connect(self.load_csv_file)
-       
+        if not isinstance(dataframe, pd.DataFrame): 
+            # Button to load CSV file
+            self.CSV_loader = CSVLoader()
+            self.layout.addWidget(self.CSV_loader)
+            self.CSV_loader.load_button.clicked.connect(self.load_csv_file)
+
         # ComboBox of cell
         behavior_hbox = QHBoxLayout()
         self.combobox_cell = QComboBox()
@@ -256,6 +254,7 @@ class Window_plot_rules(QMainWindow):
         signal_hbox_plot.addWidget(QLabel('Plot the signal:'))
         self.combobox_signal_plot = QComboBox()
         signal_hbox_plot.addWidget( self.combobox_signal_plot )
+        self.layout.addLayout(signal_hbox_plot)
         # Set the scroll widget as the widget inside the scroll area
         self.scroll_area.setWidget(self.scroll_widget)
         # Add the scroll area to the layout
@@ -267,31 +266,39 @@ class Window_plot_rules(QMainWindow):
         # Add the plot
         self.Figure = MainPlot(self.combobox_cell,self.combobox_behavior,self.combobox_signal_plot,self.layout_behavior_sliders, self.layout_signals, self.checkbox)
         self.layout.addWidget( self.Figure )
+        # Initialize if the daframae is defiend
+        if isinstance(dataframe, pd.DataFrame): 
+            # Clear the combo box of cells and populate
+            self.combobox_cell.clear()
+            self.combobox_cell.addItems(self.dataframe["cell"].unique().tolist())
 
     def load_csv_file(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.CSV_loader, "Open CSV File", "", "CSV Files (*.csv)", options=options)
         if file_name:
             try:
-                self.CSV_loader.dataframe = pd.read_csv(file_name, header=None)
+                self.dataframe = pd.read_csv(file_name, header=None)
                 self.CSV_loader.file_label.setText(file_name)
             except pd.errors.EmptyDataError:
-                self.CSV_loader.file_label.setText("CSV files is empty!")
+                self.CSV_loader.file_label.setText("CSV file is empty!")
                 return
-            self.CSV_loader.dataframe = self.CSV_loader.dataframe.rename(columns={0: "cell", 1: "signal", 2: "direction", 
+            self.dataframe = self.dataframe.rename(columns={0: "cell", 1: "signal", 2: "direction", 
                                            3: "behavior", 4: "saturation", 5: "half_max",
                                            6: "hill_power", 7: "dead"}) # version 2 of rules
             # Add the base
-            self.CSV_loader.dataframe["base_behavior"] = 0
-            # print(self.CSV_loader.dataframe)
+            self.dataframe["base_behavior"] = 0
+            # print(self.dataframe)
+            
             # Clear the combo box of cells and populate
             self.combobox_cell.clear()
-            self.combobox_cell.addItems(self.CSV_loader.dataframe["cell"].unique().tolist())
+            self.combobox_cell.addItems(self.dataframe["cell"].unique().tolist())
+    
     def update_cells(self):
         # Clear the combo box of behaviors and populate
         self.combobox_behavior.clear()
-        list_behaviors = self.CSV_loader.dataframe.loc[self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()]['behavior'].tolist()
+        list_behaviors = self.dataframe.loc[self.dataframe["cell"] == self.combobox_cell.currentText()]['behavior'].unique().tolist()
         self.combobox_behavior.addItems(list_behaviors)
+    
     def update_rules(self):
         # Remove the behavior widgets from layout
         while self.layout_behavior_sliders.count():
@@ -300,15 +307,15 @@ class Window_plot_rules(QMainWindow):
                 widget.deleteLater()
 
         # Get the behavior values
-        list_baseValue = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                 (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                 (self.CSV_loader.dataframe['direction'] == "decreases")]['base_behavior'].tolist()
-        list_UpReg = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                 (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                 (self.CSV_loader.dataframe['direction'] == "increases")]['saturation'].tolist()
-        list_DownReg = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                 (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                 (self.CSV_loader.dataframe['direction'] == "decreases")]['saturation'].tolist()
+        list_baseValue = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                 (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                 (self.dataframe['direction'] == "decreases")]['base_behavior'].tolist()
+        list_UpReg = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                 (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                 (self.dataframe['direction'] == "increases")]['saturation'].tolist()
+        list_DownReg = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                 (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                 (self.dataframe['direction'] == "decreases")]['saturation'].tolist()
         # Using the max and min of saturation to define UP and Down regulation
         try: baseBehavior = list_baseValue[0]
         except IndexError: baseBehavior = 0.0
@@ -317,12 +324,12 @@ class Window_plot_rules(QMainWindow):
         try: maxBehavior = max(list_UpReg) 
         except ValueError: maxBehavior = 0.0
         # Sliders of behavior
-        self.sliders_behavior = MyWidget_behavior( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior )
+        self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior )
         self.layout_behavior_sliders.addWidget( self.sliders_behavior )
 
         # Get the signals list
-        list_signals = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                       (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText())]['signal'].tolist()
+        list_signals = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText())]['signal'].tolist()
 
         # Clear the combo box of signals to plot
         self.combobox_signal_plot.clear()
@@ -336,20 +343,31 @@ class Window_plot_rules(QMainWindow):
 
         # Label and Sliders of signals
         for signal in list_signals:
-            signal_direction = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                       (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.CSV_loader.dataframe['signal'] == signal)]['direction'].item()
-            signal_halfmax = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                       (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.CSV_loader.dataframe['signal'] == signal)]['half_max'].item()
-            signal_hillpower = self.CSV_loader.dataframe.loc[(self.CSV_loader.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                       (self.CSV_loader.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.CSV_loader.dataframe['signal'] == signal)]['hill_power'].item()
-            self.layout_signals.addWidget( MyWidget_signal( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
+            signal_direction = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                       (self.dataframe['signal'] == signal)]['direction'].item()
+            signal_halfmax = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                       (self.dataframe['signal'] == signal)]['half_max'].item()
+            signal_hillpower = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
+                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
+                                                       (self.dataframe['signal'] == signal)]['hill_power'].item()
+            self.layout_signals.addWidget( SignalWidget( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
     
 
 if __name__ == "__main__":
+    df_test1 = pd.DataFrame(np.array([["cancer", 'pO2', 'increases', 'cycle entry', 0.042, 21.5, 4, 0, 0.001],
+                                      ["cancer", 'estrogen', 'increases', 'cycle entry', 0.042, 0.5, 3, 0, 0.001],
+                                      ["cancer", 'pressure', 'decreases', 'cycle entry', 0.0, 0.25, 3, 0, 0.001]]),
+                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+    df_test1 = df_test1.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+    df_test2 = pd.DataFrame(np.array([["default", 'substrate', 'increases', 'substrate secretion', 1.0, 0.5, 4, 0, 0.0],
+                                      ["default", 'pressure', 'increases', 'substrate secretion', 1.0, 0.5, 4, 0, 0.0]]),
+                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+    df_test2 = df_test2.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
     app = QApplication(sys.argv)
-    win = Window_plot_rules() 
+    # win = Window_plot_rules()
+    win = Window_plot_rules(dataframe=df_test1)
+    # win = Window_plot_rules(dataframe=df_test2)
     win.show()
     sys.exit(app.exec_())
