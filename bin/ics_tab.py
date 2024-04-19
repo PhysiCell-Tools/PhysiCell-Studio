@@ -29,6 +29,9 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 
+from studio_classes import QHLine
+from bioinf_import_tab import BioinfImport
+
 import numpy as np
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -61,17 +64,9 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                 """
         self.setStyleSheet(checkbox_style)
 
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-        # self.setFrameShadow(QFrame.Plain)
-        self.setStyleSheet("border:1px solid black")
-
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab):
+    def __init__(self, config_tab, celldef_tab, bioinf_import_flag, bioinf_import_test, bioinf_import_test_spatial):
         super().__init__()
         # global self.config_params
 
@@ -80,11 +75,14 @@ class ICs(QWidget):
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
 
+        self.bioinf_import_flag = bioinf_import_flag
+
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
 
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
-        self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+        # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
+        self.color_by_celltype = ['gray','red','yellow','green','blue','magenta','orange','lime','cyan','hotpink','peachpuff','darkseagreen','lightskyblue']
         self.alpha_value = 1.0
 
         self.csv_array = np.empty([1,4])  # default floats (x,y,z,cell_type_index)
@@ -158,13 +156,15 @@ class ICs(QWidget):
         self.figsize_width_svg = basic_length
         self.figsize_height_svg = basic_length
 
+        self.mouse_on_axes = False
+
         # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
-        label_width = 110
-        value_width = 60
-        label_height = 20
-        units_width = 70
+        # label_width = 110
+        # value_width = 60
+        # label_height = 20
+        # units_width = 70
 
         self.combobox_stylesheet = """ 
             QComboBox{
@@ -184,6 +184,24 @@ class ICs(QWidget):
             }
             """
 
+        self.tab_widget = QTabWidget()
+        self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
+        if self.bioinf_import_flag:
+            self.bioinf_import_tab = BioinfImport(self.config_tab, self.celldef_tab, self, bioinf_import_test, bioinf_import_test_spatial)
+            self.tab_widget.addTab(self.bioinf_import_tab,"Bioinformatics Import")
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.tab_widget)
+        # if self.show_plot_range:
+        #     self.layout.addWidget(self.controls2)
+        # self.layout.addWidget(self.my_xmin)
+        # self.layout.addWidget(self.scroll_plot)
+        # self.layout.addWidget(splitter)
+        # self.layout.addStretch()
+
+        # self.create_figure()
+        
+    def create_base_ics_tab(self):
 
         self.scroll_plot = QScrollArea()  # might contain centralWidget
         # self.create_figure()
@@ -573,17 +591,15 @@ class ICs(QWidget):
         self.create_figure()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
         splitter.addWidget(self.scroll_plot)
-        self.layout = QVBoxLayout(self)
+        
         self.show_plot_range = False
-        # if self.show_plot_range:
-        #     self.layout.addWidget(self.controls2)
-        # self.layout.addWidget(self.my_xmin)
-        # self.layout.addWidget(self.scroll_plot)
-        self.layout.addWidget(splitter)
-        # self.layout.addStretch()
 
-        # self.create_figure()
+        return splitter
 
+    def update_colors_list(self):
+        if len(self.celldef_tab.celltypes_list) >= len(self.color_by_celltype):
+            # print("ics_tab: update_colors_list(): exceeded # of colors. Grow it.")
+            self.color_by_celltype.append('white')  # match what's done in PhysiCell
 
     def fill_celltype_combobox(self):
         logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.celldef_tab.celltypes_list}')
@@ -945,6 +961,10 @@ class ICs(QWidget):
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.mpl_connect("button_press_event", self.button_press)
+        self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
+        self.canvas.mpl_connect('axes_enter_event', self.on_enter_axes)
+        self.canvas.mpl_connect('axes_leave_event', self.on_leave_axes)
+        self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
         self.canvas.setStyleSheet("background-color:transparent;")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
@@ -972,6 +992,12 @@ class ICs(QWidget):
         self.canvas.draw()
 
     #---------------------------------------------------------------------------
+    def getPos(self, event):
+        x = event.xdata  # or "None" if outside plot domain
+        y = event.ydata
+        z = 0.0
+        return x, y, z
+    
     def circles(self, x, y, s, c='b', vmin=None, vmax=None, **kwargs):
         """
         See https://gist.github.com/syrte/592a062c562cd2a98a83 
@@ -1620,10 +1646,16 @@ class ICs(QWidget):
         rvals = np.array(rlist)
         # rgbas = np.array(rgba_list)
 
+        # print("idx, # celltypes=",cell_type_index , len(self.color_by_celltype[cell_type_index]))
+        # if cell_type_index >= len(self.color_by_celltype[cell_type_index]):
+        #     print("Error: exceeded # of colors. Grow it.")
+        #     self.color_by_celltype.append('red')
+
         if (self.cells_edge_checked_flag):
             try:
                 self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-            except (ValueError):
+            # except (ValueError):
+            except:
                 pass
         else:
             self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
@@ -1805,6 +1837,10 @@ class ICs(QWidget):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getOpenFileName(self,'',".")
         full_path_rules_name = filePath[0]
+
+        self.import_from_file(full_path_rules_name)
+
+    def import_from_file(self, full_path_rules_name):
         # logging.debug(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
         print(f'\nimport_cb():  full_path_rules_name ={full_path_rules_name}')
         basename = os.path.basename(full_path_rules_name)
@@ -1813,7 +1849,7 @@ class ICs(QWidget):
         print(f'import_cb():  dirname ={dirname}')
         # if (len(full_path_rules_name) > 0) and Path(full_path_rules_name):
         if (len(full_path_rules_name) > 0) and Path(full_path_rules_name).is_file():
-            print("import_cb():  filePath is valid")
+            print("import_from_file(full_path_rules_name):  filePath is valid")
             # logging.debug(f'     filePath is valid')
             print("len(full_path_rules_name) = ", len(full_path_rules_name) )
 
@@ -1907,3 +1943,27 @@ class ICs(QWidget):
     def fill_gui(self):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
+        if self.bioinf_import_flag:
+            self.bioinf_import_tab.fill_gui()
+
+    def on_enter_axes(self, event):
+        self.mouse_on_axes = True
+        current_location = self.getPos(event)
+        self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
+        self.canvas.update()
+        self.canvas.draw()
+
+    def on_leave_axes(self, event):
+        self.mouse_on_axes = False
+        self.ax0.set_title("")
+        self.canvas.update()
+        self.canvas.draw()
+
+    def mouseMoved(self, event):
+        if self.mouse_on_axes is False:
+            return
+        current_location = self.getPos(event)
+        self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
+        self.canvas.update()
+        self.canvas.draw()
+

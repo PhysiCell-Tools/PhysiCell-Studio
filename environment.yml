@@ -1,11 +1,17 @@
-name: pmb
+name: studio
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - pandas 
-  - matplotlib 
-  - pyqt 
-  - libxml2 
-  - python 
+  - paraview 
+  - python
+  - pyqt5-sip
+  - matplotlib
   - scipy
+  - pandas
+  - anndata
+  - pip
+  - pip:
+    - simulariumio[physicell]
+    - requests
+
