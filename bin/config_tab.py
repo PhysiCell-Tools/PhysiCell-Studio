@@ -8,11 +8,12 @@ Rf. Credits.md
 import sys
 import logging
 import os
+from math import floor, log10
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog    # , QMessageBox
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
@@ -76,6 +77,8 @@ class Config(QWidget):
             """
 
         self.substrate_list = []
+
+        self.update_max_time_flag = True # flag to stop recursive QSpinBox updates
         
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
@@ -204,18 +207,65 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.max_time = QLineEdit()
-        self.max_time.setValidator(QtGui.QDoubleValidator())
+        self.max_time.setValidator(QtGui.QDoubleValidator(bottom=0))
+        self.max_time.textChanged.connect(self.max_time_changed_cb)
         self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel(self.default_time_units)
         label.setAlignment(QtCore.Qt.AlignLeft)
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
-        add_day_btn = QPushButton("+ 1 day")
-        add_day_btn.setFixedWidth(100)
-        add_day_btn.setStyleSheet("background-color: lightgreen; color: black")
-        add_day_btn.clicked.connect(self.add_day_cb)
-        self.config_tab_layout.addWidget(add_day_btn, idx_row,3,1,1) # w, row, column, rowspan, colspan
+        self.day_spin_box = QSpinBox()
+
+        self.day_spin_box.setMinimum(0)
+        self.day_spin_box.setMaximum(int(1e6))
+
+        self.day_spin_box.setSuffix(" d")
+        self.day_spin_box.setSingleStep(1)  # Or e.g. 0.5 for QDoubleSpinBox
+        self.day_spin_box.textChanged.connect(self.day_value_changed_str)
+
+        self.config_tab_layout.addWidget(self.day_spin_box,idx_row,3,1,1)
+
+        self.hour_spin_box = QSpinBox()
+
+        self.hour_spin_box.setMinimum(-1) # allow it to roll over to a new day
+        self.hour_spin_box.setMaximum(24) # allow it to roll over to a new day
+
+        self.hour_spin_box.setSuffix(" h")
+        self.hour_spin_box.setSingleStep(1)  # Or e.g. 0.5 for QDoubleSpinBox
+        self.hour_spin_box.textChanged.connect(self.hour_value_changed_str)
+
+        self.config_tab_layout.addWidget(self.hour_spin_box,idx_row,4,1,1)
+
+        self.minute_spin_box = QSpinBox()
+
+        self.minute_spin_box.setMinimum(-1)
+        self.minute_spin_box.setMaximum(60)
+
+        self.minute_spin_box.setSuffix(" min")
+        self.minute_spin_box.setSingleStep(1)  # Or e.g. 0.5 for QDoubleSpinBox
+        self.minute_spin_box.textChanged.connect(self.minute_value_changed_str)
+
+        self.config_tab_layout.addWidget(self.minute_spin_box,idx_row,5,1,1)
+
+        self.minute_fraction_spin_box = QDoubleSpinBox()
+
+        self.minute_fraction_spin_box.setMinimum(-1)
+        self.minute_fraction_spin_box.setMaximum(1)
+
+        self.minute_fraction_spin_box.setDecimals(2) # set to 2 by default, but listen to diffusion_dt
+
+        self.minute_fraction_spin_box.setSuffix(" min")
+        self.minute_fraction_spin_box.setSingleStep(0.01)  # Or e.g. 0.5 for QDoubleSpinBox
+        self.minute_fraction_spin_box.textChanged.connect(self.minute_fraction_value_changed_str)
+
+        self.config_tab_layout.addWidget(self.minute_fraction_spin_box,idx_row,6,1,1)
+
+        # add_day_btn = QPushButton("+ 1 day")
+        # add_day_btn.setFixedWidth(100)
+        # add_day_btn.setStyleSheet("background-color: lightgreen; color: black")
+        # add_day_btn.clicked.connect(self.add_day_cb)
+        # self.config_tab_layout.addWidget(add_day_btn, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("Diffusion dt")
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -224,6 +274,7 @@ class Config(QWidget):
 
         self.diffusion_dt = QLineEdit()
         self.diffusion_dt.setValidator(QtGui.QDoubleValidator())
+        self.diffusion_dt.textChanged.connect(self.diffusion_dt_changed_cb)
         self.config_tab_layout.addWidget(self.diffusion_dt, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         label = QLabel(self.default_time_units)
@@ -1022,8 +1073,61 @@ class Config(QWidget):
         for idx in range(len(self.substrate_list)):
             if old_name == self.svg_substrate_to_plot_dropdown.itemText(idx):
                 self.svg_substrate_to_plot_dropdown.setItemText(idx, new_name)
-
+                
     def count_substrates(self):
         return len(self.substrate_list)
+    def day_value_changed_str(self, s):
+        self.update_max_time()
+                
+    def hour_value_changed_str(self,s):
+        self.update_max_time()
+                
+    def minute_value_changed_str(self,s):
+        self.update_max_time()
+
+    def minute_fraction_value_changed_str(self,s):
+        self.update_max_time()
+
+    def update_max_time(self):
+        if self.update_max_time_flag:
+            new_time = self.day_spin_box.value()*1440 + self.hour_spin_box.value()*60 + self.minute_spin_box.value() + self.minute_fraction_spin_box.value()
+            new_time = max(0,new_time)
+            force_update = str(new_time) == self.max_time.text() # sometimes the value is the same, but the spinboxes have changes (like hour=-1 after max time at 0)
+            self.max_time.setText(str(new_time))
+            if force_update:
+                self.max_time_changed_cb()
+
+    def max_time_changed_cb(self):
+        self.update_max_time_flag = False # disable QSpinBox cbs to update max time while setting these
+        try:
+            time = floor(float(self.max_time.text()))
+            fraction_minutes = float(self.max_time.text()) - time
+        except:
+            time = 0
+            fraction_minutes = 0
+        minutes = time % 60
+        time -= minutes
+        time = int(time/60)
+        hours = time % 24
+        time -= hours
+        time = int(time/24)
+        days = time
+        self.minute_fraction_spin_box.setValue(fraction_minutes)
+        self.minute_spin_box.setValue(minutes)
+        self.hour_spin_box.setValue(hours)
+        self.day_spin_box.setValue(days)
+        self.update_max_time_flag = True
+
+    def diffusion_dt_changed_cb(self):
+        try:
+            diffusion_dt = float(self.diffusion_dt.text())
+            if diffusion_dt > 0:
+                new_num_decimals = -floor(log10(diffusion_dt))
+                self.minute_fraction_spin_box.setDecimals(new_num_decimals)
+                self.minute_fraction_spin_box.setSingleStep(10**(-new_num_decimals))
+            else:
+                self.minute_fraction_spin_box.setDecimals(2)
+        except:
+            self.minute_fraction_spin_box.setDecimals(2)
     #-----------------------------------------------------------------------------------------
     
