@@ -359,7 +359,7 @@ class Window_plot_rules(QMainWindow):
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0]) ) 
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1]) ) 
             else:
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction.item(), signal_halfmax.item(), signal_hillpower.item()) ) 
     
 
 if __name__ == "__main__":
@@ -372,9 +372,21 @@ if __name__ == "__main__":
                                       ["default", 'pressure', 'increases', 'substrate secretion', 1.0, 0.5, 4, 0, 0.0]]),
                    columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
     df_test2 = df_test2.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+    # Rules hill
+    df_hill = pd.DataFrame(np.array([["default", 'substrate', 'increases', 'cycle entry', 0.0033, 0.2, 10, 0, 0.003],
+                                      ["default", 'substrate', 'decreases', 'cycle entry', 0, 0.5, 10, 0, 0.003]]),
+                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+    df_hill = df_hill.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+    # Rules valley
+    df_valley = pd.DataFrame(np.array([["default", 'substrate', 'increases', 'cycle entry', 0.0033, 0.5, 100, 0, 0.003],
+                                      ["default", 'substrate', 'decreases', 'cycle entry', 0, 0.1, 100, 0, 0.003]]),
+                   columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
+    df_valley = df_valley.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
+
     app = QApplication(sys.argv)
     # win = Window_plot_rules()
-    win = Window_plot_rules(dataframe=df_test1)
+    # win = Window_plot_rules(dataframe=df_test1)
     # win = Window_plot_rules(dataframe=df_test2)
+    win = Window_plot_rules(dataframe=df_valley)
     win.show()
     sys.exit(app.exec_())
