@@ -180,7 +180,7 @@ class MainPlot(QMainWindow):
         # checkbox is unchecked.
         if (self.checkbox.checkState() == 0): 
             AxesFixed = False
-        # Calculate the hill fucntion
+        # Calculate the hill function
         if ((len(listSigUpReg) > 0) | (len(listSigDownReg) > 0)):
             signal, H_U, H_D = Multivariate_hillFunc(listSigUpReg, listHalfMaxUpReg, listHillPowerUpReg, listSigDownReg, listHalfMaxDownReg, listHillPowerDownReg)
             self.canvas.axes.set_title(f"Behavior: {behavior_name}")
@@ -332,7 +332,7 @@ class Window_plot_rules(QMainWindow):
 
         # Get the signals list
         list_signals = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
-                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText())]['signal'].tolist()
+                                                       (self.dataframe['behavior'] == self.combobox_behavior.currentText())]['signal'].unique().tolist()
 
         # Clear the combo box of signals to plot
         self.combobox_signal_plot.clear()
@@ -348,14 +348,18 @@ class Window_plot_rules(QMainWindow):
         for signal in list_signals:
             signal_direction = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['direction'].item()
+                                                       (self.dataframe['signal'] == signal)]['direction']
             signal_halfmax = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['half_max'].item()
+                                                       (self.dataframe['signal'] == signal)]['half_max']
             signal_hillpower = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['hill_power'].item()
-            self.layout_signals.addWidget( SignalWidget( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
+                                                       (self.dataframe['signal'] == signal)]['hill_power']
+            if ( len(signal_direction) > 1): # two rules with same signal and different directions
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0]) ) 
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1]) ) 
+            else:
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction, signal_halfmax, signal_hillpower) ) 
     
 
 if __name__ == "__main__":
