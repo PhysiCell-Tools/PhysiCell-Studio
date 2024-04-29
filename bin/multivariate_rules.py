@@ -14,13 +14,13 @@ from matplotlib.figure import Figure
 def Multivariate_hillFunc(signals_U, halfmaxs_U, hillpowers_U, signals_D, halfmaxs_D, hillpowers_D):
     sum_U = 0; sum_D = 0 
     for id_Up in range(len(signals_U)):
+        sum_U += (signals_U[id_Up]/halfmaxs_U[id_Up])**hillpowers_U[id_Up]
         if ( type(signals_U[id_Up]) == np.ndarray):
             proj_signal = signals_U[id_Up]
-        sum_U += (signals_U[id_Up]/halfmaxs_U[id_Up])**hillpowers_U[id_Up]
     for id_Dw in range(len(signals_D)):
-        if ( type(signals_D[id_Dw]) == np.ndarray): 
-            proj_signal = signals_D[id_Dw]
         sum_D += (signals_D[id_Dw]/halfmaxs_D[id_Dw])**hillpowers_D[id_Dw]
+        if ( type(signals_D[id_Dw]) == np.ndarray):
+            proj_signal = signals_D[id_Dw]
     H_U = sum_U/(1+sum_U)
     H_D = sum_D/(1+sum_D)
     return proj_signal, H_U, H_D
@@ -69,7 +69,7 @@ class BehaviorWidget(QWidget):
         self.max_up_min = max_up*(1.0-frac_var)
         self.max_up_max = max_up*(1.0+frac_var)
         self.max_down_min = max_down*(1.0-frac_var)
-        self.max_down_max = max_down*(1.0-frac_var)
+        self.max_down_max = max_down*(1.0+frac_var)
         self.init_ui()
     def init_ui(self):
         layout = QHBoxLayout()
@@ -89,13 +89,15 @@ class BehaviorWidget(QWidget):
         self.setLayout(layout)
 
 class SignalWidget(QWidget):
-    def __init__(self, sig_name, sig_direction , sig_halfmax, sig_hillpower):
+    def __init__(self, sig_name, sig_direction , sig_halfmax, sig_hillpower, sig_min=None, sig_max=None):
         super().__init__()
         self.sig_name = sig_name
         self.sig_direction = sig_direction
         frac_var = 1.0 # percentage of variation -/+ in signal and halfmax
-        self.sig_min = sig_halfmax*(1-frac_var)
-        self.sig_max = sig_halfmax*(1+frac_var)
+        if (sig_min): self.sig_min = sig_min
+        else: self.sig_min = sig_halfmax*(1-frac_var)
+        if(sig_max): self.sig_max = sig_max
+        else: self.sig_max = sig_halfmax*(1+frac_var)
         self.sig_halfmax_min = sig_halfmax*(1-(frac_var-0.1)) # min halfmax cannot be 0.
         self.sig_halfmax_max = sig_halfmax*(1+(frac_var-0.1))
         self.sig_hillpower = sig_hillpower
@@ -185,6 +187,7 @@ class MainPlot(QMainWindow):
             signal, H_U, H_D = Multivariate_hillFunc(listSigUpReg, listHalfMaxUpReg, listHillPowerUpReg, listSigDownReg, listHalfMaxDownReg, listHillPowerDownReg)
             self.canvas.axes.set_title(f"Behavior: {behavior_name}")
             self.canvas.axes.plot(signal, (b_0 + (b_M - b_0)*H_U)*(1-H_D) + H_D*b_m, 'r')
+            # self.canvas.axes.plot(signal, 0.5*b_0*(1-H_U) + H_U*(b_M - (0.5*b_0)) + 0.5*b_0*(1-H_D) + H_D*(b_m - (0.5*b_0)), 'r')
             self.canvas.axes.axvline(halfMax_value, ls='--', color = 'k')
             self.canvas.axes.set_ylabel('b(U,D)')
             self.canvas.axes.set_xlabel(Selected_sig)
@@ -323,6 +326,7 @@ class Window_plot_rules(QMainWindow):
         except ValueError: minBehavior = 0.0
         try: maxBehavior = max(list_UpReg) 
         except ValueError: maxBehavior = 0.0
+        print(self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior)
         # Sliders of behavior
         self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior )
         self.layout_behavior_sliders.addWidget( self.sliders_behavior )
@@ -356,8 +360,9 @@ class Window_plot_rules(QMainWindow):
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
                                                        (self.dataframe['signal'] == signal)]['hill_power']
             if ( len(signal_direction) > 1): # two rules with same signal and different directions
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0]) ) 
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1]) ) 
+                halfmax_max = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmaxß
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = 0.0, sig_max = 2.0*halfmax_max) ) 
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], sig_min = 0.0, sig_max = 2.0*halfmax_max) ) 
             else:
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction.item(), signal_halfmax.item(), signal_hillpower.item()) ) 
     
@@ -378,8 +383,8 @@ if __name__ == "__main__":
                    columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
     df_hill = df_hill.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
     # Rules valley
-    df_valley = pd.DataFrame(np.array([["default", 'substrate', 'increases', 'cycle entry', 0.0033, 0.5, 100, 0, 0.003],
-                                      ["default", 'substrate', 'decreases', 'cycle entry', 0, 0.1, 100, 0, 0.003]]),
+    df_valley = pd.DataFrame(np.array([["default", 'substrate', 'decreases', 'cycle entry', 0.001, 0.2, 8, 0, 0.003],
+                                       ["default", 'substrate', 'increases', 'cycle entry', 0.005, 0.5, 12, 0, 0.003]]),
                    columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
     df_valley = df_valley.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
 
