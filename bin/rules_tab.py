@@ -1435,7 +1435,7 @@ class Rules(QWidget):
             return False
 
     #-----------------------------------------------------------
-    def check_for_duplicate(self, cell_type_new,signal_new,behavior_new):
+    def check_for_duplicate(self, cell_type_new,signal_new,behavior_new,direction_new):
         print("check_for_duplicate(): num_rules=",self.num_rules)
         # for irow in range(self.max_rule_table_rows):
         for irow in range(self.num_rules):
@@ -1457,7 +1457,9 @@ class Rules(QWidget):
                 if signal == signal_new:
                     behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
                     if behavior == behavior_new:
-                        return irow
+                        direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+                        if direction == direction_new:
+                            return irow
 
         return -1
 
@@ -1476,9 +1478,9 @@ class Rules(QWidget):
             if not self.valid_behavior(behavior):
                 self.show_warning("Invalid behavior: " + behavior)
                 return
-
+            direction = self.up_down_combobox.currentText()
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
-            dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior)
+            dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
             if dup_rule >= 0:
                 self.show_warning(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule}). Either delete the rule in the table first or edit it manually.")
                 return
