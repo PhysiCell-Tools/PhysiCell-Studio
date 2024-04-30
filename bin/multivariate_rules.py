@@ -187,11 +187,11 @@ class MainPlot(QMainWindow):
             signal, H_U, H_D = Multivariate_hillFunc(listSigUpReg, listHalfMaxUpReg, listHillPowerUpReg, listSigDownReg, listHalfMaxDownReg, listHillPowerDownReg)
             self.canvas.axes.set_title(f"Behavior: {behavior_name}")
             self.canvas.axes.plot(signal, (b_0 + (b_M - b_0)*H_U)*(1-H_D) + H_D*b_m, 'r')
-            # self.canvas.axes.plot(signal, 0.5*b_0*(1-H_U) + H_U*(b_M - (0.5*b_0)) + 0.5*b_0*(1-H_D) + H_D*(b_m - (0.5*b_0)), 'r')
+            # self.canvas.axes.plot(signal, b_0 + H_U*(b_M-b_0) + H_D*(b_m - b_0), 'r')
             self.canvas.axes.axvline(halfMax_value, ls='--', color = 'k')
             self.canvas.axes.set_ylabel('b(U,D)')
             self.canvas.axes.set_xlabel(Selected_sig)
-            if (AxesFixed):  self.canvas.axes.set_ylim(b_m, b_M)
+            if (  (AxesFixed) and (b_M > b_m) ): self.canvas.axes.set_ylim(b_m, b_M)
         # Trigger the canvas to update and redraw.
         self.canvas.fig.tight_layout()
         self.canvas.draw()
