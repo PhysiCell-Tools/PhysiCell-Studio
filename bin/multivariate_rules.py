@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QVBoxLayout,QHBoxLayout, QSlider, QLabel, QMainWindow, QComboBox, QCheckBox, QPushButton, QFileDialog, QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QVBoxLayout,QHBoxLayout, QSlider, QLabel, QMainWindow, QComboBox, QCheckBox, QPushButton, QDoubleSpinBox, QFrame
 from PyQt5.QtCore import Qt
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -130,7 +130,7 @@ class MplCanvas(FigureCanvas):
         super(MplCanvas, self).__init__(self.fig)
 
 class MainPlot(QMainWindow):
-    def __init__(self, combobox_cell, combobox_behavior, combobox_behaviorplot, layout_behavior_sliders, layout_signals, checkbox):
+    def __init__(self, combobox_cell, combobox_behavior, combobox_behaviorplot, layout_behavior_sliders, layout_signals, checkbox, min_signal, max_signal):
         super(MainPlot, self).__init__()
         self.combobox_cell = combobox_cell
         self.combobox_behavior = combobox_behavior
@@ -138,6 +138,8 @@ class MainPlot(QMainWindow):
         self.layout_behavior_sliders = layout_behavior_sliders
         self.layout_signals = layout_signals
         self.checkbox = checkbox
+        self.min_signal = min_signal
+        self.max_signal = max_signal
         self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
         self.setCentralWidget(self.canvas)
         self.update_plot()
@@ -166,7 +168,7 @@ class MainPlot(QMainWindow):
             sig_halfmax = float( widget.slider_halfmax_signal.tickValue( widget.slider_halfmax_signal.slider.value() ) )
             sig_hillpower = float( widget.slider_hillpower.tickValue( widget.slider_hillpower.slider.value() ) )
             if (Selected_sig == widget.sig_name):
-                sig_value = np.linspace(widget.sig_min, widget.sig_max, num=1000)
+                sig_value = np.linspace(self.min_signal.value(), self.max_signal.value(), num=1000)
                 widget.slider_signal.slider.setEnabled(False)
                 halfMax_value = sig_halfmax
             else:
@@ -263,11 +265,20 @@ class Window_plot_rules(QMainWindow):
         # Add the scroll area to the layout
         self.layout.addWidget(self.scroll_area)
         # Check box of axes
+        signal_hbox_plot_options = QHBoxLayout()
         self.checkbox = QCheckBox('Fixed y-axis (min and max)')
         self.checkbox.setCheckState(2)  # 2 corresponds to Checked state
-        self.layout.addWidget( self.checkbox )
+        signal_hbox_plot_options.addWidget( self.checkbox )
+        # Float to min and max signal
+        signal_hbox_plot_options.addWidget(QLabel('\t Signal range - Min:'))
+        self.float_min_signal = QDoubleSpinBox()
+        signal_hbox_plot_options.addWidget( self.float_min_signal )
+        signal_hbox_plot_options.addWidget(QLabel('Max:'))
+        self.float_max_signal = QDoubleSpinBox()
+        signal_hbox_plot_options.addWidget( self.float_max_signal )
+        self.layout.addLayout(signal_hbox_plot_options)
         # Add the plot
-        self.Figure = MainPlot(self.combobox_cell,self.combobox_behavior,self.combobox_signal_plot,self.layout_behavior_sliders, self.layout_signals, self.checkbox)
+        self.Figure = MainPlot(self.combobox_cell,self.combobox_behavior,self.combobox_signal_plot,self.layout_behavior_sliders, self.layout_signals, self.checkbox, self.float_min_signal, self.float_max_signal)
         self.layout.addWidget( self.Figure )
         # Initialize if the daframae is defiend
         if isinstance(dataframe, pd.DataFrame): 
@@ -352,19 +363,24 @@ class Window_plot_rules(QMainWindow):
         for signal in list_signals:
             signal_direction = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['direction']
+                                                       (self.dataframe['signal'] == signal)]['direction'].to_numpy()
             signal_halfmax = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['half_max']
+                                                       (self.dataframe['signal'] == signal)]['half_max'].to_numpy()
             signal_hillpower = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
-                                                       (self.dataframe['signal'] == signal)]['hill_power']
+                                                       (self.dataframe['signal'] == signal)]['hill_power'].to_numpy()
+            
             if ( len(signal_direction) > 1): # two rules with same signal and different directions
                 halfmax_max = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmaxß
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = 0.0, sig_max = 2.0*halfmax_max) ) 
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], sig_min = 0.0, sig_max = 2.0*halfmax_max) ) 
+                self.float_min_signal.setValue(0.0)
+                self.float_max_signal.setValue(2.0*halfmax_max)
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
             else:
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction.item(), signal_halfmax.item(), signal_hillpower.item()) ) 
+                self.float_min_signal.setValue(0.0)
+                self.float_max_signal.setValue(2.0*signal_halfmax[0])
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
     
 
 if __name__ == "__main__":
