@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QVBoxLayout,QHBoxLayout, QSlider, QLabel, QMainWindow, QComboBox, QCheckBox, QPushButton, QDoubleSpinBox, QFrame
+from PyQt5.QtWidgets import QApplication, QWidget, QScrollArea, QVBoxLayout,QHBoxLayout, QSlider, QLabel, QMainWindow, QComboBox, QCheckBox, QPushButton, QDoubleSpinBox, QFrame, QSpinBox, QMessageBox
 from PyQt5.QtCore import Qt
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -60,10 +60,10 @@ class LabeledSlider(QWidget):
         self.label.setText(f"{self.description}: {value}")
 
 class BehaviorWidget(QWidget):
-    def __init__(self, name, base_v, max_up , max_down):
+    def __init__(self, name, base_v, max_up , max_down, frac_var):
         super().__init__()
         self.name = name
-        frac_var = 1.0 # percentage of variation -/+ in the base, up, down sliders of behaviors
+        # frac_var is the fraction of variation -/+ in the base, up, down sliders of behaviors
         self.base_min = base_v*(1.0-frac_var)
         self.base_max = base_v*(1.0+frac_var)
         self.max_up_min = max_up*(1.0-frac_var)
@@ -89,21 +89,18 @@ class BehaviorWidget(QWidget):
         self.setLayout(layout)
 
 class SignalWidget(QWidget):
-    def __init__(self, sig_name, sig_direction , sig_halfmax, sig_hillpower, sig_min=None, sig_max=None):
+    def __init__(self, sig_name, sig_direction , sig_halfmax, sig_hillpower, frac_var):
         super().__init__()
         self.sig_name = sig_name
         self.sig_direction = sig_direction
-        frac_var = 1.0 # percentage of variation -/+ in signal and halfmax
-        if (sig_min): self.sig_min = sig_min
-        else: self.sig_min = sig_halfmax*(1-frac_var)
-        if(sig_max): self.sig_max = sig_max
-        else: self.sig_max = sig_halfmax*(1+frac_var)
-        self.sig_halfmax_min = sig_halfmax*(1-(frac_var-0.1)) # min halfmax cannot be 0.
-        self.sig_halfmax_max = sig_halfmax*(1+(frac_var-0.1))
+        # frac_var is the percentage of variation -/+ in signal and halfmax
+        self.sig_min = sig_halfmax*(1-frac_var)
+        self.sig_max = sig_halfmax*(1-frac_var)
+        self.sig_halfmax_min = sig_halfmax*(1-frac_var)
+        self.sig_halfmax_max = sig_halfmax*(1+frac_var)
         self.sig_hillpower = sig_hillpower
-        self.sig_hillpower_min = 0
+        self.sig_hillpower_min = round(sig_hillpower*(1-frac_var))
         self.sig_hillpower_max = round(sig_hillpower*(1+frac_var))
-        if ( self.sig_hillpower_max < 20 ): self.sig_hillpower_max = 20
         self.init_ui()
     def init_ui(self):
         layout = QHBoxLayout()
@@ -163,14 +160,26 @@ class MainPlot(QMainWindow):
             b_M = float( widget.slider_up_behavior.tickValue( widget.slider_up_behavior.slider.value() ) )
             b_m = float( widget.slider_down_behavior.tickValue( widget.slider_down_behavior.slider.value() ) )
         # Layout of signals sliders (Dynamic quantity)
+        halfMax_value = None; halfMax_value2 = None
         for i in range(self.layout_signals.layout().count()):
             widget = self.layout_signals.layout().itemAt(i).widget()
             sig_halfmax = float( widget.slider_halfmax_signal.tickValue( widget.slider_halfmax_signal.slider.value() ) )
+            if ( sig_halfmax == 0): # halfmax cannot be 0.
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Half max of signal cannot be: " + str(sig_halfmax))
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                # Set to the default value
+                widget.slider_halfmax_signal.slider.setValue(5) # it is 5 because the slider is discretized to 11 values. 
+                return
             sig_hillpower = float( widget.slider_hillpower.tickValue( widget.slider_hillpower.slider.value() ) )
             if (Selected_sig == widget.sig_name):
                 sig_value = np.linspace(self.min_signal.value(), self.max_signal.value(), num=1000)
                 widget.slider_signal.slider.setEnabled(False)
-                halfMax_value = sig_halfmax
+                # If have two rules to same signal and behavior with different directions (increase and decrease)
+                if (halfMax_value): halfMax_value2 = sig_halfmax # If it is the second rule
+                else: halfMax_value = sig_halfmax # If it is the first rules
             else:
                 widget.slider_signal.slider.setEnabled(True)
                 sig_value = float( widget.slider_signal.tickValue( widget.slider_signal.slider.value() ) ) 
@@ -191,13 +200,14 @@ class MainPlot(QMainWindow):
             self.canvas.axes.plot(signal, (b_0 + (b_M - b_0)*H_U)*(1-H_D) + H_D*b_m, 'r')
             # self.canvas.axes.plot(signal, b_0 + H_U*(b_M-b_0) + H_D*(b_m - b_0), 'r')
             self.canvas.axes.axvline(halfMax_value, ls='--', color = 'k')
+            if (halfMax_value2): self.canvas.axes.axvline(halfMax_value2, ls='--', color = 'k') # If have two rules to same signal and behavior with different directions (increase and decrease)
             self.canvas.axes.set_ylabel('b(U,D)')
             self.canvas.axes.set_xlabel(Selected_sig)
             if (  (AxesFixed) and (b_M > b_m) ): self.canvas.axes.set_ylim(b_m, b_M)
         # Trigger the canvas to update and redraw.
         self.canvas.fig.tight_layout()
         self.canvas.draw()
-
+    
 class CSVLoader(QWidget):
     def __init__(self, parent=None):
         super().__init__()
@@ -245,6 +255,15 @@ class Window_plot_rules(QMainWindow):
         self.combobox_behavior.currentIndexChanged.connect(self.update_rules)
         behavior_hbox.addWidget(QLabel('\tBehavior:')); behavior_hbox.addWidget( self.combobox_behavior )
         self.layout.addLayout(behavior_hbox)
+        # Variance of behavior
+        behavior_hbox.addWidget(QLabel('\t +/- Behavior input variation +/- (%):'))
+        self.behavior_variation = QSpinBox()
+        self.behavior_variation.setMinimum(1)
+        self.behavior_variation.setMaximum(500)
+        self.behavior_variation.setSingleStep(1)
+        self.behavior_variation.valueChanged.connect(self.update_rules)
+        behavior_hbox.addWidget( self.behavior_variation )
+        
         # Add a divider
         divider = QFrame()
         divider.setFrameShape(QFrame.HLine)  # Set horizontal line shape
@@ -254,12 +273,22 @@ class Window_plot_rules(QMainWindow):
         # Behaviors sliders
         self.layout_behavior_sliders = QVBoxLayout()
         self.layout.addLayout(self.layout_behavior_sliders)
+        
         # Combox of signals to plot
         signal_hbox_plot = QHBoxLayout()
         signal_hbox_plot.addWidget(QLabel('Plot the signal:'))
         self.combobox_signal_plot = QComboBox()
         signal_hbox_plot.addWidget( self.combobox_signal_plot )
+        # Variance of signals to plot
+        signal_hbox_plot.addWidget(QLabel('\t Signal input variation +/- (%):'))
+        self.signal_variation = QSpinBox()
+        self.signal_variation.setMinimum(1)
+        self.signal_variation.setMaximum(500)
+        self.signal_variation.setSingleStep(1)
+        self.signal_variation.valueChanged.connect(self.update_rules)
+        signal_hbox_plot.addWidget( self.signal_variation )
         self.layout.addLayout(signal_hbox_plot)
+
         # Set the scroll widget as the widget inside the scroll area
         self.scroll_area.setWidget(self.scroll_widget)
         # Add the scroll area to the layout
@@ -312,6 +341,9 @@ class Window_plot_rules(QMainWindow):
         self.combobox_behavior.clear()
         list_behaviors = self.dataframe.loc[self.dataframe["cell"] == self.combobox_cell.currentText()]['behavior'].unique().tolist()
         self.combobox_behavior.addItems(list_behaviors)
+        # Behavior variation initial value
+        self.behavior_variation.setValue(100)
+        self.signal_variation.setValue(100)
     
     def update_rules(self):
         # Remove the behavior widgets from layout
@@ -338,8 +370,9 @@ class Window_plot_rules(QMainWindow):
         try: maxBehavior = max(list_UpReg) 
         except ValueError: maxBehavior = 0.0
         print(self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior)
+
         # Sliders of behavior
-        self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior )
+        self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior, 0.01*self.behavior_variation.value() )
         self.layout_behavior_sliders.addWidget( self.sliders_behavior )
         # Disable sliders
         if len(list_DownReg) == 0: self.sliders_behavior.slider_down_behavior.setEnabled(False)
@@ -372,15 +405,21 @@ class Window_plot_rules(QMainWindow):
                                                        (self.dataframe['signal'] == signal)]['hill_power'].to_numpy()
             
             if ( len(signal_direction) > 1): # two rules with same signal and different directions
-                halfmax_max = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmaxß
-                self.float_min_signal.setValue(0.0)
-                self.float_max_signal.setValue(2.0*halfmax_max)
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
+                halfmax_max = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmax
+                frac_var = 0.01*self.signal_variation.value()
+                # Set initial value of plot signal (customizable)
+                self.float_min_signal.setValue(halfmax_max*(1-frac_var))
+                self.float_max_signal.setValue(halfmax_max*(1+frac_var))
+                # Add the signal sliders
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], frac_var= frac_var) ) 
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], frac_var= frac_var) ) 
             else:
-                self.float_min_signal.setValue(0.0)
-                self.float_max_signal.setValue(2.0*signal_halfmax[0])
-                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], sig_min = self.float_min_signal.value(), sig_max = self.float_max_signal.value()) ) 
+                frac_var = 0.01*self.signal_variation.value()
+                # Set initial value of plot signal (customizable)
+                self.float_min_signal.setValue(signal_halfmax[0]*(1-frac_var))
+                self.float_max_signal.setValue(signal_halfmax[0]*(1+frac_var))
+                 # Add the signal sliders
+                self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], frac_var= frac_var) ) 
     
 
 if __name__ == "__main__":
