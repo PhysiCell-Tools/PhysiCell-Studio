@@ -371,7 +371,7 @@ class Window_plot_rules(QMainWindow):
         except ValueError: minBehavior = 0.0
         try: maxBehavior = max(list_UpReg) 
         except ValueError: maxBehavior = 0.0
-        print(self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior)
+        # print(self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior)
 
         # Sliders of behavior
         self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior, 0.01*self.behavior_variation.value() )
