@@ -95,7 +95,7 @@ class SignalWidget(QWidget):
         self.sig_direction = sig_direction
         # frac_var is the percentage of variation -/+ in signal and halfmax
         self.sig_min = sig_halfmax*(1-frac_var)
-        self.sig_max = sig_halfmax*(1-frac_var)
+        self.sig_max = sig_halfmax*(1+frac_var)
         self.sig_halfmax_min = sig_halfmax*(1-frac_var)
         self.sig_halfmax_max = sig_halfmax*(1+frac_var)
         self.sig_hillpower = sig_hillpower
@@ -301,9 +301,11 @@ class Window_plot_rules(QMainWindow):
         # Float to min and max signal
         signal_hbox_plot_options.addWidget(QLabel('\t Signal range - Min:'))
         self.float_min_signal = QDoubleSpinBox()
+        self.float_min_signal.setMinimum(-float('inf'))
         signal_hbox_plot_options.addWidget( self.float_min_signal )
         signal_hbox_plot_options.addWidget(QLabel('Max:'))
         self.float_max_signal = QDoubleSpinBox()
+        self.float_max_signal.setMaximum(float('inf'))
         signal_hbox_plot_options.addWidget( self.float_max_signal )
         self.layout.addLayout(signal_hbox_plot_options)
         # Add the plot
@@ -393,6 +395,9 @@ class Window_plot_rules(QMainWindow):
                 widget.deleteLater()
 
         # Label and Sliders of signals
+        halfmax_max = -np.inf
+        # Signal variation input
+        frac_var = 0.01*self.signal_variation.value()
         for signal in list_signals:
             signal_direction = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
                                                        (self.dataframe['behavior'] == self.combobox_behavior.currentText()) &
@@ -405,21 +410,22 @@ class Window_plot_rules(QMainWindow):
                                                        (self.dataframe['signal'] == signal)]['hill_power'].to_numpy()
             
             if ( len(signal_direction) > 1): # two rules with same signal and different directions
-                halfmax_max = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmax
-                frac_var = 0.01*self.signal_variation.value()
-                # Set initial value of plot signal (customizable)
-                self.float_min_signal.setValue(halfmax_max*(1-frac_var))
-                self.float_max_signal.setValue(halfmax_max*(1+frac_var))
                 # Add the signal sliders
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], frac_var= frac_var) ) 
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction[1], signal_halfmax[1], signal_hillpower[1], frac_var= frac_var) ) 
+                # Check maximum half max of signal
+                halfmax_max_temp = max([signal_halfmax[0], signal_halfmax[1]]) # the signal discretization based on the max halfmax
+                if (halfmax_max < halfmax_max_temp): halfmax_max = halfmax_max_temp
+                
             else:
-                frac_var = 0.01*self.signal_variation.value()
-                # Set initial value of plot signal (customizable)
-                self.float_min_signal.setValue(signal_halfmax[0]*(1-frac_var))
-                self.float_max_signal.setValue(signal_halfmax[0]*(1+frac_var))
                  # Add the signal sliders
                 self.layout_signals.addWidget( SignalWidget( signal, signal_direction[0], signal_halfmax[0], signal_hillpower[0], frac_var= frac_var) ) 
+                # Check maximum half max of signal
+                if (halfmax_max < signal_halfmax[0]): halfmax_max = signal_halfmax[0]
+        
+        # Set initial value of plot signal (customizable)
+        self.float_min_signal.setValue(halfmax_max*(1-frac_var))
+        self.float_max_signal.setValue(halfmax_max*(1+frac_var))
     
 
 if __name__ == "__main__":
