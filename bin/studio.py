@@ -1443,7 +1443,14 @@ def main():
         # print("Error parsing command line args.")
         sys.exit(-1)
 
-    root = os.path.dirname(os.path.abspath(__file__))        
+    # fix the "missing" checkmarks when Paul does: ln -s ./studio/bin/studio.py pcs 
+    if os.path.islink(__file__):
+        print("studio.py:-------- __file__ is a symlink!!!")
+        print("symlink = ",os.readlink(__file__))
+        root = os.path.dirname(os.path.abspath(os.readlink(__file__)))
+    else:
+        root = os.path.dirname(os.path.abspath(__file__))
+
     # QDir.addSearchPath('themes', os.path.join(root, 'themes'))
     QtCore.QDir.addSearchPath('images', os.path.join(root, 'images'))
 
