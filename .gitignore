@@ -1,3 +1,4 @@
 # these should be ignored by git automatically, but I've seen them become track-able when using studio as a git submodule
+studio_debug.log
 .DS_Store
 __pycache__/
