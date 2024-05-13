@@ -4,6 +4,8 @@ vis_tab.py - provide visualization on Plot tab. Cells can be plotted on top of s
 Authors:
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
+Dr. Vincent Noel 
+Dr. Marco Ruscone 
 Rf. Credits.md
 """
 
@@ -28,7 +30,8 @@ import matplotlib.colors as mplc
 #import colorcet as cc
 import cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
-from matplotlib import gridspec
+# from matplotlib import gridspec
+from matplotlib.gridspec import GridSpec
 from collections import deque
 import glob
 import csv
@@ -106,6 +109,7 @@ class Vis(VisBase, QWidget):
 
         self.fontsize = 7
         self.label_fontsize = 6
+        self.cbar_label_fontsize = 8
         self.title_fontsize = 10
 
         self.plot_cells_svg = True
@@ -146,34 +150,6 @@ class Vis(VisBase, QWidget):
         self.show_nucleus = False
         self.alpha = 0.7
 
-        basic_length = 12.0
-        self.figsize_width_substrate = 15.0  # allow extra for colormap(s)
-        self.figsize_height_substrate = basic_length
-
-        self.cax1 = None
-        self.cax2 = None
-
-        self.figsize_width_2Dplot = basic_length
-        self.figsize_height_2Dplot = basic_length
-
-        # self.width_substrate = basic_length  # allow extra for colormap
-        # self.height_substrate = basic_length
-
-        self.figsize_width_svg = basic_length
-        self.figsize_height_svg = basic_length
-
-
-        # self.output_dir = "/Users/heiland/dev/PhysiCell_V.1.8.0_release/output"
-        # self.output_dir = "output"
-        # self.output_dir = "../tmpdir"   # for nanoHUB
-        # self.output_dir = "tmpdir"   # for nanoHUB
-
-        # temporary debugging plotting without having to Run first
-        # if self.nanohub_flag:
-        #     self.output_dir = "."   # for nanoHUB
-        # else:
-        #     self.output_dir = "tmpdir"
-
         # stop the insanity!
         self.output_dir = "."   # for nanoHUB  (overwritten in studio.py, based on config_tab)
         # self.output_dir = "tmpdir"   # for nanoHUB
@@ -184,62 +160,17 @@ class Vis(VisBase, QWidget):
         label_height = 20
         units_width = 70
 
-        # Beware: padding seems to alter the behavior; adding scroll arrows to choices list!
-                # padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px;
-                # height: 30px;
-            # QComboBox{
-            #     color: #000000;
-            #     background-color: #FFFFFF; 
-            #     height: 20px;
-            # }
-            # QComboBox:disabled {
-            #     background-color: rgb(199,199,199);
-            #     color: rgb(99,99,99);
-            # }
         self.stylesheet = """ 
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; } 
             QPushButton:hover { border: 1px solid; border-radius: 3px; border-color: rgb(33, 77, 115); } QPushButton:focus { outline-color: transparent; border: 2px solid; border-color: rgb(151, 195, 243); } QPushButton:pressed{ background-color: rgb(145, 255, 145); } 
             QPushButton:disabled { color: black; border-color: grey; background-color: rgb(199,199,199); }
 
             """
-            # QPushButton{ font-family: "Segoe UI"; font-size: 8pt; border: 1px solid; border-color: rgb(46, 103, 156); border-radius: 3px; padding-right: 10px; padding-left: 10px; padding-top: 5px; padding-bottom: 5px; background-color: rgb(77, 138, 201); color: white; font: bold; width: 64px; } 
-            # QPushButton{
-            #     color:#000000;
-            #     background-color: lightgreen; 
-            #     border-style: outset;
-            #     border-color: black;
-            #     padding: 2px;
-            # }
-            # QLineEdit:disabled {
-            #     background-color: rgb(199,199,199);
-            #     color: rgb(99,99,99);
-            # }
-            # QPushButton:disabled {
-            #     background-color: rgb(199,199,199);
-            # }
-                # color: #000000;
-                # background-color: #FFFFFF; 
-                # border-style: outset;
-                # border-width: 2px;
-                # border-radius: 10px;
-                # border-color: beige;
-                # font: bold 14px;
-                # min-width: 10em;
-                # padding: 6px;
-                # padding: 1px 18px 1px 3px;
 
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
         self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
-
-    #--------------------------------------
-    # def aspect_11_cb(self,bval):
-    #     print("vis_tab: aspect_11_cb()  self.aspect_11_checkbox.isChecked()= ",self.aspect_11_checkbox.isChecked())
-    #     # self.vis_tab.aspect_11_cb(self.aspect_11_checkbox.isChecked())
-    #     # self.view_aspect_square = bval
-    #     self.view_aspect_toggle_cb(bval)
-
 
     #--------------------------------------
     def write_cells_csv_cb(self):
@@ -277,15 +208,28 @@ class Vis(VisBase, QWidget):
         # print("------ vis_tab.py: update_plots()")
         # for line in traceback.format_stack():
         #     print(line.strip())
-        self.ax0.cla()
+        try:
+            self.ax0.cla()
+        except:
+            print("----- update_plots(): exception on self.ax0.cla()")
+
+        if self.cax1:
+            self.cax1.remove()
+            self.cax1 = None
+        if self.cax2:
+            self.cax2.remove()
+            self.cax2 = None
+
         if self.substrates_checked_flag:  # do first so cells are plotted on top
             self.plot_substrate(self.current_frame)
         if self.cells_checked_flag:
             if self.plot_cells_svg:
                 self.plot_svg(self.current_frame)
             elif self.physiboss_vis_flag:
+                print("----- update_plots(): doing physiboss")
                 self.plot_cell_physiboss(self.current_frame)
             else:
+                print("----- update_plots(): doing non-physiboss; just cell scalars")
                 self.plot_cell_scalar(self.current_frame)
 
         # show grid(s), but only if Cells or Substrates checked?
@@ -320,15 +264,13 @@ class Vis(VisBase, QWidget):
         print("     self.canvas= ",self.canvas)
         self.canvas.setStyleSheet("background-color:transparent;")
 
-        # Adding one subplot for image
-        # self.ax0 = self.figure.add_subplot(111)
-        # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=1.2)
-        # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=self.aspect_ratio)
-        self.ax0 = self.figure.add_subplot(111, adjustable='box')
-        
-        # self.ax0.get_xaxis().set_visible(False)
-        # self.ax0.get_yaxis().set_visible(False)
-        # plt.tight_layout()
+        # wow, this took a long time to figure out :/
+        self.gs = GridSpec(2, 2, width_ratios=[0.95,0.05], wspace=0.05, height_ratios=[0.95,0.05], hspace=0.09)
+
+        self.ax0 = self.figure.add_subplot(self.gs[0])
+        self.cax1 = self.figure.add_subplot(self.gs[1])  # vertical colorbar axis (for substrate)
+        self.cax2 = self.figure.add_subplot(self.gs[2])  # horiz colorbar axis (for cells' scalar)
+        # self.figure.tight_layout()  # no
 
         self.reset_model()
 
@@ -450,21 +392,6 @@ class Vis(VisBase, QWidget):
 
         # self.ax0.cla()
         self.title_str = ""
-
-# https://stackoverflow.com/questions/5263034/remove-colorbar-from-figure-in-matplotlib
-# def foo(self):
-#    self.subplot.clear()
-#    hb = self.subplot.hexbin(...)
-#    if self.cb:
-#       self.figure.delaxes(self.figure.axes[1])
-#       self.figure.subplots_adjust(right=0.90)  #default right padding
-#    self.cb = self.figure.colorbar(hb)
-
-        # if self.cbar:
-            # self.cbar.remove()
-
-        # bgcolor = self.bgcolor;  # 1.0 for white 
-        # bgcolor = [0,0,0,1]  # dark mode
 
         xlist = deque()
         ylist = deque()
@@ -623,8 +550,11 @@ class Vis(VisBase, QWidget):
         self.title_str += " (" + str(num_cells) + " agents)"
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
 
-        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        try:
+            self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+            self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        except:
+            print("plot_svg(): exception on self.ax0.set_xlim, ylim")
 
         self.ax0.tick_params(labelsize=self.fontsize)
 
@@ -647,11 +577,6 @@ class Vis(VisBase, QWidget):
         else:
             self.ax0.set_aspect('auto')
     
-    #-----------------------------------------------------
-    # def cell_scalar_cbar_combobox_changed_cb(self,idx):
-    #     # print("\n>vis_tab-------->> cell_scalar_cbar_combobox_changed_cb(): cbar_name= ", cbar_name)
-    #     self.update_plots()
-
     #-----------------------------------------------------
     def plot_cell_physiboss(self, frame):
         
@@ -730,12 +655,13 @@ class Vis(VisBase, QWidget):
         else:
             cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
 
-        if self.cax2:
-            try:
-                self.cax2.remove()
-                self.cax2 = None
-            except:
-                pass
+        # if self.cax2:
+        #     try:
+        #         print("rwh: cax2.remove()")
+        #         self.cax2.remove()
+        #         self.cax2 = None
+        #     except:
+        #         pass
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -748,7 +674,9 @@ class Vis(VisBase, QWidget):
     
     
     def plot_cell_scalar(self, frame):
+        print("plot_cell_scalar(): -------")
         if self.disable_cell_scalar_cb:
+            print("plot_cell_scalar(): disable_cell_scalar_cb is True; return")
             return
             
         # if self.show_voxel_grid:
@@ -798,6 +726,7 @@ class Vis(VisBase, QWidget):
         else:
             vmin = cell_scalar.min()
             vmax = cell_scalar.max()
+            print("plot_cell_scalar(): vmin,vmax=",vmin,vmax)
             
         num_cells = len(cell_scalar)
         # print("  len(cell_scalar) = ",len(cell_scalar))
@@ -843,7 +772,7 @@ class Vis(VisBase, QWidget):
             
             elif cell_scalar_name == "is_motile":
                 self.discrete_variable = [0,1]
-                names_observed = ["motile" if i == 1 else "stationnary" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
+                names_observed = ["motile" if i == 1 else "non-motile" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
                 
             elif cell_scalar_name == "dead":
                 self.discrete_variable = [0,1]
@@ -884,8 +813,8 @@ class Vis(VisBase, QWidget):
         self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
         self.title_str += " (" + str(num_cells) + " agents)"
 
-        axes_min = mcds.get_mesh()[0][0][0][0]
-        axes_max = mcds.get_mesh()[0][0][-1][0]
+        # axes_min = mcds.get_mesh()[0][0][0][0]   #rwh comment out
+        # axes_max = mcds.get_mesh()[0][0][-1][0]
 
         if (self.cell_fill):
             if (self.cell_edge):
@@ -915,13 +844,6 @@ class Vis(VisBase, QWidget):
         # if self.axis_id_cellscalar:
                 
         if( self.discrete_variable ): # Generic way: if variable is discrete
-            # Then we don't need the cax2
-            if self.cax2 is not None:
-                try:
-                    self.cax2.remove()
-                    self.cax2 = None
-                except:
-                    pass
             # Coloring the cells as it used to be
             cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
             
@@ -929,16 +851,16 @@ class Vis(VisBase, QWidget):
             lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
                                     label="Feature {:g}".format(i), ls="", marker="o")[0]
             handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
-            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
+            # print("rwh: len(handles)= ",len(handles))
+            # self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
+            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.04),ncols=4)
 
         else:
-            # If it's not there, we create it
-            if self.cax2 is None:
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+            self.cax2 = self.figure.add_subplot(self.gs[2])
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
+            # self.cbar2.ax.set_xlabel(cell_scalar_name)
+            self.cbar2.ax.set_xlabel(cell_scalar_name, fontsize=self.cbar_label_fontsize)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -974,7 +896,7 @@ class Vis(VisBase, QWidget):
 
         fname = "output%08d_microenvironment0.mat" % frame
         full_fname = os.path.join(self.output_dir, fname)
-        # print("\n    ==>>>>> plot_substrate(): full_fname=",full_fname)
+        print("\n    ==>>>>> plot_substrate(): full_fname=",full_fname)
         if not Path(full_fname).is_file():
             print("ERROR: file not found",full_fname)
             return
@@ -1005,13 +927,18 @@ class Vis(VisBase, QWidget):
 
         try:
             xgrid = M[0, :].reshape(self.numy, self.numx)
+            print("    self.numy, self.numx=",self.numy, self.numx)
             ygrid = M[1, :].reshape(self.numy, self.numx)
         except:
             # print("error: cannot reshape ",self.numy, self.numx," for array ",M.shape)
-            print("vis_tab.py: unable to reshape substrate array; return")
-            return
+            print("vis_tab.py: unable to reshape substrate array; return (you will get this on initialization")
 
-        zvals = M[self.field_index,:].reshape(self.numy,self.numx)
+
+        try:
+            zvals = M[self.field_index,:].reshape(self.numy,self.numx)
+        except:
+            print("vis_tab.py:  zvals Exception; return")
+            return
         # print("zvals.min() = ",zvals.min())
         # print("zvals.max() = ",zvals.max())
 
@@ -1023,15 +950,15 @@ class Vis(VisBase, QWidget):
         if (self.contour_mesh):
             if (self.fix_cmap_flag):
                 try:
-                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
+                    self.substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
                 except:
                     contour_ok = False
                     print('\nWARNING: exception with fixed colormap range. Will not update plot.')
             else:    
                 try:
-                    # substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
+                    # self.substrate_plot = self.ax0.contourf(xgrid, ygrid, zvals, self.num_contours, cmap=cbar_name)  # self.colormap_dd.value)
 
-                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
+                    self.substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
                 except:
                     contour_ok = False
                     print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
@@ -1041,13 +968,13 @@ class Vis(VisBase, QWidget):
                 try:
                     delstep = (self.cmax_value - self.cmin_value) / 8
                     levels = np.arange(self.cmin_value + delstep, self.cmax_value, delstep)
-                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
+                    self.substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
                 except:
                     print("vis_tab: No contour levels were found within the data range.")
                     return
             else:    
                 try:
-                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
+                    self.substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
                 except:
                     print("vis_tab: No contour levels were found within the data range.")
                     return
@@ -1056,40 +983,26 @@ class Vis(VisBase, QWidget):
         # if self.field_index > 4:
         #     self.ax0.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0], linewidths=0.5)
 
-        # Do this funky stuff to prevent the colorbar from shrinking in height with each redraw.
-        # Except it doesn't seem to work when we use fixed ranges on the colorbar?!
-        # print("------- plot_substrate() -------------")
-        num_axes =  len(self.figure.axes)
-        # print("# axes = ",num_axes)
-        if self.cax1:
-            self.cax1.remove()  # replace/update the colorbar
-            # print("# axes(after substrate remove) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
-            #ppp
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
-            try:
-                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
-            except:
-                print("vis_tab: No contour levels were found within the data range.")
-            # print("\n# axes(redraw substrate) = ",len(self.figure.axes))
-            # print(" self.figure.axes= ",self.figure.axes)
+        try:
+            print("plot_substrate(): creating self.cbar1 for self.substrate_plot and self.cax1")
+            self.cax1 = self.figure.add_subplot(self.gs[1])
+            self.cbar1 = self.figure.colorbar(self.substrate_plot, cax=self.cax1)
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
-        else:
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
-            try:
-                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
-            except:
-                print("vis_tab: No contour levels were found within the data range.")
-                return
-            self.cbar1.ax.tick_params(labelsize=self.fontsize)
-            # print("(init substrate) self.figure.axes= ",self.figure.axes)
+            # self.cbar1.ax.set_ylabel("foobar", fontsize=self.fontsize)
+            self.cbar1.ax.set_ylabel(self.substrate_name, fontsize=self.cbar_label_fontsize)
 
-        self.cbar1.set_label(self.substrate_name)
+            self.cax1.get_xaxis().set_visible(True)  # rwh: doesn't work
+            self.cax1.get_yaxis().set_visible(True)
+        except:
+            print("plot_substrate(): except: No contour levels were found within the data range.")
+
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
-        self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
-        self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        try:
+            self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+            self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        except:
+            print("plot_substrate(): except: self.ax0.set_xlim/ylim")
+            # print("self.ax0= ",self.ax0)
 
         if self.view_aspect_square:
             self.ax0.set_aspect('equal')
