@@ -752,7 +752,18 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print("len(full_path_model_name) = ", len(full_path_model_name) )
             # self.current_save_file = full_path_model_name
             orig_file_name = self.current_xml_file
-            self.current_xml_file = full_path_model_name
+            self.current_xml_file =full_path_model_name 
+
+            # print("full_path_model_name[-4:]= ",full_path_model_name[-4:] )
+            if full_path_model_name[-4:] != ".xml":
+                print("missing .xml suffix")
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Missing a .xml suffix. Continue?")
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                returnValue = msgBox.exec()
+                if returnValue == QMessageBox.Cancel:
+                    return
         else:
             return
 
