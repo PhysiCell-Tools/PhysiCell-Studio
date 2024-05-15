@@ -118,6 +118,7 @@ class Vis(VisBase, QWidget):
 
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
+        self.substrate_grad = False
 
         self.plot_xmin = None
         self.plot_xmax = None
@@ -942,6 +943,14 @@ class Vis(VisBase, QWidget):
         # print("zvals.min() = ",zvals.min())
         # print("zvals.max() = ",zvals.max())
 
+        if (self.substrate_grad):
+            try:
+                # print(zvals.shape, ygrid[:,0], xgrid[0,:])
+                grad_x, grad_y = np.gradient(zvals, ygrid[:,0], xgrid[0,:])
+                zvals = np.sqrt(grad_x**2 + grad_y**2)
+                # print(zvals.min(),zvals.max())
+            except:
+                print("vis_tab.py: unable to compute the substrate gradient.")
 
         contour_ok = True
         # if (self.colormap_fixed_toggle.value):
