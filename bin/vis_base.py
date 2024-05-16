@@ -499,7 +499,6 @@ class VisBase():
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.play_plot_cb)
 
-        
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
@@ -523,6 +522,7 @@ class VisBase():
         # self.plot_svg_flag = False
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
+        self.substrate_grad = False
 
         self.plot_xmin = None
         self.plot_xmax = None
@@ -886,6 +886,12 @@ class VisBase():
         self.substrates_checkbox.setChecked(False)
         self.substrates_checkbox.clicked.connect(self.substrates_toggle_cb)
         self.substrates_checked_flag = False
+
+        self.substrates_grad_checkbox = QCheckBox_custom('norm of gradient')
+        self.substrates_grad_checkbox.setEnabled(False)
+        self.substrates_grad_checkbox.setChecked(False)
+        self.substrates_grad_checkbox.clicked.connect(self.substrates_grad_update)
+
         # rwh: temporary while debugging cbars
         # self.substrates_checked_flag = True   # rwh: testing
         # self.substrates_checkbox.setChecked(True)
@@ -897,6 +903,7 @@ class VisBase():
         self.substrates_cbar_combobox.setFixedWidth(120)
         hbox.addWidget(self.substrates_combobox)
         hbox.addWidget(self.substrates_cbar_combobox)
+        hbox.addWidget(self.substrates_grad_checkbox)
         hbox.addItem(self.hz_stretch_item_3)
 
         self.vbox.addLayout(hbox)
@@ -2476,6 +2483,8 @@ class VisBase():
             self.cmax.setStyleSheet("background-color: lightgray;")
         self.substrates_combobox.setEnabled(bval)
         self.substrates_cbar_combobox.setEnabled(bval)
+        self.substrates_grad_checkbox.setEnabled(bval)
+        
 
         # if self.view_shading:
         #     self.view_shading.setEnabled(bval)
@@ -2512,6 +2521,9 @@ class VisBase():
 
         self.update_plots()
 
+    def substrates_grad_update(self,bval):
+        self.substrate_grad = bval
+        self.update_plots()
 
     def fix_cmap_toggle_cb(self,bval):
         # print("fix_cmap_toggle_cb():")
