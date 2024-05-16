@@ -106,6 +106,7 @@ class Vis(VisBase, QWidget):
 
         self.fontsize = 7
         self.label_fontsize = 6
+        self.cbar_label_fontsize = 8
         self.title_fontsize = 10
 
         self.plot_cells_svg = True
@@ -938,7 +939,7 @@ class Vis(VisBase, QWidget):
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
             self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            self.cbar2.ax.set_xlabel(cell_scalar_name)
+            self.cbar2.ax.set_xlabel(cell_scalar_name, fontsize=self.cbar_label_fontsize)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -1012,8 +1013,21 @@ class Vis(VisBase, QWidget):
             return
 
         zvals = M[self.field_index,:].reshape(self.numy,self.numx)
-        # print("zvals.min() = ",zvals.min())
-        # print("zvals.max() = ",zvals.max())
+        try:
+            zvals = M[self.field_index,:].reshape(self.numy,self.numx)
+            # print("zvals.min(), max() = ",zvals.min(),zvals.max())
+        except:
+            print("vis_tab.py:  zvals Exception; return")
+            return
+
+        if (self.substrate_grad):
+            try:
+                # print(zvals.shape, ygrid[:,0], xgrid[0,:])
+                grad_x, grad_y = np.gradient(zvals, ygrid[:,0], xgrid[0,:])
+                zvals = np.sqrt(grad_x**2 + grad_y**2)
+                # print(zvals.min(),zvals.max())
+            except:
+                print("vis_tab.py: unable to compute the substrate gradient.")
 
 
         contour_ok = True
@@ -1087,6 +1101,11 @@ class Vis(VisBase, QWidget):
             # print("(init substrate) self.figure.axes= ",self.figure.axes)
 
         self.cbar1.set_label(self.substrate_name)
+        if (self.substrate_grad):
+            self.cbar1.set_label(self.substrate_name + " (gradient norm)", fontsize=self.cbar_label_fontsize)
+        else:
+            self.cbar1.set_label(self.substrate_name, fontsize=self.cbar_label_fontsize)
+
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
