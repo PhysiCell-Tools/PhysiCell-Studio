@@ -6752,7 +6752,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # initialize secretion params
             self.param_d[cdname]["secretion"][sub_name] = {}
             self.param_d[cdname]["secretion"][sub_name]["secretion_rate"] = sval
-            self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = 1.0
+            self.param_d[cdname]["secretion"][sub_name]["secretion_target"] = "1.0"
             self.param_d[cdname]["secretion"][sub_name]["uptake_rate"] = sval
             self.param_d[cdname]["secretion"][sub_name]["net_export_rate"] = sval
 
