@@ -190,8 +190,17 @@ class PhysiCellXMLCreator(QWidget):
         self.config_file = self.current_xml_file  # to Save
         print(f"studio: (default) self.config_file = {self.config_file}")
 
-        self.tree = ET.parse(self.config_file)
-        print(f"studio: (default) self.tree = {self.tree}")
+        try:
+            self.tree = ET.parse(self.config_file)
+            print(f"studio: (default) self.tree = {self.tree}")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setText(f'Error parsing the {self.config_file} Please check it for correctness.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
+            print(f'\nError parsing the {self.config_file} Please check it for correctness.')
+            sys.exit(-1)
+
         self.xml_root = self.tree.getroot()
         print(f"studio: (default) self.xml_root = {self.xml_root}")   #rwh
 
