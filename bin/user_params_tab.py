@@ -499,7 +499,7 @@ class UserParams(QWidget):
             if v_type == "int":
                 val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
                 # print("  val_str=",val_str)
-                if re.sub("^-", "", val_str).isdigit():
+                if not (re.search("(^-?\d*$)", val_str) is None):
                     continue
                 else:
                     bad_val.append([vname,val_str])
