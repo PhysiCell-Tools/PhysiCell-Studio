@@ -6,6 +6,7 @@ and rf. Credits.md
 
 """
 
+import re
 import sys
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 import logging
@@ -498,7 +499,7 @@ class UserParams(QWidget):
             if v_type == "int":
                 val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
                 # print("  val_str=",val_str)
-                if val_str.isdigit():
+                if re.sub("^-", "", val_str).isdigit():
                     continue
                 else:
                     bad_val.append([vname,val_str])
