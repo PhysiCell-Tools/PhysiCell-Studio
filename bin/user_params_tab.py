@@ -498,12 +498,13 @@ class UserParams(QWidget):
             if v_type == "int":
                 val_str = self.utable.cellWidget(idx,self.var_icol_value).text()
                 # print("  val_str=",val_str)
-                if val_str.isdigit():
-                    continue
-                else:
+                try:
+                    if float(val_str).is_integer():
+                        continue
+                    else:
+                        bad_val.append([vname,val_str])
+                except:
                     bad_val.append([vname,val_str])
-                    # print("  bad_val=",bad_val)
-                    # pass
 
         if bad_val:
             msg = f"Error: Invalid [user param, int value]: {bad_val}.<br><br>XML will not be saved. Please fix User Params before continuing."
