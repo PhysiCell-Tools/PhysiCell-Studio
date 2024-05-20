@@ -887,13 +887,15 @@ class Rules(QWidget):
     def substrate_rename(self,idx,old_name,new_name):
         # print("rules_tab: substrate_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
         # print("        self.substrates= ",self.substrates)
-        original_list = self.substrates
+        # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
+        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        possible_superstrings += self.substrates
         # self.substrates = list(map(lambda x: x.replace(old_name, new_name), self.substrates))
         idx = self.substrates.index(old_name)
         self.substrates[idx] = new_name
         self.fill_signals_widget()
         self.fill_responses_widget()
-        self.find_and_replace_rules_table(old_name, new_name, original_list)
+        self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
 
     #-----------------------------------------------------------
     def delete_substrate(self,name):
@@ -927,14 +929,15 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
         # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
-        original_list = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
-        # append self.substrates to original_list
-        original_list += self.substrates
+        # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
+        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        possible_superstrings += self.substrates
+
         self.celltype_combobox.setItemText(idx, new_name)
         # print("rules_tab: cell_def_rename(): items in combobox= ",all_items)
         self.fill_signals_widget()
         self.fill_responses_widget()
-        self.find_and_replace_rules_table(old_name, new_name, original_list)
+        self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
 
 
     #-----------------------------------------------------------
@@ -2304,11 +2307,7 @@ class Rules(QWidget):
             # print('OK clicked')
 
     #-------------------------
-    def find_and_replace_rules_table(self, old_name, new_name, original_list):
-        # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
-        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
-        # append the substrates
-        possible_superstrings += self.substrates
+    def find_and_replace_rules_table(self, old_name, new_name, possible_superstrings):
         reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
         reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
         reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
