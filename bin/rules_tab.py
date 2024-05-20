@@ -887,13 +887,15 @@ class Rules(QWidget):
     def substrate_rename(self,idx,old_name,new_name):
         # print("rules_tab: substrate_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
         # print("        self.substrates= ",self.substrates)
-        original_list = self.substrates
+        # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
+        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        possible_superstrings += self.substrates
         # self.substrates = list(map(lambda x: x.replace(old_name, new_name), self.substrates))
         idx = self.substrates.index(old_name)
         self.substrates[idx] = new_name
         self.fill_signals_widget()
         self.fill_responses_widget()
-        self.find_and_replace_rules_table(old_name, new_name, original_list)
+        self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
 
     #-----------------------------------------------------------
     def delete_substrate(self,name):
@@ -927,12 +929,15 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
         # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
-        original_list = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
+        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        possible_superstrings += self.substrates
+
         self.celltype_combobox.setItemText(idx, new_name)
         # print("rules_tab: cell_def_rename(): items in combobox= ",all_items)
         self.fill_signals_widget()
         self.fill_responses_widget()
-        self.find_and_replace_rules_table(old_name, new_name, original_list)
+        self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
 
 
     #-----------------------------------------------------------
@@ -2302,54 +2307,58 @@ class Rules(QWidget):
             # print('OK clicked')
 
     #-------------------------
-    def find_and_replace_rules_table(self, old_name, new_name, original_list):
-        old_is_substring = any([(old_name in x) and (old_name != x) for x in original_list])
-        print(f"      using find and replace with old = {old_name} and new = {new_name}. Original list = {original_list}")
-        print(f"      so old_is_substring = {old_is_substring}")
+    def find_and_replace_rules_table(self, old_name, new_name, possible_superstrings):
+        reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
+        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+        reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
+        reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
+        possible_superstrings += reserved_words
+        super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
+        print(f"\n      Finding instances of {old_name} and replacing with {new_name}.")
+        print(f"      Looking out for the following super strings: {super_strings}")
         for irow in range(self.num_rules):
-            self.find_and_replace_rule_row(old_name, new_name, original_list, irow, old_is_substring)
+            self.find_and_replace_rule_row(old_name, new_name, irow, super_strings)
         return
     
-    def find_and_replace_rule_row(self, old_name, new_name, original_list, irow, old_is_substring):
+    def find_and_replace_rule_row(self, old_name, new_name, irow, super_strings):
         column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
         for icol in column_indices:
             old_text = self.rules_table.cellWidget(irow, icol).text()
-            new_text = self.find_and_replace_rule_cell(old_name, new_name, original_list, old_is_substring, old_text)
+            new_text = self.find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
             self.rules_table.cellWidget(irow, icol).setText(new_text)
         return
     
-    def find_and_replace_rule_cell(self, old_name, new_name, original_list, old_is_substring, s):
-        if s=="old_name":
+    def find_and_replace_rule_cell(self, old_name, new_name, super_strings, s):
+        if s==old_name:
             return new_name
         
-        # now need to check if a name in the original list matches that contains old_name as a substring
-        if any([(x in s) and (old_name in x) and (old_name != x) for x in original_list]) is True:
-            # in this case, we found an element in the original_list that was in the given string...
-            # ...and the old_name was a substring of this element x in the list...
-            # ...and the element is NOT the old_name...
-            # ...then we conclude that the string has instructions for an element of our list that is NOT being renamed, so we skip
-            # NOTE: this does not protect against elements in the list being named "contact", "contact ", "intracellular", "volume", etc
-            #       protecting against that would require curating a list of "protected words" that are used in the rules grammar
-            #       but this list will grow and change over time, making it uncertain how well-maintained that list will be
-            #       Instead, we will rely on the user to not name their substrate "with", "death", etc.
-            #       Another point, any substring of these would need to be protected against, e.g. "a", "cel", "lume", etc.
-            return s
+        # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
+        # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
+        # so first check if any of the super strings are in the given string
+        for super_string in super_strings:
+            if self.find_isolated_string(s, super_string) != -1:
+                print(f"      skipping {s} because it contains {super_string}")
+                return s
         
+        ind = self.find_isolated_string(s, old_name)
+        if ind != -1:
+            print(f"      replacing {old_name} with {new_name} in {s}")
+            return s[0:ind] + new_name + s[(ind+len(old_name)):]
+        return s
+
+    def find_isolated_string(self, s, name, start=0):
         # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
-        start = 0
         while start < len(s):
-            ind = s.find(old_name, start)
+            ind = s.find(name, start)
             start = ind+1 # update for next time through the loop (if there is a next time)
             if ind == -1:
-                return s # got to the end of s without finding a good match, no replacements needed
+                return -1 # got to the end of s without finding a good match, no replacements needed
 
-            if ind>0 and ~(s[ind-1].isspace()):
+            if ind>0 and not (s[ind-1].isspace()):
                 continue # previous character was not a space, so this was not a good match
             
-            if ind < len(s)-len(old_name) and not (s[ind+len(old_name)].isspace()):
+            if ind < len(s)-len(name) and not (s[ind+len(name)].isspace()):
                 continue # next character was not a space, so this was not a good match
 
-            # if we get here, then we've found a good match starting at ind; break out and deal with it
-            break
-
-        return s[0:ind] + new_name + s[(ind+len(old_name)):]
+            # if we get here, then we've found a good match starting at ind
+            return ind
