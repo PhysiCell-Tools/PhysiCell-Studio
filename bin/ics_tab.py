@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtGui import QPixmap
 
 from studio_classes import QHLine
-from bioinf_import_tab import BioinfImport
+from biwt_tab import BioinformaticsWalkthrough
 
 import numpy as np
 import matplotlib
@@ -66,7 +66,7 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
 
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab, bioinf_import_flag, bioinf_import_test, bioinf_import_test_spatial):
+    def __init__(self, config_tab, celldef_tab, biwt_flag):
         super().__init__()
         # global self.config_params
 
@@ -75,7 +75,7 @@ class ICs(QWidget):
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
 
-        self.bioinf_import_flag = bioinf_import_flag
+        self.biwt_flag = biwt_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -186,9 +186,9 @@ class ICs(QWidget):
 
         self.tab_widget = QTabWidget()
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
-        if self.bioinf_import_flag:
-            self.bioinf_import_tab = BioinfImport(self.config_tab, self.celldef_tab, self, bioinf_import_test, bioinf_import_test_spatial)
-            self.tab_widget.addTab(self.bioinf_import_tab,"Bioinformatics Import")
+        if self.biwt_flag:
+            self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self)
+            self.tab_widget.addTab(self.biwt_tab,"BIWT")
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tab_widget)
@@ -1943,8 +1943,8 @@ class ICs(QWidget):
     def fill_gui(self):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
-        if self.bioinf_import_flag:
-            self.bioinf_import_tab.fill_gui()
+        if self.biwt_flag:
+            self.biwt_tab.fill_gui()
 
     def on_enter_axes(self, event):
         self.mouse_on_axes = True
@@ -1966,4 +1966,3 @@ class ICs(QWidget):
         self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
         self.canvas.update()
         self.canvas.draw()
-

@@ -530,7 +530,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 break
 
-        self.new_cell_def_named(cdname) # added by DRB to make it easier for BioinfImport to add a new cell type programmatically
+        self.new_cell_def_named(cdname) # added by DRB to make it easier for BIWT to add a new cell type programmatically
 
     def new_cell_def_named(self, cdname):
 
