@@ -6,15 +6,15 @@ def biwt_dev_mode(biwt):
         # file_name = "./data/visium_adata.h5ad"
         # file_name = "./data/Zhuang-ABCA-1-1.064_raw_wClusterAnnots.h5ad"
         file_name = "./data/abc/metadata/Zhuang-ABCA-1/20231215/views/cell_metadata_with_cluster_annotation.csv"
-        if "Zhuang" in file_name:
-            biwt.column_line_edit.setText("subclass")
-        else:
-            biwt.column_line_edit.setText("cluster")
+        file_name = "./data/cells.csv"
+        # if "Zhuang" in file_name:
+        #     biwt.column_line_edit.setText("subclass")
+        # else:
+        #     biwt.column_line_edit.setText("cluster")
         biwt.import_file(file_name)
-        # biwt.continue_from_import()
-        # biwt.window.process_window() # process spatial y/n window
-        # biwt.window.process_window() # process edit window
-        # biwt.window.process_window() # process rename window
+        biwt.window.process_window() # process spatial y/n window
+        biwt.window.process_window() # process edit window
+        biwt.window.process_window() # process rename window
         # biwt.continue_from_spatial_query()
         # biwt.continue_from_edit()
         # biwt.window.process_window() # process rename window

@@ -37,14 +37,18 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog, QButtonGroup, QSplitter, QSizePolicy, QSpinBox
 from PyQt5.QtGui import QIcon
 
-from studio_classes import QHLine, QVLine, QCheckBox_custom
+from studio_classes import QHLine, QVLine, QCheckBox_custom, LegendWindow
 
 class GoBackButton(QPushButton):
-    def __init__(self, parent, biwt):
+    def __init__(self, parent, biwt, pre_cb=None, post_cb=None):
         super().__init__(parent)
         self.setText("\u2190 Go back")
         self.setStyleSheet(f"QPushButton {{background-color: lightgreen; color: black;}}")
+        if pre_cb is not None:
+            self.clicked.connect(pre_cb)
         self.clicked.connect(biwt.go_back_to_prev_window)
+        if post_cb is not None:
+            self.clicked.connect(post_cb)
 
 class ContinueButton(QPushButton):
     def __init__(self, parent, cb, text="Continue \u2192",styleSheet="QPushButton {background-color: lightgreen; color: black;}"):
@@ -269,7 +273,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
         hbox = QHBoxLayout()
 
-        go_back_button = GoBackButton(self, self.biwt)
+        go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
         continue_button = ContinueButton(self, self.process_window)
 
         hbox.addWidget(go_back_button)
@@ -278,6 +282,8 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
         self.dim_red_fig = None
         self.dim_red_canvas = None
+        self.legend_window = None
+
         for key_substring in ["umap","tsne","pca","spatial"]:
             if self.try_to_plot_dim_red(key_substring=key_substring):
                 splitter = QSplitter()
@@ -308,6 +314,16 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
                 vbox.addLayout(hbox)
                 vbox.addWidget(self.dim_red_canvas)
+
+                self.legend_button = QPushButton("Show Legend")
+                self.legend_button.clicked.connect(self.show_legend)
+
+                hbox = QHBoxLayout()
+                hbox.addStretch()
+                hbox.addWidget(self.legend_button)
+                hbox.addStretch()
+                vbox.addLayout(hbox)
+
                 right_side.setLayout(vbox)
                 splitter.addWidget(right_side)
                 vbox = QVBoxLayout()
@@ -315,6 +331,13 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
                 break
         
         self.setLayout(vbox)
+
+    def close_legend(self):
+        if self.legend_window is not None:
+            self.legend_window.close()
+
+    def show_legend(self):
+        self.legend_window.show()
 
     def create_dim_red_fig(self):
         self.dim_red_fig = plt.figure()
@@ -348,8 +371,9 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
             indices = range(v.shape[0])
         self.scatter = self.dim_red_ax.scatter(v[indices,0],v[indices,1],self.marker_size,c=temp.codes[indices]) # 0.18844459036110225 = 5/sqrt(704) where I found 5 to be a good size when working with 704 points
         scatter_objects, _ = self.scatter.legend_elements()
-        self.dim_red_fig.legend(scatter_objects, temp.categories,
-                    loc=8, title="Clusters",ncol=3, mode="expand")
+        self.legend_window = LegendWindow(self, legend_artists=scatter_objects, legend_labels=temp.categories, legend_title="Clusters")
+        # self.dim_red_fig.legend(scatter_objects, temp.categories,
+        #             loc=8, title="Clusters",ncol=3, mode="expand")
         title_str = f"{k} plot"
         if using_sample:
             title_str += f" (sampling only {len(indices)} points of {v.shape[0]})"
@@ -441,6 +465,8 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         self.merge_button.setEnabled(enable_merge_button)
 
     def process_window(self):
+        if self.legend_window is not None:
+            self.legend_window.close()
         self.biwt.continue_from_edit()
 
 class BioinformaticsWalkthroughWindow_RenameCellTypes(BioinformaticsWalkthroughWindow):
@@ -838,7 +864,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         vbox = QVBoxLayout()
         vbox.addWidget(splitter)
 
-        go_back_button = GoBackButton(self, self.biwt)
+        go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
         self.continue_to_write_button = ContinueButton(self, self.process_window, styleSheet=self.biwt.qpushbutton_style_sheet)
         self.continue_to_write_button.setEnabled(False)
 
@@ -850,6 +876,10 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 
         self.setLayout(vbox)
      
+    def close_legend(self):
+        if self.ics_plot_area.legend_window is not None:
+            self.ics_plot_area.legend_window.close()
+    
     def create_cell_type_scroll_area(self):
         vbox_main = QVBoxLayout()
         label = QLabel("Select cell type(s) to place.\nGreyed out cell types have already been placed.")
@@ -1122,17 +1152,27 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         # if we get here, then all cell types have been removed, turn off undo all
         self.undo_all_button.setEnabled(False)
 
-
     def replot_all_cells_after_undo(self):
         self.ics_plot_area.ax0.cla()
         self.ics_plot_area.format_axis()
+        self.ics_plot_area.legend_artists = []
+        self.ics_plot_area.legend_labels = []
         for cell_type in self.biwt.csv_array.keys():
+            if self.biwt.csv_array[cell_type].shape[0] == 0:
+                continue # do not plot cell types with no cells
             if self.ics_plot_area.plot_is_2d:
                 sz = np.sqrt(self.ics_plot_area.cell_type_micron2_area_dict[cell_type] / np.pi)
                 self.ics_plot_area.circles(self.biwt.csv_array[cell_type], s=sz, color=self.ics_plot_area.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.ics_plot_area.alpha_value)
+                legend_patch = Patch(facecolor=self.ics_plot_area.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                self.legend_artists.append(legend_patch)
             else:
                 # sz = self.ics_plot_area.cell_type_pt_area_dict[cell_type]
-                self.ics_plot_area.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.ics_plot_area.color_by_celltype[cell_type], alpha=self.ics_plot_area.alpha_value)
+                collections = self.ics_plot_area.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.ics_plot_area.color_by_celltype[cell_type], alpha=self.ics_plot_area.alpha_value)
+                scatter_objects, _ = collections.legend_elements()
+                self.legend_artists.append(scatter_objects[0])
+            self.legend_labels.append(cell_type)
+
+        self.ics_plot_area.update_legend_window()
         self.ics_plot_area.sync_par_area() # easy way to redraw the patch for current plotting
         
         self.continue_to_write_button.setEnabled(False)
@@ -1144,6 +1184,8 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.undo_all_button.setEnabled(False)
 
     def process_window(self):
+        if self.ics_plot_area.legend_window is not None:
+            self.ics_plot_area.legend_window.close()
         self.biwt.continue_from_positions()
         
 class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
@@ -1313,13 +1355,25 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.plot_cells_button.setStyleSheet(self.biwt.qpushbutton_style_sheet)
         self.plot_cells_button.clicked.connect(self.plot_cell_pos)
 
+        self.show_legend_button = QPushButton("Show Legend")
+        self.show_legend_button.setStyleSheet(self.biwt.qpushbutton_style_sheet)
+        self.show_legend_button.clicked.connect(self.show_legend_button_cb)
+
         vbox_left.addWidget(self.plot_cells_button)
+        vbox_left.addWidget(self.show_legend_button)
         vbox_left.addWidget(self.mouse_keyboard_label)
         vbox_left.addStretch(1)
 
         self.create_figure()
+
         hbox.addLayout(vbox_left)
-        hbox.addWidget(self.canvas)
+
+        vbox_right = QVBoxLayout()
+        vbox_right.addWidget(self.canvas)
+
+        vbox_right.addWidget(self.canvas)
+
+        hbox.addLayout(vbox_right)
         
         vbox.addLayout(hbox)
         
@@ -1418,6 +1472,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.alt_and_shift = "\u2325\u2318"
             self.shift_key_ucode = "\u21e7"
             self.lower_par_key_modifier = QtCore.Qt.MetaModifier
+
+    def show_legend_button_cb(self):
+        self.legend_window.show()
 
     def create_patch_history(self):
         self.patch_history = []
@@ -2248,6 +2305,21 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             if self.biwt.use_spatial_data:
                 self.scatter_sizes = self.num_box.value() * self.single_scatter_sizes
 
+        self.legend_artists = []
+        self.legend_labels = []
+        self.legend_window = None
+        self.update_legend_window()
+        
+    def update_legend_window(self):
+        print("updating legend window")
+        is_hidden = (self.legend_window is None) or (self.legend_window.isHidden()) # doesn't exist yet or is hidden, so don't display after update
+        if self.legend_window is not None:
+            self.legend_window.close()
+        self.legend_window = LegendWindow(self, legend_artists=self.legend_artists, legend_labels=self.legend_labels, legend_title="Cell Types")
+        # if the legend window is shown, update and refresh
+        if not is_hidden:
+            self.legend_window.show()
+            
     def canvas_in_focus(self, event):
         self.mouse_keyboard_label.setEnabled(True)
 
@@ -2299,9 +2371,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
                         if self.plot_is_2d:
                             self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.legend_artists.append(legend_patch)
                         else:
                             cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
-                            self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            scatter_objects, _ = collection.legend_elements()
+                            self.legend_artists.append(scatter_objects[0])
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
                         all_new = np.empty((0,3))
@@ -2311,8 +2387,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],all_new))
                         if self.plot_is_2d:
                             self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.legend_artists.append(legend_patch)
                         else:
-                            self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            scatter_objects, _ = collection.legend_elements()
+                            self.legend_artists.append(scatter_objects[0])
+                    self.legend_labels.append(cell_type)
                     self.pw.checkbox_dict[cell_type].setEnabled(False)
                     self.pw.checkbox_dict[cell_type].setChecked(False)
                     self.pw.undo_button[cell_type].setEnabled(True)
@@ -2323,7 +2404,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                     self.plot_cell_pos_single(ctn)
         self.canvas.update()
         self.canvas.draw()
-
+        self.update_legend_window()
         self.plot_cells_button.setEnabled(False)
 
         for b in self.pw.checkbox_dict.values():
@@ -2411,6 +2492,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         self.circles(self.new_pos, s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+        self.legend_artists.append(legend_patch)
+        self.legend_labels.append(cell_type)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2428,7 +2512,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         # sz = self.cell_type_micron2_area_dict[cell_type] * 0.036089556256 # empirically-determined value to scale area to points in 3d (scales typical cell volume's area to be 8pt)
-        self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        collection = self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        scatter_objects, _ = collection.legend_elements()
+        self.legend_artists.append(scatter_objects)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2524,10 +2610,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.ax0.sci(collection)
 
         return collection
-    
-    def cancel_cb(self):
-        self.hide() # this will work for now, but maybe a better way to handle closing the window?
-        pass
 
 class BioinformaticsWalkthrough(QWidget):
     def __init__(self, config_tab, celldef_tab, ics_tab):
@@ -2662,6 +2744,7 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.show()
 
     def go_back_to_prev_window(self):
+        print(f"Going back to previous window")
         if len(self.previous_windows)==self.current_window_idx:
             self.previous_windows.append(self.window)
         if self.stale_futures and self.current_window_idx < len(self.previous_windows)-1:
