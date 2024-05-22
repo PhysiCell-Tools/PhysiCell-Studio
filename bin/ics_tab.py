@@ -964,7 +964,6 @@ class ICs(QWidget):
         self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
         self.canvas.mpl_connect('axes_enter_event', self.on_enter_axes)
         self.canvas.mpl_connect('axes_leave_event', self.on_leave_axes)
-        self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
         self.canvas.setStyleSheet("background-color:transparent;")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
