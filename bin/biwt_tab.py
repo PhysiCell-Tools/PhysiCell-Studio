@@ -1,5 +1,6 @@
 """
 Authors:
+Daniel Bergman (dbergma5@jh.edu)
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
@@ -18,7 +19,7 @@ BIWT_DEV_MODE = os.getenv('BIWT_DEV_MODE', 'False')
 if BIWT_DEV_MODE == 'True':
     from biwt_dev import biwt_dev_mode
 BIWT_DEV_MODE = BIWT_DEV_MODE=='True'
-# import scanpy as sc
+
 import copy
 import numpy as np
 import pandas as pd
@@ -39,11 +40,11 @@ from PyQt5.QtGui import QIcon
 from studio_classes import QHLine, QVLine, QCheckBox_custom
 
 class GoBackButton(QPushButton):
-    def __init__(self, parent, bioinf_walkthrough):
+    def __init__(self, parent, biwt):
         super().__init__(parent)
         self.setText("\u2190 Go back")
         self.setStyleSheet(f"QPushButton {{background-color: lightgreen; color: black;}}")
-        self.clicked.connect(bioinf_walkthrough.go_back_to_prev_window)
+        self.clicked.connect(biwt.go_back_to_prev_window)
 
 class ContinueButton(QPushButton):
     def __init__(self, parent, cb, text="Continue \u2192",styleSheet="QPushButton {background-color: lightgreen; color: black;}"):
@@ -52,16 +53,16 @@ class ContinueButton(QPushButton):
         self.setStyleSheet(styleSheet)
         self.clicked.connect(cb)
 
-class BioinfImportWindow(QWidget):
-    def __init__(self, bioinf_walkthrough):
+class BioinformaticsWalkthroughWindow(QWidget):
+    def __init__(self, biwt):
         super().__init__()
-        self.setWindowTitle(f"Bioinformatics Import Walkthrough: Step {bioinf_walkthrough.current_window_idx+1}")
-        self.biwt = bioinf_walkthrough
+        self.setWindowTitle(f"Bioinformatics Import Walkthrough: Step {biwt.current_window_idx+1}")
+        self.biwt = biwt
         self.biwt.stale_futures = True # initializing a window means that any future windows are stale
 
-class BioinfImportWindow_WarningWindow(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough, layout, continue_cb):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_WarningWindow(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt, layout, continue_cb):
+        super().__init__(biwt)
         vbox = QVBoxLayout()
         vbox.addLayout(layout)
 
@@ -74,9 +75,9 @@ class BioinfImportWindow_WarningWindow(BioinfImportWindow):
         vbox.addLayout(hbox_gb_cont)
         self.setLayout(vbox)
         
-class BioinfImportWindow_ClusterColumn(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
 
         print("------Selecting cell type column------")
 
@@ -116,9 +117,9 @@ class BioinfImportWindow_ClusterColumn(BioinfImportWindow):
         self.biwt.current_column = self.column_combobox.currentText()
         self.biwt.continue_from_import()
 
-class BioinfImportWindow_SpatialQuery(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_SpatialQuery(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
 
         print("------Asking if you want to use the spatial data found------")
 
@@ -156,9 +157,9 @@ class BioinfImportWindow_SpatialQuery(BioinfImportWindow):
     def process_window(self):
         self.biwt.continue_from_spatial_query()
 
-class BioinfImportWindow_EditCellTypes(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
 
         print("------Editing cell types------")
 
@@ -442,9 +443,9 @@ class BioinfImportWindow_EditCellTypes(BioinfImportWindow):
     def process_window(self):
         self.biwt.continue_from_edit()
 
-class BioinfImportWindow_RenameCellTypes(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_RenameCellTypes(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
 
         print("------Renaming cell types------")
         vbox = QVBoxLayout()
@@ -495,9 +496,9 @@ class BioinfImportWindow_RenameCellTypes(BioinfImportWindow):
                 self.biwt.cell_type_dict_on_rename[cell_type] = self.new_name_line_edit[intermediate_type].text()
         self.biwt.continue_from_rename()
 
-class BioinfImportWindow_CellCounts(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
         print("------Setting cell type counts------")
         names_width = 100
         counts_width = 120
@@ -808,9 +809,9 @@ class BioinfImportWindow_CellCounts(BioinfImportWindow):
                 self.biwt.cell_counts[cell_type] = int(self.type_manual[cell_type].text())
         self.biwt.continue_from_counts()
 
-class BioinfImportWindow_PositionsWindow(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
         print("------Setting cell type positions------")
 
         self.ics_plot_area = None
@@ -829,7 +830,7 @@ class BioinfImportWindow_PositionsWindow(BioinfImportWindow):
 
         splitter = QSplitter(QtCore.Qt.Vertical)
         splitter.addWidget(top_area)
-        self.ics_plot_area = BioinfImportPlotWindow(self, self.biwt, self.biwt.config_tab)
+        self.ics_plot_area = BioinformaticsWalkthroughPlotWindow(self, self.biwt, self.biwt.config_tab)
         self.plot_scroll_area = QScrollArea()
         self.plot_scroll_area.setWidget(self.ics_plot_area)
         splitter.addWidget(self.plot_scroll_area)
@@ -1145,9 +1146,9 @@ class BioinfImportWindow_PositionsWindow(BioinfImportWindow):
     def process_window(self):
         self.biwt.continue_from_positions()
         
-class BioinfImportWindow_WritePositions(BioinfImportWindow):
-    def __init__(self, bioinf_walkthrough):
-        super().__init__(bioinf_walkthrough)
+class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
 
         print("------Writing cell positions to file------")
 
@@ -1210,12 +1211,12 @@ class BioinfImportWindow_WritePositions(BioinfImportWindow):
         self.add_cell_positions_to_file()
 
     def check_for_new_celldefs(self):
-        print("BioinfImportPlotWindow: Checking for new cell definitions...")
+        print("BioinformaticsWalkthroughPlotWindow: Checking for new cell definitions...")
         for cell_type in self.biwt.cell_types_list_final:
             if cell_type in self.biwt.celldef_tab.celltypes_list:
-                print(f"BioinfImportPlotWindow: {cell_type} found in current list of cell types. Not appending {cell_type}...")
+                print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} found in current list of cell types. Not appending {cell_type}...")
             else:
-                print(f"BioinfImportPlotWindow: {cell_type} not found in current list of cell types. Appending {cell_type}...")
+                print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} not found in current list of cell types. Appending {cell_type}...")
                 self.biwt.celldef_tab.new_cell_def_named(cell_type)
                 self.biwt.ics_tab.update_colors_list()
 
@@ -1241,11 +1242,11 @@ class BioinfImportWindow_WritePositions(BioinfImportWindow):
         self.biwt.full_fname = self.full_fname
         self.biwt.close_up()
 
-class BioinfImportPlotWindow(QWidget):
-    def __init__(self, positions_window, bioinf_walkthrough, config_tab):
+class BioinformaticsWalkthroughPlotWindow(QWidget):
+    def __init__(self, positions_window, biwt, config_tab):
         super().__init__()
         self.pw = positions_window
-        self.biwt = bioinf_walkthrough
+        self.biwt = biwt
         self.config_tab = config_tab
 
         self.setup_system_keys()
@@ -1907,7 +1908,7 @@ class BioinfImportPlotWindow(QWidget):
                 # my PR to matplotlib should resolve the need for this check!
                 # if width==r1: # hack to address the bug in matplotlib.patches.Annulus which checks if width < r0 rather than <= r0 as the error message suggests it does
                 #     width *= 1 - np.finfo(width).eps # reduce width by the littlest bit possible to make sure this bug doesn't hit
-                print("\tBioinfImport WARNING: You likely can use an update to matplotlib to fix a bug in their Annulus plots.\n\tWe'll take care of it for now.")
+                print("\tBIWT WARNING: You likely can use an update to matplotlib to fix a bug in their Annulus plots.\n\tWe'll take care of it for now.")
                 self.annulus_setter(x0,y0,r1,width*(1-np.finfo(width).eps))
 
         bval = (r2 < r1*r1) and (cr2 > r0*r0)
@@ -2528,26 +2529,18 @@ class BioinfImportPlotWindow(QWidget):
         self.hide() # this will work for now, but maybe a better way to handle closing the window?
         pass
 
-class BioinfImport(QWidget):
+class BioinformaticsWalkthrough(QWidget):
     def __init__(self, config_tab, celldef_tab, ics_tab):
         super().__init__()
         if HAVE_ANNDATA is False:
-            vbox = QVBoxLayout()
-            s = "This tab allows the import of an anndata object to generate cell initial conditions."
-            s += "\nThis tab will read the adata.obs column selected for cell types and walk you through how to place them."
-            s += "\nHowever, you do not have anndata installed. You need to install that in your environment:\n\t1. pip install anndata\n---or---\n\t2. conda install anndata -c conda-forge"
+            s = "To use this tab to import an anndata object to generate cell initial conditions, you need to have anndata installed."
+            s += "\nTo install anndata in your environment, you can do one of the following:"
+            s += "\n\t1. pip install anndata\n---or---\n\t2. conda install anndata -c conda-forge"
             s += "\n\nAfter installing, restart studio."
             label = QLabel(s)
             label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-            vbox.addWidget(label)
-            base_widget = QWidget()
-            base_widget.setLayout(vbox)
-            self.layout = QVBoxLayout(self)  # leave this!
-            self.layout.addWidget(base_widget)
-            ics_tab.bioinf_import_flag = False # don't allow other tabs to proceed with doing biwt stuff
-            return
 
-        print_biwt_logo()
+        # print_biwt_logo()
         
         self.config_tab = config_tab
         self.celldef_tab = celldef_tab
@@ -2575,10 +2568,19 @@ class BioinfImport(QWidget):
             """
 
         vbox = QVBoxLayout()
+        hbox = QHBoxLayout()
+        hbox.addStretch()
+        title_label = QLabel('<p style="font-size:32px; text-decoration:underline;"><b>B</b>io<b>I</b>nformatics <b>W</b>alk<b>T</b>hrough (BIWT)</p>')
+        # title_label = QLabel("<b>B</b>io<b>I</b>nformatics <b>W</b>alk<b>T</b>hrough (BIWT)")
+        hbox.addWidget(title_label)
+        hbox.addStretch()
+        vbox.addLayout(hbox)
+        if HAVE_ANNDATA is False:
+            vbox.addWidget(label)
         vbox.addStretch(1)
         vbox.addWidget(QLabel("Importing",styleSheet="QLabel {background-color : orange;}",alignment=QtCore.Qt.AlignCenter,maximumHeight=20))
         hbox = QHBoxLayout()
-        self.import_button = QPushButton("Import from AnnData")
+        self.import_button = QPushButton("Import")
         self.import_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         self.import_button.clicked.connect(self.import_cb)
         hbox.addWidget(self.import_button)
@@ -2588,10 +2590,13 @@ class BioinfImport(QWidget):
 
         self.column_line_edit = QLineEdit()
         self.column_line_edit.setEnabled(True)
-        self.column_line_edit.setText('leiden')
+        self.column_line_edit.setText('type')
         hbox.addWidget(self.column_line_edit)
 
         vbox.addLayout(hbox)
+
+        label = QLabel("Currently supported (file format, data type) pairs: (h5ad, anndata) and (csv, NA)")
+        vbox.addWidget(label)
 
         vbox.addWidget(QHLine())
 
@@ -2632,7 +2637,7 @@ class BioinfImport(QWidget):
             if self.stale_futures:
                 # print(f"\tFutures are stale. Deleting from {self.current_window_idx} to {len(self.previous_windows)}")
                 del self.previous_windows[self.current_window_idx-1:]
-                if type(self.window) is not BioinfImportWindow_WarningWindow:
+                if type(self.window) is not BioinformaticsWalkthroughWindow_WarningWindow:
                     self.previous_windows.append(self.window)
                 else:
                     self.current_window_idx -= 1 # ok, actually, don't increase the index if the current window is a popup warning window
@@ -2697,8 +2702,13 @@ class BioinfImport(QWidget):
     def import_cb(self):
         self.start_walkthrough()
         full_file_path = QFileDialog.getOpenFileName(self,'',".")
+        print(f"full_file_path = {full_file_path}")
         file_path = full_file_path[0]
+        if file_path == "":
+            print("BIWT: No file selected.")
+            return
 
+        print(f"BIWT: Importing file {file_path}...")
         self.import_file(file_path)
 
     def import_file(self,file_path):
@@ -2707,9 +2717,9 @@ class BioinfImport(QWidget):
         elif file_path.endswith(".csv"):
             self.import_file_from_csv(file_path)
 
-        self.open_next_window(BioinfImportWindow_ClusterColumn, show=False)
+        self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
 
-        if self.auto_continue: # set in BioinfImportWindow_ClusterColumn if the line edit is filled with a column name found in the data
+        if self.auto_continue: # set in BioinformaticsWalkthroughWindow_ClusterColumn if the line edit is filled with a column name found in the data
             self.current_column = self.column_line_edit.text()
             self.continue_from_import()
         else:
@@ -2725,13 +2735,19 @@ class BioinfImport(QWidget):
         self.search_columns_for_xyz()
 
     def import_file_from_h5ad(self,file_path):
+        if not HAVE_ANNDATA:
+            print("anndata not installed. Cannot import h5ad file.")
+            return
         try:
             adata = anndata.read_h5ad(file_path)
+        except:
+            print(f"Import failed while trying to read {file_path} as an anndata object.")
+            return
+        try:
             self.data_columns = adata.obs
             self.data_vis_arrays = adata.obsm
-
         except:
-            print(f"Import failed...")
+            print(f"Failed to read either obs or obsm from {file_path}.")
             return
 
         print("------------anndata object loaded-------------")
@@ -2746,7 +2762,7 @@ class BioinfImport(QWidget):
             self.edit_cell_types()
         else:
             print("spatial data found. asking you about it now...")
-            self.open_next_window(BioinfImportWindow_SpatialQuery, show=True)
+            self.open_next_window(BioinformaticsWalkthroughWindow_SpatialQuery, show=True)
 
     def search_for_h5ad_spatial_data(self):
         # space ranger for visium data
@@ -2798,7 +2814,7 @@ class BioinfImport(QWidget):
 
     ### Edit cell types
     def edit_cell_types(self):
-        self.open_next_window(BioinfImportWindow_EditCellTypes, show=True)
+        self.open_next_window(BioinformaticsWalkthroughWindow_EditCellTypes, show=True)
 
     def continue_from_edit(self):
         self.intermediate_types = [] # types used after editing (keep, merge, delete) but before rename
@@ -2817,11 +2833,10 @@ class BioinfImport(QWidget):
 
     ### Rename cell types
     def rename_cell_types(self):
-        self.open_next_window(BioinfImportWindow_RenameCellTypes, show=True)
+        self.open_next_window(BioinformaticsWalkthroughWindow_RenameCellTypes, show=True)
 
     def continue_from_rename(self):
         print("-------Continuing from Rename-------")
-
 
         if len(set(self.cell_types_list_final)) != len(self.cell_types_list_final): # this very well could be a suboptimal check for all unique names. coded midflight so no copilot help
             duplicate_names = []
@@ -2856,7 +2871,7 @@ class BioinfImport(QWidget):
         hbox = QHBoxLayout()
         label = QLabel(s)
         hbox.addWidget(label)
-        self.open_next_window(lambda biwt : BioinfImportWindow_WarningWindow(biwt, hbox, continue_cb), show=True)
+        self.open_next_window(lambda biwt : BioinformaticsWalkthroughWindow_WarningWindow(biwt, hbox, continue_cb), show=True)
         
     def count_final_cell_types(self):
         self.cell_counts = {}
@@ -2875,21 +2890,21 @@ class BioinfImport(QWidget):
 
     ### Set cell counts
     def set_cell_counts(self):
-        self.open_next_window(BioinfImportWindow_CellCounts, show=True)
+        self.open_next_window(BioinformaticsWalkthroughWindow_CellCounts, show=True)
 
     def continue_from_counts(self):
         self.set_cell_positions()
 
     ### Set cell positions
     def set_cell_positions(self):
-        self.open_next_window(BioinfImportWindow_PositionsWindow, show=True)
+        self.open_next_window(BioinformaticsWalkthroughWindow_PositionsWindow, show=True)
 
     def continue_from_positions(self):
         self.write_to_file()
 
     ### Write data
     def write_to_file(self):
-        self.open_next_window(BioinfImportWindow_WritePositions, show=True)
+        self.open_next_window(BioinformaticsWalkthroughWindow_WritePositions, show=True)
         
     ### Finish
     def close_up(self):
@@ -2904,7 +2919,7 @@ class BioinfImport(QWidget):
         self.config_tab.csv_file.setText(self.csv_file.text())
         self.close()
         self.window.close()
-        print("BioinfImportWindow: Colors will likely change in the ICs tab due to previous cell types being present.")
+        print("BioinformaticsWalkthroughWindow: Colors will likely change in the ICs tab due to previous cell types being present.")
 
 # helper functions
 def create_checkboxes_for_cell_types(vbox, cell_types):
