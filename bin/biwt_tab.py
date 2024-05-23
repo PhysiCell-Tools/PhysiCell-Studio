@@ -1,6 +1,7 @@
 """
 Authors:
 Daniel Bergman (dbergma5@jh.edu)
+Jeanette Johnson (jjohn450@jhmi.edu)
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
@@ -14,6 +15,14 @@ try:
     HAVE_ANNDATA = True
 except:
     HAVE_ANNDATA = False
+
+try:
+    import rpy2.robjects as ro
+    from rpy2.robjects import pandas2ri, r
+    from rpy2.robjects.packages import importr
+    HAVE_RPY2 = True
+except:
+    HAVE_RPY2 = False
 
 BIWT_DEV_MODE = os.getenv('BIWT_DEV_MODE', 'False')
 if BIWT_DEV_MODE == 'True':
@@ -356,6 +365,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         return True
 
     def plot_dim_red(self, k):
+        print(f"Plotting dim reduction for {k}")
         v = self.biwt.data_vis_arrays[k]
         self.n_points = len(v)
         if self.dim_red_fig is None:
@@ -2767,6 +2777,7 @@ class BioinformaticsWalkthrough(QWidget):
     
     def search_for(self, array_dict, pattern, exact=False):
         for k, v in array_dict.items():
+            print(f"searching for {pattern} in {k}")
             if exact:
                 if k == pattern:
                     return True, k, v
@@ -2794,12 +2805,17 @@ class BioinformaticsWalkthrough(QWidget):
         print(f"BIWT: Importing file {file_path}...")
         self.import_file(file_path)
 
-    def import_file(self,file_path):
+    def import_file(self, file_path):
         if file_path.endswith(".h5ad"):
-            self.import_file_from_h5ad(file_path)
+            import_successful = self.import_file_from_h5ad(file_path)
         elif file_path.endswith(".csv"):
-            self.import_file_from_csv(file_path)
+            import_successful = self.import_file_from_csv(file_path)
+        elif file_path.lower().endswith(".rds") or file_path.lower().endswith(".rda") or file_path.lower().endswith(".rdata"):
+            import_successful = self.import_file_from_r(file_path)
 
+        if not import_successful:
+            return
+            
         self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
 
         if self.auto_continue: # set in BioinformaticsWalkthroughWindow_ClusterColumn if the line edit is filled with a column name found in the data
@@ -2809,6 +2825,77 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.hide()
             self.window.show()
 
+    def import_file_from_r(self,file_path):
+        if not HAVE_RPY2:
+            print("rpy2 not installed. Cannot import R file.")
+            return False
+        try:
+            importr_base = importr('base')
+        except:
+            print("r-base not installed. Cannot import R file.")
+            return False
+        try:
+            rdata = importr_base.readRDS(file_path)
+        except:
+            print(f"Import failed while trying to read {file_path} as an R object.")
+            return False
+        
+        print("rdata read")
+        classname = tuple(rdata.rclass)[0]
+        print(f"rdata class: {classname}")
+
+        reductions_slot_name = None # only know the slot name for Seurat objects at the moment
+        if classname in ["SingleCellExperiment", "SummarizedExperiment"]: # not clear if SummarizedExperiment will work, but fingers crossed?
+            meta_data_slot_name = "metadata"
+        elif classname in ["Seurat"]:
+            meta_data_slot_name = "meta.data"
+            reductions_slot_name = "reductions"
+        else:
+            print(f"Class {classname} not recognized. Cannot import R object.")
+            return False
+
+        try:
+            metadata = rdata.slots[meta_data_slot_name]
+        except:
+            print(f"Failed to read metadata from {file_path}.")
+            print(f"Slot {meta_data_slot_name} not among slots found: {tuple(rdata.slotnames())}")
+            return False
+
+        with (ro.default_converter + pandas2ri.converter).context():
+            print("Converting to pandas dataframe...")
+            self.data_columns = ro.conversion.get_conversion().rpy2py(metadata)
+
+            
+
+        print("------------R data file loaded-------------")
+        print(f"Metadata loaded: {self.data_columns.head()}")
+
+        return_val = True # at this point, we will consider the import successful, regardless of what happens below
+
+        self.data_vis_arrays = {}
+        if reductions_slot_name is not None:
+            try:
+                reductions = rdata.slots[reductions_slot_name]
+            except:
+                print(f"Failed to read reductions from {file_path}.")
+                print(f"Slot {reductions_slot_name} not among slots found: {tuple(rdata.slotnames())}")
+                return return_val
+
+        # self.data_vis_arrays = rdata.slots["reductions"] # not sure yet how to handle this
+        self.search_for_r_spatial_data()
+
+        return True
+
+    def search_for_r_spatial_data(self):
+        self.spatial_data_found = False
+        return
+        # the below does not adequately handle the seurat object case
+        self.spatial_data_found, key, self.spatial_data = self.search_vis_arrays_for("spatial")
+        if self.spatial_data_found:
+            self.spatial_data_key = key
+            self.spatial_data_location = f"rdata@reductions${key}"
+            return
+
     def import_file_from_csv(self,file_path):
         self.data_columns = pd.read_csv(file_path)
 
@@ -2816,26 +2903,28 @@ class BioinformaticsWalkthrough(QWidget):
 
         self.data_vis_arrays = {}
         self.search_columns_for_xyz()
+        return True
 
     def import_file_from_h5ad(self,file_path):
         if not HAVE_ANNDATA:
             print("anndata not installed. Cannot import h5ad file.")
-            return
+            return False
         try:
             adata = anndata.read_h5ad(file_path)
         except:
             print(f"Import failed while trying to read {file_path} as an anndata object.")
-            return
+            return False
         try:
             self.data_columns = adata.obs
             self.data_vis_arrays = adata.obsm
         except:
             print(f"Failed to read either obs or obsm from {file_path}.")
-            return
+            return False
 
         print("------------anndata object loaded-------------")
 
         self.search_for_h5ad_spatial_data()
+        return True
 
     def continue_from_import(self):
         if not self.spatial_data_found:
