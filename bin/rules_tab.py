@@ -1061,7 +1061,8 @@ class Rules(QWidget):
             base_val = self.celldef_tab.param_d[key0]['mechanics_attachment_rate']
         elif behavior == "cell detachment rate":
             base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
-        # elif behavior == "maximum number of cell attachments":
+        elif behavior == "maximum number of cell attachments":
+            base_val = self.celldef_tab.param_d[key0]['mechanics_max_num_attachments']
 
         elif btokens[0] == "phagocytose":
             print("--- handling phagocytose as token 0")
