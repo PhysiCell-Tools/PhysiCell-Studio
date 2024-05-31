@@ -46,6 +46,7 @@ except:
 from ics_tab import ICs
 from populate_tree_cell_defs import populate_tree_cell_defs
 from run_tab import RunModel 
+from settings import StudioSettings
 # from legend_tab import Legend 
 
 try:
@@ -98,6 +99,7 @@ class PhysiCellXMLCreator(QWidget):
             from vis_tab import Vis 
 
         self.studio_flag = studio_flag 
+        self.fix_min_size = True
         # self.view_shading = None
         self.skip_validate_flag = skip_validate_flag 
         self.rules_flag = rules_flag 
@@ -130,6 +132,8 @@ class PhysiCellXMLCreator(QWidget):
         self.title_prefix = "PhysiCell Model Builder: "
         if studio_flag:
             self.title_prefix = "PhysiCell Studio: "
+
+        self.studio_settings = StudioSettings(self, self.fix_min_size)  # pass in dict eventually
 
         self.vis2D_gouraud = False
 
@@ -441,7 +445,8 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.setFixedSize(vlayout.sizeHint())  # manually force/fix size to fit all of GUI widgets!!
         self.resize(1100, 770)  # width, height (height >= Cell Types|Death params)
-        self.setMinimumSize(1100, 770)  #width, height of window
+        if self.fix_min_size:
+            self.setMinimumSize(1100, 770)  #width, height of window
 
         if self.model3D_flag:
             self.tabWidget.setCurrentIndex(self.plot_tab_index)
@@ -514,6 +519,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         returnValue = msgBox.exec()
 
+    def settings_studio_cb(self):
+        self.studio_settings.hide()
+        self.studio_settings.show()
+
     def enablePlotTab(self, bval):
         # self.tabWidget.setTabEnabled(5, bval)
         self.tabWidget.setTabEnabled(self.plot_tab_index, bval)
@@ -543,6 +552,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         #--------------
         studio_menu = menubar.addMenu('&Studio')
         studio_menu.addAction("About", self.about_studio)
+        studio_menu.addAction("Settings", self.settings_studio_cb)
         # studio_menu.addAction("About PyQt", self.about_pyqt)
         # studio_menu.addAction("Preferences", self.prefs_cb)
         if not self.nanohub_flag:
