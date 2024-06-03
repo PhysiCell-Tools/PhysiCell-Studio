@@ -48,7 +48,8 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from PyQt5.QtCore import Qt, QRect
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
+from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
@@ -404,6 +405,7 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
         self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
+        self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
         #---rwh
         # self.custom_data_tab = CustomData(False)
@@ -507,6 +509,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_interaction_params(cdname, reset_mapping)
         self.new_intracellular_params(cdname)
         self.new_custom_data_params(cdname)
+
+        self.new_miscellaneous_params(cdname)
 
         # print("\n\n",self.param_d)
         # self.custom_data_tab.param_d = self.param_d
@@ -5905,9 +5909,178 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         
         self.custom_data_search.setText('')
 
-        # self.custom_var_count = 0
         self.custom_data_edit_active = True
 
+    #--------------------------------------------------------
+    def create_miscellaneous_tab(self):
+        par_dist_label = QLabelSeparator("Parameter Distributions")
+
+        self.behavior_model = QStandardItemModel()
+        self.par_dist_behavior_combobox = ExtendedCombo()
+        self.par_dist_behavior_combobox.setModel(self.behavior_model)
+        self.par_dist_behavior_combobox.setModelColumn(0)
+        self.par_dist_behavior_combobox.currentIndexChanged.connect(self.par_dist_behavior_changed_cb)
+
+        self.par_dist_options_combobox = QComboBox()
+        self.par_dist_options_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
+        self.par_dist_options_combobox.currentIndexChanged.connect(self.par_dist_options_changed_cb)
+
+        self.par_dist_check_base_checkbox = QCheckBox("Check base")
+        self.par_dist_check_base_checkbox.stateChanged.connect(self.par_dist_check_base_cb)
+
+        hbox_par_dist = QHBoxLayout()
+        hbox_par_dist.addWidget(QLabel("Behavior:"))
+        hbox_par_dist.addWidget(self.par_dist_behavior_combobox)
+        hbox_par_dist.addStretch()
+        hbox_par_dist.addWidget(QLabel("Distribution:"))
+        hbox_par_dist.addWidget(self.par_dist_options_combobox)
+        hbox_par_dist.addStretch()
+        hbox_par_dist.addWidget(self.par_dist_check_base_checkbox)
+
+        hbox_par_dist_parameters = QHBoxLayout()
+        self.par_dist_par_label = []
+        self.par_dist_par_lineedit = []
+        for i in range(4):
+            self.par_dist_par_label.append(QLabel(""))
+            qline_edt = QLineEdit_custom(enabled=False)
+            qline_edt.setValidator(QtGui.QDoubleValidator())
+            qline_edt.textChanged.connect(self.par_dist_parameters_changed_cb)
+            self.par_dist_par_lineedit.append(qline_edt)
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(par_dist_label)
+        vbox.addLayout(hbox_par_dist)
+        vbox.addLayout(hbox_par_dist_parameters)
+        vbox.addStretch()
+
+        miscellaneous_tab = QWidget()
+        miscellaneous_tab.setLayout(vbox)
+
+        miscellaneous_tab_scroll_area = QScrollArea()
+        miscellaneous_tab_scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setWidgetResizable(True)
+        miscellaneous_tab_scroll_area.setWidget(miscellaneous_tab)
+
+        return miscellaneous_tab_scroll_area
+
+    def fill_responses_widget(self, response_l):
+        self.par_dist_behavior_combobox.clear()
+        self.par_dist_behavior_combobox.addItems(response_l)
+        self.par_dist_behavior_combobox.setCurrentIndex(0)
+
+    def par_dist_behavior_changed_cb(self, idx):
+        if self.par_dist_behavior_combobox.currentText() not in self.param_d[self.current_cell_def]["par_dists"].keys():
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()] = {}
+            self.par_dist_options_combobox.setCurrentIndex(0) # reset to distribution to None
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["check_base"] = self.par_dist_check_base_checkbox.isChecked()
+        else:
+            self.set_par_dist_pars_from_dict(self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"])
+            self.par_dist_options_combobox.setCurrentIndex(self.par_dist_options_combobox.findText(self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["distribution"]))
+            self.par_dist_check_base_checkbox.setChecked(self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["check_base"])
+
+    def set_par_dist_pars_from_dict(self, par_d):
+        for k, v in par_d.items():
+            if k == "min":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "max":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "mu":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "sigma":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "lower_bound":
+                self.par_dist_par_lineedit[2].setText(v)
+            elif k == "upper_bound":
+                self.par_dist_par_lineedit[3].setText(v)
+            else:
+                print(f"Error: Invalid parameter key {k} in set_par_dist_pars_from_dict()")
+
+    def par_dist_options_changed_cb(self, idx):
+        current_dist = self.par_dist_options_combobox.currentText()
+        if self.par_dist_behavior_combobox.currentText() not in self.param_d[self.current_cell_def]["par_dists"].keys():
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()] = {}
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"] = {}
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["distribution"] = current_dist
+
+        if current_dist == "None":
+            for i in range(4):
+                self.par_dist_par_label[i].setText("")
+                self.par_dist_par_lineedit[i].setEnabled(False)
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"] = {}
+        elif current_dist == "Uniform" or current_dist == "Log Uniform":
+            self.par_dist_par_label[0].setText("Min:")
+            self.par_dist_par_lineedit[0].setObjectName("min")
+            self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+            self.par_dist_par_label[1].setText("Max:")
+            self.par_dist_par_lineedit[1].setObjectName("max")
+            self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
+            self.par_dist_par_label[2].setText("")
+            self.par_dist_par_label[3].setText("")
+            for i in range(2):
+                self.par_dist_par_lineedit[i].setEnabled(True)
+            for i in range(2,4):
+                self.par_dist_par_lineedit[i].setEnabled(False)
+            new_dict = {"min": self.par_dist_par_lineedit[0].text(), "max": self.par_dist_par_lineedit[1].text()}
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"] = new_dict
+        else:
+            if current_dist == "Normal":
+                self.par_dist_par_label[0].setText("Mean:")
+                self.par_dist_par_label[1].setText("Std Dev:")
+                for i in range(4):
+                    self.par_dist_par_lineedit[i].setEnabled(True)
+            elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
+                self.par_dist_par_label[0].setText("\u03BC:")
+                self.par_dist_par_label[1].setText("\u03C3:")
+                for i in range(4):
+                    self.par_dist_par_lineedit[i].setEnabled(True)
+            else:
+                print(f"Error: Invalid distribution selected??? Current distribution = {current_dist}")
+
+            self.par_dist_par_label[2].setText("Lower Bound (optional):")
+            self.par_dist_par_label[3].setText("Upper Bound (optional):")
+
+            self.par_dist_par_lineedit[0].setObjectName("mu")
+            self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+            self.par_dist_par_lineedit[1].setObjectName("sigma")
+            self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator(bottom=0))
+            self.par_dist_par_lineedit[2].setObjectName("lower_bound")
+            self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
+            self.par_dist_par_lineedit[3].setObjectName("upper_bound")
+            self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
+
+            new_dict = {"mu": self.par_dist_par_lineedit[0].text(), "sigma": self.par_dist_par_lineedit[1].text(), "lower_bound": self.par_dist_par_lineedit[2].text(), "upper_bound": self.par_dist_par_lineedit[3].text()}
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"] = new_dict
+
+        self.validate_all_par_dist_parameters()
+        for pdple in self.par_dist_par_lineedit:
+            # call their textChanged signal to update the param_d dictionary
+            if pdple.isEnabled():
+                pdple.textChanged.emit(pdple.text())
+
+    def validate_all_par_dist_parameters(self):
+        # this was written to validate that min<max values, but I have set that side project aside for now because it was slowing down key dev
+        for pdple in self.par_dist_par_lineedit:
+            if pdple.isEnabled():
+                pdple.check_validity(pdple.text())
+
+    def par_dist_check_base_cb(self, state):
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["check_base"] = state
+
+    def par_dist_parameters_changed_cb(self, text):
+        sender = self.sender()
+        if sender.objectName() == "":
+            return # likely reaching here during startup
+        is_acceptable = sender.check_validity(text)
+        if not is_acceptable or self.par_dist_behavior_combobox.currentText() == "":
+            return
+        # print(f"Updating {self.current_cell_def}, {self.par_dist_behavior_combobox.currentText()}, {sender.objectName()} with {text}")
+        # print(f"Current distribution is {self.param_d[self.current_cell_def]['par_dists'][self.par_dist_behavior_combobox.currentText()]['distribution']}")
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["parameters"][sender.objectName()] = text
+        self.validate_all_par_dist_parameters()
+        
     #--------------------------------------------------------
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
@@ -6796,6 +6969,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['custom_data'][key] = [self.custom_var_value_str_default, self.custom_var_conserved_default]   # [value, conserved flag]
             idx += 1
 
+    def new_miscellaneous_params(self, cdname):
+        self.param_d[cdname]["par_dists"] = {}
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
         # pass
@@ -8456,6 +8631,40 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # if self.debug_print_fill_xml:
         #     logging.debug(f'\n')
 
+    def fill_par_dists(self, par_dists, cdef):
+        elm = None
+        if self.debug_print_fill_xml:
+            logging.debug(f'------ ["initial_parameter_distributions"]: for {cdef}')
+
+        if "par_dists" not in self.param_d[cdef].keys():
+            return
+
+        for key_name, value in self.param_d[cdef]['par_dists'].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            check_base = "true" if value["check_base"] else "false"
+            dist_type = value["distribution"]
+            # remove whitespaces from dist_type
+            dist_type = dist_type.replace(" ", "")
+            dist_elm = ET.SubElement(par_dists, "distribution", 
+                    { "enabled":"true",
+                      "type":dist_type,
+                      "check_base":check_base } )
+            behavior_elm = ET.SubElement(dist_elm, "behavior")
+            behavior_elm.text = key_name
+            print(f"parameters = {value['parameters']}")
+            for par_name, par_value in value["parameters"].items():
+                if par_value == "":
+                    continue # adding a blank element will cause pugixml to record a value of 0
+                print(f"fill_par_dists() {par_name} = {par_value}")
+                par_elm = ET.SubElement(dist_elm, par_name)
+                par_elm.text = par_value
+
+        if elm:
+            elm.tail = self.indent8   # back up 2 for the very last one
+
+        # if self.debug_print_fill_xml:
+        #     logging.debug(f'\n')
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -8557,6 +8766,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     custom_data.text = self.indent10
                     custom_data.tail = self.indent6
                     self.fill_xml_custom_data(custom_data,cdef)
+
+                    par_dists = ET.SubElement(elm, 'initial_parameter_distributions',
+                                              { "enabled":"true" })
+                    par_dists.text = self.indent10
+                    par_dists.tail = self.indent6
+                    self.fill_par_dists(par_dists, cdef)
 
                     uep.insert(idx,elm)
                     idx += 1

@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 
 from multivariate_rules import Window_plot_rules
+from studio_classes import ExtendedCombo
 
 class RulesPlotWindow(QWidget):
     def __init__(self):
@@ -53,55 +54,6 @@ class RulesPlotWindow(QWidget):
     def close_plot_cb(self):
         self.close()
 #---------------------
-
-class ExtendedCombo( QComboBox ):
-    def __init__( self,  parent = None):
-        super( ExtendedCombo, self ).__init__( parent )
-
-        self.setFocusPolicy( Qt.StrongFocus )
-        self.setEditable( True )
-        self.completer = QCompleter( self )
-
-        # always show all completions
-        self.completer.setCompletionMode( QCompleter.UnfilteredPopupCompletion )
-        self.pFilterModel = QSortFilterProxyModel( self )
-        self.pFilterModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
-
-        self.completer.setPopup( self.view() )
-
-        self.setCompleter( self.completer )
-
-        # self.lineEdit().textEdited[unicode].connect( self.pFilterModel.setFilterFixedString )
-        self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
-        self.completer.activated.connect(self.setTextIfCompleterIsClicked)
-
-    def setModel( self, model ):
-        super(ExtendedCombo, self).setModel( model )
-        self.pFilterModel.setSourceModel( model )
-        self.completer.setModel(self.pFilterModel)
-
-    def setModelColumn( self, column ):
-        self.completer.setCompletionColumn( column )
-        self.pFilterModel.setFilterKeyColumn( column )
-        super(ExtendedCombo, self).setModelColumn( column )
-
-    def view( self ):
-        return self.completer.popup()
-
-    def index( self ):
-        return self.currentIndex()
-
-    def setTextIfCompleterIsClicked(self, text):
-      if text:
-        index = self.findText(text)
-        self.setCurrentIndex(index)
-
-
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
 
 # Overloading the QCheckBox widget 
 class MyQCheckBox(QCheckBox):  # it's insane to have to do this!
@@ -2107,6 +2059,8 @@ class Rules(QWidget):
         self.response_combobox.addItems(self.response_l)
 
         self.response_combobox.setCurrentIndex(0)
+
+        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     #-----------------------------------------------------------
     def fill_gui(self):
