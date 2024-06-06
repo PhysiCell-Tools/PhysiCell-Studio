@@ -1546,13 +1546,16 @@ class VisBase():
                 print("vis_tab.py: physiboss_state_counts_cb(): error performing mcds.get_cell_df()['cell_type']")
                 return
 
-
-            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
-
+            physiboss_state_file = os.path.join(self.output_dir, "output%08d_boolean_intracellular.csv" % i_frame)
+        
             if not Path(physiboss_state_file).is_file():
-                print("vis_tab.py: physiboss_state_counts_cb(): error file not found ",physiboss_state_file)
-                return
-    
+                
+                physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
+                
+                if not Path(physiboss_state_file).is_file():
+                    print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
+                    return
+        
             name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
             id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
     
