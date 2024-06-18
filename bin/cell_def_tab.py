@@ -52,7 +52,7 @@ from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
-from studio_classes import QLineEdit_custom, DoubleValidatorWidgetBounded
+from studio_classes import QLineEdit_custom, DoubleValidatorWidgetBounded, AttackRateValidator
 
 class CellDefException(Exception):
     pass
@@ -3357,7 +3357,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        self.immunogenicity_dropdown = None
+        if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
+            validator = AttackRateValidator(self)
+        else:
+            validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
         self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -3518,10 +3522,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
+
+        if text == "":
+            return
+        
         if self.config_tab.mechanics_dt.text() == "" or float(self.config_tab.mechanics_dt.text()) == 0:
             self.attack_rate_fast_label.setText(f"WARNING: Current mechanics_dt is 0 (or unset). Make sure to set that value > 0.")
-        elif self.attack_rate.text()!="" and float(self.attack_rate.text()) * float(self.config_tab.mechanics_dt.text()) > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
-            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/mechanics_dt is instantaneous. May as well set to {1/float(self.config_tab.mechanics_dt.text())}.")
+            return
+        
+        attack_rate = float(text) 
+        mech_dt = float(self.config_tab.mechanics_dt.text())
+        max_val = 1/mech_dt
+        attack_prob = attack_rate * mech_dt
+        if "immunogenicity" in self.param_d[self.current_cell_def].keys():
+            immunogenicity = float(self.param_d[self.current_cell_def]["immunogenicity"][self.attack_rate_dropdown.currentText()])
+            attack_prob *= immunogenicity
+            max_val /= immunogenicity
+            denom = "(immunogenicity * mechanics_dt)"
+        else:  
+            denom = "mechanics_dt"
+        if attack_prob > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
+            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
         else:
             self.attack_rate_fast_label.setText("")
     #--------------------------------------------------------

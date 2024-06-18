@@ -1,3 +1,5 @@
+import sys
+
 from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit
 from PyQt5.QtGui import QValidator, QDoubleValidator
 
@@ -62,6 +64,9 @@ class QLineEdit_custom(QLineEdit):
         else:
             self.setStyleSheet(self.valid_style)
 
+    def check_current_validity(self):
+        self.check_validity(self.text())
+        
     valid_style = """
         QLineEdit {
             background-color: rgb(255,255,255);
@@ -140,3 +145,33 @@ class DoubleValidatorWidgetBounded(QValidator):
                     print(f"Invalid value for {bound_name} in DoubleValidatorWidgetBounded: {new_bound}")
                     return QValidator.Intermediate, text, pos
                 getattr(self.qdouble_validator, f'set{bound_name.capitalize()}')(new_bound)
+
+
+class AttackRateValidator(QValidator):
+    def __init__(self, cell_def_tab):
+        super().__init__()
+        self.cell_def_tab = cell_def_tab
+        self.qdouble_validator = QDoubleValidator(bottom=0.0)
+
+    def validate(self, text, pos):
+        if text == "":
+            return QValidator.Intermediate, text, pos
+
+        dt = self.cell_def_tab.config_tab.mechanics_dt.text()
+        if dt == "" or float(dt) == 0:
+            return QValidator.Intermediate, text, pos
+        dt = float(dt)
+
+        attacking_cell_def = self.cell_def_tab.current_cell_def
+        defending_cell_def = self.cell_def_tab.attack_rate_dropdown.currentText()
+        try:
+            immunogenicity = float(self.cell_def_tab.param_d[attacking_cell_def]['immunogenicity'][defending_cell_def])
+        except Exception as e:
+            print(f"Error in AttackRateValidator: {e}")
+            return QValidator.Intermediate, text, pos
+        
+        # get machine precision for float
+        top_val = 1/(dt*immunogenicity)
+        top_val *= 1 + sys.float_info.epsilon
+        self.qdouble_validator.setTop(top_val)
+        return self.qdouble_validator.validate(text, pos)
