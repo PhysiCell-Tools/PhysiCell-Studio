@@ -1336,7 +1336,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         <html><ul>\
                         <li>Click: set (x0,y0)</li>\
                         <li>{self.shift_key_ucode}-click: set (w,h), r, or r1</li>\
-                        <li>{self.shift_key_ucode}-click: set r0</li>\
+                        <li>{self.ctrl_key_ucode}-click: set r0</li>\
                         <li>{self.alt_and_ctrl}-click: set \u03b81</li>\
                         <li>{self.alt_and_shift}-click: set \u03b82</li>\
                         <li>{self.alt_key_ucode}-click-and-drag: set (\u03b81,\u03b82)</li>\
@@ -1469,7 +1469,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.cmd_z_str = "\u2318Z"
             self.cmd_shift_z_str = "\u21e7\u2318Z"
             self.alt_and_ctrl = "\u2325\u2303"
-            self.alt_and_shift = "\u2325\u2318"
+            self.alt_and_shift = "\u2325\u21e7"
             self.shift_key_ucode = "\u21e7"
             self.lower_par_key_modifier = QtCore.Qt.MetaModifier
 
