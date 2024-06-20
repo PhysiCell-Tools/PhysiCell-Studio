@@ -17,7 +17,8 @@ except:
     HAVE_ANNDATA = False
 
 try:
-    import rpy2.robjects as ro
+    import anndata2ri
+    # import rpy2.robjects as ro
     from rpy2.robjects import pandas2ri, r
     from rpy2.robjects.packages import importr
     HAVE_RPY2 = True
@@ -97,7 +98,9 @@ class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWin
         # col_names = list(self.biwt.adata.obs.columns)
         self.biwt.auto_continue = False
         self.column_combobox = QComboBox()
-        for col_name in self.biwt.data_columns.keys():
+        data_column_keys = list(self.biwt.data_columns.keys())
+        data_column_keys.sort()
+        for col_name in data_column_keys:
             self.column_combobox.addItem(col_name)
         if self.biwt.column_line_edit.text() in self.biwt.data_columns:
             s = "Select column that contains cell type info:"
@@ -2687,7 +2690,7 @@ class BioinformaticsWalkthrough(QWidget):
 
         vbox.addLayout(hbox)
 
-        label = QLabel("Currently supported (file format, data type) pairs: (h5ad, anndata) and (csv, NA)")
+        label = QLabel("Currently supported (file format, data type) pairs: (h5ad, anndata), (rds, Seurat/SingleCellExperiment), and (csv, NA)")
         vbox.addWidget(label)
 
         vbox.addWidget(QHLine())
@@ -2841,60 +2844,79 @@ class BioinformaticsWalkthrough(QWidget):
             return False
         
         print("rdata read")
+        try:
+            anndata2ri.activate()
+        except:
+            print("anndata2ri not activated. Cannot import R object.")
+            return False
+
         classname = tuple(rdata.rclass)[0]
         print(f"rdata class: {classname}")
 
-        reductions_slot_name = None # only know the slot name for Seurat objects at the moment
+        reductions_slot_name = None
+
+        ####################
+        # another option that could work in these contexts (consider this suggestive rather than definitive):
+        # metadata = rdata.slots[slot_name]
+        # with (ro.default_converter + pandas2ri.converter).context():
+        #     print("Converting to pandas dataframe...")
+        #     data_columns = ro.conversion.get_conversion().rpy2py(metadata)
+        # with (ro.default_converter + pandas2ri.converter).context():
+        #     print("Converting to pandas dataframe...")
+        #     dim_reds = ro.conversion.get_conversion().rpy2py(reductions)
+        # for key in dim_reds.keys():
+        #     val = dim_reds[key]
+        #     with (ro.default_converter + pandas2ri.converter).context():
+        #         df[key] = ro.conversion.get_conversion().rpy2py(val.slots["cell.embeddings"])
+        ####################
+
         if classname in ["SingleCellExperiment", "SummarizedExperiment"]: # not clear if SummarizedExperiment will work, but fingers crossed?
-            meta_data_slot_name = "metadata"
+            conv_adata = anndata2ri.rpy2py(rdata)
+            self.import_from_converted_anndata(conv_adata)
         elif classname in ["Seurat"]:
-            meta_data_slot_name = "meta.data"
-            reductions_slot_name = "reductions"
+            # there is a way to do this using the rdata object loaded above, but this way works and also funnels it to import_from_converted_anndata
+            r("library(Seurat)")
+            r(f'x<-readRDS("{file_path}")')
+            conv_adata = r("as.SingleCellExperiment(x)")
+            self.import_from_converted_anndata(conv_adata)
         else:
             print(f"Class {classname} not recognized. Cannot import R object.")
             return False
-
-        try:
-            metadata = rdata.slots[meta_data_slot_name]
-        except:
-            print(f"Failed to read metadata from {file_path}.")
-            print(f"Slot {meta_data_slot_name} not among slots found: {tuple(rdata.slotnames())}")
-            return False
-
-        with (ro.default_converter + pandas2ri.converter).context():
-            print("Converting to pandas dataframe...")
-            self.data_columns = ro.conversion.get_conversion().rpy2py(metadata)
-
-            
 
         print("------------R data file loaded-------------")
         print(f"Metadata loaded: {self.data_columns.head()}")
 
         return_val = True # at this point, we will consider the import successful, regardless of what happens below
 
-        self.data_vis_arrays = {}
-        if reductions_slot_name is not None:
-            try:
-                reductions = rdata.slots[reductions_slot_name]
-            except:
-                print(f"Failed to read reductions from {file_path}.")
-                print(f"Slot {reductions_slot_name} not among slots found: {tuple(rdata.slotnames())}")
-                return return_val
+        # self.data_vis_arrays = {}
+        # if reductions_slot_name is not None:
+        #     try:
+        #         reductions = rdata.slots[reductions_slot_name]
+        #     except:
+        #         print(f"Failed to read reductions from {file_path}.")
+        #         print(f"Slot {reductions_slot_name} not among slots found: {tuple(rdata.slotnames())}")
+        #         return return_val
 
         # self.data_vis_arrays = rdata.slots["reductions"] # not sure yet how to handle this
-        self.search_for_r_spatial_data()
+        # self.search_for_r_spatial_data()
 
         return True
-
-    def search_for_r_spatial_data(self):
-        self.spatial_data_found = False
-        return
-        # the below does not adequately handle the seurat object case
-        self.spatial_data_found, key, self.spatial_data = self.search_vis_arrays_for("spatial")
-        if self.spatial_data_found:
-            self.spatial_data_key = key
-            self.spatial_data_location = f"rdata@reductions${key}"
-            return
+    
+    def import_from_converted_anndata(self, adata):
+        self.data_columns = adata.obs
+        self.data_vis_arrays = adata.obsm
+        self.search_for_h5ad_spatial_data()
+        return True
+    
+    # def search_for_r_spatial_data(self):
+    #     self.spatial_data_found = False
+    #     return
+    #     # the below does not adequately handle the seurat object case
+    #     self.spatial_data_found, key, self.spatial_data = self.search_vis_arrays_for("spatial")
+    #     if self.spatial_data_found:
+    #         self.spatial_data_key = key
+    #         self.spatial_data_location = f"rdata@reductions${key}"
+    #         return
 
     def import_file_from_csv(self,file_path):
         self.data_columns = pd.read_csv(file_path)
@@ -2947,21 +2969,24 @@ class BioinformaticsWalkthrough(QWidget):
         # merscope
         self.search_columns_for_xyz()
 
-    def search_columns_for_xyz(self):
-        x_data_found, _, x_data = self.search_columns_for("x", exact=True)
+        # visium data that just has row and col
+        self.search_columns_for_rowcol()
+
+    def search_columns_for_coords(self, xdata_colname, ydata_colname, zdata_colname):
+        x_data_found, _, x_data = self.search_columns_for(xdata_colname, exact=True)
         if x_data_found:
-            self.spatial_data_found, _, y_data = self.search_columns_for("y", exact=True)
+            self.spatial_data_found, _, y_data = self.search_columns_for(ydata_colname, exact=True)
             if not self.spatial_data_found:
                 return
-            z_data_found, _, z_data = self.search_columns_for("z", exact=True)
+            z_data_found, _, z_data = self.search_columns_for(zdata_colname, exact=True)
 
             if z_data_found:
                 self.spatial_data = np.hstack((x_data.values.reshape(-1,1),y_data.values.reshape(-1,1),z_data.values.reshape(-1,1)))
-                self.spatial_data_location = "columns 'x', 'y', and 'z'"
+                self.spatial_data_location = f"columns '{xdata_colname}', '{ydata_colname}', and '{zdata_colname}'"
             else:
                 print("\n\n\nz data not found. Assuming 2d data.\n\n\n")
                 self.spatial_data = np.hstack((x_data.values.reshape(-1,1),y_data.values.reshape(-1,1), np.zeros((len(x_data),1))))
-                self.spatial_data_location = "columns 'x' and 'y'"
+                self.spatial_data_location = f"columns '{xdata_colname}' and '{ydata_colname}'"
 
             new_key = "spatial"
             suffix = ""
@@ -2971,6 +2996,18 @@ class BioinformaticsWalkthrough(QWidget):
                 suffix = str(n)
             self.data_vis_arrays[f"{new_key}_{suffix}"] = self.spatial_data
             return
+        
+    def search_columns_for_xyz(self):
+        xdata_colname = "x"
+        ydata_colname = "y"
+        zdata_colname = "z"
+        return self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
+
+    def search_columns_for_rowcol(self):
+        xdata_colname = "row"
+        ydata_colname = "col"
+        zdata_colname = None # this will be used in an exact match, which should check if key=None which will be false (and not an error)
+        self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
 
     def collect_cell_type_data(self):
         self.cell_types_original = self.data_columns[self.current_column]
