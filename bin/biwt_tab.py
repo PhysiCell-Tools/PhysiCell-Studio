@@ -853,7 +853,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         super().__init__(biwt)
         print("------Setting cell type positions------")
 
-        self.ics_plot_area = None
+        self.biwt_plot_window = None
         self.create_cell_type_scroll_area()
         self.create_pos_scroll_area()
 
@@ -869,9 +869,9 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 
         splitter = QSplitter(QtCore.Qt.Vertical)
         splitter.addWidget(top_area)
-        self.ics_plot_area = BioinformaticsWalkthroughPlotWindow(self, self.biwt, self.biwt.config_tab)
+        self.biwt_plot_window = BioinformaticsWalkthroughPlotWindow(self, self.biwt, self.biwt.config_tab)
         self.plot_scroll_area = QScrollArea()
-        self.plot_scroll_area.setWidget(self.ics_plot_area)
+        self.plot_scroll_area.setWidget(self.biwt_plot_window)
         splitter.addWidget(self.plot_scroll_area)
 
         vbox = QVBoxLayout()
@@ -890,8 +890,8 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.setLayout(vbox)
      
     def close_legend(self):
-        if self.ics_plot_area.legend_window is not None:
-            self.ics_plot_area.legend_window.close()
+        if self.biwt_plot_window.legend_window is not None:
+            self.biwt_plot_window.legend_window.close()
     
     def create_cell_type_scroll_area(self):
         vbox_main = QVBoxLayout()
@@ -1108,10 +1108,10 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.pos_scroll_area.setWidget(pos_scroll_area_widget)
 
     def cell_pos_button_group_cb(self):
-        if self.ics_plot_area:
-            self.ics_plot_area.sync_par_area()
+        if self.biwt_plot_window:
+            self.biwt_plot_window.sync_par_area()
         if self.biwt.use_spatial_data:
-            self.ics_plot_area.num_box.setEnabled(self.cell_pos_button_group.checkedId()==6) # only enable for spatial plotter
+            self.biwt_plot_window.num_box.setEnabled(self.cell_pos_button_group.checkedId()==6) # only enable for spatial plotter
          
     def spatial_button_cb(self, checked):
         if not checked:
@@ -1128,24 +1128,24 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         bval = self.is_any_cell_type_button_group_checked()
         if bval:
             # The plot is created and at least one is checked. See if the parameters are ready
-            self.ics_plot_area.sync_par_area() # this call is overkill, I just want to see if the parameters call for the Plot button being enabled
+            self.biwt_plot_window.sync_par_area() # this call is overkill, I just want to see if the parameters call for the Plot button being enabled
         else:
-            self.ics_plot_area.plot_cells_button.setEnabled(False)
+            self.biwt_plot_window.plot_cells_button.setEnabled(False)
 
     def select_all_button_cb(self):
         for cbd in self.checkbox_dict.values():
             if cbd.isEnabled():
                 cbd.setChecked(True)
         bval = self.is_any_cell_type_button_group_checked()
-        if self.ics_plot_area:
-            self.ics_plot_area.plot_cells_button.setEnabled(bval)
+        if self.biwt_plot_window:
+            self.biwt_plot_window.plot_cells_button.setEnabled(bval)
     
     def deselect_all_button_cb(self):
         for cbd in self.checkbox_dict.values():
             if cbd.isEnabled():
                 cbd.setChecked(False)
-        if self.ics_plot_area:
-            self.ics_plot_area.plot_cells_button.setEnabled(False)
+        if self.biwt_plot_window:
+            self.biwt_plot_window.plot_cells_button.setEnabled(False)
 
     def undo_button_cb(self):
         undone_cell_type = self.sender().objectName()
@@ -1166,27 +1166,27 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.undo_all_button.setEnabled(False)
 
     def replot_all_cells_after_undo(self):
-        self.ics_plot_area.ax0.cla()
-        self.ics_plot_area.format_axis()
-        self.ics_plot_area.legend_artists = []
-        self.ics_plot_area.legend_labels = []
+        self.biwt_plot_window.ax0.cla()
+        self.biwt_plot_window.format_axis()
+        self.biwt_plot_window.legend_artists = []
+        self.biwt_plot_window.legend_labels = []
         for cell_type in self.biwt.csv_array.keys():
             if self.biwt.csv_array[cell_type].shape[0] == 0:
                 continue # do not plot cell types with no cells
-            if self.ics_plot_area.plot_is_2d:
-                sz = np.sqrt(self.ics_plot_area.cell_type_micron2_area_dict[cell_type] / np.pi)
-                self.ics_plot_area.circles(self.biwt.csv_array[cell_type], s=sz, color=self.ics_plot_area.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.ics_plot_area.alpha_value)
-                legend_patch = Patch(facecolor=self.ics_plot_area.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
-                self.legend_artists.append(legend_patch)
+            if self.biwt_plot_window.plot_is_2d:
+                sz = np.sqrt(self.biwt_plot_window.cell_type_micron2_area_dict[cell_type] / np.pi)
+                self.biwt_plot_window.circles(self.biwt.csv_array[cell_type], s=sz, color=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.biwt_plot_window.alpha_value)
+                legend_patch = Patch(facecolor=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                self.biwt_plot_window.legend_artists.append(legend_patch)
             else:
-                # sz = self.ics_plot_area.cell_type_pt_area_dict[cell_type]
-                collections = self.ics_plot_area.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.ics_plot_area.color_by_celltype[cell_type], alpha=self.ics_plot_area.alpha_value)
+                # sz = self.biwt_plot_window.cell_type_pt_area_dict[cell_type]
+                collections = self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
                 scatter_objects, _ = collections.legend_elements()
-                self.legend_artists.append(scatter_objects[0])
-            self.legend_labels.append(cell_type)
+                self.biwt_plot_window.legend_artists.append(scatter_objects[0])
+            self.biwt_plot_window.legend_labels.append(cell_type)
 
-        self.ics_plot_area.update_legend_window()
-        self.ics_plot_area.sync_par_area() # easy way to redraw the patch for current plotting
+        self.biwt_plot_window.update_legend_window()
+        self.biwt_plot_window.sync_par_area() # easy way to redraw the patch for current plotting
         
         self.continue_to_write_button.setEnabled(False)
 
@@ -1197,8 +1197,8 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.undo_all_button.setEnabled(False)
 
     def process_window(self):
-        if self.ics_plot_area.legend_window is not None:
-            self.ics_plot_area.legend_window.close()
+        if self.biwt_plot_window.legend_window is not None:
+            self.biwt_plot_window.legend_window.close()
         self.biwt.continue_from_positions()
         
 class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
