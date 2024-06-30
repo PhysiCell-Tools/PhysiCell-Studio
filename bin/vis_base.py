@@ -61,6 +61,7 @@ except:
 
 from filters3D import FilterUI3DWindow
 from filters2D import FilterUI2DWindow
+from model_summary import ModelSummaryUIWindow
 from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
@@ -1068,6 +1069,17 @@ class VisBase():
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(splitter)
 
+    def model_summary_cb(self):
+        print("---- vis_base: model_summary_cb()")
+        # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
+        # self.filterUI = FilterUIWindow()
+        self.modelSummaryUI = ModelSummaryUIWindow(self)  # , self.run_tab)
+
+        # hack to bring to foreground
+        # self.filterUI.hide()
+        # self.filterUI.show()
+        self.modelSummaryUI.hide()
+        self.modelSummaryUI.show()
 
     def filterUI_cb(self):
         print("---- vis_base: filterUI_cb()")
