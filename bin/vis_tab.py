@@ -58,6 +58,33 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+#-----------------------------
+#   Future idea of floating Plot window
+class MainPlotWindow(QWidget):
+    def __init__(self, canvas):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("Plot")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        # self.canvas = FigureCanvasQTAgg(self.figure)
+        # self.canvas.setStyleSheet("background-color:transparent;")
+        # self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        # self.layout.addWidget(self.canvas)
+        self.layout.addWidget(canvas)
+
+        # self.close_button = QPushButton("Close")
+        # self.close_button.setStyleSheet("background-color: lightgreen;")
+        # # self.close_button.setFixedWidth(150)
+        # self.close_button.clicked.connect(self.close_plot_cb)
+        # self.layout.addWidget(self.close_button)
+
+        self.setLayout(self.layout)
+
+        # self.hide()
+        # self.show()
+
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
@@ -232,7 +259,14 @@ class Vis(VisBase, QWidget):
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
-        self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
+        self.scroll_plot.setWidget(self.canvas) # for an embedded Plot window (not floating)
+
+        # -- future idea of [optional] floating Plot window
+        # self.plot_win = None
+        # self.plot_win = MainPlotWindow(self.canvas)
+        # self.plot_win.show()
+
+        # self.plot_w.setWidget(self.canvas) # self.config_params = QWidget()
 
     #--------------------------------------
     # def aspect_11_cb(self,bval):

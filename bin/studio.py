@@ -133,7 +133,7 @@ class PhysiCellXMLCreator(QWidget):
         if studio_flag:
             self.title_prefix = "PhysiCell Studio: "
 
-        self.studio_settings = StudioSettings(self, self.fix_min_size)  # pass in dict eventually
+        # self.studio_settings = StudioSettings(self, self.fix_min_size)  # pass in dict eventually
 
         self.vis2D_gouraud = False
 
@@ -419,6 +419,8 @@ class PhysiCellXMLCreator(QWidget):
             # self.tabWidget.setTabEnabled(5, False)
             self.enablePlotTab(False)
             self.enablePlotTab(True)
+
+            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab)  # pass in dict eventually
 
             # self.tabWidget.addTab(self.legend_tab,"Legend")
             # self.enableLegendTab(False)

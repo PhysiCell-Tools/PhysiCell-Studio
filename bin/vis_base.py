@@ -218,6 +218,7 @@ class SvgWidget(QSvgWidget):
 #                 # path = Path(self.current_dir,self.output_dir,"legend.svg")
 #                 time.sleep(1)
 
+
 #------------------------------
 class LegendPlotWindow(QWidget):
     def __init__(self, output_dir):
