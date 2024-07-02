@@ -200,6 +200,14 @@
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">1.0</sample>
             </custom_data>
+            <initial_parameter_distributions enabled="true">
+                <distribution enabled="true" type="Uniform" check_base="false">
+                    <behavior>substrate secretion target</behavior>
+                </distribution>
+                <distribution enabled="true" type="Uniform" check_base="false">
+                    <behavior>substrate uptake</behavior>
+                </distribution>
+            </initial_parameter_distributions>
         </cell_definition>
     </cell_definitions>
 

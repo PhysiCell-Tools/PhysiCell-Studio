@@ -45,11 +45,11 @@ import string
 import random
 # import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
@@ -5925,7 +5925,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_options_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
         self.par_dist_options_combobox.currentIndexChanged.connect(self.par_dist_options_changed_cb)
 
-        self.par_dist_check_base_checkbox = QCheckBox("Check base")
+        self.par_dist_check_base_checkbox = HoverCheckBox("Check base", "Do you want to enforce the base behavior value be within this distribution?\n(Check made at PhysiCell runtime)")
         self.par_dist_check_base_checkbox.stateChanged.connect(self.par_dist_check_base_cb)
 
         hbox_par_dist = QHBoxLayout()
@@ -5949,10 +5949,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
             hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
 
+        self.display_par_dists_button = QPushButton("Display distributions for current cell type.")
+        self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
+
         vbox = QVBoxLayout()
         vbox.addWidget(par_dist_label)
         vbox.addLayout(hbox_par_dist)
         vbox.addLayout(hbox_par_dist_parameters)
+        vbox.addWidget(self.display_par_dists_button)
         vbox.addStretch()
 
         miscellaneous_tab = QWidget()
@@ -5965,6 +5969,41 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         miscellaneous_tab_scroll_area.setWidget(miscellaneous_tab)
 
         return miscellaneous_tab_scroll_area
+
+    def display_par_dists_cb(self):
+        # create new window and print distribution infomration there
+        if self.current_cell_def is None:
+            return
+        if self.current_cell_def not in self.param_d.keys():
+            return
+        if "par_dists" not in self.param_d[self.current_cell_def].keys():
+            return
+        if len(self.param_d[self.current_cell_def]["par_dists"]) == 0:
+            return
+        
+        # create new window
+        self.par_dist_window = QWidget()
+        self.par_dist_window.setWindowTitle(f"Parameter Distributions for {self.current_cell_def}")
+        self.par_dist_window.setGeometry(100, 100, 800, 600)
+        vbox = QVBoxLayout()
+        
+        for key, value in self.param_d[self.current_cell_def]["par_dists"].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            # add a line to the QDialog box about this parameter distribution
+            label = QLabel(f"Behavior: {key}\nDistribution: {value['distribution']}\nParameters: {value['parameters']}\nCheck base: {value['check_base']}")
+            vbox.addWidget(label)
+        
+        vbox.addStretch()
+        self.par_dist_window.setLayout(vbox)
+        self.par_dist_window.hide()
+        self.par_dist_window.show()
+            # print(f"Behavior: {key}")
+            # print(f"Distribution: {value['distribution']}")
+            # print(f"Parameters: {value['parameters']}")
+            # print(f"Check base: {value['check_base']}")
+
+        print("Displaying parameter distributions for current cell type.")
 
     def fill_responses_widget(self, response_l):
         self.par_dist_behavior_combobox.clear()

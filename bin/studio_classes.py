@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QFrame, QCheckBox, QLabel, QComboBox, QCompleter, QLineEdit
-from PyQt5.QtCore import Qt, QSortFilterProxyModel
+from PyQt5.QtWidgets import QFrame, QCheckBox, QLabel, QComboBox, QCompleter, QLineEdit, QWidget, QToolTip
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
 from PyQt5.QtGui import QValidator, QDoubleValidator
 
 class QHLine(QFrame):
@@ -154,3 +154,33 @@ class OptionalDoubleValidator(QDoubleValidator):
         if text == "":
             return QValidator.Acceptable, text, pos
         return self.qdouble_validator.validate(text, pos)
+
+class HoverWidget(QWidget):
+    def __init__(self, hover_text: str, parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)  # Enable mouse tracking
+        self.hover_text = hover_text
+
+    def event(self, event):
+        if event.type() == QEvent.Enter:
+            # Display tooltip when the mouse enters the widget
+            self.setToolTip(self.hover_text)
+        elif event.type() == QEvent.Leave:
+            # Clear tooltip when the mouse leaves the widget
+            self.setToolTip('')
+        return super().event(event)
+
+class HoverCheckBox(QCheckBox):
+    def __init__(self, text, hover_text, parent=None):
+        super().__init__(text, parent)
+        self.setMouseTracking(True)  # Enable mouse tracking
+        self.hover_text = hover_text
+
+    def event(self, event):
+        if event.type() == QEvent.Enter:
+            # Display tooltip when the mouse enters the checkbox
+            QToolTip.showText(event.globalPos(), self.hover_text, self)
+        elif event.type() == QEvent.Leave:
+            # Hide tooltip when the mouse leaves the checkbox
+            QToolTip.hideText()
+        return super().event(event)
