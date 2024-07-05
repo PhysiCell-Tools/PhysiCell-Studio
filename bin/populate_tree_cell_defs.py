@@ -1517,6 +1517,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.param_d[cell_def_name]["par_dists"] = {}
             uep_par_dists = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//initial_parameter_distributions")
             if uep_par_dists and uep_par_dists.attrib["enabled"].lower() == "true":
+                cell_def_tab.param_d[cell_def_name]["par_dists_enabled"] = True
                 for par_dist in uep_par_dists:
                     print(f"populate_tree_cell_defs.py: par_dist= {par_dist}")
                     if par_dist.attrib["enabled"].lower() == "false":
@@ -1524,27 +1525,23 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # get behavior element of par_dist
                     dist_type = par_dist.attrib["type"]
                     check_base = par_dist.attrib["check_base"].lower() == "true"
-                    behavior = par_dist.find('behavior')
-                    if behavior is not None:
-                        behavior_content = behavior.text
+                    behavior_uep = par_dist.find('behavior')
+                    if behavior_uep is not None:
+                        behavior = behavior_uep.text
                     else:
                         continue
                     
-                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior_content] = {}
-                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior_content]["distribution"] = dist_type
-                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior_content]["check_base"] = check_base
-                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior_content]["parameters"] = {}
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior] = {}
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["distribution"] = dist_type
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["check_base"] = check_base
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["parameters"] = {}
 
                     for tag in par_dist:
                         if tag.tag == "behavior":
                             continue
-                        cell_def_tab.param_d[cell_def_name]["par_dists"][behavior_content]["parameters"][tag.tag] = tag.text
-
-                    print(f"populate_tree_cell_defs.py: par_dists for {behavior_content}= {cell_def_tab.param_d[cell_def_name]['par_dists'][behavior_content]}")
-                ## NEED TO READ THESE IN FROM EXISTING FILES!!! (FIRST FIGURE OUT HOW TO WRITE THEM OUT)
-                
-
-    # sys.exit(1)
+                        cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["parameters"][tag.tag] = tag.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["par_dists_enabled"] = False
 
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item

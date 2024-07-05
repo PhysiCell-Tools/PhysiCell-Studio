@@ -1970,97 +1970,93 @@ class Rules(QWidget):
         self.signal_l.clear()
         self.signal_combobox.clear()
 
-        # print("\n       fill_signals_widget(): self.substrates= ",self.substrates)
+        self.signal_l = self.create_signal_list()
 
-        for s in self.substrates:
-            self.signal_l.append(s)
-        for s in self.substrates:
-            self.signal_l.append("intracellular " + s)
-        for s in self.substrates:
-            self.signal_l.append(s + " gradient")
+        self.signal_combobox.addItems(self.signal_l)
 
-        self.signal_l += ["pressure","volume"]
+        self.signal_combobox.setCurrentIndex(0)
+
+    def create_signal_list(self):
+        signal_l = []
+        for s in self.substrates:
+            signal_l.append(s)
+        for s in self.substrates:
+            signal_l.append("intracellular " + s)
+        for s in self.substrates:
+            signal_l.append(s + " gradient")
+
+        signal_l += ["pressure","volume"]
 
         # print("       self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
         for ct in self.celldef_tab.param_d.keys():
-            self.signal_l.append("contact with " + ct)
+            signal_l.append("contact with " + ct)
 
         # special
-        self.signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
         for custom_var in list(self.celldef_tab.param_d[cell_def0]['custom_data'].keys()):
             signal_name = "custom:" + custom_var
-            self.signal_l.append(signal_name)
+            signal_l.append(signal_name)
 
-
-        #---- finally, use the self.signal_l list to create the combobox entries
-        self.signal_combobox.clear()
-        # for idx,signal in enumerate(self.signal_l):
-        #     item = QStandardItem(signal)
-        #     # print("     idx,signal,item=",idx,signal,item)
-        #     self.signal_model.setItem(idx, 0, item)
-        self.signal_combobox.addItems(self.signal_l)
-
-        self.signal_combobox.setCurrentIndex(0)
+        return signal_l
 
     #-----------------------------------------------------------
     def fill_responses_widget(self):
         self.response_l.clear()
         self.response_combobox.clear()
 
+        self.response_l = self.create_response_list()
+        #---- finally, use the self.response_l list to create the combobox entries
+        #     self.response_model.setItem(idx, 0, item)
+        self.response_combobox.addItems(self.response_l)
+
+        self.response_combobox.setCurrentIndex(0)
+        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+
+    def create_response_list(self):
         # TODO: figure out how best to organize these responses
+        response_l = []
         for s in self.substrates:
-            self.response_l.append(s + " secretion")
+            response_l.append(s + " secretion")
         for s in self.substrates:
-            self.response_l.append(s + " secretion target")
+            response_l.append(s + " secretion target")
         for s in self.substrates:
-            self.response_l.append(s + " uptake")
+            response_l.append(s + " uptake")
         for s in self.substrates:
-            self.response_l.append(s + " export")
-        self.response_l.append("cycle entry")
-        self.response_l.append("damage rate")
+            response_l.append(s + " export")
+        response_l.append("cycle entry")
+        response_l.append("damage rate")
         for idx in range(6):  # TODO: hardwired
-            self.response_l.append("exit from cycle phase " + str(idx))
+            response_l.append("exit from cycle phase " + str(idx))
 
-        self.response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
+        response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
 
         for s in self.substrates:
-            self.response_l.append("chemotactic response to " + s)
+            response_l.append("chemotactic response to " + s)
 
-        self.response_l += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
+        response_l += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
 
         for ct in self.celldef_tab.param_d.keys():
-            self.response_l.append("adhesive affinity to " + ct)
+            response_l.append("adhesive affinity to " + ct)
 
         # special
-        self.response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell"]
+        response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell"]
 
         for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]:  # verb
             for ct in self.celldef_tab.param_d.keys():
-                self.response_l.append(verb + ct)
+                response_l.append(verb + ct)
 
         # more special
-        self.response_l += ["is_movable","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+        response_l += ["is_movable","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
         for custom_var in self.celldef_tab.param_d[cell_def0]['custom_data'].keys():
             response_name = "custom:" + custom_var
-            self.response_l.append(response_name)
-
-
-        #---- finally, use the self.response_l list to create the combobox entries
-        self.response_combobox.clear()
-        # for idx,response in enumerate(self.response_l):
-        #     item = QStandardItem(response)
-        #     self.response_model.setItem(idx, 0, item)
-        self.response_combobox.addItems(self.response_l)
-
-        self.response_combobox.setCurrentIndex(0)
-
-        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+            response_l.append(response_name)
+        return response_l
 
     #-----------------------------------------------------------
     def fill_gui(self):
@@ -2262,10 +2258,7 @@ class Rules(QWidget):
 
     #-------------------------
     def find_and_replace_rules_table(self, old_name, new_name, possible_superstrings):
-        reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
-        reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
-        reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
+        reserved_words = create_reserved_words()
         possible_superstrings += reserved_words
         super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
         print(f"\n      Finding instances of {old_name} and replacing with {new_name}.")
@@ -2278,41 +2271,48 @@ class Rules(QWidget):
         column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
         for icol in column_indices:
             old_text = self.rules_table.cellWidget(irow, icol).text()
-            new_text = self.find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
+            new_text = find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
             self.rules_table.cellWidget(irow, icol).setText(new_text)
         return
     
-    def find_and_replace_rule_cell(self, old_name, new_name, super_strings, s):
-        if s==old_name:
-            return new_name
+def find_and_replace_rule_cell(old_name, new_name, super_strings, s):
+    if s==old_name:
+        return new_name
+    
+    # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
+    # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
+    # so first check if any of the super strings are in the given string
+    for super_string in super_strings:
+        if find_isolated_string(s, super_string) != -1:
+            print(f"      skipping {s} because it contains {super_string}")
+            return s
+    
+    ind = find_isolated_string(s, old_name)
+    if ind != -1:
+        print(f"      replacing {old_name} with {new_name} in {s}")
+        return s[0:ind] + new_name + s[(ind+len(old_name)):]
+    return s
+
+def find_isolated_string(s, name, start=0):
+    # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
+    while start < len(s):
+        ind = s.find(name, start)
+        start = ind+1 # update for next time through the loop (if there is a next time)
+        if ind == -1:
+            return -1 # got to the end of s without finding a good match, no replacements needed
+
+        if ind>0 and not (s[ind-1].isspace()):
+            continue # previous character was not a space, so this was not a good match
         
-        # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
-        # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
-        # so first check if any of the super strings are in the given string
-        for super_string in super_strings:
-            if self.find_isolated_string(s, super_string) != -1:
-                print(f"      skipping {s} because it contains {super_string}")
-                return s
-        
-        ind = self.find_isolated_string(s, old_name)
-        if ind != -1:
-            print(f"      replacing {old_name} with {new_name} in {s}")
-            return s[0:ind] + new_name + s[(ind+len(old_name)):]
-        return s
+        if ind < len(s)-len(name) and not (s[ind+len(name)].isspace()):
+            continue # next character was not a space, so this was not a good match
 
-    def find_isolated_string(self, s, name, start=0):
-        # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
-        while start < len(s):
-            ind = s.find(name, start)
-            start = ind+1 # update for next time through the loop (if there is a next time)
-            if ind == -1:
-                return -1 # got to the end of s without finding a good match, no replacements needed
+        # if we get here, then we've found a good match starting at ind
+        return ind
 
-            if ind>0 and not (s[ind-1].isspace()):
-                continue # previous character was not a space, so this was not a good match
-            
-            if ind < len(s)-len(name) and not (s[ind+len(name)].isspace()):
-                continue # next character was not a space, so this was not a good match
-
-            # if we get here, then we've found a good match starting at ind
-            return ind
+def create_reserved_words():
+    reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
+    reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+    reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
+    reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
+    return reserved_words
