@@ -166,6 +166,9 @@ class Vis(VisBase, QWidget):
         self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
         self.domain_boundary_actor.GetProperty().SetLineWidth(self.line_width)
 
+
+        self.png_writer = vtkPNGWriter()
+
         #-------------
         self.points = vtkPoints()
 
@@ -543,6 +546,27 @@ class Vis(VisBase, QWidget):
 
         # self.canvas.update()
         # self.canvas.draw()
+
+        if self.save_png:
+            self.png_frame += 1
+            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
+            print("---->  ", png_file)
+            windowto_image_filter = vtkWindowToImageFilter()
+            windowto_image_filter.SetInput(self.vtkWidget.GetRenderWindow())
+            windowto_image_filter.SetScale(1)  # image quality
+            # if rgba:
+            if False:
+                windowto_image_filter.SetInputBufferTypeToRGBA()
+            else:
+                windowto_image_filter.SetInputBufferTypeToRGB()
+                # Read from the front buffer.
+                windowto_image_filter.ReadFrontBufferOff()
+                windowto_image_filter.Update()
+
+            self.png_writer.SetFileName(png_file)
+            self.png_writer.SetInputConnection(windowto_image_filter.GetOutputPort())
+            self.png_writer.Write()
+
         return
 
 
@@ -1852,7 +1876,8 @@ class Vis(VisBase, QWidget):
 
 
             # TODO: Hard-coded voxel_size, plus assuming centered at origin!
-            voxel_size = 20   # rwh: fix hard-coded
+            # voxel_size = 20   # rwh: fix hard-coded
+            voxel_size = 32   # rwh: fix hard-coded for furkan-transfer-v1.14RC
             # x0 = -(voxel_size * nx) / 2.0
             # y0 = -(voxel_size * ny) / 2.0
             # z0 = -(voxel_size * nz) / 2.0

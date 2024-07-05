@@ -210,6 +210,13 @@ class FilterUI3DWindow(QWidget):
         #-----------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,3) # w, row, column, rowspan, colspan
+
+        idx_row += 1
+        self.save_png_checkbox = QCheckBox_custom('save frame*.png')
+        self.save_png_checkbox.clicked.connect(self.save_png_cb)
+        idx_row += 1
+        glayout.addWidget(self.save_png_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+
         idx_row += 1
         glayout.addWidget(QLabel("Keypress j (joystick) vs. t (trackball) "), idx_row,0,1,3) 
         idx_row += 1
@@ -378,6 +385,10 @@ class FilterUI3DWindow(QWidget):
         text = self.sphere_res_w.text()
         # print("vis_base: sphere_res_cb(): = ",int(text))
         self.vis_tab.sphere_res_cb(int(text))
+
+    def save_png_cb(self):
+        self.vis_tab.png_frame = 0
+        self.vis_tab.save_png = self.save_png_checkbox.isChecked()
 
     #----------
     def close_filterUI_cb(self):
