@@ -6047,6 +6047,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_check_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["check_base"])
 
     def set_par_dist_pars_from_dict(self, par_d):
+        for pdple in self.par_dist_par_lineedit:
+            pdple.setText("") # reset all the text before filling it in
         for k, v in par_d.items():
             if k == "min":
                 self.par_dist_par_lineedit[0].setText(v)
@@ -6069,7 +6071,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return # make sure this cell type is one we want (e.g. not currently being deleted)
         current_dist = self.par_distributions_combobox.currentText()
         behavior = self.par_dist_behavior_combobox.currentText()
-        print(f"self.param_d[cdname]['par_dists'] = {self.param_d[cdname]['par_dists']}")
         if behavior not in self.param_d[cdname]["par_dists"].keys():
             self.param_d[cdname]["par_dists"][behavior] = {}
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
@@ -6082,11 +6083,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 distribution_pars_in_dict = False
         self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
-
         if current_dist == "None":
-            for i in range(4):
-                self.par_dist_par_label[i].setText("")
-                self.par_dist_par_lineedit[i].setEnabled(False)
+            for pdpl, pdple in zip(self.par_dist_par_label, self.par_dist_par_lineedit):
+                pdpl.setText("")
+                pdple.setText("")
+                pdple.setEnabled(False)
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
         elif current_dist == "Uniform" or current_dist == "Log Uniform":
             self.par_dist_par_label[0].setText("Min:")
@@ -6109,6 +6110,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 new_dict = {"min": "", "max": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+                for pdple in self.par_dist_par_lineedit:
+                    pdple.setText("")
         else:
             if current_dist == "Normal":
                 self.par_dist_par_label[0].setText("Mean:")
@@ -6149,6 +6152,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 new_dict = {"mu": "", "sigma": "", "lower_bound": "", "upper_bound": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+                for pdple in self.par_dist_par_lineedit:
+                    pdple.setText("")
 
 
         self.validate_all_par_dist_parameters()
