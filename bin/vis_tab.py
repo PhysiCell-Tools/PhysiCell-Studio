@@ -293,6 +293,7 @@ class Vis(VisBase, QWidget):
         # total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         xvals = mcds.get_cell_df()['position_x']
+        # print("type(xvals)= ",type(xvals))
         yvals = mcds.get_cell_df()['position_y']
         cell_types = mcds.get_cell_df()["cell_type"]
         # print("len(xvals)=",len(xvals))
@@ -301,9 +302,12 @@ class Vis(VisBase, QWidget):
         # print("self.celltype_name=",self.celltype_name)
         csv_file = open("snap.csv", "w")
         csv_file.write("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n")
-        for idx in range(len(xvals)):
-            # print(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}')
-            csv_file.write(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}\n')
+        try:
+            for xv, yv, ct in zip(xvals, yvals, cell_types):  # DON'T do sequential idx
+                # print(f'{xv},{yv},{self.celltype_name[int(ct)]}')
+                csv_file.write(f'{xv},{yv},0.0,{self.celltype_name[int(ct)]}\n')
+        except:
+            print("\nvis_tab.py:-------- Error writing snap.csv file")
         csv_file.close()
 
     #--------------------------------------
