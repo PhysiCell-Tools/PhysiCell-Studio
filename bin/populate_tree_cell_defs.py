@@ -1522,6 +1522,18 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # get behavior element of par_dist
                     enabled = par_dist.attrib["enabled"].lower() == "true"
                     dist_type = par_dist.attrib["type"]
+                    dist_type = dist_type.replace(" ", "").lower()
+                    if dist_type == "uniform":
+                        dist_type = "Uniform"
+                    elif dist_type == "loguniform":
+                        dist_type = "Log Uniform"
+                    elif dist_type == "normal":
+                        dist_type = "Normal"
+                    elif dist_type == "lognormal":
+                        dist_type = "Log Normal"
+                    elif dist_type == "log10normal":
+                        dist_type = "Log10 Normal"
+
                     enforce_base = par_dist.attrib["check_base"].lower() == "true"
                     behavior_uep = par_dist.find('behavior')
                     if behavior_uep is not None:

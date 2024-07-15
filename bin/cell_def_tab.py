@@ -5930,6 +5930,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_enforce_base_checkbox = HoverCheckBox("Enforce base value within distribution", "Enforced at PhysiCell runtime.")
         self.par_dist_enforce_base_checkbox.stateChanged.connect(self.par_dist_enforce_base_cb)
 
+        self.par_dist_distribution_equation = QLabel("")
+
         hbox_par_dist_1 = QHBoxLayout()
 
         hbox_par_dist_1.addWidget(QLabel("Behavior:"))
@@ -5944,6 +5946,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         hbox_par_dist_2.addWidget(self.par_dist_enforce_base_checkbox)
         hbox_par_dist_2.addStretch()
+        hbox_par_dist_2.addWidget(self.par_dist_distribution_equation)
 
         hbox_par_dist_parameters = QHBoxLayout()
         self.par_dist_par_label = []
@@ -6047,10 +6050,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if behavior not in self.param_d[cdname]["par_dists"].keys():
             self.param_d[cdname]["par_dists"][behavior] = {}
             self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            if self.par_dist_enable_checkbox.isChecked(): # set the enabled to False if the checkbox is checked
+                self.par_dist_enable_checkbox.setChecked(False)
+            else: # otherwise, emit the unchecked state to deactivate downstream widgets
+                self.par_dist_enable_checkbox.stateChanged.emit(QtCore.Qt.Unchecked)
             self.par_dist_enforce_base_checkbox.setChecked(False)
             self.param_d[cdname]["par_dists"][behavior]["enforce_base"] = False
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
-            self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
+            if self.par_distributions_combobox.currentIndex() == 0:
+                self.par_distributions_combobox.currentIndexChanged.emit(0)
+            else:
+                self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
             for pdple in self.par_dist_par_lineedit:
                 pdple.setText("")
         else: # behavior has previously been set, proceed with caution based on prev distribution and current distribution
@@ -6088,7 +6098,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         behavior = self.par_dist_behavior_combobox.currentText()
         if behavior not in self.param_d[cdname]["par_dists"].keys():
             # I do not think this block should be reachable...
-            print(f"Error: Behavior {behavior} not in param_d[{cdname}]['par_dists'] keys")
+            raise ValueError(f"Error: Behavior {behavior} not in param_d[{cdname}]['par_dists'] keys. DRB is responsible for fixing this.")
             self.param_d[cdname]["par_dists"][behavior] = {}
             self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
@@ -6101,77 +6111,83 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 distribution_pars_in_dict = False
         self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
+
+        # next, find the distribution and update fields
+        par_labels = [""] * 4
+        par_texts = [""] * 4
         if current_dist == "None":
-            for pdpl, pdple in zip(self.par_dist_par_label, self.par_dist_par_lineedit):
-                pdpl.setText("")
-                pdple.setText("")
-                pdple.setEnabled(False)
+            par_enabled = [False] * 4
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            self.par_dist_distribution_equation.setText("")
         elif current_dist == "Uniform" or current_dist == "Log Uniform":
-            self.par_dist_par_label[0].setText("Min:")
+            par_labels[0] = "Min:"
             self.par_dist_par_lineedit[0].setObjectName("min")
             self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
-            self.par_dist_par_label[1].setText("Max:")
+            par_labels[1] = "Max:"
             self.par_dist_par_lineedit[1].setObjectName("max")
             self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
-            self.par_dist_par_label[2].setText("")
-            self.par_dist_par_label[3].setText("")
-            for i in range(2):
-                self.par_dist_par_lineedit[i].setEnabled(True)
-            for i in range(2,4):
-                self.par_dist_par_lineedit[i].setEnabled(False)
+            par_enabled = [True, True, False, False]
             if distribution_pars_in_dict:
                 if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
-                    self.par_dist_par_lineedit[0].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["min"])
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["min"]
                 if "max" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
-                    self.par_dist_par_lineedit[1].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["max"])
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["max"]
             else:
                 new_dict = {"min": "", "max": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
-                for pdple in self.par_dist_par_lineedit:
-                    pdple.setText("")
-        else:
-            if current_dist == "Normal":
-                self.par_dist_par_label[0].setText("Mean:")
-                self.par_dist_par_label[1].setText("Std Dev:")
-                for i in range(4):
-                    self.par_dist_par_lineedit[i].setEnabled(True)
-            elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
-                self.par_dist_par_label[0].setText("\u03BC:")
-                self.par_dist_par_label[1].setText("\u03C3:")
-                for i in range(4):
-                    self.par_dist_par_lineedit[i].setEnabled(True)
+            if current_dist == "Uniform":
+                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
             else:
-                print(f"Error: Invalid distribution selected??? Current distribution = {current_dist}")
+                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
+        else:
+            par_enabled = [True] * 4
+            if current_dist == "Normal":
+                par_labels[0] = "Mean:"
+                par_labels[1] = "Std Dev:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
+                self.par_dist_distribution_equation.setText("Behavior ~ N(Mean, Std Dev)\nlb \u2264 Behavior \u2264 ub")
+            elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
+                par_labels[0] = "\u03BC:"
+                par_labels[1] = "\u03C3:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator(bottom=0))
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator(bottom=0))
+                if current_dist == "Log Normal":
+                    self.par_dist_distribution_equation.setText("Behavior ~ exp(Z), Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+                else:
+                    self.par_dist_distribution_equation.setText("Behavior ~ 10^Z, Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+            else:
+                raise ValueError(f"Error: Invalid distribution selected??? Current distribution = {current_dist}")
 
-            self.par_dist_par_label[2].setText("Lower Bound (optional):")
-            self.par_dist_par_label[3].setText("Upper Bound (optional):")
+            par_labels[2] = "Lower Bound (optional):"
+            par_labels[3] = "Upper Bound (optional):"
 
             self.par_dist_par_lineedit[0].setObjectName("mu")
             self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
             self.par_dist_par_lineedit[1].setObjectName("sigma")
             self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator(bottom=0))
-            self.par_dist_par_lineedit[2].setObjectName("lower_bound")
-            self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
-            self.par_dist_par_lineedit[3].setObjectName("upper_bound")
-            self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
+            self.par_dist_par_lineedit[2].setObjectName("lower_bound") # validator set above
+            self.par_dist_par_lineedit[3].setObjectName("upper_bound") # validator set above
 
             if distribution_pars_in_dict:
-                self.par_dist_par_lineedit[0].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["mu"])
-                self.par_dist_par_lineedit[1].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["sigma"])
+                if "mu" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["mu"]
+                if "sigma" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["sigma"]
                 if "lower_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
-                    self.par_dist_par_lineedit[2].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["lower_bound"])
-                else:
-                    self.par_dist_par_lineedit[2].setText("")
+                    par_texts[2] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["lower_bound"]
                 if "upper_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
-                    self.par_dist_par_lineedit[3].setText(self.param_d[cdname]["par_dists"][behavior]["parameters"]["upper_bound"])
-                else:
-                    self.par_dist_par_lineedit[3].setText("")
+                    par_texts[3] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["upper_bound"]
             else:
                 new_dict = {"mu": "", "sigma": "", "lower_bound": "", "upper_bound": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
-                for pdple in self.par_dist_par_lineedit:
-                    pdple.setText("")
+
+        for pdpl, pdple, label, text, enabled in zip(self.par_dist_par_label, self.par_dist_par_lineedit, par_labels, par_texts, par_enabled):
+            pdpl.setText(label)
+            pdple.setText(text)
+            pdple.setEnabled(enabled)
 
         self.validate_all_par_dist_parameters()
 
@@ -6800,15 +6816,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
         for cdname in self.param_d.keys():
             if "par_dists" in self.param_d[cdname].keys():
-                new_dict = {}
                 for behavior in self.param_d[cdname]["par_dists"].keys():
                     if behavior == '':
                         continue # empty behaviors seem to crop up sometimes
-                    if not self.param_d[cdname]["par_dists"][behavior]["parameters"]:
-                        continue # if the behavior does not have parameters, skip. this can happen when renaming and that changes the index and sets a new empty behavior distribution
                     new_behavior_name = find_and_replace_rule_cell(old_name, new_name, super_strings, behavior)
-                    new_dict[new_behavior_name] = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior])
-                self.param_d[cdname]["par_dists"] = new_dict
+                    if new_behavior_name != behavior:
+                        self.param_d[cdname]["par_dists"][new_behavior_name] = self.param_d[cdname]["par_dists"].pop(behavior) # sweet
 
     #-----------------------------------------------------------------------------------------
     # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
