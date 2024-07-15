@@ -1066,9 +1066,16 @@ class Rules(QWidget):
         elif btokens[0] == "phagocytose":
             print("--- handling phagocytose as token 0")
             print(btokens)
-            if len(btokens)==3 and btokens[1] == "dead" and btokens[2] == "cell":
-                print("--- handling phagocytose dead cell")
-                base_val = self.celldef_tab.param_d[key0]['dead_phagocytosis_rate']
+            if len(btokens)==3 and btokens[2] == "cell" and btokens[1] in ["apoptotic","necrotic"]:
+                if btokens[1] == "apoptotic":
+                    print("--- handling phagocytose apoptotic cell")
+                    base_val = self.celldef_tab.param_d[key0]['apoptotic_phagocytosis_rate']
+                elif btokens[1] == "necrotic":
+                    print("--- handling phagocytose necrotic cell")
+                    base_val = self.celldef_tab.param_d[key0]['necrotic_phagocytosis_rate']
+            elif len(btokens)==4 and btokens[1] == "other" and btokens[2] == "dead" and btokens[3] == "cell":
+                print("--- handling phagocytose other dead cell")
+                base_val = self.celldef_tab.param_d[key0]['other_dead_phagocytosis_rate']
             else:
                 cell_type = behavior[12:]   # length of "phagocytose" 
                 print("      cell_type (for phagocytose)=",cell_type)
@@ -1282,18 +1289,7 @@ class Rules(QWidget):
                                 return
 
                                 # self.rules_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
-                            for icol in range(self.max_rule_table_cols-2): 
-                                # print("icol=",icol)
-                                self.rules_table.cellWidget(irow, icol).setText(elm[icol])
-                            self.rules_table.cellWidget(irow, 8).setText('??') # load base value
-
-                            # if int(elm[7]) == 0:  # hard-code
-                            if int(elm[self.max_rule_table_cols-2]) == 0:
-                                print("setting dead checkbox False")
-                                self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
-                            else:
-                                print("setting dead checkbox True")
-                                self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(True)
+                            self.fill_rule_row(irow, elm)
 
                         elif len(elm) == 9:   # v1
                             print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} is using v1 syntax. Please upgrade\n')
@@ -1306,9 +1302,17 @@ class Rules(QWidget):
                             self.show_warning(msg)
                             return
 
-                        # if elm[0][0] == '#' or elm[0][0] == '/':
-                        #     continue
+                        if elm[self.rules_response_idx] == "phagocytose dead cell":
+                            # apply this rule to all new phagocytosis rates of dead cells
+                            self.rules_table.cellWidget(irow, self.rules_response_idx).setText("phagocytose apoptotic cell")
 
+                            irow += 1
+                            elm[self.rules_response_idx] = "phagocytose necrotic cell"
+                            self.fill_rule_row(irow, elm)
+
+                            irow += 1
+                            elm[self.rules_response_idx] = "phagocytose other dead cell"
+                            self.fill_rule_row(irow, elm)
 
                         irow += 1
 
@@ -1336,6 +1340,19 @@ class Rules(QWidget):
     #     self.rules_file.setText("")
         return
 
+    def fill_rule_row(self, irow, elm):
+        for icol in range(self.max_rule_table_cols-2): 
+            # print("icol=",icol)
+            self.rules_table.cellWidget(irow, icol).setText(elm[icol])
+        self.rules_table.cellWidget(irow, 8).setText('??') # load base value
+
+        # if int(elm[7]) == 0:  # hard-code
+        if int(elm[self.max_rule_table_cols-2]) == 0:
+            print("setting dead checkbox False")
+            self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
+        else:
+            print("setting dead checkbox True")
+            self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(True)
     #-----------------------------------------------------------
     def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
@@ -2083,7 +2100,7 @@ class Rules(QWidget):
             self.response_l.append("adhesive affinity to " + ct)
 
         # special
-        self.response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell"]
+        self.response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
 
         for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]:  # verb
             for ct in self.celldef_tab.param_d.keys():
@@ -2309,7 +2326,7 @@ class Rules(QWidget):
     #-------------------------
     def find_and_replace_rules_table(self, old_name, new_name, possible_superstrings):
         reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
         reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
         reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
         possible_superstrings += reserved_words
