@@ -183,7 +183,7 @@ class PhysiCellXMLCreator(QWidget):
             self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
         else:
-            self.current_xml_file = os.path.join('.', 'config', 'PhysiCell_settings.xml')
+            self.current_xml_file = os.path.join(self.current_dir, 'config', 'PhysiCell_settings.xml')
             if not Path(self.current_xml_file).is_file():
                 print("\n\nError: A default config/PhysiCell_settings.xml does not exist\n and you did not specify a config file using the '-c' argument.\n")
                 sys.exit(1)
