@@ -70,7 +70,6 @@ class ExtendedCombo( QComboBox ):
 
         self.setCompleter( self.completer )
 
-        # self.lineEdit().textEdited[unicode].connect( self.pFilterModel.setFilterFixedString )
         self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
         self.completer.activated.connect(self.setTextIfCompleterIsClicked)
 

@@ -2604,9 +2604,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-    # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
-    # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
-    # <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
         label = QLabel("cell-cell adhesion strength")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -5906,7 +5903,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
         self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
 
-        self.display_par_dists_button = QPushButton("Display distributions for current cell type.")
+        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
         self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
 
         hbox_cell_type_par_dist = QHBoxLayout()
@@ -5919,6 +5916,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_behavior_combobox.setModel(self.behavior_model)
         self.par_dist_behavior_combobox.setModelColumn(0)
         self.par_dist_behavior_combobox.currentIndexChanged.connect(self.par_dist_behavior_changed_cb)
+        self.par_dist_behavior_combobox.editTextChanged.connect(self.par_dist_behavior_text_changed_cb)
 
         self.par_dist_enable_checkbox = QCheckBox("Enable")
         self.par_dist_enable_checkbox.stateChanged.connect(self.par_dist_enable_cb)
@@ -5992,6 +5990,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
 
     def par_dist_widgets_set_enabled(self, enabled):
+        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
         self.par_dist_behavior_combobox.setEnabled(enabled)
         self.par_dist_enable_checkbox.setEnabled(enabled)
         self.display_par_dists_button.setEnabled(enabled)
@@ -6036,8 +6035,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_window.show()
 
     def fill_responses_widget(self, response_l):
+        self.response_l = response_l
         self.par_dist_behavior_combobox.clear()
-        self.par_dist_behavior_combobox.addItems(response_l)
+        self.par_dist_behavior_combobox.addItems(self.response_l)
         self.par_dist_behavior_combobox.setCurrentIndex(0)
 
     def par_dist_behavior_changed_cb(self, idx):
@@ -6067,9 +6067,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             old_dict = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior]["parameters"])
             if self.param_d[cdname]["par_dists"][behavior]["distribution"] != self.par_distributions_combobox.currentText():
                 self.par_distributions_combobox.setCurrentIndex(self.par_distributions_combobox.findText(self.param_d[cdname]["par_dists"][behavior]["distribution"]))
+            else:
+                self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
             self.set_par_dist_pars_from_dict(old_dict)
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
         self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
+
+    def par_dist_behavior_text_changed_cb(self, text):
+        if text not in self.response_l:
+            self.par_dist_enable_checkbox.setEnabled(False)
+            self.par_dist_distribution_widgets_set_enabled(False)
+        else:
+            self.par_dist_enable_checkbox.setEnabled(True)
+            if text==self.par_dist_behavior_combobox.itemText(self.par_dist_behavior_combobox.currentIndex()):
+                # if the text is the same as the current behavior index, force the emission of the index changed signal to update the widgets
+                self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex())
+            # else:
+                # the others will follow when the behavior index is updated immediately after this event is handled
 
     def set_par_dist_pars_from_dict(self, par_d):
         for pdple in self.par_dist_par_lineedit:
@@ -6808,7 +6822,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.rename_behavior_distributions(old_name, new_name)
 
     def rename_behavior_distributions(self, old_name, new_name):
-        response_l = self.rules_tab.create_response_list()
+        self.response_l = self.rules_tab.create_response_list()
         possible_superstrings = self.celltypes_list
         possible_superstrings += self.substrate_list
         reserved_words = create_reserved_words()
@@ -7403,21 +7417,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'   (simple) chemotaxis motility is enabled:')
             self.param_d[cdname]["motility_advanced_chemotaxis"] = False
             self.chemotaxis_enabled_cb(True)
-            # self.motility_substrate_dropdown.setEnabled(True)
-            # self.chemotaxis_direction_towards.setEnabled(True)
-            # self.chemotaxis_direction_against.setEnabled(True)
-            # self.advanced_chemotaxis_enabled.setChecked(False)
         else:
             self.chemotaxis_enabled_cb(False)
-        #     print("   (simple) chemotaxis motility is NOT enabled:")
-        #     print("   motility_enabled=",self.param_d[cdname]["motility_enabled"])
-        #     print("--> ",self.param_d[cdname])
-        #     print()
-        #     self.motility_use_2D.setChecked(False)
-        #     self.motility_substrate_dropdown.setEnabled(False)
-        #     self.chemotaxis_direction_towards.setEnabled(False)
-        #     self.chemotaxis_direction_against.setEnabled(False)
-
 
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
@@ -7700,7 +7701,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
 
-        self.display_par_dists_button.setText(f"Display parameter distributions for {cdname}")    
+        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
