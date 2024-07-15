@@ -395,25 +395,25 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         self.dim_red_canvas.update()
         self.dim_red_canvas.draw()
 
-    def set_cell_type_to_keep(self, cell_type, check_merge_gp=True):
-        self.biwt.cell_type_dict_on_edit[cell_type] = cell_type
-        self.checkbox_dict_edit[cell_type].setEnabled(True)
-        self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["keep"])
-        if  check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type].text()):
+    def set_cell_type_to_keep(self, cell_type_to_keep, check_merge_gp=True):
+        self.biwt.cell_type_dict_on_edit[cell_type_to_keep] = cell_type_to_keep
+        self.checkbox_dict_edit[cell_type_to_keep].setEnabled(True)
+        self.checkbox_dict_edit[cell_type_to_keep].setStyleSheet(self.checkbox_style["keep"])
+        if  check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type_to_keep].text()):
             # check for merge group that is no longer merging
-            gp_preimage = [ctn for ctn, new_name in self.biwt.cell_type_dict_on_edit.items() if (ctn != cell_type and new_name == self.biwt.cell_type_dict_on_edit[cell_type])] # get cell types that map into this merge group
+            gp_preimage = [cell_type for cell_type, new_name in self.biwt.cell_type_dict_on_edit.items() if (cell_type != cell_type_to_keep and new_name == self.biwt.cell_type_dict_on_edit[cell_type_to_keep])] # get cell types that map into this merge group
             if len(gp_preimage)==1: # then delete this merge gp:
                 self.set_cell_type_to_keep(gp_preimage[0], check_merge_gp=False)
-            elif cell_type == self.biwt.cell_type_dict_on_edit[cell_type]: # make sure this current cell type did not set the merge group name
+            elif cell_type_to_keep == self.biwt.cell_type_dict_on_edit[cell_type_to_keep]: # make sure this current cell type did not set the merge group name
                 first_name = None
-                for ctn in gp_preimage:
+                for cell_type in gp_preimage:
                     if first_name is None:
-                        first_name = ctn
-                    self.biwt.cell_type_dict_on_edit[ctn] = first_name
+                        first_name = cell_type
+                    self.biwt.cell_type_dict_on_edit[cell_type] = first_name
 
-        self.biwt.cell_type_dict_on_edit[cell_type] = cell_type
-        self.checkbox_dict_edit[cell_type].setText(cell_type)
-        self.keep_button[cell_type].setEnabled(False)
+        self.biwt.cell_type_dict_on_edit[cell_type_to_keep] = cell_type_to_keep
+        self.checkbox_dict_edit[cell_type_to_keep].setText(cell_type_to_keep)
+        self.keep_button[cell_type_to_keep].setEnabled(False)
 
     def keep_cb(self):
         self.biwt.stale_futures = True
@@ -2410,11 +2410,11 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                     self.pw.checkbox_dict[cell_type].setEnabled(False)
                     self.pw.checkbox_dict[cell_type].setChecked(False)
                     self.pw.undo_button[cell_type].setEnabled(True)
-                    self.pw.undo_all_button.setEnabled(True)
         else:
-            for ctn in self.pw.checkbox_dict.keys():
-                if self.pw.checkbox_dict[ctn].isChecked():
-                    self.plot_cell_pos_single(ctn)
+            for cell_type in self.pw.checkbox_dict.keys():
+                if self.pw.checkbox_dict[cell_type].isChecked():
+                    self.plot_cell_pos_single(cell_type)
+        self.pw.undo_all_button.setEnabled(True)
         self.canvas.update()
         self.canvas.draw()
         self.update_legend_window()
@@ -3004,8 +3004,8 @@ class BioinformaticsWalkthrough(QWidget):
         return self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
 
     def search_columns_for_rowcol(self):
-        xdata_colname = "row"
-        ydata_colname = "col"
+        xdata_colname = "imagerow"
+        ydata_colname = "imagecol"
         zdata_colname = None # this will be used in an exact match, which should check if key=None which will be false (and not an error)
         self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
 
@@ -3015,7 +3015,6 @@ class BioinformaticsWalkthrough(QWidget):
         self.cell_types_list_original.sort()
         self.cell_types_original = [str(x) for x in self.cell_types_original] # make sure the names are strings
         self.cell_types_list_original = [str(x) for x in self.cell_types_list_original] # make sure the names are strings
-        self.remaining_cell_types_list_original = copy.deepcopy(self.cell_types_list_original)
 
     def continue_from_spatial_query(self):
         self.collect_cell_type_data()
