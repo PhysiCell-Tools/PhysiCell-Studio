@@ -1163,14 +1163,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             # # --------- cell_interactions  
             logging.debug(f'\n===== populate_tree():  cell_interactions')
-            # <cell_interactions>
-            #  <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
-            #  <live_phagocytosis_rates>
-            #     <phagocytosis_rate name="bacteria" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="blood vessel" units="1/min">0</phagocytosis_rate>
-
-            # cell_def_tab.dead_phagocytosis_rate.setText(cell_def_tab.param_d[cdname]["dead_phagocytosis_rate"])
-            # cell_interactions_path = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//cell_interactions")
             cell_interactions_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_interactions"
             logging.debug(f'---- cell_interactions_path= {cell_interactions_path}')
             # motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
@@ -1181,16 +1173,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cep = uep.find(cell_interactions_path)
             if cep is None:
                 logging.debug(f'---- no cell_interactions found. Setting to default values')
-                # print("---- no cell_interactions found.")
-                # print("\nFor now, you need to manually enter these (and cell_transformations) into your .xml \n")
-                # sys.exit(-1)
 
-                cell_def_tab.param_d[cell_def_name]["dead_phagocytosis_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["apoptotic_phagocytosis_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["necrotic_phagocytosis_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["other_dead_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '1.0'
-
-                # cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
-                # cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
-                # cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
@@ -1206,19 +1193,19 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.param_d[cell_def_name]["fusion_rate"][name] = sval
             else:
                 logging.debug(f'---- found cell_interactions:')
-                val = cep.find("dead_phagocytosis_rate").text
-                cell_def_tab.param_d[cell_def_name]["dead_phagocytosis_rate"] = val
+                dead_phagocytosis_rate_names = ["apoptotic_phagocytosis_rate", "necrotic_phagocytosis_rate", "other_dead_phagocytosis_rate"]
+                dead_phagocytosis_rates = ['0.0'] * 3
+                pre_v1_14_0_phagocytosis = cep.find("dead_phagocytosis_rate") is not None
+                if pre_v1_14_0_phagocytosis:
+                    dead_phagocytosis_rates = [cep.find("dead_phagocytosis_rate").text] * 3
+                for index, name in enumerate(dead_phagocytosis_rate_names):
+                    if cep.find(name):
+                        dead_phagocytosis_rates[index] = cep.find(name).text
+                    cell_def_tab.param_d[cell_def_name][name] = dead_phagocytosis_rates[index]
 
                 val = cep.find("damage_rate").text
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
 
-                # <cell_interactions>
-                #   <dead_phagocytosis_rate units="1/min">91.0</dead_phagocytosis_rate>
-                #   <live_phagocytosis_rates>
-                #     <phagocytosis_rate name="bacteria" units="1/min">91.1</phagocytosis_rate>
-                #     <phagocytosis_rate name="blood vessel" units="1/min">91.2</phagocytosis_rate>
-                # uep_lpr = cep.find(cell_interactions_path + "//live_phagocytosis_rates")
-                # uep_lpr = cep.find(cell_interactions_path + "//live_phagocytosis_rates")
                 uep2 = uep.find(cell_interactions_path + "//live_phagocytosis_rates")
                 logging.debug(f'uep2= {uep2}')
                 cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
@@ -1536,7 +1523,3 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
         logging.debug(f'------- populate_tree_cell_defs.py: setting rules.csv file = {rules_file}')
 
     # print("\n\n=======================  leaving cell_def populate_tree  ======================= ")
-    # print()
-    # for k in cell_def_tab.param_d.keys():
-    #     print(" ===>>> ",k, " : ", cell_def_tab.param_d[k])
-    #     print()
