@@ -183,3 +183,18 @@ class HoverCheckBox(QCheckBox):
             # Hide tooltip when the mouse leaves the checkbox
             QToolTip.hideText()
         return super().event(event)
+    
+class QDoubleValidatorOpenInterval(QDoubleValidator):
+    def __init__(self, bottom=float('-inf'), top=float('inf'), decimals=1000, parent=None):
+        super().__init__(bottom, top, decimals, parent)
+        self.bottom = bottom
+        self.top = top
+
+    def validate(self, input, pos):
+        state, value, pos = super().validate(input, pos)
+
+        if state == QDoubleValidator.Acceptable:
+            if float(value) <= self.bottom or float(value) >= self.top:
+                state = QDoubleValidator.Intermediate
+
+        return state, value, pos

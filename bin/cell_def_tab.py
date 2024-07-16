@@ -49,7 +49,7 @@ from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, QDoubleValidatorOpenInterval
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
@@ -6144,10 +6144,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         elif current_dist == "Uniform" or current_dist == "Log Uniform":
             par_labels[0] = "Min:"
             self.par_dist_par_lineedit[0].setObjectName("min")
-            self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
             par_labels[1] = "Max:"
             self.par_dist_par_lineedit[1].setObjectName("max")
-            self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
+            if current_dist == "Uniform":
+                self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+                self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
+            else: # log uniform must be postive
+                self.par_dist_par_lineedit[0].setValidator(QDoubleValidatorOpenInterval(bottom=0))
+                self.par_dist_par_lineedit[1].setValidator(QDoubleValidatorOpenInterval(bottom=0))
             par_enabled = [True, True, False, False]
             if distribution_pars_in_dict:
                 if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
