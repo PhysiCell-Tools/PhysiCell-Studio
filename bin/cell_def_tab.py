@@ -5760,6 +5760,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.custom_table_disabled:
             self.enable_all_custom_data()
             self.custom_table_disabled = False
+
+        old_name = f"custom:{prev_name}"
+        new_name = f"custom:{text}"
+        self.update_par_dist_behaviors(old_name, new_name)
         # print(f'============== leave custom_data_name_changed() --------')
 
 
@@ -6047,6 +6051,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         behavior = self.par_dist_behavior_combobox.currentText()
         if behavior == '':
             return # this can happen when new behaviors are added and the list is cleared
+        
         if behavior not in self.param_d[cdname]["par_dists"].keys():
             self.param_d[cdname]["par_dists"][behavior] = {}
             self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
@@ -6071,7 +6076,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
             self.set_par_dist_pars_from_dict(old_dict)
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
-        self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
+            if self.par_dist_enable_checkbox.isChecked() != self.param_d[cdname]["par_dists"][behavior]["enabled"]:
+                self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
+            else:
+                self.par_dist_enable_checkbox.stateChanged.emit(self.par_dist_enable_checkbox.checkState())
 
     def par_dist_behavior_text_changed_cb(self, text):
         if text not in self.response_l:
@@ -6750,7 +6758,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
-        self.rename_behavior_distributions(old_name, new_name)
+        self.update_par_dist_behaviors(old_name, new_name)
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a cell type in this tab, we need to update all 
@@ -6819,10 +6827,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 
+        self.update_par_dist_behaviors(old_name, new_name)
+
+    def update_par_dist_behaviors(self, old_name, new_name):
+        self.response_l = self.rules_tab.create_response_list()
+        self.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
         self.rename_behavior_distributions(old_name, new_name)
 
     def rename_behavior_distributions(self, old_name, new_name):
-        self.response_l = self.rules_tab.create_response_list()
         possible_superstrings = self.celltypes_list
         possible_superstrings += self.substrate_list
         reserved_words = create_reserved_words()
@@ -6830,7 +6842,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
         for cdname in self.param_d.keys():
             if "par_dists" in self.param_d[cdname].keys():
-                for behavior in self.param_d[cdname]["par_dists"].keys():
+                behavior_keys = list(self.param_d[cdname]["par_dists"].keys()) # do this to avoid changing keys while iterating
+                for behavior in behavior_keys:
                     if behavior == '':
                         continue # empty behaviors seem to crop up sometimes
                     new_behavior_name = find_and_replace_rule_cell(old_name, new_name, super_strings, behavior)

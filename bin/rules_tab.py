@@ -838,12 +838,9 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def substrate_rename(self,idx,old_name,new_name):
-        # print("rules_tab: substrate_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
-        # print("        self.substrates= ",self.substrates)
         # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
         possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
         possible_superstrings += self.substrates
-        # self.substrates = list(map(lambda x: x.replace(old_name, new_name), self.substrates))
         idx = self.substrates.index(old_name)
         self.substrates[idx] = new_name
         self.fill_signals_widget()
@@ -852,17 +849,13 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def delete_substrate(self,name):
-        # print(f"-------- rules_tab.py: delete_substrate(), self.substrates = {self.substrates}")
-        # print(f"     name = {name}")
         self.substrates.remove(name)
         self.fill_signals_widget()
         self.fill_responses_widget()
 
     #-----------------------------------------------------------
     def add_new_substrate(self,name):
-        # print("rules_tab: add_new_substrate(): name= ",name)
         self.substrates.append(name)
-        # print("        updated self.substrates= ",self.substrates)
         self.fill_signals_widget()
         self.fill_responses_widget()
 
@@ -881,13 +874,11 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
-        # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
         # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
         possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
         possible_superstrings += self.substrates
 
         self.celltype_combobox.setItemText(idx, new_name)
-        # print("rules_tab: cell_def_rename(): items in combobox= ",all_items)
         self.fill_signals_widget()
         self.fill_responses_widget()
         self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
@@ -2091,21 +2082,12 @@ class Rules(QWidget):
         self.fill_responses_widget()
 
         #----------------------------------
-        #   <cell_rules type="csv" enabled="true">
-        #     <folder>./config</folder>
-        #     <filename>dicty_rules.csv</filename>
-        # </cell_rules>      
-        # </cell_definitions>
-        # uep = self.xml_root.find(".//cell_definitions//cell_rules")
         uep = self.xml_root.find(".//cell_rules//rulesets//ruleset")
-        # logging.debug(f'rules_tab.py: fill_gui(): <cell_rules> = {uep}')
         print(f'rules_tab.py: fill_gui(): <cell_rules> =  {uep}')
         if uep:
-            # folder_name = self.xml_root.find(".//cell_definitions//cell_rules//folder").text
             folder_name = uep.find(".//folder").text
             print(f'rules_tab.py: fill_gui():  folder_name =  {folder_name}')
             self.rules_folder.setText(folder_name)
-            # file_name = self.xml_root.find(".//cell_definitions//cell_rules//filename").text
             file_name = uep.find(".//filename").text
             print(f'rules_tab.py: fill_gui():  file_name =  {file_name}')
             if folder_name == None or file_name == None:
