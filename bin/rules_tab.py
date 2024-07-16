@@ -928,13 +928,11 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def cell_def_rename(self,idx,old_name,new_name):
-        # print("rules_tab: cell_def_rename(): idx,old_name,new_name= ",idx,old_name,new_name)
         # make a possible_superstrings list of the current cell types and substrates to check if the one being changed is a substring of any of these 
         possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
         possible_superstrings += self.substrates
 
         self.celltype_combobox.setItemText(idx, new_name)
-        # print("rules_tab: cell_def_rename(): items in combobox= ",all_items)
         self.fill_signals_widget()
         self.fill_responses_widget()
         self.find_and_replace_rules_table(old_name, new_name, possible_superstrings) # drb 24-05-20: not sure if find_and_replace_rules_table must come after the fill calls, but it works here so I'm just leaving it and recording the superstrings above
@@ -943,10 +941,17 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def celltype_combobox_changed_cb(self, idx):
         self.celltype_name = self.celltype_combobox.currentText()
-        # print("----------- celltype_combobox_changed_cb(): ", self.celltype_name)
         if self.signal:
             print("        signal= ", self.signal)
         print("          ", self.celldef_tab.param_d.keys())
+
+    #-----------------------------------------------------------
+    def custom_data_rename(self, old_name, new_name):
+        possible_superstrings = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
+        possible_superstrings += self.substrates
+        self.fill_signals_widget()
+        self.fill_responses_widget()
+        self.find_and_replace_rules_table(old_name, new_name, possible_superstrings)
 
     #-----------------------------------------------------------
     # ---- Behaviors:
@@ -962,24 +967,12 @@ class Rules(QWidget):
     # ["is_movable", "cell attachment rate", "cell detachment rate", "maximum number of cell attachments"]
     # Each cv = custom var name: ["custom:" + cv]
 
-        # for s in self.substrates:
-        #     self.response_l.append(s + " export")
-        # self.response_l.append("cycle entry")
-        # for idx in range(6):  # TODO: hardwired
-        #     self.response_l.append("exit from cycle phase " + str(idx))
-        # self.response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
-
     def update_base_value(self):
-        # print("\n-------update_base_value()")
         behavior = self.response_combobox.currentText()
         self.update_base_value_by_name(behavior, True)
 
     def update_base_value_by_name(self, behavior, update_widgets):
-        # print("\n-------update_base_value_by_name()")
-        # behavior = self.response_combobox.currentText()
-        # key0 = self.celltype_name
         key0 = self.celltype_combobox.currentText()
-        # print("     behavior=",behavior)
         btokens = behavior.split()
         if len(btokens) == 0:
             return
@@ -1010,8 +1003,6 @@ class Rules(QWidget):
                 if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
                         
         elif btokens[0] in self.substrates:
-            # print(f"update_base_value(): {btokens[0]} is a substrate")
-            # key1 = btokens[0]
             key1 = 'secretion'
             key2 = btokens[0]
             if 'target' in btokens:
@@ -1023,11 +1014,7 @@ class Rules(QWidget):
             else:  # just "<substrate> secretion" which mean its rate
                 key3 = "secretion_rate"
             try:
-                # print("\n---key0= ",self.celldef_tab.param_d[key0])
-                # print("\n---key1= ",self.celldef_tab.param_d[key0][key1])
-                # print("\n---key2= ",self.celldef_tab.param_d[key0][key1][key2])
                 base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
-                # print("update_base_value(): ------- base_val= ",base_val)
             except:
                 print("update_base_value(): ---- got exception")
                 return
@@ -1108,13 +1095,11 @@ class Rules(QWidget):
             else: saturation_val = 1.0
         else:
             if "decreases" in self.up_down_combobox.currentText(): 
-                # saturation_val = self.scale_base_for_min * float(base_val)
                 # Avoid the annoying floating point epsilon (with lots of spurious 0s). Probably a better way.
                 idx_pt = str(float(base_val)).find('.')
                 num_decimal_digits = len(str(float(base_val))[idx_pt+1:])  # number of digits to right of '.'
                 saturation_val = self.scale_base_for_min * float(base_val)
                 saturation_val = round(saturation_val, num_decimal_digits+1) # "+ 1" only relevant for scaling ~= 0.1
-                # print("update_base_value(): decreases> saturation_val= ",saturation_val)
             else: 
                 saturation_val = self.scale_base_for_max * float(base_val)
 
@@ -1149,41 +1134,12 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def signal_combobox_changed_cb(self, idx):
-
         self.signal = self.signal_combobox.currentText()
-        # print("signal_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
-        # print(f"    '{self.celltype_name}' keys= {self.celldef_tab.param_d[self.celltype_name].keys()}")
-
-        # self.update_base_value()
-
-    #   * param_d[cell_type]['custom_data'][custom_var_name] = [value, conserved_flag]
-        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
-        # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
-        #     self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
-        # else:
-        #     self.cell_adhesion_affinity.setText(self.default_affinity)
-
-        # if idx == -1:
-        #     return
 
     #-----------------------------------------------------------
     def response_combobox_changed_cb(self, idx):
-        # print("------- response_combobox_changed_cb(): idx={idx}")
-
-        # self.behavior = self.response_combobox.currentText()
-        # print("response_combobox_changed_cb(): ", self.celldef_tab.param_d.keys())
-        # print(f"    {self.celltype_name} params= {self.celldef_tab.param_d[self.celltype_name]}")
-
         self.update_base_value()
 
-        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
-        # if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
-        #     self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
-        # else:
-        #     self.cell_adhesion_affinity.setText(self.default_affinity)
-
-        # if idx == -1:
-        #     return
     #-----------------------------------------------------------
     def plot_rules(self):
         dataframe = pd.DataFrame(columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
