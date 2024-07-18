@@ -1203,8 +1203,22 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         dead_phagocytosis_rates[index] = cep.find(name).text
                     cell_def_tab.param_d[cell_def_name][name] = dead_phagocytosis_rates[index]
 
-                val = cep.find("damage_rate").text
-                cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
+                try:  # pre 1.14.0
+                    val = cep.find("damage_rate").text
+                    cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
+                except:
+                    try:
+                        val = cep.find("attack_damage_rate").text
+                        cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = val
+                    except:
+                        print("\nError: missing damage_rate or attack_damage_rate in XML")
+                        sys.exit()
+
+                try:  # 1.14.0
+                    val = cep.find("attack_duration").text
+                    cell_def_tab.param_d[cell_def_name]["attack_duration"] = val
+                except:  # default, if missing, e.g., pre-1.14.0
+                    cell_def_tab.param_d[cell_def_name]["attack_duration"] = "0.1"
 
                 uep2 = uep.find(cell_interactions_path + "//live_phagocytosis_rates")
                 logging.debug(f'uep2= {uep2}')

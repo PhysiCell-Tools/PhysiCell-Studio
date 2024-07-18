@@ -3318,7 +3318,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        label = QLabel("damage rate")
+        label = QLabel("attack damage rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -3330,6 +3330,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("attack duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.attack_duration = QLineEdit_color()
+        self.attack_duration.textChanged.connect(self.attack_duration_changed)
+        self.attack_duration.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.attack_duration , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -3463,6 +3480,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['damage_rate'] = text
+    #--------------------------------------------------------
+    def attack_duration_changed(self,text):
+        self.param_d[self.current_cell_def]['attack_duration'] = text
     #--------------------------------------------------------
     def fusion_rate_changed(self,text):
         celltype_name = self.fusion_rate_dropdown.currentText()
@@ -6650,6 +6670,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["necrotic_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["other_dead_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["damage_rate"] = '1.0'
+        self.param_d[cdname_new]["attack_duration"] = '0.1'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
@@ -7086,6 +7107,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.necrotic_phagocytosis_rate.setText(self.param_d[cdname]["necrotic_phagocytosis_rate"])
         self.other_dead_phagocytosis_rate.setText(self.param_d[cdname]["other_dead_phagocytosis_rate"])
         self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
+        self.attack_duration.setText(self.param_d[cdname]["attack_duration"])
 
         if self.live_phagocytosis_celltype in self.param_d[cdname]["live_phagocytosis_rate"].keys():
             self.live_phagocytosis_rate.setText(self.param_d[cdname]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
@@ -8092,6 +8114,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #-----
         subelm = ET.SubElement(interactions, "damage_rate",{"units":self.default_rate_units})
         subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "attack_duration",{"units":self.default_time_units})
+        subelm.text = self.param_d[cdef]["attack_duration"]
         subelm.tail = self.indent12
 
         #-----

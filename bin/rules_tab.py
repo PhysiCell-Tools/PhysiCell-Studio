@@ -1080,6 +1080,8 @@ class Rules(QWidget):
                 cell_type = behavior[12:]   # length of "phagocytose" 
                 print("      cell_type (for phagocytose)=",cell_type)
                 base_val = self.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
+        elif behavior == "attack duration":
+            base_val = self.celldef_tab.param_d[key0]["attack_duration"]
         elif btokens[0] == "attack":
             cell_type = behavior[7:]
             base_val = self.celldef_tab.param_d[key0]['attack_rate'][cell_type]
@@ -2086,6 +2088,7 @@ class Rules(QWidget):
             self.response_l.append(s + " export")
         self.response_l.append("cycle entry")
         self.response_l.append("damage rate")
+        self.response_l.append("attack duration")
         for idx in range(6):  # TODO: hardwired
             self.response_l.append("exit from cycle phase " + str(idx))
 
@@ -2326,7 +2329,7 @@ class Rules(QWidget):
     #-------------------------
     def find_and_replace_rules_table(self, old_name, new_name, possible_superstrings):
         reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+        reserved_words_behaviors = ["secretion target","cycle entry","damage rate","attack duration","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
         reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
         reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
         possible_superstrings += reserved_words
