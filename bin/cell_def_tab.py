@@ -750,24 +750,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.ics_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
-        # logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
-        # print(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
         logging.debug(f'--- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
         print(f'\ndelete_cell_def(): ----- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
 
         # remove from the widgets
-
-        # for idx in range(len(self.celltypes_list)):
-        #     # print("idx,old,new = ",idx, old_name,new_name)
-        #     # if old_name in self.motility_substrate_dropdown.itemText(idx):
-        #     if old_name == self.live_phagocytosis_dropdown.itemText(idx):
-        #         self.live_phagocytosis_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.attack_rate_dropdown.itemText(idx):
-        #         self.attack_rate_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.fusion_rate_dropdown.itemText(idx):
-        #         self.fusion_rate_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.cell_transformation_dropdown.itemText(idx):
-        #         self.cell_transformation_dropdown.setItemText(idx, new_name)
 
         # TODO: is this safe? Seems so.
         del self.param_d[self.current_cell_def]
@@ -776,18 +762,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.rules_tab:
             self.rules_tab.delete_celltype(item_idx)
 
-
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
-
         # For the remaining cell defs, if any, remove the deleted cell def from certain dicts
         for cdef in self.param_d.keys():
-            # print(" ===>>> ",cdef, " : ", self.param_d[cdef])
             # Mechanics
-            # print(f" pre-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
             self.param_d[cdef]['cell_adhesion_affinity'].pop(self.current_cell_def,0)  
-            # print(f"\n post-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
 
             # Interactions
             self.param_d[cdef]['live_phagocytosis_rate'].pop(self.current_cell_def,0)
@@ -797,11 +775,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row()   # rwh: apparently not used?
-        # print('------      item_idx=',item_idx)
-        # self.tree.removeItemWidget(self.tree.currentItem(), 0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
-        # print('------      new name=',self.tree.currentItem().text(0))
         self.current_cell_def = self.tree.currentItem().text(0)
 
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
@@ -3242,80 +3217,60 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def create_interaction_tab(self):
-            # <cell_interactions>
-            #   <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
-            #   <live_phagocytosis_rates>
-            #     <phagocytosis_rate name="bacteria" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="blood vessel" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="stem" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="differentiated" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="macrophage" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="CD8+ T cell" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="neutrophil" units="1/min">0</phagocytosis_rate>
-            #   </live_phagocytosis_rates>
-            #   <attack_rates>
-            #     <attack_rate name="bacteria" units="1/min">0</attack_rate>
-            #     <attack_rate name="blood vessel" units="1/min">0</attack_rate>
-            #     <attack_rate name="stem" units="1/min">0</attack_rate>
-            #     <attack_rate name="differentiated" units="1/min">0</attack_rate>
-            #     <attack_rate name="macrophage" units="1/min">0</attack_rate>
-            #     <attack_rate name="CD8+ T cell" units="1/min">0</attack_rate>
-            #     <attack_rate name="neutrophil" units="1/min">0</attack_rate>
-            #   </attack_rates>
-            #   <damage_rate units="1/min">0</damage_rate>
-            #   <fusion_rates>
-            #     <fusion_rate name="bacteria" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="blood vessel" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="stem" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="differentiated" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="macrophage" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="CD8+ T cell" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="neutrophil" units="1/min">0</fusion_rate>
-            #   </fusion_rates>
-            # </cell_interactions>
-            # <cell_transformations>
-            #   <transformation_rates>
-            #     <transformation_rate name="bacteria" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="blood vessel" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="stem" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="differentiated" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="macrophage" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="CD8+ T cell" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="neutrophil" units="1/min">0</transformation_rate>
-            #   </transformation_rates>
-            # </cell_transformations>
-
         interaction_tab = QWidget()
         interaction_tab.setStyleSheet("background-color: rgb(236,236,236)")
-        # interaction_tab.setStyleSheet("QLineEdit { background-color: white }")
-        # interaction_tab.setStyleSheet("QPushButton { background-color: white }")
-        # interaction_tab.setStyleSheet("QPushButton { color: black }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: interaction")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
-            # <cell_interactions>
-            #   <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
-            #   <live_phagocytosis_rates>
-            #     <phagocytosis_rate name="bacteria" units="1/min">0</phagocytosis_rate>
-
-        label = QLabel("dead phagocytosis rate")
+        label = QLabel("apoptotic phagocytosis rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr = 0
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.dead_phagocytosis_rate = QLineEdit_color()
-        self.dead_phagocytosis_rate.textChanged.connect(self.dead_phagocytosis_rate_changed)
-        self.dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.apoptotic_phagocytosis_rate = QLineEdit_color()
+        self.apoptotic_phagocytosis_rate.textChanged.connect(self.apoptotic_phagocytosis_rate_changed)
+        self.apoptotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.apoptotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # units.setStyleSheet("border: 1px solid black;")
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+        
+        label = QLabel("necrotic phagocytosis rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrotic_phagocytosis_rate = QLineEdit_color()
+        self.necrotic_phagocytosis_rate.textChanged.connect(self.necrotic_phagocytosis_rate_changed)
+        self.necrotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.necrotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("other dead phagocytosis rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.other_dead_phagocytosis_rate = QLineEdit_color()
+        self.other_dead_phagocytosis_rate.textChanged.connect(self.other_dead_phagocytosis_rate_changed)
+        self.other_dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.other_dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
@@ -3489,42 +3444,33 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
 
     #--------------------------------------------------------
-    def dead_phagocytosis_rate_changed(self,text):
-        # print("dead_phagocytosis_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['dead_phagocytosis_rate'] = text
+    def apoptotic_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['apoptotic_phagocytosis_rate'] = text
+    #--------------------------------------------------------
+    def necrotic_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['necrotic_phagocytosis_rate'] = text
+    #--------------------------------------------------------
+    def other_dead_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['other_dead_phagocytosis_rate'] = text
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
-        # print("live_phagocytosis_rate_changed:  self.live_phagocytosis_celltype=",self.live_phagocytosis_celltype)
-        # print("live_phagocytosis_rate_changed:  text=",text)
-
         celltype_name = self.live_phagocytosis_dropdown.currentText()
-
-        # self.param_d[self.current_cell_def]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
         self.param_d[self.current_cell_def]['live_phagocytosis_rate'][celltype_name] = text
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
-        # print("attack_rate_changed:  text=",text)
         celltype_name = self.attack_rate_dropdown.currentText()
-
-        # self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
-        # print("damage_rate_changed:  text=",text)
         self.param_d[self.current_cell_def]['damage_rate'] = text
     #--------------------------------------------------------
     def fusion_rate_changed(self,text):
-        # print("fusion_rate_changed:  text=",text)
         celltype_name = self.fusion_rate_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['fusion_rate'][self.fusion_rate_celltype] = text
         self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
-        # print("\n\n >>>>   transformation_rate_changed:  text=",text)
         celltype_name = self.cell_transformation_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
-        # print(self.param_d[self.current_cell_def]['transformation_rate'])
 
     #--------------------------------------------------------
     # def immunogenicity_changed(self,text):
@@ -3640,7 +3586,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for celltype in self.celltypes_list:
                 self.physiboss_behaviours.append("adhesive affinity to " + celltype)
 
-            self.physiboss_behaviours += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+            self.physiboss_behaviours += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose apoptotic cell", "phagocytose necrotic cell", "phagocytose other dead cell"]
 
             for celltype in self.celltypes_list:
                 self.physiboss_behaviours.append("phagocytose " + celltype)
@@ -5985,20 +5931,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #---- in interactions subtab
     def live_phagocytosis_dropdown_changed_cb(self, idx):
-        # print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.live_phagocytosis_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['live_phagocytosis_celltype'] = celltype_name
         self.live_phagocytosis_celltype = celltype_name
-        # print("   self.live_phagocytosis_celltype = ",celltype_name)
 
         if self.live_phagocytosis_celltype in self.param_d[self.current_cell_def]["live_phagocytosis_rate"].keys():
             self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
         else:
             self.live_phagocytosis_rate.setText(self.default_sval)
-        # self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"]['differentiated'])
-        # print("self.param_d[self.current_cell_def]['live_phagocytosis_rate'] = ",self.param_d[self.current_cell_def]['live_phagocytosis_rate'])
 
         if idx == -1:
             return
@@ -6707,24 +6646,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         logging.debug(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
         # print(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
         sval = self.default_sval
-        self.param_d[cdname_new]["dead_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["apoptotic_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["necrotic_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["other_dead_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["damage_rate"] = '1.0'
-
-        # self.param_d[cdname]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
-        # for cdname2 in self.param_d.keys():  
-        #     print('cdname2= ',cdname2)
-        #     self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-        #     self.param_d[cdname]['attack_rate'][cdname2] = sval
-        #     self.param_d[cdname]['fusion_rate'][cdname2] = sval
-        #     self.param_d[cdname]['transformation_rate'][cdname2] = sval
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
-                # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
                 for cdname2 in self.param_d.keys():    # for each cell def
-                    # print('cdname2= ',cdname2)
                     if (cdname == cdname_new) or (cdname2 == cdname_new): 
-                    # if (cdname == cdname_new):   #rwh 8/24/23
                         self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
                         self.param_d[cdname]['attack_rate'][cdname2] = sval
                         self.param_d[cdname]['fusion_rate'][cdname2] = sval
@@ -7151,9 +7081,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     def update_interaction_params(self):
-        # print("------ update_interaction_params():")
         cdname = self.current_cell_def
-        self.dead_phagocytosis_rate.setText(self.param_d[cdname]["dead_phagocytosis_rate"])
+        self.apoptotic_phagocytosis_rate.setText(self.param_d[cdname]["apoptotic_phagocytosis_rate"])
+        self.necrotic_phagocytosis_rate.setText(self.param_d[cdname]["necrotic_phagocytosis_rate"])
+        self.other_dead_phagocytosis_rate.setText(self.param_d[cdname]["other_dead_phagocytosis_rate"])
         self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
 
         if self.live_phagocytosis_celltype in self.param_d[cdname]["live_phagocytosis_rate"].keys():
@@ -7371,22 +7302,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
-        # print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
-        # cdname = it.text(0)
-        # if col > 0:  # only allow editing cell type name, not ID
-            # return
-        # self.current_cell_def = it.text(col)
         self.current_cell_def = it.text(0)
-        # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
-
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
 
         # fill in the GUI with this cell def's params
-
-        # self.live_phagocytosis_celltype = self.current_cell_def
 
         self.update_cycle_params()
         self.update_death_params()
@@ -8123,8 +8041,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         interactions.text = self.indent12  # affects indent of child
         interactions.tail = "\n" + self.indent10
 
-        subelm = ET.SubElement(interactions, "dead_phagocytosis_rate",{"units":self.default_rate_units})
-        subelm.text = self.param_d[cdef]["dead_phagocytosis_rate"]
+        subelm = ET.SubElement(interactions, "apoptotic_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["apoptotic_phagocytosis_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "necrotic_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["necrotic_phagocytosis_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "other_dead_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["other_dead_phagocytosis_rate"]
         subelm.tail = self.indent12
 
         #-----
@@ -8133,7 +8059,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         lpr.tail = "\n" + self.indent12
 
         logging.debug(f'--- live_phagocytosis_rate= {self.param_d[cdef]["live_phagocytosis_rate"]}')
-        # print("live_phagocytosis_rate keys=",self.param_d[cdef]['live_phagocytosis_rate'].keys())
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
             logging.debug(f'  key in live_phagocytosis_rate= {key}')
             print(f'  key in live_phagocytosis_rate= {key}')
