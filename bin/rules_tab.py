@@ -1321,7 +1321,7 @@ class Rules(QWidget):
                             self.fill_rule_row(irow, elm)
 
                         if elm[self.rules_response_idx] == "damage rate" and hasattr(self.celldef_tab, "pre_v1_14_0_damage_rate") and self.celldef_tab.pre_v1_14_0_damage_rate:
-                            elm[self.rules_response_idx] = "attack damage rate"
+                            self.rules_table.cellWidget(irow, self.rules_response_idx).setText("attack damage rate")
                             msg = "\"damage rate\" no longer refers to the rate of damage dealt, but rather the rate at which damage accumulates in the given cell type."
                             msg += f"\n{elm[0]} had a rule affecting \"damage rate\" that has been replaced with \"attack damage rate\" to fit the new version."
                             msg += "\nThis is because \"damage rate\" was found in the config file where \"attack damage rate\" is now used."
