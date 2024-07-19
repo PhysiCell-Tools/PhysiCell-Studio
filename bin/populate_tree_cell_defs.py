@@ -1178,6 +1178,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["necrotic_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["other_dead_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = '1.0'
+                cell_def_tab.param_d[cell_def_name]["attack_duration"] = '0.1'
+                cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = '0.0'
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
@@ -1203,23 +1206,20 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         dead_phagocytosis_rates[index] = cep.find(name).text
                     cell_def_tab.param_d[cell_def_name][name] = dead_phagocytosis_rates[index]
 
-                try:  # pre 1.14.0
+                cell_def_tab.pre_v1_14_0_damage_rate = cep.find("damage_rate") is not None
+                if cell_def_tab.pre_v1_14_0_damage_rate:
                     val = cep.find("damage_rate").text
-                    # cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
-                    cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = val  # change tag - 1.14.0
-                except:
-                    try:
-                        val = cep.find("attack_damage_rate").text
-                        cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = val
-                    except:
-                        print("\nError: missing damage_rate or attack_damage_rate in XML")
-                        sys.exit()
+                elif cep.find("attack_damage_rate") is not None: # change tag - 1.14.0
+                    val = cep.find("attack_damage_rate").text
+                else: # no attack damage rate found, default to 1.0
+                    val = '1.0'
+                cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = val
 
-                try:  # 1.14.0
+                if cep.find("attack_duration") is not None:  # 1.14.0
                     val = cep.find("attack_duration").text
-                    cell_def_tab.param_d[cell_def_name]["attack_duration"] = val
-                except:  # default, if missing, e.g., pre-1.14.0
-                    cell_def_tab.param_d[cell_def_name]["attack_duration"] = "0.1"
+                else:
+                    val = '0.1'
+                cell_def_tab.param_d[cell_def_name]["attack_duration"] = val
 
                 uep2 = uep.find(cell_interactions_path + "//live_phagocytosis_rates")
                 logging.debug(f'uep2= {uep2}')
