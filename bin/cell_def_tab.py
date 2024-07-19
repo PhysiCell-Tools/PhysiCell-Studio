@@ -3324,10 +3324,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.damage_rate = QLineEdit_color()
-        self.damage_rate.textChanged.connect(self.damage_rate_changed)
-        self.damage_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.attack_damage_rate = QLineEdit_color()
+        self.attack_damage_rate.textChanged.connect(self.attack_damage_rate_changed)
+        self.attack_damage_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.attack_damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
@@ -3394,6 +3394,41 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("damage rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.damage_rate = QLineEdit_color()
+        self.damage_rate.textChanged.connect(self.damage_rate_changed)
+        self.damage_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("damage repair rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.damage_repair_rate = QLineEdit_color()
+        self.damage_repair_rate.textChanged.connect(self.damage_repair_rate_changed)
+        self.damage_repair_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.damage_repair_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
 
         #------
         # label = QLabel("immunogenicity")
@@ -3478,8 +3513,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         celltype_name = self.attack_rate_dropdown.currentText()
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
     #--------------------------------------------------------
-    def damage_rate_changed(self,text):
-        self.param_d[self.current_cell_def]['damage_rate'] = text
+    def attack_damage_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['attack_damage_rate'] = text
     #--------------------------------------------------------
     def attack_duration_changed(self,text):
         self.param_d[self.current_cell_def]['attack_duration'] = text
@@ -3491,6 +3526,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def transformation_rate_changed(self,text):
         celltype_name = self.cell_transformation_dropdown.currentText()
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+    #--------------------------------------------------------
+    def damage_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['damage_rate'] = text
+    #--------------------------------------------------------
+    def damage_repair_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['damage_repair_rate'] = text
 
     #--------------------------------------------------------
     # def immunogenicity_changed(self,text):
@@ -6669,8 +6710,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["apoptotic_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["necrotic_phagocytosis_rate"] = sval
         self.param_d[cdname_new]["other_dead_phagocytosis_rate"] = sval
-        self.param_d[cdname_new]["damage_rate"] = '1.0'
+        self.param_d[cdname_new]["attack_damage_rate"] = '1.0'
         self.param_d[cdname_new]["attack_duration"] = '0.1'
+        # <cell_integrity>
+        self.param_d[cdname_new]["damage_rate"] = '0.0'
+        self.param_d[cdname_new]["damage_repair_rate"] = '0.0'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
@@ -7106,7 +7150,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.apoptotic_phagocytosis_rate.setText(self.param_d[cdname]["apoptotic_phagocytosis_rate"])
         self.necrotic_phagocytosis_rate.setText(self.param_d[cdname]["necrotic_phagocytosis_rate"])
         self.other_dead_phagocytosis_rate.setText(self.param_d[cdname]["other_dead_phagocytosis_rate"])
-        self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
+        self.attack_damage_rate.setText(self.param_d[cdname]["attack_damage_rate"])
         self.attack_duration.setText(self.param_d[cdname]["attack_duration"])
 
         if self.live_phagocytosis_celltype in self.param_d[cdname]["live_phagocytosis_rate"].keys():
@@ -7128,6 +7172,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.transformation_rate.setText(self.param_d[cdname]["transformation_rate"][self.transformation_rate_celltype])
         else:
             self.transformation_rate.setText(self.default_sval)
+
+        self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
+        self.damage_repair_rate.setText(self.param_d[cdname]["damage_repair_rate"])
 
     #-----------------------------------------------------------------------------------------
     def missing_boolean_info_popup(self, dups_dict):
@@ -8112,8 +8159,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm.tail = self.indent18
 
         #-----
-        subelm = ET.SubElement(interactions, "damage_rate",{"units":self.default_rate_units})
-        subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm = ET.SubElement(interactions, "attack_damage_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["attack_damage_rate"]
         subelm.tail = self.indent12
 
         subelm = ET.SubElement(interactions, "attack_duration",{"units":self.default_time_units})
@@ -8154,6 +8201,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
+
+        #-----
+        integrity = ET.SubElement(pheno, "cell_integrity")
+        integrity.text = self.indent12  # affects indent of child
+        integrity.tail = "\n" + self.indent10
+
+        subelm = ET.SubElement(integrity, "damage_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(integrity, "damage_repair_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["damage_repair_rate"]
+        subelm.tail = self.indent12
 
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML

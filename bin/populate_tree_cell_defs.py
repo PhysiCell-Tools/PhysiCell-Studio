@@ -1177,7 +1177,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["apoptotic_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["necrotic_phagocytosis_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["other_dead_phagocytosis_rate"] = '0.0'
-                cell_def_tab.param_d[cell_def_name]["damage_rate"] = '1.0'
+                cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = '1.0'
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
@@ -1205,7 +1205,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                 try:  # pre 1.14.0
                     val = cep.find("damage_rate").text
-                    cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
+                    # cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
+                    cell_def_tab.param_d[cell_def_name]["attack_damage_rate"] = val  # change tag - 1.14.0
                 except:
                     try:
                         val = cep.find("attack_damage_rate").text
@@ -1290,6 +1291,33 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
+
+
+            # # --------- cell_integrity  
+            cell_integrity_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_integrity"
+            logging.debug(f'---- cell_integrity_path = {cell_integrity_path}')
+            print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
+            cip = uep.find(cell_integrity_path)
+            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+
+            if cip is None:
+                print("---- No cell_integrity found.")
+                # print("\nFor now, you need to manually enter these into your .xml\n")
+                # sys.exit(-1)
+                logging.debug(f'---- No cell_integrity found. Setting to default values')
+                print(f'---- No cell_integrity found. Setting to default values')
+                cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = '0.0'
+            else:
+                print(f"---- found cell_integrity for {cell_def_name}")
+                val = cip.find("damage_rate").text
+                cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
+                val = cip.find("damage_repair_rate").text
+                cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = val
+
+            logging.debug(f' damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
+            print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
+            logging.debug(f'------ done parsing cell_integrity:')
 
             # sys.exit(-1)
 
