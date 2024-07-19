@@ -1786,14 +1786,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
-
         #-----
-        # 	<model code="100" name="apoptosis"> 
-        # 	<death_rate units="1/min">2.1e-4</death_rate>  
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-        # 	</phase_transition_rates>
-
         label = QLabel("phase 0->1 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1835,19 +1828,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
-        # <phase_durations units="min">
-        #     <duration index="0" fixed_duration="true">516</duration>
 
         #-------------------
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-        # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1894,12 +1879,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_cytoplasmic_hbox.addWidget(units)
-        # self.vbox.addLayout(self.apoptosis_cytoplasmic_biomass_change_rate_hbox)
-
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
@@ -1957,12 +1936,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <model code="101" name="necrosis">
-        # 	<death_rate units="1/min">0.0</death_rate>
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
-        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
-        # 	</phase_transition_rates>
         label = QLabel("death rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2002,19 +1975,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
         #-----
-        # 	<model code="100" name="apoptosis"> 
-        # 	<death_rate units="1/min">2.1e-4</death_rate>  
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-        # 	</phase_transition_rates>
-
-        # <model code="101" name="necrosis">
-        # 	<death_rate units="1/min">0.0</death_rate>
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
-        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
-        # 	</phase_transition_rates>
-
         label = QLabel("phase 0->1 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2106,13 +2066,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-        # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2159,10 +2112,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
@@ -2231,10 +2180,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         death_tab_scroll.setWidget(death_tab) 
 
         death_tab.setLayout(glayout)
-        # death_tab.addWidget(death_tab_scroll)
-        # scroll_params.setLayout(glayout)
-        # death_tab.setLayout(scroll_params)
-        # return death_tab
         return death_tab_scroll
 
     #--------------------------------------------------------
@@ -2327,27 +2272,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.param_d[self.current_cell_def]['necrosis_duration_flag'] = self.necrosis_duration_flag
 
-    #-------
-
-    # def apop_death_rate_changed(self, text):
-    #     print("----- apop_death_rate_changed: self.current_cell_def = ",self.current_cell_def)
-    #     self.param_d[self.current_cell_def]["apop_death_rate"] = text
-    # def apop_phase0_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_phase0"] = text
-
-    # def apop_unlysed_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_unlysed"] = text
-    # def apop_lysed_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_lysed"] = text
-    # def apop_cyto_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_cyto"] = text
-    # def apop_nuclear_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_nuclear"] = text
-    # def apop_calcif_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_calcif"] = text
-    # def apop_rupture_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_rupture"] = text
-
     #--------------------------------------------------------
     def create_volume_tab(self):
         volume_tab = QWidget()
@@ -2369,30 +2293,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: volume")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-
-        # <total units="micron^3">2494</total>
-        # <fluid_fraction units="dimensionless">0.75</fluid_fraction>
-        # <nuclear units="micron^3">540</nuclear>
 
         label = QLabel("total")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr = 0
-        # self.volume_total_hbox.addWidget(label)
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_total = QLineEdit_color()
         self.volume_total.textChanged.connect(self.volume_total_changed)
         self.volume_total.setValidator(QtGui.QDoubleValidator())
-        # self.volume_total_hbox.addWidget(self.volume_total)
         glayout.addWidget(self.volume_total, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron^3")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.volume_total_hbox.addWidget(units)
-        # vlayout.addLayout(self.volume_total_hbox)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #---
@@ -2429,10 +2344,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
-        # <fluid_change_rate units="1/min">0.05</fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
-
         #---
         label = QLabel("fluid change rate")
         label.setFixedWidth(self.label_width)
@@ -2485,8 +2396,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
         #---
-        # <calcified_fraction units="dimensionless">0</calcified_fraction>
-        # <calcification_rate units="1/min">0</calcification_rate>
         label = QLabel("calcification fraction")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2587,9 +2496,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-    # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
-    # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
-    # <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
         label = QLabel("cell-cell adhesion strength")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2627,42 +2533,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #-----
         # self.new_stuff = False
         self.new_stuff = True
-        # label = QLabel("cell-BM adhesion strength")
-        # label.setEnabled(self.new_stuff)
-        # label.setFixedWidth(self.label_width)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idr += 1
-        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        # self.cell_bm_adhesion_strength = QLineEdit_color()
-        # self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
-        # self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
-        # glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.cell_bm_adhesion_strength.setEnabled(self.new_stuff)
-
-        # units = QLabel("micron/min")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # #---
-        # label = QLabel("cell-BM repulsion strength")
-        # label.setEnabled(self.new_stuff)
-        # label.setFixedWidth(self.label_width)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idr += 1
-        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        # self.cell_bm_repulsion_strength = QLineEdit_color()
-        # self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
-        # self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
-        # glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.cell_bm_repulsion_strength.setEnabled(self.new_stuff)
-
-        # units = QLabel("micron/min")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #---
         label = QLabel("relative max adhesion distance")
@@ -2698,11 +2568,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_adhesion_affinity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
-        #---
-    # <options>
-    #     <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
-    #     <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
-    # </options>
         label = QLabel("Options:")
         label.setFixedSize(80,20)
         label.setStyleSheet("background-color: orange")
@@ -2726,11 +2591,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_relative_equilibrium_distance_enabled = QCheckBox_custom("enable")
         self.set_relative_equilibrium_distance_enabled.clicked.connect(self.set_relative_equilibrium_distance_enabled_cb)
         glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # units = QLabel("")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #--------
         label = QLabel("absolute equilibrium distance")
@@ -2852,13 +2712,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: motility")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-        # self.vbox.addWidget(QHLine())
 
-        #---
-        # <speed units="micron/min">1</speed>
-        # <persistence_time units="min">1</persistence_time>
-        # <migration_bias units="dimensionless">.75</migration_bias>
         label = QLabel("speed")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2911,15 +2765,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
-        # <options>
-        #     <enabled>false</enabled>
-        #     <use_2D>true</use_2D>
-        #     <chemotaxis>
-        #         <enabled>false</enabled>
-        #         <substrate>virus</substrate>
-        #         <direction>1</direction>
-        #     </chemotaxis>
-        # </options>
         #---
         self.motility_enabled = QCheckBox_custom("enable motility")
         self.motility_enabled.clicked.connect(self.motility_enabled_cb)
@@ -2956,16 +2801,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
         # self.motility_substrate_dropdown.addItem("oxygen")
 
-        # self.chemotaxis_direction_positive = QCheckBox_custom("up gradient (+1)")
-        # glayout.addWidget(self.chemotaxis_direction_positive, idr,1, 1,1) # w, row, column, rowspan, colspan
-
         self.chemotaxis_direction_towards = QRadioButton("towards")
         self.chemotaxis_direction_towards.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addLayout(self.chemotaxis_direction_towards, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.chemotaxis_direction_against = QRadioButton("against")
         self.chemotaxis_direction_against.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addWidget(self.chemotaxis_direction_against, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.chemotaxis_direction_towards)
@@ -2978,18 +2818,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         radio_frame.setFixedWidth(170)  # omg
         glayout.addWidget(radio_frame, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        #---
-            # <advanced_chemotaxis>
-            #     <enabled>false</enabled>
-            #     <normalize_each_gradient>false</normalize_each_gradient>
-            #     <chemotactic_sensitivities>
-            #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="toxin">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="quorum">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="pro-inflammatory">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="debris">0</chemotactic_sensitivity> 
-            #     </chemotactic_sensitivities>
-            #   </advanced_chemotaxis>
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,2) # w, row, column, rowspan, colspan
 
@@ -3064,49 +2892,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: secretion")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-
-        # <substrate name="virus">
-        #     <secretion_rate units="1/min">0</secretion_rate>
-        #     <secretion_target units="substrate density">1</secretion_target>
-        #     <uptake_rate units="1/min">10</uptake_rate>
-        #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-        # </substrate> 
-        
-        # <substrate name="interferon">
-        #     <secretion_rate units="1/min">0</secretion_rate>
-        #     <secretion_target units="substrate density">1</secretion_target>
-        #     <uptake_rate units="1/min">0</uptake_rate>
-        #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-        # </substrate> 
-
-        # cycle_path = ".//cell_definition[" + str(idx_current_cell_def) + "]//phenotype//cycle"
-        # phase_transition_path = cycle_path + "//phase_transition_rates"
-        # print(' >> phase_transition_path ')
-        # pt_uep = uep.find(phase_transition_path)
-
-        # self.secretion_substrate_dropdown = QComboBox()
-        # self.secretion_substrate_dropdown.setFixedWidth(300)
-        # self.secretion_substrate_dropdown.currentIndexChanged.connect(self.secretion_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
-
-
-        # self.uep_cell_defs = self.xml_root.find(".//cell_definitions")
-        # print('self.uep_cell_defs= ',self.uep_cell_defs)
-        # # secretion_path = ".//cell_definition[" + str(idx_current_cell_def) + "]//phenotype//secretion//"
-        # uep_secretion = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//secretion")
-        # print('uep_secretion = ',uep_secretion )
-        # # vp = []   # pointers to <variable> nodes
-        # if self.uep_cell_defs:
-        #     # uep = self.xml_root.find('.//secretion')  # find unique entry point
-        #     idx = 0
-        #     for sub in uep_secretion.findall('substrate'):
-        #         # vp.append(var)
-        #         print(idx,") -- secretion substrate = ",sub.attrib['name'])
-        #         idx += 1
-
-        # label = QLabel("oxygen")
-        # label.setStyleSheet('background-color: lightgreen')
-        # label.setFixedWidth(150)
-        # self.vbox.addWidget(label)
 
         self.secretion_substrate_dropdown = QComboBox()
         self.secretion_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
@@ -3429,7 +3214,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
-
         #------
         # label = QLabel("immunogenicity")
         # label.setFixedWidth(self.label_width)
@@ -3465,7 +3249,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.reset_interaction_button, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        for idx in range(11):  # rwh: hack solution to align rows
+        # self.insert_hacky_blank_lines(glayout)
+        for idx in range(7):  # rwh: hack solution to align rows
             blank_line = QLabel("")
             idr += 1
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -3475,12 +3260,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         interaction_tab.setLayout(glayout)
 
         return interaction_tab
-
-    #--------------------------------------------------------
-    # def enable_interaction_callbacks(self):
-    #     print("----- enable_interaction_callbacks()")
-    #     self.transformation_rate.textChanged.connect(self.transformation_rate_changed)
-    #     self.cell_transformation_dropdown.currentIndexChanged.connect(self.cell_transformation_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
     #--------------------------------------------------------
     def reset_interaction_cb(self):
