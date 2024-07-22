@@ -2532,6 +2532,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        ### cell-bm interactions; save for later (db: 2024-05-31)
         #-----
         # self.new_stuff = False
         self.new_stuff = True
@@ -2570,6 +2571,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_adhesion_affinity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
+        #---
         label = QLabel("Options:")
         label.setFixedSize(80,20)
         label.setStyleSheet("background-color: orange")
@@ -2621,7 +2623,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         label = QLabel("elastic constant")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2631,16 +2632,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.elastic_constant.setEnabled(self.new_stuff)
+        self.elastic_constant.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-
+        #--
         label = QLabel("attachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2650,7 +2650,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.attachment_rate.setEnabled(self.new_stuff)
+        self.attachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
@@ -2659,7 +2659,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #--
         label = QLabel("detachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2669,12 +2668,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.detachment_rate.setEnabled(self.new_stuff)
+        self.detachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #--
+        label = QLabel("maximum number of attachments")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.max_num_attachments = QLineEdit_color()
+        self.max_num_attachments.textChanged.connect(self.max_num_attachments_changed)
+        self.max_num_attachments.setValidator(QtGui.QIntValidator(bottom=0))
+        glayout.addWidget(self.max_num_attachments, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.max_num_attachments.setEnabled(True)
 
         #---------
         idr += 1
@@ -2715,6 +2727,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
+        #---
         label = QLabel("speed")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -4980,6 +4993,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['mechanics_attachment_rate'] = text
     def detachment_rate_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_detachment_rate'] = text
+    def max_num_attachments_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_max_num_attachments'] = text
 
     # insert callbacks for QCheckBoxes
     def set_relative_equilibrium_distance_enabled_cb(self,bval):
@@ -6479,6 +6494,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_elastic_constant"] = '0.01'
         self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
+        self.param_d[cdname_new]["mechanics_max_num_attachments"] = '12'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
@@ -6863,6 +6879,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
         self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
         self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
+        self.max_num_attachments.setText(self.param_d[cdname]["mechanics_max_num_attachments"])
 
 
     #-----------------------------------------------------------------------------------------
@@ -7781,6 +7798,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         elm = ET.SubElement(mechanics, 'detachment_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_detachment_rate"]
+        elm.tail = self.indent10
+
+        elm = ET.SubElement(mechanics, 'maximum_number_of_attachments')
+        elm.text = self.param_d[cdef]["mechanics_max_num_attachments"]
         elm.tail = self.indent10
 
     #-------------------------------------------------------------------
