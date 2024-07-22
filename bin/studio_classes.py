@@ -98,23 +98,28 @@ class QLineEdit_custom(QLineEdit):
         """
 
 class DoubleValidatorWidgetBounded(QValidator):
+    # a validator that uses other widgets to set the bounds of a QDoubleValidator
     def __init__(self, bottom=None, top=None, bottom_transform=lambda x: x, top_transform=lambda x: x):
         super().__init__()
         # check if bottom is widget or double
         self.qdouble_validator = QDoubleValidator()
         if isinstance(bottom, QWidget):
+            # then just record the info so the validator can access later
             self.bottom = bottom
             self.bottom_fn = bottom_transform
         else:
+            # then just a normal bottom bound: transform if desired and set. then reset bottom and bottom_fn to None so they are not used later
             if bottom_transform is not None:
                 bottom = bottom_transform(bottom)
             self.qdouble_validator.setBottom(bottom)
             self.bottom = None
             self.bottom_fn = None
         if isinstance(top, QWidget):
+            # then just record the info so the validator can access later
             self.top = top
             self.top_fn = top_transform
         else:
+            # then just a normal top bound: transform if desired and set. then reset top and top_fn to None so they are not used later
             if top_transform is not None:
                 top = top_transform(top)
             self.qdouble_validator.setTop(top)
@@ -126,25 +131,38 @@ class DoubleValidatorWidgetBounded(QValidator):
         if text == "":
             return QValidator.Intermediate, text, pos
 
-        self.validate_bound('bottom', text, pos)
-        self.validate_bound('top', text, pos)
+        result_bottom = self.validate_bound('bottom', text, pos)
+        if result_bottom is not None:
+            return result_bottom
+        result_top = self.validate_bound('top', text, pos)
+        if result_top is not None:
+            return result_top
 
         return self.qdouble_validator.validate(text, pos)
 
     def validate_bound(self, bound_name, text, pos):
         bound = getattr(self, bound_name, None)
-        if bound is not None:
-            bound_text = bound.text()
-            if bound_text != "":
-                try:
-                    new_bound = getattr(self, f'{bound_name}_fn')(float(bound_text))
-                except Exception as e:
-                    print(f"Invalid value for {bound_name} in DoubleValidatorWidgetBounded: {e}")
-                    return QValidator.Intermediate, text, pos
-                if new_bound != new_bound:
-                    print(f"Invalid value for {bound_name} in DoubleValidatorWidgetBounded: {new_bound}")
-                    return QValidator.Intermediate, text, pos
-                getattr(self.qdouble_validator, f'set{bound_name.capitalize()}')(new_bound)
+        if bound is None:
+            return
+        
+        bound_text = bound.text()
+        if bound_text == "":
+            return
+        
+        try:
+            # if bound is a widget, then call the transform function on the text
+            new_bound = getattr(self, f'{bound_name}_fn')(float(bound_text))
+        except Exception as e:
+            print(f"Invalid value for {bound_name} in DoubleValidatorWidgetBounded: {e}")
+            return QValidator.Intermediate, text, pos
+
+        if new_bound != new_bound:
+            # then new_bound is nan
+            print(f"Invalid value for {bound_name} in DoubleValidatorWidgetBounded: {new_bound}")
+            return QValidator.Intermediate, text, pos
+
+        getattr(self.qdouble_validator, f'set{bound_name.capitalize()}')(new_bound)
+        
 
 
 class AttackRateValidator(QValidator):

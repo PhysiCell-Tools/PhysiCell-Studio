@@ -1797,7 +1797,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_trate01 = QLineEdit()
-        # self.apoptosis_trate01 = QLineEdit_color()
         self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
         self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -3097,7 +3096,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        self.immunogenicity_dropdown = None
         if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
             validator = AttackRateValidator(self)
         else:
