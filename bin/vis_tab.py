@@ -58,6 +58,33 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+#-----------------------------
+#   Future idea of floating Plot window
+class MainPlotWindow(QWidget):
+    def __init__(self, canvas):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("Plot")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        # self.canvas = FigureCanvasQTAgg(self.figure)
+        # self.canvas.setStyleSheet("background-color:transparent;")
+        # self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        # self.layout.addWidget(self.canvas)
+        self.layout.addWidget(canvas)
+
+        # self.close_button = QPushButton("Close")
+        # self.close_button.setStyleSheet("background-color: lightgreen;")
+        # # self.close_button.setFixedWidth(150)
+        # self.close_button.clicked.connect(self.close_plot_cb)
+        # self.layout.addWidget(self.close_button)
+
+        self.setLayout(self.layout)
+
+        # self.hide()
+        # self.show()
+
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
@@ -232,7 +259,14 @@ class Vis(VisBase, QWidget):
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
-        self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
+        self.scroll_plot.setWidget(self.canvas) # for an embedded Plot window (not floating)
+
+        # -- future idea of [optional] floating Plot window
+        # self.plot_win = None
+        # self.plot_win = MainPlotWindow(self.canvas)
+        # self.plot_win.show()
+
+        # self.plot_w.setWidget(self.canvas) # self.config_params = QWidget()
 
     #--------------------------------------
     # def aspect_11_cb(self,bval):
@@ -259,6 +293,7 @@ class Vis(VisBase, QWidget):
         # total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         xvals = mcds.get_cell_df()['position_x']
+        # print("type(xvals)= ",type(xvals))
         yvals = mcds.get_cell_df()['position_y']
         cell_types = mcds.get_cell_df()["cell_type"]
         # print("len(xvals)=",len(xvals))
@@ -267,9 +302,12 @@ class Vis(VisBase, QWidget):
         # print("self.celltype_name=",self.celltype_name)
         csv_file = open("snap.csv", "w")
         csv_file.write("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n")
-        for idx in range(len(xvals)):
-            # print(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}')
-            csv_file.write(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}\n')
+        try:
+            for xv, yv, ct in zip(xvals, yvals, cell_types):  # DON'T do sequential idx
+                # print(f'{xv},{yv},{self.celltype_name[int(ct)]}')
+                csv_file.write(f'{xv},{yv},0.0,{self.celltype_name[int(ct)]}\n')
+        except:
+            print("\nvis_tab.py:-------- Error writing snap.csv file")
         csv_file.close()
 
     #--------------------------------------
