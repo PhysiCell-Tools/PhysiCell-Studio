@@ -44,6 +44,10 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                 {
                     background-color:lightgray;
                 }
+                QCheckBox:indicator:disabled
+                {
+                    background-color:lightgray;
+                }
                 """
         self.setStyleSheet(checkbox_style)
 
