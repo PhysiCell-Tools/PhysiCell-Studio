@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHB
 # from PyQt5.QtWidgets import QMessageBox
 
 from studio_classes import QCheckBox_custom
+from studio_functions import style_sheet_template
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
@@ -31,22 +32,12 @@ class Config(QWidget):
 
         self.studio_flag = studio_flag
         self.vis_tab = None
+        self.ics_tab = None
 
         self.xml_root = None
 
         self.sync_output = True
 
-        style_sheet_template = lambda widget_class: f"""
-            {widget_class.__name__}:disabled {{
-                background-color: lightgray;
-                color: black;
-            }}
-            {widget_class.__name__}:enabled {{
-                background-color: white;
-                color: black;
-            }}
-            """
-        
         self.substrate_list = []
 
         self.update_max_time_flag = True # flag to stop recursive QSpinBox updates
@@ -1010,7 +1001,7 @@ class Config(QWidget):
         self.substrate_list.append(sub_name)
         self.svg_substrate_to_plot_dropdown.addItem(sub_name)
 
-    def delete_substrate(self, item_idx, new_substrate):
+    def delete_substrate(self, item_idx):
         subname = self.svg_substrate_to_plot_dropdown.itemText(item_idx)
         self.substrate_list.remove(subname)
         self.svg_substrate_to_plot_dropdown.removeItem(item_idx)
