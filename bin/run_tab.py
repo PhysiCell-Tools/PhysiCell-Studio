@@ -133,7 +133,7 @@ class RunModel(QWidget):
     # replicate what we do in the "save" function in the main module
     def update_xml_from_gui(self):
         if not self.user_params_tab.validate_utable():
-            self.show_error_message(self, "run_tab.py update_xml_from_gui(): Error: invalid user params table.")
+            self.show_error_message("run_tab.py: update_xml_from_gui(): Error: invalid user params table.")
             self.enable_run(True)
             return False
 
@@ -205,7 +205,10 @@ class RunModel(QWidget):
                     self.output_dir = self.config_tab.folder.text()
                     os.system('rm -rf ' + self.output_dir)
                     logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
-                    os.makedirs(self.output_dir)  # do 'mkdir output_dir'
+                    try:
+                        os.makedirs(self.output_dir)  # do 'mkdir output_dir'
+                    except:
+                        pass
                     time.sleep(1)
                     tdir = os.path.abspath(self.output_dir)
 
@@ -271,6 +274,7 @@ class RunModel(QWidget):
                 # self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
                 self.message("Executing process")
                 self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
+                self.p.errorOccurred.connect(self.error_cb)
                 self.p.readyReadStandardOutput.connect(self.handle_stdout)
                 self.p.readyReadStandardError.connect(self.handle_stderr)
                 self.p.stateChanged.connect(self.handle_state)
@@ -279,6 +283,7 @@ class RunModel(QWidget):
                 exec_str = self.exec_name.text()
                 xml_str = self.config_xml_name.text()
                 print("\n--- run_tab:  xml_str before run is ",xml_str)
+                print("--- run_tab:  exec_str before run is ",xml_str)
                 if self.nanohub_flag:
                     self.p.start("submit",["--local",exec_str,xml_str])
                 else:
@@ -299,7 +304,20 @@ class RunModel(QWidget):
             self.show_error_message(str(e) + " : run_cb(): Error: Please finish the definition before running.")
             self.run_button.setEnabled(True)
 
-
+    def error_cb(self, error):
+        print("\n\nERROR : QProcess failed !")
+        errorMessage = {
+            QProcess.FailedToStart: "The process failed to start",
+            QProcess.Crashed: "The process crashed some time after starting successfully.",
+            QProcess.Timedout: "The last waitFor…() function timed out. The state of QProcess is unchanged, and you can try calling waitFor…() again.",
+            QProcess.WriteError: "An error occurred when attempting to write to the process. For example, the process may not be running, or it may have closed its input channel.",
+            QProcess.ReadError: "An error occurred when attempting to read from the process. For example, the process may not be running.",
+            QProcess.UnknownError: "An unknown error occurred. This is the default return value of error()"
+        }
+        print(errorMessage[error])
+        print("Detailed logs : ", self.p.errorString())
+        print("\n\n")
+        
     def cancel_model_cb(self):
         # logging.debug(f'===========  cancel_model_cb():  ============')
         if self.p:  # process running.

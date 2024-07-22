@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QDoubleValidator #, QTreeWidgetItemIterator
+from PyQt5.QtGui import QIcon, QDoubleValidator
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
@@ -152,10 +152,11 @@ class SubstrateDef(QWidget):
         # self.copy_button.setFixedWidth(bwidth)
         tree_w_hbox.addWidget(self.copy_button)
 
-        self.delete_button = QPushButton("Delete")
+        self.delete_button = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
         self.delete_button.clicked.connect(self.delete_substrate)
         self.delete_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        # self.delete_button.setFixedWidth(bwidth)
+        del_btn_width = 50
+        self.delete_button.setFixedWidth(del_btn_width)
         tree_w_hbox.addWidget(self.delete_button)
 
 
@@ -483,6 +484,8 @@ class SubstrateDef(QWidget):
         # self.layout.addWidget(self.scroll_area)
         self.layout.addWidget(splitter)
 
+        self.new_substrate_count = self.config_tab.count_substrates()
+
         # self.layout.addWidget(self.vbox)
 
         # self.layout.addWidget(self.text)
@@ -614,7 +617,13 @@ class SubstrateDef(QWidget):
     # @QtCore.Slot()
     def new_substrate(self):
         # print('------ new_substrate')
-        subname = "substrate%02d" % self.new_substrate_count
+        while True:
+            subname = "substrate%02d" % self.new_substrate_count
+            if subname in self.config_tab.substrate_list:
+                self.new_substrate_count += 1
+            else:
+                break
+            
         # Make a new substrate (that's a copy of the currently selected one)
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
 

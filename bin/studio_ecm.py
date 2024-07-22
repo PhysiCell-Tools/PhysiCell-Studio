@@ -78,7 +78,7 @@ def quit_cb():
 
   
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag, pytest_flag, biwt_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         if ecm_flag:
             from vis_tab_ecm import Vis 
@@ -105,6 +105,8 @@ class PhysiCellXMLCreator(QWidget):
         self.tensor_flag = tensor_flag 
         self.nanohub_flag = nanohub_flag 
         self.ecm_flag = ecm_flag 
+        self.pytest_flag = pytest_flag 
+        self.biwt_flag = biwt_flag
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
         self.rules_tab_index = None
@@ -256,7 +258,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef()
+        self.celldef_tab = CellDef(self.pytest_flag)
         self.celldef_tab.xml_root = self.xml_root
         if is_movable_flag:
             self.celldef_tab.is_movable_w.setEnabled(True)
@@ -339,7 +341,7 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             logging.debug(f'studio.py: creating ICs, Run, and Plot tabs')
-            self.ics_tab = ICs(self.config_tab, self.celldef_tab)
+            self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.biwt_flag)
             self.ics_tab.fill_celltype_combobox()
             self.ics_tab.reset_info()
 
@@ -1315,6 +1317,8 @@ def main():
     skip_validate_flag = False
     nanohub_flag = False
     is_movable_flag = False
+    pytest_flag = False
+    biwt_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Studio.')
 
@@ -1327,6 +1331,7 @@ def main():
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
         parser.add_argument("-c", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e", "--exec", type=str, help="executable model")
+        parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
 
         exec_file = 'project'  # for template sample
 
@@ -1393,6 +1398,8 @@ def main():
             else:
                 print("exec_file is NOT valid: ", args.exec)
                 sys.exit()
+        if args.biwt_flag:
+            biwt_flag = True
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
@@ -1466,7 +1473,7 @@ def main():
             # print("Warning: Rules module not found.\n")
 
     # print("calling PhysiCellXMLCreator with rules_flag= ",rules_flag)
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, ecm_flag, pytest_flag, biwt_flag)
     print("size=",ex.size())  # = PyQt5.QtCore.QSize(1100, 770)
     # ex.setFixedWidth(1101)  # = PyQt5.QtCore.QSize(1100, 770)
     # print("width=",ex.size())
