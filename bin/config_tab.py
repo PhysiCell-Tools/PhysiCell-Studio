@@ -16,29 +16,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                """
-        self.setStyleSheet(checkbox_style)
+from studio_classes import QCheckBox_custom
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
@@ -58,24 +36,17 @@ class Config(QWidget):
 
         self.sync_output = True
 
-        qlineedit_style = """
-        QLineEdit: disabled {
-            background-color:#ff0000;
-        }
-
-        QLineEdit: enabled {
-            background-color:#ffffff;
-        }
-        """
-        self.setStyleSheet(qlineedit_style)
-
-        self.combobox_stylesheet = """ 
-            QComboBox{
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
+        style_sheet_template = lambda widget_class: f"""
+            {widget_class.__name__}:disabled {{
+                background-color: lightgray;
+                color: black;
+            }}
+            {widget_class.__name__}:enabled {{
+                background-color: white;
+                color: black;
+            }}
             """
-
+        
         self.substrate_list = []
 
         self.update_max_time_flag = True # flag to stop recursive QSpinBox updates
@@ -261,12 +232,6 @@ class Config(QWidget):
 
         self.config_tab_layout.addWidget(self.minute_fraction_spin_box,idx_row,6,1,1)
 
-        # add_day_btn = QPushButton("+ 1 day")
-        # add_day_btn.setFixedWidth(100)
-        # add_day_btn.setStyleSheet("background-color: lightgreen; color: black")
-        # add_day_btn.clicked.connect(self.add_day_cb)
-        # self.config_tab_layout.addWidget(add_day_btn, idx_row,3,1,1) # w, row, column, rowspan, colspan
-
         label = QLabel("Diffusion dt")
         label.setAlignment(QtCore.Qt.AlignRight)
         idx_row += 1
@@ -315,19 +280,6 @@ class Config(QWidget):
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
-        # label = QLabel("Max Time")
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idx_row += 1
-        # self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
-
-        # self.max_time = QLineEdit()
-        # self.max_time.setValidator(QtGui.QDoubleValidator())
-        # self.config_tab_layout.addWidget(self.max_time, idx_row,1,1,1) # w, row, column, rowspan, colspan
-
-        # label = QLabel("min")
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        # self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
-
         #----------
         label = QLabel("# threads")
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -348,16 +300,6 @@ class Config(QWidget):
         if self.nanohub_flag:
             self.folder.setEnabled(False)
         self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
-        # self.folder.textChanged.connect(self.folder_name_cb)
-
-        # if self.studio_flag:
-        #     label = QLabel("Plot/Legend folder")
-        #     label.setAlignment(QtCore.Qt.AlignRight)
-        #     self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
-
-        #     self.plot_folder = QLineEdit()
-        #     self.config_tab_layout.addWidget(self.plot_folder, idx_row,3,1,1) # w, row, column, rowspan, colspan
-        #     self.plot_folder.textChanged.connect(self.plot_folder_name_cb)
 
         #---------------------------------------------------------------------------
         # Use a vbox/hbox instead of the grid for better alignment :/
@@ -386,6 +328,7 @@ class Config(QWidget):
         self.svg_interval.setFixedWidth(100)
         self.svg_interval.setValidator(QtGui.QDoubleValidator())
         self.svg_interval.textChanged.connect(self.svg_interval_changed)
+        self.svg_interval.setStyleSheet(style_sheet_template(QLineEdit))
         hbox.addWidget(self.svg_interval)
 
         label = QLabel(self.default_time_units)
@@ -402,6 +345,7 @@ class Config(QWidget):
         self.full_interval.setFixedWidth(100)
         self.full_interval.setValidator(QtGui.QDoubleValidator())
         self.full_interval.textChanged.connect(self.full_interval_changed)
+        self.full_interval.setStyleSheet(style_sheet_template(QLineEdit))
         hbox.addWidget(self.full_interval)
 
         label = QLabel(self.default_time_units)
@@ -440,7 +384,7 @@ class Config(QWidget):
 
         self.svg_substrate_to_plot_dropdown = QComboBox()
         self.svg_substrate_to_plot_dropdown.setFixedWidth(200)
-        self.svg_substrate_to_plot_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.svg_substrate_to_plot_dropdown.setStyleSheet(style_sheet_template(QComboBox))
         hbox.addWidget(self.svg_substrate_to_plot_dropdown)
 
         self.plot_substrate_limits = QCheckBox_custom("Limits enabled")
@@ -457,6 +401,7 @@ class Config(QWidget):
         self.svg_substrate_min.setFixedWidth(100)
         self.svg_substrate_min.setValidator(QtGui.QDoubleValidator())
         self.svg_substrate_min.textChanged.connect(self.svg_substrate_min_changed)
+        self.svg_substrate_min.setStyleSheet(style_sheet_template(QLineEdit))
         hbox.addWidget(self.svg_substrate_min)
 
         label = QLabel("max")
@@ -467,6 +412,7 @@ class Config(QWidget):
         self.svg_substrate_max.setFixedWidth(100)
         self.svg_substrate_max.setValidator(QtGui.QDoubleValidator())
         self.svg_substrate_max.textChanged.connect(self.svg_substrate_max_changed)
+        self.svg_substrate_max.setStyleSheet(style_sheet_template(QLineEdit))
         hbox.addWidget(self.svg_substrate_max)
 
         label = QLabel("colormap")
@@ -475,7 +421,7 @@ class Config(QWidget):
 
         self.svg_substrate_colormap_dropdown = QComboBox()
         self.svg_substrate_colormap_dropdown.setFixedWidth(100)
-        self.svg_substrate_colormap_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.svg_substrate_colormap_dropdown.setStyleSheet(style_sheet_template(QComboBox))
         hbox.addWidget(self.svg_substrate_colormap_dropdown)
 
 
@@ -504,6 +450,7 @@ class Config(QWidget):
         hbox.addWidget(label)
         self.csv_folder = QLineEdit()
         self.csv_folder.setFixedWidth(filename_width)
+        self.csv_folder.setStyleSheet(style_sheet_template(QLineEdit))
         if self.nanohub_flag:
             self.folder.setEnabled(False)
         hbox.addWidget(self.csv_folder)
@@ -514,6 +461,7 @@ class Config(QWidget):
 
         self.csv_file = QLineEdit()
         self.csv_file.setFixedWidth(filename_width)
+        self.csv_file.setStyleSheet(style_sheet_template(QLineEdit))
         hbox.addWidget(self.csv_file)
 
         self.import_seeding_button = QPushButton("Import")
@@ -584,12 +532,6 @@ class Config(QWidget):
         max_time += 1440
         self.max_time.setText(f"{max_time}")
 
-    # def folder_name_cb(self):
-    #     try:  # due to the initial callback
-    #         self.plot_folder.setText(self.folder.text())
-    #     except:
-    #         pass
-
     # def plot_folder_name_cb(self):   # allow plotting data from *any* output dir
     #     try:  # due to the initial callback
     #         self.vis_tab.output_dir = self.plot_folder.text()
@@ -608,81 +550,47 @@ class Config(QWidget):
         self.svg_interval.setEnabled(bval)
         self.plot_substrate_svg.setEnabled(bval)
         if bval:
-            self.svg_interval.setStyleSheet("background-color: white; color: black")
             if self.plot_substrate_svg.isChecked():
                 self.svg_substrate_to_plot_dropdown.setEnabled(True)
-                self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
                 self.svg_substrate_colormap_dropdown.setEnabled(True)
-                self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: white; color: black")
         else:
-            self.svg_interval.setStyleSheet("background-color: lightgray; color: black")
             self.svg_substrate_to_plot_dropdown.setEnabled(False)
-            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.svg_substrate_colormap_dropdown.setEnabled(False)
-            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: lightgray; color: black")
             self.plot_substrate_svg.setChecked(False)
             self.plot_substrate_limits.setEnabled(False)
             self.plot_substrate_limits.setChecked(False)
             self.svg_substrate_min.setEnabled(False)
             self.svg_substrate_max.setEnabled(False)
-            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
-            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
 
     def plot_substrate_svg_clicked(self, bval):
         self.svg_substrate_to_plot_dropdown.setEnabled(bval)
         self.svg_substrate_colormap_dropdown.setEnabled(bval)
         self.plot_substrate_limits.setEnabled(bval)
-        if bval:
-            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: white; color: black")
-            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: white; color: black")
-            if self.plot_substrate_limits.isChecked():
-                self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
-                self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
-        else:
-            self.svg_substrate_to_plot_dropdown.setStyleSheet("background-color: lightgray; color: black")
-            self.svg_substrate_colormap_dropdown.setStyleSheet("background-color: lightgray; color: black")
+        if not bval:
             self.plot_substrate_limits.setChecked(False)
             self.svg_substrate_min.setEnabled(False)
             self.svg_substrate_max.setEnabled(False)
-            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
-            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
 
     def plot_substrate_limits_clicked(self, bval):
-        # print("plot_substrate_limits_clicked: bval=",bval)
         self.svg_substrate_min.setEnabled(bval)
         self.svg_substrate_max.setEnabled(bval)
-        # come back to this to include substrate and cmin and cmax
-        if bval:
-            self.svg_substrate_min.setStyleSheet("background-color: white; color: black")
-            self.svg_substrate_max.setStyleSheet("background-color: white; color: black")
-        else:
-            self.svg_substrate_min.setStyleSheet("background-color: lightgray; color: black")
-            self.svg_substrate_max.setStyleSheet("background-color: lightgray; color: black")
 
     def svg_interval_changed(self, val):
-        # print("svg_interval_changed(): val=",val)
         if self.sync_output:
             self.full_interval.setText(val)
 
     def svg_substrate_min_changed(self, val):
-        # print("svg_substrate_min_changed(): val=",val)
         if self.sync_output:
             self.svg_substrate_min.setText(val)
 
     def svg_substrate_max_changed(self, val):
-        # print("svg_substrate_max_changed(): val=",val)
         if self.sync_output:
             self.svg_substrate_max.setText(val)
 
     def full_clicked(self, bval):
         self.full_interval.setEnabled(bval)
-        if bval:
-            self.full_interval.setStyleSheet("background-color: white; color: black")
-        else:
-            self.full_interval.setStyleSheet("background-color: lightgray; color: black")
 
     def full_interval_changed(self, val):
-        # print("full_interval_changed(): val=",val)
         if self.sync_output:
             self.svg_interval.setText(val)
 
@@ -699,12 +607,6 @@ class Config(QWidget):
     def cells_csv_clicked(self, bval):
         self.csv_folder.setEnabled(bval)
         self.csv_file.setEnabled(bval)
-        if bval:
-            self.csv_folder.setStyleSheet("background-color: white; color: black")
-            self.csv_file.setStyleSheet("background-color: white; color: black")
-        else:
-            self.csv_folder.setStyleSheet("background-color: lightgray; color: black")
-            self.csv_file.setStyleSheet("background-color: lightgray; color: black")
 
     def fill_gui(self):
         self.fill_substrates_comboboxes()
