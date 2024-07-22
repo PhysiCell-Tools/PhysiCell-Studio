@@ -52,6 +52,8 @@ from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
+from studio_classes import QLineEdit_custom, DoubleValidatorWidgetBounded, AttackRateValidator
+
 class CellDefException(Exception):
     pass
 
@@ -121,12 +123,13 @@ class MyQLineEdit(QLineEdit):
 
 
 class CellDef(QWidget):
-    def __init__(self, pytest_flag):
+    def __init__(self, pytest_flag, config_tab=None):
         super().__init__()
 
         random.seed(42)   # for reproducibility (cough). Needed for pytest results.
         self.pytest_flag = pytest_flag
 
+        self.config_tab = config_tab
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
@@ -1794,7 +1797,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_trate01 = QLineEdit()
-        # self.apoptosis_trate01 = QLineEdit_color()
         self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
         self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -3092,15 +3094,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.attack_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.attack_rate_dropdown.currentIndexChanged.connect(self.attack_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.attack_rate = QLineEdit_color()
+        self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        self.attack_rate.setValidator(QtGui.QDoubleValidator())
+        if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
+            validator = AttackRateValidator(self)
+        else:
+            validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        idr += 1
+        self.attack_rate_fast_label = QLabel("")
+        self.attack_rate_fast_label.setStyleSheet("color: red")
+        glayout.addWidget(self.attack_rate_fast_label, idr,0, 1,4) # w, row, column, rowspan, colspan
+
 
         #------
         label = QLabel("attack damage rate")
@@ -3291,6 +3303,29 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def attack_rate_changed(self,text):
         celltype_name = self.attack_rate_dropdown.currentText()
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
+
+        if text == "":
+            return
+        
+        if self.config_tab.mechanics_dt.text() == "" or float(self.config_tab.mechanics_dt.text()) == 0:
+            self.attack_rate_fast_label.setText(f"WARNING: Current mechanics_dt is 0 (or unset). Make sure to set that value > 0.")
+            return
+        
+        attack_rate = float(text) 
+        mech_dt = float(self.config_tab.mechanics_dt.text())
+        max_val = 1/mech_dt
+        attack_prob = attack_rate * mech_dt
+        if "immunogenicity" in self.param_d[self.current_cell_def].keys():
+            immunogenicity = float(self.param_d[self.current_cell_def]["immunogenicity"][self.attack_rate_dropdown.currentText()])
+            attack_prob *= immunogenicity
+            max_val /= immunogenicity
+            denom = "(immunogenicity * mechanics_dt)"
+        else:  
+            denom = "mechanics_dt"
+        if attack_prob > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
+            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
+        else:
+            self.attack_rate_fast_label.setText("")
     #--------------------------------------------------------
     def attack_damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['attack_damage_rate'] = text
