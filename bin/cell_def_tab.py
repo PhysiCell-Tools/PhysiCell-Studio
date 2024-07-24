@@ -6141,18 +6141,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
     #-----------------------------------------------------------------------------------------
-    # def delete_substrate(self, item_idx):
     def delete_substrate(self, item_idx, new_substrate):
 
         # 1) delete it from the comboboxes
-        # print("------- delete_substrate: name=",name)
-        # print("------- delete_substrate: index=",item_idx)
 
         # subname = self.motility_substrate_dropdown.itemText(item_idx)
         subname = self.motility2_substrate_dropdown.itemText(item_idx)
-        # print("cell_def_tab.py: delete_substrate():    subname = ", subname)
         self.substrate_list.remove(subname)
-        # print("self.substrate_list = ",self.substrate_list)
 
         # update all dropdown/comboboxes
         self.motility_substrate_dropdown.removeItem(item_idx)
@@ -6162,17 +6157,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.secretion_substrate_dropdown.clear()
 
         # 2) update (delete) in the param_d dict
-        # print("\n\n----- before stepping thru all cell defs, self.param_d:")
-        # for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print(self.param_d[cdname]["secretion"])
-            # print()
-
-        # print()
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print("--- cdname = ",cdname)
-            # print("--- old: ",self.param_d[cdname]["secretion"])
-            # print(" keys= ",self.param_d[cdname]["secretion"].keys() )
-            # if self.param_d[cdname]["secretion"].has_key(subname):
             if subname == self.param_d[cdname]["motility_chemotaxis_substrate"]:
                 self.param_d[cdname]["motility_chemotaxis_substrate"] = new_substrate
 

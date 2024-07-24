@@ -1,6 +1,7 @@
 import sys
 
-from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel
 from PyQt5.QtGui import QValidator, QDoubleValidator
 
 class QHLine(QFrame):
@@ -50,7 +51,6 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
                 }
                 """
         self.setStyleSheet(checkbox_style)
-
 
 class QLineEdit_custom(QLineEdit):
     def __init__(self):
@@ -167,8 +167,6 @@ class DoubleValidatorWidgetBounded(QValidator):
 
         getattr(self.qdouble_validator, f'set{bound_name.capitalize()}')(new_bound)
         
-
-
 class AttackRateValidator(QValidator):
     def __init__(self, cell_def_tab):
         super().__init__()
@@ -197,3 +195,44 @@ class AttackRateValidator(QValidator):
         top_val *= 1 + sys.float_info.epsilon
         self.qdouble_validator.setTop(top_val)
         return self.qdouble_validator.validate(text, pos)
+
+class HoverWidget(QWidget):
+    def __init__(self, hover_text=None, parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)  # Enable mouse tracking
+        self.hover_text = hover_text
+    
+    def setHoverText(self, hover_text):
+        self.hover_text = hover_text
+
+    def event(self, event):
+        if event.type() == QEvent.Enter:
+            # Display tooltip when the mouse enters the widget
+            self.setToolTip(self.hover_text)
+        elif event.type() == QEvent.Leave:
+            # Clear tooltip when the mouse leaves the widget
+            self.setToolTip('')
+        return super().event(event)
+
+class HoverCombobox(QComboBox, HoverWidget):
+    def __init__(self, hover_text: str, parent=None):
+        super().__init__(parent)
+        self.setHoverText(hover_text)
+
+class HoverLabel(QLabel, HoverWidget):
+    def __init__(self, label_text, hover_text, parent=None):
+        super().__init__(parent)
+        self.setText(label_text)
+        self.setHoverText(hover_text)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                color: #333;
+                background-color: #f0f0f0;
+                border: 2px solid #333333;
+                border-radius: 4px;
+                padding: 5px;
+                font-weight: bold;
+            }
+        """)
