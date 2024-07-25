@@ -61,35 +61,12 @@ except:
 
 from filters3D import FilterUI3DWindow
 from filters2D import FilterUI2DWindow
+from model_summary import ModelSummaryUIWindow
 from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                QCheckBox:disabled {background-color:lightgray;}
-                QCheckBox:indicator:disabled {background-color:lightgray;}
-                """
-        self.setStyleSheet(checkbox_style)
+from studio_classes import QCheckBox_custom
 
 #---------------------------
 class ExtendedComboBox(QComboBox):
@@ -216,6 +193,7 @@ class SvgWidget(QSvgWidget):
 #                 path = Path(self.output_dir,"legend.svg")
 #                 # path = Path(self.current_dir,self.output_dir,"legend.svg")
 #                 time.sleep(1)
+
 
 #------------------------------
 class LegendPlotWindow(QWidget):
@@ -782,7 +760,7 @@ class VisBase():
         self.cell_scalar_combobox.addItem("cell_type")
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
-        # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
+        # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'apoptotic_phagocytosis_rate', 'necrotic_phagocytosis_rate', 'other_dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
         self.vbox.addLayout(self.cells_hbox)
 
@@ -1068,6 +1046,17 @@ class VisBase():
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(splitter)
 
+    def model_summary_cb(self):
+        print("---- vis_base: model_summary_cb()")
+        # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
+        # self.filterUI = FilterUIWindow()
+        self.modelSummaryUI = ModelSummaryUIWindow(self)  # , self.run_tab)
+
+        # hack to bring to foreground
+        # self.filterUI.hide()
+        # self.filterUI.show()
+        self.modelSummaryUI.hide()
+        self.modelSummaryUI.show()
 
     def filterUI_cb(self):
         print("---- vis_base: filterUI_cb()")
@@ -1924,7 +1913,7 @@ class VisBase():
         xml_file = "initial.xml"
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
-            print(f"vis3D_tab.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
         # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
