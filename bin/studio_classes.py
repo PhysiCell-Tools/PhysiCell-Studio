@@ -1,9 +1,12 @@
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QComboBox, QLabel, QCompleter, QToolTip
 from PyQt5.QtGui import QValidator, QDoubleValidator
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
 
+# organizers
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -20,6 +23,13 @@ class QVLine(QFrame):
         # self.setFrameShadow(QFrame.Plain)
         self.setStyleSheet("border:1px solid black")
 
+class QLabelSeparator(QLabel):
+    def __init__(self, text):
+        super(QLabel, self).__init__(text)
+        self.setStyleSheet("background-color: orange;")
+        self.setAlignment(QtCore.Qt.AlignCenter)
+
+# custom widgets
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
@@ -53,10 +63,11 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
         self.setStyleSheet(checkbox_style)
 
 class QLineEdit_custom(QLineEdit):
-    def __init__(self):
-        super(QLineEdit, self).__init__()
+    def __init__(self, **kwargs):
+        super(QLineEdit, self).__init__(**kwargs)
         self.validator = None  # Add a validator attribute
         self.textChanged.connect(self.check_validity)
+        self.check_validity(self.text())
 
     def setValidator(self, validator):
         super().setValidator(validator)
@@ -65,8 +76,10 @@ class QLineEdit_custom(QLineEdit):
     def check_validity(self, text):
         if self.validator and self.validator.validate(text, 0)[0] != QValidator.Acceptable:
             self.setStyleSheet(self.invalid_style)
+            return False
         else:
             self.setStyleSheet(self.valid_style)
+            return True
 
     def check_current_validity(self):
         self.check_validity(self.text())
@@ -101,6 +114,105 @@ class QLineEdit_custom(QLineEdit):
         }
         """
 
+class ExtendedCombo( QComboBox ):
+    def __init__( self,  parent = None):
+        super( ExtendedCombo, self ).__init__( parent )
+
+        self.setFocusPolicy( Qt.StrongFocus )
+        self.setEditable( True )
+        self.completer = QCompleter( self )
+
+        # always show all completions
+        self.completer.setCompletionMode( QCompleter.UnfilteredPopupCompletion )
+        self.pFilterModel = QSortFilterProxyModel( self )
+        self.pFilterModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
+
+        self.completer.setPopup( self.view() )
+
+        self.setCompleter( self.completer )
+
+        self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
+        self.completer.activated.connect(self.setTextIfCompleterIsClicked)
+
+    def setModel( self, model ):
+        super(ExtendedCombo, self).setModel( model )
+        self.pFilterModel.setSourceModel( model )
+        self.completer.setModel(self.pFilterModel)
+
+    def setModelColumn( self, column ):
+        self.completer.setCompletionColumn( column )
+        self.pFilterModel.setFilterKeyColumn( column )
+        super(ExtendedCombo, self).setModelColumn( column )
+
+    def view( self ):
+        return self.completer.popup()
+
+    def index( self ):
+        return self.currentIndex()
+
+    def setTextIfCompleterIsClicked(self, text):
+      if text:
+        index = self.findText(text)
+        self.setCurrentIndex(index)
+
+# hover widgets
+class HoverWidget(QWidget):
+    def __init__(self, hover_text=None, parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)  # Enable mouse tracking
+        self.hover_text = hover_text
+    
+    def setHoverText(self, hover_text):
+        self.hover_text = hover_text
+
+    def event(self, event):
+        if event.type() == QEvent.Enter:
+            # Display tooltip when the mouse enters the widget
+            self.setToolTip(self.hover_text)
+        elif event.type() == QEvent.Leave:
+            # Clear tooltip when the mouse leaves the widget
+            self.setToolTip('')
+        return super().event(event)
+
+class HoverCheckBox(QCheckBox):
+    def __init__(self, text, hover_text, parent=None):
+        super().__init__(text, parent)
+        self.setMouseTracking(True)  # Enable mouse tracking
+        self.hover_text = hover_text
+
+    def event(self, event):
+        if event.type() == QEvent.Enter:
+            # Display tooltip when the mouse enters the checkbox
+            QToolTip.showText(event.globalPos(), self.hover_text, self)
+        elif event.type() == QEvent.Leave:
+            # Hide tooltip when the mouse leaves the checkbox
+            QToolTip.hideText()
+        return super().event(event)
+
+class HoverCombobox(QComboBox, HoverWidget):
+    def __init__(self, hover_text: str, parent=None):
+        super().__init__(parent)
+        self.setHoverText(hover_text)
+
+class HoverLabel(QLabel, HoverWidget):
+    def __init__(self, label_text, hover_text, parent=None):
+        super().__init__(parent)
+        self.setText(label_text)
+        self.setHoverText(hover_text)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                color: #333;
+                background-color: #f0f0f0;
+                border: 2px solid #333333;
+                border-radius: 4px;
+                padding: 5px;
+                font-weight: bold;
+            }
+        """)
+      
+# validators    
 class DoubleValidatorWidgetBounded(QValidator):
     # a validator that uses other widgets to set the bounds of a QDoubleValidator
     def __init__(self, bottom=None, top=None, bottom_transform=lambda x: x, top_transform=lambda x: x):
@@ -195,44 +307,28 @@ class AttackRateValidator(QValidator):
         top_val *= 1 + sys.float_info.epsilon
         self.qdouble_validator.setTop(top_val)
         return self.qdouble_validator.validate(text, pos)
+  
+class OptionalDoubleValidator(QDoubleValidator):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.qdouble_validator = QDoubleValidator(**kwargs)
 
-class HoverWidget(QWidget):
-    def __init__(self, hover_text=None, parent=None):
-        super().__init__(parent)
-        self.setMouseTracking(True)  # Enable mouse tracking
-        self.hover_text = hover_text
-    
-    def setHoverText(self, hover_text):
-        self.hover_text = hover_text
+    def validate(self, text, pos):
+        if text == "":
+            return QValidator.Acceptable, text, pos
+        return self.qdouble_validator.validate(text, pos)
 
-    def event(self, event):
-        if event.type() == QEvent.Enter:
-            # Display tooltip when the mouse enters the widget
-            self.setToolTip(self.hover_text)
-        elif event.type() == QEvent.Leave:
-            # Clear tooltip when the mouse leaves the widget
-            self.setToolTip('')
-        return super().event(event)
+class DoubleValidatorOpenInterval(QDoubleValidator):
+    def __init__(self, bottom=float('-inf'), top=float('inf'), decimals=1000, parent=None):
+        super().__init__(bottom, top, decimals, parent)
+        self.bottom = bottom
+        self.top = top
 
-class HoverCombobox(QComboBox, HoverWidget):
-    def __init__(self, hover_text: str, parent=None):
-        super().__init__(parent)
-        self.setHoverText(hover_text)
+    def validate(self, input, pos):
+        state, value, pos = super().validate(input, pos)
 
-class HoverLabel(QLabel, HoverWidget):
-    def __init__(self, label_text, hover_text, parent=None):
-        super().__init__(parent)
-        self.setText(label_text)
-        self.setHoverText(hover_text)
-        self.setAlignment(Qt.AlignCenter)
-        self.setStyleSheet("""
-            QLabel {
-                font-size: 14px;
-                color: #333;
-                background-color: #f0f0f0;
-                border: 2px solid #333333;
-                border-radius: 4px;
-                padding: 5px;
-                font-weight: bold;
-            }
-        """)
+        if state == QDoubleValidator.Acceptable:
+            if float(value) <= self.bottom or float(value) >= self.top:
+                state = QDoubleValidator.Intermediate
+
+        return state, value, pos

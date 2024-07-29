@@ -1,3 +1,13 @@
+from PyQt5.QtWidgets import QMessageBox
+
+def show_warning(msg):
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Information)
+    msgBox.setText(msg)
+    msgBox.setStandardButtons(QMessageBox.Ok)
+
+    return msgBox.exec()
+
 def style_sheet_template(widget_class):
     return f"""
             {widget_class.__name__}:disabled {{
