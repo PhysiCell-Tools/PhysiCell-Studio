@@ -910,6 +910,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = mypath.text
             else:
                 cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = '0.0'
+
+            mypath =  uep.find(mechanics_path+"maximum_number_of_attachments")
+            if mypath is not None:
+                cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = mypath.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = '12'
             # >>>
 
 

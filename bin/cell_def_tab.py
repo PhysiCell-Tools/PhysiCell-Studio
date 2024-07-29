@@ -49,7 +49,7 @@ from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, QDoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
@@ -2522,6 +2522,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        ### cell-bm interactions; save for later (db: 2024-05-31)
         #-----
         # self.new_stuff = False
         self.new_stuff = True
@@ -2560,6 +2561,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_adhesion_affinity.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
+        #---
         label = QLabel("Options:")
         label.setFixedSize(80,20)
         label.setStyleSheet("background-color: orange")
@@ -2611,7 +2613,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         label = QLabel("elastic constant")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2621,16 +2622,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.elastic_constant.setEnabled(self.new_stuff)
+        self.elastic_constant.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-
+        #--
         label = QLabel("attachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2640,7 +2640,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.attachment_rate.setEnabled(self.new_stuff)
+        self.attachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
@@ -2649,7 +2649,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #--
         label = QLabel("detachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2659,12 +2658,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.detachment_rate.setEnabled(self.new_stuff)
+        self.detachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #--
+        label = QLabel("maximum number of attachments")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.max_num_attachments = QLineEdit_color()
+        self.max_num_attachments.textChanged.connect(self.max_num_attachments_changed)
+        self.max_num_attachments.setValidator(QtGui.QIntValidator(bottom=0))
+        glayout.addWidget(self.max_num_attachments, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.max_num_attachments.setEnabled(True)
 
         #---------
         idr += 1
@@ -2705,6 +2717,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
+        #---
         label = QLabel("speed")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -4970,6 +4983,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['mechanics_attachment_rate'] = text
     def detachment_rate_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_detachment_rate'] = text
+    def max_num_attachments_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_max_num_attachments'] = text
 
     # insert callbacks for QCheckBoxes
     def set_relative_equilibrium_distance_enabled_cb(self,bval):
@@ -5972,8 +5987,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
                 self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
             else: # log uniform must be postive
-                self.par_dist_par_lineedit[0].setValidator(QDoubleValidatorOpenInterval(bottom=0))
-                self.par_dist_par_lineedit[1].setValidator(QDoubleValidatorOpenInterval(bottom=0))
+                self.par_dist_par_lineedit[0].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                self.par_dist_par_lineedit[1].setValidator(DoubleValidatorOpenInterval(bottom=0))
             par_enabled = [True, True, False, False]
             if distribution_pars_in_dict:
                 if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
@@ -6460,18 +6475,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
     #-----------------------------------------------------------------------------------------
-    # def delete_substrate(self, item_idx):
     def delete_substrate(self, item_idx, new_substrate):
 
         # 1) delete it from the comboboxes
-        # print("------- delete_substrate: name=",name)
-        # print("------- delete_substrate: index=",item_idx)
 
         # subname = self.motility_substrate_dropdown.itemText(item_idx)
         subname = self.motility2_substrate_dropdown.itemText(item_idx)
-        # print("cell_def_tab.py: delete_substrate():    subname = ", subname)
         self.substrate_list.remove(subname)
-        # print("self.substrate_list = ",self.substrate_list)
 
         # update all dropdown/comboboxes
         self.motility_substrate_dropdown.removeItem(item_idx)
@@ -6481,17 +6491,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.secretion_substrate_dropdown.clear()
 
         # 2) update (delete) in the param_d dict
-        # print("\n\n----- before stepping thru all cell defs, self.param_d:")
-        # for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print(self.param_d[cdname]["secretion"])
-            # print()
-
-        # print()
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print("--- cdname = ",cdname)
-            # print("--- old: ",self.param_d[cdname]["secretion"])
-            # print(" keys= ",self.param_d[cdname]["secretion"].keys() )
-            # if self.param_d[cdname]["secretion"].has_key(subname):
             if subname == self.param_d[cdname]["motility_chemotaxis_substrate"]:
                 self.param_d[cdname]["motility_chemotaxis_substrate"] = new_substrate
 
@@ -6837,6 +6837,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_elastic_constant"] = '0.01'
         self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
+        self.param_d[cdname_new]["mechanics_max_num_attachments"] = '12'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
@@ -7225,6 +7226,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
         self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
         self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
+        self.max_num_attachments.setText(self.param_d[cdname]["mechanics_max_num_attachments"])
 
 
     #-----------------------------------------------------------------------------------------
@@ -8153,6 +8155,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         elm = ET.SubElement(mechanics, 'detachment_rate',{"units":self.default_rate_units})
         elm.text = self.param_d[cdef]["mechanics_detachment_rate"]
+        elm.tail = self.indent10
+
+        elm = ET.SubElement(mechanics, 'maximum_number_of_attachments')
+        elm.text = self.param_d[cdef]["mechanics_max_num_attachments"]
         elm.tail = self.indent10
 
     #-------------------------------------------------------------------
