@@ -1,8 +1,9 @@
 """
-ics_tab.py - create initial conditions (ICs) of cells' positions (by cell type)
+ics_tab.py - create initial conditions (ICs) of cells' positions (by cell type) and substrates
 
 Authors:
 Randy Heiland (heiland@iu.edu)
+Dr. Daniel Bergman
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
 """
@@ -29,7 +30,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 
-from studio_classes import QHLine, HoverLabel
+from studio_classes import QHLine, HoverLabel,DoubleValidatorWidgetBounded
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -82,6 +83,8 @@ class ICs(QWidget):
         # self.mech_voxel_size = 30
 
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
+        self.spacing = 1.0
+
         # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
         self.color_by_celltype = ['gray','red','yellow','green','blue','magenta','orange','lime','cyan','hotpink','peachpuff','darkseagreen','lightskyblue']
         self.alpha_value = 1.0
@@ -297,7 +300,23 @@ class ICs(QWidget):
         # self.glayout1.addWidget(self.num_cells, idr,icol,1,1) 
         hbox.addWidget(self.num_cells)
 
-        self.zeq0 = QCheckBox_custom("2D (z=0) (no 3D yet)")
+        #----
+        label = QLabel("spacing")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.spacing_w = QLineEdit()
+        self.spacing_w.setStyleSheet(self.stylesheet)
+        fixed_width_value = 60
+        self.spacing_w.setFixedWidth(fixed_width_value)
+        self.spacing_w.setValidator(DoubleValidatorWidgetBounded(bottom=0.1,top=999))
+        self.spacing_w.setEnabled(False)
+        self.spacing_w.setText('1.0')
+        self.spacing_w.textChanged.connect(self.spacing_cb)
+        hbox.addWidget(self.spacing_w)
+
+        #----
+        self.zeq0 = QCheckBox_custom(" 2D(z=0)")
         self.zeq0.setChecked(True)
         self.zeq0.setEnabled(False)
         zeq0_style = """
@@ -315,6 +334,7 @@ class ICs(QWidget):
         # self.zeq0.setFixedWidth(50)
         self.zeq0.clicked.connect(self.zeq0_cb)
         hbox.addWidget(self.zeq0)
+
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -834,6 +854,13 @@ class ICs(QWidget):
 
         # self.update_plots()
 
+    def spacing_cb(self):
+        try:  # due to the initial callback
+            val = float(self.spacing_w.text())
+            # print("spacing_cb(): val=",val)
+            self.spacing = val
+        except:
+            pass
 
     def x0_cb(self):
         try:  # due to the initial callback
@@ -1040,6 +1067,7 @@ class ICs(QWidget):
         #         self.enable_ring_params(False)
 
         self.create_point = False
+        self.spacing_w.setEnabled(False)
         if self.geom_combobox.currentText().find("point") >= 0:
             self.create_point = True
             # print("------- setting point")
@@ -1060,6 +1088,10 @@ class ICs(QWidget):
 
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
+            if "box" in self.geom_combobox.currentText():
+                self.spacing_w.setEnabled(True)
+            else:
+                self.spacing_w.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
         # if idx == 0:
@@ -1070,10 +1102,17 @@ class ICs(QWidget):
 
     def fill_combobox_changed_cb(self,idx):
         # print("----- fill_combobox_changed_cb: idx = ",idx)
+        # if "hex" in self.fill_combobox.currentText():
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
+
+            if "box" in self.geom_combobox.currentText():
+                self.spacing_w.setEnabled(True)
+            else:
+                self.spacing_w.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
+            self.spacing_w.setEnabled(False)
         # self.update_plots()
 
 
@@ -1509,8 +1548,8 @@ class ICs(QWidget):
         y_max =  self.r2_value
         y_idx = -1
         # hex packing constants
-        x_spacing = self.cell_radius * 2
-        y_spacing = self.cell_radius * np.sqrt(3)
+        x_spacing = self.cell_radius * 2 * self.spacing
+        y_spacing = self.cell_radius * 1.7320508 * self.spacing  # np.sqrt(3) = 1.7320508 
 
         cells_x = np.array([])
         cells_y = np.array([])
