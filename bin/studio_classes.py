@@ -85,34 +85,27 @@ class QLineEdit_custom(QLineEdit):
         self.check_validity(self.text())
         
     valid_style = """
-        QLineEdit {
-            background-color: rgb(255,255,255);
-            border: 1px solid #5A5A5A;
-            width : 15px;
-            height : 15px;
-            border-radius : 3px;
-        }
-        QLineEdit:disabled
-        {
-            background-color:lightgray;
-            color: black;
-        }
-        """
+            QLineEdit {
+                color: black;
+                background-color: white;
+            }
+            QLineEdit:disabled
+            {
+                color: black;
+                background-color:gray;
+            }
+            """
 
     invalid_style = """
-        QLineEdit {
-            background-color: rgba(255, 0, 0, 0.5);
-            border: 1px solid #5A5A5A;
-            width : 15px;
-            height : 15px;
-            border-radius : 3px;
-        }
-        QLineEdit:disabled
-        {
-            background-color:lightgray;
-            color: black;
-        }
-        """
+            QLineEdit {
+                color: black;
+                background-color: rgba(255, 0, 0, 0.5);
+            }
+            QLineEdit:disabled {
+                color: black;
+                background-color:gray;
+            }
+            """
 
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
