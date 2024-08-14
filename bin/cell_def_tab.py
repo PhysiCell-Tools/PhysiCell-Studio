@@ -666,9 +666,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         for cdname in self.param_d.keys():    # for each cell def, set how it interacts with new cell based on how it interacted with original cell
             self.param_d[cdname]['live_phagocytosis_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
+            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['attack_rate'][cdname_original]
+            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['fusion_rate'][cdname_original]
+            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['transformation_rate'][cdname_original]
 
             self.param_d[cdname]['cell_adhesion_affinity'][cdname_copy] = self.param_d[cdname]['cell_adhesion_affinity'][cdname_original]  # default affinity
            
