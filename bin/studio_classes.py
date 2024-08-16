@@ -2,9 +2,11 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtWidgets import QWidget, QFrame, QCheckBox, QLabel, QLineEdit, QComboBox
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip
 from PyQt5.QtGui import QValidator, QDoubleValidator
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
 
+# organizers
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -27,6 +29,7 @@ class QLabelSeparator(QLabel):
         self.setStyleSheet("background-color: orange;")
         self.setAlignment(QtCore.Qt.AlignCenter)
 
+# custom widgets
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
@@ -60,7 +63,7 @@ class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
         self.setStyleSheet(checkbox_style)
 
 class QLineEdit_custom(QLineEdit):
-    def __init__(self, **kwargs): 
+    def __init__(self, **kwargs):
         super(QLineEdit, self).__init__(**kwargs)
         self.validator = None  # Add a validator attribute
         self.textChanged.connect(self.check_validity)
@@ -80,38 +83,74 @@ class QLineEdit_custom(QLineEdit):
             self.setStyleSheet(self.valid_style)
             return True
 
+    def check_current_validity(self):
+        self.check_validity(self.text())
+        
     valid_style = """
-        QLineEdit {
-            background-color: rgb(255,255,255);
-            border: 1px solid #5A5A5A;
-            width : 15px;
-            height : 15px;
-            border-radius : 3px;
-        }
-        QLineEdit:disabled
-        {
-            background-color:lightgray;
-            color: black;
-        }
-        """
+            QLineEdit {
+                color: black;
+                background-color: white;
+            }
+            QLineEdit:disabled
+            {
+                color: black;
+                background-color:gray;
+            }
+            """
 
     invalid_style = """
-        QLineEdit {
-            background-color: rgba(255, 0, 0, 0.5);
-            border: 1px solid #5A5A5A;
-            width : 15px;
-            height : 15px;
-            border-radius : 3px;
-        }
-        QLineEdit:disabled
-        {
-            background-color:lightgray;
-            color: black;
-        }
-        """
+            QLineEdit {
+                color: black;
+                background-color: rgba(255, 0, 0, 0.5);
+            }
+            QLineEdit:disabled {
+                color: black;
+                background-color:gray;
+            }
+            """
+
+class ExtendedCombo( QComboBox ):
+    def __init__( self,  parent = None):
+        super( ExtendedCombo, self ).__init__( parent )
+
+        self.setFocusPolicy( Qt.StrongFocus )
+        self.setEditable( True )
+        self.completer = QCompleter( self )
+
+        # always show all completions
+        self.completer.setCompletionMode( QCompleter.UnfilteredPopupCompletion )
+        self.pFilterModel = QSortFilterProxyModel( self )
+        self.pFilterModel.setFilterCaseSensitivity( Qt.CaseInsensitive )
+
+        self.completer.setPopup( self.view() )
+
+        self.setCompleter( self.completer )
+
+        self.lineEdit().textEdited[str].connect( self.pFilterModel.setFilterFixedString )
+        self.completer.activated.connect(self.setTextIfCompleterIsClicked)
+
+    def setModel( self, model ):
+        super(ExtendedCombo, self).setModel( model )
+        self.pFilterModel.setSourceModel( model )
+        self.completer.setModel(self.pFilterModel)
+
+    def setModelColumn( self, column ):
+        self.completer.setCompletionColumn( column )
+        self.pFilterModel.setFilterKeyColumn( column )
+        super(ExtendedCombo, self).setModelColumn( column )
+
+    def view( self ):
+        return self.completer.popup()
+
+    def index( self ):
+        return self.currentIndex()
+
+    def setTextIfCompleterIsClicked(self, text):
+      if text:
+        index = self.findText(text)
+        self.setCurrentIndex(index)
 
 # hover widgets
-
 class HoverWidget(QWidget):
     def __init__(self, hover_text=None, parent=None):
         super().__init__(parent)
@@ -123,12 +162,18 @@ class HoverWidget(QWidget):
 
     def event(self, event):
         if event.type() == QEvent.Enter:
-            # Display tooltip when the mouse enters the widget
-            self.setToolTip(self.hover_text)
+            # Display tooltip when the mouse enters the checkbox
+            QToolTip.showText(event.globalPos(), self.hover_text, self)
         elif event.type() == QEvent.Leave:
-            # Clear tooltip when the mouse leaves the widget
-            self.setToolTip('')
+            # Hide tooltip when the mouse leaves the checkbox
+            QToolTip.hideText()
         return super().event(event)
+
+class HoverCheckBox(QCheckBox, HoverWidget):
+    def __init__(self, text, hover_text, parent=None):
+        super().__init__(text, parent)
+        self.setText(text)
+        self.setHoverText(hover_text)
 
 class HoverCombobox(QComboBox, HoverWidget):
     def __init__(self, hover_text: str, parent=None):
@@ -152,7 +197,7 @@ class HoverLabel(QLabel, HoverWidget):
                 font-weight: bold;
             }
         """)
-        
+      
 # validators
 
 class DoubleValidatorWidgetBounded(QValidator):
@@ -249,3 +294,28 @@ class AttackRateValidator(QValidator):
         top_val *= 1 + sys.float_info.epsilon
         self.qdouble_validator.setTop(top_val)
         return self.qdouble_validator.validate(text, pos)
+  
+class OptionalDoubleValidator(QDoubleValidator):
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.qdouble_validator = QDoubleValidator(**kwargs)
+
+    def validate(self, text, pos):
+        if text == "":
+            return QValidator.Acceptable, text, pos
+        return self.qdouble_validator.validate(text, pos)
+
+class DoubleValidatorOpenInterval(QDoubleValidator):
+    def __init__(self, bottom=float('-inf'), top=float('inf'), decimals=1000, parent=None):
+        super().__init__(bottom, top, decimals, parent)
+        self.bottom = bottom
+        self.top = top
+
+    def validate(self, input, pos):
+        state, value, pos = super().validate(input, pos)
+
+        if state == QDoubleValidator.Acceptable:
+            if float(value) <= self.bottom or float(value) >= self.top:
+                state = QDoubleValidator.Intermediate
+
+        return state, value, pos

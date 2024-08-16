@@ -1548,8 +1548,46 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             #     jdx += 1
 
                 # print("--------- populate_tree: cell_def_tab.param_d[cell_def_name]['custom_data'] = ",cell_def_tab.param_d[cell_def_name]['custom_data'])
+                
+            cell_def_tab.param_d[cell_def_name]["par_dists"] = {}
+            uep_par_dists = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//initial_parameter_distributions")
+            if uep_par_dists:
+                cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = uep_par_dists.attrib["enabled"].lower() != "true"
+                for par_dist in uep_par_dists:
+                    # get behavior element of par_dist
+                    enabled = par_dist.attrib["enabled"].lower() == "true"
+                    dist_type = par_dist.attrib["type"]
+                    dist_type = dist_type.replace(" ", "").lower()
+                    if dist_type == "uniform":
+                        dist_type = "Uniform"
+                    elif dist_type == "loguniform":
+                        dist_type = "Log Uniform"
+                    elif dist_type == "normal":
+                        dist_type = "Normal"
+                    elif dist_type == "lognormal":
+                        dist_type = "Log Normal"
+                    elif dist_type == "log10normal":
+                        dist_type = "Log10 Normal"
 
-    # sys.exit(1)
+                    enforce_base = par_dist.attrib["check_base"].lower() == "true"
+                    behavior_uep = par_dist.find('behavior')
+                    if behavior_uep is not None:
+                        behavior = behavior_uep.text
+                    else:
+                        continue
+                    
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior] = {}
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["enabled"] = enabled
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["distribution"] = dist_type
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["enforce_base"] = enforce_base
+                    cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["parameters"] = {}
+
+                    for tag in par_dist:
+                        if tag.tag == "behavior":
+                            continue
+                        cell_def_tab.param_d[cell_def_name]["par_dists"][behavior]["parameters"][tag.tag] = tag.text
+            else:
+                cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item

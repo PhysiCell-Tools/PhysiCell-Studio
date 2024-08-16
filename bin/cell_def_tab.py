@@ -45,14 +45,14 @@ import string
 import random
 # import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
+from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
+from rules_tab import create_reserved_words, find_and_replace_rule_cell
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
-
-from studio_classes import QLineEdit_custom, DoubleValidatorWidgetBounded, AttackRateValidator
 
 class CellDefException(Exception):
     pass
@@ -407,6 +407,7 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
         self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
+        self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
         #---rwh
         # self.custom_data_tab = CustomData(False)
@@ -511,6 +512,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_intracellular_params(cdname)
         self.new_custom_data_params(cdname)
 
+        self.new_miscellaneous_params(cdname)
+
         # print("\n\n",self.param_d)
         # self.custom_data_tab.param_d = self.param_d
         # self.custom_data_tab.new_custom_data_params(cdname)
@@ -541,19 +544,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
-        
-
-        # for k in self.param_d.keys():
-        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-        #     print()
-        # print()
-
         self.init_default_phenotype_params(cdname, True)
-
-        # print("\n ----- new dict:")
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
 
         self.current_cell_def = cdname
 
@@ -561,8 +552,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
-        # print("tree has num_items = ",num_items)
-        # treeitem = QTreeWidgetItem([cdname])
+
         treeitem = QTreeWidgetItem([cdname, self.param_d[cdname]["ID"]])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
@@ -676,9 +666,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         for cdname in self.param_d.keys():    # for each cell def, set how it interacts with new cell based on how it interacted with original cell
             self.param_d[cdname]['live_phagocytosis_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
+            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['attack_rate'][cdname_original]
+            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['fusion_rate'][cdname_original]
+            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['transformation_rate'][cdname_original]
 
             self.param_d[cdname]['cell_adhesion_affinity'][cdname_copy] = self.param_d[cdname]['cell_adhesion_affinity'][cdname_original]  # default affinity
            
@@ -5607,6 +5597,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.custom_table_disabled:
             self.enable_all_custom_data()
             self.custom_table_disabled = False
+
+        old_name = f"custom:{prev_name}"
+        new_name = f"custom:{text}"
+        self.update_par_dist_behaviors(old_name, new_name)
         # print(f'============== leave custom_data_name_changed() --------')
 
 
@@ -5741,9 +5735,349 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         
         self.custom_data_search.setText('')
 
-        # self.custom_var_count = 0
         self.custom_data_edit_active = True
 
+    #--------------------------------------------------------
+    def create_miscellaneous_tab(self):
+        par_dist_label = QLabelSeparator("Parameter Distributions")
+
+        self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
+        self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
+
+        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
+        self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
+
+        hbox_cell_type_par_dist = QHBoxLayout()
+        hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
+        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
+        hbox_cell_type_par_dist.addStretch()
+
+        self.behavior_model = QStandardItemModel()
+        self.par_dist_behavior_combobox = ExtendedCombo()
+        self.par_dist_behavior_combobox.setModel(self.behavior_model)
+        self.par_dist_behavior_combobox.setModelColumn(0)
+        self.par_dist_behavior_combobox.currentIndexChanged.connect(self.par_dist_behavior_changed_cb)
+        self.par_dist_behavior_combobox.editTextChanged.connect(self.par_dist_behavior_text_changed_cb)
+
+        self.par_dist_enable_checkbox = QCheckBox("Enable")
+        self.par_dist_enable_checkbox.stateChanged.connect(self.par_dist_enable_cb)
+
+        self.par_distributions_combobox = QComboBox()
+        self.par_distributions_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
+        self.par_distributions_combobox.currentIndexChanged.connect(self.par_distribution_changed_cb)
+
+        self.par_dist_enforce_base_checkbox = HoverCheckBox("Enforce base value within distribution", "Enforced at PhysiCell runtime.")
+        self.par_dist_enforce_base_checkbox.stateChanged.connect(self.par_dist_enforce_base_cb)
+
+        self.par_dist_distribution_equation = QLabel("")
+
+        hbox_par_dist_1 = QHBoxLayout()
+
+        hbox_par_dist_1.addWidget(QLabel("Behavior:"))
+        hbox_par_dist_1.addWidget(self.par_dist_behavior_combobox)
+        hbox_par_dist_1.addWidget(self.par_dist_enable_checkbox)
+        hbox_par_dist_1.addStretch()
+
+        hbox_par_dist_2 = QHBoxLayout()
+
+        hbox_par_dist_2.addWidget(QLabel("Distribution:"))
+        hbox_par_dist_2.addWidget(self.par_distributions_combobox)
+
+        hbox_par_dist_2.addWidget(self.par_dist_enforce_base_checkbox)
+        hbox_par_dist_2.addStretch()
+        hbox_par_dist_2.addWidget(self.par_dist_distribution_equation)
+
+        hbox_par_dist_parameters = QHBoxLayout()
+        self.par_dist_par_label = []
+        self.par_dist_par_lineedit = []
+        for i in range(4):
+            self.par_dist_par_label.append(QLabel(""))
+            qline_edt = QLineEdit_custom(enabled=False)
+            qline_edt.setValidator(QtGui.QDoubleValidator())
+            qline_edt.textChanged.connect(self.par_dist_parameters_changed_cb)
+            self.par_dist_par_lineedit.append(qline_edt)
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(par_dist_label)
+        vbox.addLayout(hbox_cell_type_par_dist)
+        vbox.addLayout(hbox_par_dist_1)
+        vbox.addLayout(hbox_par_dist_2)
+        vbox.addLayout(hbox_par_dist_parameters)
+        vbox.addStretch()
+
+        miscellaneous_tab = QWidget()
+        miscellaneous_tab.setLayout(vbox)
+
+        miscellaneous_tab_scroll_area = QScrollArea()
+        miscellaneous_tab_scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setWidgetResizable(True)
+        miscellaneous_tab_scroll_area.setWidget(miscellaneous_tab)
+
+        return miscellaneous_tab_scroll_area
+
+    def par_dist_enable_cb(self, state):
+        # throw warning that this is not yet implemented
+        bval = state == QtCore.Qt.Checked
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enabled"] = bval
+        self.par_dist_distribution_widgets_set_enabled(bval)
+            
+    def cell_type_par_dist_disabled_cb(self, state):
+        if self.current_cell_def is None:
+            return
+        self.param_d[self.current_cell_def]["par_dists_disabled"] = state == QtCore.Qt.Checked
+        self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
+
+    def par_dist_widgets_set_enabled(self, enabled):
+        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
+        self.par_dist_behavior_combobox.setEnabled(enabled)
+        self.par_dist_enable_checkbox.setEnabled(enabled)
+        self.display_par_dists_button.setEnabled(enabled)
+        self.par_dist_distribution_widgets_set_enabled(enabled and self.par_dist_enable_checkbox.isChecked())
+    
+    def par_dist_distribution_widgets_set_enabled(self, enabled):
+        self.par_distributions_combobox.setEnabled(enabled)
+        self.par_dist_enforce_base_checkbox.setEnabled(enabled)
+        if enabled:
+            self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
+        else:
+            for i in range(4):
+                self.par_dist_par_lineedit[i].setEnabled(False)
+
+    def display_par_dists_cb(self):
+        # create new window and print distribution infomration there
+        if self.current_cell_def is None:
+            return
+        if self.current_cell_def not in self.param_d.keys():
+            return
+        if "par_dists" not in self.param_d[self.current_cell_def].keys():
+            return
+        if len(self.param_d[self.current_cell_def]["par_dists"]) == 0:
+            return
+        
+        # create new window
+        self.par_dist_window = QWidget()
+        self.par_dist_window.setWindowTitle(f"Parameter Distributions for {self.current_cell_def}")
+        self.par_dist_window.setGeometry(100, 100, 800, 600)
+        vbox = QVBoxLayout()
+        
+        for key, value in self.param_d[self.current_cell_def]["par_dists"].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            # add a line to the QDialog box about this parameter distribution
+            label = QLabel(f"Behavior: {key}\nEnabled: {value['enabled']}\nDistribution: {value['distribution']}\nParameters: {value['parameters']}\nCheck base: {value['enforce_base']}")
+            vbox.addWidget(label)
+        
+        vbox.addStretch()
+        self.par_dist_window.setLayout(vbox)
+        self.par_dist_window.hide()
+        self.par_dist_window.show()
+
+    def fill_responses_widget(self, response_l):
+        self.response_l = response_l
+        self.par_dist_behavior_combobox.clear()
+        self.par_dist_behavior_combobox.addItems(self.response_l)
+        self.par_dist_behavior_combobox.setCurrentIndex(0)
+
+    def par_dist_behavior_changed_cb(self, idx):
+        cdname = self.current_cell_def
+        if cdname is None or cdname not in self.param_d.keys():
+            return # make sure this cell type is one we want (e.g. not currently being deleted)
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior == '':
+            return # this can happen when new behaviors are added and the list is cleared
+        
+        if behavior not in self.param_d[cdname]["par_dists"].keys():
+            self.param_d[cdname]["par_dists"][behavior] = {}
+            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            if self.par_dist_enable_checkbox.isChecked(): # set the enabled to False if the checkbox is checked
+                self.par_dist_enable_checkbox.setChecked(False)
+            else: # otherwise, emit the unchecked state to deactivate downstream widgets
+                self.par_dist_enable_checkbox.stateChanged.emit(QtCore.Qt.Unchecked)
+            self.par_dist_enforce_base_checkbox.setChecked(False)
+            self.param_d[cdname]["par_dists"][behavior]["enforce_base"] = False
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            if self.par_distributions_combobox.currentIndex() == 0:
+                self.par_distributions_combobox.currentIndexChanged.emit(0)
+            else:
+                self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
+            for pdple in self.par_dist_par_lineedit:
+                pdple.setText("")
+        else: # behavior has previously been set, proceed with caution based on prev distribution and current distribution
+            old_dict = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior]["parameters"])
+            if self.param_d[cdname]["par_dists"][behavior]["distribution"] != self.par_distributions_combobox.currentText():
+                self.par_distributions_combobox.setCurrentIndex(self.par_distributions_combobox.findText(self.param_d[cdname]["par_dists"][behavior]["distribution"]))
+            else:
+                self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
+            self.set_par_dist_pars_from_dict(old_dict)
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
+            if self.par_dist_enable_checkbox.isChecked() != self.param_d[cdname]["par_dists"][behavior]["enabled"]:
+                self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
+            else:
+                self.par_dist_enable_checkbox.stateChanged.emit(self.par_dist_enable_checkbox.checkState())
+
+    def par_dist_behavior_text_changed_cb(self, text):
+        if text not in self.response_l:
+            self.par_dist_enable_checkbox.setEnabled(False)
+            self.par_dist_distribution_widgets_set_enabled(False)
+        else:
+            self.par_dist_enable_checkbox.setEnabled(True)
+            if text==self.par_dist_behavior_combobox.itemText(self.par_dist_behavior_combobox.currentIndex()):
+                # if the text is the same as the current behavior index, force the emission of the index changed signal to update the widgets
+                self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex())
+            # else:
+                # the others will follow when the behavior index is updated immediately after this event is handled
+
+    def set_par_dist_pars_from_dict(self, par_d):
+        for pdple in self.par_dist_par_lineedit:
+            pdple.setText("") # reset all the text before filling it in
+        for k, v in par_d.items():
+            if k == "min":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "max":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "mu":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "sigma":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "lower_bound":
+                self.par_dist_par_lineedit[2].setText(v)
+            elif k == "upper_bound":
+                self.par_dist_par_lineedit[3].setText(v)
+            else:
+                print(f"Error: Invalid parameter key {k} in set_par_dist_pars_from_dict()")
+
+    def par_distribution_changed_cb(self, idx):
+        cdname = self.current_cell_def
+        if cdname is None or cdname not in self.param_d.keys():
+            return # make sure this cell type is one we want (e.g. not currently being deleted)
+        current_dist = self.par_distributions_combobox.currentText()
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior not in self.param_d[cdname]["par_dists"].keys():
+            # I do not think this block should be reachable...
+            raise ValueError(f"Error: Behavior {behavior} not in param_d[{cdname}]['par_dists'] keys. DRB is responsible for fixing this.")
+            self.param_d[cdname]["par_dists"][behavior] = {}
+            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            self.par_dist_enforce_base_checkbox.setChecked(False)
+            distribution_pars_in_dict = False
+        else:
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
+            if ("distribution" in self.param_d[cdname]["par_dists"][behavior].keys()) and (current_dist == self.param_d[cdname]["par_dists"][behavior]["distribution"]):
+                distribution_pars_in_dict = True
+            else:
+                distribution_pars_in_dict = False
+        self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
+
+        # next, find the distribution and update fields
+        par_labels = [""] * 4
+        par_texts = [""] * 4
+        if current_dist == "None":
+            par_enabled = [False] * 4
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            self.par_dist_distribution_equation.setText("")
+        elif current_dist == "Uniform" or current_dist == "Log Uniform":
+            par_labels[0] = "Min:"
+            self.par_dist_par_lineedit[0].setObjectName("min")
+            par_labels[1] = "Max:"
+            self.par_dist_par_lineedit[1].setObjectName("max")
+            if current_dist == "Uniform":
+                self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+                self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
+            else: # log uniform must be postive
+                self.par_dist_par_lineedit[0].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                self.par_dist_par_lineedit[1].setValidator(DoubleValidatorOpenInterval(bottom=0))
+            par_enabled = [True, True, False, False]
+            if distribution_pars_in_dict:
+                if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["min"]
+                if "max" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["max"]
+            else:
+                new_dict = {"min": "", "max": ""}
+                self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+            if current_dist == "Uniform":
+                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
+            else:
+                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
+        else:
+            par_enabled = [True] * 4
+            if current_dist == "Normal":
+                par_labels[0] = "Mean:"
+                par_labels[1] = "Std Dev:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
+                self.par_dist_distribution_equation.setText("Behavior ~ N(Mean, Std Dev)\nlb \u2264 Behavior \u2264 ub")
+            elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
+                par_labels[0] = "\u03BC:"
+                par_labels[1] = "\u03C3:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator(bottom=0))
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator(bottom=0))
+                if current_dist == "Log Normal":
+                    self.par_dist_distribution_equation.setText("Behavior ~ exp(Z), Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+                else:
+                    self.par_dist_distribution_equation.setText("Behavior ~ 10^Z, Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+            else:
+                raise ValueError(f"Error: Invalid distribution selected??? Current distribution = {current_dist}")
+
+            par_labels[2] = "Lower Bound (optional):"
+            par_labels[3] = "Upper Bound (optional):"
+
+            self.par_dist_par_lineedit[0].setObjectName("mu")
+            self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+            self.par_dist_par_lineedit[1].setObjectName("sigma")
+            self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator(bottom=0))
+            self.par_dist_par_lineedit[2].setObjectName("lower_bound") # validator set above
+            self.par_dist_par_lineedit[3].setObjectName("upper_bound") # validator set above
+
+            if distribution_pars_in_dict:
+                if "mu" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["mu"]
+                if "sigma" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["sigma"]
+                if "lower_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[2] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["lower_bound"]
+                if "upper_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[3] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["upper_bound"]
+            else:
+                new_dict = {"mu": "", "sigma": "", "lower_bound": "", "upper_bound": ""}
+                self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+
+        for pdpl, pdple, label, text, enabled in zip(self.par_dist_par_label, self.par_dist_par_lineedit, par_labels, par_texts, par_enabled):
+            pdpl.setText(label)
+            pdple.setText(text)
+            pdple.setEnabled(enabled)
+
+        self.validate_all_par_dist_parameters()
+
+    def validate_all_par_dist_parameters(self):
+        # this was written to validate that min<max values, but I have set that side project aside for now because it was slowing down key dev
+        for pdple in self.par_dist_par_lineedit:
+            if pdple.isEnabled():
+                pdple.check_validity(pdple.text())
+
+    def par_dist_enforce_base_cb(self, state):
+        if self.current_cell_def is None:
+            return
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enforce_base"] = state == QtCore.Qt.Checked
+
+    def par_dist_parameters_changed_cb(self, text):
+        if self.current_cell_def is None:
+            return
+        sender = self.sender()
+        if sender.objectName() == "":
+            return # likely reaching here during startup
+        is_acceptable = sender.check_validity(text)
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if not is_acceptable or behavior == "":
+            return
+        self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][sender.objectName()] = text
+        self.validate_all_par_dist_parameters()
+        
     #--------------------------------------------------------
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
@@ -6243,6 +6577,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
+        self.update_par_dist_behaviors(old_name, new_name)
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a cell type in this tab, we need to update all 
@@ -6310,6 +6645,29 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     self.current_secretion_substrate = new_name
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
+
+        self.update_par_dist_behaviors(old_name, new_name)
+
+    def update_par_dist_behaviors(self, old_name, new_name):
+        self.response_l = self.rules_tab.create_response_list()
+        self.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.rename_behavior_distributions(old_name, new_name)
+
+    def rename_behavior_distributions(self, old_name, new_name):
+        possible_superstrings = self.celltypes_list
+        possible_superstrings += self.substrate_list
+        reserved_words = create_reserved_words()
+        possible_superstrings += reserved_words
+        super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
+        for cdname in self.param_d.keys():
+            if "par_dists" in self.param_d[cdname].keys():
+                behavior_keys = list(self.param_d[cdname]["par_dists"].keys()) # do this to avoid changing keys while iterating
+                for behavior in behavior_keys:
+                    if behavior == '':
+                        continue # empty behaviors seem to crop up sometimes
+                    new_behavior_name = find_and_replace_rule_cell(old_name, new_name, super_strings, behavior)
+                    if new_behavior_name != behavior:
+                        self.param_d[cdname]["par_dists"][new_behavior_name] = self.param_d[cdname]["par_dists"].pop(behavior) # sweet
 
     #-----------------------------------------------------------------------------------------
     # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
@@ -6606,6 +6964,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['custom_data'][key] = [self.custom_var_value_str_default, self.custom_var_conserved_default]   # [value, conserved flag]
             idx += 1
 
+    def new_miscellaneous_params(self, cdname):
+        self.param_d[cdname]["par_dists"] = {}
+        self.param_d[cdname]["par_dists_disabled"] = True
+        
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
         # pass
@@ -6884,21 +7246,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'   (simple) chemotaxis motility is enabled:')
             self.param_d[cdname]["motility_advanced_chemotaxis"] = False
             self.chemotaxis_enabled_cb(True)
-            # self.motility_substrate_dropdown.setEnabled(True)
-            # self.chemotaxis_direction_towards.setEnabled(True)
-            # self.chemotaxis_direction_against.setEnabled(True)
-            # self.advanced_chemotaxis_enabled.setChecked(False)
         else:
             self.chemotaxis_enabled_cb(False)
-        #     print("   (simple) chemotaxis motility is NOT enabled:")
-        #     print("   motility_enabled=",self.param_d[cdname]["motility_enabled"])
-        #     print("--> ",self.param_d[cdname])
-        #     print()
-        #     self.motility_use_2D.setChecked(False)
-        #     self.motility_substrate_dropdown.setEnabled(False)
-        #     self.chemotaxis_direction_towards.setEnabled(False)
-        #     self.chemotaxis_direction_against.setEnabled(False)
-
 
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
@@ -7166,6 +7515,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.custom_data_edit_active = True
 
+    def update_misc_params(self):
+        cdname = self.current_cell_def
+        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
+        self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        if self.param_d[cdname]["par_dists_disabled"]:
+            for pdple in self.par_dist_par_lineedit:
+                pdple.setText('')
+            return
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior != '' and (behavior in self.param_d[cdname]['par_dists'].keys()):
+            for pdple in self.par_dist_par_lineedit:
+                name = pdple.objectName()
+                if name not in self.param_d[cdname]['par_dists'][behavior]["parameters"].keys():
+                    val = ''
+                else:
+                    val = self.param_d[cdname]['par_dists'][behavior]['parameters'][name]
+                pdple.setText(val)
+            self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
+
+        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
@@ -7201,6 +7571,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
+
+        self.update_misc_params()
 
 
     #-------------------------------------------------------------------
@@ -8287,6 +8659,38 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # if self.debug_print_fill_xml:
         #     logging.debug(f'\n')
 
+    def fill_par_dists(self, par_dists, cdef):
+        elm = None
+        if self.debug_print_fill_xml:
+            logging.debug(f'------ ["initial_parameter_distributions"]: for {cdef}')
+
+        if "par_dists" not in self.param_d[cdef].keys():
+            return
+        # if self.param_d[cdef]['par_dists_disabled']:
+        #     return
+
+        for key_name, value in self.param_d[cdef]['par_dists'].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            enabled = "true" if value["enabled"] else "false"
+            enforce_base = "true" if value["enforce_base"] else "false"
+            dist_type = value["distribution"]
+            # remove whitespaces from dist_type
+            dist_type = dist_type.replace(" ", "")
+            dist_elm = ET.SubElement(par_dists, "distribution", 
+                    { "enabled":enabled,
+                      "type":dist_type,
+                      "check_base":enforce_base } )
+            behavior_elm = ET.SubElement(dist_elm, "behavior")
+            behavior_elm.text = key_name
+            for par_name, par_value in value["parameters"].items():
+                if par_value == "":
+                    continue # adding a blank element will cause pugixml to record a value of 0
+                par_elm = ET.SubElement(dist_elm, par_name)
+                par_elm.text = par_value
+
+        if elm:
+            elm.tail = self.indent8   # back up 2 for the very last one
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -8388,6 +8792,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     custom_data.text = self.indent10
                     custom_data.tail = self.indent6
                     self.fill_xml_custom_data(custom_data,cdef)
+
+                    par_dists_enabled = "false"
+                    if "par_dists_disabled" in self.param_d[cdef].keys():
+                        par_dists_enabled = "false" if self.param_d[cdef]["par_dists_disabled"] else "true"
+                    par_dists = ET.SubElement(elm, 'initial_parameter_distributions',
+                                            { "enabled":par_dists_enabled })
+                    par_dists.text = self.indent10
+                    par_dists.tail = self.indent6
+                    self.fill_par_dists(par_dists, cdef)
 
                     uep.insert(idx,elm)
                     idx += 1
