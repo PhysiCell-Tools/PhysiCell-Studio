@@ -2,7 +2,7 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QComboBox, QLabel, QCompleter, QToolTip
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip
 from PyQt5.QtGui import QValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
 
@@ -73,7 +73,9 @@ class QLineEdit_custom(QLineEdit):
         super().setValidator(validator)
         self.validator = validator
 
-    def check_validity(self, text):
+    def check_validity(self, text=None):
+        if text is None:
+            text = self.text()
         if self.validator and self.validator.validate(text, 0)[0] != QValidator.Acceptable:
             self.setStyleSheet(self.invalid_style)
             return False
@@ -160,27 +162,18 @@ class HoverWidget(QWidget):
 
     def event(self, event):
         if event.type() == QEvent.Enter:
-            # Display tooltip when the mouse enters the widget
-            self.setToolTip(self.hover_text)
-        elif event.type() == QEvent.Leave:
-            # Clear tooltip when the mouse leaves the widget
-            self.setToolTip('')
-        return super().event(event)
-
-class HoverCheckBox(QCheckBox):
-    def __init__(self, text, hover_text, parent=None):
-        super().__init__(text, parent)
-        self.setMouseTracking(True)  # Enable mouse tracking
-        self.hover_text = hover_text
-
-    def event(self, event):
-        if event.type() == QEvent.Enter:
             # Display tooltip when the mouse enters the checkbox
             QToolTip.showText(event.globalPos(), self.hover_text, self)
         elif event.type() == QEvent.Leave:
             # Hide tooltip when the mouse leaves the checkbox
             QToolTip.hideText()
         return super().event(event)
+
+class HoverCheckBox(QCheckBox, HoverWidget):
+    def __init__(self, text, hover_text, parent=None):
+        super().__init__(text, parent)
+        self.setText(text)
+        self.setHoverText(hover_text)
 
 class HoverCombobox(QComboBox, HoverWidget):
     def __init__(self, hover_text: str, parent=None):
@@ -205,7 +198,8 @@ class HoverLabel(QLabel, HoverWidget):
             }
         """)
       
-# validators    
+# validators
+
 class DoubleValidatorWidgetBounded(QValidator):
     # a validator that uses other widgets to set the bounds of a QDoubleValidator
     def __init__(self, bottom=None, top=None, bottom_transform=lambda x: x, top_transform=lambda x: x):

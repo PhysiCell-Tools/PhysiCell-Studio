@@ -13,11 +13,33 @@ from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox    # , QMessageBox
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
-from studio_classes import QCheckBox_custom
+from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom
 from studio_functions import style_sheet_template
+
+class RandomSeedIntValidator(QtGui.QValidator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def validate(self, text, pos):
+        # see if text is an integer
+        if text == "" or text.isdigit():
+            return QtGui.QValidator.Acceptable, text, pos
+        else:
+            return QtGui.QValidator.Invalid, text, pos
+
+class RandomSeedIntValidator(QtGui.QValidator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def validate(self, text, pos):
+        # see if text is an integer
+        if text == "" or text.isdigit():
+            return QtGui.QValidator.Acceptable, text, pos
+        else:
+            return QtGui.QValidator.Invalid, text, pos
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
@@ -60,10 +82,8 @@ class Config(QWidget):
         # self.config_tab_layout.addWidget(self.tab_widget, 0,0,1,1) # w, row, column, rowspan, colspan
 
         #============  Domain ================================
-        label = QLabel("Domain (micron)")
+        label = QLabelSeparator("Domain (micron)")
         label.setFixedHeight(label_height)
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
         idx_row = 0
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
@@ -156,10 +176,8 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(self.zdel, idx_row,5,1,1) # w, row, column, rowspan, colspan
 
         #============  Misc ================================
-        label = QLabel("Times")
+        label = QLabelSeparator("Times")
         label.setFixedHeight(label_height)
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
@@ -264,10 +282,8 @@ class Config(QWidget):
         self.config_tab_layout.addWidget(label, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
         #============  Misc ================================
-        label = QLabel("Misc runtime parameters")
+        label = QLabelSeparator("Misc runtime parameters")
         label.setFixedHeight(label_height)
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
         idx_row += 1
         self.config_tab_layout.addWidget(label, idx_row,0,1,20) # w, row, column, rowspan, colspan
 
@@ -280,6 +296,7 @@ class Config(QWidget):
         self.num_threads = QLineEdit()
         self.num_threads.setValidator(QtGui.QIntValidator())
         self.config_tab_layout.addWidget(self.num_threads, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
         #----------
 
         label = QLabel("output folder")
@@ -296,6 +313,59 @@ class Config(QWidget):
         # Use a vbox/hbox instead of the grid for better alignment :/
         vbox = QVBoxLayout()
         vbox.addLayout(self.config_tab_layout)
+
+        #----------
+        hbox = QHBoxLayout()
+        label = QLabel("Random seed:")
+        label.setAlignment(QtCore.Qt.AlignRight)
+
+        vbox_temp = QVBoxLayout()
+        vbox_temp.addStretch()
+        vbox_temp.addWidget(label)
+        vbox_temp.addStretch()
+        hbox.addLayout(vbox_temp)
+
+        self.random_seed_gp = QButtonGroup()
+        self.random_seed_gp.idToggled.connect(self.random_seed_gp_cb)
+        random_seed_gp_next_id = 0
+
+        self.random_seed_random_button = QRadioButton("system clock")
+        self.random_seed_random_button.setChecked(True)
+        self.random_seed_gp.addButton(self.random_seed_random_button, random_seed_gp_next_id)
+        hbox.addWidget(self.random_seed_random_button)
+        random_seed_gp_next_id += 1
+
+        self.random_seed_integer_button = QRadioButton("integer \u2192 ")
+        self.random_seed_gp.addButton(self.random_seed_integer_button, random_seed_gp_next_id)
+        hbox.addWidget(self.random_seed_integer_button)
+        random_seed_gp_next_id += 1
+
+        label = QLabel("seed")
+        # align label vertically in bottom of hbox
+        label.setAlignment(QtCore.Qt.AlignBottom)
+        label.setAlignment(QtCore.Qt.AlignLeft)
+
+        vbox_temp = QVBoxLayout()
+        vbox_temp.addStretch()
+        vbox_temp.addWidget(label)
+        vbox_temp.addStretch()
+        hbox.addLayout(vbox_temp)
+
+        self.random_seed_integer = QLineEdit_custom()
+        self.random_seed_integer.setPlaceholderText("system_clock")
+        self.random_seed_integer.setFixedWidth(100)
+        self.random_seed_integer.setEnabled(False)
+        self.random_seed_integer.textChanged.connect(self.random_seed_integer_cb)
+        self.random_seed_integer.setValidator(RandomSeedIntValidator())
+        hbox.addWidget(self.random_seed_integer)
+
+        self.random_seed_warning = QLabel()
+        self.random_seed_warning.setStyleSheet("color: red;")
+        hbox.addWidget(self.random_seed_warning)
+
+        hbox.addStretch()
+
+        vbox.addLayout(hbox)
 
         #------------------
         hbox = QHBoxLayout()
@@ -421,10 +491,8 @@ class Config(QWidget):
         vbox.addLayout(hbox)
 
         #============  Cells IC ================================
-        label = QLabel("Initial conditions of cells (x,y,z, type)")
+        label = QLabelSeparator("Initial conditions of cells (x,y,z, type)")
         label.setFixedHeight(label_height)
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
         vbox.addWidget(label)
 
 
@@ -466,10 +534,8 @@ class Config(QWidget):
         vbox.addLayout(hbox)
 
         #============  Cell behavior flags ================================
-        label = QLabel("Cells' global behaviors")
+        label = QLabelSeparator("Cells' global behaviors")
         label.setFixedHeight(label_height)
-        label.setStyleSheet("background-color: orange")
-        label.setAlignment(QtCore.Qt.AlignCenter)
         vbox.addWidget(label)
         vbox.addLayout(hbox)
         idx_row += 1
@@ -513,6 +579,16 @@ class Config(QWidget):
         self.layout = QVBoxLayout(self)  # leave this!
         self.layout.addWidget(self.scroll)
 
+    def random_seed_gp_cb(self, id):
+        if id == 0:
+            self.random_seed_integer.setEnabled(False)
+        else:
+            self.random_seed_integer.setEnabled(True)
+            self.random_seed_integer.check_validity() # set color based on current validity
+
+    def random_seed_integer_cb(self, text):
+        if text == "":
+            self.random_seed_integer.setPlaceholderText("system_clock") # warn the user that this will set the seed to system_clock
 
     def add_day_cb(self):
         if not self.max_time.text():
@@ -628,6 +704,20 @@ class Config(QWidget):
                 self.virtual_walls.setChecked(False)
         else:
             print("\n\n---------virtual_wall_at_domain_edge is None !!!!!!!!!!!!1")
+
+        if self.xml_root.find(".//random_seed") is not None:
+            # this intentionally will read in the user_parameter random_seed if it exists. this will facilitate the user using this new placement (importantly, the default custom.cpp will still use the user_parameter to override the value placed here)
+            text = self.xml_root.find(".//random_seed").text
+            if text in  ["system_clock","random",""]:
+                self.random_seed_random_button.setChecked(True)
+            else:
+                self.random_seed_integer_button.setChecked(True)
+                self.random_seed_integer.setText(self.xml_root.find(".//random_seed").text)
+        else:
+            self.random_seed_random_button.setChecked(True)
+
+        if self.xml_root.find(".//user_parameters//random_seed") is not None:
+            self.random_seed_warning.setText("WARNING: random_seed in user_parameters found in xml loading.\nThat parameter will take precedence if it remains.")
 
         # self.disable_auto_springs.setChecked(False)
         # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
@@ -784,6 +874,15 @@ class Config(QWidget):
             uep = self.xml_root.find('.//options')
             subelm = ET.SubElement(uep, "virtual_wall_at_domain_edge")
             subelm.text = bval
+
+        if self.xml_root.find(".//options//random_seed") is None:
+            uep = self.xml_root.find('.//options')
+            subelm = ET.SubElement(uep, "random_seed")
+
+        if self.random_seed_random_button.isChecked():
+            self.xml_root.find(".//options//random_seed").text = "system_clock"
+        else:
+            self.xml_root.find(".//options//random_seed").text = self.random_seed_integer.text()
 
         # bval = "false"
         # if self.disable_auto_springs.isChecked():
