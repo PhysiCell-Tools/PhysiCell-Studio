@@ -1196,7 +1196,7 @@ class Rules(QWidget):
             # if raw: yield raw
             # print(row)
             raw = row.split('/')[0].strip()
-            # print(raw)
+            # print("rules_tab.py: strip_comments(): raw=",raw)
             if raw: yield raw
 
     #-----------------------------------------------------------
@@ -1249,7 +1249,7 @@ class Rules(QWidget):
                             return
                         else:
                             print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} has unknown syntax\n')
-                            msg = "fill_rules(): " + full_rules_fname + " has unknown syntax."
+                            msg = f"fill_rules(): {full_rules_fname} has unknown syntax. len(elm)={len(elm)}"
                             show_warning(msg)
                             return
 
