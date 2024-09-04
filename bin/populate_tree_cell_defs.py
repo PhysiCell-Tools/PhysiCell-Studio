@@ -13,6 +13,7 @@ import sys
 import logging
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5 import QtCore
+from PyQt5.QtWidgets import QMessageBox
 
 
 def invertf2s(sval):  # takes a numeric string, converts to float, returns string with num_dec decimal places.
@@ -1443,18 +1444,38 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                         'smoothing': output_settings.find("smoothing").text if output_settings.find("smoothing") is not None else "0",
                                     })
                                     
-                # Update widget values
-                cell_def_tab.physiboss_clear_initial_values()
-                cell_def_tab.physiboss_clear_parameters()
-                cell_def_tab.physiboss_clear_mutants()
-                cell_def_tab.physiboss_clear_node_inheritance()
-                cell_def_tab.physiboss_clear_inputs()
-                cell_def_tab.physiboss_clear_outputs()
-                
-                cell_def_tab.physiboss_update_list_signals()
-                cell_def_tab.physiboss_update_list_behaviours()
-                cell_def_tab.physiboss_update_list_nodes()
-                cell_def_tab.physiboss_update_list_parameters()
+                    # Update widget values
+                    cell_def_tab.physiboss_clear_initial_values()
+                    cell_def_tab.physiboss_clear_parameters()
+                    cell_def_tab.physiboss_clear_mutants()
+                    cell_def_tab.physiboss_clear_node_inheritance()
+                    cell_def_tab.physiboss_clear_inputs()
+                    cell_def_tab.physiboss_clear_outputs()
+                    
+                    cell_def_tab.physiboss_update_list_signals()
+                    cell_def_tab.physiboss_update_list_behaviours()
+                    cell_def_tab.physiboss_update_list_nodes()
+                    cell_def_tab.physiboss_update_list_parameters()
+
+                elif uep_intracellular.attrib["type"] == "roadrunner":
+                    # <intracellular type="roadrunner">
+                    #     <sbml_filename>./config/demo.xml</sbml_filename>
+                    #     <intracellular_dt>0.01</intracellular_dt>
+                    #     <map PC_substrate="oxygen" sbml_species="Oxygen"/>
+                    #     <map PC_substrate="NADH" sbml_species="NADH"/>
+                    #     <map PC_phenotype="da" sbml_species="apoptosis_rate"/>
+                    #     <map PC_phenotype="mms" sbml_species="migration_speed"/>
+                    #     <map PC_phenotype="ssr_lactate" sbml_species="Lac_Secretion_Rate"/>
+                    #     <map PC_phenotype="ctr_0_0" sbml_species="Transition_Rate"/>
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "roadrunner" 
+
+                    msg = f"WARNING: a roadrunner intracellular model was detected, but it is not currently possible to modify its parameters from the Studio."
+                    print(msg)
+                    msgBox = QMessageBox()
+                    # msgBox.setTextFormat(Qt.RichText)
+                    msgBox.setText(msg)
+                    msgBox.setStandardButtons(QMessageBox.Ok)
+                    returnValue = msgBox.exec()
             
 
             logging.debug(f'------ done parsing intracellular:')
