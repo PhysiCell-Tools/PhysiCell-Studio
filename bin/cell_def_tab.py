@@ -4302,8 +4302,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.intracellular_type_dropdown.addItem("none")
         self.intracellular_type_dropdown.addItem("boolean")
         self.intracellular_type_dropdown.addItem("odes")
-        self.intracellular_type_dropdown.addItem("fba")
-        self.intracellular_type_dropdown.model().item(3).setEnabled(False)
+        # self.intracellular_type_dropdown.addItem("fba")
+        # self.intracellular_type_dropdown.model().item(3).setEnabled(False)
         type_hbox.addWidget(self.intracellular_type_dropdown)
 
         # glayout.addLayout(type_hbox, idr,0, 1,1) # w, row, column, rowspan, colspan
