@@ -7302,10 +7302,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         logging.debug(f'update_secretion_params(): self.current_secretion_substrate = {self.current_secretion_substrate}')
         logging.debug(f'{self.param_d[cdname]["secretion"]}')
 
-        self.secretion_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"])
-        self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
-        self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
-        self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+        try:
+            self.secretion_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"])
+            self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
+            self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
+            self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+        except:
+            msg = f"Error parsing secretion parameters for {self.current_secretion_substrate} for cell type {cdname}. Please fix your XML config file."
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         # rwh: also update the qdropdown to select the substrate
 
@@ -8262,6 +8271,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         secretion.tail = "\n" + self.indent10
 
         if self.debug_print_fill_xml:
+            logging.debug(f'\n\n ====================> fill_xml_secretion()\n')
             logging.debug(f'self.substrate_list = {self.substrate_list}')
         for substrate in self.substrate_list:
             if self.debug_print_fill_xml:
@@ -8275,21 +8285,30 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm.text = self.indent14
             elm.tail = self.indent12
 
-            subelm = ET.SubElement(elm, "secretion_rate",{"units":self.default_rate_units})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
-            subelm.tail = self.indent14
+            try:
+                subelm = ET.SubElement(elm, "secretion_rate",{"units":self.default_rate_units})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "secretion_target",{"units":"substrate density"})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
-            subelm.tail = self.indent14
+                subelm = ET.SubElement(elm, "secretion_target",{"units":"substrate density"})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "uptake_rate",{"units":self.default_rate_units})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
-            subelm.tail = self.indent14
+                subelm = ET.SubElement(elm, "uptake_rate",{"units":self.default_rate_units})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "net_export_rate",{"units":"total substrate/min"})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["net_export_rate"]
-            subelm.tail = self.indent12
+                subelm = ET.SubElement(elm, "net_export_rate",{"units":"total substrate/min"})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["net_export_rate"]
+                subelm.tail = self.indent12
+            except:
+                msg = f"Error: unable to update XML secretion parameters for {substrate} for cell type {cdef}. Please fix your XML config file."
+                print(msg)
+                msgBox = QMessageBox()
+                msgBox.setTextFormat(Qt.RichText)
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                returnValue = msgBox.exec()
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
