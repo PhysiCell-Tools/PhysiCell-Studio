@@ -759,7 +759,7 @@ class VisBase():
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
         self.cell_scalar_combobox = ExtendedComboBox()
-        self.cell_scalar_combobox.setFixedWidth(270)
+        self.cell_scalar_combobox.setFixedWidth(320)
         self.cell_scalar_combobox.addItem("cell_type")
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
