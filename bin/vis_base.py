@@ -67,6 +67,7 @@ from phenotypeSummary import PhenotypeWindow
 from populate_tree_cell_defs import populate_tree_cell_defs
 
 from studio_classes import QCheckBox_custom
+from pyMCDS import xmlfile_to_xmlpathfile
 
 #---------------------------
 class ExtendedComboBox(QComboBox):
@@ -2556,48 +2557,71 @@ class VisBase():
         self.disable_cell_scalar_cb = True
         self.cell_scalar_combobox.clear()
 
-        # -- old way (limit choices)
-        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        # for idx in range(len(default_var_l)):
-        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
-        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
-
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
 
-        # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        # num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        # print("plot_tab: add_default_cell_vars(): num_keys=",num_keys)
-        # keys_l = list(mcds.data['discrete_cells']['data'])
         self.cell_scalars_l.clear()
         self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
-        # for idx in range(num_keys-1,0,-1):
-        #     if "transformation_rates" in keys_l[idx]:
-        #         print("found transformation_rates at index=",idx)
-        #         break
-        # idx1 = idx + 1
 
-        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        # Let's remove the ID which seems to be problematic.
         self.cell_scalars_l.remove('ID')
-        # self.cell_scalars_l.reverse()
         self.cell_scalars_l.sort()
-        # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
 
-        # for idx in range(0, len(keys_l)):
-        #     # print("------ add: ",keys_l[idx])
-        #     if keys_l[idx] == "ID":
-        #         continue
-        #     # self.cell_scalar_combobox.addItem(keys_l[idx])
-        #     self.cell_scalars_l.append(keys_l[idx])
-
+        self.replace_ids_with_names(xml_file_root)
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
-        # items = [self.cell_scalar_combobox.itemText(i) for i in range(self.cell_scalar_combobox.count())]
-        # print(items)
 
         self.disable_cell_scalar_cb = False
 
         self.update_plots()
 
+    def replace_ids_with_names(self, xml_file_root):
+        xmlpathfile, _ = xmlfile_to_xmlpathfile(xml_file_root, self.output_dir)
+        tree = ET.parse(xmlpathfile)
+        root = tree.getroot()
+        variables_node = root.find('microenvironment').find('domain').find('variables')
+        variables = variables_node.findall('variable')
+        variable_dict = {}
+        for variable in variables:
+            name = variable.get('name').replace(' ', '_')
+            ID = variable.get('ID')
+            variable_dict[ID] = name
 
+        cell_dict = {}
+        for cdname in self.celldef_tab.param_d.keys():
+            cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
+
+        substrate_scalar_prefixes = ['chemotactic_sensitivities_','secretion_rates_','uptake_rates_','saturation_densities_','net_export_rates_','internalized_total_substrates_','fraction_released_at_death_','fraction_transferred_when_ingested_']
+        substrate_scalar_replace = {'chemotactic_sensitivities_':'chemotactic sensitivity to ','secretion_rates_':'secretion rate of ','uptake_rates_':'uptake rate of ','saturation_densities_':'saturation density of ','net_export_rates_':'net export rate of ','internalized_total_substrates_':'internalized total amount of ','fraction_released_at_death_':'fraction released at death of ','fraction_transferred_when_ingested_':'fraction transferred when ingested of '}
+        cell_scalar_prefixes = ['cell_adhesion_affinities_','live_phagocytosis_rates_','attack_rates_','immunogenicities_','fusion_rates_','transformation_rates_']
+        cell_scalar_replace = {'cell_adhesion_affinities_': 'cell adhesion affinity to ','live_phagocytosis_rates_':'live phagocytosis rate of ','attack_rates_':'rate of attacking ','immunogenicities_':'immunogenicity to ','fusion_rates_':'fusion rate to ','transformation_rates_':'transformation rate to '}
+        substrate_warned = []
+        cell_warned = []
+        for ind, scalar in enumerate(self.cell_scalars_l):
+            scalar_found = False
+            for prefix in substrate_scalar_prefixes:
+                if scalar.startswith(prefix):
+                    scalar_found = True # this comment provides symmetry with the comment below. please don't break the symmetry
+                    sub_id = scalar.split(prefix)[1]
+                    if sub_id not in variable_dict.keys():
+                        if sub_id not in substrate_warned:
+                            print(f"WARNING: Could not find the name of the substrate with ID {sub_id}. Very unclear how this could happen.\n\tSkipping renaming this...")
+                            substrate_warned.append(sub_id)
+                        continue
+                    self.cell_scalars_l[ind] = f"{substrate_scalar_replace[prefix]}{variable_dict[sub_id]}"
+                    break
+            if scalar_found:
+                continue
+            for prefix in cell_scalar_prefixes:
+                if scalar.startswith(prefix):
+                    scalar_found = True # not necessary since we won't be checking it again, but why not put here for symmetry??
+                    sub_id = scalar.split(prefix)[1]
+                    if sub_id not in cell_dict.keys():
+                        if sub_id not in cell_warned:
+                            print(f"WARNING: Could not find the name of the cell variable with ID {sub_id}. Very unclear how this could happen.\n\tSkipping renaming this...")
+                            cell_warned.append(sub_id)
+                        continue
+                    self.cell_scalars_l[ind] = f"{cell_scalar_replace[prefix]}{cell_dict[sub_id]}"
+                    break
+            
     def add_partial_cell_vars(self):
         print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
 

@@ -966,14 +966,7 @@ class pyMCDS:
             internal function to load the data from the PhysiCell output files
             into the pyMCDS instance.
         """
-        # file and path manipulation
-        xmlfile = xmlfile.replace('\\','/')
-        if (xmlfile.find('/') > -1) and (output_path == '.'):
-            ls_xmlfile = xmlfile.split('/')
-            xmlfile = ls_xmlfile.pop(-1)
-            output_path = '/'.join(ls_xmlfile)
-        output_path = pathlib.Path(output_path)
-        xmlpathfile = output_path / xmlfile
+        xmlpathfile, output_path = xmlfile_to_xmlpathfile(xmlfile, output_path)
 
         # read xml path/file
         # 20221027 juliano: d = xmltodict.parse(open('PhysiCell_settings.xml').read(), process_namespaces=True)
@@ -1308,3 +1301,13 @@ class pyMCDS:
         if self.verbose:
             print('done!')
         return MCDS
+
+def xmlfile_to_xmlpathfile(xmlfile, output_path):
+    xmlfile = xmlfile.replace('\\','/')
+    if (xmlfile.find('/') > -1) and (output_path == '.'):
+        ls_xmlfile = xmlfile.split('/')
+        xmlfile = ls_xmlfile.pop(-1)
+        output_path = '/'.join(ls_xmlfile)
+    output_path = pathlib.Path(output_path)
+    xmlpathfile = output_path / xmlfile
+    return xmlpathfile, output_path
