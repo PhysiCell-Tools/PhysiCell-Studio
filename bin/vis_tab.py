@@ -804,6 +804,8 @@ class Vis(VisBase, QWidget):
         xml_file = os.path.join(self.output_dir, xml_file_root)
         # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
         cell_scalar_name = self.cell_scalar_combobox.currentText()
+        if cell_scalar_name in self.cell_scalar_human2mcds_dict.keys():
+            cell_scalar_name = self.cell_scalar_human2mcds_dict[cell_scalar_name]
         cbar_name = self.cell_scalar_cbar_combobox.currentText()
         # print(f"\n\n   >>>>--------- plot_cell_scalar(): xml_file={xml_file}, scalar={cell_scalar_name}, cbar={cbar_name}")
         if not Path(xml_file).is_file():

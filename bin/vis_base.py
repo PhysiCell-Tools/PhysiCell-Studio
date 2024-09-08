@@ -351,6 +351,8 @@ class VisBase():
 
         self.discrete_variable_observed = set()
 
+        self.cell_scalar_human2mcds_dict = {} # initialize here for vis_tab.py
+
         # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
 
 # 	// currently recognized cell cycle models 
@@ -2566,6 +2568,8 @@ class VisBase():
         self.cell_scalars_l.remove('ID')
         self.cell_scalars_l.sort()
 
+        self.cell_scalar_human2mcds_dict = {x: x for x in self.cell_scalars_l} # default to the name shown in the combobox is the same as the key
+
         self.replace_ids_with_names(xml_file_root)
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
 
@@ -2590,37 +2594,34 @@ class VisBase():
             cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
 
         substrate_scalar_prefixes = ['chemotactic_sensitivities_','secretion_rates_','uptake_rates_','saturation_densities_','net_export_rates_','internalized_total_substrates_','fraction_released_at_death_','fraction_transferred_when_ingested_']
-        substrate_scalar_replace = {'chemotactic_sensitivities_':'chemotactic sensitivity to ','secretion_rates_':'secretion rate of ','uptake_rates_':'uptake rate of ','saturation_densities_':'saturation density of ','net_export_rates_':'net export rate of ','internalized_total_substrates_':'internalized total amount of ','fraction_released_at_death_':'fraction released at death of ','fraction_transferred_when_ingested_':'fraction transferred when ingested of '}
+        substrate_scalar_replace = {
+            'chemotactic_sensitivities_': lambda x: f'chemotactic response to {x}',
+            'secretion_rates_': lambda x:  f'(rate of) {x} secretion ',
+            'uptake_rates_': lambda x: f'(rate of) {x} uptake',
+            'saturation_densities_': lambda x: f'{x} secretion target',
+            'net_export_rates_': lambda x: f'(rate of) {x} export',
+            'internalized_total_substrates_': lambda x: f'(amount of) intracellular {x}',
+            'fraction_released_at_death_': lambda x: f'fraction released at death of {x}',
+            'fraction_transferred_when_ingested_': lambda x: f'fraction transferred when ingested of {x}'
+        }
         cell_scalar_prefixes = ['cell_adhesion_affinities_','live_phagocytosis_rates_','attack_rates_','immunogenicities_','fusion_rates_','transformation_rates_']
-        cell_scalar_replace = {'cell_adhesion_affinities_': 'cell adhesion affinity to ','live_phagocytosis_rates_':'live phagocytosis rate of ','attack_rates_':'rate of attacking ','immunogenicities_':'immunogenicity to ','fusion_rates_':'fusion rate to ','transformation_rates_':'transformation rate to '}
-        substrate_warned = []
-        cell_warned = []
+        cell_scalar_replace = {
+            'cell_adhesion_affinities_': lambda x: f'adhesive affinity to {x}',
+            'live_phagocytosis_rates_': lambda x: f'(rate of) phagocytose {x}',
+            'attack_rates_': lambda x: f'(rate of) attack {x}',
+            'immunogenicities_': lambda x: f'immunogenicity to {x}',
+            'fusion_rates_': lambda x: f'(rate of) fuse to {x}',
+            'transformation_rates_': lambda x: f'(rate of) transform to {x}'
+        }
+
         for ind, scalar in enumerate(self.cell_scalars_l):
-            scalar_found = False
-            for prefix in substrate_scalar_prefixes:
-                if scalar.startswith(prefix):
-                    scalar_found = True # this comment provides symmetry with the comment below. please don't break the symmetry
-                    sub_id = scalar.split(prefix)[1]
-                    if sub_id not in variable_dict.keys():
-                        if sub_id not in substrate_warned:
-                            print(f"WARNING: Could not find the name of the substrate with ID {sub_id}. Very unclear how this could happen.\n\tSkipping renaming this...")
-                            substrate_warned.append(sub_id)
-                        continue
-                    self.cell_scalars_l[ind] = f"{substrate_scalar_replace[prefix]}{variable_dict[sub_id]}"
-                    break
+            scalar_found, new_name = find_name_in_dict(scalar, variable_dict, substrate_scalar_prefixes, substrate_scalar_replace)
+            if not scalar_found:
+                scalar_found, new_name = find_name_in_dict(scalar, cell_dict, cell_scalar_prefixes, cell_scalar_replace, state_type='cell definition')
             if scalar_found:
+                self.cell_scalars_l[ind] = new_name
+                self.cell_scalar_human2mcds_dict[new_name] = scalar
                 continue
-            for prefix in cell_scalar_prefixes:
-                if scalar.startswith(prefix):
-                    scalar_found = True # not necessary since we won't be checking it again, but why not put here for symmetry??
-                    sub_id = scalar.split(prefix)[1]
-                    if sub_id not in cell_dict.keys():
-                        if sub_id not in cell_warned:
-                            print(f"WARNING: Could not find the name of the cell variable with ID {sub_id}. Very unclear how this could happen.\n\tSkipping renaming this...")
-                            cell_warned.append(sub_id)
-                        continue
-                    self.cell_scalars_l[ind] = f"{cell_scalar_replace[prefix]}{cell_dict[sub_id]}"
-                    break
             
     def add_partial_cell_vars(self):
         print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
@@ -3083,3 +3084,20 @@ class VisBase():
         print(f"--> {model_name}.simularium")
 
         print("Load this model at: https://simularium.allencell.org/viewer")
+
+
+def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='substrate'):
+    # make a static variable for this function
+    if not hasattr(find_name_in_dict, "warned_ids") or find_name_in_dict.current_warning_state_type != state_type:
+        find_name_in_dict.warned_ids = []
+        find_name_in_dict.current_warning_state_type = state_type
+    for prefix in prefixes:
+        if scalar.startswith(prefix):
+            id = scalar.split(prefix)[1]
+            if id not in state_dict.keys():
+                if id not in find_name_in_dict.warned_ids:
+                    print(f"WARNING: Could not find the name of the {state_type} with ID {id}.")
+                    find_name_in_dict.warned_ids.append(id)
+                return True, scalar
+            return True, replace_dict[prefix](state_dict[id])
+    return False, scalar

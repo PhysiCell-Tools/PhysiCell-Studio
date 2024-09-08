@@ -855,6 +855,8 @@ class Vis(VisBase, QWidget):
         print("    choice= ", choice)
         if len(choice) == 0:
             return
+        if choice in self.cell_scalar_human2mcds_dict.keys():
+            choice = self.cell_scalar_human2mcds_dict[choice]
 
         xml_files = glob.glob(self.output_dir+'/output*.xml')  # cross-platform OK?
         # print('xml_files = ',xml_files)
@@ -1601,6 +1603,8 @@ class Vis(VisBase, QWidget):
             cell_scalar_str = self.cell_scalar_combobox.currentText()
             if len(cell_scalar_str) == 0:
                 cell_scalar_str = 'cell_type'
+            if cell_scalar_str in self.cell_scalar_human2mcds_dict.keys():
+                cell_scalar_str = self.cell_scalar_human2mcds_dict[cell_scalar_str]
             # print("\n------- cell_scalar_str= ",cell_scalar_str)
             self.scalar_bar_cells.SetTitle(cell_scalar_str)
             # cell_type = mcds.data['discrete_cells']['data']['cell_type']
