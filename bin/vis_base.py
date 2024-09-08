@@ -3096,6 +3096,9 @@ def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='su
             id = scalar.split(prefix)[1]
             if id == '': # if there is only one substrate/celltype, no id is added to the name
                 id = '0'
+            else:
+                # strip the leading underscore
+                id = id[1:]
             if id not in state_dict.keys():
                 if id not in find_name_in_dict.warned_ids:
                     print(f"WARNING: Could not find the name of the {state_type} with ID {id}.")
