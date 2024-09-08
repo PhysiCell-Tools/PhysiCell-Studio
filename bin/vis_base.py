@@ -2593,25 +2593,25 @@ class VisBase():
         for cdname in self.celldef_tab.param_d.keys():
             cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
 
-        substrate_scalar_prefixes = ['chemotactic_sensitivities_','secretion_rates_','uptake_rates_','saturation_densities_','net_export_rates_','internalized_total_substrates_','fraction_released_at_death_','fraction_transferred_when_ingested_']
+        substrate_scalar_prefixes = ['chemotactic_sensitivities','secretion_rates','uptake_rates','saturation_densities','net_export_rates','internalized_total_substrates','fraction_released_at_death','fraction_transferred_when_ingested']
         substrate_scalar_replace = {
-            'chemotactic_sensitivities_': lambda x: f'chemotactic response to {x}',
-            'secretion_rates_': lambda x:  f'(rate of) {x} secretion ',
-            'uptake_rates_': lambda x: f'(rate of) {x} uptake',
-            'saturation_densities_': lambda x: f'{x} secretion target',
-            'net_export_rates_': lambda x: f'(rate of) {x} export',
-            'internalized_total_substrates_': lambda x: f'(amount of) intracellular {x}',
-            'fraction_released_at_death_': lambda x: f'fraction released at death of {x}',
-            'fraction_transferred_when_ingested_': lambda x: f'fraction transferred when ingested of {x}'
+            'chemotactic_sensitivities': lambda x: f'chemotactic response to {x}',
+            'secretion_rates': lambda x:  f'(rate of) {x} secretion ',
+            'uptake_rates': lambda x: f'(rate of) {x} uptake',
+            'saturation_densities': lambda x: f'{x} secretion target',
+            'net_export_rates': lambda x: f'(rate of) {x} export',
+            'internalized_total_substrates': lambda x: f'(amount of) intracellular {x}',
+            'fraction_released_at_death': lambda x: f'fraction released at death of {x}',
+            'fraction_transferred_when_ingested': lambda x: f'fraction transferred when ingested of {x}'
         }
-        cell_scalar_prefixes = ['cell_adhesion_affinities_','live_phagocytosis_rates_','attack_rates_','immunogenicities_','fusion_rates_','transformation_rates_']
+        cell_scalar_prefixes = ['cell_adhesion_affinities','live_phagocytosis_rates','attack_rates','immunogenicities','fusion_rates','transformation_rates']
         cell_scalar_replace = {
-            'cell_adhesion_affinities_': lambda x: f'adhesive affinity to {x}',
-            'live_phagocytosis_rates_': lambda x: f'(rate of) phagocytose {x}',
-            'attack_rates_': lambda x: f'(rate of) attack {x}',
-            'immunogenicities_': lambda x: f'immunogenicity to {x}',
-            'fusion_rates_': lambda x: f'(rate of) fuse to {x}',
-            'transformation_rates_': lambda x: f'(rate of) transform to {x}'
+            'cell_adhesion_affinities': lambda x: f'adhesive affinity to {x}',
+            'live_phagocytosis_rates': lambda x: f'(rate of) phagocytose {x}',
+            'attack_rates': lambda x: f'(rate of) attack {x}',
+            'immunogenicities': lambda x: f'immunogenicity to {x}',
+            'fusion_rates': lambda x: f'(rate of) fuse to {x}',
+            'transformation_rates': lambda x: f'(rate of) transform to {x}'
         }
 
         for ind, scalar in enumerate(self.cell_scalars_l):
@@ -3094,6 +3094,8 @@ def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='su
     for prefix in prefixes:
         if scalar.startswith(prefix):
             id = scalar.split(prefix)[1]
+            if id == '': # if there is only one substrate/celltype, no id is added to the name
+                id = '0'
             if id not in state_dict.keys():
                 if id not in find_name_in_dict.warned_ids:
                     print(f"WARNING: Could not find the name of the {state_type} with ID {id}.")
