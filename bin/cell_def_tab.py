@@ -5744,13 +5744,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
         self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
 
-        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
+        self.display_par_dists_button = QPushButton("Display/update summary for current cell type")
         self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
 
         hbox_cell_type_par_dist = QHBoxLayout()
         hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
-        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
         hbox_cell_type_par_dist.addStretch()
+        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
 
         self.behavior_model = QStandardItemModel()
         self.par_dist_behavior_combobox = ExtendedCombo()
@@ -5831,7 +5831,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
 
     def par_dist_widgets_set_enabled(self, enabled):
-        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
         self.par_dist_behavior_combobox.setEnabled(enabled)
         self.par_dist_enable_checkbox.setEnabled(enabled)
         self.display_par_dists_button.setEnabled(enabled)
@@ -6634,19 +6633,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["fusion_rate"][new_name] = self.param_d[cdname]["fusion_rate"].pop(old_name)
             self.param_d[cdname]["transformation_rate"][new_name] = self.param_d[cdname]["transformation_rate"].pop(old_name)
             self.param_d[cdname]["cell_adhesion_affinity"][new_name] = self.param_d[cdname]["cell_adhesion_affinity"].pop(old_name)
-        #     # print("--- new_name: ",new_name)
-        #     self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
-        #     self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
-        #     self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
 
-        #     # print("--- new: ",self.param_d[cdname]["secretion"])
-
-        # if old_name == self.current_secretion_substrate:
-        #     self.current_secretion_substrate = new_name
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 
         self.update_par_dist_behaviors(old_name, new_name)
+        
+        self.update_par_dist_cdname(new_name)
 
     def update_par_dist_behaviors(self, old_name, new_name):
         self.response_l = self.rules_tab.create_response_list()
@@ -7526,8 +7519,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def update_misc_params(self):
         cdname = self.current_cell_def
-        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
         self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        self.update_par_dist_cdname(cdname)
         if self.param_d[cdname]["par_dists_disabled"]:
             for pdple in self.par_dist_par_lineedit:
                 pdple.setText('')
@@ -7544,7 +7537,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
 
-        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
+    def update_par_dist_cdname(self,cdname):  
+        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
+        self.display_par_dists_button.setText(f"Display/update summary for {cdname}")    
+        if hasattr(self, "par_dist_window") and self.par_dist_window is not None:
+            self.par_dist_window.setWindowTitle(f"Parameter Distributions for {cdname}")
+
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
