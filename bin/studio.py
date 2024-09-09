@@ -471,12 +471,12 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.update_3D()
 
         elif self.rules_tab_index and (index == self.rules_tab_index): 
-            self.rules_tab.update_base_value()
             if self.rules_tab.update_rules_for_custom_data:
                 print("studio.py: need to update Rules comboboxes for changed custom data")
                 self.rules_tab.fill_signals_widget()
                 self.rules_tab.fill_responses_widget()
                 self.rules_tab.update_rules_for_custom_data = False
+            self.rules_tab.update_base_value()
 
     def about_pyqt(self):
         msgBox = QMessageBox()

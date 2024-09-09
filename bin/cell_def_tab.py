@@ -5449,20 +5449,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # Callback when user edits a "Name" cell in the table. Somewhat tricky...
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
-        # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
         if self.rules_tab:
             self.rules_tab.update_rules_for_custom_data = True
 
         debug_me = False
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
-        # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
-        # print("incoming master_custom_var_d= ",self.master_custom_var_d)
-        # print(f'custom_data_name_changed():   self.current_cell_def = {self.current_cell_def}')
-        # print(f'custom_data_name_changed():   text= {text}')
 
         if not self.custom_data_edit_active:  # hack to avoid unwanted callback
-            # print("--- edit is not active, leaving!")
             return
 
         vname = self.sender().vname.text()
@@ -5475,8 +5469,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             print(f'  prev_name= {prev_name}')
 
         len_vname = len(vname)
-        # user has deleted the entire name; remove any prev name from the relevant dicts
         if len_vname == 0:
+            # user has deleted the entire name; remove any prev name from the relevant dicts
             if debug_me:
                 print("--------- handling len(vname)==0 ")
                 print("1) master_custom_var_d= ",self.master_custom_var_d)
@@ -5484,27 +5478,20 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 if debug_me:
                     print(f"--------- pop prev_name {prev_name}")
                 self.master_custom_var_d.pop(prev_name)
-                # print("2) master_custom_var_d= ",self.master_custom_var_d)
                 for cdname in self.param_d.keys():
                     self.param_d[cdname]["custom_data"].pop(prev_name)
-                    # print(f"3) self.param_d[{cdname}]['custom_data']= ",self.param_d[cdname]['custom_data'])
 
                 self.sender().prev = None  # update previous to be None
-            # return
 
         else:  # vname has >=1 length
             wrow = self.sender().wrow
             if debug_me:
                 print("--------- handling len(vname) >= 1. wrow= ",wrow)
-            # next_row = self.sender().wrow + 1
-            # print("  len(vname)>=1.  next_row= ",next_row)
 
             # check for duplicate name; if so, disable entire table forcing this name to be changed
             if vname in self.master_custom_var_d.keys():
-                # print(f"-- found {vname} in master_custom_var_d: {self.master_custom_var_d}")
                 self.disable_table_cells_for_duplicate_name(self.sender())
                 self.custom_table_disabled = True
-                # print("--------- 1) leave function")
                 return  # --------- leave function
 
 
@@ -5515,17 +5502,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 # If we're at the last row, add N(=10) more rows to the table.
                 if wrow == self.max_custom_data_rows-1:
-                    # print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
-                    # print("add 10 rows")
                     for ival in range(10):
                         self.add_row_custom_table(self.max_custom_data_rows+ival)
                     self.max_custom_data_rows += 10
-                    # print("post: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
-                    # print("self.max_custom_data_rows= ",self.max_custom_data_rows)
 
                 units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
                 desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
-                # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
                 if prev_name:
                     # this is replacing a previous name; it's NOT a new var
                     if debug_me:
@@ -5539,60 +5521,38 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     if debug_me:
                         print(f" Adding a NEW var {vname}")
                     self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
-                # print(f'post adding {vname} --> {self.master_custom_var_d}')
 
                 # -- since we're adding this var for the 1st time, add it to each cell type, using same values
                     val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
                     bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
                     for cdname in self.param_d.keys():
-                        # print(f'--- cdname= {cdname},  vname={vname}')
                         self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
 
                 self.sender().prev = vname  # update the previous to be the current
 
             else:  # length of vname >= 1 
-                # print(f'--- len_vname >= 1:  vname={vname},  prev_name={prev_name}')
                 if prev_name:   # if this name had a previous name, update it (pop the previous) in the dicts
-                    # print(f'----- prev_name={prev_name}')
                     self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
-                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
-                    # self.master_custom_var_d.pop(prev_name)
-
-                    # units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
-                    # desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
-                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
-                    # self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
-                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
-
 
                     for cdname in self.param_d.keys():
-                        # print(f'--- cdname= {cdname},  vname={vname},  prev_name={prev_name}')
                         self.param_d[cdname]["custom_data"][vname] = self.param_d[cdname]["custom_data"].pop(prev_name)
                     self.sender().prev = vname  # update the previous to be the current
 
                 else:
-                    # print(f'----- no prev_name; add to dicts')
                     units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
                     desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
-                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
                     self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
-                    # print(f"after adding {vname} -->  {self.master_custom_var_d}")
 
                     val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
                     bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
                     for cdname in self.param_d.keys():
-                        # print(f'--- cdname= {cdname},  vname={vname}')
                         self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
 
                     self.sender().prev = vname  # update the previous to be the current
 
         self.max_custom_vars = len(self.master_custom_var_d)
-        # print("- max_custom_vars = ",self.max_custom_vars)
-        # self.sender().prev = vname
 
         # Let's use whatever is there now
-
-        # print("    master_custom_var_d= ",self.master_custom_var_d)
 
         if self.custom_table_disabled:
             self.enable_all_custom_data()
@@ -5603,6 +5563,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_par_dist_behaviors(old_name, new_name)
         # print(f'============== leave custom_data_name_changed() --------')
 
+        if self.rules_tab:
+            self.rules_tab.custom_data_rename(old_name, new_name)
 
     #--------------------------------------------------------------
     # Callback when user edit a Value cell in the table. Somewhat tricky...
@@ -6554,9 +6516,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 2) update in the param_d dict
         for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
-            # print("--- cdname = ",cdname)
-            # print("--- old: ",self.param_d[cdname]["secretion"])
-            # print("--- new_name: ",new_name)
             if self.param_d[cdname]["motility_chemotaxis_substrate"] == old_name:
                 self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
 
@@ -6571,7 +6530,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.current_secretion_substrate = new_name
 
         if self.rules_tab:
-            # print("     calling self.rules_tab.substrate_rename")
             self.rules_tab.substrate_rename(idx,old_name,new_name)
 
         self.physiboss_update_list_signals()
@@ -6583,17 +6541,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # data structures (e.g., QComboBox) that reference it.  Including Rules tab(!)
     def renamed_celltype(self, old_name,new_name):
 
-        # print(f'\ncell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.cell_adhesion_affinity_celltype = new_name
-        # print(f'------- setting self.cell_adhesion_affinity_celltype= {new_name}')
 
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         logging.debug(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
-        # print(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
         logging.debug(f'    self.celltypes_list= {self.celltypes_list}')
-        # print(f'    self.celltypes_list= {self.celltypes_list}')
-        # print()
         logging.debug(f' ')
         for cdname in self.param_d.keys():
             logging.debug(f'{self.param_d[cdname]}')
@@ -6601,8 +6554,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 1) update all dropdown widgets containing the cell def names
         for idx in range(len(self.celltypes_list)):
-            # print("     idx,old,new = ",idx, old_name,new_name)
-            # if old_name in self.motility_substrate_dropdown.itemText(idx):
             if old_name == self.live_phagocytosis_dropdown.itemText(idx):
                 self.live_phagocytosis_dropdown.setItemText(idx, new_name)
             if old_name == self.attack_rate_dropdown.itemText(idx):
@@ -6620,8 +6571,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.ics_tab.celltype_combobox.setItemText(idx, new_name)
 
             if self.rules_tab and (old_name == self.rules_tab.celltype_combobox.itemText(idx)):
-                # print("    calling self.rules_tab.celltype_combobox.setItemText")
-                # self.rules_tab.celltype_combobox.setItemText(idx, new_name)
                 self.rules_tab.cell_def_rename(idx,old_name,new_name)
 
         # 2) also update all param_d dicts that involve cell def names
