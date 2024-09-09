@@ -354,6 +354,7 @@ class Vis(VisBase, QWidget):
             print("              self.figure is None, so return!")
             return
         self.figure = plt.figure()
+        self.gs = gridspec.GridSpec(2,2, height_ratios=[20,1], width_ratios=[20,1]) # top row is [plot, substrate colorbar]; bottom row is [cells colorbar, nothing]
         self.canvas = FigureCanvasQTAgg(self.figure)
         print("     self.canvas= ",self.canvas)
         self.canvas.setStyleSheet("background-color:transparent;")
@@ -362,7 +363,7 @@ class Vis(VisBase, QWidget):
         # self.ax0 = self.figure.add_subplot(111)
         # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=1.2)
         # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=self.aspect_ratio)
-        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.ax0 = self.figure.add_subplot(self.gs[0,0], adjustable='box')
         
         # self.ax0.get_xaxis().set_visible(False)
         # self.ax0.get_yaxis().set_visible(False)
@@ -973,9 +974,10 @@ class Vis(VisBase, QWidget):
         else:
             # If it's not there, we create it
             if self.cax2 is None:
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+                self.cax2 = self.figure.add_subplot(self.gs[1,0])
+                # ax2_divider = make_axes_locatable(self.ax0)
+                # self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
             self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
    
@@ -1118,8 +1120,9 @@ class Vis(VisBase, QWidget):
             # print("# axes(after substrate remove) = ",len(self.figure.axes))
             # print(" self.figure.axes= ",self.figure.axes)
             #ppp
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            # ax1_divider = make_axes_locatable(self.ax0)
+            # self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
                 self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
             except:
@@ -1128,8 +1131,9 @@ class Vis(VisBase, QWidget):
             # print(" self.figure.axes= ",self.figure.axes)
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
         else:
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            # ax1_divider = make_axes_locatable(self.ax0)
+            # self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
                 self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
             except:
