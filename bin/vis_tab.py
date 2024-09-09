@@ -284,7 +284,6 @@ class Vis(VisBase, QWidget):
         xml_file = os.path.join(self.output_dir, xml_file_root)
         # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
 
-        # cell_scalar_name = self.cell_scalar_combobox.currentText()
         if not Path(xml_file).is_file():
             print("ERROR: file not found",xml_file)
             return
@@ -518,7 +517,6 @@ class Vis(VisBase, QWidget):
             print("------ plot_svg(): error trying to parse ",full_fname)
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
             msg = "plot_svg(): error parsing "+full_fname+". You may have a partially written .svg file due to a canceled simulation."
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
@@ -709,12 +707,16 @@ class Vis(VisBase, QWidget):
         except:
             print("vis_tab.py: plot_cell_physiboss(): error performing mcds.get_cell_df()['cell_type']")
             return
-            
-        physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+        
+        physiboss_state_file = os.path.join(self.output_dir, "output%08d_boolean_intracellular.csv" % frame)
         
         if not Path(physiboss_state_file).is_file():
-            print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
-            return
+            
+            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+            
+            if not Path(physiboss_state_file).is_file():
+                print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
+                return
         
         cell_scalar = {id: 9 for id in mcds.get_cell_df().index}
         
@@ -798,10 +800,12 @@ class Vis(VisBase, QWidget):
 
         xml_file_root = "output%08d.xml" % frame
         xml_file = os.path.join(self.output_dir, xml_file_root)
-        # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
-        cell_scalar_name = self.cell_scalar_combobox.currentText()
+        cell_scalar_humanreadable_name = self.cell_scalar_combobox.currentText()
+        if cell_scalar_humanreadable_name in self.cell_scalar_human2mcds_dict.keys():
+            cell_scalar_mcds_name = self.cell_scalar_human2mcds_dict[cell_scalar_humanreadable_name]
+        else:
+            cell_scalar_mcds_name = cell_scalar_humanreadable_name
         cbar_name = self.cell_scalar_cbar_combobox.currentText()
-        # print(f"\n\n   >>>>--------- plot_cell_scalar(): xml_file={xml_file}, scalar={cell_scalar_name}, cbar={cbar_name}")
         if not Path(xml_file).is_file():
             print("ERROR: file not found",xml_file)
             return
@@ -810,13 +814,12 @@ class Vis(VisBase, QWidget):
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         try:
-            cell_scalar = mcds.get_cell_df()[cell_scalar_name]
+            cell_scalar = mcds.get_cell_df()[cell_scalar_mcds_name]
         except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
+            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_mcds_name]")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
-            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
+            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_mcds_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
@@ -855,36 +858,33 @@ class Vis(VisBase, QWidget):
         # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
         # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
         
-        # print(cell_scalar_name, " - discrete: ", (cell_scalar % 1  == 0).all()) # Possible test if the variable is discrete or continuum variable (issue: in some time the continuum variable can be classified as discrete (example time=0))
-        
-        # if( cell_scalar_name == 'cell_type' or cell_scalar_name == 'current_phase'): discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
-        if cell_scalar_name in self.discrete_cell_scalars: 
+        if cell_scalar_mcds_name in self.discrete_cell_scalars: 
 
             self.discrete_variable_observed = self.discrete_variable_observed.union(set([int(i) for i in np.unique(cell_scalar)]))
 
-            if cell_scalar_name == "current_phase":   # and if "Fixed" range is checked
+            if cell_scalar_mcds_name == "current_phase":   # and if "Fixed" range is checked
                 self.discrete_variable = list(self.cycle_phases.keys())
                 names_observed = [self.cycle_phases[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_phases.keys()]
 
-            elif cell_scalar_name == "cell_type":
+            elif cell_scalar_mcds_name == "cell_type":
                 # I'm not sure I should be calling this every time. But I'm also not sure about the life cycle of celltype_name
                 self.get_cell_types_from_config()
                 self.discrete_variable = list(range(len(self.celltype_name)))
                 names_observed = [self.celltype_name[i] for i in sorted(list(self.discrete_variable_observed)) if i < len(self.celltype_name)]
                 
-            elif cell_scalar_name == "cycle_model":
+            elif cell_scalar_mcds_name == "cycle_model":
                 self.discrete_variable = list(self.cycle_models.keys())
                 names_observed = [self.cycle_models[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_models.keys()]
 
-            elif cell_scalar_name == "current_death_model":
+            elif cell_scalar_mcds_name == "current_death_model":
                 self.discrete_variable = [0,1]
                 names_observed = ["phase #%d" % i for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             
-            elif cell_scalar_name == "is_motile":
+            elif cell_scalar_mcds_name == "is_motile":
                 self.discrete_variable = [0,1]
                 names_observed = ["motile" if i == 1 else "stationnary" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
                 
-            elif cell_scalar_name == "dead":
+            elif cell_scalar_mcds_name == "dead":
                 self.discrete_variable = [0,1]
                 names_observed = ["dead" if i == 1 else "alive" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             else:
@@ -977,7 +977,7 @@ class Vis(VisBase, QWidget):
                 self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
             self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            self.cbar2.ax.set_xlabel(cell_scalar_name, fontsize=self.cbar_label_fontsize)
+            self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)

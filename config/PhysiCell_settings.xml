@@ -179,7 +179,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0.0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0.0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0.0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="default" units="1/min">0</phagocytosis_rate>
                     </live_phagocytosis_rates>
@@ -200,6 +202,38 @@
             <custom_data>
                 <sample conserved="false" units="dimensionless" description="">1.0</sample>
             </custom_data>
+            <initial_parameter_distributions enabled="true">
+                <distribution enabled="true" type="Uniform" check_base="false">
+                    <behavior>substrate secretion target</behavior>
+                    <min>0.01</min>
+                    <max>0.99</max>
+                </distribution>
+                <distribution enabled="true" type="Normal" check_base="false">
+                    <behavior>substrate uptake</behavior>
+                    <mu>0.005</mu>
+                    <sigma>0.0005</sigma>
+                    <lower_bound>0</lower_bound>
+                </distribution>
+                <distribution enabled="true" type="LogNormal" check_base="false">
+                    <behavior>substrate secretion</behavior>
+                    <mu>2</mu>
+                    <sigma>1</sigma>
+                    <lower_bound>0.01</lower_bound>
+                    <upper_bound>1000</upper_bound>
+                </distribution>
+                <distribution enabled="true" type="LogUniform" check_base="true">
+                    <behavior>Volume</behavior>
+                    <min>100</min>
+                    <max>10000</max>
+                </distribution>
+                <distribution enabled="true" type="Log10Normal" check_base="false">
+                    <behavior>custom:sample</behavior>
+                    <mu>2</mu>
+                    <sigma>2</sigma>
+                    <lower_bound>10</lower_bound>
+                    <upper_bound>1000</upper_bound>
+                </distribution>
+            </initial_parameter_distributions>
         </cell_definition>
     </cell_definitions>
 

@@ -45,10 +45,12 @@ import string
 import random
 # import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
+from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
+from rules_tab import create_reserved_words, find_and_replace_rule_cell
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
@@ -121,12 +123,13 @@ class MyQLineEdit(QLineEdit):
 
 
 class CellDef(QWidget):
-    def __init__(self, pytest_flag):
+    def __init__(self, pytest_flag, config_tab=None):
         super().__init__()
 
         random.seed(42)   # for reproducibility (cough). Needed for pytest results.
         self.pytest_flag = pytest_flag
 
+        self.config_tab = config_tab
         # primary key = cell def name
         # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
@@ -404,6 +407,7 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
         self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
+        self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
         #---rwh
         # self.custom_data_tab = CustomData(False)
@@ -508,6 +512,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_intracellular_params(cdname)
         self.new_custom_data_params(cdname)
 
+        self.new_miscellaneous_params(cdname)
+
         # print("\n\n",self.param_d)
         # self.custom_data_tab.param_d = self.param_d
         # self.custom_data_tab.new_custom_data_params(cdname)
@@ -538,19 +544,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
-        
-
-        # for k in self.param_d.keys():
-        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-        #     print()
-        # print()
-
         self.init_default_phenotype_params(cdname, True)
-
-        # print("\n ----- new dict:")
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
 
         self.current_cell_def = cdname
 
@@ -558,8 +552,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #-----  Update this new cell def's widgets' values
         num_items = self.tree.invisibleRootItem().childCount()
-        # print("tree has num_items = ",num_items)
-        # treeitem = QTreeWidgetItem([cdname])
+
         treeitem = QTreeWidgetItem([cdname, self.param_d[cdname]["ID"]])
         treeitem.setFlags(treeitem.flags() | QtCore.Qt.ItemIsEditable)
         self.tree.insertTopLevelItem(num_items,treeitem)
@@ -673,9 +666,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         for cdname in self.param_d.keys():    # for each cell def, set how it interacts with new cell based on how it interacted with original cell
             self.param_d[cdname]['live_phagocytosis_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
-            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['live_phagocytosis_rate'][cdname_original]
+            self.param_d[cdname]['attack_rate'][cdname_copy] = self.param_d[cdname]['attack_rate'][cdname_original]
+            self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['fusion_rate'][cdname_original]
+            self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['transformation_rate'][cdname_original]
 
             self.param_d[cdname]['cell_adhesion_affinity'][cdname_copy] = self.param_d[cdname]['cell_adhesion_affinity'][cdname_original]  # default affinity
            
@@ -750,24 +743,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.ics_tab.celltype_combobox.removeItem(item_idx)
 
         # But ALSO remove from the dicts:
-        # logging.debug(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
-        # print(f'Also delete {self.param_d[self.current_cell_def]} from dicts')
         logging.debug(f'--- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
         print(f'\ndelete_cell_def(): ----- cell_adhesion_affinity= {self.param_d[self.current_cell_def]["cell_adhesion_affinity"]}')
 
         # remove from the widgets
-
-        # for idx in range(len(self.celltypes_list)):
-        #     # print("idx,old,new = ",idx, old_name,new_name)
-        #     # if old_name in self.motility_substrate_dropdown.itemText(idx):
-        #     if old_name == self.live_phagocytosis_dropdown.itemText(idx):
-        #         self.live_phagocytosis_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.attack_rate_dropdown.itemText(idx):
-        #         self.attack_rate_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.fusion_rate_dropdown.itemText(idx):
-        #         self.fusion_rate_dropdown.setItemText(idx, new_name)
-        #     if old_name == self.cell_transformation_dropdown.itemText(idx):
-        #         self.cell_transformation_dropdown.setItemText(idx, new_name)
 
         # TODO: is this safe? Seems so.
         del self.param_d[self.current_cell_def]
@@ -776,18 +755,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.rules_tab:
             self.rules_tab.delete_celltype(item_idx)
 
-
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
-
         # For the remaining cell defs, if any, remove the deleted cell def from certain dicts
         for cdef in self.param_d.keys():
-            # print(" ===>>> ",cdef, " : ", self.param_d[cdef])
             # Mechanics
-            # print(f" pre-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
             self.param_d[cdef]['cell_adhesion_affinity'].pop(self.current_cell_def,0)  
-            # print(f"\n post-pop ===>>> [{cdef}]['cell_adhesion_affinity'] = {self.param_d[cdef]['cell_adhesion_affinity']}")
 
             # Interactions
             self.param_d[cdef]['live_phagocytosis_rate'].pop(self.current_cell_def,0)
@@ -797,11 +768,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row()   # rwh: apparently not used?
-        # print('------      item_idx=',item_idx)
-        # self.tree.removeItemWidget(self.tree.currentItem(), 0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
 
-        # print('------      new name=',self.tree.currentItem().text(0))
         self.current_cell_def = self.tree.currentItem().text(0)
 
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
@@ -1811,14 +1779,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
-
         #-----
-        # 	<model code="100" name="apoptosis"> 
-        # 	<death_rate units="1/min">2.1e-4</death_rate>  
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-        # 	</phase_transition_rates>
-
         label = QLabel("phase 0->1 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1826,7 +1787,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.apoptosis_trate01 = QLineEdit()
-        # self.apoptosis_trate01 = QLineEdit_color()
         self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
         self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
@@ -1860,19 +1820,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
-        # <phase_durations units="min">
-        #     <duration index="0" fixed_duration="true">516</duration>
 
         #-------------------
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-        # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1919,12 +1871,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-        # self.apoptosis_cytoplasmic_hbox.addWidget(units)
-        # self.vbox.addLayout(self.apoptosis_cytoplasmic_biomass_change_rate_hbox)
-
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
@@ -1982,12 +1928,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <model code="101" name="necrosis">
-        # 	<death_rate units="1/min">0.0</death_rate>
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
-        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
-        # 	</phase_transition_rates>
         label = QLabel("death rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2027,19 +1967,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(radio_frame, idr,0, 1,2) # w, row, column, rowspan, colspan
 
         #-----
-        # 	<model code="100" name="apoptosis"> 
-        # 	<death_rate units="1/min">2.1e-4</death_rate>  
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-        # 	</phase_transition_rates>
-
-        # <model code="101" name="necrosis">
-        # 	<death_rate units="1/min">0.0</death_rate>
-        # 	<phase_transition_rates units="1/min">
-        # 		<rate start_index="0" end_index="1" fixed_duration="false">9e9</rate>
-        # 		<rate start_index="1" end_index="2" fixed_duration="true">1.15741e-5</rate>
-        # 	</phase_transition_rates>
-
         label = QLabel("phase 0->1 transition rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2131,13 +2058,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
-        # <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-        # <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-
         label = QLabel("unlysed fluid change rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2184,10 +2104,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-        # <calcification_rate units="1/min">0</calcification_rate>
-        # <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
 
         label = QLabel("nuclear biomass change rate")
         label.setFixedWidth(self.label_width)
@@ -2256,10 +2172,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         death_tab_scroll.setWidget(death_tab) 
 
         death_tab.setLayout(glayout)
-        # death_tab.addWidget(death_tab_scroll)
-        # scroll_params.setLayout(glayout)
-        # death_tab.setLayout(scroll_params)
-        # return death_tab
         return death_tab_scroll
 
     #--------------------------------------------------------
@@ -2352,27 +2264,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.param_d[self.current_cell_def]['necrosis_duration_flag'] = self.necrosis_duration_flag
 
-    #-------
-
-    # def apop_death_rate_changed(self, text):
-    #     print("----- apop_death_rate_changed: self.current_cell_def = ",self.current_cell_def)
-    #     self.param_d[self.current_cell_def]["apop_death_rate"] = text
-    # def apop_phase0_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_phase0"] = text
-
-    # def apop_unlysed_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_unlysed"] = text
-    # def apop_lysed_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_lysed"] = text
-    # def apop_cyto_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_cyto"] = text
-    # def apop_nuclear_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_nuclear"] = text
-    # def apop_calcif_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_calcif"] = text
-    # def apop_rupture_changed(self, text):
-    #     self.param_d[self.current_cell_def]["apop_rupture"] = text
-
     #--------------------------------------------------------
     def create_volume_tab(self):
         volume_tab = QWidget()
@@ -2394,30 +2285,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: volume")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-
-        # <total units="micron^3">2494</total>
-        # <fluid_fraction units="dimensionless">0.75</fluid_fraction>
-        # <nuclear units="micron^3">540</nuclear>
 
         label = QLabel("total")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr = 0
-        # self.volume_total_hbox.addWidget(label)
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         self.volume_total = QLineEdit_color()
         self.volume_total.textChanged.connect(self.volume_total_changed)
         self.volume_total.setValidator(QtGui.QDoubleValidator())
-        # self.volume_total_hbox.addWidget(self.volume_total)
         glayout.addWidget(self.volume_total, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron^3")
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # self.volume_total_hbox.addWidget(units)
-        # vlayout.addLayout(self.volume_total_hbox)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #---
@@ -2454,10 +2336,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
-        # <fluid_change_rate units="1/min">0.05</fluid_change_rate>
-        # <cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
-        # <nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
-
         #---
         label = QLabel("fluid change rate")
         label.setFixedWidth(self.label_width)
@@ -2510,8 +2388,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
         #---
-        # <calcified_fraction units="dimensionless">0</calcified_fraction>
-        # <calcification_rate units="1/min">0</calcification_rate>
         label = QLabel("calcification fraction")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2612,9 +2488,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-    # <cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
-    # <cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
-    # <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
         label = QLabel("cell-cell adhesion strength")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2649,45 +2522,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
+        ### cell-bm interactions; save for later (db: 2024-05-31)
         #-----
         # self.new_stuff = False
         self.new_stuff = True
-        # label = QLabel("cell-BM adhesion strength")
-        # label.setEnabled(self.new_stuff)
-        # label.setFixedWidth(self.label_width)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idr += 1
-        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        # self.cell_bm_adhesion_strength = QLineEdit_color()
-        # self.cell_bm_adhesion_strength.textChanged.connect(self.cell_bm_adhesion_strength_changed)
-        # self.cell_bm_adhesion_strength.setValidator(QtGui.QDoubleValidator())
-        # glayout.addWidget(self.cell_bm_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.cell_bm_adhesion_strength.setEnabled(self.new_stuff)
-
-        # units = QLabel("micron/min")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # #---
-        # label = QLabel("cell-BM repulsion strength")
-        # label.setEnabled(self.new_stuff)
-        # label.setFixedWidth(self.label_width)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # idr += 1
-        # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-        # self.cell_bm_repulsion_strength = QLineEdit_color()
-        # self.cell_bm_repulsion_strength.textChanged.connect(self.cell_bm_repulsion_strength_changed)
-        # self.cell_bm_repulsion_strength.setValidator(QtGui.QDoubleValidator())
-        # glayout.addWidget(self.cell_bm_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
-        # self.cell_bm_repulsion_strength.setEnabled(self.new_stuff)
-
-        # units = QLabel("micron/min")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         #---
         label = QLabel("relative max adhesion distance")
@@ -2724,10 +2562,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
         #---
-    # <options>
-    #     <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
-    #     <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
-    # </options>
         label = QLabel("Options:")
         label.setFixedSize(80,20)
         label.setStyleSheet("background-color: orange")
@@ -2751,11 +2585,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_relative_equilibrium_distance_enabled = QCheckBox_custom("enable")
         self.set_relative_equilibrium_distance_enabled.clicked.connect(self.set_relative_equilibrium_distance_enabled_cb)
         glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
-
-        # units = QLabel("")
-        # units.setFixedWidth(self.units_width)
-        # units.setAlignment(QtCore.Qt.AlignLeft)
-        # glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #--------
         label = QLabel("absolute equilibrium distance")
@@ -2784,7 +2613,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         label = QLabel("elastic constant")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2794,16 +2622,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.elastic_constant.setEnabled(self.new_stuff)
+        self.elastic_constant.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-
+        #--
         label = QLabel("attachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2813,7 +2640,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.attachment_rate.setEnabled(self.new_stuff)
+        self.attachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
@@ -2822,7 +2649,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #--
         label = QLabel("detachment rate")
-        label.setEnabled(self.new_stuff)
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
@@ -2832,12 +2658,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
-        self.detachment_rate.setEnabled(self.new_stuff)
+        self.detachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        #--
+        label = QLabel("maximum number of attachments")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+
+        self.max_num_attachments = QLineEdit_color()
+        self.max_num_attachments.textChanged.connect(self.max_num_attachments_changed)
+        self.max_num_attachments.setValidator(QtGui.QIntValidator(bottom=0))
+        glayout.addWidget(self.max_num_attachments, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.max_num_attachments.setEnabled(True)
 
         #---------
         idr += 1
@@ -2877,13 +2716,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: motility")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-        # self.vbox.addWidget(QHLine())
 
         #---
-        # <speed units="micron/min">1</speed>
-        # <persistence_time units="min">1</persistence_time>
-        # <migration_bias units="dimensionless">.75</migration_bias>
         label = QLabel("speed")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -2936,15 +2770,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
-        # <options>
-        #     <enabled>false</enabled>
-        #     <use_2D>true</use_2D>
-        #     <chemotaxis>
-        #         <enabled>false</enabled>
-        #         <substrate>virus</substrate>
-        #         <direction>1</direction>
-        #     </chemotaxis>
-        # </options>
         #---
         self.motility_enabled = QCheckBox_custom("enable motility")
         self.motility_enabled.clicked.connect(self.motility_enabled_cb)
@@ -2981,16 +2806,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
         # self.motility_substrate_dropdown.addItem("oxygen")
 
-        # self.chemotaxis_direction_positive = QCheckBox_custom("up gradient (+1)")
-        # glayout.addWidget(self.chemotaxis_direction_positive, idr,1, 1,1) # w, row, column, rowspan, colspan
-
         self.chemotaxis_direction_towards = QRadioButton("towards")
         self.chemotaxis_direction_towards.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addLayout(self.chemotaxis_direction_towards, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.chemotaxis_direction_against = QRadioButton("against")
         self.chemotaxis_direction_against.clicked.connect(self.chemotaxis_direction_cb)
-        # glayout.addWidget(self.chemotaxis_direction_against, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         hbox = QHBoxLayout()
         hbox.addWidget(self.chemotaxis_direction_towards)
@@ -3003,18 +2823,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         radio_frame.setFixedWidth(170)  # omg
         glayout.addWidget(radio_frame, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        #---
-            # <advanced_chemotaxis>
-            #     <enabled>false</enabled>
-            #     <normalize_each_gradient>false</normalize_each_gradient>
-            #     <chemotactic_sensitivities>
-            #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="toxin">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="quorum">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="pro-inflammatory">0</chemotactic_sensitivity> 
-            #       <chemotactic_sensitivity substrate="debris">0</chemotactic_sensitivity> 
-            #     </chemotactic_sensitivities>
-            #   </advanced_chemotaxis>
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,2) # w, row, column, rowspan, colspan
 
@@ -3089,49 +2897,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("Phenotype: secretion")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-
-        # <substrate name="virus">
-        #     <secretion_rate units="1/min">0</secretion_rate>
-        #     <secretion_target units="substrate density">1</secretion_target>
-        #     <uptake_rate units="1/min">10</uptake_rate>
-        #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-        # </substrate> 
-        
-        # <substrate name="interferon">
-        #     <secretion_rate units="1/min">0</secretion_rate>
-        #     <secretion_target units="substrate density">1</secretion_target>
-        #     <uptake_rate units="1/min">0</uptake_rate>
-        #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-        # </substrate> 
-
-        # cycle_path = ".//cell_definition[" + str(idx_current_cell_def) + "]//phenotype//cycle"
-        # phase_transition_path = cycle_path + "//phase_transition_rates"
-        # print(' >> phase_transition_path ')
-        # pt_uep = uep.find(phase_transition_path)
-
-        # self.secretion_substrate_dropdown = QComboBox()
-        # self.secretion_substrate_dropdown.setFixedWidth(300)
-        # self.secretion_substrate_dropdown.currentIndexChanged.connect(self.secretion_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
-
-
-        # self.uep_cell_defs = self.xml_root.find(".//cell_definitions")
-        # print('self.uep_cell_defs= ',self.uep_cell_defs)
-        # # secretion_path = ".//cell_definition[" + str(idx_current_cell_def) + "]//phenotype//secretion//"
-        # uep_secretion = self.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//secretion")
-        # print('uep_secretion = ',uep_secretion )
-        # # vp = []   # pointers to <variable> nodes
-        # if self.uep_cell_defs:
-        #     # uep = self.xml_root.find('.//secretion')  # find unique entry point
-        #     idx = 0
-        #     for sub in uep_secretion.findall('substrate'):
-        #         # vp.append(var)
-        #         print(idx,") -- secretion substrate = ",sub.attrib['name'])
-        #         idx += 1
-
-        # label = QLabel("oxygen")
-        # label.setStyleSheet('background-color: lightgreen')
-        # label.setFixedWidth(150)
-        # self.vbox.addWidget(label)
 
         self.secretion_substrate_dropdown = QComboBox()
         self.secretion_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
@@ -3242,80 +3007,60 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def create_interaction_tab(self):
-            # <cell_interactions>
-            #   <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
-            #   <live_phagocytosis_rates>
-            #     <phagocytosis_rate name="bacteria" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="blood vessel" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="stem" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="differentiated" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="macrophage" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="CD8+ T cell" units="1/min">0</phagocytosis_rate>
-            #     <phagocytosis_rate name="neutrophil" units="1/min">0</phagocytosis_rate>
-            #   </live_phagocytosis_rates>
-            #   <attack_rates>
-            #     <attack_rate name="bacteria" units="1/min">0</attack_rate>
-            #     <attack_rate name="blood vessel" units="1/min">0</attack_rate>
-            #     <attack_rate name="stem" units="1/min">0</attack_rate>
-            #     <attack_rate name="differentiated" units="1/min">0</attack_rate>
-            #     <attack_rate name="macrophage" units="1/min">0</attack_rate>
-            #     <attack_rate name="CD8+ T cell" units="1/min">0</attack_rate>
-            #     <attack_rate name="neutrophil" units="1/min">0</attack_rate>
-            #   </attack_rates>
-            #   <damage_rate units="1/min">0</damage_rate>
-            #   <fusion_rates>
-            #     <fusion_rate name="bacteria" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="blood vessel" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="stem" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="differentiated" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="macrophage" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="CD8+ T cell" units="1/min">0</fusion_rate>
-            #     <fusion_rate name="neutrophil" units="1/min">0</fusion_rate>
-            #   </fusion_rates>
-            # </cell_interactions>
-            # <cell_transformations>
-            #   <transformation_rates>
-            #     <transformation_rate name="bacteria" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="blood vessel" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="stem" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="differentiated" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="macrophage" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="CD8+ T cell" units="1/min">0</transformation_rate>
-            #     <transformation_rate name="neutrophil" units="1/min">0</transformation_rate>
-            #   </transformation_rates>
-            # </cell_transformations>
-
         interaction_tab = QWidget()
         interaction_tab.setStyleSheet("background-color: rgb(236,236,236)")
-        # interaction_tab.setStyleSheet("QLineEdit { background-color: white }")
-        # interaction_tab.setStyleSheet("QPushButton { background-color: white }")
-        # interaction_tab.setStyleSheet("QPushButton { color: black }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: interaction")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
-            # <cell_interactions>
-            #   <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
-            #   <live_phagocytosis_rates>
-            #     <phagocytosis_rate name="bacteria" units="1/min">0</phagocytosis_rate>
-
-        label = QLabel("dead phagocytosis rate")
+        label = QLabel("apoptotic phagocytosis rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr = 0
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.dead_phagocytosis_rate = QLineEdit_color()
-        self.dead_phagocytosis_rate.textChanged.connect(self.dead_phagocytosis_rate_changed)
-        self.dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.apoptotic_phagocytosis_rate = QLineEdit_color()
+        self.apoptotic_phagocytosis_rate.textChanged.connect(self.apoptotic_phagocytosis_rate_changed)
+        self.apoptotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.apoptotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        # units.setStyleSheet("border: 1px solid black;")
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+        
+        label = QLabel("necrotic phagocytosis rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrotic_phagocytosis_rate = QLineEdit_color()
+        self.necrotic_phagocytosis_rate.textChanged.connect(self.necrotic_phagocytosis_rate_changed)
+        self.necrotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.necrotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("other dead phagocytosis rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.other_dead_phagocytosis_rate = QLineEdit_color()
+        self.other_dead_phagocytosis_rate.textChanged.connect(self.other_dead_phagocytosis_rate_changed)
+        self.other_dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
+        glayout.addWidget(self.other_dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
@@ -3352,9 +3097,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.attack_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.attack_rate_dropdown.currentIndexChanged.connect(self.attack_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
-        self.attack_rate = QLineEdit_color()
+        self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        self.attack_rate.setValidator(QtGui.QDoubleValidator())
+        if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
+            validator = AttackRateValidator(self)
+        else:
+            validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
@@ -3362,19 +3111,42 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        idr += 1
+        self.attack_rate_fast_label = QLabel("")
+        self.attack_rate_fast_label.setStyleSheet("color: red")
+        glayout.addWidget(self.attack_rate_fast_label, idr,0, 1,4) # w, row, column, rowspan, colspan
+
+
         #------
-        label = QLabel("damage rate")
+        label = QLabel("attack damage rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.damage_rate = QLineEdit_color()
-        self.damage_rate.textChanged.connect(self.damage_rate_changed)
-        self.damage_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.attack_damage_rate = QLineEdit_color()
+        self.attack_damage_rate.textChanged.connect(self.attack_damage_rate_changed)
+        self.attack_damage_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.attack_damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("attack duration")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.attack_duration = QLineEdit_color()
+        self.attack_duration.textChanged.connect(self.attack_duration_changed)
+        self.attack_duration.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.attack_duration , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_time_units)
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
@@ -3424,6 +3196,40 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
+        label = QLabel("damage rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.damage_rate = QLineEdit_color()
+        self.damage_rate.textChanged.connect(self.damage_rate_changed)
+        self.damage_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
+        label = QLabel("damage repair rate")
+        label.setFixedWidth(self.label_width)
+        label.setAlignment(QtCore.Qt.AlignRight)
+        idr += 1
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
+
+        self.damage_repair_rate = QLineEdit_color()
+        self.damage_repair_rate.textChanged.connect(self.damage_repair_rate_changed)
+        self.damage_repair_rate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.damage_repair_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        units = QLabel(self.default_rate_units)
+        units.setFixedWidth(self.units_width)
+        units.setAlignment(QtCore.Qt.AlignLeft)
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        #------
         # label = QLabel("immunogenicity")
         # label.setFixedWidth(self.label_width)
         # label.setAlignment(QtCore.Qt.AlignRight)
@@ -3458,7 +3264,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.reset_interaction_button, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        for idx in range(11):  # rwh: hack solution to align rows
+        # self.insert_hacky_blank_lines(glayout)
+        for idx in range(7):  # rwh: hack solution to align rows
             blank_line = QLabel("")
             idr += 1
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -3468,12 +3275,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         interaction_tab.setLayout(glayout)
 
         return interaction_tab
-
-    #--------------------------------------------------------
-    # def enable_interaction_callbacks(self):
-    #     print("----- enable_interaction_callbacks()")
-    #     self.transformation_rate.textChanged.connect(self.transformation_rate_changed)
-    #     self.cell_transformation_dropdown.currentIndexChanged.connect(self.cell_transformation_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
     #--------------------------------------------------------
     def reset_interaction_cb(self):
@@ -3489,42 +3290,65 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
 
     #--------------------------------------------------------
-    def dead_phagocytosis_rate_changed(self,text):
-        # print("dead_phagocytosis_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['dead_phagocytosis_rate'] = text
+    def apoptotic_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['apoptotic_phagocytosis_rate'] = text
+    #--------------------------------------------------------
+    def necrotic_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['necrotic_phagocytosis_rate'] = text
+    #--------------------------------------------------------
+    def other_dead_phagocytosis_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['other_dead_phagocytosis_rate'] = text
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
-        # print("live_phagocytosis_rate_changed:  self.live_phagocytosis_celltype=",self.live_phagocytosis_celltype)
-        # print("live_phagocytosis_rate_changed:  text=",text)
-
         celltype_name = self.live_phagocytosis_dropdown.currentText()
-
-        # self.param_d[self.current_cell_def]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
         self.param_d[self.current_cell_def]['live_phagocytosis_rate'][celltype_name] = text
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
-        # print("attack_rate_changed:  text=",text)
         celltype_name = self.attack_rate_dropdown.currentText()
-
-        # self.param_d[self.current_cell_def]['attack_rate'][self.attack_rate_celltype] = text
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
+
+        if text == "":
+            return
+        
+        if self.config_tab.mechanics_dt.text() == "" or float(self.config_tab.mechanics_dt.text()) == 0:
+            self.attack_rate_fast_label.setText(f"WARNING: Current mechanics_dt is 0 (or unset). Make sure to set that value > 0.")
+            return
+        
+        attack_rate = float(text) 
+        mech_dt = float(self.config_tab.mechanics_dt.text())
+        max_val = 1/mech_dt
+        attack_prob = attack_rate * mech_dt
+        if "immunogenicity" in self.param_d[self.current_cell_def].keys():
+            immunogenicity = float(self.param_d[self.current_cell_def]["immunogenicity"][self.attack_rate_dropdown.currentText()])
+            attack_prob *= immunogenicity
+            max_val /= immunogenicity
+            denom = "(immunogenicity * mechanics_dt)"
+        else:  
+            denom = "mechanics_dt"
+        if attack_prob > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
+            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
+        else:
+            self.attack_rate_fast_label.setText("")
     #--------------------------------------------------------
-    def damage_rate_changed(self,text):
-        # print("damage_rate_changed:  text=",text)
-        self.param_d[self.current_cell_def]['damage_rate'] = text
+    def attack_damage_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['attack_damage_rate'] = text
+    #--------------------------------------------------------
+    def attack_duration_changed(self,text):
+        self.param_d[self.current_cell_def]['attack_duration'] = text
     #--------------------------------------------------------
     def fusion_rate_changed(self,text):
-        # print("fusion_rate_changed:  text=",text)
         celltype_name = self.fusion_rate_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['fusion_rate'][self.fusion_rate_celltype] = text
         self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
-        # print("\n\n >>>>   transformation_rate_changed:  text=",text)
         celltype_name = self.cell_transformation_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['transformation_rate'][self.transformation_rate_celltype] = text
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
-        # print(self.param_d[self.current_cell_def]['transformation_rate'])
+    #--------------------------------------------------------
+    def damage_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['damage_rate'] = text
+    #--------------------------------------------------------
+    def damage_repair_rate_changed(self,text):
+        self.param_d[self.current_cell_def]['damage_repair_rate'] = text
 
     #--------------------------------------------------------
     # def immunogenicity_changed(self,text):
@@ -3640,7 +3464,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for celltype in self.celltypes_list:
                 self.physiboss_behaviours.append("adhesive affinity to " + celltype)
 
-            self.physiboss_behaviours += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose dead cell"]
+            self.physiboss_behaviours += ["relative maximum adhesion distance", "cell-cell repulsion", "cell-BM adhesion", "cell-BM repulsion", "phagocytose apoptotic cell", "phagocytose necrotic cell", "phagocytose other dead cell"]
 
             for celltype in self.celltypes_list:
                 self.physiboss_behaviours.append("phagocytose " + celltype)
@@ -4478,8 +4302,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.intracellular_type_dropdown.addItem("none")
         self.intracellular_type_dropdown.addItem("boolean")
         self.intracellular_type_dropdown.addItem("odes")
-        self.intracellular_type_dropdown.addItem("fba")
-        self.intracellular_type_dropdown.model().item(3).setEnabled(False)
+        # self.intracellular_type_dropdown.addItem("fba")
+        # self.intracellular_type_dropdown.model().item(3).setEnabled(False)
         type_hbox.addWidget(self.intracellular_type_dropdown)
 
         # glayout.addLayout(type_hbox, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -5159,6 +4983,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['mechanics_attachment_rate'] = text
     def detachment_rate_changed(self, text):
         self.param_d[self.current_cell_def]['mechanics_detachment_rate'] = text
+    def max_num_attachments_changed(self, text):
+        self.param_d[self.current_cell_def]['mechanics_max_num_attachments'] = text
 
     # insert callbacks for QCheckBoxes
     def set_relative_equilibrium_distance_enabled_cb(self,bval):
@@ -5732,11 +5558,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.enable_all_custom_data()
             self.custom_table_disabled = False
 
+        old_name = f"custom:{prev_name}"
+        new_name = f"custom:{text}"
+        self.update_par_dist_behaviors(old_name, new_name)
+        # print(f'============== leave custom_data_name_changed() --------')
+
         if self.rules_tab:
-            old_name = f"custom:{prev_name}"
-            new_name = f"custom:{vname}"
             self.rules_tab.custom_data_rename(old_name, new_name)
-            pass
 
     #--------------------------------------------------------------
     # Callback when user edit a Value cell in the table. Somewhat tricky...
@@ -5869,9 +5697,349 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         
         self.custom_data_search.setText('')
 
-        # self.custom_var_count = 0
         self.custom_data_edit_active = True
 
+    #--------------------------------------------------------
+    def create_miscellaneous_tab(self):
+        par_dist_label = QLabelSeparator("Parameter Distributions")
+
+        self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
+        self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
+
+        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
+        self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
+
+        hbox_cell_type_par_dist = QHBoxLayout()
+        hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
+        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
+        hbox_cell_type_par_dist.addStretch()
+
+        self.behavior_model = QStandardItemModel()
+        self.par_dist_behavior_combobox = ExtendedCombo()
+        self.par_dist_behavior_combobox.setModel(self.behavior_model)
+        self.par_dist_behavior_combobox.setModelColumn(0)
+        self.par_dist_behavior_combobox.currentIndexChanged.connect(self.par_dist_behavior_changed_cb)
+        self.par_dist_behavior_combobox.editTextChanged.connect(self.par_dist_behavior_text_changed_cb)
+
+        self.par_dist_enable_checkbox = QCheckBox("Enable")
+        self.par_dist_enable_checkbox.stateChanged.connect(self.par_dist_enable_cb)
+
+        self.par_distributions_combobox = QComboBox()
+        self.par_distributions_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
+        self.par_distributions_combobox.currentIndexChanged.connect(self.par_distribution_changed_cb)
+
+        self.par_dist_enforce_base_checkbox = HoverCheckBox("Enforce base value within distribution", "Enforced at PhysiCell runtime.")
+        self.par_dist_enforce_base_checkbox.stateChanged.connect(self.par_dist_enforce_base_cb)
+
+        self.par_dist_distribution_equation = QLabel("")
+
+        hbox_par_dist_1 = QHBoxLayout()
+
+        hbox_par_dist_1.addWidget(QLabel("Behavior:"))
+        hbox_par_dist_1.addWidget(self.par_dist_behavior_combobox)
+        hbox_par_dist_1.addWidget(self.par_dist_enable_checkbox)
+        hbox_par_dist_1.addStretch()
+
+        hbox_par_dist_2 = QHBoxLayout()
+
+        hbox_par_dist_2.addWidget(QLabel("Distribution:"))
+        hbox_par_dist_2.addWidget(self.par_distributions_combobox)
+
+        hbox_par_dist_2.addWidget(self.par_dist_enforce_base_checkbox)
+        hbox_par_dist_2.addStretch()
+        hbox_par_dist_2.addWidget(self.par_dist_distribution_equation)
+
+        hbox_par_dist_parameters = QHBoxLayout()
+        self.par_dist_par_label = []
+        self.par_dist_par_lineedit = []
+        for i in range(4):
+            self.par_dist_par_label.append(QLabel(""))
+            qline_edt = QLineEdit_custom(enabled=False)
+            qline_edt.setValidator(QtGui.QDoubleValidator())
+            qline_edt.textChanged.connect(self.par_dist_parameters_changed_cb)
+            self.par_dist_par_lineedit.append(qline_edt)
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
+            hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
+
+        vbox = QVBoxLayout()
+        vbox.addWidget(par_dist_label)
+        vbox.addLayout(hbox_cell_type_par_dist)
+        vbox.addLayout(hbox_par_dist_1)
+        vbox.addLayout(hbox_par_dist_2)
+        vbox.addLayout(hbox_par_dist_parameters)
+        vbox.addStretch()
+
+        miscellaneous_tab = QWidget()
+        miscellaneous_tab.setLayout(vbox)
+
+        miscellaneous_tab_scroll_area = QScrollArea()
+        miscellaneous_tab_scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        miscellaneous_tab_scroll_area.setWidgetResizable(True)
+        miscellaneous_tab_scroll_area.setWidget(miscellaneous_tab)
+
+        return miscellaneous_tab_scroll_area
+
+    def par_dist_enable_cb(self, state):
+        # throw warning that this is not yet implemented
+        bval = state == QtCore.Qt.Checked
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enabled"] = bval
+        self.par_dist_distribution_widgets_set_enabled(bval)
+            
+    def cell_type_par_dist_disabled_cb(self, state):
+        if self.current_cell_def is None:
+            return
+        self.param_d[self.current_cell_def]["par_dists_disabled"] = state == QtCore.Qt.Checked
+        self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
+
+    def par_dist_widgets_set_enabled(self, enabled):
+        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
+        self.par_dist_behavior_combobox.setEnabled(enabled)
+        self.par_dist_enable_checkbox.setEnabled(enabled)
+        self.display_par_dists_button.setEnabled(enabled)
+        self.par_dist_distribution_widgets_set_enabled(enabled and self.par_dist_enable_checkbox.isChecked())
+    
+    def par_dist_distribution_widgets_set_enabled(self, enabled):
+        self.par_distributions_combobox.setEnabled(enabled)
+        self.par_dist_enforce_base_checkbox.setEnabled(enabled)
+        if enabled:
+            self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
+        else:
+            for i in range(4):
+                self.par_dist_par_lineedit[i].setEnabled(False)
+
+    def display_par_dists_cb(self):
+        # create new window and print distribution infomration there
+        if self.current_cell_def is None:
+            return
+        if self.current_cell_def not in self.param_d.keys():
+            return
+        if "par_dists" not in self.param_d[self.current_cell_def].keys():
+            return
+        if len(self.param_d[self.current_cell_def]["par_dists"]) == 0:
+            return
+        
+        # create new window
+        self.par_dist_window = QWidget()
+        self.par_dist_window.setWindowTitle(f"Parameter Distributions for {self.current_cell_def}")
+        self.par_dist_window.setGeometry(100, 100, 800, 600)
+        vbox = QVBoxLayout()
+        
+        for key, value in self.param_d[self.current_cell_def]["par_dists"].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            # add a line to the QDialog box about this parameter distribution
+            label = QLabel(f"Behavior: {key}\nEnabled: {value['enabled']}\nDistribution: {value['distribution']}\nParameters: {value['parameters']}\nCheck base: {value['enforce_base']}")
+            vbox.addWidget(label)
+        
+        vbox.addStretch()
+        self.par_dist_window.setLayout(vbox)
+        self.par_dist_window.hide()
+        self.par_dist_window.show()
+
+    def fill_responses_widget(self, response_l):
+        self.response_l = response_l
+        self.par_dist_behavior_combobox.clear()
+        self.par_dist_behavior_combobox.addItems(self.response_l)
+        self.par_dist_behavior_combobox.setCurrentIndex(0)
+
+    def par_dist_behavior_changed_cb(self, idx):
+        cdname = self.current_cell_def
+        if cdname is None or cdname not in self.param_d.keys():
+            return # make sure this cell type is one we want (e.g. not currently being deleted)
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior == '':
+            return # this can happen when new behaviors are added and the list is cleared
+        
+        if behavior not in self.param_d[cdname]["par_dists"].keys():
+            self.param_d[cdname]["par_dists"][behavior] = {}
+            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            if self.par_dist_enable_checkbox.isChecked(): # set the enabled to False if the checkbox is checked
+                self.par_dist_enable_checkbox.setChecked(False)
+            else: # otherwise, emit the unchecked state to deactivate downstream widgets
+                self.par_dist_enable_checkbox.stateChanged.emit(QtCore.Qt.Unchecked)
+            self.par_dist_enforce_base_checkbox.setChecked(False)
+            self.param_d[cdname]["par_dists"][behavior]["enforce_base"] = False
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            if self.par_distributions_combobox.currentIndex() == 0:
+                self.par_distributions_combobox.currentIndexChanged.emit(0)
+            else:
+                self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
+            for pdple in self.par_dist_par_lineedit:
+                pdple.setText("")
+        else: # behavior has previously been set, proceed with caution based on prev distribution and current distribution
+            old_dict = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior]["parameters"])
+            if self.param_d[cdname]["par_dists"][behavior]["distribution"] != self.par_distributions_combobox.currentText():
+                self.par_distributions_combobox.setCurrentIndex(self.par_distributions_combobox.findText(self.param_d[cdname]["par_dists"][behavior]["distribution"]))
+            else:
+                self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
+            self.set_par_dist_pars_from_dict(old_dict)
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
+            if self.par_dist_enable_checkbox.isChecked() != self.param_d[cdname]["par_dists"][behavior]["enabled"]:
+                self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
+            else:
+                self.par_dist_enable_checkbox.stateChanged.emit(self.par_dist_enable_checkbox.checkState())
+
+    def par_dist_behavior_text_changed_cb(self, text):
+        if text not in self.response_l:
+            self.par_dist_enable_checkbox.setEnabled(False)
+            self.par_dist_distribution_widgets_set_enabled(False)
+        else:
+            self.par_dist_enable_checkbox.setEnabled(True)
+            if text==self.par_dist_behavior_combobox.itemText(self.par_dist_behavior_combobox.currentIndex()):
+                # if the text is the same as the current behavior index, force the emission of the index changed signal to update the widgets
+                self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex())
+            # else:
+                # the others will follow when the behavior index is updated immediately after this event is handled
+
+    def set_par_dist_pars_from_dict(self, par_d):
+        for pdple in self.par_dist_par_lineedit:
+            pdple.setText("") # reset all the text before filling it in
+        for k, v in par_d.items():
+            if k == "min":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "max":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "mu":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "sigma":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "lower_bound":
+                self.par_dist_par_lineedit[2].setText(v)
+            elif k == "upper_bound":
+                self.par_dist_par_lineedit[3].setText(v)
+            else:
+                print(f"Error: Invalid parameter key {k} in set_par_dist_pars_from_dict()")
+
+    def par_distribution_changed_cb(self, idx):
+        cdname = self.current_cell_def
+        if cdname is None or cdname not in self.param_d.keys():
+            return # make sure this cell type is one we want (e.g. not currently being deleted)
+        current_dist = self.par_distributions_combobox.currentText()
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior not in self.param_d[cdname]["par_dists"].keys():
+            # I do not think this block should be reachable...
+            raise ValueError(f"Error: Behavior {behavior} not in param_d[{cdname}]['par_dists'] keys. DRB is responsible for fixing this.")
+            self.param_d[cdname]["par_dists"][behavior] = {}
+            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            self.par_dist_enforce_base_checkbox.setChecked(False)
+            distribution_pars_in_dict = False
+        else:
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
+            if ("distribution" in self.param_d[cdname]["par_dists"][behavior].keys()) and (current_dist == self.param_d[cdname]["par_dists"][behavior]["distribution"]):
+                distribution_pars_in_dict = True
+            else:
+                distribution_pars_in_dict = False
+        self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
+
+        # next, find the distribution and update fields
+        par_labels = [""] * 4
+        par_texts = [""] * 4
+        if current_dist == "None":
+            par_enabled = [False] * 4
+            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
+            self.par_dist_distribution_equation.setText("")
+        elif current_dist == "Uniform" or current_dist == "Log Uniform":
+            par_labels[0] = "Min:"
+            self.par_dist_par_lineedit[0].setObjectName("min")
+            par_labels[1] = "Max:"
+            self.par_dist_par_lineedit[1].setObjectName("max")
+            if current_dist == "Uniform":
+                self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+                self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
+            else: # log uniform must be postive
+                self.par_dist_par_lineedit[0].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                self.par_dist_par_lineedit[1].setValidator(DoubleValidatorOpenInterval(bottom=0))
+            par_enabled = [True, True, False, False]
+            if distribution_pars_in_dict:
+                if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["min"]
+                if "max" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["max"]
+            else:
+                new_dict = {"min": "", "max": ""}
+                self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+            if current_dist == "Uniform":
+                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
+            else:
+                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
+        else:
+            par_enabled = [True] * 4
+            if current_dist == "Normal":
+                par_labels[0] = "Mean:"
+                par_labels[1] = "Std Dev:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
+                self.par_dist_distribution_equation.setText("Behavior ~ N(Mean, Std Dev)\nlb \u2264 Behavior \u2264 ub")
+            elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
+                par_labels[0] = "\u03BC:"
+                par_labels[1] = "\u03C3:"
+                # set these here rather than checking again later
+                self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator(bottom=0))
+                self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator(bottom=0))
+                if current_dist == "Log Normal":
+                    self.par_dist_distribution_equation.setText("Behavior ~ exp(Z), Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+                else:
+                    self.par_dist_distribution_equation.setText("Behavior ~ 10^Z, Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
+            else:
+                raise ValueError(f"Error: Invalid distribution selected??? Current distribution = {current_dist}")
+
+            par_labels[2] = "Lower Bound (optional):"
+            par_labels[3] = "Upper Bound (optional):"
+
+            self.par_dist_par_lineedit[0].setObjectName("mu")
+            self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+            self.par_dist_par_lineedit[1].setObjectName("sigma")
+            self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator(bottom=0))
+            self.par_dist_par_lineedit[2].setObjectName("lower_bound") # validator set above
+            self.par_dist_par_lineedit[3].setObjectName("upper_bound") # validator set above
+
+            if distribution_pars_in_dict:
+                if "mu" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[0] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["mu"]
+                if "sigma" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[1] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["sigma"]
+                if "lower_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[2] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["lower_bound"]
+                if "upper_bound" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
+                    par_texts[3] = self.param_d[cdname]["par_dists"][behavior]["parameters"]["upper_bound"]
+            else:
+                new_dict = {"mu": "", "sigma": "", "lower_bound": "", "upper_bound": ""}
+                self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
+
+        for pdpl, pdple, label, text, enabled in zip(self.par_dist_par_label, self.par_dist_par_lineedit, par_labels, par_texts, par_enabled):
+            pdpl.setText(label)
+            pdple.setText(text)
+            pdple.setEnabled(enabled)
+
+        self.validate_all_par_dist_parameters()
+
+    def validate_all_par_dist_parameters(self):
+        # this was written to validate that min<max values, but I have set that side project aside for now because it was slowing down key dev
+        for pdple in self.par_dist_par_lineedit:
+            if pdple.isEnabled():
+                pdple.check_validity(pdple.text())
+
+    def par_dist_enforce_base_cb(self, state):
+        if self.current_cell_def is None:
+            return
+        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enforce_base"] = state == QtCore.Qt.Checked
+
+    def par_dist_parameters_changed_cb(self, text):
+        if self.current_cell_def is None:
+            return
+        sender = self.sender()
+        if sender.objectName() == "":
+            return # likely reaching here during startup
+        is_acceptable = sender.check_validity(text)
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if not is_acceptable or behavior == "":
+            return
+        self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][sender.objectName()] = text
+        self.validate_all_par_dist_parameters()
+        
     #--------------------------------------------------------
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
@@ -5949,20 +6117,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #---- in interactions subtab
     def live_phagocytosis_dropdown_changed_cb(self, idx):
-        # print('\n------ live_phagocytosis_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.live_phagocytosis_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['live_phagocytosis_celltype'] = celltype_name
         self.live_phagocytosis_celltype = celltype_name
-        # print("   self.live_phagocytosis_celltype = ",celltype_name)
 
         if self.live_phagocytosis_celltype in self.param_d[self.current_cell_def]["live_phagocytosis_rate"].keys():
             self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
         else:
             self.live_phagocytosis_rate.setText(self.default_sval)
-        # self.live_phagocytosis_rate.setText(self.param_d[self.current_cell_def]["live_phagocytosis_rate"]['differentiated'])
-        # print("self.param_d[self.current_cell_def]['live_phagocytosis_rate'] = ",self.param_d[self.current_cell_def]['live_phagocytosis_rate'])
 
         if idx == -1:
             return
@@ -6276,18 +6437,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
     #-----------------------------------------------------------------------------------------
-    # def delete_substrate(self, item_idx):
     def delete_substrate(self, item_idx, new_substrate):
 
         # 1) delete it from the comboboxes
-        # print("------- delete_substrate: name=",name)
-        # print("------- delete_substrate: index=",item_idx)
 
         # subname = self.motility_substrate_dropdown.itemText(item_idx)
         subname = self.motility2_substrate_dropdown.itemText(item_idx)
-        # print("cell_def_tab.py: delete_substrate():    subname = ", subname)
         self.substrate_list.remove(subname)
-        # print("self.substrate_list = ",self.substrate_list)
 
         # update all dropdown/comboboxes
         self.motility_substrate_dropdown.removeItem(item_idx)
@@ -6297,17 +6453,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.secretion_substrate_dropdown.clear()
 
         # 2) update (delete) in the param_d dict
-        # print("\n\n----- before stepping thru all cell defs, self.param_d:")
-        # for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print(self.param_d[cdname]["secretion"])
-            # print()
-
-        # print()
         for cdname in self.param_d.keys():  # for all cell defs, rename secretion substrate
-            # print("--- cdname = ",cdname)
-            # print("--- old: ",self.param_d[cdname]["secretion"])
-            # print(" keys= ",self.param_d[cdname]["secretion"].keys() )
-            # if self.param_d[cdname]["secretion"].has_key(subname):
             if subname == self.param_d[cdname]["motility_chemotaxis_substrate"]:
                 self.param_d[cdname]["motility_chemotaxis_substrate"] = new_substrate
 
@@ -6389,6 +6535,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
+        self.update_par_dist_behaviors(old_name, new_name)
 
     #-----------------------------------------------------------------------------------------
     # When a user renames a cell type in this tab, we need to update all 
@@ -6439,6 +6586,29 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
+
+        self.update_par_dist_behaviors(old_name, new_name)
+
+    def update_par_dist_behaviors(self, old_name, new_name):
+        self.response_l = self.rules_tab.create_response_list()
+        self.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.rename_behavior_distributions(old_name, new_name)
+
+    def rename_behavior_distributions(self, old_name, new_name):
+        possible_superstrings = self.celltypes_list
+        possible_superstrings += self.substrate_list
+        reserved_words = create_reserved_words()
+        possible_superstrings += reserved_words
+        super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
+        for cdname in self.param_d.keys():
+            if "par_dists" in self.param_d[cdname].keys():
+                behavior_keys = list(self.param_d[cdname]["par_dists"].keys()) # do this to avoid changing keys while iterating
+                for behavior in behavior_keys:
+                    if behavior == '':
+                        continue # empty behaviors seem to crop up sometimes
+                    new_behavior_name = find_and_replace_rule_cell(old_name, new_name, super_strings, behavior)
+                    if new_behavior_name != behavior:
+                        self.param_d[cdname]["par_dists"][new_behavior_name] = self.param_d[cdname]["par_dists"].pop(behavior) # sweet
 
     #-----------------------------------------------------------------------------------------
     # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
@@ -6608,6 +6778,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_elastic_constant"] = '0.01'
         self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
+        self.param_d[cdname_new]["mechanics_max_num_attachments"] = '12'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
@@ -6650,24 +6821,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         logging.debug(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
         # print(f'\n--------new_interaction_params(): cdname_new= {cdname_new}, reset_mapping= {reset_mapping}')
         sval = self.default_sval
-        self.param_d[cdname_new]["dead_phagocytosis_rate"] = sval
-        self.param_d[cdname_new]["damage_rate"] = '1.0'
-
-        # self.param_d[cdname]['live_phagocytosis_rate'][self.live_phagocytosis_celltype] = text
-        # for cdname2 in self.param_d.keys():  
-        #     print('cdname2= ',cdname2)
-        #     self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
-        #     self.param_d[cdname]['attack_rate'][cdname2] = sval
-        #     self.param_d[cdname]['fusion_rate'][cdname2] = sval
-        #     self.param_d[cdname]['transformation_rate'][cdname2] = sval
+        self.param_d[cdname_new]["apoptotic_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["necrotic_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["other_dead_phagocytosis_rate"] = sval
+        self.param_d[cdname_new]["attack_damage_rate"] = '1.0'
+        self.param_d[cdname_new]["attack_duration"] = '0.1'
+        # <cell_integrity>
+        self.param_d[cdname_new]["damage_rate"] = '0.0'
+        self.param_d[cdname_new]["damage_repair_rate"] = '0.0'
 
         if reset_mapping:
             for cdname in self.param_d.keys():    # for each cell def
-                # for cdname2 in self.param_d[cdname]['live_phagocytosis_rate'].keys():    # for each cell def's 
                 for cdname2 in self.param_d.keys():    # for each cell def
-                    # print('cdname2= ',cdname2)
                     if (cdname == cdname_new) or (cdname2 == cdname_new): 
-                    # if (cdname == cdname_new):   #rwh 8/24/23
                         self.param_d[cdname]['live_phagocytosis_rate'][cdname2] = sval
                         self.param_d[cdname]['attack_rate'][cdname2] = sval
                         self.param_d[cdname]['fusion_rate'][cdname2] = sval
@@ -6739,6 +6905,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['custom_data'][key] = [self.custom_var_value_str_default, self.custom_var_conserved_default]   # [value, conserved flag]
             idx += 1
 
+    def new_miscellaneous_params(self, cdname):
+        self.param_d[cdname]["par_dists"] = {}
+        self.param_d[cdname]["par_dists_disabled"] = True
+        
     #-----------------------------------------------------------------------------------------
     def update_cycle_params(self):
         # pass
@@ -6997,6 +7167,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
         self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
         self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
+        self.max_num_attachments.setText(self.param_d[cdname]["mechanics_max_num_attachments"])
 
 
     #-----------------------------------------------------------------------------------------
@@ -7016,21 +7187,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'   (simple) chemotaxis motility is enabled:')
             self.param_d[cdname]["motility_advanced_chemotaxis"] = False
             self.chemotaxis_enabled_cb(True)
-            # self.motility_substrate_dropdown.setEnabled(True)
-            # self.chemotaxis_direction_towards.setEnabled(True)
-            # self.chemotaxis_direction_against.setEnabled(True)
-            # self.advanced_chemotaxis_enabled.setChecked(False)
         else:
             self.chemotaxis_enabled_cb(False)
-        #     print("   (simple) chemotaxis motility is NOT enabled:")
-        #     print("   motility_enabled=",self.param_d[cdname]["motility_enabled"])
-        #     print("--> ",self.param_d[cdname])
-        #     print()
-        #     self.motility_use_2D.setChecked(False)
-        #     self.motility_substrate_dropdown.setEnabled(False)
-        #     self.chemotaxis_direction_towards.setEnabled(False)
-        #     self.chemotaxis_direction_against.setEnabled(False)
-
 
         self.motility_use_2D.setChecked(self.param_d[cdname]["motility_use_2D"])
         self.chemotaxis_enabled.setChecked(self.param_d[cdname]["motility_chemotaxis"])
@@ -7085,19 +7243,30 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         logging.debug(f'update_secretion_params(): self.current_secretion_substrate = {self.current_secretion_substrate}')
         logging.debug(f'{self.param_d[cdname]["secretion"]}')
 
-        self.secretion_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"])
-        self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
-        self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
-        self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+        try:
+            self.secretion_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_rate"])
+            self.secretion_target.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["secretion_target"])
+            self.uptake_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["uptake_rate"])
+            self.secretion_net_export_rate.setText(self.param_d[cdname]["secretion"][self.current_secretion_substrate]["net_export_rate"])
+        except:
+            msg = f"Error parsing secretion parameters for {self.current_secretion_substrate} for cell type {cdname}. Please fix your XML config file."
+            print(msg)
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
 
         # rwh: also update the qdropdown to select the substrate
 
     #-----------------------------------------------------------------------------------------
     def update_interaction_params(self):
-        # print("------ update_interaction_params():")
         cdname = self.current_cell_def
-        self.dead_phagocytosis_rate.setText(self.param_d[cdname]["dead_phagocytosis_rate"])
-        self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
+        self.apoptotic_phagocytosis_rate.setText(self.param_d[cdname]["apoptotic_phagocytosis_rate"])
+        self.necrotic_phagocytosis_rate.setText(self.param_d[cdname]["necrotic_phagocytosis_rate"])
+        self.other_dead_phagocytosis_rate.setText(self.param_d[cdname]["other_dead_phagocytosis_rate"])
+        self.attack_damage_rate.setText(self.param_d[cdname]["attack_damage_rate"])
+        self.attack_duration.setText(self.param_d[cdname]["attack_duration"])
 
         if self.live_phagocytosis_celltype in self.param_d[cdname]["live_phagocytosis_rate"].keys():
             self.live_phagocytosis_rate.setText(self.param_d[cdname]["live_phagocytosis_rate"][self.live_phagocytosis_celltype])
@@ -7118,6 +7287,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.transformation_rate.setText(self.param_d[cdname]["transformation_rate"][self.transformation_rate_celltype])
         else:
             self.transformation_rate.setText(self.default_sval)
+
+        self.damage_rate.setText(self.param_d[cdname]["damage_rate"])
+        self.damage_repair_rate.setText(self.param_d[cdname]["damage_repair_rate"])
 
     #-----------------------------------------------------------------------------------------
     def missing_boolean_info_popup(self, dups_dict):
@@ -7293,6 +7465,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.custom_data_edit_active = True
 
+    def update_misc_params(self):
+        cdname = self.current_cell_def
+        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
+        self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        if self.param_d[cdname]["par_dists_disabled"]:
+            for pdple in self.par_dist_par_lineedit:
+                pdple.setText('')
+            return
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior != '' and (behavior in self.param_d[cdname]['par_dists'].keys()):
+            for pdple in self.par_dist_par_lineedit:
+                name = pdple.objectName()
+                if name not in self.param_d[cdname]['par_dists'][behavior]["parameters"].keys():
+                    val = ''
+                else:
+                    val = self.param_d[cdname]['par_dists'][behavior]['parameters'][name]
+                pdple.setText(val)
+            self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
+            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
+
+        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
@@ -7314,22 +7507,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-----------------------------------------------------------------------------------------
     # User selects a cell def from the tree on the left. We need to fill in ALL widget values from param_d
     def tree_item_clicked_cb(self, it,col):
-        # print('------------ tree_item_clicked_cb -----------', it, col, it.text(col) )
-        # print(f'------------ tree_item_clicked_cb(): col= {col}, it.text(col)={it.text(col)}')
-        # cdname = it.text(0)
-        # if col > 0:  # only allow editing cell type name, not ID
-            # return
-        # self.current_cell_def = it.text(col)
         self.current_cell_def = it.text(0)
-        # print('--- tree_item_clicked_cb(): self.current_cell_def= ',self.current_cell_def )
-
-        # for k in self.param_d.keys():
-        #     print(" ===>>> ",k, " : ", self.param_d[k])
-        #     print()
 
         # fill in the GUI with this cell def's params
-
-        # self.live_phagocytosis_celltype = self.current_cell_def
 
         self.update_cycle_params()
         self.update_death_params()
@@ -7341,6 +7521,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
+
+        self.update_misc_params()
 
 
     #-------------------------------------------------------------------
@@ -7925,6 +8107,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         elm.text = self.param_d[cdef]["mechanics_detachment_rate"]
         elm.tail = self.indent10
 
+        elm = ET.SubElement(mechanics, 'maximum_number_of_attachments')
+        elm.text = self.param_d[cdef]["mechanics_max_num_attachments"]
+        elm.tail = self.indent10
+
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_motility(self,pheno,cdef):
@@ -8026,6 +8212,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         secretion.tail = "\n" + self.indent10
 
         if self.debug_print_fill_xml:
+            logging.debug(f'\n\n ====================> fill_xml_secretion()\n')
             logging.debug(f'self.substrate_list = {self.substrate_list}')
         for substrate in self.substrate_list:
             if self.debug_print_fill_xml:
@@ -8039,21 +8226,30 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm.text = self.indent14
             elm.tail = self.indent12
 
-            subelm = ET.SubElement(elm, "secretion_rate",{"units":self.default_rate_units})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
-            subelm.tail = self.indent14
+            try:
+                subelm = ET.SubElement(elm, "secretion_rate",{"units":self.default_rate_units})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_rate"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "secretion_target",{"units":"substrate density"})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
-            subelm.tail = self.indent14
+                subelm = ET.SubElement(elm, "secretion_target",{"units":"substrate density"})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["secretion_target"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "uptake_rate",{"units":self.default_rate_units})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
-            subelm.tail = self.indent14
+                subelm = ET.SubElement(elm, "uptake_rate",{"units":self.default_rate_units})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["uptake_rate"]
+                subelm.tail = self.indent14
 
-            subelm = ET.SubElement(elm, "net_export_rate",{"units":"total substrate/min"})
-            subelm.text = self.param_d[cdef]["secretion"][substrate]["net_export_rate"]
-            subelm.tail = self.indent12
+                subelm = ET.SubElement(elm, "net_export_rate",{"units":"total substrate/min"})
+                subelm.text = self.param_d[cdef]["secretion"][substrate]["net_export_rate"]
+                subelm.tail = self.indent12
+            except:
+                msg = f"Error: unable to update XML secretion parameters for {substrate} for cell type {cdef}. Please fix your XML config file."
+                print(msg)
+                msgBox = QMessageBox()
+                msgBox.setTextFormat(Qt.RichText)
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                returnValue = msgBox.exec()
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -8066,8 +8262,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         interactions.text = self.indent12  # affects indent of child
         interactions.tail = "\n" + self.indent10
 
-        subelm = ET.SubElement(interactions, "dead_phagocytosis_rate",{"units":self.default_rate_units})
-        subelm.text = self.param_d[cdef]["dead_phagocytosis_rate"]
+        subelm = ET.SubElement(interactions, "apoptotic_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["apoptotic_phagocytosis_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "necrotic_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["necrotic_phagocytosis_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "other_dead_phagocytosis_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["other_dead_phagocytosis_rate"]
         subelm.tail = self.indent12
 
         #-----
@@ -8076,7 +8280,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         lpr.tail = "\n" + self.indent12
 
         logging.debug(f'--- live_phagocytosis_rate= {self.param_d[cdef]["live_phagocytosis_rate"]}')
-        # print("live_phagocytosis_rate keys=",self.param_d[cdef]['live_phagocytosis_rate'].keys())
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
             logging.debug(f'  key in live_phagocytosis_rate= {key}')
             print(f'  key in live_phagocytosis_rate= {key}')
@@ -8108,8 +8311,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm.tail = self.indent18
 
         #-----
-        subelm = ET.SubElement(interactions, "damage_rate",{"units":self.default_rate_units})
-        subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm = ET.SubElement(interactions, "attack_damage_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["attack_damage_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(interactions, "attack_duration",{"units":self.default_time_units})
+        subelm.text = self.param_d[cdef]["attack_duration"]
         subelm.tail = self.indent12
 
         #-----
@@ -8146,6 +8353,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elm = ET.SubElement(trates, 'transformation_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
+
+        #-----
+        integrity = ET.SubElement(pheno, "cell_integrity")
+        integrity.text = self.indent12  # affects indent of child
+        integrity.tail = "\n" + self.indent10
+
+        subelm = ET.SubElement(integrity, "damage_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["damage_rate"]
+        subelm.tail = self.indent12
+
+        subelm = ET.SubElement(integrity, "damage_repair_rate",{"units":self.default_rate_units})
+        subelm.text = self.param_d[cdef]["damage_repair_rate"]
+        subelm.tail = self.indent12
 
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
@@ -8399,6 +8619,38 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # if self.debug_print_fill_xml:
         #     logging.debug(f'\n')
 
+    def fill_par_dists(self, par_dists, cdef):
+        elm = None
+        if self.debug_print_fill_xml:
+            logging.debug(f'------ ["initial_parameter_distributions"]: for {cdef}')
+
+        if "par_dists" not in self.param_d[cdef].keys():
+            return
+        # if self.param_d[cdef]['par_dists_disabled']:
+        #     return
+
+        for key_name, value in self.param_d[cdef]['par_dists'].items():
+            if "distribution" not in value.keys() or value["distribution"] == "None":
+                continue
+            enabled = "true" if value["enabled"] else "false"
+            enforce_base = "true" if value["enforce_base"] else "false"
+            dist_type = value["distribution"]
+            # remove whitespaces from dist_type
+            dist_type = dist_type.replace(" ", "")
+            dist_elm = ET.SubElement(par_dists, "distribution", 
+                    { "enabled":enabled,
+                      "type":dist_type,
+                      "check_base":enforce_base } )
+            behavior_elm = ET.SubElement(dist_elm, "behavior")
+            behavior_elm.text = key_name
+            for par_name, par_value in value["parameters"].items():
+                if par_value == "":
+                    continue # adding a blank element will cause pugixml to record a value of 0
+                par_elm = ET.SubElement(dist_elm, par_name)
+                par_elm.text = par_value
+
+        if elm:
+            elm.tail = self.indent8   # back up 2 for the very last one
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
@@ -8500,6 +8752,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     custom_data.text = self.indent10
                     custom_data.tail = self.indent6
                     self.fill_xml_custom_data(custom_data,cdef)
+
+                    par_dists_enabled = "false"
+                    if "par_dists_disabled" in self.param_d[cdef].keys():
+                        par_dists_enabled = "false" if self.param_d[cdef]["par_dists_disabled"] else "true"
+                    par_dists = ET.SubElement(elm, 'initial_parameter_distributions',
+                                            { "enabled":par_dists_enabled })
+                    par_dists.text = self.indent10
+                    par_dists.tail = self.indent6
+                    self.fill_par_dists(par_dists, cdef)
 
                     uep.insert(idx,elm)
                     idx += 1
