@@ -63,6 +63,7 @@ class SubstrateDef(QWidget):
         self.default_rate_units = "1/min"
         self.dirichlet_units = "mmHG"
 
+        self.ics_tab = None   # update in studio.py
         self.rules_tab = None   # update in studio.py
 
         # self.stacked_w = QStackedWidget()
@@ -673,6 +674,7 @@ class SubstrateDef(QWidget):
 
         self.celldef_tab.add_new_substrate(subname)
         self.config_tab.add_new_substrate(subname)
+        self.ics_tab.add_new_substrate(subname)
         # self.celldef_tab.add_new_substrate_comboboxes(subname)
         # self.param_d[cell_def_name]["secretion"][substrate_name] = {}
 
@@ -721,6 +723,7 @@ class SubstrateDef(QWidget):
 
         self.celldef_tab.add_new_substrate(subname)
         self.config_tab.add_new_substrate(subname)
+        self.ics_tab.add_new_substrate(subname)
 
         self.current_substrate = subname
         # self.substrate_name.setText(subname)
@@ -787,7 +790,8 @@ class SubstrateDef(QWidget):
 
         # do this last
         self.celldef_tab.delete_substrate(item_idx, self.current_substrate)
-        self.config_tab.delete_substrate(item_idx, self.current_substrate)
+        self.config_tab.delete_substrate(item_idx)
+        self.ics_tab.delete_substrate(item_idx)
 
 
     #----------------------------------------------------------------------
@@ -812,6 +816,7 @@ class SubstrateDef(QWidget):
 
         self.celldef_tab.renamed_substrate(prev_name, self.current_substrate)
         self.config_tab.renamed_substrate(prev_name, self.current_substrate)
+        self.ics_tab.renamed_substrate(prev_name, self.current_substrate)
 
     #----------------------------------------------------------------------
     def tree_item_sel_changed_cb(self, it,col):
@@ -1352,5 +1357,16 @@ class SubstrateDef(QWidget):
         else:
             self.xml_root.find(".//options//track_internalized_substrates_in_each_agent").text = 'false'
     
+        if self.ics_tab.enable_csv_for_substrate_ics is True:
+            if self.xml_root.find(".//microenvironment_setup//options//initial_condition") is None:
+                # add this eleement if it does not exist
+                elm = ET.Element("initial_condition", {"type":"csv", "enabled":'True'})
+                ET.SubElement(elm, 'filename')
+                self.xml_root.find('.//microenvironment_setup//options').insert(2,elm) # [calculate_gradients, track_internalized_substrates_in_each_agent, initial_condition]
+            self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['type'] = 'csv'
+            self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['enabled'] = 'true'
+            self.xml_root.find(".//microenvironment_setup//options//initial_condition//filename").text = self.ics_tab.full_substrate_ic_fname
+        elif (self.xml_root.find(".//microenvironment_setup//options//initial_condition") is not None) and (self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['type'].lower()=="csv"): # then make sure this is disabled
+            self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['enabled'] = 'false'
     def clear_gui(self):
         pass

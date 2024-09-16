@@ -166,6 +166,9 @@ class Vis(VisBase, QWidget):
         self.domain_boundary_actor.GetProperty().SetColor(0, 0, 0)
         self.domain_boundary_actor.GetProperty().SetLineWidth(self.line_width)
 
+
+        self.png_writer = vtkPNGWriter()
+
         #-------------
         self.points = vtkPoints()
 
@@ -543,6 +546,27 @@ class Vis(VisBase, QWidget):
 
         # self.canvas.update()
         # self.canvas.draw()
+
+        if self.save_png:
+            self.png_frame += 1
+            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
+            print("---->  ", png_file)
+            windowto_image_filter = vtkWindowToImageFilter()
+            windowto_image_filter.SetInput(self.vtkWidget.GetRenderWindow())
+            windowto_image_filter.SetScale(1)  # image quality
+            # if rgba:
+            if False:
+                windowto_image_filter.SetInputBufferTypeToRGBA()
+            else:
+                windowto_image_filter.SetInputBufferTypeToRGB()
+                # Read from the front buffer.
+                windowto_image_filter.ReadFrontBufferOff()
+                windowto_image_filter.Update()
+
+            self.png_writer.SetFileName(png_file)
+            self.png_writer.SetInputConnection(windowto_image_filter.GetOutputPort())
+            self.png_writer.Write()
+
         return
 
 
@@ -727,6 +751,39 @@ class Vis(VisBase, QWidget):
         self.sphereSource.SetThetaResolution(self.sphere_res)
         self.update_plots()
 
+    #--------------------------------------
+    def write_cells_csv_cb(self):
+        print("vis3D_tab.py: write_cells_csv_cb")
+
+        xml_file_root = "output%08d.xml" % self.current_frame
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        print("write_cells_csv_cb(): xml_file= ",xml_file)
+        # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
+
+        # cell_scalar_name = self.cell_scalar_combobox.currentText()
+        if not Path(xml_file).is_file():
+            print("ERROR: file not found",xml_file)
+            return
+
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        # total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
+    
+        xvals = mcds.get_cell_df()['position_x']
+        # print("len(xvals)=",len(xvals))
+        yvals = mcds.get_cell_df()['position_y']
+        zvals = mcds.get_cell_df()['position_z']
+        cell_types = mcds.get_cell_df()["cell_type"]
+        self.get_cell_types_from_config()
+        print("self.celltype_name=",self.celltype_name)
+        csv_file = open("snap.csv", "w")
+        csv_file.write("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n")
+        try:
+            for xv, yv, zv, ct in zip(xvals, yvals, zvals, cell_types):  # DON'T do sequential idx
+                csv_file.write(f'{xv},{yv},{zv},{self.celltype_name[int(ct)]}\n')
+        except:
+            print("\nvis3D_tab.py-------- Error writing snap.csv file")
+        csv_file.close()
+
     # def colorbar_combobox_changed_cb(self,idx):
     #     self.update_plots()
 
@@ -798,6 +855,8 @@ class Vis(VisBase, QWidget):
         print("    choice= ", choice)
         if len(choice) == 0:
             return
+        if choice in self.cell_scalar_human2mcds_dict.keys():
+            choice = self.cell_scalar_human2mcds_dict[choice]
 
         xml_files = glob.glob(self.output_dir+'/output*.xml')  # cross-platform OK?
         # print('xml_files = ',xml_files)
@@ -1544,6 +1603,8 @@ class Vis(VisBase, QWidget):
             cell_scalar_str = self.cell_scalar_combobox.currentText()
             if len(cell_scalar_str) == 0:
                 cell_scalar_str = 'cell_type'
+            if cell_scalar_str in self.cell_scalar_human2mcds_dict.keys():
+                cell_scalar_str = self.cell_scalar_human2mcds_dict[cell_scalar_str]
             # print("\n------- cell_scalar_str= ",cell_scalar_str)
             self.scalar_bar_cells.SetTitle(cell_scalar_str)
             # cell_type = mcds.data['discrete_cells']['data']['cell_type']
@@ -1852,7 +1913,8 @@ class Vis(VisBase, QWidget):
 
 
             # TODO: Hard-coded voxel_size, plus assuming centered at origin!
-            voxel_size = 20   # rwh: fix hard-coded
+            # voxel_size = 20   # rwh: fix hard-coded
+            voxel_size = 32   # rwh: fix hard-coded for furkan-transfer-v1.14RC
             # x0 = -(voxel_size * nx) / 2.0
             # y0 = -(voxel_size * ny) / 2.0
             # z0 = -(voxel_size * nz) / 2.0

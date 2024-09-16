@@ -61,35 +61,13 @@ except:
 
 from filters3D import FilterUI3DWindow
 from filters2D import FilterUI2DWindow
+from model_summary import ModelSummaryUIWindow
 from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                QCheckBox:disabled {background-color:lightgray;}
-                QCheckBox:indicator:disabled {background-color:lightgray;}
-                """
-        self.setStyleSheet(checkbox_style)
+from studio_classes import QCheckBox_custom
+from pyMCDS import xmlfile_to_xmlpathfile
 
 #---------------------------
 class ExtendedComboBox(QComboBox):
@@ -216,6 +194,7 @@ class SvgWidget(QSvgWidget):
 #                 path = Path(self.output_dir,"legend.svg")
 #                 # path = Path(self.current_dir,self.output_dir,"legend.svg")
 #                 time.sleep(1)
+
 
 #------------------------------
 class LegendPlotWindow(QWidget):
@@ -371,6 +350,8 @@ class VisBase():
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.discrete_variable_observed = set()
+
+        self.cell_scalar_human2mcds_dict = {} # initialize here for vis_tab.py
 
         # self.discrete_scalar_len = {"cell_type":0, "cycle_model":6, "current_phase":4, "is_motile":2,"current_death_model":2, "dead":2, "number_of_nuclei":0 }
 
@@ -778,11 +759,11 @@ class VisBase():
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
         self.cell_scalar_combobox = ExtendedComboBox()
-        self.cell_scalar_combobox.setFixedWidth(270)
+        self.cell_scalar_combobox.setFixedWidth(320)
         self.cell_scalar_combobox.addItem("cell_type")
         # self.cell_scalar_combobox.currentIndexChanged.connect(self.cell_scalar_changed_cb)
 
-        # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
+        # e.g., dict_keys(['ID', 'position_x', 'position_y', 'position_z', 'total_volume', 'cell_type', 'cycle_model', 'current_phase', 'elapsed_time_in_phase', 'nuclear_volume', 'cytoplasmic_volume', 'fluid_fraction', 'calcified_fraction', 'orientation_x', 'orientation_y', 'orientation_z', 'polarity', 'migration_speed', 'motility_vector_x', 'motility_vector_y', 'motility_vector_z', 'migration_bias', 'motility_bias_direction_x', 'motility_bias_direction_y', 'motility_bias_direction_z', 'persistence_time', 'motility_reserved', 'chemotactic_sensitivities_x', 'chemotactic_sensitivities_y', 'adhesive_affinities_x', 'adhesive_affinities_y', 'apoptotic_phagocytosis_rate', 'necrotic_phagocytosis_rate', 'other_dead_phagocytosis_rate', 'live_phagocytosis_rates_x', 'live_phagocytosis_rates_y', 'attack_rates_x', 'attack_rates_y', 'damage_rate', 'fusion_rates_x', 'fusion_rates_y', 'transformation_rates_x', 'transformation_rates_y', 'oncoprotein', 'elastic_coefficient', 'kill_rate', 'attachment_lifetime', 'attachment_rate', 'oncoprotein_saturation', 'oncoprotein_threshold', 'max_attachment_distance', 'min_attachment_distance'])
 
         self.vbox.addLayout(self.cells_hbox)
 
@@ -1068,6 +1049,17 @@ class VisBase():
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(splitter)
 
+    def model_summary_cb(self):
+        print("---- vis_base: model_summary_cb()")
+        # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
+        # self.filterUI = FilterUIWindow()
+        self.modelSummaryUI = ModelSummaryUIWindow(self)  # , self.run_tab)
+
+        # hack to bring to foreground
+        # self.filterUI.hide()
+        # self.filterUI.show()
+        self.modelSummaryUI.hide()
+        self.modelSummaryUI.show()
 
     def filterUI_cb(self):
         print("---- vis_base: filterUI_cb()")
@@ -1546,13 +1538,16 @@ class VisBase():
                 print("vis_tab.py: physiboss_state_counts_cb(): error performing mcds.get_cell_df()['cell_type']")
                 return
 
-
-            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
-
+            physiboss_state_file = os.path.join(self.output_dir, "output%08d_boolean_intracellular.csv" % i_frame)
+        
             if not Path(physiboss_state_file).is_file():
-                print("vis_tab.py: physiboss_state_counts_cb(): error file not found ",physiboss_state_file)
-                return
-    
+                
+                physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % i_frame)
+                
+                if not Path(physiboss_state_file).is_file():
+                    print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
+                    return
+        
             name_cellline = list(self.physiboss_node_dict.keys())[self.physiboss_selected_cell_line]
             id_cellline = list(self.celldef_tab.param_d.keys()).index(name_cellline)
     
@@ -1924,7 +1919,7 @@ class VisBase():
         xml_file = "initial.xml"
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
-            print(f"vis3D_tab.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
         # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
@@ -2564,48 +2559,70 @@ class VisBase():
         self.disable_cell_scalar_cb = True
         self.cell_scalar_combobox.clear()
 
-        # -- old way (limit choices)
-        # default_var_l = ["pressure", "total_volume", "current_phase", "cell_type", "damage"]
-        # for idx in range(len(default_var_l)):
-        #     self.cell_scalar_combobox.addItem(default_var_l[idx])
-        # self.cell_scalar_combobox.insertSeparator(len(default_var_l))
-
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
 
-        # # cell_scalar = mcds.get_cell_df()[cell_scalar_name]
-        # num_keys = len(mcds.data['discrete_cells']['data'].keys())
-        # print("plot_tab: add_default_cell_vars(): num_keys=",num_keys)
-        # keys_l = list(mcds.data['discrete_cells']['data'])
         self.cell_scalars_l.clear()
         self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
-        # for idx in range(num_keys-1,0,-1):
-        #     if "transformation_rates" in keys_l[idx]:
-        #         print("found transformation_rates at index=",idx)
-        #         break
-        # idx1 = idx + 1
 
-        # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
+        # Let's remove the ID which seems to be problematic.
         self.cell_scalars_l.remove('ID')
-        # self.cell_scalars_l.reverse()
         self.cell_scalars_l.sort()
-        # print("plot_tab: add_default_cell_vars(): self.cell_scalars_l =",self.cell_scalars_l)
 
-        # for idx in range(0, len(keys_l)):
-        #     # print("------ add: ",keys_l[idx])
-        #     if keys_l[idx] == "ID":
-        #         continue
-        #     # self.cell_scalar_combobox.addItem(keys_l[idx])
-        #     self.cell_scalars_l.append(keys_l[idx])
+        self.cell_scalar_human2mcds_dict = {x: x for x in self.cell_scalars_l} # default to the name shown in the combobox is the same as the key
 
+        self.replace_ids_with_names(xml_file_root)
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
-        # items = [self.cell_scalar_combobox.itemText(i) for i in range(self.cell_scalar_combobox.count())]
-        # print(items)
 
         self.disable_cell_scalar_cb = False
 
         self.update_plots()
 
+    def replace_ids_with_names(self, xml_file_root):
+        xmlpathfile, _ = xmlfile_to_xmlpathfile(xml_file_root, self.output_dir)
+        tree = ET.parse(xmlpathfile)
+        root = tree.getroot()
+        variables_node = root.find('microenvironment').find('domain').find('variables')
+        variables = variables_node.findall('variable')
+        variable_dict = {}
+        for variable in variables:
+            name = variable.get('name').replace(' ', '_')
+            ID = variable.get('ID')
+            variable_dict[ID] = name
 
+        cell_dict = {}
+        for cdname in self.celldef_tab.param_d.keys():
+            cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
+
+        substrate_scalar_prefixes = ['chemotactic_sensitivities','secretion_rates','uptake_rates','saturation_densities','net_export_rates','internalized_total_substrates','fraction_released_at_death','fraction_transferred_when_ingested']
+        substrate_scalar_replace = {
+            'chemotactic_sensitivities': lambda x: f'chemotactic response to {x}',
+            'secretion_rates': lambda x:  f'(rate of) {x} secretion ',
+            'uptake_rates': lambda x: f'(rate of) {x} uptake',
+            'saturation_densities': lambda x: f'{x} secretion target',
+            'net_export_rates': lambda x: f'(rate of) {x} export',
+            'internalized_total_substrates': lambda x: f'(amount of) intracellular {x}',
+            'fraction_released_at_death': lambda x: f'fraction released at death of {x}',
+            'fraction_transferred_when_ingested': lambda x: f'fraction transferred when ingested of {x}'
+        }
+        cell_scalar_prefixes = ['cell_adhesion_affinities','live_phagocytosis_rates','attack_rates','immunogenicities','fusion_rates','transformation_rates']
+        cell_scalar_replace = {
+            'cell_adhesion_affinities': lambda x: f'adhesive affinity to {x}',
+            'live_phagocytosis_rates': lambda x: f'(rate of) phagocytose {x}',
+            'attack_rates': lambda x: f'(rate of) attack {x}',
+            'immunogenicities': lambda x: f'immunogenicity to {x}',
+            'fusion_rates': lambda x: f'(rate of) fuse to {x}',
+            'transformation_rates': lambda x: f'(rate of) transform to {x}'
+        }
+
+        for ind, scalar in enumerate(self.cell_scalars_l):
+            scalar_found, new_name = find_name_in_dict(scalar, variable_dict, substrate_scalar_prefixes, substrate_scalar_replace)
+            if not scalar_found:
+                scalar_found, new_name = find_name_in_dict(scalar, cell_dict, cell_scalar_prefixes, cell_scalar_replace, state_type='cell definition')
+            if scalar_found:
+                self.cell_scalars_l[ind] = new_name
+                self.cell_scalar_human2mcds_dict[new_name] = scalar
+                continue
+            
     def add_partial_cell_vars(self):
         print("\n-------  vis_base:  add_partial_cell_vars():   self.output_dir= ",self.output_dir)
 
@@ -3067,3 +3084,25 @@ class VisBase():
         print(f"--> {model_name}.simularium")
 
         print("Load this model at: https://simularium.allencell.org/viewer")
+
+
+def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='substrate'):
+    # make a static variable for this function
+    if not hasattr(find_name_in_dict, "warned_ids") or find_name_in_dict.current_warning_state_type != state_type:
+        find_name_in_dict.warned_ids = []
+        find_name_in_dict.current_warning_state_type = state_type
+    for prefix in prefixes:
+        if scalar.startswith(prefix):
+            id = scalar.split(prefix)[1]
+            if id == '': # if there is only one substrate/celltype, no id is added to the name
+                id = '0'
+            else:
+                # strip the leading underscore
+                id = id[1:]
+            if id not in state_dict.keys():
+                if id not in find_name_in_dict.warned_ids:
+                    print(f"WARNING: Could not find the name of the {state_type} with ID {id}.")
+                    find_name_in_dict.warned_ids.append(id)
+                return True, scalar
+            return True, replace_dict[prefix](state_dict[id])
+    return False, scalar

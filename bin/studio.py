@@ -133,7 +133,7 @@ class PhysiCellXMLCreator(QWidget):
         if studio_flag:
             self.title_prefix = "PhysiCell Studio: "
 
-        self.studio_settings = StudioSettings(self, self.fix_min_size)  # pass in dict eventually
+        # self.studio_settings = StudioSettings(self, self.fix_min_size)  # pass in dict eventually
 
         self.vis2D_gouraud = False
 
@@ -183,7 +183,7 @@ class PhysiCellXMLCreator(QWidget):
             self.current_xml_file = os.path.join(self.current_dir, config_file)
             print("got config_file=",config_file)
         else:
-            self.current_xml_file = os.path.join('.', 'config', 'PhysiCell_settings.xml')
+            self.current_xml_file = os.path.join(self.current_dir, 'config', 'PhysiCell_settings.xml')
             if not Path(self.current_xml_file).is_file():
                 print("\n\nError: A default config/PhysiCell_settings.xml does not exist\n and you did not specify a config file using the '-c' argument.\n")
                 sys.exit(1)
@@ -240,7 +240,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef(self.pytest_flag)
+        self.celldef_tab = CellDef(self.pytest_flag, self.config_tab)
         self.celldef_tab.xml_root = self.xml_root
         if is_movable_flag:
             self.celldef_tab.is_movable_w.setEnabled(True)
@@ -331,7 +331,10 @@ class PhysiCellXMLCreator(QWidget):
         if self.studio_flag:
             logging.debug(f'studio.py: creating ICs, Run, and Plot tabs')
             self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.biwt_flag)
+            self.config_tab.ics_tab = self.ics_tab
+            self.microenv_tab.ics_tab = self.ics_tab
             self.ics_tab.fill_celltype_combobox()
+            self.ics_tab.fill_substrate_combobox()
             self.ics_tab.reset_info()
 
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
@@ -420,6 +423,8 @@ class PhysiCellXMLCreator(QWidget):
             self.enablePlotTab(False)
             self.enablePlotTab(True)
 
+            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab)  # pass in dict eventually
+
             # self.tabWidget.addTab(self.legend_tab,"Legend")
             # self.enableLegendTab(False)
             # self.enableLegendTab(True)
@@ -466,12 +471,12 @@ class PhysiCellXMLCreator(QWidget):
             self.microenv_tab.update_3D()
 
         elif self.rules_tab_index and (index == self.rules_tab_index): 
-            self.rules_tab.update_base_value()
             if self.rules_tab.update_rules_for_custom_data:
                 print("studio.py: need to update Rules comboboxes for changed custom data")
                 self.rules_tab.fill_signals_widget()
                 self.rules_tab.fill_responses_widget()
                 self.rules_tab.update_rules_for_custom_data = False
+            self.rules_tab.update_base_value()
 
     def about_pyqt(self):
         msgBox = QMessageBox()
@@ -527,6 +532,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.tabWidget.setTabEnabled(5, bval)
         self.tabWidget.setTabEnabled(self.plot_tab_index, bval)
 
+
+    def model_summary_cb(self):
+        print("studio.py: model_summary_cb")
+        self.vis_tab.model_summary_cb()
 
     def filterUI_cb(self):
         print("studio.py: filterUI_cb")
@@ -618,6 +627,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 view_menu.triggered.connect(self.view2D_cb)
 
                 vis2D_filterUI_act = view_menu.addAction("Plot options", self.filterUI_cb)
+                vis2D_model_summary_act = view_menu.addAction("Model summary", self.model_summary_cb)
 
 
         action_menu = menubar.addMenu('&Action')
@@ -838,7 +848,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.user_params_tab.fill_xml()
             if self.rules_flag:
                 self.rules_tab.fill_xml()
-
+            
             self.setWindowTitle(self.title_prefix + self.current_xml_file)
 
             # print("\n\n ===================================")
@@ -848,7 +858,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # self.tree.write(out_file)  # originally
             self.tree.write(self.current_xml_file)
             pretty_print(self.current_xml_file, self.current_xml_file)
-    
+
         except CellDefException as e:
             self.show_error_message(str(e) + " : save_cb(): Error: Please finish the definition before saving.")
 
@@ -1480,6 +1490,7 @@ def main():
 
     icon_path = os.path.join(os.path.dirname(sys.modules[__name__].__file__), 'physicell_logo_200px.png')
     studio_app.setWindowIcon(QIcon(icon_path))
+    # studio_app.setApplicationName("Randy's app")   # argh, doesn't work
 
     # print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
 
@@ -1576,4 +1587,21 @@ if __name__ == '__main__':
     logfile = "studio_debug.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG, filemode='w',)
     # logging.basicConfig(filename=logfile, level=logging.ERROR, filemode='w',)
+
+    # # trying/failing to change name on icon in Mac Dock from "pythonx.y" to something else (including .xml name)
+    # if sys.platform.startswith('darwin'):
+    #     try:
+    #         from Foundation import NSBundle
+    #         bundle = NSBundle.mainBundle()
+    #         print("\n\n ------------ studio.py:   bundle= ",bundle)
+    #         if bundle:
+    #             app_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    #             print("------------ studio.py:   app_name= ",app_name)
+    #             app_info = bundle.localizedInfoDictionary() or bundle.infoDictionary()
+    #             print("\n\n ------------ studio.py:   app_info= ",app_info)
+    #             if app_info:
+    #                 app_info['CFBundleName'] = app_name
+    #     except ImportError:
+    #         pass
+
     main()
