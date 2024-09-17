@@ -2730,7 +2730,6 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.hide()
             self.current_window_idx += 1
             if self.stale_futures:
-                # print(f"\tFutures are stale. Deleting from {self.current_window_idx} to {len(self.previous_windows)}")
                 del self.previous_windows[self.current_window_idx-1:]
                 if type(self.window) is not BioinformaticsWalkthroughWindow_WarningWindow:
                     self.previous_windows.append(self.window)
@@ -2738,14 +2737,8 @@ class BioinformaticsWalkthrough(QWidget):
                     self.current_window_idx -= 1 # ok, actually, don't increase the index if the current window is a popup warning window
                 self.window = window_class(self)
             else:
-                # print(f"\tFutures are not stale. Using window {self.current_window_idx+1}...")
                 self.window = self.previous_windows[self.current_window_idx]
                 self.stale_futures = self.current_window_idx==len(self.previous_windows)-1 # if it's now the last one, mark it as stale
-                # if self.stale_futures:
-                    # print(f"\tFutures are now stale.")
-                # else:
-                    # print(f"\tFutures are still not stale.")
-            # self.previous_windows[self.current_window_idx-1].hide()
         else: # This is opening the very first window
             self.window = window_class(self)
 
@@ -2834,20 +2827,20 @@ class BioinformaticsWalkthrough(QWidget):
             return False
         try:
             importr_base = importr('base')
-        except:
-            print("r-base not installed. Cannot import R file.")
+        except Exception as e:
+            print(f"r-base not installed. Cannot import R file.\nError: {e}")
             return False
         try:
             rdata = importr_base.readRDS(file_path)
-        except:
-            print(f"Import failed while trying to read {file_path} as an R object.")
+        except Exception as e:
+            print(f"Import failed while trying to read {file_path} as an R object.\nError: {e}")
             return False
         
         print("rdata read")
         try:
             anndata2ri.activate()
-        except:
-            print("anndata2ri not activated. Cannot import R object.")
+        except Exception as e:
+            print(f"anndata2ri not activated. Cannot import R object.\nError: {e}")
             return False
 
         classname = tuple(rdata.rclass)[0]
@@ -2886,21 +2879,7 @@ class BioinformaticsWalkthrough(QWidget):
         print("------------R data file loaded-------------")
         print(f"Metadata loaded: {self.data_columns.head()}")
 
-        return_val = True # at this point, we will consider the import successful, regardless of what happens below
-
-        # self.data_vis_arrays = {}
-        # if reductions_slot_name is not None:
-        #     try:
-        #         reductions = rdata.slots[reductions_slot_name]
-        #     except:
-        #         print(f"Failed to read reductions from {file_path}.")
-        #         print(f"Slot {reductions_slot_name} not among slots found: {tuple(rdata.slotnames())}")
-        #         return return_val
-
-        # self.data_vis_arrays = rdata.slots["reductions"] # not sure yet how to handle this
-        # self.search_for_r_spatial_data()
-
-        return True
+        return True # at this point, we will consider the import successful, regardless of what happens below
     
     def import_from_converted_anndata(self, adata):
         self.data_columns = adata.obs
@@ -2933,14 +2912,14 @@ class BioinformaticsWalkthrough(QWidget):
             return False
         try:
             adata = anndata.read_h5ad(file_path)
-        except:
-            print(f"Import failed while trying to read {file_path} as an anndata object.")
+        except Exception as e:
+            print(f"Import failed while trying to read {file_path} as an anndata object.\nError: {e}")
             return False
         try:
             self.data_columns = adata.obs
             self.data_vis_arrays = adata.obsm
-        except:
-            print(f"Failed to read either obs or obsm from {file_path}.")
+        except Exception as e:
+            print(f"Failed to read either obs or obsm from {file_path}.\nError: {e}")
             return False
 
         print("------------anndata object loaded-------------")
