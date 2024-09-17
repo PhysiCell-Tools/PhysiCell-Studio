@@ -49,7 +49,7 @@ from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
@@ -811,11 +811,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox = QHBoxLayout()
         hbox.setSpacing(0)
         hbox.setContentsMargins(0, 0, 0, 0)
-        self.cycle_rb1 = QRadioButton("transition rate(s)      ")
+        self.cycle_rb1 = QRadioButton_custom("transition rate(s)      ")
         self.cycle_rb1.toggled.connect(self.cycle_phase_transition_cb)
         hbox.addWidget(self.cycle_rb1)
 
-        self.cycle_rb2 = QRadioButton("duration(s)")
+        self.cycle_rb2 = QRadioButton_custom("duration(s)")
         self.cycle_rb2.toggled.connect(self.cycle_phase_transition_cb)
         hbox.addWidget(self.cycle_rb2)
 
@@ -1761,10 +1761,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox.setSpacing(0)
         hbox.setContentsMargins(0, 0, 0, 0)
 
-        self.apoptosis_rb1 = QRadioButton("transition rate     ", self)  # OMG, leave "self" for QButtonGroup
+        self.apoptosis_rb1 = QRadioButton_custom("transition rate     ", parent=self)  # OMG, leave "self" for QButtonGroup
         self.apoptosis_rb1.toggled.connect(self.apoptosis_phase_transition_cb)
 
-        self.apoptosis_rb2 = QRadioButton("duration", self)
+        self.apoptosis_rb2 = QRadioButton_custom("duration", parent=self)
         self.apoptosis_rb2.toggled.connect(self.apoptosis_phase_transition_cb)
 
         hbox.addWidget(self.apoptosis_rb1)
@@ -1949,10 +1949,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox.setSpacing(0)
         hbox.setContentsMargins(0, 0, 0, 0)
 
-        self.necrosis_rb1 = QRadioButton("transition rate     ", self)  # OMG, leave "self" for QButtonGroup
+        self.necrosis_rb1 = QRadioButton_custom("transition rate     ", parent=self)  # OMG, leave "self" for QButtonGroup
         self.necrosis_rb1.toggled.connect(self.necrosis_phase_transition_cb)
 
-        self.necrosis_rb2 = QRadioButton("duration", self)
+        self.necrosis_rb2 = QRadioButton_custom("duration", parent=self)
         self.necrosis_rb2.toggled.connect(self.necrosis_phase_transition_cb)
 
         hbox.addWidget(self.necrosis_rb1)
@@ -2806,10 +2806,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
         # self.motility_substrate_dropdown.addItem("oxygen")
 
-        self.chemotaxis_direction_towards = QRadioButton("towards")
+        self.chemotaxis_direction_towards = QRadioButton_custom("towards")
         self.chemotaxis_direction_towards.clicked.connect(self.chemotaxis_direction_cb)
 
-        self.chemotaxis_direction_against = QRadioButton("against")
+        self.chemotaxis_direction_against = QRadioButton_custom("against")
         self.chemotaxis_direction_against.clicked.connect(self.chemotaxis_direction_cb)
 
         hbox = QHBoxLayout()
