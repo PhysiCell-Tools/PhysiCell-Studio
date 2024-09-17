@@ -1,8 +1,9 @@
 """
-ics_tab.py - create initial conditions (ICs) of cells' positions (by cell type)
+ics_tab.py - create initial conditions (ICs) of cells' positions (by cell type) and substrates
 
 Authors:
 Randy Heiland (heiland@iu.edu)
+Dr. Daniel Bergman
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
 """
@@ -29,7 +30,8 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 
-from studio_classes import QHLine
+from studio_classes import QHLine, HoverLabel,DoubleValidatorWidgetBounded
+from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
 import numpy as np
@@ -81,6 +83,8 @@ class ICs(QWidget):
         # self.mech_voxel_size = 30
 
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
+        self.spacing = 1.0
+
         # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
         self.color_by_celltype = ['gray','red','yellow','green','blue','magenta','orange','lime','cyan','hotpink','peachpuff','darkseagreen','lightskyblue']
         self.alpha_value = 1.0
@@ -93,6 +97,8 @@ class ICs(QWidget):
         self.plot_xmax = 500
         self.plot_ymin = -500
         self.plot_ymax = 500
+        self.plot_zmin = -20
+        self.plot_zmax = 20
 
         # self.nanohub_flag = nanohub_flag
 
@@ -158,6 +164,30 @@ class ICs(QWidget):
 
         self.mouse_on_axes = False
 
+        self.mouse_pressed = False
+        self.current_voxel_subs = None
+
+        self.current_substrate_set_value = 1.0
+
+        self.substrate_list = []
+        self.current_substrate_ind = None
+        self.full_substrate_ic_fname = "./config/ics.csv"
+
+        self.setupSubstratePlotParameters()
+
+        self.substrate_value_updater = self.point_updater
+        self.substrate_updater_pars = {}
+        self.substrate_color_pars = {}
+
+        # after reading the docs and thinking about it, this is what I (DB) think is happening:
+        # ICs has installed an event filter for itself (self). So, any event being sent to ICs is first intercepted by this filter.
+        # What filter you ask? The function eventFilter that belongs to this class below!
+        # Any event that goes to ICs first gets sent through that filter.
+        # If the filter returns True, the event is discarded and not sent on; this would be bad because then nothing would work because no events would make it past the filter.
+        # If the filter returns False, then the event passes along to the target objects (self in this case) or any other installed event filters (those would actually take precedence over self).
+        # Though now I'm wondering how you could set this up to filter events to other targets since they all seem to be processed by the same eventFilter function, which brings into question why you'd pass in the target here...
+        self.installEventFilter(self)
+
         # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
@@ -210,10 +240,15 @@ class ICs(QWidget):
         self.vbox.addStretch(1)
 
         self.ics_params = QWidget()
-        # self.ics_params.setStyleSheet(self.combobox_stylesheet)
         self.ics_params.setLayout(self.vbox)
 
         #----
+        label = QLabel("Cell Initital Conditions")
+        label.setStyleSheet("background-color: orange")
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        idx_row = 0
+        self.vbox.addWidget(label) # w, row, column, rowspan, colspan
+
         hbox = QHBoxLayout()
         label = QLabel("cell type")
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -221,7 +256,6 @@ class ICs(QWidget):
 
         self.celltype_combobox = QComboBox()
         self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)
-        # self.celltype_combobox.setStyleSheet(self.combobox_stylesheet)
         self.celltype_combobox.setFixedWidth(200)  # how wide is sufficient?
         hbox.addWidget(self.celltype_combobox)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
@@ -230,7 +264,6 @@ class ICs(QWidget):
         #----
         hbox = QHBoxLayout()
         self.geom_combobox = QComboBox()
-        # self.geom_combobox.setStyleSheet(self.combobox_stylesheet)
         w_width = 150
         self.geom_combobox.addItem("annulus/disk")
         # self.geom_combobox.addItem("annulus(2D)/shell(3D)")
@@ -267,7 +300,23 @@ class ICs(QWidget):
         # self.glayout1.addWidget(self.num_cells, idr,icol,1,1) 
         hbox.addWidget(self.num_cells)
 
-        self.zeq0 = QCheckBox_custom("2D (z=0) (no 3D yet)")
+        #----
+        label = QLabel("spacing")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.spacing_w = QLineEdit()
+        self.spacing_w.setStyleSheet(self.stylesheet)
+        fixed_width_value = 60
+        self.spacing_w.setFixedWidth(fixed_width_value)
+        self.spacing_w.setValidator(DoubleValidatorWidgetBounded(bottom=0.1,top=999))
+        self.spacing_w.setEnabled(False)
+        self.spacing_w.setText('1.0')
+        self.spacing_w.textChanged.connect(self.spacing_cb)
+        hbox.addWidget(self.spacing_w)
+
+        #----
+        self.zeq0 = QCheckBox_custom(" 2D(z=0)")
         self.zeq0.setChecked(True)
         self.zeq0.setEnabled(False)
         zeq0_style = """
@@ -285,6 +334,7 @@ class ICs(QWidget):
         # self.zeq0.setFixedWidth(50)
         self.zeq0.clicked.connect(self.zeq0_cb)
         hbox.addWidget(self.zeq0)
+
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -399,7 +449,7 @@ class ICs(QWidget):
         hbox = QHBoxLayout()
 
         cvalue_width = 70
-        label = QLabel("o1")  # omega 1: starting angle for a "ring" of cells
+        label = QLabel("\u03b81")  # omega 1: starting angle for a "ring" of cells
         label.setFixedWidth(30)
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -417,7 +467,7 @@ class ICs(QWidget):
         hbox.addWidget(self.o1val)
 
         #------
-        label = QLabel("o2")
+        label = QLabel("\u03b82")
         label.setFixedWidth(30)
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
@@ -563,6 +613,180 @@ class ICs(QWidget):
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
 
+
+        #--------------------- substrate save button
+
+        label = QLabel("Substrate Initital Conditions")
+        # label.setFixedHeight(label_height)
+        label.setStyleSheet("background-color: orange")
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        idx_row = 0
+        self.vbox.addWidget(label) # w, row, column, rowspan, colspan
+
+
+        hbox = QHBoxLayout()
+        label = QLabel("Substrate")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+        
+        self.substrate_combobox = QComboBox()
+        self.substrate_combobox.setFixedWidth(200)  # how wide is sufficient?
+        self.substrate_combobox.currentIndexChanged.connect(self.substrate_combobox_changed_cb)
+        hbox.addWidget(self.substrate_combobox)
+
+        msg = """
+            How to use the substrate plotter:
+            * select a brush and the parameters
+            * click on the plot to start plotting
+            * click again to stop (or leave the plot area)
+            * Note: the Gaussian brush will only update a pixel value if it is greater than the current value
+        """
+        self.help_label = HoverLabel("Help", msg)
+        hbox.addWidget(self.help_label)
+
+        hbox.addStretch(1)
+        self.vbox.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        label = QLabel("Brush")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+        
+        self.brush_combobox = QComboBox()
+        self.brush_combobox.addItem("point")
+        self.brush_combobox.addItem("rectangle")
+        self.brush_combobox.addItem("gaussian_rectangle")
+        self.brush_combobox.currentIndexChanged.connect(self.brush_combobox_changed_cb)
+        self.brush_combobox.setFixedWidth(200)  # how wide is sufficient?
+        hbox.addWidget(self.brush_combobox)
+
+        label = QLabel("Value")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+        
+        self.substrate_set_value = QLineEdit()
+        self.substrate_set_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
+        self.substrate_set_value.setEnabled(True)
+        self.substrate_set_value.setText(str(self.current_substrate_set_value))
+        self.substrate_set_value.textChanged.connect(self.substrate_set_value_changed_cb)
+        self.substrate_set_value.setValidator(QtGui.QDoubleValidator(0.,10000.,4))
+        hbox.addWidget(self.substrate_set_value)
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+        self.vbox.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        self.substrate_par_1_label = QLabel()
+        self.substrate_par_1_label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(self.substrate_par_1_label)
+
+        self.substrate_par_1_value = QLineEdit()
+        self.substrate_par_1_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
+        self.substrate_par_1_value.setEnabled(False)
+        self.substrate_par_1_value.textChanged.connect(self.substrate_par_1_value_changed_cb)
+        self.substrate_par_1_value.setStyleSheet(style_sheet_template(QLineEdit))
+        self.substrate_par_1_value.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.substrate_par_1_value)
+
+        self.substrate_par_2_label = QLabel()
+        self.substrate_par_2_label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(self.substrate_par_2_label)
+
+        self.substrate_par_2_value = QLineEdit()
+        self.substrate_par_2_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
+        self.substrate_par_2_value.setEnabled(False)
+        self.substrate_par_2_value.textChanged.connect(self.substrate_par_2_value_changed_cb)
+        self.substrate_par_2_value.setStyleSheet(style_sheet_template(QLineEdit))
+        self.substrate_par_2_value.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        hbox.addWidget(self.substrate_par_2_value)
+
+        self.substrate_par_3_label = QLabel()
+        self.substrate_par_3_label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(self.substrate_par_3_label)
+
+        self.substrate_par_3_value = QLineEdit()
+        self.substrate_par_3_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
+        self.substrate_par_3_value.setEnabled(False)
+        self.substrate_par_3_value.textChanged.connect(self.substrate_par_3_value_changed_cb)
+        self.substrate_par_3_value.setStyleSheet(style_sheet_template(QLineEdit))
+        self.substrate_par_3_value.setValidator(QtGui.QDoubleValidator(0.,10000.,3))
+        hbox.addWidget(self.substrate_par_3_value)
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+        
+        self.vbox.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+
+        self.fix_cmap_checkbox = QCheckBox_custom('fix: ')
+        self.fix_cmap_flag = False
+        self.fix_cmap_checkbox.setEnabled(True)
+        self.fix_cmap_checkbox.setChecked(self.fix_cmap_flag)
+        self.fix_cmap_checkbox.clicked.connect(self.fix_cmap_toggle_cb)
+        hbox.addWidget(self.fix_cmap_checkbox)
+
+        cvalue_width = 60
+        label = QLabel("cmin")
+        # label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        # label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(label)
+        self.cmin = QLineEdit()
+        self.cmin.setText('0.0')
+        self.cmin.setEnabled(False)
+        self.cmin.setStyleSheet(style_sheet_template(QLineEdit))
+        # self.cmin.textChanged.connect(self.change_plot_range)
+        self.cmin.editingFinished.connect(self.cmin_cmax_cb)
+        self.cmin.setFixedWidth(cvalue_width)
+        self.cmin.setValidator(QtGui.QDoubleValidator())
+        # self.cmin.setEnabled(False)
+        hbox.addWidget(self.cmin)
+
+        label = QLabel("cmax")
+        # label.setFixedWidth(label_width)
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hbox.addWidget(label)
+        self.cmax = QLineEdit()
+        self.cmax.setText('1.0')
+        self.cmax.setEnabled(False)
+        self.cmax.setStyleSheet(style_sheet_template(QLineEdit))
+        self.cmax.editingFinished.connect(self.cmin_cmax_cb)
+        self.cmax.setFixedWidth(cvalue_width)
+        self.cmax.setValidator(QtGui.QDoubleValidator())
+        # self.cmax.setEnabled(False)
+        hbox.addWidget(self.cmax)
+
+        label = QLabel("scale")
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        hbox.addWidget(label)
+
+        self.color_scale_combobox = QComboBox()
+        self.color_scale_combobox.currentIndexChanged.connect(self.color_scale_combobox_changed_cb)
+        self.color_scale_combobox.setFixedWidth(100)  # how wide is sufficient?
+        self.color_scale_combobox.addItem("auto")
+        self.color_scale_combobox.addItem("linear")
+        self.color_scale_combobox.addItem("log")
+        hbox.addWidget(self.color_scale_combobox)
+
+        hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
+
+        self.vbox.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        self.save_button_substrates = QPushButton("Save Substrate")
+        self.save_button_substrates.setFixedWidth(110)
+        self.save_button_substrates.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
+        self.save_button_substrates.clicked.connect(self.save_substrate_cb)
+        hbox.addWidget(self.save_button_substrates)
+
+        self.import_substrate_button = QPushButton("Import")
+        self.import_substrate_button.setFixedWidth(150)
+        self.import_substrate_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.import_substrate_button.clicked.connect(self.import_substrate_cb)
+        hbox.addWidget(self.import_substrate_button)
+
+        hbox.addStretch()
+
+        self.vbox.addLayout(hbox)
+
         #---------------------
         splitter = QSplitter()
         self.scroll_params = QScrollArea()
@@ -611,6 +835,8 @@ class ICs(QWidget):
         self.plot_xmax = float(self.config_tab.xmax.text())
         self.plot_ymin = float(self.config_tab.ymin.text())
         self.plot_ymax = float(self.config_tab.ymax.text())
+        self.plot_zmin = float(self.config_tab.zmin.text())
+        self.plot_zmax = float(self.config_tab.zmax.text())
         try:  # due to the initial callback
             # self.my_xmin.setText(str(self.xmin))
             # self.my_xmax.setText(str(self.xmax))
@@ -628,6 +854,13 @@ class ICs(QWidget):
 
         # self.update_plots()
 
+    def spacing_cb(self):
+        try:  # due to the initial callback
+            val = float(self.spacing_w.text())
+            # print("spacing_cb(): val=",val)
+            self.spacing = val
+        except:
+            pass
 
     def x0_cb(self):
         try:  # due to the initial callback
@@ -701,18 +934,21 @@ class ICs(QWidget):
         except:
             pass
 
-    def change_plot_range(self):
-        # print("\n----- change_plot_range:")
-        # print("----- my_xmin= ",self.my_xmin.text())
-        # print("----- my_xmax= ",self.my_xmax.text())
-        try:  # due to the initial callback
-            self.plot_xmin = float(self.my_xmin.text())
-            self.plot_xmax = float(self.my_xmax.text())
-            self.plot_ymin = float(self.my_ymin.text())
-            self.plot_ymax = float(self.my_ymax.text())
-            self.update_plots()
-        except:
-            pass
+    # DB found this to be unused (2023-09-07)
+    # def change_plot_range(self):
+    #     # print("\n----- change_plot_range:")
+    #     # print("----- my_xmin= ",self.my_xmin.text())
+    #     # print("----- my_xmax= ",self.my_xmax.text())
+    #     try:  # due to the initial callback
+    #         self.plot_xmin = float(self.my_xmin.text())
+    #         self.plot_xmax = float(self.my_xmax.text())
+    #         self.plot_ymin = float(self.my_ymin.text())
+    #         self.plot_ymax = float(self.my_ymax.text())
+    #         self.plot_zmin = float(self.my_zmin.text())
+    #         self.plot_zmax = float(self.my_zmax.text())
+    #         self.update_plots()
+    #     except:
+    #         pass
 
         # self.update_plots()
 
@@ -734,7 +970,7 @@ class ICs(QWidget):
             idx += 1
         # print('field_dict= ',self.field_dict)
         # print('field_min_max= ',self.field_min_max)
-        # self.substrates_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
+        # self.substrate_combobox.setCurrentIndex(2)  # not working; gets reset to oxygen somehow after a Run
 
     def celltype_combobox_changed_cb(self,idx):
         try:
@@ -831,6 +1067,7 @@ class ICs(QWidget):
         #         self.enable_ring_params(False)
 
         self.create_point = False
+        self.spacing_w.setEnabled(False)
         if self.geom_combobox.currentText().find("point") >= 0:
             self.create_point = True
             # print("------- setting point")
@@ -851,6 +1088,10 @@ class ICs(QWidget):
 
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
+            if "box" in self.geom_combobox.currentText():
+                self.spacing_w.setEnabled(True)
+            else:
+                self.spacing_w.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
         # if idx == 0:
@@ -861,10 +1102,17 @@ class ICs(QWidget):
 
     def fill_combobox_changed_cb(self,idx):
         # print("----- fill_combobox_changed_cb: idx = ",idx)
+        # if "hex" in self.fill_combobox.currentText():
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
+
+            if "box" in self.geom_combobox.currentText():
+                self.spacing_w.setEnabled(True)
+            else:
+                self.spacing_w.setEnabled(False)
         else:
             self.num_cells.setEnabled(True)
+            self.spacing_w.setEnabled(False)
         # self.update_plots()
 
 
@@ -884,6 +1132,7 @@ class ICs(QWidget):
         # print("\nics_tab:  --- reset_info()")
         self.celltype_combobox.clear()
         self.fill_celltype_combobox()
+        self.fill_substrate_combobox()
         self.csv_array = np.empty([1,4])
         self.csv_array = np.delete(self.csv_array,0,0)
         self.numcells_l = []
@@ -893,8 +1142,11 @@ class ICs(QWidget):
         self.plot_xmax = float(self.config_tab.xmax.text())
         self.plot_ymin = float(self.config_tab.ymin.text())
         self.plot_ymax = float(self.config_tab.ymax.text())
+        self.plot_zmin = float(self.config_tab.zmin.text())
+        self.plot_zmax = float(self.config_tab.zmax.text())
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        self.setupSubstratePlotParameters()
         # self.update_plots()
         self.canvas.update()
         self.canvas.draw()
@@ -902,14 +1154,9 @@ class ICs(QWidget):
 
     def button_press(self,event):
         if self.create_point:
-            # print("------ button_press()")
             xval = event.xdata  # or "None" if outside plot domain
             yval = event.ydata
             zval = 0.0
-            # print("event.inaxes", event.inaxes)  # Axes(0.125,0.146794;0.775x0.696412)
-            # print("x", event.x)  # e.g.,750
-            # print("y", event.y)  # e.g., 562
-            # print("size=",self.canvas.size())
 
             if self.create_point and (xval is not None):
                 xlist = deque()
@@ -921,12 +1168,9 @@ class ICs(QWidget):
                 # self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
                 rval = self.cell_radius
 
-                # print("event.xdata (xval)=", xval)
-                # print("event.ydata (yval)=", yval)
                 cell_type_index = self.celltype_combobox.currentIndex()
                 xlist.append(xval)
                 ylist.append(yval)
-                # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
                 self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
                 rlist.append(rval)
                 self.cell_radii.append(self.cell_radius)
@@ -936,7 +1180,6 @@ class ICs(QWidget):
                 xvals = np.array(xlist)
                 yvals = np.array(ylist)
                 rvals = np.array(rlist)
-                # rgbas = np.array(rgba_list)
 
                 if (self.cells_edge_checked_flag):
                     try:
@@ -960,33 +1203,33 @@ class ICs(QWidget):
         # print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
         self.figure = plt.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
-        self.canvas.mpl_connect("button_press_event", self.button_press)
+        self.canvas.mpl_connect("button_press_event", self.button_press) # for cell placement when point selected
+        self.canvas.mpl_connect("button_press_event", self.mousePressed) # for substrate placement when point not selected
         self.canvas.mpl_connect("motion_notify_event", self.mouseMoved) # for substrate placement when point not selected
+        self.canvas.mpl_connect("figure_leave_event", self.mouseLeftFigure)
         self.canvas.mpl_connect('axes_enter_event', self.on_enter_axes)
         self.canvas.mpl_connect('axes_leave_event', self.on_leave_axes)
         self.canvas.setStyleSheet("background-color:transparent;")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box')
 
-        # self.reset_model()
-
-        # print("ics_tab:  create_figure(): ------- creating dummy contourf")
-        # xlist = np.linspace(-3.0, 3.0, 50)
-        # print("len(xlist)=",len(xlist))
-        # ylist = np.linspace(-3.0, 3.0, 50)
-        # X, Y = np.meshgrid(xlist, ylist)
-        # Z = np.sqrt(X**2 + Y**2) + 10*np.random.rand()
-
-        # self.cmap = plt.cm.get_cmap("viridis")
-        # self.mysubstrate = self.ax0.contourf(X, Y, Z, cmap=self.cmap)
-
-        # print("ics_tab:  ------------create_figure():  # axes = ",len(self.figure.axes))
-
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.ax0.set_aspect(1.0)
 
-        # self.update_plots()
+        self.cmap = plt.cm.get_cmap("viridis")
+        self.setupSubstratePlotParameters()
+        self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
+        
+        ax1_divider = make_axes_locatable(self.ax0)
+        self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+        self.cbar1 = self.figure.colorbar(self.substrate_plot, cax=self.cax1)
+        self.cbar1.ax.tick_params(labelsize=self.fontsize)
+        self.cbar1.set_label(self.substrate_combobox.currentText()) 
+        
+        self.time_of_last_substrate_plot_update = time.time()
+        self.substrate_plot_time_delay = 0.1
+
         self.canvas.update()
         self.canvas.draw()
 
@@ -996,7 +1239,99 @@ class ICs(QWidget):
         y = event.ydata
         z = 0.0
         return x, y, z
+
+    def mousePressed(self, event):
+        if self.create_point is True:
+            return
+        self.mouse_pressed = not (self.mouse_pressed)
+        if self.mouse_pressed is False:
+            self.update_substrate_plot(check_time_delay=False)
+            return
+        x, y, z = self.getPos(event)
+        if (x is None) or (y is None) or (z is None):
+            self.current_voxel_subs = None
+            return
+        self.current_voxel_subs = self.getAllVoxelSubs(x, y ,z)
+        self.substrate_value_updater()
+        check_time_delay = True
+        self.update_substrate_plot(check_time_delay)
+
+    def mouseMoved(self, event):
+        if self.mouse_on_axes is False:
+            return
+        self.displayCurrentCoordinates(event)
+        if (self.create_point is True) or (self.mouse_pressed is False):
+            return
+        x, y, z = self.getPos(event)
+        if (x is None) or (y is None) or (z is None):
+            self.current_voxel_subs = None
+            return
+        current_voxel_subs = self.getAllVoxelSubs(x, y, z)
+        if all(current_voxel_subs == self.current_voxel_subs):
+            return # only do something if in new voxel
+        self.current_voxel_subs = current_voxel_subs     
+        self.substrate_value_updater()   
+        check_time_delay = True
+        self.update_substrate_plot(check_time_delay)
+
+    def mouseLeftFigure(self, event):
+        self.mouse_pressed = False
+        self.update_substrate_plot(check_time_delay=False)
+
+    def null_updater(self):
+        return
     
+    def point_updater(self):
+        self.current_substrate_values[self.current_voxel_subs[1],self.current_voxel_subs[0]] = self.current_substrate_set_value
+
+    def rectangle_updater(self):
+        # (i,j) refering to the (x,y) coordinates even though the matrix is the transpose of this
+        min_i = max(0,self.current_voxel_subs[0]-self.substrate_updater_pars["x_ind_stretch"])
+        max_i = min(self.nx,self.current_voxel_subs[0]+self.substrate_updater_pars["x_ind_stretch"]+1)
+        min_j = max(0,self.current_voxel_subs[1]-self.substrate_updater_pars["y_ind_stretch"])
+        max_j = min(self.ny,self.current_voxel_subs[1]+self.substrate_updater_pars["y_ind_stretch"]+1)
+        self.current_substrate_values[min_j:max_j,min_i:max_i] = self.current_substrate_set_value
+
+    def gaussian_rectangle_updater(self):
+        dx = self.substrate_updater_pars["x_ind_stretch"]-self.current_voxel_subs[0]
+        min_i_rect = max(0,dx)
+        max_i_rect = min(2*self.substrate_updater_pars["x_ind_stretch"] + 1,self.nx + dx)
+        min_i_all = min_i_rect - dx
+        max_i_all = max_i_rect - dx
+        dy = self.substrate_updater_pars["y_ind_stretch"]-self.current_voxel_subs[1]
+        min_j_rect = max(0,dy)
+        max_j_rect = min(2*self.substrate_updater_pars["y_ind_stretch"] + 1,self.ny + dy)
+        min_j_all = min_j_rect - dy
+        max_j_all = max_j_rect - dy
+        self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all] = np.maximum(self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all],self.current_substrate_set_value[min_j_rect:max_j_rect,min_i_rect:max_i_rect])
+
+    def getAllVoxelSubs(self, x, y, z):
+        x = self.getSingleVoxelSub(x, self.plot_xmin, self.xdel)
+        y = self.getSingleVoxelSub(y, self.plot_ymin, self.ydel)
+        z = self.getSingleVoxelSub(z, self.plot_zmin, self.zdel)
+        return np.array([x, y, z])
+
+    def getAllVoxelCoords(self, x, y, z):
+        x = self.getSingleVoxelCoord(x, self.plot_xmin, self.xdel)
+        y = self.getSingleVoxelCoord(y, self.plot_ymin, self.ydel)
+        z = self.getSingleVoxelCoord(z, self.plot_zmin, self.zdel)
+        return np.array([x, y, z])
+
+    def getSingleVoxelSub(self, x, xmin, dx):
+        return int((x - ((x-xmin) % dx) - xmin) / dx)
+
+    def getSingleVoxelCoord(self, x, xmin, dx):
+        remainder = (x-xmin) % dx
+        return x - remainder + 0.5 * dx
+    
+    def update_substrate_plot(self, check_time_delay):
+        if (not check_time_delay) or (time.time() > self.time_of_last_substrate_plot_update+self.substrate_plot_time_delay):
+            self.substrate_plot.set_data(self.current_substrate_values)
+            # self.substrate_plot.set_clim(vmin=np.min(self.current_substrate_values),vmax=np.max(self.current_substrate_values))
+            self.canvas.update()
+            self.canvas.draw()
+            self.time_of_last_substrate_plot_update = time.time()
+
     def circles(self, x, y, s, c='b', vmin=None, vmax=None, **kwargs):
         """
         See https://gist.github.com/syrte/592a062c562cd2a98a83 
@@ -1184,6 +1519,7 @@ class ICs(QWidget):
 
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
 
         # self.update_plots()
         self.canvas.update()
@@ -1212,8 +1548,8 @@ class ICs(QWidget):
         y_max =  self.r2_value
         y_idx = -1
         # hex packing constants
-        x_spacing = self.cell_radius * 2
-        y_spacing = self.cell_radius * np.sqrt(3)
+        x_spacing = self.cell_radius * 2 * self.spacing
+        y_spacing = self.cell_radius * 1.7320508 * self.spacing  # np.sqrt(3) = 1.7320508 
 
         cells_x = np.array([])
         cells_y = np.array([])
@@ -1764,6 +2100,7 @@ class ICs(QWidget):
         self.ax0.cla()
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
         self.canvas.update()
         self.canvas.draw()
 
@@ -1830,6 +2167,32 @@ class ICs(QWidget):
             print("----- Writing v1 (with cell indices) .csv file for cells")
             print("----- full_fname=",full_fname)
             np.savetxt(full_fname, self.csv_array, delimiter=',')
+
+    def save_substrate_cb(self):
+        filePath = QFileDialog.getSaveFileName(self,'',".")
+        self.full_substrate_ic_fname = filePath[0]
+
+        print("save_substrate_cb(): self.full_substrate_ic_fname=",self.full_substrate_ic_fname)
+        
+        X = np.tile(self.plot_xx,self.ny).reshape((-1,1))
+        Y = np.repeat(self.plot_yy,self.nx).reshape((-1,1))
+        Z = np.zeros(self.nx*self.ny).reshape((-1,1))
+        C = self.all_substrate_values.reshape((len(X),-1))
+        nonzero_substrates = (C!=0).any(axis=0)
+        if ~nonzero_substrates.any():
+            # then no substrates are being saved; just disable ics and move on
+            print("---- All substrate ics are 0. Not saving and disabling ics")
+            self.enable_csv_for_substrate_ics = False
+            return
+        
+        print("----- Writing .csv file for substrate")
+        print("----- self.full_substrate_ic_fname=",self.full_substrate_ic_fname)
+
+        C = C[:,nonzero_substrates] # remove columns of all zeros corresponding to substrates that were not set
+        substrates_to_save = [self.substrate_list[i] for i in range(len(self.substrate_list)) if nonzero_substrates[i]]
+        header = f'x,y,z,{",".join(substrates_to_save)}'
+        np.savetxt(self.full_substrate_ic_fname, np.concatenate((X,Y,Z,C), axis=1), delimiter=',',header=header,comments='')
+        self.enable_csv_for_substrate_ics = True
 
     #--------------------------------------------------
     def import_cb(self):
@@ -1942,8 +2305,10 @@ class ICs(QWidget):
     def fill_gui(self):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
+        self.fill_substrate_combobox()
         if self.biwt_flag:
             self.biwt_tab.fill_gui()
+        
 
     def on_enter_axes(self, event):
         self.mouse_on_axes = True
@@ -1958,10 +2323,279 @@ class ICs(QWidget):
         self.canvas.update()
         self.canvas.draw()
 
-    def mouseMoved(self, event):
-        if self.mouse_on_axes is False:
-            return
+    def displayCurrentCoordinates(self, event):
         current_location = self.getPos(event)
         self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
         self.canvas.update()
         self.canvas.draw()
+
+    def substrate_combobox_changed_cb(self):
+        self.current_substrate_ind = self.substrate_combobox.currentIndex()
+        self.current_substrate_values = self.all_substrate_values[:,:,self.current_substrate_ind]
+        check_time_delay = False
+        if self.substrate_combobox.currentText() not in self.substrate_color_pars.keys():
+            self.substrate_color_pars[self.substrate_combobox.currentText()] = {"fixed":False,"cmin":0,"cmax":1,"scale":"auto"}
+        self.fix_cmap_checkbox.setChecked(self.substrate_color_pars[self.substrate_combobox.currentText()]["fixed"])
+        self.fix_cmap_toggle_cb(self.fix_cmap_checkbox.isChecked()) # force this callback to gray out boxes etc
+        self.cmin.setText(str(self.substrate_color_pars[self.substrate_combobox.currentText()]["cmin"]))
+        self.cmax.setText(str(self.substrate_color_pars[self.substrate_combobox.currentText()]["cmax"]))
+        self.color_scale_combobox.setCurrentText(self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"])
+        self.cbar1.set_label(self.substrate_combobox.currentText())
+        self.update_substrate_clims()
+        self.update_substrate_plot(check_time_delay)
+
+    def brush_combobox_changed_cb(self):
+        if self.brush_combobox.currentText() == "point":
+            self.substrate_par_1_label.setText("")
+            self.substrate_par_1_value.setEnabled(False)
+            self.substrate_par_2_label.setText("")
+            self.substrate_par_2_value.setEnabled(False)
+            self.substrate_par_3_label.setText("")
+            self.substrate_par_3_value.setEnabled(False)
+            self.setupPointUpdater()
+        elif self.brush_combobox.currentText() == "rectangle":
+            self.substrate_par_1_label.setText("R1")
+            self.substrate_par_1_value.setEnabled(True)
+            self.substrate_par_2_label.setText("R2")
+            self.substrate_par_2_value.setEnabled(True)
+            self.substrate_par_3_label.setText("")
+            self.substrate_par_3_value.setEnabled(False)
+            self.setupRectangleUpdater()
+        elif self.brush_combobox.currentText() == "gaussian_rectangle":
+            self.substrate_par_1_label.setText("R1")
+            self.substrate_par_1_value.setEnabled(True)
+            self.substrate_par_2_label.setText("R2")
+            self.substrate_par_2_value.setEnabled(True)
+            self.substrate_par_3_label.setText("\u03c3")
+            self.substrate_par_3_value.setEnabled(True)
+            self.setupGaussianRectangleUpdater()
+
+    def setupPointUpdater(self):
+        self.substrate_value_updater = self.point_updater
+        self.current_substrate_set_value = float(self.substrate_set_value.text())
+
+    def setupRectangleUpdater(self):
+        self.substrate_updater_pars = {}
+        updater_ready = True
+        try:
+            R1 = float(self.substrate_par_1_value.text())
+        except:
+            updater_ready = False
+        try:
+            R2 = float(self.substrate_par_2_value.text())
+        except:
+            updater_ready = False
+
+        if updater_ready is False:
+            self.substrate_value_updater = self.null_updater
+            return
+        
+        self.substrate_value_updater = self.rectangle_updater
+        self.current_substrate_set_value = float(self.substrate_set_value.text())
+        self.substrate_updater_pars["x_ind_stretch"] = int(np.floor(R1/self.xdel))
+        self.substrate_updater_pars["y_ind_stretch"] = int(np.floor(R2/self.ydel))
+
+    def setupGaussianRectangleUpdater(self):
+        self.substrate_updater_pars = {}
+        updater_ready = True
+        try:
+            R1 = float(self.substrate_par_1_value.text())
+        except:
+            updater_ready = False
+        try:
+            R2 = float(self.substrate_par_2_value.text())
+        except:
+            updater_ready = False
+        try:
+            sigma = float(self.substrate_par_3_value.text())
+        except:
+            updater_ready = False
+
+        if updater_ready is False:
+            self.substrate_value_updater = self.null_updater
+            return
+        
+        self.substrate_value_updater = self.gaussian_rectangle_updater
+        self.substrate_updater_pars["x_ind_stretch"] = int(np.floor(R1/self.xdel))
+        self.substrate_updater_pars["y_ind_stretch"] = int(np.floor(R2/self.ydel))
+        xx = self.xdel * np.arange(-self.substrate_updater_pars["x_ind_stretch"],self.substrate_updater_pars["x_ind_stretch"]+1).reshape((1,-1))
+        yy = self.ydel * np.arange(-self.substrate_updater_pars["y_ind_stretch"],self.substrate_updater_pars["y_ind_stretch"]+1).reshape((-1,1))
+        r2 = xx**2 + yy**2
+        self.current_substrate_set_value = float(self.substrate_set_value.text())
+        self.current_substrate_set_value = self.current_substrate_set_value * np.exp(-0.5*r2/(sigma*sigma))
+
+    def substrate_set_value_changed_cb(self):
+        try:  # due to the initial callback
+            if self.brush_combobox.currentText() == "point":
+                self.setupPointUpdater()
+            elif self.brush_combobox.currentText() == "rectangle":
+                self.setupRectangleUpdater()
+            elif self.brush_combobox.currentText() == "gaussian_rectangle":
+                self.setupGaussianRectangleUpdater()
+        except:
+            pass
+        try: # for when the value is being set and isn't a number yet, e.g. '', or '.'
+            self.update_substrate_clims()
+        except:
+            pass
+        
+    def fill_substrate_combobox(self):
+        logging.debug(f'ics_tab.py: ------- fill_substrate_combobox')
+        self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
+        self.substrate_combobox.clear()
+        uep = self.config_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
+        if uep:
+            idx = 0
+            num_vars = len(uep.findall('variable'))
+            self.all_substrate_values = np.zeros((self.ny, self.nx, num_vars))
+            for var in uep.findall('variable'):
+                logging.debug(f' --> {var.attrib["name"]}')
+                name = var.attrib['name']
+                self.substrate_list.append(name)
+                self.substrate_combobox.addItem(name)
+                idx += 1
+
+    def add_new_substrate(self, sub_name):
+        self.substrate_list.append(sub_name)
+        self.substrate_combobox.addItem(sub_name)
+        self.all_substrate_values = np.concatenate((self.all_substrate_values, np.zeros((self.ny,self.nx,1))), axis=2)
+
+    def delete_substrate(self, item_idx):
+        subname = self.substrate_combobox.itemText(item_idx)
+        ind = self.substrate_list.index(subname)
+        if self.current_substrate_ind==ind:
+            self.current_substrate_ind = None # if this was the current substrate for ic plotting, then do not bother saving the current values
+        self.all_substrate_values = np.delete(self.all_substrate_values, ind, axis=2)
+        self.substrate_list.remove(subname)
+        self.substrate_combobox.removeItem(item_idx)
+
+    def renamed_substrate(self, old_name,new_name):
+        self.substrate_list = [new_name if x==old_name else x for x in self.substrate_list]
+        for idx in range(len(self.substrate_list)):
+            if old_name == self.substrate_combobox.itemText(idx):
+                self.substrate_combobox.setItemText(idx, new_name)
+
+    def substrate_par_1_value_changed_cb(self):
+        if self.brush_combobox.currentText() == "rectangle":
+            self.setupRectangleUpdater()
+        elif self.brush_combobox.currentText() == "gaussian_rectangle":
+            self.setupGaussianRectangleUpdater()
+
+    def substrate_par_2_value_changed_cb(self):
+        if self.brush_combobox.currentText() == "rectangle":
+            self.setupRectangleUpdater()
+        elif self.brush_combobox.currentText() == "gaussian_rectangle":
+            self.setupGaussianRectangleUpdater()
+
+    def substrate_par_3_value_changed_cb(self):
+        if self.brush_combobox.currentText() == "gaussian_rectangle":
+            self.setupGaussianRectangleUpdater()
+
+    def setupSubstratePlotParameters(self):
+        self.xdel = float(self.config_tab.xdel.text())
+        self.nx = int(np.ceil((self.plot_xmax - self.plot_xmin) / self.xdel))
+        self.plot_xx = np.arange(0,self.nx)*self.xdel+self.plot_xmin+0.5*self.xdel
+        self.ydel = float(self.config_tab.ydel.text())
+        self.ny = int(np.ceil((self.plot_ymax - self.plot_ymin) / self.ydel))
+        self.plot_yy = np.arange(0,self.ny)*self.ydel+self.plot_ymin+0.5*self.ydel
+        self.zdel = float(self.config_tab.zdel.text())
+        self.nz = 1 # only let this work for 2d
+        self.plot_zz = np.arange(0,self.nz)*self.zdel+self.plot_zmin+0.5*self.zdel
+        self.current_substrate_values = np.zeros((self.ny, self.nx)) # set it up for plotting
+        self.all_substrate_values = np.zeros((self.ny, self.nx, len(self.substrate_list)))
+        self.enable_csv_for_substrate_ics = False # since we're reseting this here, might as well disable this
+
+    def import_substrate_cb(self):
+        filePath = QFileDialog.getOpenFileName(self,'',".")
+        full_path_file_name = filePath[0]
+
+        self.import_substrate_from_file(full_path_file_name)
+
+    def import_substrate_from_file(self, full_path_file_name):
+        if (len(full_path_file_name) == 0) or (not Path(full_path_file_name).is_file()):
+            print("import_substrate_from_file():  full_path_file_name is NOT valid")
+            return
+
+        with open(full_path_file_name, newline='') as csvfile:
+            data = list(csv.reader(csvfile))
+            if data[0][0]=='x': # check for header row
+                substrate_names = data[0][3:]
+                col_inds = [self.substrate_list.index(name) for name in substrate_names]
+                data = data[1:]
+            else:
+                col_inds = range(len(data[0]))
+            data = np.array([[float(x) for x in y] for y in np.array(data)])
+            if data.shape[0] != (self.nx*self.ny):
+                # we could help the user out and load up what is there to work with, but they're probably better served by just getting a reality check with a reset to zeros
+                print(f"WARNING: Substrate IC CSV did not have the correct number of voxels ({data.shape[0]}!={self.nx*self.ny}). Reseting all concentrations to 0.")
+                self.setupSubstratePlotParameters()
+            else:
+                self.all_substrate_values[:,:,col_inds] = data[:,3:].reshape((self.ny, self.nx, -1))
+                self.current_substrate_values = self.all_substrate_values[:,:,self.substrate_combobox.currentIndex()]
+            check_time_delay = False
+            self.update_substrate_plot(check_time_delay)
+
+    def checkForNewGrid(self):
+        if float(self.config_tab.xmin.text())!=self.plot_xmin or float(self.config_tab.xmax.text())!=self.plot_xmax or float(self.config_tab.xdel.text())!=self.xdel \
+            or float(self.config_tab.ymin.text())!=self.plot_ymin or float(self.config_tab.ymax.text())!=self.plot_ymax or float(self.config_tab.ydel.text())!=self.ydel:
+            self.reset_plot_range()
+            self.setupSubstratePlotParameters()
+            self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
+            self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+            self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
+            self.canvas.update()
+            self.canvas.draw()
+
+    def eventFilter(self, source, event):
+        if event.type() == QtCore.QEvent.Show:
+            self.checkForNewGrid()
+        return False # A False return value makes sure that this intercepted event goes on to the target object or any other eventFilter's
+    
+
+    def fix_cmap_toggle_cb(self,bval):
+        # print("fix_cmap_toggle_cb():")
+        self.fix_cmap_flag = bval
+        self.cmin.setEnabled(bval)
+        self.cmax.setEnabled(bval)
+        self.substrate_color_pars[self.substrate_combobox.currentText()]["fixed"] = bval
+        field_name = self.substrate_combobox.currentText()
+        try:
+            self.update_substrate_clims()
+        except:
+            print("------- ics_tab: fix_cmap_toggle_cb(): exception updating field_min_max for ",field_name)
+
+    def cmin_cmax_cb(self):
+        try:  # due to the initial callback
+            self.substrate_color_pars[self.substrate_combobox.currentText()]["cmin"] = self.cmin.text()
+            self.substrate_color_pars[self.substrate_combobox.currentText()]["cmax"] = self.cmax.text()
+            self.update_substrate_clims()
+        except:
+            pass
+
+    def update_substrate_clims(self):
+        # if  self.fix_cmap_checkbox.isChecked() is True:
+        if  self.substrate_color_pars[self.substrate_combobox.currentText()]["fixed"] is True:
+            min_val = float(self.substrate_color_pars[self.substrate_combobox.currentText()]["cmin"])
+            min_pos_val = min_val
+            max_val = float(self.substrate_color_pars[self.substrate_combobox.currentText()]["cmax"])
+        else:
+            min_val = min(float(self.substrate_set_value.text()),np.min(self.current_substrate_values))
+            min_pos_val = np.min(self.current_substrate_values[self.current_substrate_values>0],initial=float(self.substrate_set_value.text()))
+            max_val = max(float(self.substrate_set_value.text()),np.max(self.current_substrate_values))
+        if (min_pos_val>0) and ((self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"]=="log") or (self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"]=="auto" and max_val > 100*min_pos_val)):
+            self.substrate_plot.set_norm(matplotlib.colors.LogNorm(vmin=min_pos_val, vmax=max_val))
+            self.substrate_plot.set_clim(vmin=min_pos_val,vmax=max_val)
+        else:
+            self.substrate_plot.set_norm(matplotlib.colors.Normalize(vmin=min_val, vmax=max_val))
+            self.substrate_plot.set_clim(vmin=min_val,vmax=max_val)
+        self.update_substrate_plot(check_time_delay=False)
+        # except: # for initialization
+        #     print("     hit exception")
+        #     pass
+
+    def color_scale_combobox_changed_cb(self):
+        try:
+            self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"] = self.color_scale_combobox.currentText()
+            self.update_substrate_clims()
+        except:
+            pass

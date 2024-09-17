@@ -58,6 +58,33 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # from matplotlib.figure import Figure
 
+#-----------------------------
+#   Future idea of floating Plot window
+class MainPlotWindow(QWidget):
+    def __init__(self, canvas):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.label = QLabel("Plot")
+        # self.layout.addWidget(self.label)
+
+        self.figure = plt.figure()
+        # self.canvas = FigureCanvasQTAgg(self.figure)
+        # self.canvas.setStyleSheet("background-color:transparent;")
+        # self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        # self.layout.addWidget(self.canvas)
+        self.layout.addWidget(canvas)
+
+        # self.close_button = QPushButton("Close")
+        # self.close_button.setStyleSheet("background-color: lightgreen;")
+        # # self.close_button.setFixedWidth(150)
+        # self.close_button.clicked.connect(self.close_plot_cb)
+        # self.layout.addWidget(self.close_button)
+
+        self.setLayout(self.layout)
+
+        # self.hide()
+        # self.show()
+
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
@@ -232,7 +259,14 @@ class Vis(VisBase, QWidget):
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
-        self.scroll_plot.setWidget(self.canvas) # self.config_params = QWidget()
+        self.scroll_plot.setWidget(self.canvas) # for an embedded Plot window (not floating)
+
+        # -- future idea of [optional] floating Plot window
+        # self.plot_win = None
+        # self.plot_win = MainPlotWindow(self.canvas)
+        # self.plot_win.show()
+
+        # self.plot_w.setWidget(self.canvas) # self.config_params = QWidget()
 
     #--------------------------------------
     # def aspect_11_cb(self,bval):
@@ -250,7 +284,6 @@ class Vis(VisBase, QWidget):
         xml_file = os.path.join(self.output_dir, xml_file_root)
         # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
 
-        # cell_scalar_name = self.cell_scalar_combobox.currentText()
         if not Path(xml_file).is_file():
             print("ERROR: file not found",xml_file)
             return
@@ -259,6 +292,7 @@ class Vis(VisBase, QWidget):
         # total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         xvals = mcds.get_cell_df()['position_x']
+        # print("type(xvals)= ",type(xvals))
         yvals = mcds.get_cell_df()['position_y']
         cell_types = mcds.get_cell_df()["cell_type"]
         # print("len(xvals)=",len(xvals))
@@ -267,9 +301,12 @@ class Vis(VisBase, QWidget):
         # print("self.celltype_name=",self.celltype_name)
         csv_file = open("snap.csv", "w")
         csv_file.write("x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n")
-        for idx in range(len(xvals)):
-            # print(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}')
-            csv_file.write(f'{xvals[idx]},{yvals[idx]},0.0,{self.celltype_name[int(cell_types[idx])]}\n')
+        try:
+            for xv, yv, ct in zip(xvals, yvals, cell_types):  # DON'T do sequential idx
+                # print(f'{xv},{yv},{self.celltype_name[int(ct)]}')
+                csv_file.write(f'{xv},{yv},0.0,{self.celltype_name[int(ct)]}\n')
+        except:
+            print("\nvis_tab.py:-------- Error writing snap.csv file")
         csv_file.close()
 
     #--------------------------------------
@@ -317,6 +354,7 @@ class Vis(VisBase, QWidget):
             print("              self.figure is None, so return!")
             return
         self.figure = plt.figure()
+        self.gs = gridspec.GridSpec(2,2, height_ratios=[20,1], width_ratios=[20,1]) # top row is [plot, substrate colorbar]; bottom row is [cells colorbar, nothing]
         self.canvas = FigureCanvasQTAgg(self.figure)
         print("     self.canvas= ",self.canvas)
         self.canvas.setStyleSheet("background-color:transparent;")
@@ -325,7 +363,7 @@ class Vis(VisBase, QWidget):
         # self.ax0 = self.figure.add_subplot(111)
         # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=1.2)
         # self.ax0 = self.figure.add_subplot(111, adjustable='box', aspect=self.aspect_ratio)
-        self.ax0 = self.figure.add_subplot(111, adjustable='box')
+        self.ax0 = self.figure.add_subplot(self.gs[0,0], adjustable='box')
         
         # self.ax0.get_xaxis().set_visible(False)
         # self.ax0.get_yaxis().set_visible(False)
@@ -480,7 +518,6 @@ class Vis(VisBase, QWidget):
             print("------ plot_svg(): error trying to parse ",full_fname)
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
             msg = "plot_svg(): error parsing "+full_fname+". You may have a partially written .svg file due to a canceled simulation."
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
@@ -671,12 +708,16 @@ class Vis(VisBase, QWidget):
         except:
             print("vis_tab.py: plot_cell_physiboss(): error performing mcds.get_cell_df()['cell_type']")
             return
-            
-        physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+        
+        physiboss_state_file = os.path.join(self.output_dir, "output%08d_boolean_intracellular.csv" % frame)
         
         if not Path(physiboss_state_file).is_file():
-            print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
-            return
+            
+            physiboss_state_file = os.path.join(self.output_dir, "states_%08d.csv" % frame)
+            
+            if not Path(physiboss_state_file).is_file():
+                print("vis_tab.py: plot_cell_physiboss(): error file not found ",physiboss_state_file)
+                return
         
         cell_scalar = {id: 9 for id in mcds.get_cell_df().index}
         
@@ -760,10 +801,12 @@ class Vis(VisBase, QWidget):
 
         xml_file_root = "output%08d.xml" % frame
         xml_file = os.path.join(self.output_dir, xml_file_root)
-        # xml_file = os.path.join("tmpdir", xml_file_root)  # temporary hack
-        cell_scalar_name = self.cell_scalar_combobox.currentText()
+        cell_scalar_humanreadable_name = self.cell_scalar_combobox.currentText()
+        if cell_scalar_humanreadable_name in self.cell_scalar_human2mcds_dict.keys():
+            cell_scalar_mcds_name = self.cell_scalar_human2mcds_dict[cell_scalar_humanreadable_name]
+        else:
+            cell_scalar_mcds_name = cell_scalar_humanreadable_name
         cbar_name = self.cell_scalar_cbar_combobox.currentText()
-        # print(f"\n\n   >>>>--------- plot_cell_scalar(): xml_file={xml_file}, scalar={cell_scalar_name}, cbar={cbar_name}")
         if not Path(xml_file).is_file():
             print("ERROR: file not found",xml_file)
             return
@@ -772,13 +815,12 @@ class Vis(VisBase, QWidget):
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
     
         try:
-            cell_scalar = mcds.get_cell_df()[cell_scalar_name]
+            cell_scalar = mcds.get_cell_df()[cell_scalar_mcds_name]
         except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_name]")
+            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_mcds_name]")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            # msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You are probably trying to use out-of-date scalars. Resetting to .svg plots, so you will need to refresh the cell scalar dropdown combobox in the Plot tab."
-            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
+            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_mcds_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
@@ -817,36 +859,33 @@ class Vis(VisBase, QWidget):
         # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
         # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"
         
-        # print(cell_scalar_name, " - discrete: ", (cell_scalar % 1  == 0).all()) # Possible test if the variable is discrete or continuum variable (issue: in some time the continuum variable can be classified as discrete (example time=0))
-        
-        # if( cell_scalar_name == 'cell_type' or cell_scalar_name == 'current_phase'): discrete_variable = list(set(cell_scalar)) # It's a set of possible value of the variable
-        if cell_scalar_name in self.discrete_cell_scalars: 
+        if cell_scalar_mcds_name in self.discrete_cell_scalars: 
 
             self.discrete_variable_observed = self.discrete_variable_observed.union(set([int(i) for i in np.unique(cell_scalar)]))
 
-            if cell_scalar_name == "current_phase":   # and if "Fixed" range is checked
+            if cell_scalar_mcds_name == "current_phase":   # and if "Fixed" range is checked
                 self.discrete_variable = list(self.cycle_phases.keys())
                 names_observed = [self.cycle_phases[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_phases.keys()]
 
-            elif cell_scalar_name == "cell_type":
+            elif cell_scalar_mcds_name == "cell_type":
                 # I'm not sure I should be calling this every time. But I'm also not sure about the life cycle of celltype_name
                 self.get_cell_types_from_config()
                 self.discrete_variable = list(range(len(self.celltype_name)))
                 names_observed = [self.celltype_name[i] for i in sorted(list(self.discrete_variable_observed)) if i < len(self.celltype_name)]
                 
-            elif cell_scalar_name == "cycle_model":
+            elif cell_scalar_mcds_name == "cycle_model":
                 self.discrete_variable = list(self.cycle_models.keys())
                 names_observed = [self.cycle_models[i] for i in sorted(list(self.discrete_variable_observed)) if i in self.cycle_models.keys()]
 
-            elif cell_scalar_name == "current_death_model":
+            elif cell_scalar_mcds_name == "current_death_model":
                 self.discrete_variable = [0,1]
                 names_observed = ["phase #%d" % i for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             
-            elif cell_scalar_name == "is_motile":
+            elif cell_scalar_mcds_name == "is_motile":
                 self.discrete_variable = [0,1]
                 names_observed = ["motile" if i == 1 else "stationnary" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
                 
-            elif cell_scalar_name == "dead":
+            elif cell_scalar_mcds_name == "dead":
                 self.discrete_variable = [0,1]
                 names_observed = ["dead" if i == 1 else "alive" for i in sorted(list(self.discrete_variable_observed)) if i in [0,1]]
             else:
@@ -935,11 +974,12 @@ class Vis(VisBase, QWidget):
         else:
             # If it's not there, we create it
             if self.cax2 is None:
-                ax2_divider = make_axes_locatable(self.ax0)
-                self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None,cax=self.cax2, orientation="horizontal")
+                self.cax2 = self.figure.add_subplot(self.gs[1,0])
+                # ax2_divider = make_axes_locatable(self.ax0)
+                # self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
+            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-            self.cbar2.ax.set_xlabel(cell_scalar_name, fontsize=self.cbar_label_fontsize)
+            self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -1080,8 +1120,9 @@ class Vis(VisBase, QWidget):
             # print("# axes(after substrate remove) = ",len(self.figure.axes))
             # print(" self.figure.axes= ",self.figure.axes)
             #ppp
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            # ax1_divider = make_axes_locatable(self.ax0)
+            # self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
                 self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
             except:
@@ -1090,8 +1131,9 @@ class Vis(VisBase, QWidget):
             # print(" self.figure.axes= ",self.figure.axes)
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
         else:
-            ax1_divider = make_axes_locatable(self.ax0)
-            self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            # ax1_divider = make_axes_locatable(self.ax0)
+            # self.cax1 = ax1_divider.append_axes("right", size="4%", pad="2%")
+            self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
                 self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
             except:

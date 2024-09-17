@@ -1,5 +1,6 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from studio_classes import DoubleValidatorWidgetBounded
 # from PyQt5.QtWidgets import QCompleter, QSizePolicy
 # from PyQt5.QtCore import QSortFilterProxyModel
 # from PyQt5.QtSvg import QSvgWidget
@@ -130,15 +131,25 @@ class FilterUI2DWindow(QWidget):
         glayout.addWidget(self.aspect_11_checkbox, idx_row,0,1,3) # w, row, column, rowspan, colspan
 
         #--------------------------
-        self.voxel_grid_checkbox = QCheckBox_custom('voxel grid')
+        idx_row += 1
+        glayout.addWidget(QLabel("Grids:"), idx_row,0,1,2) # w, row, column, rowspan, colspan
+
+        self.voxel_grid_checkbox = QCheckBox_custom('voxel')
         self.voxel_grid_checkbox.clicked.connect(self.voxel_grid_cb)
         idx_row += 1
-        glayout.addWidget(self.voxel_grid_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.voxel_grid_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         #------
-        self.mech_grid_checkbox = QCheckBox_custom('mech grid')
+        self.mech_grid_checkbox = QCheckBox_custom('mech')
         self.mech_grid_checkbox.clicked.connect(self.mech_grid_cb)
-        glayout.addWidget(self.mech_grid_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.mech_grid_checkbox, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        # self.mech_grid_size = QLineEdit_custom()
+        self.mech_grid_size = QLineEdit("30")
+        self.mech_grid_size.setFixedWidth(30)
+        self.mech_grid_size.textChanged.connect(self.mech_grid_size_changed)
+        self.mech_grid_size.setValidator(DoubleValidatorWidgetBounded(bottom=1, top=999))
+        glayout.addWidget(self.mech_grid_size , idx_row,2, 1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
         self.save_png_checkbox = QCheckBox_custom('save frame*.png')
@@ -246,6 +257,13 @@ class FilterUI2DWindow(QWidget):
 
     def mech_grid_cb(self):
         self.vis_tab.mech_grid_cb(self.mech_grid_checkbox.isChecked())
+
+    def mech_grid_size_changed(self,sval):
+        # print("size=",sval)
+        try:
+            self.vis_tab.mech_voxel_size = float(sval)
+        except:
+            pass
 
     def save_png_cb(self):
         self.vis_tab.png_frame = 0

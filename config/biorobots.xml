@@ -1,5 +1,14 @@
 <PhysiCell_settings version="devel-version">
 
+    <cell_rules>
+        <rulesets>
+            <ruleset protocol="CBHG" version="2.0" format="csv" enabled="true">
+                <folder>config</folder>
+                <filename>rules.csv</filename>
+            </ruleset>
+        </rulesets>
+    </cell_rules>
+
     <domain>
         <x_min>-1000</x_min>
         <x_max>1000</x_max>
@@ -35,6 +44,12 @@
         <SVG>
             <interval units="min">2</interval>
             <enable>true</enable>
+            <plot_substrate enabled="false" limits="false">
+                <substrate>director signal</substrate>
+                <min_conc />
+                <max_conc />
+                <colormap />
+            </plot_substrate>
         </SVG>
         <legacy_data>
             <enable>false</enable>
@@ -45,6 +60,7 @@
         <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
         <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
         <disable_automated_spring_adhesions>true</disable_automated_spring_adhesions>
+        <random_seed>0</random_seed>
     </options>
 
     <microenvironment_setup>
@@ -155,11 +171,10 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.5</attachment_elastic_constant>
                     <attachment_rate units="1/min">10.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">1</speed>
@@ -198,7 +213,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="director cell" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="cargo cell" units="1/min">0.0</phagocytosis_rate>
@@ -211,7 +228,8 @@
                         <attack_rate name="worker cell" units="1/min">0.0</attack_rate>
                         <attack_rate name="default" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1</damage_rate>
+                    <attack_damage_rate units="1/min">1</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="director cell" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="cargo cell" units="1/min">0.0</fusion_rate>
@@ -227,10 +245,16 @@
                         <transformation_rate name="default" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <receptor conserved="false" units="dimensionless" description="">0</receptor>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
         <cell_definition name="cargo cell" ID="1">
             <phenotype>
@@ -294,11 +318,10 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.5</attachment_elastic_constant>
                     <attachment_rate units="1/min">10.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">1</speed>
@@ -337,7 +360,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="director cell" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="cargo cell" units="1/min">0.0</phagocytosis_rate>
@@ -348,7 +373,8 @@
                         <attack_rate name="cargo cell" units="1/min">0.0</attack_rate>
                         <attack_rate name="worker cell" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1</damage_rate>
+                    <attack_damage_rate units="1/min">1</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="director cell" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="cargo cell" units="1/min">0.0</fusion_rate>
@@ -362,10 +388,16 @@
                         <transformation_rate name="worker cell" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <receptor conserved="false" units="dimensionless" description="">1</receptor>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
         <cell_definition name="worker cell" ID="2">
             <phenotype>
@@ -429,11 +461,10 @@
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
                         <set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
                     </options>
-                    <cell_BM_adhesion_strength units="micron/min">4.0</cell_BM_adhesion_strength>
-                    <cell_BM_repulsion_strength units="micron/min">10.0</cell_BM_repulsion_strength>
                     <attachment_elastic_constant units="1/min">0.5</attachment_elastic_constant>
                     <attachment_rate units="1/min">10.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">5</speed>
@@ -472,7 +503,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="director cell" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="cargo cell" units="1/min">0.0</phagocytosis_rate>
@@ -483,7 +516,8 @@
                         <attack_rate name="cargo cell" units="1/min">0.0</attack_rate>
                         <attack_rate name="worker cell" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1</damage_rate>
+                    <attack_damage_rate units="1/min">1</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="director cell" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="cargo cell" units="1/min">0.0</fusion_rate>
@@ -497,10 +531,16 @@
                         <transformation_rate name="worker cell" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <receptor conserved="false" units="dimensionless" description="">1</receptor>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
     </cell_definitions>
 
