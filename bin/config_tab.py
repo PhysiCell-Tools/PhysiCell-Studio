@@ -66,6 +66,28 @@ class Config(QWidget):
         
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
+
+        radiobutton_style = """
+            QRadioButton {
+                spacing: 10px; /* Space between indicator and text */
+                color: black; /* Text color */
+            }
+
+            QRadioButton::indicator {
+                width: 12px; /* Indicator size */
+                height: 12px;
+                border-radius: 6px; /* Rounded indicator */
+            }
+
+            QRadioButton::indicator:unchecked {
+                border: 1px solid gray; /* Border when unchecked */
+            }
+
+            QRadioButton::indicator:checked {
+                background-color: rgb(21,96,209); /* Filled color when checked */
+                border: 1px solid black;
+            }
+                """
         
         #-------------------------------------------
         label_width = 110
@@ -329,13 +351,12 @@ class Config(QWidget):
         self.random_seed_gp.idToggled.connect(self.random_seed_gp_cb)
         random_seed_gp_next_id = 0
 
-        self.random_seed_random_button = QRadioButton("system clock")
-        self.random_seed_random_button.setChecked(True)
+        self.random_seed_random_button = QRadioButton("system clock",styleSheet=radiobutton_style)
         self.random_seed_gp.addButton(self.random_seed_random_button, random_seed_gp_next_id)
         hbox.addWidget(self.random_seed_random_button)
         random_seed_gp_next_id += 1
 
-        self.random_seed_integer_button = QRadioButton("integer \u2192 ")
+        self.random_seed_integer_button = QRadioButton("integer \u2192 ",styleSheet=radiobutton_style)
         self.random_seed_gp.addButton(self.random_seed_integer_button, random_seed_gp_next_id)
         hbox.addWidget(self.random_seed_integer_button)
         random_seed_gp_next_id += 1
@@ -708,7 +729,8 @@ class Config(QWidget):
         if self.xml_root.find(".//random_seed") is not None:
             # this intentionally will read in the user_parameter random_seed if it exists. this will facilitate the user using this new placement (importantly, the default custom.cpp will still use the user_parameter to override the value placed here)
             text = self.xml_root.find(".//random_seed").text
-            if text in  ["system_clock","random",""]:
+            print("\n------------------ config_tab: random_seed = ",text)
+            if text in  ["system_clock","random","",None]:
                 self.random_seed_random_button.setChecked(True)
             else:
                 self.random_seed_integer_button.setChecked(True)
