@@ -1403,6 +1403,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                 cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append({"name": parameter.attrib["intracellular_name"], "value": parameter.text})                    
 
                     # print("cell def : " + cell_def_name + " : dt = " + cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"])
+                    # <initial_values>
+                    #     <initial_value intracellular_name="A">1</initial_value>
+                    #     <initial_value intracellular_name="C">0</initial_value>
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
                     if uep_intracellular_iv is not None:
@@ -1469,13 +1472,28 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     #     <map PC_phenotype="ctr_0_0" sbml_species="Transition_Rate"/>
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "roadrunner" 
 
-                    msg = f"WARNING: a roadrunner intracellular model was detected, but it is not currently possible to modify its parameters from the Studio."
-                    print(msg)
-                    msgBox = QMessageBox()
-                    # msgBox.setTextFormat(Qt.RichText)
-                    msgBox.setText(msg)
-                    msgBox.setStandardButtons(QMessageBox.Ok)
-                    returnValue = msgBox.exec()
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_filename"] = uep_intracellular.find("sbml_filename").text if uep_intracellular.find("sbml_filename") is not None else None
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["intracellular_dt"] = uep_intracellular.find("intracellular_dt").text if uep_intracellular.find("intracellular_dt") is not None else None
+
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"] = []
+                    for mymap in uep_intracellular.findall('map'):
+                        # save triplets 
+                        if 'PC_substrate' in mymap.attrib.keys():
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"].append(['PC_substrate',mymap.attrib['PC_substrate'], mymap.attrib['sbml_species'] ])
+                        elif 'PC_phenotype' in mymap.attrib.keys():
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"].append(['PC_phenotype',mymap.attrib['PC_phenotype'], mymap.attrib['sbml_species'] ])
+                        elif 'PC_custom_data' in mymap.attrib.keys():
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"].append(['PC_custom_data',mymap.attrib['PC_custom_data'], mymap.attrib['sbml_species'] ])
+
+                    print("\n--> ",cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"])
+
+                    # msg = f"WARNING: a roadrunner intracellular model was detected, but it is not currently possible to modify its parameters from the Studio."
+                    # print(msg)
+                    # msgBox = QMessageBox()
+                    # # msgBox.setTextFormat(Qt.RichText)
+                    # msgBox.setText(msg)
+                    # msgBox.setStandardButtons(QMessageBox.Ok)
+                    # returnValue = msgBox.exec()
             
 
             logging.debug(f'------ done parsing intracellular:')
