@@ -8441,9 +8441,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # self.param_d[cdef]['intracellular'] = {}
             if "none" in self.intracellular_type_dropdown.currentText():
                 self.param_d[cdef]['intracellular'] = None
-            elif "Boolean" in self.intracellular_type_dropdown.currentText():
-                self.param_d[cdef]['intracellular'] = {}
-                self.param_d[cdef]['intracellular']['type'] = "maboss"
+            # elif "Boolean" in self.intracellular_type_dropdown.currentText():
+            #     self.param_d[cdef]['intracellular'] = {}
+            #     self.param_d[cdef]['intracellular']['type'] = "maboss"
             elif "ODEs" in self.intracellular_type_dropdown.currentText():
                 print(f'\n\n------------------- cell_def_tab.py:  fill_xml_intracellular()')
                 self.param_d[cdef]['intracellular'] = {}
