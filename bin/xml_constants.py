@@ -1,0 +1,10 @@
+indent1 = '\n'
+indent6 = '\n      '
+indent8 = '\n        '
+indent10 = '\n          '
+indent12 = '\n            '
+indent14 = '\n              '
+indent16 = '\n                '
+indent18 = '\n                  '
+indent20 = '\n                    '
+
