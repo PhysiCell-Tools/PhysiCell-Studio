@@ -2128,7 +2128,7 @@ class Rules(QWidget):
             # self.rules_text.setPlainText("")
             self.rules_folder.setText("config")
             self.rules_file.setText("rules.csv")
-            self.rules_enabled.setChecked(True)
+            # self.rules_enabled.setChecked(True)   # Sep 2024: comment out; error w/ physiboss model with no rules block provided in xml 
 
             self.clear_rules()
         return

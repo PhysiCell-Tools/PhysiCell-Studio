@@ -51,6 +51,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
 from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
+from sbml_intra import SBML_ODEs
 # from PyQt5.QtCore import Qt
 # from cell_def_custom_data import CustomData
 
@@ -297,7 +298,9 @@ class CellDef(QWidget):
 
 
         self.empty_frame = QFrame()
-        self.ode_sbml_frame = QFrame()
+        # self.ode_sbml_frame = QFrame()
+        # self.ode_sbml_frame = SBML_ODEs(nanohub_flag, microenv_tab, celldef_tab))
+        self.ode_sbml_frame = SBML_ODEs(None, None, self)
 
         self.cell_def_horiz_layout.addWidget(self.tree)
 
@@ -4271,6 +4274,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.physiboss_boolean_frame.show()
         elif index == 2:
             # logging.debug(f'intracellular is SBML ODEs')
+            if "intracellular" not in self.param_d[self.current_cell_def].keys():
+                self.param_d[self.current_cell_def]["intracellular"] = None
             self.ode_sbml_frame.show()
         elif index == 3:
             pass
@@ -4300,8 +4305,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.intracellular_type_dropdown.setFixedWidth(300)
         self.intracellular_type_dropdown.currentIndexChanged.connect(self.intracellular_type_changed)
         self.intracellular_type_dropdown.addItem("none")
-        self.intracellular_type_dropdown.addItem("boolean")
-        self.intracellular_type_dropdown.addItem("odes")
+        self.intracellular_type_dropdown.addItem("Boolean")
+        self.intracellular_type_dropdown.addItem("ODEs")
         # self.intracellular_type_dropdown.addItem("fba")
         # self.intracellular_type_dropdown.model().item(3).setEnabled(False)
         type_hbox.addWidget(self.intracellular_type_dropdown)
@@ -4598,17 +4603,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addStretch()
 
         # -------  ODE SBML frame  -------
-        vbox = QVBoxLayout()
-        self.ode_sbml_frame.setLayout(vbox)
-
-        hbox = QHBoxLayout()
-        ode_label = QLabel("ODEs via SBML in preparation...")
-        ode_label.setFont(QFont('Arial', 30))
-        hbox.addWidget(ode_label)
-        vbox.addLayout(hbox)
-
         glayout.addWidget(self.ode_sbml_frame)
-        glayout.addStretch()
+        # glayout.addStretch()   # ??
 
         #-------------------------------------------
         intracellular_tab_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
@@ -5449,14 +5445,20 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # Callback when user edits a "Name" cell in the table. Somewhat tricky...
     # (self.master_custom_var_d is created in populate_tree_cell_defs.py if custom vars in .xml)
     def custom_data_name_changed(self, text):
+        # logging.debug(f'\n--------- cell_def_tab.py: custom_data tab: custom_data_name_changed() --------')
         if self.rules_tab:
             self.rules_tab.update_rules_for_custom_data = True
 
         debug_me = False
         if debug_me:
             print(f'\n--------- custom_data_name_changed() --------')
+        # logging.debug(f'   self.current_cell_def = {self.current_cell_def}')
+        # print("incoming master_custom_var_d= ",self.master_custom_var_d)
+        # print(f'custom_data_name_changed():   self.current_cell_def = {self.current_cell_def}')
+        # print(f'custom_data_name_changed():   text= {text}')
 
         if not self.custom_data_edit_active:  # hack to avoid unwanted callback
+            # print("--- edit is not active, leaving!")
             return
 
         vname = self.sender().vname.text()
@@ -5469,8 +5471,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             print(f'  prev_name= {prev_name}')
 
         len_vname = len(vname)
+        # user has deleted the entire name; remove any prev name from the relevant dicts
         if len_vname == 0:
-            # user has deleted the entire name; remove any prev name from the relevant dicts
             if debug_me:
                 print("--------- handling len(vname)==0 ")
                 print("1) master_custom_var_d= ",self.master_custom_var_d)
@@ -5478,20 +5480,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 if debug_me:
                     print(f"--------- pop prev_name {prev_name}")
                 self.master_custom_var_d.pop(prev_name)
+                # print("2) master_custom_var_d= ",self.master_custom_var_d)
                 for cdname in self.param_d.keys():
                     self.param_d[cdname]["custom_data"].pop(prev_name)
+                    # print(f"3) self.param_d[{cdname}]['custom_data']= ",self.param_d[cdname]['custom_data'])
 
                 self.sender().prev = None  # update previous to be None
+            # return
 
         else:  # vname has >=1 length
             wrow = self.sender().wrow
             if debug_me:
                 print("--------- handling len(vname) >= 1. wrow= ",wrow)
+            # next_row = self.sender().wrow + 1
+            # print("  len(vname)>=1.  next_row= ",next_row)
 
             # check for duplicate name; if so, disable entire table forcing this name to be changed
             if vname in self.master_custom_var_d.keys():
+                # print(f"-- found {vname} in master_custom_var_d: {self.master_custom_var_d}")
                 self.disable_table_cells_for_duplicate_name(self.sender())
                 self.custom_table_disabled = True
+                # print("--------- 1) leave function")
                 return  # --------- leave function
 
 
@@ -5502,12 +5511,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 # If we're at the last row, add N(=10) more rows to the table.
                 if wrow == self.max_custom_data_rows-1:
+                    # print("pre: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+                    # print("add 10 rows")
                     for ival in range(10):
                         self.add_row_custom_table(self.max_custom_data_rows+ival)
                     self.max_custom_data_rows += 10
+                    # print("post: wrow, self.max_custom_data_rows= ",wrow,self.max_custom_data_rows)
+                    # print("self.max_custom_data_rows= ",self.max_custom_data_rows)
 
                 units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
                 desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
                 if prev_name:
                     # this is replacing a previous name; it's NOT a new var
                     if debug_me:
@@ -5521,38 +5535,60 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     if debug_me:
                         print(f" Adding a NEW var {vname}")
                     self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                # print(f'post adding {vname} --> {self.master_custom_var_d}')
 
                 # -- since we're adding this var for the 1st time, add it to each cell type, using same values
                     val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
                     bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
                     for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname}')
                         self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
 
                 self.sender().prev = vname  # update the previous to be the current
 
             else:  # length of vname >= 1 
+                # print(f'--- len_vname >= 1:  vname={vname},  prev_name={prev_name}')
                 if prev_name:   # if this name had a previous name, update it (pop the previous) in the dicts
+                    # print(f'----- prev_name={prev_name}')
                     self.master_custom_var_d[vname] = self.master_custom_var_d.pop(prev_name)
+                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
+                    # self.master_custom_var_d.pop(prev_name)
+
+                    # units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
+                    # desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
+                    # self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                    # print("after replacing prev with new: master_custom_var_d= ",self.master_custom_var_d)
+
 
                     for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname},  prev_name={prev_name}')
                         self.param_d[cdname]["custom_data"][vname] = self.param_d[cdname]["custom_data"].pop(prev_name)
                     self.sender().prev = vname  # update the previous to be the current
 
                 else:
+                    # print(f'----- no prev_name; add to dicts')
                     units_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_units).text()
                     desc_str = self.custom_data_table.cellWidget(wrow,self.custom_icol_desc).text()
+                    # self.master_custom_var_d[vname] = ['','']  # default [units, desc]
                     self.master_custom_var_d[vname] = [wrow, units_str, desc_str]  # default [units, desc]
+                    # print(f"after adding {vname} -->  {self.master_custom_var_d}")
 
                     val = self.custom_data_table.cellWidget(wrow,self.custom_icol_value).text()
                     bval = self.custom_data_table.cellWidget(wrow,self.custom_icol_conserved).isChecked()
                     for cdname in self.param_d.keys():
+                        # print(f'--- cdname= {cdname},  vname={vname}')
                         self.param_d[cdname]["custom_data"][vname] = [val, bval]    # [value, conserved flag] 
 
                     self.sender().prev = vname  # update the previous to be the current
 
         self.max_custom_vars = len(self.master_custom_var_d)
+        # print("- max_custom_vars = ",self.max_custom_vars)
+        # self.sender().prev = vname
 
         # Let's use whatever is there now
+
+        # print("    master_custom_var_d= ",self.master_custom_var_d)
 
         if self.custom_table_disabled:
             self.enable_all_custom_data()
@@ -5563,8 +5599,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_par_dist_behaviors(old_name, new_name)
         # print(f'============== leave custom_data_name_changed() --------')
 
-        if self.rules_tab:
-            self.rules_tab.custom_data_rename(old_name, new_name)
 
     #--------------------------------------------------------------
     # Callback when user edit a Value cell in the table. Somewhat tricky...
@@ -5706,13 +5740,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
         self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
 
-        self.display_par_dists_button = QPushButton("Display/update summary for current cell type")
+        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
         self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
 
         hbox_cell_type_par_dist = QHBoxLayout()
         hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
-        hbox_cell_type_par_dist.addStretch()
         hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
+        hbox_cell_type_par_dist.addStretch()
 
         self.behavior_model = QStandardItemModel()
         self.par_dist_behavior_combobox = ExtendedCombo()
@@ -5793,6 +5827,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
 
     def par_dist_widgets_set_enabled(self, enabled):
+        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
         self.par_dist_behavior_combobox.setEnabled(enabled)
         self.par_dist_enable_checkbox.setEnabled(enabled)
         self.display_par_dists_button.setEnabled(enabled)
@@ -6516,6 +6551,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 2) update in the param_d dict
         for cdname in self.param_d.keys():  # for all cell defs, rename motility/chemotaxis and secretion substrate
+            # print("--- cdname = ",cdname)
+            # print("--- old: ",self.param_d[cdname]["secretion"])
+            # print("--- new_name: ",new_name)
             if self.param_d[cdname]["motility_chemotaxis_substrate"] == old_name:
                 self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
 
@@ -6530,6 +6568,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.current_secretion_substrate = new_name
 
         if self.rules_tab:
+            # print("     calling self.rules_tab.substrate_rename")
             self.rules_tab.substrate_rename(idx,old_name,new_name)
 
         self.physiboss_update_list_signals()
@@ -6541,12 +6580,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # data structures (e.g., QComboBox) that reference it.  Including Rules tab(!)
     def renamed_celltype(self, old_name,new_name):
 
+        # print(f'\ncell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.cell_adhesion_affinity_celltype = new_name
+        # print(f'------- setting self.cell_adhesion_affinity_celltype= {new_name}')
 
         # 1) update in the comboboxes associated with motility(chemotaxis) and secretion
         logging.debug(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
+        # print(f'cell_def_tab.py: ------- renamed_celltype() {old_name} -> {new_name}')
         self.celltypes_list = [new_name if x==old_name else x for x in self.celltypes_list]
         logging.debug(f'    self.celltypes_list= {self.celltypes_list}')
+        # print(f'    self.celltypes_list= {self.celltypes_list}')
+        # print()
         logging.debug(f' ')
         for cdname in self.param_d.keys():
             logging.debug(f'{self.param_d[cdname]}')
@@ -6554,6 +6598,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # 1) update all dropdown widgets containing the cell def names
         for idx in range(len(self.celltypes_list)):
+            # print("     idx,old,new = ",idx, old_name,new_name)
+            # if old_name in self.motility_substrate_dropdown.itemText(idx):
             if old_name == self.live_phagocytosis_dropdown.itemText(idx):
                 self.live_phagocytosis_dropdown.setItemText(idx, new_name)
             if old_name == self.attack_rate_dropdown.itemText(idx):
@@ -6571,6 +6617,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.ics_tab.celltype_combobox.setItemText(idx, new_name)
 
             if self.rules_tab and (old_name == self.rules_tab.celltype_combobox.itemText(idx)):
+                # print("    calling self.rules_tab.celltype_combobox.setItemText")
+                # self.rules_tab.celltype_combobox.setItemText(idx, new_name)
                 self.rules_tab.cell_def_rename(idx,old_name,new_name)
 
         # 2) also update all param_d dicts that involve cell def names
@@ -6582,13 +6630,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["fusion_rate"][new_name] = self.param_d[cdname]["fusion_rate"].pop(old_name)
             self.param_d[cdname]["transformation_rate"][new_name] = self.param_d[cdname]["transformation_rate"].pop(old_name)
             self.param_d[cdname]["cell_adhesion_affinity"][new_name] = self.param_d[cdname]["cell_adhesion_affinity"].pop(old_name)
+        #     # print("--- new_name: ",new_name)
+        #     self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
+        #     self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
+        #     self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
 
+        #     # print("--- new: ",self.param_d[cdname]["secretion"])
+
+        # if old_name == self.current_secretion_substrate:
+        #     self.current_secretion_substrate = new_name
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 
         self.update_par_dist_behaviors(old_name, new_name)
-        
-        self.update_par_dist_cdname(new_name)
 
     def update_par_dist_behaviors(self, old_name, new_name):
         self.response_l = self.rules_tab.create_response_list()
@@ -7403,6 +7457,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     basal_value.setText(output["basal_value"])
                     smoothing.setText(output["smoothing"])
 
+            elif self.param_d[cdname]["intracellular"]["type"] == "roadrunner":
+                print("------ Parsing roadrunner intracellular params")
+                self.ode_sbml_frame.fill_gui(cdname)
+                self.intracellular_type_dropdown.setCurrentIndex(2)
+                # if "sbml_filename" in self.param_d[cdname]["intracellular"].keys(): 
+                    # self.ode_sbml_frame.sbml_file.setText(self.param_d[cdname]["intracellular"]["sbml_filename"])
+
         else:
             self.intracellular_type_dropdown.setCurrentIndex(0)
 
@@ -7468,8 +7529,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def update_misc_params(self):
         cdname = self.current_cell_def
+        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
         self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
-        self.update_par_dist_cdname(cdname)
         if self.param_d[cdname]["par_dists_disabled"]:
             for pdple in self.par_dist_par_lineedit:
                 pdple.setText('')
@@ -7486,12 +7547,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
 
-    def update_par_dist_cdname(self,cdname):  
-        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
-        self.display_par_dists_button.setText(f"Display/update summary for {cdname}")    
-        if hasattr(self, "par_dist_window") and self.par_dist_window is not None:
-            self.par_dist_window.setWindowTitle(f"Parameter Distributions for {cdname}")
-
+        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
@@ -8377,11 +8433,25 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # Get values from the dict and generate/write a new XML
     def fill_xml_intracellular(self, pheno, cdef):
         if self.debug_print_fill_xml:
-            logging.debug(f'------------------- fill_xml_intracellular()')
+            logging.debug(f'------------------- cell_def_tab.py:  fill_xml_intracellular()')
             logging.debug(f'------ ["intracellular"]: for {cdef}')
             logging.debug(f'{self.param_d[cdef]["intracellular"]}')
 
+            #-----  rwh: Sep 2024
+            # self.param_d[cdef]['intracellular'] = {}
+            if "none" in self.intracellular_type_dropdown.currentText():
+                self.param_d[cdef]['intracellular'] = None
+            # elif "Boolean" in self.intracellular_type_dropdown.currentText():
+            #     self.param_d[cdef]['intracellular'] = {}
+            #     self.param_d[cdef]['intracellular']['type'] = "maboss"
+            elif "ODEs" in self.intracellular_type_dropdown.currentText():
+                print(f'\n\n------------------- cell_def_tab.py:  fill_xml_intracellular()')
+                self.param_d[cdef]['intracellular'] = {}
+                self.param_d[cdef]['intracellular']['type'] = "roadrunner"
+                print(f'------------------- ',self.param_d[cdef]['intracellular'])
+
             if self.param_d[cdef]['intracellular'] is not None:
+                print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
 
                 if self.param_d[cdef]['intracellular']['type'] == "maboss":
                             
@@ -8564,6 +8634,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                             tag_output.tail = self.indent12
 
 
+                elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
+                    self.ode_sbml_frame.fill_xml(pheno, cdef)
                     
 
         if self.debug_print_fill_xml:
