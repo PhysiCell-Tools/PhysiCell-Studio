@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
-from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom
+from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom
 from studio_functions import style_sheet_template
 
 class RandomSeedIntValidator(QtGui.QValidator):
@@ -67,28 +67,6 @@ class Config(QWidget):
         # self.tab = QWidget()
         # self.tabs.resize(200,5)
 
-        radiobutton_style = """
-            QRadioButton {
-                spacing: 10px; /* Space between indicator and text */
-                color: black; /* Text color */
-            }
-
-            QRadioButton::indicator {
-                width: 12px; /* Indicator size */
-                height: 12px;
-                border-radius: 6px; /* Rounded indicator */
-            }
-
-            QRadioButton::indicator:unchecked {
-                border: 1px solid gray; /* Border when unchecked */
-            }
-
-            QRadioButton::indicator:checked {
-                background-color: rgb(21,96,209); /* Filled color when checked */
-                border: 1px solid black;
-            }
-                """
-        
         #-------------------------------------------
         label_width = 110
         domain_value_width = 100
@@ -351,12 +329,12 @@ class Config(QWidget):
         self.random_seed_gp.idToggled.connect(self.random_seed_gp_cb)
         random_seed_gp_next_id = 0
 
-        self.random_seed_random_button = QRadioButton("system clock",styleSheet=radiobutton_style)
+        self.random_seed_random_button = QRadioButton_custom("system clock")
         self.random_seed_gp.addButton(self.random_seed_random_button, random_seed_gp_next_id)
         hbox.addWidget(self.random_seed_random_button)
         random_seed_gp_next_id += 1
 
-        self.random_seed_integer_button = QRadioButton("integer \u2192 ",styleSheet=radiobutton_style)
+        self.random_seed_integer_button = QRadioButton_custom("integer \u2192")
         self.random_seed_gp.addButton(self.random_seed_integer_button, random_seed_gp_next_id)
         hbox.addWidget(self.random_seed_integer_button)
         random_seed_gp_next_id += 1

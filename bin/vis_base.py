@@ -66,7 +66,7 @@ from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
-from studio_classes import QCheckBox_custom
+from studio_classes import QCheckBox_custom, QRadioButton_custom
 from pyMCDS import xmlfile_to_xmlpathfile
 
 #---------------------------
@@ -722,10 +722,10 @@ class VisBase():
         self.cells_hbox.addWidget(self.cells_checkbox) 
 
         # Need to create the following regardless of 2D/3D
-        self.cells_svg_rb = QRadioButton(".svg")
+        self.cells_svg_rb = QRadioButton_custom(".svg")
         self.cells_svg_rb.setChecked(True)
 
-        self.cells_mat_rb = QRadioButton(".mat")
+        self.cells_mat_rb = QRadioButton_custom(".mat")
         # self.cell_edge_checkbox = QCheckBox_custom('edge')
         
         if not self.model3D_flag:  # 2D vis
@@ -1417,7 +1417,7 @@ class VisBase():
             self.vbox.removeWidget(self.stretch_widget) #removes the placeholder for the "stretcher widget" to place it at the bottom
             self.cells_hbox.removeItem(self.hz_stretch_item_1) #same as above
 
-            self.cells_physiboss_rb = QRadioButton("physiboss")
+            self.cells_physiboss_rb = QRadioButton_custom("physiboss")
             self.cells_physiboss_rb.setChecked(False)
             self.cells_physiboss_rb.clicked.connect(self.cells_svg_mat_cb)
             self.cells_hbox.addWidget(self.cells_physiboss_rb)

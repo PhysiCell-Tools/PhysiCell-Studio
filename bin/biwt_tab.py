@@ -37,7 +37,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog, QButtonGroup, QSplitter, QSizePolicy, QSpinBox
 from PyQt5.QtGui import QIcon
 
-from studio_classes import QHLine, QVLine, QCheckBox_custom
+from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom
 
 class GoBackButton(QPushButton):
     def __init__(self, parent, biwt):
@@ -128,8 +128,8 @@ class BioinformaticsWalkthroughWindow_SpatialQuery(BioinformaticsWalkthroughWind
         label = QLabel(s)
 
         self.yes_no_group = QButtonGroup()
-        self.yes = QRadioButton("Yes")
-        self.no = QRadioButton("No")
+        self.yes = QRadioButton_custom("Yes")
+        self.no = QRadioButton_custom("No")
         self.yes_no_group.addButton(self.yes,0)
         self.yes_no_group.addButton(self.no,1)
         self.yes_no_group.idToggled.connect(self.yn_toggled)
@@ -520,25 +520,25 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         self.counts_button_group.idToggled.connect(self.counts_button_cb)
         counts_button_group_next_id = 0
 
-        self.use_counts_as_is_radio_button = QRadioButton("Use counts")
+        self.use_counts_as_is_radio_button = QRadioButton_custom("Use counts")
         self.use_counts_as_is_radio_button.setFixedWidth(counts_width)
         self.use_counts_as_is_radio_button.setChecked(True)
         self.counts_button_group.addButton(self.use_counts_as_is_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_props_radio_button = QRadioButton("Use proportions")
+        self.use_props_radio_button = QRadioButton_custom("Use proportions")
         self.use_props_radio_button.setFixedWidth(props_width)
         self.use_props_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_props_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_confluence_radio_button = QRadioButton("Set confluence (%)")
+        self.use_confluence_radio_button = QRadioButton_custom("Set confluence (%)")
         self.use_confluence_radio_button.setFixedWidth(confluence_width)
         self.use_confluence_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_confluence_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_manual_radio_button = QRadioButton("Set manually")
+        self.use_manual_radio_button = QRadioButton_custom("Set manually")
         self.use_manual_radio_button.setFixedWidth(manual_width)
         self.use_manual_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_manual_radio_button,counts_button_group_next_id)
