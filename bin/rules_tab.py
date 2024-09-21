@@ -2143,39 +2143,7 @@ class Rules(QWidget):
         indent8 = '\n        '
         indent10 = '\n          '
 
-        # <cell_rules type="csv" enabled="true">
-        #     <folder>.</folder>
-        #     <filename>test_rules.csv</filename>
-        # </cell_rules>      
-        # </cell_definitions>
-
-        # ---- v1
-        # uep = self.xml_root.find(".//cell_definitions")
-        # if not self.xml_root.find(".//cell_definitions//cell_rules"):
-        #     elm = ET.Element("cell_rules", 
-        #                 {"type":"csv", "enabled":"false" })
-        #     elm.tail = '\n' + indent8
-        #     elm.text = indent8
-
-        #     subelm = ET.SubElement(elm, 'folder')
-        #     subelm.text = self.rules_folder.text()
-        #     subelm.tail = indent8
-
-        #     subelm = ET.SubElement(elm, 'filename')
-        #     subelm.text = self.rules_file.text()
-        #     subelm.tail = indent8
-        #     uep.insert(0,elm)
-        # else:
-        #     self.xml_root.find(".//cell_rules//folder").text = self.rules_folder.text()
-        #     self.xml_root.find(".//cell_rules//filename").text = self.rules_file.text()
-
-        #     if self.rules_enabled.isChecked():
-        #         self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'true'
-        #     else:
-        #         self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'false'
-
-
-        # ---- v2
+        # ---- v3
         uep = self.xml_root.find(".")
         if not self.xml_root.find(".//cell_rules"):
             enabled_flag = "false"
@@ -2191,7 +2159,7 @@ class Rules(QWidget):
             rulesets.text = indent8
 
             ruleset = ET.SubElement(rulesets,"ruleset", 
-                        {"protocol":"CBHG", "version":"2.0", "format":"csv", "enabled":enabled_flag })
+                        {"protocol":"CBHG", "version":"3.0", "format":"csv", "enabled":enabled_flag })
             ruleset.tail = '\n' + indent8
             ruleset.text = indent8
 

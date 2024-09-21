@@ -2,7 +2,7 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip, QRadioButton
 from PyQt5.QtGui import QValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
 
@@ -108,6 +108,27 @@ class QLineEdit_custom(QLineEdit):
                 background-color:gray;
             }
             """
+
+radiobutton_style = """
+QRadioButton {
+    spacing: 4px; /* Space between indicator and text */
+    padding-left: 4px;
+}
+QRadioButton::indicator {
+    width: 12;
+    height: 12;
+}
+QRadioButton::indicator:unchecked {
+    image: url(bin/icon/RadioButtonUnchecked.svg);
+}
+QRadioButton::indicator:checked {
+    image: url(bin/icon/RadioButtonChecked.svg);
+}
+"""
+class QRadioButton_custom(QRadioButton):
+    def __init__(self, text, styleSheet=radiobutton_style, **kwargs):
+        super(QRadioButton, self).__init__(text, **kwargs)
+        self.setStyleSheet(styleSheet)
 
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
