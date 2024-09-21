@@ -119,16 +119,16 @@ QRadioButton::indicator {
     height: 12;
 }
 QRadioButton::indicator:unchecked {
-    image: url(bin/icon/RadioButtonUnchecked.svg);
+    image: url(images:RadioButtonUnchecked.svg);
 }
 QRadioButton::indicator:checked {
-    image: url(bin/icon/RadioButtonChecked.svg);
+    image: url(images:RadioButtonChecked.svg);
 }
 """
 class QRadioButton_custom(QRadioButton):
-    def __init__(self, text, styleSheet=radiobutton_style, **kwargs):
+    def __init__(self, text, **kwargs):
         super(QRadioButton, self).__init__(text, **kwargs)
-        self.setStyleSheet(styleSheet)
+        self.setStyleSheet(radiobutton_style)
 
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
