@@ -124,6 +124,9 @@ QRadioButton::indicator:unchecked {
 QRadioButton::indicator:checked {
     image: url(images:RadioButtonChecked.svg);
 }
+QRadioButton::indicator:disabled:checked {
+    image: url(images:RadioButtonDisabledChecked.svg);
+}
 """
 class QRadioButton_custom(QRadioButton):
     def __init__(self, text, **kwargs):
