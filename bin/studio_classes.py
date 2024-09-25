@@ -3,8 +3,9 @@ import sys
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip, QRadioButton
+from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QValidator, QDoubleValidator
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent, QByteArray
 
 # organizers
 class QHLine(QFrame):
@@ -177,6 +178,13 @@ class HoverWidget(QWidget):
         super().__init__(parent)
         self.setMouseTracking(True)  # Enable mouse tracking
         self.hover_text = hover_text
+        self.setStyleSheet("QToolTip { \
+                            background-color: black; \
+                            color: white; \
+                            border: 1px solid black; \
+                            border-radius: 5px; \
+                            padding: 5px; \
+                            }")
     
     def setHoverText(self, hover_text):
         self.hover_text = hover_text
@@ -219,6 +227,22 @@ class HoverLabel(QLabel, HoverWidget):
             }
         """)
       
+class HoverSvgWidget(QSvgWidget, HoverWidget):
+    def __init__(self, hover_text, parent=None):
+        super().__init__(parent)
+        self.setHoverText(hover_text)
+
+class HoverWarning(HoverSvgWidget):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+
+    def show_warning(self):
+        self.load("images:warning.svg")
+
+    def no_warning(self):
+        self.load(QByteArray()) # passing in an empty file path (self.load("")) works, but prints endless warnings about not being able to load the file
+        
 # validators
 
 class DoubleValidatorWidgetBounded(QValidator):
@@ -242,7 +266,7 @@ class DoubleValidatorWidgetBounded(QValidator):
             # then just record the info so the validator can access later
             self.top = top
             self.top_fn = top_transform
-        else:
+        elif top != None:
             # then just a normal top bound: transform if desired and set. then reset top and top_fn to None so they are not used later
             if top_transform is not None:
                 top = top_transform(top)

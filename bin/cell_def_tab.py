@@ -48,8 +48,9 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
+from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom, HoverWarning
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 from sbml_intra import SBML_ODEs
 # from PyQt5.QtCore import Qt
@@ -174,7 +175,7 @@ class CellDef(QWidget):
 
         self.new_cell_def_count = 0
         self.label_width = 210
-        self.units_width = 110
+        self.units_width = 35
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.config_path = None
@@ -3033,6 +3034,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptotic_phagocytosis_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.apoptotic_phagocytosis_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
         
         label = QLabel("necrotic phagocytosis rate")
         label.setFixedWidth(self.label_width)
@@ -3050,6 +3054,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        self.necrotic_phagocytosis_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.necrotic_phagocytosis_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
+
         label = QLabel("other dead phagocytosis rate")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -3065,6 +3072,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.other_dead_phagocytosis_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.other_dead_phagocytosis_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("live phagocytosis rate")
@@ -3088,6 +3098,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        self.live_phagocytosis_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.live_phagocytosis_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
+
         #------
         label = QLabel("attack rate")
         label.setFixedWidth(self.label_width)
@@ -3102,10 +3115,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
-            validator = AttackRateValidator(self)
-        else:
-            validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        # if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
+        #     validator = AttackRateValidator(self)
+        # else:
+        #     validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        validator = QtGui.QDoubleValidator(bottom=0.0) # no longer want to highlight the box red if rate is too high (just show warning (!) )
         self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -3114,11 +3128,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
-        idr += 1
-        self.attack_rate_fast_label = QLabel("")
-        self.attack_rate_fast_label.setStyleSheet("color: red")
-        glayout.addWidget(self.attack_rate_fast_label, idr,0, 1,4) # w, row, column, rowspan, colspan
-
+        self.attack_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.attack_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("attack damage rate")
@@ -3176,6 +3187,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        self.fusion_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.fusion_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
+
         #------
         label = QLabel("transformation rate")
         label.setFixedWidth(self.label_width)
@@ -3197,6 +3211,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.transformation_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.transformation_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("damage rate")
@@ -3293,18 +3310,53 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
 
     #--------------------------------------------------------
+    def is_dt_set(self, label, time_step, dt_text):
+        if dt_text != "" and float(dt_text) != 0:
+            return True
+        label.show_warning()
+        label.setHoverText(f"WARNING: Current {time_step} is 0 (or unset). Make sure to set that value > 0.")
+        return False
+
+    def check_rate_too_fast(self, text, label, time_step="mechanics_dt"):
+        if text == "":
+            return
+
+        if time_step == "diffusion_dt":
+            dt_text = self.config_tab.diffusion_dt.text()
+        elif time_step == "mechanics_dt":
+            dt_text = self.config_tab.mechanics_dt.text()
+        elif time_step == "phenotype_dt":
+            dt_text = self.config_tab.phenotype_dt.text()
+
+        if self.is_dt_set(label, time_step, dt_text) == False:
+            return
+
+        rate = float(text)
+        dt = float(dt_text)
+        max_val = 1/dt
+        prob = rate * dt
+        if prob > 1:
+            label.show_warning()
+            label.setHoverText(f"WARNING: A rate > 1/{time_step} is instantaneous. May as well set to {max_val}.")
+        else:
+            label.no_warning()
+
     def apoptotic_phagocytosis_rate_changed(self,text):
         self.param_d[self.current_cell_def]['apoptotic_phagocytosis_rate'] = text
+        self.check_rate_too_fast(text, self.apoptotic_phagocytosis_rate_fast_label)
     #--------------------------------------------------------
     def necrotic_phagocytosis_rate_changed(self,text):
         self.param_d[self.current_cell_def]['necrotic_phagocytosis_rate'] = text
+        self.check_rate_too_fast(text, self.necrotic_phagocytosis_rate_fast_label)
     #--------------------------------------------------------
     def other_dead_phagocytosis_rate_changed(self,text):
         self.param_d[self.current_cell_def]['other_dead_phagocytosis_rate'] = text
+        self.check_rate_too_fast(text, self.other_dead_phagocytosis_rate_fast_label)
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
         celltype_name = self.live_phagocytosis_dropdown.currentText()
         self.param_d[self.current_cell_def]['live_phagocytosis_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.live_phagocytosis_rate_fast_label)
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
         celltype_name = self.attack_rate_dropdown.currentText()
@@ -3313,12 +3365,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if text == "":
             return
         
-        if self.config_tab.mechanics_dt.text() == "" or float(self.config_tab.mechanics_dt.text()) == 0:
-            self.attack_rate_fast_label.setText(f"WARNING: Current mechanics_dt is 0 (or unset). Make sure to set that value > 0.")
+        mech_dt_str = self.config_tab.mechanics_dt.text()
+        if self.is_dt_set(self.attack_rate_fast_label, "mechanics_dt", mech_dt_str) == False:
             return
         
+        mech_dt = float(mech_dt_str)
         attack_rate = float(text) 
-        mech_dt = float(self.config_tab.mechanics_dt.text())
         max_val = 1/mech_dt
         attack_prob = attack_rate * mech_dt
         if "immunogenicity" in self.param_d[self.current_cell_def].keys():
@@ -3328,10 +3380,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             denom = "(immunogenicity * mechanics_dt)"
         else:  
             denom = "mechanics_dt"
-        if attack_prob > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
-            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
+        if attack_prob > 1:
+            self.attack_rate_fast_label.show_warning()
+            self.attack_rate_fast_label.setHoverText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
         else:
-            self.attack_rate_fast_label.setText("")
+            self.attack_rate_fast_label.no_warning()
     #--------------------------------------------------------
     def attack_damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['attack_damage_rate'] = text
@@ -3342,10 +3395,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def fusion_rate_changed(self,text):
         celltype_name = self.fusion_rate_dropdown.currentText()
         self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.fusion_rate_fast_label)
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
         celltype_name = self.cell_transformation_dropdown.currentText()
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.transformation_rate_fast_label)
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['damage_rate'] = text
