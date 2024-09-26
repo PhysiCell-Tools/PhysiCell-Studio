@@ -227,114 +227,114 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     sval = rate.text
                     if (rate.attrib['start_index'] == "0"): 
                         if (rate.attrib['end_index'] == "0"): #  Must be 'live'
-                            logging.debug(f'--  cycle_live_trate00 {sval}')
-                            cell_def_tab.param_d[cell_def_name]['cycle_live_trate00'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = invertf2s(sval) # invert
+                            logging.debug(f'--  cycle_live_00_trate {sval}')
+                            cell_def_tab.param_d[cell_def_name]['cycle_live_00_trate'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_live_00_duration'] = invertf2s(sval) # invert
                             if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_live_trate00_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_live_duration00_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_live_00_fixed_trate'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_live_00_fixed_duration'] = True
                         elif (rate.attrib['end_index'] == "1"): 
                             if cycle_code == 0: #'advanced Ki67'
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_fixed_duration'] = True
                             elif cycle_code == 1: # 'basic Ki67'
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_fixed_duration'] = True
                             elif cycle_code == 2: # 'flow cytometry'
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_fixed_duration'] = True
                             elif cycle_code == 6: # 'flow cytometry separated'
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_fixed_duration'] = True
                             elif cycle_code == 7: # 'cycling quiescent'
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_fixed_duration'] = True
 
                     elif (rate.attrib['start_index'] == "1"):
                         if (rate.attrib['end_index'] == "0"):
                             if cycle_code == 1: # 'basic Ki67'
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_fixed_duration'] = True
                             elif cycle_code == 7: # 'cycling quiescent'
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_fixed_duration'] = True
                         elif (rate.attrib['end_index'] == "2"):
                             if cycle_code == 0: #'advanced Ki67'
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_fixed_duration'] = True
                             elif cycle_code == 2: # 'flow cytometry'
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_fixed_duration'] = True
                             elif cycle_code == 6: # 'flow cytometry separated'
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_fixed_duration'] = True
                             elif cycle_code == 7: # 'cycling quiescent'
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate12'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration12'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_12_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_12_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate12_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration12_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_12_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_quiescent_12_fixed_duration'] = True
 
                     elif (rate.attrib['start_index'] == "2"):
                         if (rate.attrib['end_index'] == "0"):
                             if cycle_code == 0: #'advanced Ki67'
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_fixed_duration'] = True
                             elif cycle_code == 2: # 'flow cytometry'
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20'] = sval
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration20'] = invertf2s(sval) # invert
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_trate'] = sval
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_duration'] = invertf2s(sval) # invert
                                 if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = True
-                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_fixed_trate'] = True
+                                    cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_fixed_duration'] = True
 
                         elif (rate.attrib['end_index'] == "3"):
                             # if cycle_code == 6: # 'flow cytometry separated'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_trate'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_duration'] = invertf2s(sval) # invert
                             if (rate.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_fixed_trate'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_fixed_duration'] = True
 
                     elif (rate.attrib['start_index'] == "3") and (rate.attrib['end_index'] == "0"):
-                        # cell_def_tab.cycle_flowcytosep_trate30.setText(rate.text)
-                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = rate.text
-                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = invertf2s(sval) # invert
+                        # cell_def_tab.cycle_flowcytosep_30_trate.setText(rate.text)
+                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_trate'] = rate.text
+                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_duration'] = invertf2s(sval) # invert
                         if (rate.attrib['fixed_duration'].lower() == "true"): 
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = True
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = True
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_fixed_trate'] = True
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_fixed_duration'] = True
 
 
             # template.xml:
@@ -376,104 +376,104 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                     if (pd.attrib['index'] == "0"): 
                         if cycle_code == 0: #'advanced Ki67'
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration01_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate01_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_01_fixed_trate'] = True
                         elif cycle_code == 1: # 'basic Ki67'
-                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration01_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate01_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_01_fixed_trate'] = True
                         elif cycle_code == 2: # 'flow cytometry'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration01_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate01_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_01_fixed_trate'] = True
                         elif cycle_code == 5: # 'live'
                             logging.debug(f'------------ for live: sval for phase duration= {sval}')
-                            cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_live_trate00'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_live_00_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_live_00_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_live_duration00_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_live_trate00_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_live_00_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_live_00_fixed_trate'] = True
                         elif cycle_code == 6: # 'flow cytometry separated'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01'] = sval
-                            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = str(1.0/float(sval)) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_duration'] = sval
+                            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_trate'] = str(1.0/float(sval)) # invert
                             # val3.setText(f'{fval:.{number_of_decimals}f}')
-                            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = f'{1.0/float(sval):{num_dec}f}' # invert
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01'] = invertf2s(sval)
+                            # cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_trate'] = f'{1.0/float(sval):{num_dec}f}' # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_trate'] = invertf2s(sval)
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration01_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate01_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_01_fixed_trate'] = True
                         elif cycle_code == 7: # 'cycling quiescent'
-                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration01_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate01_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_01_fixed_trate'] = True
 
                     elif (pd.attrib['index'] == "1"):
                         if cycle_code == 0: #'advanced Ki67'
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration12_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate12_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_12_fixed_trate'] = True
                         elif cycle_code == 1: #'basic Ki67'
-                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_duration10_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_trate10_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_Ki67_10_fixed_trate'] = True
                         elif cycle_code == 2: # 'flow cytometry'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration12_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate12_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_12_fixed_trate'] = True
                         elif cycle_code == 6: # 'flow cytometry separated'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration12_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate12_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_12_fixed_trate'] = True
                         elif cycle_code == 7: # 'cycling quiescent'
-                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_duration10_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_trate10_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_quiescent_10_fixed_trate'] = True
 
                     elif (pd.attrib['index'] == "2"):
                         if cycle_code == 0: #'advanced Ki67'
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_duration20_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_trate20_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_advancedKi67_20_fixed_trate'] = True
                         elif cycle_code == 2: # 'flow cytometry'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_duration20_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_trate20_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcyto_20_fixed_trate'] = True
                         elif cycle_code == 6: # 'flow cytometry separated'
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23'] = sval
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23'] = invertf2s(sval) # invert
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_duration'] = sval
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_trate'] = invertf2s(sval) # invert
                             if (pd.attrib['fixed_duration'].lower() == "true"): 
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration23_fixed'] = True
-                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate23_fixed'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_fixed_duration'] = True
+                                cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_23_fixed_trate'] = True
 
                     elif (pd.attrib['index'] == "3"):
-                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30'] = sval
-                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30'] = invertf2s(sval) # invert
+                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_duration'] = sval
+                        cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_trate'] = invertf2s(sval) # invert
                         if (pd.attrib['fixed_duration'].lower() == "true"): 
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_duration30_fixed'] = True
-                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_trate30_fixed'] = True
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_fixed_duration'] = True
+                            cell_def_tab.param_d[cell_def_name]['cycle_flowcytosep_30_fixed_trate'] = True
 
 
             # rf. microenv:
@@ -484,7 +484,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # ---------  cycle (live)
             # cell_def_tab.float0.value = float(uep.find('.//cell_definition[1]//phenotype//cycle//phase_transition_rates//rate[1]').text)
 
-            # cell_def_tab.param_d[cell_def_name]['cycle_live_duration00'] = default_sval  # rwh - WHY?!
+            # cell_def_tab.param_d[cell_def_name]['cycle_live_00_duration'] = default_sval  # rwh - WHY?!
 
             # ---------  death 
             logging.debug(f'\n===== populate_tree():  death')
@@ -536,20 +536,20 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             # rwh: init death params to default? - yipeee, don't need now?
             # cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = False
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_trate01"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_trate01_fixed"] = False
+            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
+            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
 
             # cell_def_tab.param_d[cell_def_name]['necrosis_duration_flag'] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_phase1_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_trate01"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_trate01_fixed"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_trate12"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_trate12_fixed"] = False
+            # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
+            # cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
+            # cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
+            # cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = "0.0"
+            # cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
 
             # uep = cell_def_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
             death_uep = uep.find(".//cell_definition[" + str(idx) + "]//phenotype//death")
@@ -581,15 +581,15 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                             logging.debug(f'index= {pd.attrib["index"]}')
                             if  pd.attrib['index'] == "0":
                     # 			<duration index="0" fixed_duration="true">86400.1</duration>
-                                cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_duration"] = pd.text
+                                cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = pd.text
                                 # print("populate(): apop phase0 duration= ",pd.text)  # rwh
-                                cell_def_tab.param_d[cell_def_name]["apoptosis_trate01"] = invertf2s(pd.text)
+                                cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = invertf2s(pd.text)
                                 if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_trate01_fixed"] = True
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
                                 else:
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_trate01_fixed"] = False
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
 
                     # 			<duration index="1" fixed_duration="true">86400.1</duration>
 
@@ -609,14 +609,14 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                 logging.debug(f'start_index= {tr.attrib["start_index"]}')
 
                                 if  tr.attrib['start_index'] == "0":
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_trate01"] = tr.text
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_duration"] = invertf2s(tr.text)
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = tr.text
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = invertf2s(tr.text)
                                     if  tr.attrib['fixed_duration'].lower() == "true":
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_trate01_fixed"] = True
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = True
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
                                     else:
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_trate01_fixed"] = False
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_phase0_fixed"] = False
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
 
                     # apoptosis_params_path = apoptosis_path + "parameters//"
                     params_uep = death_model.find("parameters")
@@ -651,24 +651,24 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                             logging.debug(f'{pd}')
                             logging.debug(f'index= {pd.attrib["index"]}')
                             if  pd.attrib['index'] == "0":
-                                cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration"] = pd.text
-                                cell_def_tab.param_d[cell_def_name]["necrosis_trate01"] = invertf2s(pd.text)
+                                cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = pd.text
+                                cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = invertf2s(pd.text)
                                 if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate01_fixed"] = True
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
                                 else:
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate01_fixed"] = False
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
 
                             elif  pd.attrib['index'] == "1":
-                                cell_def_tab.param_d[cell_def_name]["necrosis_phase1_duration"] = pd.text
-                                cell_def_tab.param_d[cell_def_name]["necrosis_trate12"] = invertf2s(pd.text)
+                                cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = pd.text
+                                cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = invertf2s(pd.text)
                                 if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase1_fixed"] = True
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate12_fixed"] = True
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = True
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
                                 else:
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase1_fixed"] = False
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate12_fixed"] = False
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
 
                     #------------------------
                     else:  # necrosis transition rates
@@ -690,33 +690,33 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     # else:
                                         # dval = rate * 60.0
                                     logging.debug(f' --- transition rate 01 (float) = {rate}')
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration"] = tr.text
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration"] = str(dval)
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_trate01"] = str(dval)
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate01"] = str(rate)
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration"] = invertf2s(str(rate))
+                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = tr.text
+                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = str(dval)
+                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(dval)
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(rate)
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = invertf2s(str(rate))
                                     if  tr.attrib['fixed_duration'].lower() == "true":
-                                        # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_fixed"] = True
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_trate01_fixed"] = True
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration_fixed"] = True
+                                        # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
                                     else:
-                                        # cell_def_tab.param_d[cell_def_name]["necrosis_phase0_fixed"] = False
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_trate01_fixed"] = False
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_phase0_duration_fixed"] = False
+                                        # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
 
                                 elif  tr.attrib['start_index'] == "1":
                                     rate = float(tr.text)
                                     if abs(rate) < 1.e-6:
                                         rate = 1.e-6
                                     logging.debug(f' --- transition rate 12 (float) = {rate}')
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_trate12"] = str(rate)
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_phase1_duration"] = invertf2s(str(rate))
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = str(rate)
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = invertf2s(str(rate))
                                     if  tr.attrib['fixed_duration'].lower() == "true":
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_trate12_fixed"] = True
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_phase1_duration_fixed"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = True
                                     else:
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_trate12_fixed"] = False
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_phase1_duration_fixed"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
 
 
                     params_uep = death_model.find("parameters")
@@ -882,16 +882,18 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             val =  uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text
             cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance"] = val
 
-            if uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true':
-                cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = True
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = False
+            rel_eq_bval = uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true'
+            cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = rel_eq_bval
 
-            if uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true':
-                cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = True
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = False
+            abs_eq_bval = uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true'
+            cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = abs_eq_bval
 
+            if cell_def_name==cell_def_0th:
+                print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
+                cell_def_tab.set_relative_equilibrium_distance_enabled.setChecked(rel_eq_bval)
+                cell_def_tab.set_relative_equilibrium_distance_enabled.stateChanged.emit(rel_eq_bval)
+                cell_def_tab.set_absolute_equilibrium_distance_enabled.setChecked(abs_eq_bval)
+                cell_def_tab.set_absolute_equilibrium_distance_enabled.stateChanged.emit(abs_eq_bval)
 
             # <<< new (June 2022) mechanics params
             mypath =  uep.find(mechanics_path+"attachment_elastic_constant")
@@ -902,15 +904,15 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             mypath =  uep.find(mechanics_path+"attachment_rate")
             if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = mypath.text
+                cell_def_tab.param_d[cell_def_name]["attachment_rate"] = mypath.text
             else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_attachment_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["attachment_rate"] = '0.0'
 
             mypath =  uep.find(mechanics_path+"detachment_rate")
             if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = mypath.text
+                cell_def_tab.param_d[cell_def_name]["detachment_rate"] = mypath.text
             else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_detachment_rate"] = '0.0'
+                cell_def_tab.param_d[cell_def_name]["detachment_rate"] = '0.0'
 
             mypath =  uep.find(mechanics_path+"maximum_number_of_attachments")
             if mypath is not None:

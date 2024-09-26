@@ -929,24 +929,24 @@ class Rules(QWidget):
             # print(behavior, cycle_model_idx )
             #{0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
             if (behavior == 'cycle entry' or behavior == 'exit from cycle phase 0'):
-                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_trate00']
-                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate01']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate01']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate01']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate01']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate01']
+                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_00_trate']
+                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_01_trate']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_01_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_01_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_01_trate']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_01_trate']
             elif (behavior == 'exit from cycle phase 1'):
-                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate10']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate12']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate12']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate12']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate10']
+                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_10_trate']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_12_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_12_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_12_trate']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_10_trate']
             elif (behavior == 'exit from cycle phase 2'):
-                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate20']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate20']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate23']
+                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_20_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_20_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_23_trate']
             elif (behavior == 'exit from cycle phase 3'):
-                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
+                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_30_trate']
                         
         elif btokens[0] in self.substrates:
             key1 = 'secretion'
@@ -991,9 +991,9 @@ class Rules(QWidget):
         elif behavior == "relative maximum adhesion distance":
             base_val = self.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
         elif behavior == "cell attachment rate":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_attachment_rate']
+            base_val = self.celldef_tab.param_d[key0]['attachment_rate']
         elif behavior == "cell detachment rate":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
+            base_val = self.celldef_tab.param_d[key0]['detachment_rate']
         elif behavior == "maximum number of cell attachments":
             base_val = self.celldef_tab.param_d[key0]['mechanics_max_num_attachments']
 
