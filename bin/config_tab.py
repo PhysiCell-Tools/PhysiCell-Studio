@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
-from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom
+from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom, HoverWarning
 from studio_functions import style_sheet_template
 
 class RandomSeedIntValidator(QtGui.QValidator):
@@ -43,16 +43,17 @@ class RandomSeedIntValidator(QtGui.QValidator):
 
 class Config(QWidget):
     # def __init__(self, nanohub_flag):
-    def __init__(self, studio_flag):
+    def __init__(self, xml_creator):
         super().__init__()
         # global self.config_params
+
+        self.xml_creator = xml_creator
 
         self.default_time_units = "min"
 
         # self.nanohub_flag = nanohub_flag
         self.nanohub_flag = False
 
-        self.studio_flag = studio_flag
         self.vis_tab = None
         self.ics_tab = None
 
@@ -358,9 +359,8 @@ class Config(QWidget):
         self.random_seed_integer.setValidator(RandomSeedIntValidator())
         hbox.addWidget(self.random_seed_integer)
 
-        self.random_seed_warning = QLabel()
-        self.random_seed_warning.setStyleSheet("color: red;")
-        hbox.addWidget(self.random_seed_warning)
+        self.random_seed_warning_label = HoverWarning("WARNING: random_seed in user_parameters will take precedence if it remains.")
+        hbox.addWidget(self.random_seed_warning_label)
 
         hbox.addStretch()
 
@@ -585,6 +585,17 @@ class Config(QWidget):
             self.random_seed_integer.setEnabled(True)
             self.random_seed_integer.check_validity() # set color based on current validity
 
+        # see if random_seed remains in user_parameters
+        if hasattr(self.xml_creator, 'user_params_tab'):
+            # this is called before user_params_tab is created one time, so make sure it exists
+            for idx in range(self.xml_creator.user_params_tab.count):
+                v_name = self.xml_creator.user_params_tab.utable.cellWidget(idx,self.xml_creator.user_params_tab.var_icol_name).text()
+                if v_name=="random_seed":
+                    self.random_seed_warning_label.show_warning()
+                    return
+        self.random_seed_warning_label.no_warning()
+        
+
     def random_seed_integer_cb(self, text):
         if text == "":
             self.random_seed_integer.setPlaceholderText("system_clock") # warn the user that this will set the seed to system_clock
@@ -717,7 +728,7 @@ class Config(QWidget):
             self.random_seed_random_button.setChecked(True)
 
         if self.xml_root.find(".//user_parameters//random_seed") is not None:
-            self.random_seed_warning.setText("WARNING: random_seed in user_parameters found in xml loading.\nThat parameter will take precedence if it remains.")
+            self.random_seed_warning_label.show_warning()
 
         # self.disable_auto_springs.setChecked(False)
         # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
@@ -742,9 +753,6 @@ class Config(QWidget):
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
         self.folder.setText(self.xml_root.find(".//save//folder").text)
-        # print("\n----------------config_tab: fill_gui(): folder= ",self.folder.text())
-        # if self.studio_flag:
-        #     self.plot_folder.setText(self.xml_root.find(".//folder").text)
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
@@ -1054,7 +1062,7 @@ class Config(QWidget):
 
             # self.add_new_model(self.current_xml_file, True)
             # self.config_file = self.current_xml_file
-            # if self.studio_flag:
+            # if self.xml_creator.studio_flag:
             #     self.run_tab.config_file = self.current_xml_file
             #     self.run_tab.config_xml_name.setText(self.current_xml_file)
             # self.show_sample_model()
