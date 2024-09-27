@@ -367,7 +367,7 @@ class UserParams(QWidget):
 
         # self.enable_all_custom_data()
         if varname == "random_seed":
-            self.xml_creator.config_tab.random_seed_warning_label.no_warning()
+            self.xml_creator.config_tab.random_seed_warning_label.hide_icon()
     #----------------------------------------
     # Not currently used
     def disable_table_cells_for_duplicate_name(self, widget=None):
@@ -574,7 +574,7 @@ class UserParams(QWidget):
 
     def name_change_finished_cb(self):
         if self.sender().text()=="random_seed":
-            self.xml_creator.config_tab.random_seed_warning_label.show_warning()
+            self.xml_creator.config_tab.random_seed_warning_label.show_icon()
 
     #----------------------------------------
     def units_changed_cb(self, text):
