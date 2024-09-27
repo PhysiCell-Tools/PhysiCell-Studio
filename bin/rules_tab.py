@@ -2183,7 +2183,9 @@ class Rules(QWidget):
                 self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['enabled'] = 'true'
             else:
                 self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['enabled'] = 'false'
-
+                
+            # force version update for users
+            self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['version'] = '3.0'
         return
     
     #-------------------------
