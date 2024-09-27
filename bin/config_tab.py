@@ -591,9 +591,9 @@ class Config(QWidget):
             for idx in range(self.xml_creator.user_params_tab.count):
                 v_name = self.xml_creator.user_params_tab.utable.cellWidget(idx,self.xml_creator.user_params_tab.var_icol_name).text()
                 if v_name=="random_seed":
-                    self.random_seed_warning_label.show_warning()
+                    self.random_seed_warning_label.show_icon()
                     return
-        self.random_seed_warning_label.no_warning()
+        self.random_seed_warning_label.hide_icon()
         
 
     def random_seed_integer_cb(self, text):
@@ -728,7 +728,7 @@ class Config(QWidget):
             self.random_seed_random_button.setChecked(True)
 
         if self.xml_root.find(".//user_parameters//random_seed") is not None:
-            self.random_seed_warning_label.show_warning()
+            self.random_seed_warning_label.show_icon()
 
         # self.disable_auto_springs.setChecked(False)
         # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:

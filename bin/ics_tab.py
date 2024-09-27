@@ -30,7 +30,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 
-from studio_classes import QHLine, HoverLabel,DoubleValidatorWidgetBounded
+from studio_classes import QHLine,DoubleValidatorWidgetBounded, HoverQuestion
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -641,8 +641,9 @@ class ICs(QWidget):
             * click again to stop (or leave the plot area)
             * Note: the Gaussian brush will only update a pixel value if it is greater than the current value
         """
-        self.help_label = HoverLabel("Help", msg)
-        hbox.addWidget(self.help_label)
+        self.ic_substrate_question_label = HoverQuestion(msg)
+        self.ic_substrate_question_label.show_icon()
+        hbox.addWidget(self.ic_substrate_question_label)
 
         hbox.addStretch(1)
         self.vbox.addLayout(hbox)

@@ -235,17 +235,28 @@ class HoverSvgWidget(QSvgWidget, HoverWidget):
         super().__init__(parent)
         self.setHoverText(hover_text)
 
-class HoverWarning(HoverSvgWidget):
+class HoverHelp(HoverSvgWidget):
+    icon = None
     def __init__(self, hover_text, parent=None, width=15, height=15):
         super().__init__(hover_text, parent)
         self.setFixedSize(width, height)
 
-    def show_warning(self):
-        self.load("images:warning.svg")
+    def show_icon(self):
+        self.load(self.icon)
 
-    def no_warning(self):
+    def hide_icon(self):
         self.load(QByteArray()) # passing in an empty file path (self.load("")) works, but prints endless warnings about not being able to load the file
-        
+class HoverWarning(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:warning.svg"
+class HoverQuestion(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:info.svg"
+
 # validators
 
 class DoubleValidatorWidgetBounded(QValidator):
