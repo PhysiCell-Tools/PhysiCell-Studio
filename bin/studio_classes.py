@@ -177,7 +177,8 @@ class ExtendedCombo( QComboBox ):
 
 # hover widgets
 class HoverWidget(QWidget):
-    def __init__(self, hover_text=None, parent=None):
+    hover_enabled = True
+    def __init__(self, hover_text=None, parent=None, hover_enabled=True):
         super().__init__(parent)
         self.setMouseTracking(True)  # Enable mouse tracking
         self.hover_text = hover_text
@@ -188,11 +189,14 @@ class HoverWidget(QWidget):
                             border-radius: 5px; \
                             padding: 5px; \
                             }")
-    
+        self.hover_enabled = hover_enabled
+
     def setHoverText(self, hover_text):
         self.hover_text = hover_text
 
     def event(self, event):
+        if not self.hover_enabled:
+            return super().event(event)
         if event.type() == QEvent.Enter:
             # Display tooltip when the mouse enters the checkbox
             QToolTip.showText(event.globalPos(), self.hover_text, self)
@@ -243,9 +247,11 @@ class HoverHelp(HoverSvgWidget):
 
     def show_icon(self):
         self.load(self.icon)
+        self.hover_enabled = True
 
     def hide_icon(self):
         self.load(QByteArray()) # passing in an empty file path (self.load("")) works, but prints endless warnings about not being able to load the file
+        self.hover_enabled = False
 class HoverWarning(HoverHelp):
     def __init__(self, hover_text, parent=None, width=15, height=15):
         super().__init__(hover_text, parent)

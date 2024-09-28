@@ -4717,20 +4717,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def create_miscellaneous_tab(self):
-        if not hasattr(self, "response_l"):
-            self.response_l = []
             
         par_dist_label = QLabelSeparator("Parameter Distributions")
 
-        self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
-        self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
+        self.par_dist_cell_type_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
+        self.par_dist_cell_type_disabled_checkbox.stateChanged.connect(self.par_dist_cell_type_disabled_cb)
 
-        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
-        self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
+        self.par_dist_display_button = QPushButton("Display/update distributions for current cell type.")
+        self.par_dist_display_button.clicked.connect(self.par_dist_display_button_cb)
 
         hbox_cell_type_par_dist = QHBoxLayout()
-        hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
-        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
+        hbox_cell_type_par_dist.addWidget(self.par_dist_cell_type_disabled_checkbox)
+        hbox_cell_type_par_dist.addWidget(self.par_dist_display_button)
         hbox_cell_type_par_dist.addStretch()
 
         self.behavior_model = QStandardItemModel()
@@ -4773,6 +4771,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox_par_dist_parameters = QHBoxLayout()
         self.par_dist_par_label = []
         self.par_dist_par_lineedit = []
+        self.help_stacks = {}
         for i in range(4):
             self.par_dist_par_label.append(QLabel(""))
             qline_edt = QLineEdit_custom(enabled=False)
@@ -4781,6 +4780,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_par_lineedit.append(qline_edt)
             hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
             hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
+            help_stack = QStackedWidget()
+            help_stack.addWidget(HoverWarning("")) # remember that the warning is index 0
+            help_stack.addWidget(HoverQuestion("")) # ...and the question is index 1
+            help_stack.setFixedWidth(15)
+            help_stack.setFixedHeight(15)
+            self.help_stacks[qline_edt] = help_stack
+            hbox_par_dist_parameters.addWidget(help_stack)
 
         vbox = QVBoxLayout()
         vbox.addWidget(par_dist_label)
@@ -4801,12 +4807,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         return miscellaneous_tab_scroll_area
 
-    def cell_type_par_dist_disabled_cb(self, state):
+    def par_dist_cell_type_disabled_cb(self, state):
         if self.current_cell_def is None: # happens at studio initialization
             return
         enabled = state != QtCore.Qt.Checked
         self.param_d[self.current_cell_def]["par_dists_disabled"] = (not enabled)
-        self.display_par_dists_button.setEnabled(enabled)
+        self.par_dist_display_button.setEnabled(enabled)
         self.par_dist_behavior_combobox.setEnabled(enabled)
         if enabled:
             # par_dist_behavior_combobox will handle enabling par_dist_enable_checkbox if necessary
@@ -4815,7 +4821,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_enable_checkbox.setEnabled(False)
             self.par_dist_distribution_widgets_set_enabled(False)
 
-    def display_par_dists_cb(self):
+    def par_dist_display_button_cb(self):
         # create new window and print distribution infomration there
         if self.current_cell_def is None:
             return
@@ -4844,28 +4850,28 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_window.hide()
         self.par_dist_window.show()
 
-    def fill_responses_widget(self, response_l):
-        self.response_l = response_l
-        self.par_dist_behavior_combobox.clear()
-        self.par_dist_behavior_combobox.addItems(self.response_l)
-        self.par_dist_behavior_combobox.setCurrentIndex(0)
+    def par_dist_current_responses(self):
+        return [self.par_dist_behavior_combobox.itemText(i) for i in range(self.par_dist_behavior_combobox.count())]
+
+    def par_dist_fill_responses_widget(self, response_l):
+        # loop over all current items in the combobox and check if they are in the response list
+        current_response_list = self.par_dist_current_responses()
+        for response in current_response_list:
+            if response not in response_l:
+                self.par_dist_behavior_combobox.removeItem(self.par_dist_behavior_combobox.findText(response))
+        for response in response_l:
+            # check if response is an item in self.par_dist_behavior_combobox
+            if self.par_dist_behavior_combobox.findText(response) == -1:
+                self.par_dist_behavior_combobox.addItem(response)
 
     def par_dist_behavior_text_changed_cb(self, text):
-        if text == '':
-            return
-        if not hasattr(self, "response_l"):
-            return # will hit here before it's set at initialization
-        if not self.is_behavior_real(text):
+        if not self.is_behavior(text):
             self.par_dist_enable_checkbox.setEnabled(False)
             self.par_dist_distribution_widgets_set_enabled(False)
         elif (self.current_cell_def in self.param_d.keys()) and (not self.param_d[self.current_cell_def]["par_dists_disabled"]):
             self.create_behavior_dict(self.current_cell_def, text, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
             self.par_dist_enable_checkbox.setEnabled(True)
-            if text==self.par_dist_behavior_combobox.itemText(self.par_dist_behavior_combobox.currentIndex()):
-                # if the text is the same as the current behavior index, force the emission of the index changed signal to update the widgets
-                self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex())
-            # else:
-                # the others will follow when the behavior index is updated immediately after this event is handled
+            self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex()) # force this cb now even before the user hits tab/enter/leaves focus and causes the update (it can be confusing to see the previous index pars before hitting enter)
        
     def par_dist_behavior_changed_cb(self, idx):
         cdname = self.current_cell_def
@@ -4876,7 +4882,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return # this can happen when new behaviors are added and the list is cleared OR if the distributions are disabled but the behavior box is updated for other reasons
 
         if behavior not in self.param_d[cdname]["par_dists"].keys():
-            self.create_behavior_dict(cdname, behavior)
+            self.create_behavior_dict(cdname, behavior, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
             if self.par_dist_enable_checkbox.isChecked(): # set the enabled to False if the checkbox is checked
                 self.par_dist_enable_checkbox.setChecked(False)
             else: # otherwise, emit the unchecked state to deactivate downstream widgets
@@ -4886,19 +4892,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.par_distributions_combobox.currentIndexChanged.emit(0)
             else:
                 self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
-            for pdple in self.par_dist_par_lineedit:
-                pdple.setText("")
         else: # behavior has previously been set, proceed with caution based on prev distribution and current distribution
             old_dict = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior]["parameters"])
             if self.param_d[cdname]["par_dists"][behavior]["distribution"] != self.par_distributions_combobox.currentText():
                 self.par_distributions_combobox.setCurrentIndex(self.par_distributions_combobox.findText(self.param_d[cdname]["par_dists"][behavior]["distribution"]))
             else:
                 self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
-            self.set_par_dist_pars_from_dict(old_dict)
+            self.par_dist_set_pars_from_dict(old_dict)
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
             if self.par_dist_enable_checkbox.isChecked() != self.param_d[cdname]["par_dists"][behavior]["enabled"]:
+                # if the checkbox is not in the correct state, set it to the correct state (and thus emit the correct state)
                 self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
             else:
+                # no need to toggle the checkbox, just emit the current state
                 self.par_dist_enable_checkbox.stateChanged.emit(self.par_dist_enable_checkbox.checkState())
     
     def par_dist_enable_cb(self, state):
@@ -4908,14 +4914,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enabled"] = bval
         self.par_dist_distribution_widgets_set_enabled(bval)
         if bval:
+            # if we are enabling the distribution, emit the signal of selecting this distribution
             self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
 
     def par_dist_distribution_widgets_set_enabled(self, enabled):
+        # enable everything downstream of the behavior: the distribution, enforcement, and parameters
+        # if disabling the parameters, hide the help stacks
         self.par_distributions_combobox.setEnabled(enabled)
         self.par_dist_enforce_base_checkbox.setEnabled(enabled)
         for pdple in self.par_dist_par_lineedit:
             pdple.setEnabled(enabled)
-
+            if not enabled:
+                self.par_dist_hide_help_stack(self.help_stacks[pdple])
+                
     def par_distribution_changed_cb(self, idx):
         cdname = self.current_cell_def
         if cdname is None or cdname not in self.param_d.keys():
@@ -4925,8 +4936,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.create_behavior_dict(cdname, behavior, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
         self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
         if ("distribution" in self.param_d[cdname]["par_dists"][behavior].keys()) and (current_dist == self.param_d[cdname]["par_dists"][behavior]["distribution"]):
+            # if we have the correct distribution already in a dict, note this so we make use of those parameters
             distribution_pars_in_dict = True
         else:
+            # otherwise, we don't want to keep the old parameters (if they even exist); we will create a brand new dictionary below
             distribution_pars_in_dict = False
 
         self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
@@ -4934,6 +4947,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # next, find the distribution and update fields
         par_labels = [""] * 4
         par_texts = [""] * 4
+        # default to hiding all icons
+        for pdple in self.par_dist_par_lineedit:
+            help_stack = self.help_stacks[pdple]
+            self.par_dist_hide_help_stack(help_stack)
+
         if current_dist == "None":
             par_enabled = [False] * 4
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
@@ -4945,10 +4963,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_par_lineedit[1].setObjectName("max")
             if current_dist == "Uniform":
                 self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Min is required!")
                 self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
-            else: # log uniform must be postive
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Max is required!")
+                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
+            elif current_dist == "Log Uniform": # log uniform must be postive
                 self.par_dist_par_lineedit[0].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Min is required! And it must be > 0.")
+                help_stack.widget(1).setHoverText("Min represents the actual behavior value, not the exponent.\nMin must be positive.")
+                help_stack.widget(1).show_icon()
                 self.par_dist_par_lineedit[1].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Max is required! And it must be > 0.")
+                help_stack.widget(1).setHoverText("Max represents the actual behavior value, not the exponent.\nMax must be positive.")
+                help_stack.widget(1).show_icon()
+                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
+            else:
+                raise NotImplementedError(f"Error: Invalid distribution selected??? Current distribution = {current_dist} is not among those we have a formula for displaying. Whoever added this distribution should add a formula here.")
+
             par_enabled = [True, True, False, False]
             if distribution_pars_in_dict:
                 if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
@@ -4958,27 +4993,39 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 new_dict = {"min": "", "max": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
-            if current_dist == "Uniform":
-                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
-            elif current_dist == "Log Uniform":
-                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
-            else:
-                raise NotImplementedError(f"Error: Invalid distribution selected??? Current distribution = {current_dist} is not among those we have a formula for displaying. Whoever added this distribution should add a formula here.")
         else:
             par_enabled = [True] * 4
             if current_dist == "Normal":
                 par_labels[0] = "Mean:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Mean is required!")
                 par_labels[1] = "Std Dev:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Std Dev is required!")
                 # set these here rather than checking again later
                 self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
                 self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
                 self.par_dist_distribution_equation.setText("Behavior ~ N(Mean, Std Dev)\nlb \u2264 Behavior \u2264 ub")
             elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
                 par_labels[0] = "\u03BC:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("\u03BC is required!\n\u03BC can be negative as it represents the exponent.")
+                help_stack.widget(1).setHoverText("\u03BC represents the exponent, not the actual behavior value.\n\u03BC can be negative.")
+                help_stack.widget(1).show_icon()
                 par_labels[1] = "\u03C3:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("\u03C3 is required!\n\u03C3 must be > 0 as it represents the standard deviation of the exponent.")
+                help_stack.widget(1).setHoverText("\u03C3 represents the standard deviation of the exponent, not the actual behavior value.\n\u03C3 must be > 0.")
+                help_stack.widget(1).show_icon()
                 # set these here rather than checking again later
                 self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[2]]
+                help_stack.widget(1).setHoverText("Lower bound is on the behavior values, not the exponent.\nThus, it must be non-negative.\nSetting to 0 allows arbitrarily small, positive behavior values.")
+                help_stack.widget(1).show_icon()
                 self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[3]]
+                help_stack.widget(1).setHoverText("Upper bound is on the behavior values, not the exponent.\nThus, it must be positive.\nSetting this to 0 would result in an ill-formed distribution.")
+                help_stack.widget(1).show_icon()
                 if current_dist == "Log Normal":
                     self.par_dist_distribution_equation.setText("Behavior ~ exp(Z), Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
                 else:
@@ -5010,13 +5057,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
 
         for pdpl, pdple, label, text, enabled in zip(self.par_dist_par_label, self.par_dist_par_lineedit, par_labels, par_texts, par_enabled):
+            # actually set all the stuff gathered above
             pdpl.setText(label)
+            pdple.setEnabled(enabled) # disable it first so that the textChanged signal triggers the right callbacks
             pdple.setText(text)
-            pdple.setEnabled(enabled)
 
-        self.validate_all_par_dist_parameters()
+        self.par_dist_validate_all_parameters() # possibly redundant, originally added to allow for higher-order parameter checks, e.g. make sure that min<max. decided that's just on the user
 
-    def set_par_dist_pars_from_dict(self, par_d):
+    def par_dist_set_pars_from_dict(self, par_d):
+        # get the pars from the dictionary and write to the line edits
         for pdple in self.par_dist_par_lineedit:
             pdple.setText("") # reset all the text before filling it in
         for k, v in par_d.items():
@@ -5033,13 +5082,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elif k == "upper_bound":
                 self.par_dist_par_lineedit[3].setText(v)
             else:
-                raise ValueError(f"Error: Invalid parameter key {k} in set_par_dist_pars_from_dict()")
+                raise ValueError(f"Error: Invalid parameter key {k} in par_dist_set_pars_from_dict()")
 
-    def validate_all_par_dist_parameters(self):
+    def par_dist_validate_all_parameters(self):
         # this was written to validate that min<max values, but I have set that side project aside for now because it was slowing down key dev
+        # I think it is still unnecessary, but the help stacks may actually depend on this, so I'm leaving it in for now
         for pdple in self.par_dist_par_lineedit:
             if pdple.isEnabled():
-                pdple.check_validity(pdple.text())
+                is_acceptable = pdple.check_validity(pdple.text())
+                self.par_dist_toggle_help_stack(pdple, is_acceptable)
 
     def par_dist_enforce_base_cb(self, state):
         if self.current_cell_def is None:
@@ -5051,19 +5102,37 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_enforce_base_question_label.show_icon()
         else:
             self.par_dist_enforce_base_question_label.hide_icon()
+    
+    def par_dist_hide_help_stack(self, help_stack):
+        for i in range(help_stack.count()):
+            help_stack.widget(i).hide_icon()
+
+    def par_dist_toggle_help_stack(self, sender, is_acceptable):
+        help_stack = self.help_stacks[sender]
+        if sender.isEnabled() == False:
+            self.par_dist_hide_help_stack(help_stack)
+            return
+        if not is_acceptable:
+            help_stack.setCurrentIndex(0)
+            help_stack.widget(0).show_icon()
+        else:
+            help_stack.setCurrentIndex(1)
+    
     def par_dist_parameters_changed_cb(self, text):
+        # single callback for any parameter line edits changes
+        # makes sure everything looks good, updates help icons, and updates the dictionary
         if self.current_cell_def is None:
             return
         sender = self.sender()
-        if sender.objectName() == "":
+        object_name = sender.objectName()
+        if object_name == "":
             return # likely reaching here during startup
         is_acceptable = sender.check_validity(text)
+        self.par_dist_toggle_help_stack(sender, is_acceptable)
         behavior = self.par_dist_behavior_combobox.currentText()
-        if not is_acceptable or behavior == "":
-            return
         if behavior in self.param_d[self.current_cell_def]["par_dists"].keys():
-            self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][sender.objectName()] = text
-            self.validate_all_par_dist_parameters()
+            self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][object_name] = text
+            self.par_dist_validate_all_parameters()
         
     def create_behavior_dict(self, cdname, behavior, overwrite=False):
         if cdname not in self.param_d.keys():
@@ -5078,11 +5147,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 if (k not in self.param_d[cdname]["par_dists"][behavior].keys()):
                     self.param_d[cdname]["par_dists"][behavior][k] = new_dict[k]
 
-    def is_behavior_real(self, text):
-        return text in self.response_l
+    def is_behavior(self, text):
+        return text in self.par_dist_current_responses()
     
-    def is_current_behavior_real(self):
-        return self.is_behavior_real(self.par_dist_behavior_combobox.currentText())
+    def current_text_is_behavior(self):
+        return self.is_behavior(self.par_dist_behavior_combobox.currentText())
 
     #--------------------------------------------------------
     # @QtCore.Slot()
@@ -5627,7 +5696,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def update_par_dist_behaviors(self, old_name, new_name):
         response_l = self.rules_tab.create_response_list()
-        self.fill_responses_widget(response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.par_dist_fill_responses_widget(response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
         self.rename_behavior_distributions(old_name, new_name)
 
     def rename_behavior_distributions(self, old_name, new_name):
@@ -5741,7 +5810,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]['cycle_quiescent_01_fixed_duration'] = bval
         self.param_d[cdname]['cycle_quiescent_10_fixed_duration'] = True
 
-
     def new_death_params(self, cdname):
         sval = self.default_sval
         duration_sval = '1.e9'
@@ -5780,7 +5848,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["necrosis_nuclear_rate"] = '2.16667e-4'
         self.param_d[cdname]["necrosis_calcif_rate"] = '7e-05'
         self.param_d[cdname]["necrosis_rel_rupture_rate"] = '2.0'
-
 
     def new_volume_params(self, cdname):   # rf. core/*_phenotype.cpp
         sval = self.default_sval
@@ -6402,13 +6469,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def update_misc_params(self):
         cdname = self.current_cell_def
-        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
-        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
-        if self.param_d[cdname]["par_dists_disabled"] != self.cell_type_par_dist_disabled_checkbox.isChecked():
-            self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        self.par_dist_cell_type_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
+        self.par_dist_display_button.setText(f"Display/update parameter distributions for {cdname}")    
+        if self.param_d[cdname]["par_dists_disabled"] != self.par_dist_cell_type_disabled_checkbox.isChecked():
+            self.par_dist_cell_type_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
         else:
             state = QtCore.Qt.Checked if self.param_d[cdname]["par_dists_disabled"] else QtCore.Qt.Unchecked
-            self.cell_type_par_dist_disabled_checkbox.stateChanged.emit(state)
+            self.par_dist_cell_type_disabled_checkbox.stateChanged.emit(state)
             
         if self.param_d[cdname]["par_dists_disabled"]:
             self.par_dist_enable_checkbox.setChecked(False)
