@@ -597,7 +597,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         self.response_combobox.addItems(self.response_l)
 
         self.response_combobox.setCurrentIndex(0)
-        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     def create_response_list(self):
         # TODO: figure out how best to organize these responses
