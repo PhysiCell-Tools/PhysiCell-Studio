@@ -3,8 +3,9 @@ import sys
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip, QRadioButton
+from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QValidator, QDoubleValidator
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent, QByteArray
 
 # organizers
 class QHLine(QFrame):
@@ -124,6 +125,9 @@ QRadioButton::indicator:unchecked {
 QRadioButton::indicator:checked {
     image: url(images:RadioButtonChecked.svg);
 }
+QRadioButton::indicator:disabled:checked {
+    image: url(images:RadioButtonDisabledChecked.svg);
+}
 """
 class QRadioButton_custom(QRadioButton):
     def __init__(self, text, **kwargs):
@@ -173,15 +177,26 @@ class ExtendedCombo( QComboBox ):
 
 # hover widgets
 class HoverWidget(QWidget):
-    def __init__(self, hover_text=None, parent=None):
+    hover_enabled = True
+    def __init__(self, hover_text=None, parent=None, hover_enabled=True):
         super().__init__(parent)
         self.setMouseTracking(True)  # Enable mouse tracking
         self.hover_text = hover_text
-    
+        self.setStyleSheet("QToolTip { \
+                            background-color: black; \
+                            color: white; \
+                            border: 1px solid black; \
+                            border-radius: 5px; \
+                            padding: 5px; \
+                            }")
+        self.hover_enabled = hover_enabled
+
     def setHoverText(self, hover_text):
         self.hover_text = hover_text
 
     def event(self, event):
+        if not self.hover_enabled:
+            return super().event(event)
         if event.type() == QEvent.Enter:
             # Display tooltip when the mouse enters the checkbox
             QToolTip.showText(event.globalPos(), self.hover_text, self)
@@ -219,6 +234,35 @@ class HoverLabel(QLabel, HoverWidget):
             }
         """)
       
+class HoverSvgWidget(QSvgWidget, HoverWidget):
+    def __init__(self, hover_text, parent=None):
+        super().__init__(parent)
+        self.setHoverText(hover_text)
+
+class HoverHelp(HoverSvgWidget):
+    icon = None
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+
+    def show_icon(self):
+        self.load(self.icon)
+        self.hover_enabled = True
+
+    def hide_icon(self):
+        self.load(QByteArray()) # passing in an empty file path (self.load("")) works, but prints endless warnings about not being able to load the file
+        self.hover_enabled = False
+class HoverWarning(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:warning.svg"
+class HoverQuestion(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:info.svg"
+
 # validators
 
 class DoubleValidatorWidgetBounded(QValidator):
@@ -242,7 +286,7 @@ class DoubleValidatorWidgetBounded(QValidator):
             # then just record the info so the validator can access later
             self.top = top
             self.top_fn = top_transform
-        else:
+        elif top != None:
             # then just a normal top bound: transform if desired and set. then reset top and top_fn to None so they are not used later
             if top_transform is not None:
                 top = top_transform(top)

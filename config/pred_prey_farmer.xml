@@ -1,14 +1,5 @@
 <PhysiCell_settings version="devel-version">
 
-    <cell_rules>
-        <rulesets>
-            <ruleset protocol="CBHG" version="2.0" format="csv" enabled="false">
-                <folder>config</folder>
-                <filename>rules.csv</filename>
-            </ruleset>
-        </rulesets>
-    </cell_rules>
-
     <domain>
         <x_min>-500</x_min>
         <x_max>500</x_max>
@@ -32,11 +23,11 @@
     </overall>
 
     <parallel>
-        <omp_num_threads>1</omp_num_threads>
+        <omp_num_threads>2</omp_num_threads>
     </parallel>
 
     <save>
-        <folder>output_pred_prey_hope</folder>
+        <folder>output</folder>
         <full_data>
             <interval units="min">60</interval>
             <enable>true</enable>
@@ -58,6 +49,7 @@
     <options>
         <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
         <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
+        <random_seed>0</random_seed>
     </options>
 
     <microenvironment_setup>
@@ -187,6 +179,7 @@
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
                     <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">0.25</speed>
@@ -232,7 +225,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0.0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0.0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0.0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0.0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="farmer" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="prey" units="1/min">0.0</phagocytosis_rate>
@@ -243,7 +238,8 @@
                         <attack_rate name="prey" units="1/min">0.0</attack_rate>
                         <attack_rate name="predator" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <attack_damage_rate units="1/min">1.0</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="farmer" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="prey" units="1/min">0.0</fusion_rate>
@@ -257,6 +253,10 @@
                         <transformation_rate name="predator" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <energy conserved="false" units="dimensionless" description="">1.0</energy>
@@ -266,6 +266,8 @@
                 <prey_weight conserved="false" units="dimensionless" description="">-1</prey_weight>
                 <food_weight conserved="false" units="dimensionless" description="">-10</food_weight>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
         <cell_definition name="prey" ID="1">
             <phenotype>
@@ -332,6 +334,7 @@
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
                     <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">0.5</speed>
@@ -377,7 +380,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0.0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0.0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0.0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0.0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="farmer" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="prey" units="1/min">0.0</phagocytosis_rate>
@@ -388,7 +393,8 @@
                         <attack_rate name="prey" units="1/min">0.0</attack_rate>
                         <attack_rate name="predator" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <attack_damage_rate units="1/min">1.0</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="farmer" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="prey" units="1/min">0.0</fusion_rate>
@@ -402,6 +408,10 @@
                         <transformation_rate name="predator" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <energy conserved="false" units="dimensionless" description="">1.0</energy>
@@ -411,6 +421,8 @@
                 <prey_weight conserved="false" units="dimensionless" description="">10</prey_weight>
                 <food_weight conserved="false" units="dimensionless" description="">1</food_weight>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
         <cell_definition name="predator" ID="2">
             <phenotype>
@@ -477,6 +489,7 @@
                     <attachment_elastic_constant units="1/min">0.01</attachment_elastic_constant>
                     <attachment_rate units="1/min">0.0</attachment_rate>
                     <detachment_rate units="1/min">0.0</detachment_rate>
+                    <maximum_number_of_attachments>12</maximum_number_of_attachments>
                 </mechanics>
                 <motility>
                     <speed units="micron/min">0.5</speed>
@@ -522,7 +535,9 @@
                     </substrate>
                 </secretion>
                 <cell_interactions>
-                    <dead_phagocytosis_rate units="1/min">0.0</dead_phagocytosis_rate>
+                    <apoptotic_phagocytosis_rate units="1/min">0.0</apoptotic_phagocytosis_rate>
+                    <necrotic_phagocytosis_rate units="1/min">0.0</necrotic_phagocytosis_rate>
+                    <other_dead_phagocytosis_rate units="1/min">0.0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="farmer" units="1/min">0.0</phagocytosis_rate>
                         <phagocytosis_rate name="prey" units="1/min">0.0</phagocytosis_rate>
@@ -533,7 +548,8 @@
                         <attack_rate name="prey" units="1/min">0.0</attack_rate>
                         <attack_rate name="predator" units="1/min">0.0</attack_rate>
                     </attack_rates>
-                    <damage_rate units="1/min">1.0</damage_rate>
+                    <attack_damage_rate units="1/min">1.0</attack_damage_rate>
+                    <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="farmer" units="1/min">0.0</fusion_rate>
                         <fusion_rate name="prey" units="1/min">0.0</fusion_rate>
@@ -547,6 +563,10 @@
                         <transformation_rate name="predator" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
+                <cell_integrity>
+                    <damage_rate units="1/min">0.0</damage_rate>
+                    <damage_repair_rate units="1/min">0.0</damage_repair_rate>
+                </cell_integrity>
             </phenotype>
             <custom_data>
                 <energy conserved="false" units="dimensionless" description="">1.0</energy>
@@ -556,8 +576,19 @@
                 <prey_weight conserved="false" units="dimensionless" description="">100</prey_weight>
                 <food_weight conserved="false" units="dimensionless" description="">1</food_weight>
             </custom_data>
+            <initial_parameter_distributions enabled="false">
+          </initial_parameter_distributions>
         </cell_definition>
     </cell_definitions>
+
+    <cell_rules>
+        <rulesets>
+            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="false">
+                <folder>config</folder>
+                <filename>rules.csv</filename>
+            </ruleset>
+        </rulesets>
+    </cell_rules>
 
     <initial_conditions>
         <cell_positions type="csv" enabled="false">
@@ -567,7 +598,6 @@
     </initial_conditions>
 
     <user_parameters>
-        <random_seed type="int" units="dimensionless" description="">0</random_seed>
         <number_of_farmers type="int" units="none" description="initial number of farmer cells">15</number_of_farmers>
         <number_of_prey type="int" units="none" description="initial number of prey cells">50</number_of_prey>
         <number_of_predators type="int" units="none" description="initial number of predators cells">20</number_of_predators>

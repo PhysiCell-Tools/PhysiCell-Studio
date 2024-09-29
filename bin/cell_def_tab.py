@@ -43,13 +43,15 @@ import logging
 import inspect
 import string
 import random
+import numpy as np
 # import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QIcon, QFont, QStandardItemModel
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, HoverCheckBox, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtGui import QIcon, QFont, QStandardItemModel, QValidator
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom, HoverWarning, HoverQuestion
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 from sbml_intra import SBML_ODEs
 # from PyQt5.QtCore import Qt
@@ -59,8 +61,8 @@ class CellDefException(Exception):
     pass
 
 class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
-    def __init__(self):
-        super(QLineEdit_color, self).__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         # newtab.setStyleSheet("background-color: rgb(236,236,236)")
 
         # argh, doesn't seem to work!
@@ -78,8 +80,8 @@ class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
         # self.setStyleSheet("background-color: white")
 
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
+    def __init__(self,name, **kwargs):
+        super().__init__(name, **kwargs)
 
         checkbox_style = """
                 QCheckBox::indicator:checked {
@@ -174,7 +176,8 @@ class CellDef(QWidget):
 
         self.new_cell_def_count = 0
         self.label_width = 210
-        self.units_width = 110
+        self.units_width = 35
+        self.fixed_checkbox_column_width = 60
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.config_path = None
@@ -229,19 +232,6 @@ class CellDef(QWidget):
         self.indent16 = '\n                '
         self.indent18 = '\n                  '
         self.indent20 = '\n                    '
-
-        # <substrate name="virus">
-        #     <secretion_rate units="1/min">0</secretion_rate>
-        #     <secretion_target units="substrate density">1</secretion_target>
-        #     <uptake_rate units="1/min">10</uptake_rate>
-        #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-        # </substrate> 
-
-        # Create lists for cell type secretion values, for each substrate (index by substrate index)
-        # self.secretion_rate_val = []  # .setText(uep.find(secretion_sub1_path+"secretion_rate").text)
-        # self.secretion_target_val = []
-        # self.secretion_uptake_rate_val = []
-        # self.secretion_net_export_rate_val = []
 
         # self.cell_defs = CellDefInstances()
         self.cell_def_horiz_layout = QHBoxLayout()
@@ -778,14 +768,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
-    def insert_hacky_blank_lines(self, glayout):
-        idr = 4
-        for idx in range(3):  # rwh: hack solution to align rows
-            blank_line = QLabel("")
-            idr += 1
-            glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
-
-    #--------------------------------------------------------
     def create_cycle_tab(self):
         logging.debug(f'\n====================== create_cycle_tab ===================')
         # self.group_cycle = QGroupBox()
@@ -808,7 +790,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.params_cycle.setStyleSheet("background-color: rgb(236,236,236)")
         # background:rgb(200,100,150)
         self.vbox_cycle = QVBoxLayout()
-        # glayout = QGridLayout()
 
         #----------------------------
         hbox = QHBoxLayout()
@@ -879,7 +860,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # transition rates
         self.stack_trate_live = QWidget()
-        # self.stack_trate_live .setStyleSheet("QLineEdit { background-color: white }")
         self.stack_trate_Ki67 = QWidget()
         self.stack_trate_advancedKi67 = QWidget()
         self.stack_trate_flowcyto = QWidget()
@@ -907,798 +887,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #------ Cycle transition rate (live) ----------------------
         # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
 
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_live_trate00 = QLineEdit()
-        self.cycle_live_trate00.textChanged.connect(self.cycle_live_trate00_changed)
-        self.cycle_live_trate00.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_live_trate00, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_live_trate00_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_live_trate00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_live_trate00_fixed.clicked.connect(self.cycle_live_trate00_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        # idr = 4
-        # for idx in range(11):  # rwh: hack solution to align rows
-        #     blank_line = QLabel("")
-        #     idr += 1
-        #     glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
-        #---
-        #---
-        self.stack_trate_live.setLayout(glayout)   
-
-        idx_stacked_widget = 0
-        self.stack_trate_live_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: trate live -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_trate_live)  # <------------- stack widget 0
-
-        # arg, following seems to be required, in spite of pmb.py doing pmb_app.setStyleSheet("QLineEdit { background-color: white }")  !!
+        self.idx_stacked_widget = 0
+        self.build_cycle_layouts("live", 1)
+        self.build_cycle_layouts("Ki67", 2)
+        self.build_cycle_layouts("advancedKi67", 3)
+        self.build_cycle_layouts("flowcyto", 3)
+        self.build_cycle_layouts("flowcytosep", 4)
+        self.build_cycle_layouts("quiescent", 2)
         self.stacked_cycle.setStyleSheet("QLineEdit { background-color: white }")
-
-
-        #------ Cycle transition rates (Ki67) ----------------------
-        # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->1 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_trate01 = QLineEdit()
-        self.cycle_Ki67_trate01.textChanged.connect(self.cycle_Ki67_trate01_changed)
-        self.cycle_Ki67_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_Ki67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_trate01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_Ki67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_Ki67_trate01_fixed.clicked.connect(self.cycle_Ki67_trate01_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_trate10 = QLineEdit()
-        self.cycle_Ki67_trate10.textChanged.connect(self.cycle_Ki67_trate10_changed)
-        self.cycle_Ki67_trate10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_Ki67_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_trate10_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_Ki67_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_Ki67_trate10_fixed.clicked.connect(self.cycle_Ki67_trate10_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        self.stack_trate_Ki67.setLayout(glayout)
-
-        idx_stacked_widget += 1
-        self.stack_trate_Ki67_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: trate Ki67 -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_trate_Ki67) # <------------- stack widget 1
-
-
-        #------ Cycle transition rates (advanced Ki67) ----------------------
-        # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->1 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate01 = QLineEdit()
-        self.cycle_advancedKi67_trate01.textChanged.connect(self.cycle_advancedKi67_trate01_changed)
-        self.cycle_advancedKi67_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_advancedKi67_trate01_fixed.clicked.connect(self.cycle_advancedKi67_trate01_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1->2 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate12 = QLineEdit()
-        self.cycle_advancedKi67_trate12.textChanged.connect(self.cycle_advancedKi67_trate12_changed)
-        self.cycle_advancedKi67_trate12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_advancedKi67_trate12_fixed.clicked.connect(self.cycle_advancedKi67_trate12_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate20 = QLineEdit()
-        self.cycle_advancedKi67_trate20.textChanged.connect(self.cycle_advancedKi67_trate20_changed)
-        self.cycle_advancedKi67_trate20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_trate20_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_advancedKi67_trate20_fixed.clicked.connect(self.cycle_advancedKi67_trate20_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        self.stack_trate_advancedKi67.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: t02 -------------> {idx_stacked_widget}')
-        self.stack_trate_advancedKi67_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_trate_advancedKi67)
-
-
-        #------ Cycle transition rates (flow cytometry) ----------------------
-        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->1 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate01 = QLineEdit()
-        self.cycle_flowcyto_trate01.textChanged.connect(self.cycle_flowcyto_trate01_changed)
-        self.cycle_flowcyto_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcyto_trate01_fixed.clicked.connect(self.cycle_flowcyto_trate01_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1->2 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate12 = QLineEdit()
-        self.cycle_flowcyto_trate12.textChanged.connect(self.cycle_flowcyto_trate12_changed)
-        self.cycle_flowcyto_trate12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcyto_trate12_fixed.clicked.connect(self.cycle_flowcyto_trate12_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate20 = QLineEdit()
-        self.cycle_flowcyto_trate20.textChanged.connect(self.cycle_flowcyto_trate20_changed)
-        self.cycle_flowcyto_trate20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_trate20, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_trate20_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_trate20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcyto_trate20_fixed.clicked.connect(self.cycle_flowcyto_trate20_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #-----
-        self.stack_trate_flowcyto.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: trate_flowcyto -------------> {idx_stacked_widget}')
-        self.stack_trate_flowcyto_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_trate_flowcyto)
-
-
-        #------ Cycle transition rates (flow cytometry separated) ----------------------
-        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->1 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate01 = QLineEdit()
-        self.cycle_flowcytosep_trate01.textChanged.connect(self.cycle_flowcytosep_trate01_changed)
-        self.cycle_flowcytosep_trate01.setValidator(QtGui.QDoubleValidator())
-        self.cycle_flowcytosep_trate01.setMaxLength(10)  #rwhtest
-        glayout.addWidget(self.cycle_flowcytosep_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcytosep_trate01_fixed.clicked.connect(self.cycle_flowcytosep_trate01_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1->2 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate12 = QLineEdit()
-        self.cycle_flowcytosep_trate12.textChanged.connect(self.cycle_flowcytosep_trate12_changed)
-        self.cycle_flowcytosep_trate12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_trate12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_trate12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcytosep_trate12_fixed.clicked.connect(self.cycle_flowcytosep_trate12_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2->3 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate23 = QLineEdit()
-        self.cycle_flowcytosep_trate23.textChanged.connect(self.cycle_flowcytosep_trate23_changed)
-        self.cycle_flowcytosep_trate23.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_trate23, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate23_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_trate23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcytosep_trate23_fixed.clicked.connect(self.cycle_flowcytosep_trate23_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 3->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate30 = QLineEdit()
-        self.cycle_flowcytosep_trate30.textChanged.connect(self.cycle_flowcytosep_trate30_changed)
-        self.cycle_flowcytosep_trate30.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_trate30, 3,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_trate30_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_trate30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_flowcytosep_trate30_fixed.clicked.connect(self.cycle_flowcytosep_trate30_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-
-        #-----
-        self.stack_trate_flowcytosep.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: flow cyto sep -------------> {idx_stacked_widget}')
-        self.stack_trate_flowcytosep_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_trate_flowcytosep)
-
-
-        #------ Cycle transition rates (cycling quiescent) ----------------------
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0->1 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_trate01 = QLineEdit()
-        self.cycle_quiescent_trate01.textChanged.connect(self.cycle_quiescent_trate01_changed)
-        self.cycle_quiescent_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_quiescent_trate01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_trate01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_quiescent_trate01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_quiescent_trate01_fixed.clicked.connect(self.cycle_quiescent_trate01_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1->0 transition rate")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_trate10 = QLineEdit()
-        self.cycle_quiescent_trate10.textChanged.connect(self.cycle_quiescent_trate10_changed)
-        self.cycle_quiescent_trate10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_quiescent_trate10, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_trate10_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_quiescent_trate10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-        self.cycle_quiescent_trate10_fixed.clicked.connect(self.cycle_quiescent_trate10_fixed_clicked)
-
-        units = QLabel(self.default_rate_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #---
-        self.stack_trate_quiescent.setLayout(glayout)
-
-        idx_stacked_widget += 1
-        self.stack_trate_quiescent_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: trate_quiescent -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_trate_quiescent) # <------------- stack widget 1
-
-
-        #===========================================================================
-        #------ Cycle duration rates ----------------------
-        # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_live_duration00 = QLineEdit()
-        self.cycle_live_duration00.textChanged.connect(self.cycle_live_duration00_changed)
-        self.cycle_live_duration00.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_live_duration00, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_live_duration00_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_live_duration00_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-        # NOTE: callbacks to all Fixed checkboxes are below, after the widgets are created.
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #---
-        self.stack_duration_live.setLayout(glayout)   
-
-        idx_stacked_widget += 1
-        self.stack_duration_live_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: duration live -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_duration_live)
-
-
-        #------ Cycle duration (Ki67) ----------------------
-        # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_duration01 = QLineEdit()
-        self.cycle_Ki67_duration01.textChanged.connect(self.cycle_Ki67_duration01_changed)
-        self.cycle_Ki67_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_Ki67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_duration01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_Ki67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_duration10 = QLineEdit()
-        self.cycle_Ki67_duration10.textChanged.connect(self.cycle_Ki67_duration10_changed)
-        self.cycle_Ki67_duration10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_Ki67_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_Ki67_duration10_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_Ki67_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #---
-        self.stack_duration_Ki67.setLayout(glayout)
-
-        idx_stacked_widget += 1
-        self.stack_duration_Ki67_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: duration Ki67 -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_duration_Ki67) # <------------- stack widget 1
-
-
-        #------ Cycle duration (advanced Ki67) ----------------------
-        # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration01 = QLineEdit()
-        self.cycle_advancedKi67_duration01.textChanged.connect(self.cycle_advancedKi67_duration01_changed)
-        self.cycle_advancedKi67_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration12 = QLineEdit()
-        self.cycle_advancedKi67_duration12.textChanged.connect(self.cycle_advancedKi67_duration12_changed)
-        self.cycle_advancedKi67_duration12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration20 = QLineEdit()
-        self.cycle_advancedKi67_duration20.textChanged.connect(self.cycle_advancedKi67_duration20_changed)
-        self.cycle_advancedKi67_duration20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_advancedKi67_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_advancedKi67_duration20_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_advancedKi67_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #-----
-        self.stack_duration_advancedKi67.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: t02 -------------> {idx_stacked_widget}')
-        self.stack_duration_advancedKi67_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_duration_advancedKi67)
-
-
-        #------ Cycle duration (flow cytometry) ----------------------
-        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration01 = QLineEdit()
-        self.cycle_flowcyto_duration01.textChanged.connect(self.cycle_flowcyto_duration01_changed)
-        self.cycle_flowcyto_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration12 = QLineEdit()
-        self.cycle_flowcyto_duration12.textChanged.connect(self.cycle_flowcyto_duration12_changed)
-        self.cycle_flowcyto_duration12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration20 = QLineEdit()
-        self.cycle_flowcyto_duration20.textChanged.connect(self.cycle_flowcyto_duration20_changed)
-        self.cycle_flowcyto_duration20.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcyto_duration20, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcyto_duration20_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcyto_duration20_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-
-        #-----
-        self.stack_duration_flowcyto.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: duration_flowcyto -------------> {idx_stacked_widget}')
-        self.stack_duration_flowcyto_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_duration_flowcyto)
-
-
-        #------ Cycle duration (flow cytometry separated) ----------------------
-        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration01 = QLineEdit()
-        self.cycle_flowcytosep_duration01.textChanged.connect(self.cycle_flowcytosep_duration01_changed)
-        self.cycle_flowcytosep_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration12 = QLineEdit()
-        self.cycle_flowcytosep_duration12.textChanged.connect(self.cycle_flowcytosep_duration12_changed)
-        self.cycle_flowcytosep_duration12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_duration12, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration12_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_duration12_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 2 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 2,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration23 = QLineEdit()
-        self.cycle_flowcytosep_duration23.textChanged.connect(self.cycle_flowcytosep_duration23_changed)
-        self.cycle_flowcytosep_duration23.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_duration23, 2,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration23_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_duration23_fixed, 2,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 2,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 3 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 3,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration30 = QLineEdit()
-        self.cycle_flowcytosep_duration30.textChanged.connect(self.cycle_flowcytosep_duration30_changed)
-        self.cycle_flowcytosep_duration30.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_flowcytosep_duration30, 3,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_flowcytosep_duration30_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_flowcytosep_duration30_fixed, 3,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 3,4,1,1) # w, row, column, rowspan, colspan
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-        
-        #-----
-        self.stack_duration_flowcytosep.setLayout(glayout)
-        idx_stacked_widget += 1
-        logging.debug(f' new stacked widget: flow cyto sep -------------> {idx_stacked_widget}')
-        self.stack_duration_flowcytosep_idx = idx_stacked_widget 
-        self.stacked_cycle.addWidget(self.stack_duration_flowcytosep)
-
-
-        #------ Cycle duration (cycling quiescent) ----------------------
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-
-        glayout = QGridLayout()
-
-        label = QLabel("phase 0 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 0,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_duration01 = QLineEdit()
-        self.cycle_quiescent_duration01.textChanged.connect(self.cycle_quiescent_duration01_changed)
-        self.cycle_quiescent_duration01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_quiescent_duration01, 0,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_duration01_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_quiescent_duration01_fixed, 0,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 0,4,1,1) # w, row, column, rowspan, colspan
-
-        #-------
-        label = QLabel("phase 1 duration")
-        label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        glayout.addWidget(label, 1,0,1,1) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_duration10 = QLineEdit()
-        self.cycle_quiescent_duration10.textChanged.connect(self.cycle_quiescent_duration10_changed)
-        self.cycle_quiescent_duration10.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cycle_quiescent_duration10, 1,1,1,2) # w, row, column, rowspan, colspan
-
-        self.cycle_quiescent_duration10_fixed = QCheckBox_custom("Fixed")
-        glayout.addWidget(self.cycle_quiescent_duration10_fixed, 1,3,1,1) # w, row, column, rowspan, colspan
-
-        units = QLabel(self.default_time_units)
-        units.setAlignment(QtCore.Qt.AlignCenter)
-        units.setFixedWidth(self.units_width)
-        glayout.addWidget(units, 1,4,1,1) # w, row, column, rowspan, colspan
-
-        #----- duration Fixed callbacks:
-        self.cycle_live_duration00_fixed.clicked.connect(self.cycle_live_duration00_fixed_clicked)
-        self.cycle_Ki67_duration01_fixed.clicked.connect(self.cycle_Ki67_duration01_fixed_clicked)
-        self.cycle_Ki67_duration10_fixed.clicked.connect(self.cycle_Ki67_duration10_fixed_clicked)
-        self.cycle_advancedKi67_duration01_fixed.clicked.connect(self.cycle_advancedKi67_duration01_fixed_clicked)
-        self.cycle_advancedKi67_duration12_fixed.clicked.connect(self.cycle_advancedKi67_duration12_fixed_clicked)
-        self.cycle_advancedKi67_duration20_fixed.clicked.connect(self.cycle_advancedKi67_duration20_fixed_clicked)
-        self.cycle_flowcyto_duration01_fixed.clicked.connect(self.cycle_flowcyto_duration01_fixed_clicked)
-        self.cycle_flowcyto_duration12_fixed.clicked.connect(self.cycle_flowcyto_duration12_fixed_clicked)
-        self.cycle_flowcyto_duration20_fixed.clicked.connect(self.cycle_flowcyto_duration20_fixed_clicked)
-        self.cycle_flowcytosep_duration01_fixed.clicked.connect(self.cycle_flowcytosep_duration01_fixed_clicked)
-        self.cycle_flowcytosep_duration12_fixed.clicked.connect(self.cycle_flowcytosep_duration12_fixed_clicked)
-        self.cycle_flowcytosep_duration23_fixed.clicked.connect(self.cycle_flowcytosep_duration23_fixed_clicked)
-        self.cycle_flowcytosep_duration30_fixed.clicked.connect(self.cycle_flowcytosep_duration30_fixed_clicked)
-        self.cycle_quiescent_duration01_fixed.clicked.connect(self.cycle_quiescent_duration01_fixed_clicked)
-        self.cycle_quiescent_duration10_fixed.clicked.connect(self.cycle_quiescent_duration10_fixed_clicked)
-
-        #------
-        self.insert_hacky_blank_lines(glayout)
-
-        self.stack_duration_quiescent.setLayout(glayout)
-
-        idx_stacked_widget += 1
-        self.stack_duration_quiescent_idx = idx_stacked_widget 
-        logging.debug(f' new stacked widget: duration_quiescent -------------> {idx_stacked_widget}')
-        self.stacked_cycle.addWidget(self.stack_duration_quiescent) # <------------- stack widget 1
-
-
 
         #---------------------------------------------
         # After adding all combos of cycle widgets (groups) to the stacked widget, 
@@ -1725,7 +921,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_cycle_params(self.current_cell_def, False)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
-
     #--------------------------------------------------------
     def create_death_tab(self):
         death_tab = QWidget()
@@ -1749,15 +944,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_death_rate = QLineEdit()
-        self.apoptosis_death_rate.textChanged.connect(self.apoptosis_death_rate_changed)
+        self.apoptosis_death_rate = QLineEdit(objectName="apoptosis_death_rate")
+        self.apoptosis_death_rate.textChanged.connect(self.cell_def_pheno_rate_changed)
         self.apoptosis_death_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_death_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.apoptosis_death_rate_warning_label, idr, 3, 1, 1) # w, row, column, rowspan, colspan
 
         #-------
         hbox = QHBoxLayout()
@@ -1789,19 +987,22 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_trate01 = QLineEdit()
-        self.apoptosis_trate01.textChanged.connect(self.apoptosis_trate01_changed)
-        self.apoptosis_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.apoptosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.apoptosis_01_trate = QLineEdit(objectName="apoptosis_01_trate")
+        self.apoptosis_01_trate.textChanged.connect(self.cell_def_pheno_rate_changed)
+        self.apoptosis_01_trate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.apoptosis_01_trate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_trate01_fixed = QCheckBox_custom("Fixed")
-        self.apoptosis_trate01_fixed.toggled.connect(self.apoptosis_trate01_fixed_toggled)
-        glayout.addWidget(self.apoptosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.apoptosis_01_fixed_trate = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="apoptosis_01_fixed")
+        self.apoptosis_01_fixed_trate.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.apoptosis_01_fixed_trate, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_01_trate_warning_label = HoverWarning("")
+        glayout.addWidget(self.apoptosis_01_trate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #-----
         label = QLabel("phase 0 duration")
@@ -1810,19 +1011,22 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_phase0_duration = QLineEdit()
-        self.apoptosis_phase0_duration.textChanged.connect(self.apoptosis_phase0_duration_changed)
-        self.apoptosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.apoptosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.apoptosis_01_duration = QLineEdit(objectName="apoptosis_01_duration")
+        self.apoptosis_01_duration.textChanged.connect(self.cell_def_pheno_duration_changed)
+        self.apoptosis_01_duration.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.apoptosis_01_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_phase0_duration_fixed = QCheckBox_custom("Fixed")
-        self.apoptosis_phase0_duration_fixed.toggled.connect(self.apoptosis_phase0_duration_fixed_toggled)
-        glayout.addWidget(self.apoptosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.apoptosis_01_fixed_duration = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="apoptosis_01_fixed")
+        self.apoptosis_01_fixed_duration.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.apoptosis_01_fixed_duration, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptosis_01_duration_warning_label = HoverWarning("")
+        glayout.addWidget(self.apoptosis_01_duration_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #-------------------
         idr += 1
@@ -1834,13 +1038,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_unlysed_rate = QLineEdit()
-        self.apoptosis_unlysed_rate.textChanged.connect(self.apoptosis_unlysed_rate_changed)
+        self.apoptosis_unlysed_rate = QLineEdit(objectName="apoptosis_unlysed_rate")
+        self.apoptosis_unlysed_rate.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1850,12 +1054,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_lysed_rate = QLineEdit()
-        self.apoptosis_lysed_rate.textChanged.connect(self.apoptosis_lysed_rate_changed)
+        self.apoptosis_lysed_rate = QLineEdit(objectName="apoptosis_lysed_rate")
+        self.apoptosis_lysed_rate.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1865,13 +1069,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_cytoplasmic_biomass_change_rate = QLineEdit()
-        self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.apoptosis_cytoplasmic_biomass_change_rate_changed)
+        self.apoptosis_cytoplasmic_biomass_change_rate = QLineEdit(objectName="apoptosis_cyto_rate")
+        self.apoptosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1881,13 +1085,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_nuclear_biomass_change_rate = QLineEdit()
-        self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.apoptosis_nuclear_biomass_change_rate_changed)
+        self.apoptosis_nuclear_biomass_change_rate = QLineEdit(objectName="apoptosis_nuclear_rate")
+        self.apoptosis_nuclear_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1897,13 +1101,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_calcification_rate = QLineEdit()
-        self.apoptosis_calcification_rate.textChanged.connect(self.apoptosis_calcification_rate_changed)
+        self.apoptosis_calcification_rate = QLineEdit(objectName="apoptosis_calcif_rate")
+        self.apoptosis_calcification_rate.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1913,13 +1117,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptosis_relative_rupture_volume = QLineEdit()
-        self.apoptosis_relative_rupture_volume.textChanged.connect(self.apoptosis_relative_rupture_volume_changed)
+        self.apoptosis_relative_rupture_volume = QLineEdit(objectName="apoptosis_rel_rupture_volume")
+        self.apoptosis_relative_rupture_volume.textChanged.connect(self.cell_def_param_changed)
         self.apoptosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.apoptosis_relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -1937,15 +1141,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_death_rate = QLineEdit()
-        self.necrosis_death_rate.textChanged.connect(self.necrosis_death_rate_changed)
+        self.necrosis_death_rate = QLineEdit(objectName="necrosis_death_rate")
+        self.necrosis_death_rate.textChanged.connect(self.cell_def_pheno_rate_changed)
         self.necrosis_death_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_death_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_death_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrosis_death_rate_warning_label, idr, 3, 1, 1) # w, row, column, rowspan, colspan
 
         #-------
         hbox = QHBoxLayout()
@@ -1976,19 +1183,22 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate01 = QLineEdit()
-        self.necrosis_trate01.textChanged.connect(self.necrosis_trate01_changed)
-        self.necrosis_trate01.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.necrosis_trate01, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_01_trate = QLineEdit(objectName="necrosis_01_trate")
+        self.necrosis_01_trate.textChanged.connect(self.cell_def_pheno_rate_changed)
+        self.necrosis_01_trate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_01_trate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate01_fixed = QCheckBox_custom("Fixed")
-        self.necrosis_trate01_fixed.toggled.connect(self.necrosis_trate01_fixed_toggled)
-        glayout.addWidget(self.necrosis_trate01_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_01_fixed_trate = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="necrosis_01_fixed")
+        self.necrosis_01_fixed_trate.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.necrosis_01_fixed_trate, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_01_trate_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrosis_01_trate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #-----
         label = QLabel("phase 1->2 transition rate")
@@ -1997,44 +1207,46 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate12 = QLineEdit()
-        self.necrosis_trate12.textChanged.connect(self.necrosis_trate12_changed)
-        self.necrosis_trate12.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.necrosis_trate12, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_12_trate = QLineEdit(objectName="necrosis_12_trate")
+        self.necrosis_12_trate.textChanged.connect(self.cell_def_pheno_rate_changed)
+        self.necrosis_12_trate.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_12_trate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_trate12_fixed = QCheckBox_custom("Fixed")
-        self.necrosis_trate12_fixed.toggled.connect(self.necrosis_trate12_fixed_toggled)
-        glayout.addWidget(self.necrosis_trate12_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_12_fixed_trate = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="necrosis_12_fixed")
+        self.necrosis_12_fixed_trate.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.necrosis_12_fixed_trate, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        self.necrosis_12_trate_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrosis_12_trate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
+
         #-----------------
-        # self.necrosis_phase0_duration_hbox = QHBoxLayout()
         label = QLabel("phase 0 duration")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-    #    self.necrosis_phase0_duration_hbox.addWidget(label)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase0_duration = QLineEdit()
-        self.necrosis_phase0_duration.textChanged.connect(self.necrosis_phase0_duration_changed)
-        self.necrosis_phase0_duration.setValidator(QtGui.QDoubleValidator())
-        # self.necrosis_phase0_duration.textChanged.connect(self.necrosis_phase0_changed)
-        # self.necrosis_phase0_duration_hbox.addWidget(self.necrosis_phase0_duration)
-        glayout.addWidget(self.necrosis_phase0_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_01_duration = QLineEdit(objectName="necrosis_01_duration")
+        self.necrosis_01_duration.textChanged.connect(self.cell_def_pheno_duration_changed)
+        self.necrosis_01_duration.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_01_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase0_duration_fixed = QCheckBox_custom("Fixed")
-        self.necrosis_phase0_duration_fixed.toggled.connect(self.necrosis_phase0_duration_fixed_toggled)
-        glayout.addWidget(self.necrosis_phase0_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_01_fixed_duration = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="necrosis_01_fixed")
+        self.necrosis_01_fixed_duration.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.necrosis_01_fixed_duration, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_01_duration_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrosis_01_duration_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #----
         label = QLabel("phase 1 duration")
@@ -2043,19 +1255,22 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase1_duration = QLineEdit()
-        self.necrosis_phase1_duration.textChanged.connect(self.necrosis_phase1_duration_changed)
-        self.necrosis_phase1_duration.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.necrosis_phase1_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_12_duration = QLineEdit(objectName="necrosis_12_duration")
+        self.necrosis_12_duration.textChanged.connect(self.cell_def_pheno_duration_changed)
+        self.necrosis_12_duration.setValidator(QtGui.QDoubleValidator())
+        glayout.addWidget(self.necrosis_12_duration, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_phase1_duration_fixed = QCheckBox_custom("Fixed")
-        self.necrosis_phase1_duration_fixed.toggled.connect(self.necrosis_phase1_duration_fixed_toggled)
-        glayout.addWidget(self.necrosis_phase1_duration_fixed, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.necrosis_12_fixed_duration = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName="necrosis_12_fixed")
+        self.necrosis_12_fixed_duration.toggled.connect(self.cell_def_fixed_clicked)
+        glayout.addWidget(self.necrosis_12_fixed_duration, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrosis_12_duration_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrosis_12_duration_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #-------------------
         idr += 1
@@ -2067,13 +1282,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_unlysed_rate = QLineEdit()
-        self.necrosis_unlysed_rate.textChanged.connect(self.necrosis_unlysed_rate_changed)
+        self.necrosis_unlysed_rate = QLineEdit(objectName="necrosis_unlysed_rate")
+        self.necrosis_unlysed_rate.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_unlysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_unlysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2083,12 +1298,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_lysed_rate = QLineEdit()
-        self.necrosis_lysed_rate.textChanged.connect(self.necrosis_lysed_rate_changed)
+        self.necrosis_lysed_rate = QLineEdit(objectName="necrosis_lysed_rate")
+        self.necrosis_lysed_rate.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_lysed_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_lysed_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
@@ -2098,13 +1313,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_cytoplasmic_biomass_change_rate = QLineEdit()
-        self.necrosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.necrosis_cytoplasmic_biomass_change_rate_changed)
+        self.necrosis_cytoplasmic_biomass_change_rate = QLineEdit(objectName="necrosis_cyto_rate")
+        self.necrosis_cytoplasmic_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2114,13 +1329,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_nuclear_biomass_change_rate = QLineEdit()
-        self.necrosis_nuclear_biomass_change_rate.textChanged.connect(self.necrosis_nuclear_biomass_change_rate_changed)
+        self.necrosis_nuclear_biomass_change_rate = QLineEdit(objectName="necrosis_nuclear_rate")
+        self.necrosis_nuclear_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2130,13 +1345,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_calcification_rate = QLineEdit()
-        self.necrosis_calcification_rate.textChanged.connect(self.necrosis_calcification_rate_changed)
+        self.necrosis_calcification_rate = QLineEdit(objectName="necrosis_calcif_rate")
+        self.necrosis_calcification_rate.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2146,13 +1361,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrosis_relative_rupture_volume = QLineEdit()
-        self.necrosis_relative_rupture_volume.textChanged.connect(self.necrosis_relative_rupture_volume_changed)
+        self.necrosis_relative_rupture_volume = QLineEdit(objectName="necrosis_rel_rupture_rate")
+        self.necrosis_relative_rupture_volume.textChanged.connect(self.cell_def_param_changed)
         self.necrosis_relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.necrosis_relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2194,23 +1409,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if "duration" in radioBtn.text():
             logging.debug(f'apoptosis_phase_transition_cb: --> duration')
             self.apoptosis_duration_flag = True
-            self.apoptosis_trate01.setReadOnly(True)
-            self.apoptosis_trate01.setStyleSheet("background-color: lightgray")  
-            self.apoptosis_trate01_fixed.setEnabled(False)
+            self.apoptosis_01_trate.setReadOnly(True)
+            self.apoptosis_01_trate.setStyleSheet("background-color: lightgray")  
+            self.apoptosis_01_fixed_trate.setEnabled(False)
 
-            self.apoptosis_phase0_duration.setReadOnly(False)
-            self.apoptosis_phase0_duration.setStyleSheet("background-color: white")
-            self.apoptosis_phase0_duration_fixed.setEnabled(True)
+            self.apoptosis_01_duration.setReadOnly(False)
+            self.apoptosis_01_duration.setStyleSheet("background-color: white")
+            self.apoptosis_01_fixed_duration.setEnabled(True)
         else:  # transition rates
             logging.debug(f'apoptosis_phase_transition_cb: NOT duration')
             self.apoptosis_duration_flag = False
-            self.apoptosis_phase0_duration.setReadOnly(True)
-            self.apoptosis_phase0_duration.setStyleSheet("background-color: lightgray")  
-            self.apoptosis_phase0_duration_fixed.setEnabled(False)
+            self.apoptosis_01_duration.setReadOnly(True)
+            self.apoptosis_01_duration.setStyleSheet("background-color: lightgray")  
+            self.apoptosis_01_fixed_duration.setEnabled(False)
 
-            self.apoptosis_trate01.setReadOnly(False)
-            self.apoptosis_trate01.setStyleSheet("background-color: white")  
-            self.apoptosis_trate01_fixed.setEnabled(True)
+            self.apoptosis_01_trate.setReadOnly(False)
+            self.apoptosis_01_trate.setStyleSheet("background-color: white")  
+            self.apoptosis_01_fixed_trate.setEnabled(True)
 
         self.param_d[self.current_cell_def]['apoptosis_duration_flag'] = self.apoptosis_duration_flag
 
@@ -2233,35 +1448,35 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'necrosis_phase_transition_cb: --> duration')
             self.necrosis_duration_flag = True
             # self.customize_cycle_choices()
-            self.necrosis_trate01.setReadOnly(True)
-            self.necrosis_trate01.setStyleSheet("background-color: lightgray")
-            self.necrosis_trate01_fixed.setEnabled(False)
-            self.necrosis_trate12.setReadOnly(True)
-            self.necrosis_trate12.setStyleSheet("background-color: lightgray")
-            self.necrosis_trate12_fixed.setEnabled(False)
+            self.necrosis_01_trate.setReadOnly(True)
+            self.necrosis_01_trate.setStyleSheet("background-color: lightgray")
+            self.necrosis_01_fixed_trate.setEnabled(False)
+            self.necrosis_12_trate.setReadOnly(True)
+            self.necrosis_12_trate.setStyleSheet("background-color: lightgray")
+            self.necrosis_12_fixed_trate.setEnabled(False)
 
-            self.necrosis_phase0_duration.setReadOnly(False)
-            self.necrosis_phase0_duration.setStyleSheet("background-color: white")
-            self.necrosis_phase0_duration_fixed.setEnabled(True)
-            self.necrosis_phase1_duration.setReadOnly(False)
-            self.necrosis_phase1_duration.setStyleSheet("background-color: white")
-            self.necrosis_phase1_duration_fixed.setEnabled(True)
+            self.necrosis_01_duration.setReadOnly(False)
+            self.necrosis_01_duration.setStyleSheet("background-color: white")
+            self.necrosis_01_fixed_duration.setEnabled(True)
+            self.necrosis_12_duration.setReadOnly(False)
+            self.necrosis_12_duration.setStyleSheet("background-color: white")
+            self.necrosis_12_fixed_duration.setEnabled(True)
         else:  # transition rates
             logging.debug(f'necrosis_phase_transition_cb: NOT duration')
             self.necrosis_duration_flag = False
-            self.necrosis_phase0_duration.setReadOnly(True)
-            self.necrosis_phase0_duration.setStyleSheet("background-color: lightgray")
-            self.necrosis_phase0_duration_fixed.setEnabled(False)
-            self.necrosis_phase1_duration.setReadOnly(True)
-            self.necrosis_phase1_duration.setStyleSheet("background-color: lightgray")
-            self.necrosis_phase1_duration_fixed.setEnabled(False)
+            self.necrosis_01_duration.setReadOnly(True)
+            self.necrosis_01_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_01_fixed_duration.setEnabled(False)
+            self.necrosis_12_duration.setReadOnly(True)
+            self.necrosis_12_duration.setStyleSheet("background-color: lightgray")
+            self.necrosis_12_fixed_duration.setEnabled(False)
 
-            self.necrosis_trate01.setReadOnly(False)
-            self.necrosis_trate01.setStyleSheet("background-color: white")  
-            self.necrosis_trate01_fixed.setEnabled(True)
-            self.necrosis_trate12.setReadOnly(False)
-            self.necrosis_trate12.setStyleSheet("background-color: white")  
-            self.necrosis_trate12_fixed.setEnabled(True)
+            self.necrosis_01_trate.setReadOnly(False)
+            self.necrosis_01_trate.setStyleSheet("background-color: white")  
+            self.necrosis_01_fixed_trate.setEnabled(True)
+            self.necrosis_12_trate.setReadOnly(False)
+            self.necrosis_12_trate.setStyleSheet("background-color: white")  
+            self.necrosis_12_fixed_trate.setEnabled(True)
             # self.customize_cycle_choices()
             # pass
 
@@ -2295,13 +1510,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_total = QLineEdit_color()
-        self.volume_total.textChanged.connect(self.volume_total_changed)
+        self.volume_total = QLineEdit_color(objectName="volume_total")
+        self.volume_total.textChanged.connect(self.cell_def_param_changed)
         self.volume_total.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_total, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron^3")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2312,13 +1527,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_fluid_fraction = QLineEdit_color()
-        self.volume_fluid_fraction.textChanged.connect(self.volume_fluid_fraction_changed)
+        self.volume_fluid_fraction = QLineEdit_color(objectName="volume_fluid_fraction")
+        self.volume_fluid_fraction.textChanged.connect(self.cell_def_param_changed)
         self.volume_fluid_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2329,13 +1544,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_nuclear = QLineEdit_color()
-        self.volume_nuclear.textChanged.connect(self.volume_nuclear_changed)
+        self.volume_nuclear = QLineEdit_color(objectName="volume_nuclear")
+        self.volume_nuclear.textChanged.connect(self.cell_def_param_changed)
         self.volume_nuclear.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron^3")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
@@ -2346,13 +1561,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_fluid_change_rate = QLineEdit_color()
-        self.volume_fluid_change_rate.textChanged.connect(self.volume_fluid_change_rate_changed)
+        self.volume_fluid_change_rate = QLineEdit_color(objectName="volume_fluid_change_rate")
+        self.volume_fluid_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.volume_fluid_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_fluid_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2363,13 +1578,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_cytoplasmic_biomass_change_rate = QLineEdit_color()
-        self.volume_cytoplasmic_biomass_change_rate.textChanged.connect(self.volume_cytoplasmic_biomass_change_rate_changed)
+        self.volume_cytoplasmic_biomass_change_rate = QLineEdit_color(objectName="volume_cytoplasmic_rate")
+        self.volume_cytoplasmic_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.volume_cytoplasmic_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_cytoplasmic_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2380,13 +1595,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_nuclear_biomass_change_rate = QLineEdit_color()
-        self.volume_nuclear_biomass_change_rate.textChanged.connect(self.volume_nuclear_biomass_change_rate_changed)
+        self.volume_nuclear_biomass_change_rate = QLineEdit_color(objectName="volume_nuclear_rate")
+        self.volume_nuclear_biomass_change_rate.textChanged.connect(self.cell_def_param_changed)
         self.volume_nuclear_biomass_change_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_nuclear_biomass_change_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
@@ -2397,13 +1612,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_calcified_fraction = QLineEdit_color()
-        self.volume_calcified_fraction.textChanged.connect(self.volume_calcified_fraction_changed)
+        self.volume_calcified_fraction = QLineEdit_color(objectName="volume_calcif_fraction")
+        self.volume_calcified_fraction.textChanged.connect(self.cell_def_param_changed)
         self.volume_calcified_fraction.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcified_fraction, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2414,13 +1629,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.volume_calcification_rate = QLineEdit_color()
-        self.volume_calcification_rate.textChanged.connect(self.volume_calcification_rate_changed)
+        self.volume_calcification_rate = QLineEdit_color(objectName="volume_calcif_rate")
+        self.volume_calcification_rate.textChanged.connect(self.cell_def_param_changed)
         self.volume_calcification_rate.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.volume_calcification_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
@@ -2432,13 +1647,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.relative_rupture_volume = QLineEdit_color()
-        self.relative_rupture_volume.textChanged.connect(self.relative_rupture_volume_changed)
+        self.relative_rupture_volume = QLineEdit_color(objectName="volume_rel_rupture_vol")
+        self.relative_rupture_volume.textChanged.connect(self.cell_def_param_changed)
         self.relative_rupture_volume.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.relative_rupture_volume, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2492,38 +1707,38 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("cell-cell adhesion strength")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         idr = 0
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_cell_adhesion_strength = QLineEdit_color()
-        self.cell_cell_adhesion_strength.textChanged.connect(self.cell_cell_adhesion_strength_changed)
+        self.cell_cell_adhesion_strength = QLineEdit_color(objectName="mechanics_adhesion")
+        self.cell_cell_adhesion_strength.textChanged.connect(self.cell_def_param_changed)
         self.cell_cell_adhesion_strength.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cell_cell_adhesion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.cell_cell_adhesion_strength, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron/min")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #---
         label = QLabel("cell-cell repulsion strength")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_cell_repulsion_strength = QLineEdit_color()
-        self.cell_cell_repulsion_strength.textChanged.connect(self.cell_cell_repulsion_strength_changed)
+        self.cell_cell_repulsion_strength = QLineEdit_color(objectName="mechanics_repulsion")
+        self.cell_cell_repulsion_strength.textChanged.connect(self.cell_def_param_changed)
         self.cell_cell_repulsion_strength.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.cell_cell_repulsion_strength, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.cell_cell_repulsion_strength, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron/min")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         ### cell-bm interactions; save for later (db: 2024-05-31)
         #-----
@@ -2532,24 +1747,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #---
         label = QLabel("relative max adhesion distance")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.relative_maximum_adhesion_distance = QLineEdit_color()
-        self.relative_maximum_adhesion_distance.textChanged.connect(self.relative_maximum_adhesion_distance_changed)
+        self.relative_maximum_adhesion_distance = QLineEdit_color(objectName="mechanics_adhesion_distance")
+        self.relative_maximum_adhesion_distance.textChanged.connect(self.cell_def_param_changed)
         self.relative_maximum_adhesion_distance.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.relative_maximum_adhesion_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.relative_maximum_adhesion_distance, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("cell adhesion affinity")
-        label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
@@ -2565,120 +1779,135 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.cell_adhesion_affinity , idr,2, 1,1) # w, row, column, rowspan, colspan
     
         #---
-        label = QLabel("Options:")
-        label.setFixedSize(80,20)
+        label = QLabel("Cell-cell adhesion strength alternatives")
+        label.setFixedHeight(20)
         label.setStyleSheet("background-color: orange")
-        # label.setFixedWidth(self.label_width)
-        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setAlignment(QtCore.Qt.AlignCenter)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,3) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,0, 1,5) # w, row, column, rowspan, colspan
 
         #--------
         label = QLabel("relative equilibrium distance")
-        label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_relative_equilibrium_distance = QLineEdit_color()
-        self.set_relative_equilibrium_distance.textChanged.connect(self.set_relative_equilibrium_distance_changed)
-        self.set_relative_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.set_relative_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.set_relative_equilibrium_distance = QLineEdit_color(objectName="mechanics_relative_equilibrium_distance")
+        self.set_relative_equilibrium_distance.textChanged.connect(self.set_relative_equilibrium_distance_cb)
+        self.set_relative_equilibrium_distance.setValidator(QtGui.QDoubleValidator(bottom=0.0)) # PhysiCell sets this to 2.0 if it is bigger than 2.0 anyways
+        glayout.addWidget(self.set_relative_equilibrium_distance, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_relative_equilibrium_distance_enabled = QCheckBox_custom("enable")
-        self.set_relative_equilibrium_distance_enabled.clicked.connect(self.set_relative_equilibrium_distance_enabled_cb)
-        glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.set_relative_equilibrium_distance_enabled = QCheckBox_custom("enable", objectName="mechanics_relative_equilibrium_distance_enabled")
+        self.set_relative_equilibrium_distance_enabled.stateChanged.connect(self.set_relative_equilibrium_distance_enabled_cb)
+        glayout.addWidget(self.set_relative_equilibrium_distance_enabled, idr,0, 1,1, alignment=QtCore.Qt.AlignRight) # w, row, column, rowspan, colspan
+
+        self.set_relative_equilibrium_distance_warning_label = HoverWarning("PhysiCell sets this to 2.0 if it is bigger than 2.0.")
+        glayout.addWidget(self.set_relative_equilibrium_distance_warning_label, idr, 4, 1,1) # w, row, column, rowspan, colspan
 
         #--------
         label = QLabel("absolute equilibrium distance")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_absolute_equilibrium_distance = QLineEdit_color()
-        self.set_absolute_equilibrium_distance.textChanged.connect(self.set_absolute_equilibrium_distance_changed)
-        self.set_absolute_equilibrium_distance.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.set_absolute_equilibrium_distance, idr,1, 1,1) # w, row, column, rowspan, colspan
+        self.set_absolute_equilibrium_distance = QLineEdit_color(objectName="mechanics_absolute_equilibrium_distance")
+        self.set_absolute_equilibrium_distance.textChanged.connect(self.set_absolute_equilibrium_distance_cb)
+        self.set_absolute_equilibrium_distance.setValidator(QtGui.QDoubleValidator(bottom=0.0))
+        glayout.addWidget(self.set_absolute_equilibrium_distance, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        self.set_absolute_equilibrium_distance_enabled = QCheckBox_custom("enable")
-        self.set_absolute_equilibrium_distance_enabled.clicked.connect(self.set_absolute_equilibrium_distance_enabled_cb)
-        glayout.addWidget(self.set_absolute_equilibrium_distance_enabled, idr,2, 1,1) # w, row, column, rowspan, colspan
+        self.set_absolute_equilibrium_distance_enabled = QCheckBox_custom("enable", objectName="mechanics_absolute_equilibrium_distance_enabled")
+        self.set_absolute_equilibrium_distance_enabled.stateChanged.connect(self.set_absolute_equilibrium_distance_enabled_cb)
+        glayout.addWidget(self.set_absolute_equilibrium_distance_enabled, idr,0, 1,1, alignment=QtCore.Qt.AlignRight) # w, row, column, rowspan, colspan
 
         units = QLabel("micron")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
+        self.set_absolute_equilibrium_distance_warning_label = HoverWarning("")
+        glayout.addWidget(self.set_absolute_equilibrium_distance_warning_label, idr, 4, 1,1) # w, row, column, rowspan, colspan
+
+        self.cell_adhesion_strength_group = QButtonGroup(exclusive=False)
+        self.cell_adhesion_strength_group.addButton(self.set_relative_equilibrium_distance_enabled, 0)
+        self.cell_adhesion_strength_group.addButton(self.set_absolute_equilibrium_distance_enabled, 1)
+        self.cell_adhesion_strength_group.buttonToggled.connect(self.cell_adhesion_strength_group_cb)
+        
         #--------------------------------
         # ------ horiz separator -----
         idr += 1
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         label = QLabel("elastic constant")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.elastic_constant = QLineEdit_color()
-        self.elastic_constant.textChanged.connect(self.elastic_constant_changed)
+        self.elastic_constant = QLineEdit_color(objectName="mechanics_elastic_constant")
+        self.elastic_constant.textChanged.connect(self.cell_def_param_changed)
         self.elastic_constant.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.elastic_constant, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.elastic_constant, idr,2, 1,1) # w, row, column, rowspan, colspan
         self.elastic_constant.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
         #--
         label = QLabel("attachment rate")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.attachment_rate = QLineEdit_color()
-        self.attachment_rate.textChanged.connect(self.attachment_rate_changed)
+        self.attachment_rate = QLineEdit_color(objectName="attachment_rate")
+        self.attachment_rate.textChanged.connect(self.cell_def_mechano_rate_changed)
         self.attachment_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.attachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.attachment_rate, idr,2, 1,1) # w, row, column, rowspan, colspan
         self.attachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.attachment_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.attachment_rate_warning_label, idr, 4, 1,1) # w, row, column, rowspan, colspan
 
         #--
         label = QLabel("detachment rate")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.detachment_rate = QLineEdit_color()
-        self.detachment_rate.textChanged.connect(self.detachment_rate_changed)
+        self.detachment_rate = QLineEdit_color(objectName="detachment_rate")
+        self.detachment_rate.textChanged.connect(self.cell_def_mechano_rate_changed)
         self.detachment_rate.setValidator(QtGui.QDoubleValidator())
-        glayout.addWidget(self.detachment_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.detachment_rate, idr,2, 1,1) # w, row, column, rowspan, colspan
         self.detachment_rate.setEnabled(True)
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignCenter)
-        glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.detachment_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.detachment_rate_warning_label, idr, 4, 1,1) # w, row, column, rowspan, colspan
 
         #--
         label = QLabel("maximum number of attachments")
-        label.setFixedWidth(self.label_width)
+        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
-        glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.max_num_attachments = QLineEdit_color()
-        self.max_num_attachments.textChanged.connect(self.max_num_attachments_changed)
+        self.max_num_attachments = QLineEdit_color(objectName="mechanics_max_num_attachments")
+        self.max_num_attachments.textChanged.connect(self.cell_def_param_changed)
         self.max_num_attachments.setValidator(QtGui.QIntValidator(bottom=0))
-        glayout.addWidget(self.max_num_attachments, idr,1, 1,1) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.max_num_attachments, idr,2, 1,1) # w, row, column, rowspan, colspan
         self.max_num_attachments.setEnabled(True)
 
         #---------
@@ -2686,7 +1915,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(QHLine(), idr,0, 1,4) # w, row, column, rowspan, colspan
 
         self.reset_mechanics_button = QPushButton("Reset to PhysiCell defaults")
-        self.reset_mechanics_button.setFixedWidth(200)
         self.reset_mechanics_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         self.reset_mechanics_button.clicked.connect(self.reset_mechanics_cb)
         idr += 1
@@ -2728,13 +1956,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.speed = QLineEdit_color()
-        self.speed.textChanged.connect(self.speed_changed)
+        self.speed = QLineEdit_color(objectName="speed")
+        self.speed.textChanged.connect(self.cell_def_param_changed)
         self.speed.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.speed, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("micron/min")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         # units.setStyleSheet("border: 1px solid black;")
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2746,15 +1974,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.persistence_time = QLineEdit_color()
-        self.persistence_time.textChanged.connect(self.persistence_time_changed)
+        self.persistence_time = QLineEdit_color(objectName="persistence_time")
+        self.persistence_time.textChanged.connect(self.cell_def_mechano_duration_changed)
         self.persistence_time.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.persistence_time, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
+
+        self.persistence_time_warning_label = HoverWarning("")
+        glayout.addWidget(self.persistence_time_warning_label, idr, 3, 1,1) # w, row, column, rowspan, colspan
 
         #---
         label = QLabel("migration bias")
@@ -2763,27 +1994,24 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.migration_bias = QLineEdit_color()
-        self.migration_bias.textChanged.connect(self.migration_bias_changed)
+        self.migration_bias = QLineEdit_color(objectName="migration_bias")
+        self.migration_bias.textChanged.connect(self.cell_def_param_changed)
         self.migration_bias.setValidator(QtGui.QDoubleValidator())
         glayout.addWidget(self.migration_bias, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
         
         #---
-        self.motility_enabled = QCheckBox_custom("enable motility")
-        self.motility_enabled.clicked.connect(self.motility_enabled_cb)
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(self.label_width)
+        self.motility_enabled = QCheckBox_custom("enable motility", objectName="motility_enabled")
+        self.motility_enabled.clicked.connect(self.cell_def_param_changed)
         idr += 1
         glayout.addWidget(self.motility_enabled, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.motility_use_2D = QCheckBox_custom("2D")
-        self.motility_use_2D.clicked.connect(self.motility_use_2D_cb)
-        # self.motility_use_2D.setAlignment(QtCore.Qt.AlignRight)
+        self.motility_use_2D = QCheckBox_custom("2D", objectName="motility_use_2D")
+        self.motility_use_2D.clicked.connect(self.cell_def_param_changed)
         glayout.addWidget(self.motility_use_2D, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         #---
@@ -2840,8 +2068,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.advanced_chemotaxis_enabled.clicked.connect(self.advanced_chemotaxis_enabled_cb)
         glayout.addWidget(self.advanced_chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.normalize_each_gradient = QCheckBox_custom("normalize gradient")
-        self.normalize_each_gradient.clicked.connect(self.normalize_each_gradient_cb)
+        self.normalize_each_gradient = QCheckBox_custom("normalize gradient", objectName="normalize_each_gradient")
+        self.normalize_each_gradient.clicked.connect(self.cell_def_param_changed)
         glayout.addWidget(self.normalize_each_gradient, idr,2, 1,1) # w, row, column, rowspan, colspan
 
         self.motility2_substrate_dropdown = QComboBox()
@@ -2920,7 +2148,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.secretion_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         # units.setStyleSheet("border: 1px solid black;")
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
@@ -2959,7 +2187,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.uptake_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -2976,7 +2204,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.secretion_net_export_rate, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel("total/min")
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,2, 1,1) # w, row, column, rowspan, colspan
 
@@ -3024,15 +2252,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr = 0
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.apoptotic_phagocytosis_rate = QLineEdit_color()
-        self.apoptotic_phagocytosis_rate.textChanged.connect(self.apoptotic_phagocytosis_rate_changed)
+        self.apoptotic_phagocytosis_rate = QLineEdit_color(objectName="apoptotic_phagocytosis_rate")
+        self.apoptotic_phagocytosis_rate.textChanged.connect(self.cell_def_pheno_rate_changed)
         self.apoptotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
         glayout.addWidget(self.apoptotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.apoptotic_phagocytosis_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.apoptotic_phagocytosis_rate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
         
         label = QLabel("necrotic phagocytosis rate")
         label.setFixedWidth(self.label_width)
@@ -3040,15 +2271,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.necrotic_phagocytosis_rate = QLineEdit_color()
-        self.necrotic_phagocytosis_rate.textChanged.connect(self.necrotic_phagocytosis_rate_changed)
+        self.necrotic_phagocytosis_rate = QLineEdit_color(objectName="necrotic_phagocytosis_rate")
+        self.necrotic_phagocytosis_rate.textChanged.connect(self.cell_def_pheno_rate_changed)
         self.necrotic_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
         glayout.addWidget(self.necrotic_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.necrotic_phagocytosis_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.necrotic_phagocytosis_rate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         label = QLabel("other dead phagocytosis rate")
         label.setFixedWidth(self.label_width)
@@ -3056,15 +2290,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.other_dead_phagocytosis_rate = QLineEdit_color()
-        self.other_dead_phagocytosis_rate.textChanged.connect(self.other_dead_phagocytosis_rate_changed)
+        self.other_dead_phagocytosis_rate = QLineEdit_color(objectName="other_dead_phagocytosis_rate")
+        self.other_dead_phagocytosis_rate.textChanged.connect(self.cell_def_pheno_rate_changed)
         self.other_dead_phagocytosis_rate.setValidator(QtGui.QDoubleValidator(bottom=0))
         glayout.addWidget(self.other_dead_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.other_dead_phagocytosis_rate_warning_label = HoverWarning("")
+        glayout.addWidget(self.other_dead_phagocytosis_rate_warning_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("live phagocytosis rate")
@@ -3084,9 +2321,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.live_phagocytosis_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.live_phagocytosis_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.live_phagocytosis_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("attack rate")
@@ -3102,23 +2342,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
-            validator = AttackRateValidator(self)
-        else:
-            validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        # if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
+        #     validator = AttackRateValidator(self)
+        # else:
+        #     validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        validator = QtGui.QDoubleValidator(bottom=0.0) # no longer want to highlight the box red if rate is too high (just show warning (!) )
         self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
-        idr += 1
-        self.attack_rate_fast_label = QLabel("")
-        self.attack_rate_fast_label.setStyleSheet("color: red")
-        glayout.addWidget(self.attack_rate_fast_label, idr,0, 1,4) # w, row, column, rowspan, colspan
-
+        self.attack_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.attack_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("attack damage rate")
@@ -3133,7 +2371,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.attack_damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
@@ -3150,7 +2388,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.attack_duration , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_time_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
@@ -3172,9 +2410,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.fusion_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.fusion_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.fusion_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("transformation rate")
@@ -3194,9 +2435,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.transformation_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
+
+        self.transformation_rate_fast_label = HoverWarning("")
+        glayout.addWidget(self.transformation_rate_fast_label, idr, 4, 1, 1) # w, row, column, rowspan, colspan
 
         #------
         label = QLabel("damage rate")
@@ -3211,7 +2455,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.damage_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
@@ -3228,7 +2472,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.damage_repair_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        units.setFixedWidth(self.units_width)
+        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
@@ -3267,7 +2511,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.reset_interaction_button, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        # self.insert_hacky_blank_lines(glayout)
         for idx in range(7):  # rwh: hack solution to align rows
             blank_line = QLabel("")
             idr += 1
@@ -3285,40 +2528,120 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.new_interaction_params(self.current_cell_def, True)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
-
-
     #--------------------------------------------------------
     def cell_adhesion_affinity_changed(self,text):
         # print("cell_adhesion_affinity_changed:  text=",text)
         self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
 
     #--------------------------------------------------------
-    def apoptotic_phagocytosis_rate_changed(self,text):
-        self.param_d[self.current_cell_def]['apoptotic_phagocytosis_rate'] = text
+    def is_dt_set(self, label, time_step, dt_text):
+        if dt_text != "" and float(dt_text) != 0:
+            return True
+        label.show_icon()
+        label.setHoverText(f"WARNING: Current {time_step} is 0 (or unset). Make sure to set that value > 0.")
+        return False
+
+    def check_rate_too_fast(self, text, label, time_step="mechanics_dt"):
+        self.check_too_fast(text, label, time_step)
+    
+    def check_duration_too_fast(self, text, label, time_step="mechanics_dt"):
+        self.check_too_fast(text, label, time_step, is_duration=True)
+
+    def check_too_fast(self, text, label, time_step, is_duration=False):
+        if self.sender().validator().validate(text,0)[0]==QValidator.Intermediate:
+            return
+
+        if time_step == "diffusion_dt":
+            dt_text = self.config_tab.diffusion_dt.text()
+        elif time_step == "mechanics_dt":
+            dt_text = self.config_tab.mechanics_dt.text()
+        elif time_step == "phenotype_dt":
+            dt_text = self.config_tab.phenotype_dt.text()
+
+        if self.is_dt_set(label, time_step, dt_text) == False:
+            return
+
+        rate = float(text)
+        if is_duration:
+            if rate==0:
+                label.hide_icon()
+                return # if duration is set to 0, then they already know it is going to happen instantaneously
+            rate = 1/rate
+        dt = float(dt_text)
+        max_val = dt if is_duration else 1/dt # help the user with the max value depending on if it's a rate or duration
+        prob = rate * dt
+        if prob > 1:
+            label.show_icon()
+            phrase = f"duration < {time_step}" if is_duration else f"rate > 1/{time_step}"
+            label.setHoverText(f"WARNING: A {phrase} is instantaneous. May as well set to {max_val}.")
+        else:
+            label.hide_icon()
+
     #--------------------------------------------------------
-    def necrotic_phagocytosis_rate_changed(self,text):
-        self.param_d[self.current_cell_def]['necrotic_phagocytosis_rate'] = text
+    def set_relative_equilibrium_distance_cb(self, text):
+        if self.sender().validator().validate(text,0)[0]==QValidator.Acceptable and float(text) > 2.0:
+            self.set_relative_equilibrium_distance_warning_label.show_icon()
+        else:
+            self.set_relative_equilibrium_distance_warning_label.hide_icon()
+        self.cell_def_param_changed(text)
     #--------------------------------------------------------
-    def other_dead_phagocytosis_rate_changed(self,text):
-        self.param_d[self.current_cell_def]['other_dead_phagocytosis_rate'] = text
+    def set_relative_equilibrium_distance_enabled_cb(self, bval):
+        self.set_relative_equilibrium_distance.setEnabled(bval)
+        self.cell_def_param_changed(bval)
+    #--------------------------------------------------------
+    def set_absolute_equilibrium_distance_cb(self, text):
+        show_warning = False
+        if self.sender().validator().validate(text,0)[0]==QValidator.Acceptable:
+            d = float(text)
+            V = float(self.param_d[self.current_cell_def]['volume_total'])
+            r = (3*V/(4*np.pi))**(1/3)
+            show_warning = d > 2*r
+        
+        if show_warning:
+            self.set_absolute_equilibrium_distance_warning_label.show_icon()
+            msg = f"""
+            WARNING: The distance is greater than twice the radius of the cell.
+            PhysiCell will reduce this distance to twice the cell radius.
+            May as well decrease the distance to {2*r:.2f} or increase the total volume to {4*np.pi*(d**3)/3:.0f}.
+            """
+            self.set_absolute_equilibrium_distance_warning_label.setHoverText(msg)
+        else:
+            self.set_absolute_equilibrium_distance_warning_label.hide_icon()
+        self.cell_def_param_changed(text)
+    #--------------------------------------------------------
+    def set_absolute_equilibrium_distance_enabled_cb(self, bval):
+        self.set_absolute_equilibrium_distance.setEnabled(bval)
+        self.cell_def_param_changed(bval)
+    #--------------------------------------------------------
+    def cell_adhesion_strength_group_cb(self, checkbox, bval):
+        idx = self.cell_adhesion_strength_group.id(checkbox)
+        other_idx = (idx+1) % 2
+        if bval == True:
+            self.cell_adhesion_strength_group.button(other_idx).setChecked(False)
+            self.cell_cell_adhesion_strength.setEnabled(False)
+        elif self.cell_adhesion_strength_group.button(other_idx).isChecked() == False:
+            # if both are False, then activate cell_cell_adhesion_strength (it should be impossible for the other to be True here, but just in case we check that it is False)
+            self.cell_cell_adhesion_strength.setEnabled(True)
+
     #--------------------------------------------------------
     def live_phagocytosis_rate_changed(self,text):
         celltype_name = self.live_phagocytosis_dropdown.currentText()
         self.param_d[self.current_cell_def]['live_phagocytosis_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.live_phagocytosis_rate_fast_label)
     #--------------------------------------------------------
     def attack_rate_changed(self,text):
         celltype_name = self.attack_rate_dropdown.currentText()
         self.param_d[self.current_cell_def]['attack_rate'][celltype_name] = text
 
-        if text == "":
+        if self.attack_rate.validator.validate(text, 0)[0] == QValidator.Intermediate:
             return
         
-        if self.config_tab.mechanics_dt.text() == "" or float(self.config_tab.mechanics_dt.text()) == 0:
-            self.attack_rate_fast_label.setText(f"WARNING: Current mechanics_dt is 0 (or unset). Make sure to set that value > 0.")
+        mech_dt_str = self.config_tab.mechanics_dt.text()
+        if self.is_dt_set(self.attack_rate_fast_label, "mechanics_dt", mech_dt_str) == False:
             return
         
+        mech_dt = float(mech_dt_str)
         attack_rate = float(text) 
-        mech_dt = float(self.config_tab.mechanics_dt.text())
         max_val = 1/mech_dt
         attack_prob = attack_rate * mech_dt
         if "immunogenicity" in self.param_d[self.current_cell_def].keys():
@@ -3328,10 +2651,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             denom = "(immunogenicity * mechanics_dt)"
         else:  
             denom = "mechanics_dt"
-        if attack_prob > 1: # attack_rate * dt > 1 <==> attack_rate > 1/dt
-            self.attack_rate_fast_label.setText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
+        if attack_prob > 1:
+            self.attack_rate_fast_label.show_icon()
+            self.attack_rate_fast_label.setHoverText(f"WARNING: An attack rate > 1/{denom} is instantaneous. May as well set to {max_val}.")
         else:
-            self.attack_rate_fast_label.setText("")
+            self.attack_rate_fast_label.hide_icon()
     #--------------------------------------------------------
     def attack_damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['attack_damage_rate'] = text
@@ -3342,10 +2666,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def fusion_rate_changed(self,text):
         celltype_name = self.fusion_rate_dropdown.currentText()
         self.param_d[self.current_cell_def]['fusion_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.fusion_rate_fast_label)
     #--------------------------------------------------------
     def transformation_rate_changed(self,text):
         celltype_name = self.cell_transformation_dropdown.currentText()
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
+        self.check_rate_too_fast(text, self.transformation_rate_fast_label)
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['damage_rate'] = text
@@ -3432,7 +2758,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         
                 name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_inputs_signal_changed(i, index))
 
-
     def physiboss_update_list_behaviours(self):
 
         if self.current_cell_def == None:
@@ -3496,7 +2821,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     name.setCurrentIndex(-1)
 
                 name.currentIndexChanged.connect(lambda index, i=i: self.physiboss_outputs_behaviour_changed(i, index))
-
 
     def physiboss_update_list_nodes(self):
 
@@ -4161,7 +3485,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.physiboss_inheritance_layout.addLayout(node_inheritance_editor)
         self.physiboss_node_specific_inheritance.append((node_inheritance_dropdown, node_inheritance_checkbox, node_inheritance_remove, node_inheritance_editor))
     
-    
     def physiboss_remove_node_inheritance(self, id):
         self.physiboss_node_specific_inheritance[id][0].currentIndexChanged.disconnect()
         self.physiboss_node_specific_inheritance[id][0].deleteLater()
@@ -4618,326 +3941,48 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         return intracellular_tab_scroll
 
     #--------------------------------------------------------
-    # The following (text-based widgets) were (originally) auto-generated by 
-    # a mix of sed and Python scripts. See the gen_qline_cb.py script as an early example.
-    # --- cycle transition rates
-    def cycle_live_trate00_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_live_trate00'] = text
+    def cell_def_param_changed(self, text, check=True, name=None):
+        if name==None:
+            name = self.sender().objectName()
+        if check:
+            if name not in self.param_d[self.current_cell_def].keys():
+                print(f'cell_def_param_changed: {name} not in {self.param_d[self.current_cell_def].keys()}')
+                raise KeyError(f'cell_def_param_changed: {name} not in {self.param_d[self.current_cell_def].keys()}')
+        self.param_d[self.current_cell_def][name] = text
 
-    def cycle_Ki67_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate01'] = text
-    def cycle_Ki67_trate10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate10'] = text
+    # we could use lambda functions to accomplish most/all of this. but this keeps the initialization of the widgets simpler
+    def cell_def_mechano_rate_changed(self, text):
+        self.cell_def_mechano_changed(text, self.check_rate_too_fast)
 
-    def cycle_advancedKi67_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01'] = text
-    def cycle_advancedKi67_trate12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12'] = text
-    def cycle_advancedKi67_trate20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20'] = text
+    def cell_def_mechano_duration_changed(self, text):
+        self.cell_def_mechano_changed(text, self.check_duration_too_fast)
+        
+    def cell_def_mechano_changed(self, text, fn):
+        self.cell_def_rate_changed(text, fn, "mechanics_dt")
 
-    def cycle_flowcyto_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01'] = text
-    def cycle_flowcyto_trate12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12'] = text
-    def cycle_flowcyto_trate20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate_20'] = text
+    def cell_def_pheno_rate_changed(self, text):
+        self.cell_def_pheno_changed(text, self.check_rate_too_fast)
 
-    def cycle_flowcytosep_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01'] = text
-    def cycle_flowcytosep_trate12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12'] = text
-    def cycle_flowcytosep_trate23_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23'] = text
-    def cycle_flowcytosep_trate30_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30'] = text
+    def cell_def_pheno_duration_changed(self, text):
+        self.cell_def_pheno_changed(text, self.check_duration_too_fast)
 
-    def cycle_quiescent_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate01'] = text
-    def cycle_quiescent_trate10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate10'] = text
+    def cell_def_pheno_changed(self, text, fn):
+        self.cell_def_rate_changed(text, fn, "phenotype_dt")
 
-    #--------
-    # --- cycle durations
-    def cycle_live_duration00_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_live_duration00'] = text
-
-    def cycle_Ki67_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration01'] = text
-    def cycle_Ki67_duration10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration10'] = text
-
-    def cycle_advancedKi67_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01'] = text
-    def cycle_advancedKi67_duration12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12'] = text
-    def cycle_advancedKi67_duration20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20'] = text
-
-    def cycle_flowcyto_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01'] = text
-    def cycle_flowcyto_duration12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12'] = text
-    def cycle_flowcyto_duration20_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration_20'] = text
-
-    def cycle_flowcytosep_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01'] = text
-    def cycle_flowcytosep_duration12_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12'] = text
-    def cycle_flowcytosep_duration23_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23'] = text
-    def cycle_flowcytosep_duration30_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30'] = text
-
-    def cycle_quiescent_duration01_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration01'] = text
-    def cycle_quiescent_duration10_changed(self, text):
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration10'] = text
-
-    #------------------------------
-    #----- handle all checkboxes for cycle models 'fixed_duration' for 
-    # both transition rates and duration times
-    def cycle_live_trate00_fixed_clicked(self, bval):
-        # print('cycle_live_trate00_fixed_clicked: bval=',bval)
-        self.param_d[self.current_cell_def]['cycle_live_trate00_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_live_duration00_fixed'] = bval
-        # self.cycle_flowcyto_trate01_fixed_clicked()
-        self.cycle_live_duration00_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_Ki67_trate01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration01_fixed'] = bval
-        self.cycle_Ki67_duration01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_Ki67_trate10_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate10_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration10_fixed'] = bval
-        self.cycle_Ki67_duration10_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_advancedKi67_trate01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01_fixed'] = bval
-        self.cycle_advancedKi67_duration01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_advancedKi67_trate12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12_fixed'] = bval
-        self.cycle_advancedKi67_duration12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_advancedKi67_trate20_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20_fixed'] = bval
-        self.cycle_advancedKi67_duration20_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_flowcyto_trate01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01_fixed'] = bval
-        self.cycle_flowcyto_duration01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcyto_trate12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12_fixed'] = bval
-        self.cycle_flowcyto_duration12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcyto_trate20_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate20_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration20_fixed'] = bval
-        self.cycle_flowcyto_duration20_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_flowcytosep_trate01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01_fixed'] = bval
-        print("cycle_flowcytosep_trate01_fixed_clicked: set cycle_flowcytosep_duration01_fixed, bval = ",bval)
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01_fixed'] = bval
-        # print("  then call cycle_flowcytosep_duration01_fixed_clicked(bval)")
-        # self.cycle_flowcytosep_duration01_fixed_clicked(bval)
-        self.cycle_flowcytosep_duration01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_trate12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12_fixed'] = bval
-        self.cycle_flowcytosep_duration12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_trate23_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23_fixed'] = bval
-        self.cycle_flowcytosep_duration23_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_trate30_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30_fixed'] = bval
-        self.cycle_flowcytosep_duration30_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_quiescent_trate01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration01_fixed'] = bval
-        self.cycle_quiescent_duration01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_quiescent_trate10_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate10_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration10_fixed'] = bval
-        self.cycle_quiescent_duration10_fixed.setChecked(bval)   # sync rate and duration
-
-    # --- duration
-    def cycle_live_duration00_fixed_clicked(self, bval):
-        # print('cycle_live_duration00_fixed_clicked: bval=',bval)
-        self.param_d[self.current_cell_def]['cycle_live_duration00_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_live_trate00_fixed'] = bval
-        self.cycle_live_trate00_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_Ki67_duration01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate01_fixed'] = bval
-        self.cycle_Ki67_trate01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_Ki67_duration10_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_Ki67_duration10_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_Ki67_trate10_fixed'] = bval
-        self.cycle_Ki67_trate10_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_advancedKi67_duration01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate01_fixed'] = bval
-        self.cycle_advancedKi67_trate01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_advancedKi67_duration12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate12_fixed'] = bval
-        self.cycle_advancedKi67_trate12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_advancedKi67_duration20_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_duration20_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_advancedKi67_trate20_fixed'] = bval
-        self.cycle_advancedKi67_trate20_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_flowcyto_duration01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate01_fixed'] = bval
-        self.cycle_flowcyto_trate01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcyto_duration12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate12_fixed'] = bval
-        self.cycle_flowcyto_trate12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcyto_duration20_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcyto_duration20_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcyto_trate20_fixed'] = bval
-        self.cycle_flowcyto_trate20_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_flowcytosep_duration01_fixed_clicked(self, bval):
-        # print("cycle_flowcytosep_duration01_fixed_clicked, bval= ",bval)
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate01_fixed'] = bval
-        self.cycle_flowcytosep_trate01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_duration12_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration12_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate12_fixed'] = bval
-        self.cycle_flowcytosep_trate12_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_duration23_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration23_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate23_fixed'] = bval
-        self.cycle_flowcytosep_trate23_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_flowcytosep_duration30_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_duration30_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_flowcytosep_trate30_fixed'] = bval
-        self.cycle_flowcytosep_trate30_fixed.setChecked(bval)   # sync rate and duration
-
-    def cycle_quiescent_duration01_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration01_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate01_fixed'] = bval
-        self.cycle_quiescent_trate01_fixed.setChecked(bval)   # sync rate and duration
-    def cycle_quiescent_duration10_fixed_clicked(self, bval):
-        self.param_d[self.current_cell_def]['cycle_quiescent_duration10_fixed'] = bval
-        self.param_d[self.current_cell_def]['cycle_quiescent_trate10_fixed'] = bval
-        self.cycle_quiescent_trate10_fixed.setChecked(bval)   # sync rate and duration
-
-    #------------------------------
-    # --- death
-    def apoptosis_death_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_death_rate'] = text
-
-    def apoptosis_phase0_duration_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_phase0_duration'] = text
-    def apoptosis_phase0_duration_fixed_toggled(self, bval):
-        # sync rate and duration
-        self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = bval
-        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = bval
-        self.apoptosis_trate01_fixed.setChecked(bval)   # sync rate and duration
-
-    def apoptosis_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]["apoptosis_trate01"] = text
-    def apoptosis_trate01_fixed_toggled(self, bval):
-        # sync rate and duration
-        self.param_d[self.current_cell_def]['apoptosis_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['apoptosis_phase0_fixed'] = bval
-        self.apoptosis_phase0_duration_fixed.setChecked(bval)   # sync rate and duration
-
-    def apoptosis_unlysed_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_unlysed_rate'] = text
-    def apoptosis_lysed_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_lysed_rate'] = text
-    def apoptosis_cytoplasmic_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_cyto_rate'] = text
-    def apoptosis_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_nuclear_rate'] = text
-    def apoptosis_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_calcif_rate'] = text
-    def apoptosis_relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['apoptosis_rel_rupture_volume'] = text
-
-    #------
-    def necrosis_death_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_death_rate'] = text
-
-
-    def necrosis_phase0_duration_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_phase0_duration'] = text
-    def necrosis_phase0_duration_fixed_toggled(self, bval):
-        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = bval
-        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = bval
-        self.necrosis_trate01_fixed.setChecked(bval)   # sync rate and duration
-
-    def necrosis_phase1_duration_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_phase1_duration'] = text
-    def necrosis_phase1_duration_fixed_toggled(self, bval):
-        self.param_d[self.current_cell_def]['necrosis_phase1_fixed'] = bval
-        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = bval
-        self.necrosis_trate12_fixed.setChecked(bval)   # sync rate and duration
-
-    def necrosis_trate01_changed(self, text):
-        self.param_d[self.current_cell_def]["necrosis_trate01"] = text
-    def necrosis_trate01_fixed_toggled(self, bval):
-        self.param_d[self.current_cell_def]['necrosis_trate01_fixed'] = bval
-        self.param_d[self.current_cell_def]['necrosis_phase0_fixed'] = bval
-        self.necrosis_phase0_duration_fixed.setChecked(bval)   # sync rate and duration
-
-    def necrosis_trate12_changed(self, text):
-        self.param_d[self.current_cell_def]["necrosis_trate12"] = text
-    def necrosis_trate12_fixed_toggled(self, bval):
-        self.param_d[self.current_cell_def]['necrosis_trate12_fixed'] = bval
-        self.param_d[self.current_cell_def]['necrosis_phase1_fixed'] = bval
-        self.necrosis_phase1_duration_fixed.setChecked(bval)   # sync rate and duration
-
-    def necrosis_unlysed_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_unlysed_rate'] = text
-    def necrosis_lysed_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_lysed_rate'] = text
-    def necrosis_cytoplasmic_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_cyto_rate'] = text
-    def necrosis_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_nuclear_rate'] = text
-    def necrosis_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_calcif_rate'] = text
-    def necrosis_relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['necrosis_rel_rupture_rate'] = text
-
-    # --- volume
-    def volume_total_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_total'] = text
-    def volume_fluid_fraction_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_fluid_fraction'] = text
-    def volume_nuclear_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_nuclear'] = text
-    def volume_fluid_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_fluid_change_rate'] = text
-    def volume_cytoplasmic_biomass_change_rate_changed(self, text):
-        # self.param_d[self.current_cell_def]['volume_cytoplasmic_biomass_change_rate'] = text
-        self.param_d[self.current_cell_def]['volume_cytoplasmic_rate'] = text
-    def volume_nuclear_biomass_change_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_nuclear_rate'] = text
-    def volume_calcified_fraction_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_calcif_fraction'] = text
-    def volume_calcification_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_calcif_rate'] = text
-    def relative_rupture_volume_changed(self, text):
-        self.param_d[self.current_cell_def]['volume_rel_rupture_vol'] = text
+    def cell_def_rate_changed(self, text, fn, time_step):
+        name = self.sender().objectName()
+        label = getattr(self, f"{name}_warning_label")
+        fn(text, label, time_step=time_step)
+        self.cell_def_param_changed(text, check=False, name=name)
+        
+    def cell_def_fixed_clicked(self, bval):
+        name = self.sender().objectName()
+        fixed_rate_name = f"{name}_trate"
+        fixed_duration_name = f"{name}_duration"
+        self.param_d[self.current_cell_def][fixed_rate_name] = bval
+        self.param_d[self.current_cell_def][fixed_duration_name] = bval
+        getattr(self, fixed_rate_name).setChecked(bval)   # sync rate and duration
+        getattr(self, fixed_duration_name).setChecked(bval)   # sync rate and duration
 
     # --- mechanics
     def enable_mech_params(self, bval):
@@ -4957,53 +4002,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #     self.param_d[self.current_cell_def]['is_movable'] = not bval  # uh, this isn't not confusing :/
     #     self.enable_mech_params(not bval)
 
-    def cell_cell_adhesion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_adhesion'] = text
-    def cell_cell_repulsion_strength_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_repulsion'] = text
-
     # def cell_bm_adhesion_strength_changed(self, text):
     #     self.param_d[self.current_cell_def]['mechanics_BM_adhesion'] = text
     # def cell_bm_repulsion_strength_changed(self, text):
     #     self.param_d[self.current_cell_def]['mechanics_BM_repulsion'] = text
-    def relative_maximum_adhesion_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_adhesion_distance'] = text
-    def set_relative_equilibrium_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_relative_equilibrium_distance'] = text
-    def set_absolute_equilibrium_distance_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance'] = text
-
-    def elastic_constant_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_elastic_constant'] = text
-    def attachment_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_attachment_rate'] = text
-    def detachment_rate_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_detachment_rate'] = text
-    def max_num_attachments_changed(self, text):
-        self.param_d[self.current_cell_def]['mechanics_max_num_attachments'] = text
-
-    # insert callbacks for QCheckBoxes
-    def set_relative_equilibrium_distance_enabled_cb(self,bval):
-        # print("set_relative_equilibrium_distance_enabled_cb: bval=",bval)
-        self.param_d[self.current_cell_def]['mechanics_relative_equilibrium_distance_enabled'] = bval
-    def set_absolute_equilibrium_distance_enabled_cb(self,bval):
-        # print("set_absolute_equilibrium_distance_enabled_cb: bval=",bval)
-        self.param_d[self.current_cell_def]['mechanics_absolute_equilibrium_distance_enabled'] = bval
-
-    # --- motility
-    def speed_changed(self, text):
-        self.param_d[self.current_cell_def]['speed'] = text
-    def persistence_time_changed(self, text):
-        self.param_d[self.current_cell_def]['persistence_time'] = text
-    def migration_bias_changed(self, text):
-        self.param_d[self.current_cell_def]['migration_bias'] = text
-
-    # insert callbacks for QCheckBoxes
-    def motility_enabled_cb(self,bval):
-        self.param_d[self.current_cell_def]['motility_enabled'] = bval
-
-    def motility_use_2D_cb(self,bval):
-        self.param_d[self.current_cell_def]['motility_use_2D'] = bval
 
     def chemotaxis_enabled_cb(self,bval):
         self.param_d[self.current_cell_def]['motility_chemotaxis'] = bval
@@ -5028,20 +4030,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.chemotaxis_enabled.setChecked(False)
             self.param_d[self.current_cell_def]['motility_chemotaxis'] = False
 
-        #     self.motility2_substrate_dropdown.setEnabled(True)
-        #     self.chemo_sensitivity.setEnabled(True)
-        #     self.normalize_each_gradient.setEnabled(True)
-        # else:
-        #     self.motility2_substrate_dropdown.setEnabled(False)
-        #     self.normalize_each_gradient.setEnabled(False)
-        #     self.chemo_sensitivity.setEnabled(False)
         self.motility2_substrate_dropdown.setEnabled(bval)
         self.chemo_sensitivity.setEnabled(bval)
         self.normalize_each_gradient.setEnabled(bval)
-
-    def normalize_each_gradient_cb(self,bval):
-        self.param_d[self.current_cell_def]['normalize_each_gradient'] = bval
-
 
     def chemo_sensitivity_changed(self, text):
         logging.debug(f'----- chemo_sensitivity_changed() = {text}')
@@ -5058,23 +4049,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     # --- secretion
     def secretion_rate_changed(self, text):
-        # self.param_d[self.current_cell_def]['secretion_rate'] = text
-
-        # self.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['secretion_rate'] = text
     def secretion_target_changed(self, text):
-        # self.param_d[self.current_cell_def]['secretion_target'] = text
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['secretion_target'] = text
     def uptake_rate_changed(self, text):
-        # self.param_d[self.current_cell_def]['uptake_rate'] = text
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['uptake_rate'] = text
     def secretion_net_export_rate_changed(self, text):
-        # self.param_d[self.current_cell_def]['secretion_net_export_rate'] = text
         self.param_d[self.current_cell_def]["secretion"][self.current_secretion_substrate]['net_export_rate'] = text
 
     #--------------------------------------------------------
     def clear_all_var_name_prev(self):
-        # print("---clear_all_var_name_prev()")
         for irow in range(self.max_custom_data_rows):
             self.custom_data_table.cellWidget(irow,self.custom_icol_name).prev = None
 
@@ -5083,10 +4067,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if not s:
             s = 'thisisadummystring'
 
-        # print("---custom_data_search_cb()")
         for irow in range(self.max_custom_data_rows):
             if s in self.custom_data_table.cellWidget(irow,self.custom_icol_name).text():
-                # print(f"   found {s} at row {irow}")
                 backcolor = "background: bisque"
                 self.custom_data_table.cellWidget(irow,self.custom_icol_name).setStyleSheet(backcolor)
                 # self.custom_data_table.selectRow(irow)  # don't do this; keyboard input -> cell 
@@ -5735,17 +4717,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def create_miscellaneous_tab(self):
+            
         par_dist_label = QLabelSeparator("Parameter Distributions")
 
-        self.cell_type_par_dist_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
-        self.cell_type_par_dist_disabled_checkbox.stateChanged.connect(self.cell_type_par_dist_disabled_cb)
+        self.par_dist_cell_type_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
+        self.par_dist_cell_type_disabled_checkbox.stateChanged.connect(self.par_dist_cell_type_disabled_cb)
 
-        self.display_par_dists_button = QPushButton("Display/update distributions for current cell type.")
-        self.display_par_dists_button.clicked.connect(self.display_par_dists_cb)
+        self.par_dist_display_button = QPushButton("Display/update distributions for current cell type.")
+        self.par_dist_display_button.clicked.connect(self.par_dist_display_button_cb)
 
         hbox_cell_type_par_dist = QHBoxLayout()
-        hbox_cell_type_par_dist.addWidget(self.cell_type_par_dist_disabled_checkbox)
-        hbox_cell_type_par_dist.addWidget(self.display_par_dists_button)
+        hbox_cell_type_par_dist.addWidget(self.par_dist_cell_type_disabled_checkbox)
+        hbox_cell_type_par_dist.addWidget(self.par_dist_display_button)
         hbox_cell_type_par_dist.addStretch()
 
         self.behavior_model = QStandardItemModel()
@@ -5762,8 +4745,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_distributions_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
         self.par_distributions_combobox.currentIndexChanged.connect(self.par_distribution_changed_cb)
 
-        self.par_dist_enforce_base_checkbox = HoverCheckBox("Enforce base value within distribution", "Enforced at PhysiCell runtime.")
+        self.par_dist_enforce_base_checkbox = QCheckBox("Enforce base value within distribution")
         self.par_dist_enforce_base_checkbox.stateChanged.connect(self.par_dist_enforce_base_cb)
+        self.par_dist_enforce_base_question_label = HoverQuestion("Enforced at PhysiCell runtime.")
 
         self.par_dist_distribution_equation = QLabel("")
 
@@ -5780,12 +4764,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         hbox_par_dist_2.addWidget(self.par_distributions_combobox)
 
         hbox_par_dist_2.addWidget(self.par_dist_enforce_base_checkbox)
+        hbox_par_dist_2.addWidget(self.par_dist_enforce_base_question_label)
         hbox_par_dist_2.addStretch()
         hbox_par_dist_2.addWidget(self.par_dist_distribution_equation)
 
         hbox_par_dist_parameters = QHBoxLayout()
         self.par_dist_par_label = []
         self.par_dist_par_lineedit = []
+        self.help_stacks = {}
         for i in range(4):
             self.par_dist_par_label.append(QLabel(""))
             qline_edt = QLineEdit_custom(enabled=False)
@@ -5794,6 +4780,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_par_lineedit.append(qline_edt)
             hbox_par_dist_parameters.addWidget(self.par_dist_par_label[i])
             hbox_par_dist_parameters.addWidget(self.par_dist_par_lineedit[i])
+            help_stack = QStackedWidget()
+            help_stack.addWidget(HoverWarning("")) # remember that the warning is index 0
+            help_stack.addWidget(HoverQuestion("")) # ...and the question is index 1
+            help_stack.setFixedWidth(15)
+            help_stack.setFixedHeight(15)
+            self.help_stacks[qline_edt] = help_stack
+            hbox_par_dist_parameters.addWidget(help_stack)
 
         vbox = QVBoxLayout()
         vbox.addWidget(par_dist_label)
@@ -5814,35 +4807,21 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         return miscellaneous_tab_scroll_area
 
-    def par_dist_enable_cb(self, state):
-        # throw warning that this is not yet implemented
-        bval = state == QtCore.Qt.Checked
-        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enabled"] = bval
-        self.par_dist_distribution_widgets_set_enabled(bval)
-            
-    def cell_type_par_dist_disabled_cb(self, state):
-        if self.current_cell_def is None:
+    def par_dist_cell_type_disabled_cb(self, state):
+        if self.current_cell_def is None: # happens at studio initialization
             return
-        self.param_d[self.current_cell_def]["par_dists_disabled"] = state == QtCore.Qt.Checked
-        self.par_dist_widgets_set_enabled(not self.param_d[self.current_cell_def]["par_dists_disabled"])
-
-    def par_dist_widgets_set_enabled(self, enabled):
-        print(f"par_dist_widgets_set_enabled(): enabled= {enabled}")
+        enabled = state != QtCore.Qt.Checked
+        self.param_d[self.current_cell_def]["par_dists_disabled"] = (not enabled)
+        self.par_dist_display_button.setEnabled(enabled)
         self.par_dist_behavior_combobox.setEnabled(enabled)
-        self.par_dist_enable_checkbox.setEnabled(enabled)
-        self.display_par_dists_button.setEnabled(enabled)
-        self.par_dist_distribution_widgets_set_enabled(enabled and self.par_dist_enable_checkbox.isChecked())
-    
-    def par_dist_distribution_widgets_set_enabled(self, enabled):
-        self.par_distributions_combobox.setEnabled(enabled)
-        self.par_dist_enforce_base_checkbox.setEnabled(enabled)
         if enabled:
-            self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
+            # par_dist_behavior_combobox will handle enabling par_dist_enable_checkbox if necessary
+            self.par_dist_behavior_combobox.editTextChanged.emit(self.par_dist_behavior_combobox.currentText())
         else:
-            for i in range(4):
-                self.par_dist_par_lineedit[i].setEnabled(False)
+            self.par_dist_enable_checkbox.setEnabled(False)
+            self.par_dist_distribution_widgets_set_enabled(False)
 
-    def display_par_dists_cb(self):
+    def par_dist_display_button_cb(self):
         # create new window and print distribution infomration there
         if self.current_cell_def is None:
             return
@@ -5871,105 +4850,108 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_window.hide()
         self.par_dist_window.show()
 
-    def fill_responses_widget(self, response_l):
-        self.response_l = response_l
-        self.par_dist_behavior_combobox.clear()
-        self.par_dist_behavior_combobox.addItems(self.response_l)
-        self.par_dist_behavior_combobox.setCurrentIndex(0)
+    def par_dist_current_responses(self):
+        return [self.par_dist_behavior_combobox.itemText(i) for i in range(self.par_dist_behavior_combobox.count())]
 
+    def par_dist_fill_responses_widget(self, response_l):
+        # loop over all current items in the combobox and check if they are in the response list
+        current_response_list = self.par_dist_current_responses()
+        for response in current_response_list:
+            if response not in response_l:
+                self.par_dist_behavior_combobox.removeItem(self.par_dist_behavior_combobox.findText(response))
+        for response in response_l:
+            # check if response is an item in self.par_dist_behavior_combobox
+            if self.par_dist_behavior_combobox.findText(response) == -1:
+                self.par_dist_behavior_combobox.addItem(response)
+
+    def par_dist_behavior_text_changed_cb(self, text):
+        if not self.is_behavior(text):
+            self.par_dist_enable_checkbox.setEnabled(False)
+            self.par_dist_distribution_widgets_set_enabled(False)
+        elif (self.current_cell_def in self.param_d.keys()) and (not self.param_d[self.current_cell_def]["par_dists_disabled"]):
+            self.create_behavior_dict(self.current_cell_def, text, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
+            self.par_dist_enable_checkbox.setEnabled(True)
+            self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex()) # force this cb now even before the user hits tab/enter/leaves focus and causes the update (it can be confusing to see the previous index pars before hitting enter)
+       
     def par_dist_behavior_changed_cb(self, idx):
         cdname = self.current_cell_def
         if cdname is None or cdname not in self.param_d.keys():
             return # make sure this cell type is one we want (e.g. not currently being deleted)
         behavior = self.par_dist_behavior_combobox.currentText()
-        if behavior == '':
-            return # this can happen when new behaviors are added and the list is cleared
-        
+        if behavior == '' or self.param_d[cdname]["par_dists_disabled"]:
+            return # this can happen when new behaviors are added and the list is cleared OR if the distributions are disabled but the behavior box is updated for other reasons
+
         if behavior not in self.param_d[cdname]["par_dists"].keys():
-            self.param_d[cdname]["par_dists"][behavior] = {}
-            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
+            self.create_behavior_dict(cdname, behavior, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
             if self.par_dist_enable_checkbox.isChecked(): # set the enabled to False if the checkbox is checked
                 self.par_dist_enable_checkbox.setChecked(False)
             else: # otherwise, emit the unchecked state to deactivate downstream widgets
                 self.par_dist_enable_checkbox.stateChanged.emit(QtCore.Qt.Unchecked)
             self.par_dist_enforce_base_checkbox.setChecked(False)
-            self.param_d[cdname]["par_dists"][behavior]["enforce_base"] = False
-            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
             if self.par_distributions_combobox.currentIndex() == 0:
                 self.par_distributions_combobox.currentIndexChanged.emit(0)
             else:
                 self.par_distributions_combobox.setCurrentIndex(0) # reset to distribution to None
-            for pdple in self.par_dist_par_lineedit:
-                pdple.setText("")
         else: # behavior has previously been set, proceed with caution based on prev distribution and current distribution
             old_dict = copy.deepcopy(self.param_d[cdname]["par_dists"][behavior]["parameters"])
             if self.param_d[cdname]["par_dists"][behavior]["distribution"] != self.par_distributions_combobox.currentText():
                 self.par_distributions_combobox.setCurrentIndex(self.par_distributions_combobox.findText(self.param_d[cdname]["par_dists"][behavior]["distribution"]))
             else:
                 self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
-            self.set_par_dist_pars_from_dict(old_dict)
+            self.par_dist_set_pars_from_dict(old_dict)
             self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
             if self.par_dist_enable_checkbox.isChecked() != self.param_d[cdname]["par_dists"][behavior]["enabled"]:
+                # if the checkbox is not in the correct state, set it to the correct state (and thus emit the correct state)
                 self.par_dist_enable_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enabled"])
             else:
+                # no need to toggle the checkbox, just emit the current state
                 self.par_dist_enable_checkbox.stateChanged.emit(self.par_dist_enable_checkbox.checkState())
+    
+    def par_dist_enable_cb(self, state):
+        bval = state == QtCore.Qt.Checked
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior in self.param_d[self.current_cell_def]["par_dists"].keys():
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enabled"] = bval
+        self.par_dist_distribution_widgets_set_enabled(bval)
+        if bval:
+            # if we are enabling the distribution, emit the signal of selecting this distribution
+            self.par_distributions_combobox.currentIndexChanged.emit(self.par_distributions_combobox.currentIndex())
 
-    def par_dist_behavior_text_changed_cb(self, text):
-        if text not in self.response_l:
-            self.par_dist_enable_checkbox.setEnabled(False)
-            self.par_dist_distribution_widgets_set_enabled(False)
-        else:
-            self.par_dist_enable_checkbox.setEnabled(True)
-            if text==self.par_dist_behavior_combobox.itemText(self.par_dist_behavior_combobox.currentIndex()):
-                # if the text is the same as the current behavior index, force the emission of the index changed signal to update the widgets
-                self.par_dist_behavior_combobox.currentIndexChanged.emit(self.par_dist_behavior_combobox.currentIndex())
-            # else:
-                # the others will follow when the behavior index is updated immediately after this event is handled
-
-    def set_par_dist_pars_from_dict(self, par_d):
+    def par_dist_distribution_widgets_set_enabled(self, enabled):
+        # enable everything downstream of the behavior: the distribution, enforcement, and parameters
+        # if disabling the parameters, hide the help stacks
+        self.par_distributions_combobox.setEnabled(enabled)
+        self.par_dist_enforce_base_checkbox.setEnabled(enabled)
         for pdple in self.par_dist_par_lineedit:
-            pdple.setText("") # reset all the text before filling it in
-        for k, v in par_d.items():
-            if k == "min":
-                self.par_dist_par_lineedit[0].setText(v)
-            elif k == "max":
-                self.par_dist_par_lineedit[1].setText(v)
-            elif k == "mu":
-                self.par_dist_par_lineedit[0].setText(v)
-            elif k == "sigma":
-                self.par_dist_par_lineedit[1].setText(v)
-            elif k == "lower_bound":
-                self.par_dist_par_lineedit[2].setText(v)
-            elif k == "upper_bound":
-                self.par_dist_par_lineedit[3].setText(v)
-            else:
-                print(f"Error: Invalid parameter key {k} in set_par_dist_pars_from_dict()")
-
+            pdple.setEnabled(enabled)
+            if not enabled:
+                self.par_dist_hide_help_stack(self.help_stacks[pdple])
+                
     def par_distribution_changed_cb(self, idx):
         cdname = self.current_cell_def
         if cdname is None or cdname not in self.param_d.keys():
             return # make sure this cell type is one we want (e.g. not currently being deleted)
         current_dist = self.par_distributions_combobox.currentText()
         behavior = self.par_dist_behavior_combobox.currentText()
-        if behavior not in self.param_d[cdname]["par_dists"].keys():
-            # I do not think this block should be reachable...
-            raise ValueError(f"Error: Behavior {behavior} not in param_d[{cdname}]['par_dists'] keys. DRB is responsible for fixing this.")
-            self.param_d[cdname]["par_dists"][behavior] = {}
-            self.param_d[cdname]["par_dists"][behavior]["enabled"] = False
-            self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
-            self.par_dist_enforce_base_checkbox.setChecked(False)
-            distribution_pars_in_dict = False
+        self.create_behavior_dict(cdname, behavior, overwrite=False) # include keyword to emphasize to future devs that we are not overwriting the dict if it exists
+        self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
+        if ("distribution" in self.param_d[cdname]["par_dists"][behavior].keys()) and (current_dist == self.param_d[cdname]["par_dists"][behavior]["distribution"]):
+            # if we have the correct distribution already in a dict, note this so we make use of those parameters
+            distribution_pars_in_dict = True
         else:
-            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]["par_dists"][behavior]["enforce_base"])
-            if ("distribution" in self.param_d[cdname]["par_dists"][behavior].keys()) and (current_dist == self.param_d[cdname]["par_dists"][behavior]["distribution"]):
-                distribution_pars_in_dict = True
-            else:
-                distribution_pars_in_dict = False
+            # otherwise, we don't want to keep the old parameters (if they even exist); we will create a brand new dictionary below
+            distribution_pars_in_dict = False
+
         self.param_d[cdname]["par_dists"][behavior]["distribution"] = current_dist
 
         # next, find the distribution and update fields
         par_labels = [""] * 4
         par_texts = [""] * 4
+        # default to hiding all icons
+        for pdple in self.par_dist_par_lineedit:
+            help_stack = self.help_stacks[pdple]
+            self.par_dist_hide_help_stack(help_stack)
+
         if current_dist == "None":
             par_enabled = [False] * 4
             self.param_d[cdname]["par_dists"][behavior]["parameters"] = {}
@@ -5981,10 +4963,27 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.par_dist_par_lineedit[1].setObjectName("max")
             if current_dist == "Uniform":
                 self.par_dist_par_lineedit[0].setValidator(QtGui.QDoubleValidator())
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Min is required!")
                 self.par_dist_par_lineedit[1].setValidator(QtGui.QDoubleValidator())
-            else: # log uniform must be postive
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Max is required!")
+                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
+            elif current_dist == "Log Uniform": # log uniform must be postive
                 self.par_dist_par_lineedit[0].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Min is required! And it must be > 0.")
+                help_stack.widget(1).setHoverText("Min represents the actual behavior value, not the exponent.\nMin must be positive.")
+                help_stack.widget(1).show_icon()
                 self.par_dist_par_lineedit[1].setValidator(DoubleValidatorOpenInterval(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Max is required! And it must be > 0.")
+                help_stack.widget(1).setHoverText("Max represents the actual behavior value, not the exponent.\nMax must be positive.")
+                help_stack.widget(1).show_icon()
+                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
+            else:
+                raise NotImplementedError(f"Error: Invalid distribution selected??? Current distribution = {current_dist} is not among those we have a formula for displaying. Whoever added this distribution should add a formula here.")
+
             par_enabled = [True, True, False, False]
             if distribution_pars_in_dict:
                 if "min" in self.param_d[cdname]["par_dists"][behavior]["parameters"].keys():
@@ -5994,25 +4993,39 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             else:
                 new_dict = {"min": "", "max": ""}
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
-            if current_dist == "Uniform":
-                self.par_dist_distribution_equation.setText("Behavior ~ U(Min, Max)")
-            else:
-                self.par_dist_distribution_equation.setText("Behavior ~ exp(Z)\nZ ~ U(log(Min), log(Max))")
         else:
             par_enabled = [True] * 4
             if current_dist == "Normal":
                 par_labels[0] = "Mean:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("Mean is required!")
                 par_labels[1] = "Std Dev:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("Std Dev is required!")
                 # set these here rather than checking again later
                 self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator())
                 self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator())
                 self.par_dist_distribution_equation.setText("Behavior ~ N(Mean, Std Dev)\nlb \u2264 Behavior \u2264 ub")
             elif current_dist == "Log Normal" or current_dist == "Log10 Normal":
                 par_labels[0] = "\u03BC:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[0]]
+                help_stack.widget(0).setHoverText("\u03BC is required!\n\u03BC can be negative as it represents the exponent.")
+                help_stack.widget(1).setHoverText("\u03BC represents the exponent, not the actual behavior value.\n\u03BC can be negative.")
+                help_stack.widget(1).show_icon()
                 par_labels[1] = "\u03C3:"
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[1]]
+                help_stack.widget(0).setHoverText("\u03C3 is required!\n\u03C3 must be > 0 as it represents the standard deviation of the exponent.")
+                help_stack.widget(1).setHoverText("\u03C3 represents the standard deviation of the exponent, not the actual behavior value.\n\u03C3 must be > 0.")
+                help_stack.widget(1).show_icon()
                 # set these here rather than checking again later
                 self.par_dist_par_lineedit[2].setValidator(OptionalDoubleValidator(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[2]]
+                help_stack.widget(1).setHoverText("Lower bound is on the behavior values, not the exponent.\nThus, it must be non-negative.\nSetting to 0 allows arbitrarily small, positive behavior values.")
+                help_stack.widget(1).show_icon()
                 self.par_dist_par_lineedit[3].setValidator(OptionalDoubleValidator(bottom=0))
+                help_stack = self.help_stacks[self.par_dist_par_lineedit[3]]
+                help_stack.widget(1).setHoverText("Upper bound is on the behavior values, not the exponent.\nThus, it must be positive.\nSetting this to 0 would result in an ill-formed distribution.")
+                help_stack.widget(1).show_icon()
                 if current_dist == "Log Normal":
                     self.par_dist_distribution_equation.setText("Behavior ~ exp(Z), Z ~ N(\u03BC, \u03C3)\nlb \u2264 Behavior \u2264 ub")
                 else:
@@ -6044,36 +5057,102 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.param_d[cdname]["par_dists"][behavior]["parameters"] = new_dict
 
         for pdpl, pdple, label, text, enabled in zip(self.par_dist_par_label, self.par_dist_par_lineedit, par_labels, par_texts, par_enabled):
+            # actually set all the stuff gathered above
             pdpl.setText(label)
+            pdple.setEnabled(enabled) # disable it first so that the textChanged signal triggers the right callbacks
             pdple.setText(text)
-            pdple.setEnabled(enabled)
 
-        self.validate_all_par_dist_parameters()
+        self.par_dist_validate_all_parameters() # possibly redundant, originally added to allow for higher-order parameter checks, e.g. make sure that min<max. decided that's just on the user
 
-    def validate_all_par_dist_parameters(self):
+    def par_dist_set_pars_from_dict(self, par_d):
+        # get the pars from the dictionary and write to the line edits
+        for pdple in self.par_dist_par_lineedit:
+            pdple.setText("") # reset all the text before filling it in
+        for k, v in par_d.items():
+            if k == "min":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "max":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "mu":
+                self.par_dist_par_lineedit[0].setText(v)
+            elif k == "sigma":
+                self.par_dist_par_lineedit[1].setText(v)
+            elif k == "lower_bound":
+                self.par_dist_par_lineedit[2].setText(v)
+            elif k == "upper_bound":
+                self.par_dist_par_lineedit[3].setText(v)
+            else:
+                raise ValueError(f"Error: Invalid parameter key {k} in par_dist_set_pars_from_dict()")
+
+    def par_dist_validate_all_parameters(self):
         # this was written to validate that min<max values, but I have set that side project aside for now because it was slowing down key dev
+        # I think it is still unnecessary, but the help stacks may actually depend on this, so I'm leaving it in for now
         for pdple in self.par_dist_par_lineedit:
             if pdple.isEnabled():
-                pdple.check_validity(pdple.text())
+                is_acceptable = pdple.check_validity(pdple.text())
+                self.par_dist_toggle_help_stack(pdple, is_acceptable)
 
     def par_dist_enforce_base_cb(self, state):
         if self.current_cell_def is None:
             return
-        self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enforce_base"] = state == QtCore.Qt.Checked
+        behavior = self.par_dist_behavior_combobox.currentText()
+        if behavior in self.param_d[self.current_cell_def]["par_dists"].keys():
+            self.param_d[self.current_cell_def]["par_dists"][self.par_dist_behavior_combobox.currentText()]["enforce_base"] = state == QtCore.Qt.Checked
+        if state == QtCore.Qt.Checked:
+            self.par_dist_enforce_base_question_label.show_icon()
+        else:
+            self.par_dist_enforce_base_question_label.hide_icon()
+    
+    def par_dist_hide_help_stack(self, help_stack):
+        for i in range(help_stack.count()):
+            help_stack.widget(i).hide_icon()
 
+    def par_dist_toggle_help_stack(self, sender, is_acceptable):
+        help_stack = self.help_stacks[sender]
+        if sender.isEnabled() == False:
+            self.par_dist_hide_help_stack(help_stack)
+            return
+        if not is_acceptable:
+            help_stack.setCurrentIndex(0)
+            help_stack.widget(0).show_icon()
+        else:
+            help_stack.setCurrentIndex(1)
+    
     def par_dist_parameters_changed_cb(self, text):
+        # single callback for any parameter line edits changes
+        # makes sure everything looks good, updates help icons, and updates the dictionary
         if self.current_cell_def is None:
             return
         sender = self.sender()
-        if sender.objectName() == "":
+        object_name = sender.objectName()
+        if object_name == "":
             return # likely reaching here during startup
         is_acceptable = sender.check_validity(text)
+        self.par_dist_toggle_help_stack(sender, is_acceptable)
         behavior = self.par_dist_behavior_combobox.currentText()
-        if not is_acceptable or behavior == "":
-            return
-        self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][sender.objectName()] = text
-        self.validate_all_par_dist_parameters()
+        if behavior in self.param_d[self.current_cell_def]["par_dists"].keys():
+            self.param_d[self.current_cell_def]["par_dists"][behavior]["parameters"][object_name] = text
+            self.par_dist_validate_all_parameters()
         
+    def create_behavior_dict(self, cdname, behavior, overwrite=False):
+        if cdname not in self.param_d.keys():
+            raise ValueError(f"create_behavior_dict(): {cdname} not in self.param_d.keys(). It should always be in the dictionary!")
+        if "par_dists" not in self.param_d[cdname].keys():
+            self.param_d[cdname]["par_dists"] = {}
+        new_dict = {"enabled": False, "distribution": "None", "enforce_base": False, "parameters": {}}
+        if overwrite or (behavior not in self.param_d[cdname]["par_dists"].keys()):
+            self.param_d[cdname]["par_dists"][behavior] = new_dict
+        else: # add any missing keys to default values
+            for k in new_dict.keys():
+                if (k not in self.param_d[cdname]["par_dists"][behavior].keys()):
+                    self.param_d[cdname]["par_dists"][behavior][k] = new_dict[k]
+
+    def is_behavior(self, text):
+        return text in self.par_dist_current_responses()
+    
+    def current_text_is_behavior(self):
+        return self.is_behavior(self.par_dist_behavior_combobox.currentText())
+
     #--------------------------------------------------------
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
@@ -6275,47 +5354,22 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
         # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
     def cycle_phase_transition_cb(self):
-        # rb1.toggled.connect(self.updateLabel)(self, idx_choice):
-        # print('self.cycle_rows_vbox.count()=', self.cycle_rows_vbox.count())
-        # print('cycle_phase_transition_cb: self.stacked_cycle.count()=', self.stacked_cycle.count())
 
         radioBtn = self.sender()
-        # if radioBtn.isChecked():
-        #     print("--------- ",radioBtn.text())
-
-        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
-        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
-
-        # self.cycle_rows_vbox.clear()
-        # if radioBtn.text().find("duration"):
         if "duration" in radioBtn.text():
-            # print('cycle_phase_transition_cb: --> duration')
             self.cycle_duration_flag = True
             self.customize_cycle_choices()
         else:  # transition rates
-            # print('cycle_phase_transition_cb: NOT duration')
             self.cycle_duration_flag = False
             self.customize_cycle_choices()
-            # pass
 
         self.param_d[self.current_cell_def]['cycle_duration_flag'] = self.cycle_duration_flag
         
-
-        # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-        # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-        # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
     # Called whenever there's a toggle between "transition rate(s)" vs. "duration(S)", or if a
     # different cycle model is chosen from the dropdown combobox.
     def customize_cycle_choices(self):
-
-        # print("-- customize_cycle_choices(): index= ",self.cycle_dropdown.currentIndex())
-
         if self.cycle_duration_flag:  # specifying duration times (radio button)
             if self.cycle_dropdown.currentIndex() == 0:
-                # print("customize_cycle_choices():  idx = ",self.stack_duration_live_idx)
                 self.stacked_cycle.setCurrentIndex(self.stack_duration_live_idx)
             elif self.cycle_dropdown.currentIndex() == 1:
                 self.stacked_cycle.setCurrentIndex(self.stack_duration_Ki67_idx)
@@ -6342,13 +5396,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             elif self.cycle_dropdown.currentIndex() == 5:
                 self.stacked_cycle.setCurrentIndex(self.stack_trate_quiescent_idx)
 
-
     def chemotaxis_direction_cb(self):
-        # print('chemotaxis_direction_cb: ')
-
         radioBtn = self.sender()
         if radioBtn.isChecked():
-            # print("--------- ",radioBtn.text())  # towards, against
             if "toward" in radioBtn.text():
                 self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = True
             else:
@@ -6645,8 +5695,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_par_dist_behaviors(old_name, new_name)
 
     def update_par_dist_behaviors(self, old_name, new_name):
-        self.response_l = self.rules_tab.create_response_list()
-        self.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        response_l = self.rules_tab.create_response_list()
+        self.par_dist_fill_responses_widget(response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
         self.rename_behavior_distributions(old_name, new_name)
 
     def rename_behavior_distributions(self, old_name, new_name):
@@ -6671,103 +5721,102 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if reset_type_flag:
             self.param_d[cdname]['cycle_choice_idx'] = 0
 
-        self.param_d[cdname]['cycle_live_trate00'] = '0.00072'
+        self.param_d[cdname]['cycle_live_00_trate'] = '0.00072'
 
-        self.param_d[cdname]['cycle_Ki67_trate01'] = '3.63108e-3'
-        self.param_d[cdname]['cycle_Ki67_trate10'] = '1.07527e-3'
+        self.param_d[cdname]['cycle_Ki67_01_trate'] = '3.63108e-3'
+        self.param_d[cdname]['cycle_Ki67_10_trate'] = '1.07527e-3'
 
-        self.param_d[cdname]['cycle_advancedKi67_trate01'] = '4.60405e-3'
-        self.param_d[cdname]['cycle_advancedKi67_trate12'] = '1.28205e-3'
-        self.param_d[cdname]['cycle_advancedKi67_trate20'] = '6.66666e-3'
+        self.param_d[cdname]['cycle_advancedKi67_01_trate'] = '4.60405e-3'
+        self.param_d[cdname]['cycle_advancedKi67_12_trate'] = '1.28205e-3'
+        self.param_d[cdname]['cycle_advancedKi67_20_trate'] = '6.66666e-3'
 
-        self.param_d[cdname]['cycle_flowcyto_trate01'] = '0.00324'
-        self.param_d[cdname]['cycle_flowcyto_trate12'] = '0.00208'
-        self.param_d[cdname]['cycle_flowcyto_trate20'] = '0.00333'
+        self.param_d[cdname]['cycle_flowcyto_01_trate'] = '0.00324'
+        self.param_d[cdname]['cycle_flowcyto_12_trate'] = '0.00208'
+        self.param_d[cdname]['cycle_flowcyto_20_trate'] = '0.00333'
 
-        self.param_d[cdname]['cycle_flowcytosep_trate01'] = '0.00335'
-        self.param_d[cdname]['cycle_flowcytosep_trate12'] = '0.00208'
-        self.param_d[cdname]['cycle_flowcytosep_trate23'] = '0.00417'
-        self.param_d[cdname]['cycle_flowcytosep_trate30'] = '0.01667'   # C++ had only 4-digits: 0.0167 ??
+        self.param_d[cdname]['cycle_flowcytosep_01_trate'] = '0.00335'
+        self.param_d[cdname]['cycle_flowcytosep_12_trate'] = '0.00208'
+        self.param_d[cdname]['cycle_flowcytosep_23_trate'] = '0.00417'
+        self.param_d[cdname]['cycle_flowcytosep_30_trate'] = '0.01667'   # C++ had only 4-digits: 0.0167 ??
 
-        self.param_d[cdname]['cycle_quiescent_trate01'] = '3.63108e-3'
-        self.param_d[cdname]['cycle_quiescent_trate10'] = '1.07527e-3'
+        self.param_d[cdname]['cycle_quiescent_01_trate'] = '3.63108e-3'
+        self.param_d[cdname]['cycle_quiescent_10_trate'] = '1.07527e-3'
 
         # duration times
-        self.param_d[cdname]['cycle_live_duration00'] = '1388.88889'
+        self.param_d[cdname]['cycle_live_00_duration'] = '1388.88889'
 
-        self.param_d[cdname]['cycle_Ki67_duration01'] = '275.40015'
-        self.param_d[cdname]['cycle_Ki67_duration10'] = '929.99898'
+        self.param_d[cdname]['cycle_Ki67_01_duration'] = '275.40015'
+        self.param_d[cdname]['cycle_Ki67_10_duration'] = '929.99898'
 
-        self.param_d[cdname]['cycle_advancedKi67_duration01'] = '217.20007'
-        self.param_d[cdname]['cycle_advancedKi67_duration12'] = '780.00078'
-        self.param_d[cdname]['cycle_advancedKi67_duration20'] = '150.00015'
+        self.param_d[cdname]['cycle_advancedKi67_01_duration'] = '217.20007'
+        self.param_d[cdname]['cycle_advancedKi67_12_duration'] = '780.00078'
+        self.param_d[cdname]['cycle_advancedKi67_20_duration'] = '150.00015'
 
-        self.param_d[cdname]['cycle_flowcyto_duration01'] = '308.64198'
-        self.param_d[cdname]['cycle_flowcyto_duration12'] = '480.76923'
-        self.param_d[cdname]['cycle_flowcyto_duration20'] = '300.30030'
+        self.param_d[cdname]['cycle_flowcyto_01_duration'] = '308.64198'
+        self.param_d[cdname]['cycle_flowcyto_12_duration'] = '480.76923'
+        self.param_d[cdname]['cycle_flowcyto_20_duration'] = '300.30030'
 
-        self.param_d[cdname]['cycle_flowcytosep_duration01'] = '298.50746'
-        self.param_d[cdname]['cycle_flowcytosep_duration12'] = '480.76923'
-        self.param_d[cdname]['cycle_flowcytosep_duration23'] = '239.80815'
-        self.param_d[cdname]['cycle_flowcytosep_duration30'] = '59.88024'
+        self.param_d[cdname]['cycle_flowcytosep_01_duration'] = '298.50746'
+        self.param_d[cdname]['cycle_flowcytosep_12_duration'] = '480.76923'
+        self.param_d[cdname]['cycle_flowcytosep_23_duration'] = '239.80815'
+        self.param_d[cdname]['cycle_flowcytosep_30_duration'] = '59.88024'
 
-        self.param_d[cdname]['cycle_quiescent_duration01'] = '275.40016'
-        self.param_d[cdname]['cycle_quiescent_duration10'] = '929.99898'
+        self.param_d[cdname]['cycle_quiescent_01_duration'] = '275.40016'
+        self.param_d[cdname]['cycle_quiescent_10_duration'] = '929.99898'
 
         #-------------------------
         # transition rates "fixed"
         bval = self.default_bval
-        self.param_d[cdname]['cycle_live_trate00_fixed'] = bval
+        self.param_d[cdname]['cycle_live_00_fixed_trate'] = bval
 
-        self.param_d[cdname]['cycle_Ki67_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_Ki67_trate10_fixed'] = True
+        self.param_d[cdname]['cycle_Ki67_01_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_Ki67_10_fixed_trate'] = True
 
-        self.param_d[cdname]['cycle_advancedKi67_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'] = True
-        self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'] = True
+        self.param_d[cdname]['cycle_advancedKi67_01_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_12_fixed_trate'] = True
+        self.param_d[cdname]['cycle_advancedKi67_20_fixed_trate'] = True
 
-        self.param_d[cdname]['cycle_flowcyto_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcyto_trate12_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcyto_trate20_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_01_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_flowcyto_12_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_flowcyto_20_fixed_trate'] = bval
 
-        self.param_d[cdname]['cycle_flowcytosep_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_trate12_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_trate23_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_trate30_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_01_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_12_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_23_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_30_fixed_trate'] = bval
 
-        self.param_d[cdname]['cycle_quiescent_trate01_fixed'] = bval
-        self.param_d[cdname]['cycle_quiescent_trate10_fixed'] = True
+        self.param_d[cdname]['cycle_quiescent_01_fixed_trate'] = bval
+        self.param_d[cdname]['cycle_quiescent_10_fixed_trate'] = True
 
         #------ duration times "fixed"
-        self.param_d[cdname]['cycle_live_duration00_fixed'] = bval
+        self.param_d[cdname]['cycle_live_00_fixed_duration'] = bval
 
-        self.param_d[cdname]['cycle_Ki67_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_Ki67_duration10_fixed'] = True
+        self.param_d[cdname]['cycle_Ki67_01_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_Ki67_10_fixed_duration'] = True
 
-        self.param_d[cdname]['cycle_advancedKi67_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'] = True
-        self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'] = True
+        self.param_d[cdname]['cycle_advancedKi67_01_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_advancedKi67_12_fixed_duration'] = True
+        self.param_d[cdname]['cycle_advancedKi67_20_fixed_duration'] = True
 
-        self.param_d[cdname]['cycle_flowcyto_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcyto_duration12_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcyto_duration20_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcyto_01_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_flowcyto_12_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_flowcyto_20_fixed_duration'] = bval
 
-        self.param_d[cdname]['cycle_flowcytosep_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_duration12_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_duration23_fixed'] = bval
-        self.param_d[cdname]['cycle_flowcytosep_duration30_fixed'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_01_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_12_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_23_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_flowcytosep_30_fixed_duration'] = bval
 
-        self.param_d[cdname]['cycle_quiescent_duration01_fixed'] = bval
-        self.param_d[cdname]['cycle_quiescent_duration10_fixed'] = True
-
+        self.param_d[cdname]['cycle_quiescent_01_fixed_duration'] = bval
+        self.param_d[cdname]['cycle_quiescent_10_fixed_duration'] = True
 
     def new_death_params(self, cdname):
         sval = self.default_sval
         duration_sval = '1.e9'
         self.param_d[cdname]["death_rate"] = '5.31667e-05'   # deprecated??
         self.param_d[cdname]["apoptosis_death_rate"] = '5.31667e-05'
-        self.param_d[cdname]["apoptosis_phase0_duration"] = '516'
-        self.param_d[cdname]["apoptosis_phase0_fixed"] = False
+        self.param_d[cdname]["apoptosis_01_duration"] = '516'
+        self.param_d[cdname]["apoptosis_01_fixed_duration"] = False
 
         self.param_d[cdname]["apoptosis_duration_flag"] = False
 
@@ -6781,17 +5830,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #-----
         self.param_d[cdname]["necrosis_death_rate"] = sval
 
-        self.param_d[cdname]["necrosis_trate01"] = '9e9'
-        self.param_d[cdname]['necrosis_trate01_fixed'] = False
-        self.param_d[cdname]["necrosis_trate12"] = '1.15741e-05'
-        self.param_d[cdname]['necrosis_trate12_fixed'] = True
+        self.param_d[cdname]["necrosis_01_trate"] = '9e9'
+        self.param_d[cdname]["necrosis_01_fixed_trate"] = False
+        self.param_d[cdname]["necrosis_12_trate"] = '1.15741e-05'
+        self.param_d[cdname]["necrosis_12_fixed_trate"] = True
 
         self.param_d[cdname]["necrosis_duration_flag"] = False
 
-        self.param_d[cdname]["necrosis_phase0_duration"] = '1.11111e-10'
-        self.param_d[cdname]["necrosis_phase0_fixed"] = False
-        self.param_d[cdname]["necrosis_phase1_duration"] = '86399.80646'
-        self.param_d[cdname]["necrosis_phase1_fixed"] = True
+        self.param_d[cdname]["necrosis_01_duration"] = '1.11111e-10'
+        self.param_d[cdname]["necrosis_01_fixed_duration"] = False
+        self.param_d[cdname]["necrosis_12_duration"] = '86399.80646'
+        self.param_d[cdname]["necrosis_12_fixed_duration"] = True
 
         self.param_d[cdname]["necrosis_unlysed_rate"] = '1.11667e-02'
         self.param_d[cdname]["necrosis_lysed_rate"] = '8.33333e-4'
@@ -6799,7 +5848,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["necrosis_nuclear_rate"] = '2.16667e-4'
         self.param_d[cdname]["necrosis_calcif_rate"] = '7e-05'
         self.param_d[cdname]["necrosis_rel_rupture_rate"] = '2.0'
-
 
     def new_volume_params(self, cdname):   # rf. core/*_phenotype.cpp
         sval = self.default_sval
@@ -6831,8 +5879,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname_new]["mechanics_absolute_equilibrium_distance_enabled"] = False
 
         self.param_d[cdname_new]["mechanics_elastic_constant"] = '0.01'
-        self.param_d[cdname_new]["mechanics_attachment_rate"] = '0.0'
-        self.param_d[cdname_new]["mechanics_detachment_rate"] = '0.0'
+        self.param_d[cdname_new]["attachment_rate"] = '0.0'
+        self.param_d[cdname_new]["detachment_rate"] = '0.0'
         self.param_d[cdname_new]["mechanics_max_num_attachments"] = '12'
 
         if reset_mapping:
@@ -6983,125 +6031,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
         self.cycle_dropdown.setCurrentIndex(self.param_d[cdname]['cycle_choice_idx'])
 
-
-        # transition rates
-        self.cycle_live_trate00.setText(self.param_d[cdname]['cycle_live_trate00'])
-
-        self.cycle_Ki67_trate01.setText(self.param_d[cdname]['cycle_Ki67_trate01'])
-        self.cycle_Ki67_trate10.setText(self.param_d[cdname]['cycle_Ki67_trate10'])
-
-        self.cycle_advancedKi67_trate01.setText(self.param_d[cdname]['cycle_advancedKi67_trate01'])
-        self.cycle_advancedKi67_trate12.setText(self.param_d[cdname]['cycle_advancedKi67_trate12'])
-        self.cycle_advancedKi67_trate20.setText(self.param_d[cdname]['cycle_advancedKi67_trate20'])
-
-        self.cycle_flowcyto_trate01.setText(self.param_d[cdname]['cycle_flowcyto_trate01'])
-        self.cycle_flowcyto_trate12.setText(self.param_d[cdname]['cycle_flowcyto_trate12'])
-        self.cycle_flowcyto_trate20.setText(self.param_d[cdname]['cycle_flowcyto_trate20'])
-
-        self.cycle_flowcytosep_trate01.setText(self.param_d[cdname]['cycle_flowcytosep_trate01'])
-        # self.cycle_flowcytosep_trate01.setText(f'{self.param_d[cdname]["cycle_flowcytosep_trate01"]:.{self.num_dec}f}')
-        # val3.setText(f'{fval:.{number_of_decimals}f}')
-        self.cycle_flowcytosep_trate12.setText(self.param_d[cdname]['cycle_flowcytosep_trate12'])
-        self.cycle_flowcytosep_trate23.setText(self.param_d[cdname]['cycle_flowcytosep_trate23'])
-        self.cycle_flowcytosep_trate30.setText(self.param_d[cdname]['cycle_flowcytosep_trate30'])
-
-        self.cycle_quiescent_trate01.setText(self.param_d[cdname]['cycle_quiescent_trate01'])
-        self.cycle_quiescent_trate10.setText(self.param_d[cdname]['cycle_quiescent_trate10'])
-
-        # duration times
-        self.cycle_live_duration00.setText(self.param_d[cdname]['cycle_live_duration00'])
-
-        self.cycle_Ki67_duration01.setText(self.param_d[cdname]['cycle_Ki67_duration01'])
-        self.cycle_Ki67_duration10.setText(self.param_d[cdname]['cycle_Ki67_duration10'])
-
-        self.cycle_advancedKi67_duration01.setText(self.param_d[cdname]['cycle_advancedKi67_duration01'])
-        self.cycle_advancedKi67_duration12.setText(self.param_d[cdname]['cycle_advancedKi67_duration12'])
-        self.cycle_advancedKi67_duration20.setText(self.param_d[cdname]['cycle_advancedKi67_duration20'])
-
-        self.cycle_flowcyto_duration01.setText(self.param_d[cdname]['cycle_flowcyto_duration01'])
-        self.cycle_flowcyto_duration12.setText(self.param_d[cdname]['cycle_flowcyto_duration12'])
-        self.cycle_flowcyto_duration20.setText(self.param_d[cdname]['cycle_flowcyto_duration20'])
-
-        self.cycle_flowcytosep_duration01.setText(self.param_d[cdname]['cycle_flowcytosep_duration01'])
-        self.cycle_flowcytosep_duration12.setText(self.param_d[cdname]['cycle_flowcytosep_duration12'])
-        self.cycle_flowcytosep_duration23.setText(self.param_d[cdname]['cycle_flowcytosep_duration23'])
-        self.cycle_flowcytosep_duration30.setText(self.param_d[cdname]['cycle_flowcytosep_duration30'])
-
-        self.cycle_quiescent_duration01.setText(self.param_d[cdname]['cycle_quiescent_duration01'])
-        self.cycle_quiescent_duration10.setText(self.param_d[cdname]['cycle_quiescent_duration10'])
-
-
-        #-------------------------
-        # transition rates "fixed"
-        # self.apoptosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["apoptosis_phase0_fixed"])
-
-        self.cycle_live_trate00_fixed.setChecked(self.param_d[cdname]['cycle_live_trate00_fixed'])
-
-        self.cycle_Ki67_trate01_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_trate01_fixed'])
-        self.cycle_Ki67_trate10_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_trate10_fixed'])
-
-        self.cycle_advancedKi67_trate01_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate01_fixed'])
-        self.cycle_advancedKi67_trate12_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate12_fixed'])
-        self.cycle_advancedKi67_trate20_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_trate20_fixed'])
-
-        self.cycle_flowcyto_trate01_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate01_fixed'])
-        self.cycle_flowcyto_trate12_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate12_fixed'])
-        self.cycle_flowcyto_trate20_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_trate20_fixed'])
-
-        self.cycle_flowcytosep_trate01_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate01_fixed'])
-        self.cycle_flowcytosep_trate12_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate12_fixed'])
-        self.cycle_flowcytosep_trate23_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate23_fixed'])
-        self.cycle_flowcytosep_trate30_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_trate30_fixed'])
-
-        self.cycle_quiescent_trate01_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_trate01_fixed'])
-        self.cycle_quiescent_trate10_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_trate10_fixed'])
-
-
-        #------ duration times "fixed"
-        self.cycle_live_duration00_fixed.setChecked(self.param_d[cdname]['cycle_live_duration00_fixed'])
-
-        self.cycle_Ki67_duration01_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_duration01_fixed'])
-        self.cycle_Ki67_duration10_fixed.setChecked(self.param_d[cdname]['cycle_Ki67_duration10_fixed'])
-
-        self.cycle_advancedKi67_duration01_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration01_fixed'])
-        self.cycle_advancedKi67_duration12_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration12_fixed'])
-        self.cycle_advancedKi67_duration20_fixed.setChecked(self.param_d[cdname]['cycle_advancedKi67_duration20_fixed'])
-
-        self.cycle_flowcyto_duration01_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration01_fixed'])
-        self.cycle_flowcyto_duration12_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration12_fixed'])
-        self.cycle_flowcyto_duration20_fixed.setChecked(self.param_d[cdname]['cycle_flowcyto_duration20_fixed'])
-
-        self.cycle_flowcytosep_duration01_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration01_fixed'])
-        self.cycle_flowcytosep_duration12_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration12_fixed'])
-        self.cycle_flowcytosep_duration23_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration23_fixed'])
-        self.cycle_flowcytosep_duration30_fixed.setChecked(self.param_d[cdname]['cycle_flowcytosep_duration30_fixed'])
-
-        self.cycle_quiescent_duration01_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_duration01_fixed'])
-        self.cycle_quiescent_duration10_fixed.setChecked(self.param_d[cdname]['cycle_quiescent_duration10_fixed'])
-
-        #         # if cycle_code == 0:
-        #         #     self.cycle_dropdown.setCurrentIndex(2)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'advanced Ki67'
-        #         # elif cycle_code == 1:
-        #         #     self.cycle_dropdown.setCurrentIndex(1)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'basic Ki67'
-        #         # elif cycle_code == 2:
-        #         #     self.cycle_dropdown.setCurrentIndex(3)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry'
-        #         # elif cycle_code == 5:
-        #         #     self.cycle_dropdown.setCurrentIndex(0)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'live cells'
-        #         # elif cycle_code == 6:
-        #         #     self.cycle_dropdown.setCurrentIndex(4)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'flow cytometry separated'
-        #         # elif cycle_code == 7:
-        #         #     self.cycle_dropdown.setCurrentIndex(5)
-        #         #     self.param_d[cell_def_name]['cycle'] = 'cycling quiescent'
-
-        # self.cycle_trate00.setText(self.param_d[self.current_cell_def]['cycle_trate00'])
-        # self.cycle_trate01.setText(self.param_d[self.current_cell_def]['cycle_trate01'])
-        # # self.cycle_flowcyto_trate01.setText(self.param_d[self.current_cell_def]['cycle_flowcyto_trate01'])
-        # self.cycle_flowcyto_trate12.setText(self.param_d[self.current_cell_def]['cycle_flowcyto_trate12'])
+        for k, v in self.param_d[cdname].items():
+            if not k.startswith("cycle_"):
+                # not a cycle parameter
+                continue
+            if (not k.endswith("_trate")) and (not k.endswith("_duration")) and (not k.endswith("_fixed")):
+                # only updating those that end with these strings
+                continue
+            if isinstance(v, bool):
+                getattr(self, k).setChecked(v)
+            else:
+                getattr(self, k).setText(v)
 
     #-----------------------------------------------------------------------------------------
     def update_death_params(self):
@@ -7116,11 +6056,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         else:
             # print(" ------------------  apoptosis_rb1.setChecked(True) ")
             self.apoptosis_rb1.setChecked(True)
-        self.apoptosis_phase0_duration.setText(self.param_d[cdname]["apoptosis_phase0_duration"])
-        self.apoptosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["apoptosis_phase0_fixed"])
+        self.apoptosis_01_duration.setText(self.param_d[cdname]["apoptosis_01_duration"])
+        self.apoptosis_01_fixed_duration.setChecked(self.param_d[cdname]["apoptosis_01_fixed_duration"])
         # vs.
-        self.apoptosis_trate01.setText(self.param_d[cdname]["apoptosis_trate01"])
-        self.apoptosis_trate01_fixed.setChecked(self.param_d[cdname]["apoptosis_trate01_fixed"])
+        self.apoptosis_01_trate.setText(self.param_d[cdname]["apoptosis_01_trate"])
+        self.apoptosis_01_fixed_trate.setChecked(self.param_d[cdname]["apoptosis_01_fixed_trate"])
 
         self.apoptosis_unlysed_rate.setText(self.param_d[cdname]["apoptosis_unlysed_rate"])
         self.apoptosis_lysed_rate.setText(self.param_d[cdname]["apoptosis_lysed_rate"])
@@ -7138,15 +6078,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         else:
             # print(" ------------------  necrosis_rb1.setChecked(True) ")
             self.necrosis_rb1.setChecked(True)
-        self.necrosis_phase0_duration.setText(self.param_d[cdname]["necrosis_phase0_duration"])
-        self.necrosis_phase0_duration_fixed.setChecked(self.param_d[cdname]["necrosis_phase0_fixed"])
-        self.necrosis_phase1_duration.setText(self.param_d[cdname]["necrosis_phase1_duration"])
-        self.necrosis_phase1_duration_fixed.setChecked(self.param_d[cdname]["necrosis_phase1_fixed"])
+        self.necrosis_01_duration.setText(self.param_d[cdname]["necrosis_01_duration"])
+        self.necrosis_01_fixed_duration.setChecked(self.param_d[cdname]["necrosis_01_fixed_duration"])
+        self.necrosis_12_duration.setText(self.param_d[cdname]["necrosis_12_duration"])
+        self.necrosis_12_fixed_duration.setChecked(self.param_d[cdname]["necrosis_12_fixed_duration"])
         # vs.
-        self.necrosis_trate01.setText(self.param_d[cdname]["necrosis_trate01"])
-        self.necrosis_trate01_fixed.setChecked(self.param_d[cdname]["necrosis_trate01_fixed"])
-        self.necrosis_trate12.setText(self.param_d[cdname]["necrosis_trate12"])
-        self.necrosis_trate12_fixed.setChecked(self.param_d[cdname]["necrosis_trate12_fixed"])
+        self.necrosis_01_trate.setText(self.param_d[cdname]["necrosis_01_trate"])
+        self.necrosis_01_fixed_trate.setChecked(self.param_d[cdname]["necrosis_01_fixed_trate"])
+        self.necrosis_12_trate.setText(self.param_d[cdname]["necrosis_12_trate"])
+        self.necrosis_12_fixed_trate.setChecked(self.param_d[cdname]["necrosis_12_fixed_trate"])
 
         self.necrosis_unlysed_rate.setText(self.param_d[cdname]["necrosis_unlysed_rate"])
         self.necrosis_lysed_rate.setText(self.param_d[cdname]["necrosis_lysed_rate"])
@@ -7220,8 +6160,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.set_absolute_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_absolute_equilibrium_distance_enabled"])
 
         self.elastic_constant.setText(self.param_d[cdname]["mechanics_elastic_constant"])
-        self.attachment_rate.setText(self.param_d[cdname]["mechanics_attachment_rate"])
-        self.detachment_rate.setText(self.param_d[cdname]["mechanics_detachment_rate"])
+        self.attachment_rate.setText(self.param_d[cdname]["attachment_rate"])
+        self.detachment_rate.setText(self.param_d[cdname]["detachment_rate"])
         self.max_num_attachments.setText(self.param_d[cdname]["mechanics_max_num_attachments"])
 
 
@@ -7268,10 +6208,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         if self.param_d[cdname]["normalize_each_gradient"]:
             self.normalize_each_gradient.setChecked(True)
-            self.normalize_each_gradient_cb(True)
+            # self.normalize_each_gradient_cb(True) # all this function (used to) does is set self.param_d[cdname]["normalize_each_gradient"] to True, but we're because it already is True
         else:
             self.normalize_each_gradient.setChecked(False)
-            self.normalize_each_gradient_cb(False)
+            # self.normalize_each_gradient_cb(False) # all this function (used to) does is set self.param_d[cdname]["normalize_each_gradient"] to False, but we're because it already is False
 
         # print('chemotactic_sensitivity= ',self.param_d[cdname]['chemotactic_sensitivity'])
         # foobar now None
@@ -7529,25 +6469,20 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def update_misc_params(self):
         cdname = self.current_cell_def
-        self.cell_type_par_dist_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
-        self.cell_type_par_dist_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        self.par_dist_cell_type_disabled_checkbox.setText(f"Disable all parameter distributions for {cdname}")
+        self.par_dist_display_button.setText(f"Display/update parameter distributions for {cdname}")    
+        if self.param_d[cdname]["par_dists_disabled"] != self.par_dist_cell_type_disabled_checkbox.isChecked():
+            self.par_dist_cell_type_disabled_checkbox.setChecked(self.param_d[cdname]["par_dists_disabled"])
+        else:
+            state = QtCore.Qt.Checked if self.param_d[cdname]["par_dists_disabled"] else QtCore.Qt.Unchecked
+            self.par_dist_cell_type_disabled_checkbox.stateChanged.emit(state)
+            
         if self.param_d[cdname]["par_dists_disabled"]:
+            self.par_dist_enable_checkbox.setChecked(False)
+            self.par_dist_enforce_base_checkbox.setChecked(False)
             for pdple in self.par_dist_par_lineedit:
-                pdple.setText('')
-            return
-        behavior = self.par_dist_behavior_combobox.currentText()
-        if behavior != '' and (behavior in self.param_d[cdname]['par_dists'].keys()):
-            for pdple in self.par_dist_par_lineedit:
-                name = pdple.objectName()
-                if name not in self.param_d[cdname]['par_dists'][behavior]["parameters"].keys():
-                    val = ''
-                else:
-                    val = self.param_d[cdname]['par_dists'][behavior]['parameters'][name]
-                pdple.setText(val)
-            self.par_distributions_combobox.setCurrentText(self.param_d[cdname]['par_dists'][behavior]["distribution"])
-            self.par_dist_enforce_base_checkbox.setChecked(self.param_d[cdname]['par_dists'][behavior]["enforce_base"])
+                pdple.setText('') # do not let the previous cell def param values affect this cell def param values
 
-        self.display_par_dists_button.setText(f"Display/update parameter distributions for {cdname}")    
     #-----------------------------------------------------------------------------------------
     # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
     def clear_custom_data_params(self):
@@ -7647,11 +6582,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             #--- live
             if combo_widget_idx == 0:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_live_duration00_fixed']:
+                if self.param_d[cdef]['cycle_live_00_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_live_duration00']
-                live_duration = float(self.param_d[cdef]['cycle_live_duration00'])
+                subelm2.text = self.param_d[cdef]['cycle_live_00_duration']
+                live_duration = float(self.param_d[cdef]['cycle_live_00_duration'])
                 if abs(live_duration) < 1.e-6:
                     msg = f"WARNING: {cdef} has Cycle=live with duration ~= 0 which will result in unrealistically high proliferation!"
                     print(msg)
@@ -7665,109 +6600,109 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
             elif combo_widget_idx == 1:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_duration01_fixed']:
+                if self.param_d[cdef]['cycle_Ki67_01_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_01_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_duration10_fixed']:
+                if self.param_d[cdef]['cycle_Ki67_10_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_10_duration']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
             elif combo_widget_idx == 2:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_duration01_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_01_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_01_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_duration12_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_12_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration12']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_12_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_duration20_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_20_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_duration20']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_20_duration']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
             elif combo_widget_idx == 3:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_duration01_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_01_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_01_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_duration12_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_12_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration12']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_12_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_duration20_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_20_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_duration20']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_20_duration']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("flow cytometry sepaduration") # 0->1, 1->2, 2->3, 3->0
             elif combo_widget_idx == 4:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_duration01_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_01_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_01_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_duration12_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_12_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration12']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_12_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_duration23_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_23_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration23']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_23_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_duration30_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_30_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"3", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_duration30']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_30_duration']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
             elif combo_widget_idx == 5:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_duration01_fixed']:
+                if self.param_d[cdef]['cycle_quiescent_01_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_01_duration']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_duration10_fixed']:
+                if self.param_d[cdef]['cycle_quiescent_10_fixed_duration']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_duration01']
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_10_duration']
                 subelm2.tail = self.indent12
 
 
@@ -7786,117 +6721,117 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
             if combo_widget_idx == 0:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_live_trate00_fixed']:
+                if self.param_d[cdef]['cycle_live_00_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_live_trate00']
+                subelm2.text = self.param_d[cdef]['cycle_live_00_trate']
                 subelm2.tail = self.indent12
 
             elif combo_widget_idx == 1:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_trate01_fixed']:
+                if self.param_d[cdef]['cycle_Ki67_01_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_01_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_trate10_fixed']:
+                if self.param_d[cdef]['cycle_Ki67_10_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_Ki67_10_trate']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
             elif combo_widget_idx == 2:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_trate01_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_01_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_01_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_trate12_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_12_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate12']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_12_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_trate20_fixed']:
+                if self.param_d[cdef]['cycle_advancedKi67_20_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_trate20']
+                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_20_trate']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
             elif combo_widget_idx == 3:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_trate01_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_01_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_01_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_trate12_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_12_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate12']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_12_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_trate20_fixed']:
+                if self.param_d[cdef]['cycle_flowcyto_20_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_trate20']
+                subelm2.text = self.param_d[cdef]['cycle_flowcyto_20_trate']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
             elif combo_widget_idx == 4:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_trate01_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_01_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_01_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_trate12_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_12_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate12']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_12_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_trate23_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_23_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"3", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate23']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_23_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_trate30_fixed']:
+                if self.param_d[cdef]['cycle_flowcytosep_30_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"3", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_trate30']
+                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_30_trate']
                 subelm2.tail = self.indent12
 
             # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
             elif combo_widget_idx == 5:
                 sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_trate01_fixed']:
+                if self.param_d[cdef]['cycle_quiescent_01_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_01_trate']
                 subelm2.tail = self.indent14
 
                 sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_trate10_fixed']:
+                if self.param_d[cdef]['cycle_quiescent_10_fixed_trate']:
                     sfix = "true"
                 subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_trate01']
+                subelm2.text = self.param_d[cdef]['cycle_quiescent_10_trate']
                 subelm2.tail = self.indent12
 
     #-------------------------------------------------------------------
@@ -7920,10 +6855,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             subelm.tail = self.indent14
 
             bval = "false"
-            if self.param_d[cdname]["apoptosis_phase0_fixed"]:
+            if self.param_d[cdname]["apoptosis_01_fixed_duration"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["apoptosis_phase0_duration"]
+            subelm2.text = self.param_d[cdname]["apoptosis_01_duration"]
             subelm2.tail = self.indent14
         else:   # transition rate
             subelm = ET.SubElement(model, "phase_transition_rates",{"units":self.default_rate_units})
@@ -7931,10 +6866,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             subelm.tail = self.indent14
 
             bval = "false"
-            if self.param_d[cdname]["apoptosis_trate01_fixed"]:
+            if self.param_d[cdname]["apoptosis_01_fixed_trate"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0","end_index":"1", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["apoptosis_trate01"]
+            subelm2.text = self.param_d[cdname]["apoptosis_01_trate"]
             subelm2.tail = self.indent14
 
         elm = ET.SubElement(model, "parameters")
@@ -7980,17 +6915,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             subelm.tail = self.indent14
 
             bval = "false"
-            if self.param_d[cdname]["necrosis_phase0_fixed"]:
+            if self.param_d[cdname]["necrosis_01_fixed_duration"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["necrosis_phase0_duration"]
+            subelm2.text = self.param_d[cdname]["necrosis_01_duration"]
             subelm2.tail = self.indent14
 
             bval = "false"
-            if self.param_d[cdname]["necrosis_phase1_fixed"]:
+            if self.param_d[cdname]["necrosis_12_fixed_duration"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["necrosis_phase1_duration"]
+            subelm2.text = self.param_d[cdname]["necrosis_12_duration"]
             subelm2.tail = self.indent14
         else:   # transition rate
             subelm = ET.SubElement(model, "phase_transition_rates",{"units":self.default_rate_units})
@@ -7998,17 +6933,17 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             subelm.tail = self.indent14
 
             bval = "false"
-            if self.param_d[cdname]["necrosis_trate01_fixed"]:
+            if self.param_d[cdname]["necrosis_01_fixed_trate"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0","end_index":"1", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["necrosis_trate01"]
+            subelm2.text = self.param_d[cdname]["necrosis_01_trate"]
             subelm2.tail = self.indent16
 
             bval = "false"
-            if self.param_d[cdname]["necrosis_trate12_fixed"]:
+            if self.param_d[cdname]["necrosis_12_fixed_trate"]:
                 bval = "true"
             subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1","end_index":"2", "fixed_duration":bval})
-            subelm2.text = self.param_d[cdname]["necrosis_trate12"]
+            subelm2.text = self.param_d[cdname]["necrosis_12_trate"]
             subelm2.tail = self.indent14
 
         elm = ET.SubElement(model, "parameters")
@@ -8162,11 +7097,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         elm.tail = self.indent12
 
         elm = ET.SubElement(mechanics, 'attachment_rate',{"units":self.default_rate_units})
-        elm.text = self.param_d[cdef]["mechanics_attachment_rate"]
+        elm.text = self.param_d[cdef]["attachment_rate"]
         elm.tail = self.indent12
 
         elm = ET.SubElement(mechanics, 'detachment_rate',{"units":self.default_rate_units})
-        elm.text = self.param_d[cdef]["mechanics_detachment_rate"]
+        elm.text = self.param_d[cdef]["detachment_rate"]
         elm.tail = self.indent10
 
         elm = ET.SubElement(mechanics, 'maximum_number_of_attachments')
@@ -8864,3 +7799,81 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             #     {"code":self.cycle_combo_idx_code[combo_widget_idx],
             #         "name":self.cycle_combo_idx_name[combo_widget_idx] } )
             # textW.appendPlainText(cycle)
+
+    def finalize_glayout(self, glayout, glayout_name):
+        # loop over rows of glayout
+        dict_name = 'rate_fast_label'
+        if not hasattr(self, dict_name):
+            setattr(self, dict_name, {})
+        for i in range(glayout.rowCount()):
+            hover_warning = HoverWarning("")
+            getattr(self, dict_name)[f"{glayout_name}_{i}"] = hover_warning
+            glayout.addWidget(hover_warning, i, 5, 1, 1) # w, row, column, rowspan, colspan
+        vbox = QVBoxLayout()
+        w = QWidget()
+        w.setLayout(glayout)
+        vbox.addWidget(w)
+        vbox.addStretch()
+        return vbox
+    
+    def build_cycle_layouts(self, base_name, n_phases):
+        self.build_cycle_layout(base_name, n_phases, "trate")
+        self.build_cycle_layout(base_name, n_phases, "duration")
+
+    def build_cycle_layout(self, base_name, n_phases, suffix):
+        units_width = 35
+        cycle_base_name = f"cycle_{base_name}" # prepend "cycle_" to match previous name convention
+        glayout = QGridLayout()
+        for start_phase_index in range(n_phases):
+            if start_phase_index == n_phases-1:
+                end_phase_index = 0
+            else:
+                end_phase_index = start_phase_index+1
+
+            base_label_str = f"phase {start_phase_index}->{end_phase_index}"
+            label_end_str = "transition rate" if suffix=="trate" else "duration"
+            label_str = f"{base_label_str} {label_end_str}"
+            label = QLabel(label_str)
+            label.setFixedWidth(self.label_width)
+            label.setAlignment(QtCore.Qt.AlignRight)
+            glayout.addWidget(label, start_phase_index, 0, 1, 1) # w, row, column, rowspan, colspan
+
+            phases_name = f"{cycle_base_name}_{start_phase_index}{end_phase_index}"
+            name = f"{phases_name}_{suffix}"
+            qle = QLineEdit(objectName=name)
+            cb_fn = self.cell_def_pheno_rate_changed if suffix=="trate" else self.cell_def_pheno_duration_changed
+            qle.textChanged.connect(cb_fn)
+            qle.setValidator(QtGui.QDoubleValidator(bottom=0.0))
+            glayout.addWidget(qle, start_phase_index, 1, 1, 2) # w, row, column, rowspan, colspan
+            setattr(self, name, qle)
+
+            name_for_cb = f"{phases_name}_fixed"
+            fixed_attr_name= f"{name_for_cb}_{suffix}"
+            qcb = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName=name_for_cb)
+            qcb.clicked.connect(self.cell_def_fixed_clicked)
+            glayout.addWidget(qcb, start_phase_index, 3, 1, 1) # w, row, column, rowspan, colspan
+            setattr(self, fixed_attr_name, qcb)
+
+            units_str = self.default_rate_units if suffix=="trate" else self.default_time_units
+            units = QLabel(units_str)
+            units.setAlignment(QtCore.Qt.AlignCenter)
+            units.setFixedWidth(units_width)
+            glayout.addWidget(units, start_phase_index, 4, 1, 1) # w, row, column, rowspan, colspan
+
+            hover_warning = HoverWarning("")
+            glayout.addWidget(hover_warning, start_phase_index, 5, 1, 1) # w, row, column, rowspan, colspan
+            setattr(self, f"{name}_warning_label", hover_warning)
+
+        vbox = QVBoxLayout()
+        w = QWidget()
+        w.setLayout(glayout)
+        vbox.addWidget(w)
+        vbox.addStretch()
+
+        base_name_stack = f"stack_trate_{base_name}" if suffix=="trate" else f"stack_duration_{base_name}"
+        getattr(self, base_name_stack).setLayout(vbox)
+        setattr(self, f"{base_name_stack}_idx", self.idx_stacked_widget)
+        self.idx_stacked_widget += 1
+
+        self.stacked_cycle.addWidget(getattr(self, base_name_stack))
+            

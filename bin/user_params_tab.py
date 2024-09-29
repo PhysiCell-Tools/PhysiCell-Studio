@@ -68,9 +68,10 @@ class MyQLineEdit(QLineEdit):
 
 
 class UserParams(QWidget):
-    def __init__(self):
+    def __init__(self, xml_creator):
         super().__init__()
 
+        self.xml_creator = xml_creator
         # self.current_param = None
         self.xml_root = None
         self.count = 100
@@ -180,6 +181,7 @@ class UserParams(QWidget):
             w_varname.wrow = irow
             w_varname.wcol = self.var_icol_name
             w_varname.textChanged[str].connect(self.name_changed_cb)  # being explicit about passing a string 
+            w_varname.editingFinished.connect(self.name_change_finished_cb) 
 
             # ------- type
             w_var_type = MyQComboBox()
@@ -364,7 +366,8 @@ class UserParams(QWidget):
         self.add_row_utable(self.count - 1)
 
         # self.enable_all_custom_data()
-
+        if varname == "random_seed":
+            self.xml_creator.config_tab.random_seed_warning_label.hide_icon()
     #----------------------------------------
     # Not currently used
     def disable_table_cells_for_duplicate_name(self, widget=None):
@@ -568,6 +571,10 @@ class UserParams(QWidget):
             for ival in range(N):
                 self.add_row_utable(self.count + ival)
             self.count += N
+
+    def name_change_finished_cb(self):
+        if self.sender().text()=="random_seed":
+            self.xml_creator.config_tab.random_seed_warning_label.show_icon()
 
     #----------------------------------------
     def units_changed_cb(self, text):

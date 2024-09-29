@@ -32,7 +32,7 @@ import numpy as np
 
 # from multivariate_rules import Window_plot_rules
 from studio_classes import ExtendedCombo
-from studio_functions import show_warning
+from studio_functions import show_studio_warning_window
 from xml_constants import *
 
 # from cell_def_tab import CellDef
@@ -520,14 +520,14 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # if row < 0:
         if (row < 0) or (row+1 > self.num_maps) or (self.num_maps <= 0):
             msg = f'Error: Select a row with a map before deleting.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return
         for irow in range(row, self.max_map_table_rows):
             try:
                 self.maps_table.cellWidget(irow,self.maps_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
             except:
                 msg = f'Warning: could not decrement row {irow} from the Maps table. Select a row before deleting.'
-                show_warning(msg)
+                show_studio_warning_window(msg)
                 return
 
         self.maps_table.removeRow(row)
@@ -597,7 +597,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         self.response_combobox.addItems(self.response_l)
 
         self.response_combobox.setCurrentIndex(0)
-        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     def create_response_list(self):
         # TODO: figure out how best to organize these responses
@@ -674,13 +674,13 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         if "type" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'type'")
             msg = f'Error: Missing "type" in intracellular subtab for ODEs. Please provide before saving the XML.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return False
 
         if len(self.sbml_filename) == 0:
             print("---- sbml_intra.py: validate_params(): missing 'sbml_filename'")
             msg = f'Error: Missing "SBML file" in intracellular subtab for ODEs. Please provide before saving the XML.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return False
         self.celldef_tab.param_d[cdef]["intracellular"]["sbml_filename"] = self.sbml_filename
 
@@ -690,11 +690,11 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
             if float(self.dt_w.text()) <= 0.0: 
                 print("---- sbml_intra.py: validate_params(): missing 'intracellular_dt'")
                 msg = f'Error: Invalid "intracellular_dt" in intracellular subtab for ODEs. Please provide before saving the XML.'
-                show_warning(msg)
+                show_studio_warning_window(msg)
                 return False
         except:
             msg = f'Error: Invalid "intracellular_dt" in intracellular subtab for ODEs. Please provide before saving the XML.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return False
         # self.celldef_tab.param_d[cdef]["intracellular"]["intracellular_dt"] = self.intracellular_dt
 
@@ -706,7 +706,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'sbml_maps'")
             msg = f'Error: Invalid "sbml_maps" in intracellular subtab for ODEs. Please provide before saving the XML.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return False
 
         return True
@@ -714,17 +714,17 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # if "sbml_filename" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
         #     print("---- sbml_intra.py: validate_params(): missing 'sbml_filename'")
         #     msg = f'Error: Missing "SBML file" in intracellular subtab for ODEs. Please provide before saving the XML.'
-        #     show_warning(msg)
+        #     show_studio_warning_window(msg)
         #     return False
         # if "intracellular_dt" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
         #     print("---- sbml_intra.py: validate_params(): missing 'intracellular_dt'")
         #     msg = f'Error: Missing "intracellular_dt" in intracellular subtab for ODEs. Please provide before saving the XML.'
-        #     show_warning(msg)
+        #     show_studio_warning_window(msg)
         #     return False
         # if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
         #     print("---- sbml_intra.py: validate_params(): missing 'sbml_maps'")
         #     msg = f'Error: Missing "sbml_maps" in intracellular subtab for ODEs. Please provide before saving the XML.'
-        #     show_warning(msg)
+        #     show_studio_warning_window(msg)
         #     return False        
 
     #-----------------------------------------------------------
