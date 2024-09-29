@@ -1,14 +1,5 @@
 <PhysiCell_settings version="devel-version">
 
-    <cell_rules>
-        <rulesets>
-            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="true">
-                <folder>config</folder>
-                <filename>rules.csv</filename>
-            </ruleset>
-        </rulesets>
-    </cell_rules>
-
     <domain>
         <x_min>-1000</x_min>
         <x_max>1000</x_max>
@@ -544,6 +535,15 @@
         </cell_definition>
     </cell_definitions>
 
+    <cell_rules>
+        <rulesets>
+            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="false">
+                <folder>config</folder>
+                <filename>rules.csv</filename>
+            </ruleset>
+        </rulesets>
+    </cell_rules>
+
     <initial_conditions>
         <cell_positions type="csv" enabled="false">
             <folder>./config</folder>
@@ -552,7 +552,6 @@
     </initial_conditions>
 
     <user_parameters>
-        <random_seed type="int" units="none" description="">0</random_seed>
         <number_of_cells type="int" units="none" description="initial number of cells (for each cell type)">0</number_of_cells>
         <worker_color type="string" units="none" description="">red</worker_color>
         <cargo_color type="string" units="none" description="">blue</cargo_color>
