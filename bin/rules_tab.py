@@ -496,27 +496,17 @@ class Rules(QWidget):
 
         delete_rule_btn = QPushButton("Delete rule")
         delete_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         delete_rule_btn.clicked.connect(self.delete_rule_cb)
         delete_rule_btn.setStyleSheet("background-color: yellow")
         hlayout.addWidget(delete_rule_btn)
 
         plot_rule_btn = QPushButton("Plot rule")
         plot_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         plot_rule_btn.clicked.connect(self.plot_rule_cb)
         plot_rule_btn.setStyleSheet("background-color: lightgreen")
         hlayout.addWidget(plot_rule_btn)
 
         hlayout.addStretch(1)
-
-        # btn_frame = QFrame()
-        # btn_frame.setGeometry(QRect(10,10,500,20))
-        # btn_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
-        # btn_frame.setLayout(hlayout)
-        # btn_frame.setFixedWidth(500)  # omg
-        # self.vbox_cycle.addWidget(radio_frame)
-
         #-------
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
@@ -532,13 +522,6 @@ class Rules(QWidget):
         self.clear_button.setStyleSheet("background-color: yellow")
         self.clear_button.clicked.connect(self.clear_rules)
         hlayout2.addWidget(self.clear_button) 
-
-        # self.validate_button = QPushButton("Validate all")
-        # self.validate_button.setEnabled(False)
-        # self.validate_button.setFixedWidth(150)
-        # self.validate_button.setStyleSheet("background-color: lightgreen")
-        # self.validate_button.clicked.connect(self.validate_rules_cb)
-        # hlayout.addWidget(self.validate_button) 
 
         self.rules_tab_layout.addLayout(hlayout2) 
         #----------------------

@@ -193,34 +193,7 @@ class SubstrateDef(QWidget):
             }
             """
 
-        # self.params_cycle.setStyleSheet("QLineEdit { background-color: white }")
-        # self.microenv_params.setStyleSheet(stylesheet)
-
         self.vbox = QVBoxLayout()
-        # self.vbox.addStretch(0)
-
-        # self.microenv_hbox.addWidget(self.)
-
-        #------------------
-
-        # self.vbox.addLayout(hbox)
-        # self.vbox.addWidget(QHLine())
-
-        #------------------
-        # hbox = QHBoxLayout()
-        # label = QLabel("Name of substrate:")
-        # label.setFixedWidth(180)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # hbox.addWidget(label)
-
-        # self.substrate_name = QLineEdit()
-        # self.substrate_name.textChanged.connect(self.substrate_name_cb)  # todo - rename it
-        # # Want to validate name, e.g., starts with alpha, no special chars, etc.
-        # # self.cycle_trate0_0.setValidator(QtGui.QDoubleValidator())
-        # # self.cycle_trate0_1.enter.connect(self.save_xml)
-        # hbox.addWidget(self.substrate_name)
-        # self.vbox.addLayout(hbox)
-
         #------------------
         hbox = QHBoxLayout()
         label = QLabel("diffusion coefficient")
@@ -231,7 +204,6 @@ class SubstrateDef(QWidget):
         self.diffusion_coef = QLineEdit()
         self.diffusion_coef.setValidator(QtGui.QDoubleValidator())
         self.diffusion_coef.textChanged.connect(self.diffusion_coef_changed)
-        # self.diffusion_coef.enter.connect(self.save_xml)
         hbox.addWidget(self.diffusion_coef)
 
         units = QLabel("micron^2/min")
@@ -249,7 +221,6 @@ class SubstrateDef(QWidget):
         self.decay_rate = QLineEdit()
         self.decay_rate.setValidator(QtGui.QDoubleValidator())
         self.decay_rate.textChanged.connect(self.decay_rate_changed)
-        # self.decay_rate.enter.connect(self.save_xml)
         hbox.addWidget(self.decay_rate)
 
         units = QLabel(self.default_rate_units)
@@ -267,7 +238,6 @@ class SubstrateDef(QWidget):
         self.init_cond = QLineEdit()
         self.init_cond.setValidator(QtGui.QDoubleValidator())
         self.init_cond.textChanged.connect(self.init_cond_changed)
-        # self.init_cond.enter.connect(self.save_xml)
         hbox.addWidget(self.init_cond)
 
         self.init_cond_units = QLabel(self.dirichlet_units)
@@ -285,19 +255,11 @@ class SubstrateDef(QWidget):
         self.dirichlet_bc = QLineEdit()
         self.dirichlet_bc.setValidator(QtGui.QDoubleValidator())
         self.dirichlet_bc.textChanged.connect(self.dirichlet_bc_changed)
-        # self.bdy_cond.enter.connect(self.save_xml)
         hbox.addWidget(self.dirichlet_bc)
 
         self.dirichlet_bc_units = QLabel(self.dirichlet_units)
         self.dirichlet_bc_units.setFixedWidth(units_width)
         hbox.addWidget(self.dirichlet_bc_units)
-
-# # 			<Dirichlet_boundary_condition units="dimensionless" enabled="false">0</Dirichlet_boundary_condition>
-#         self.dirichlet_bc_enabled = QCheckBox("on")
-#         self.dirichlet_bc_enabled.stateChanged.connect(self.dirichlet_toggle_cb)
-#         # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-#         # label.setFixedWidth(label_width)
-#         hbox.addWidget(self.dirichlet_bc_enabled)
 
         self.apply_dc_button = QPushButton("Apply to all")
         # self.apply_dc_button.setFixedWidth(btn_width)
@@ -309,19 +271,7 @@ class SubstrateDef(QWidget):
         self.vbox.addLayout(hbox)
 
         #--------------------------
-# <!--
-# 			<Dirichlet_options>
-# 				<boundary_value ID="xmin" enabled="false">0</boundary_value>
-# 				<boundary_value ID="xmax" enabled="false">0</boundary_value>
-# 				<boundary_value ID="ymin" enabled="false">0</boundary_value>
-# 				<boundary_value ID="ymax" enabled="false">0</boundary_value>
-# 				<boundary_value ID="zmin" enabled="false">1</boundary_value>
-# 				<boundary_value ID="zmax" enabled="false">0</boundary_value>
-# 			</Dirichlet_options>
-# -->			
-#  		</variable>
         dirichlet_options_bdy = QLabel("Dirichlet options per boundary:")
-        # units.setFixedWidth(units_width)
         self.vbox.addWidget(dirichlet_options_bdy)
 
         #----
@@ -338,8 +288,6 @@ class SubstrateDef(QWidget):
 
         self.enable_xmin = QCheckBox_custom("on")
         self.enable_xmin.stateChanged.connect(self.enable_xmin_cb)
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(label_width)
         hbox.addWidget(self.enable_xmin)
         self.vbox.addLayout(hbox)
         #----
@@ -372,8 +320,6 @@ class SubstrateDef(QWidget):
 
         self.enable_ymin = QCheckBox_custom("on")
         self.enable_ymin.stateChanged.connect(self.enable_ymin_cb)
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(label_width)
         hbox.addWidget(self.enable_ymin)
         self.vbox.addLayout(hbox)
         #----
@@ -406,8 +352,6 @@ class SubstrateDef(QWidget):
 
         self.enable_zmin = QCheckBox_custom("on")
         self.enable_zmin.stateChanged.connect(self.enable_zmin_cb)
-        # self.motility_enabled.setAlignment(QtCore.Qt.AlignRight)
-        # label.setFixedWidth(label_width)
         hbox.addWidget(self.enable_zmin)
         self.vbox.addLayout(hbox)
         #----
@@ -427,8 +371,6 @@ class SubstrateDef(QWidget):
         hbox.addWidget(self.enable_zmax)
         self.vbox.addLayout(hbox)
 
-        # self.update_3D()
-
         #-------------
         # Toggles for overall microenv (all substrates)
         self.vbox.addWidget(QHLine())
@@ -439,28 +381,13 @@ class SubstrateDef(QWidget):
         self.gradients = QCheckBox_custom("calculate gradients")
         self.gradients.stateChanged.connect(self.gradients_cb)
         hbox.addWidget(self.gradients)
-        # self.vbox.addLayout(hbox)
 
-        # hbox = QHBoxLayout()
         self.track_in_agents = QCheckBox_custom("track in agents")
         self.track_in_agents.stateChanged.connect(self.track_in_agents_cb)
         hbox.addWidget(self.track_in_agents)
         self.vbox.addLayout(hbox)
 
-        #--------------------------
-        # Dummy widget for filler??
-        # label = QLabel("")
-        # label.setFixedHeight(1000)
-        # # label.setStyleSheet("background-color: orange")
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
-
         #==================================================================
-        # self.vbox.setAlignment(QtCore.Qt.AlignTop)
-
-        # spacerItem = QSpacerItem(20, 237, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        # spacerItem = QSpacerItem(100,500)
-        # self.vbox.addItem(spacerItem)
         self.vbox.addStretch()
 
         self.microenv_params.setLayout(self.vbox)
@@ -470,47 +397,10 @@ class SubstrateDef(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.microenv_params)
 
-
-        # self.save_button = QPushButton("Save")
-        # self.text = QLabel("Hello World",alignment=QtCore.Qt.AlignCenter)
-
         self.layout = QVBoxLayout(self)
-
-        # self.layout.addLayout(controls_hbox)
- 
-        # self.layout.addWidget(self.tabs)
-        # self.layout.addWidget(QHLine())
-        # self.layout.addWidget(self.params)
-
-        # self.layout.addWidget(self.scroll_area)
         self.layout.addWidget(splitter)
 
         self.new_substrate_count = self.config_tab.count_substrates()
-
-        # self.layout.addWidget(self.vbox)
-
-        # self.layout.addWidget(self.text)
-        # self.layout.addWidget(self.save_button)
-        # self.save_button.clicked.connect(self.save_xml)
-
-
-    # def treeitem_edit_cb(self, *args):
-    #     itm = self.tree.itemFromIndex(self.tree.selectedIndexes()[0])
-    #     column = self.tree.currentColumn()
-    #     edit = QLineEdit()
-    #     edit.returnPressed.connect(lambda*_:self.project.setData(column, edit.text(), itm, column, self.tree))
-    #     edit.returnPressed.connect(lambda*_:self.update())
-    #     print(edit.text())
-    #     self.tree.setItemWidget(itm,column,edit)
-
-    # def substrate_name_cb(self, text):
-    #     print("Text: %s", text)
-    #     self.param_d[self.current_substrate]["name"] = text
-
-    #     treeitem = QTreeWidgetItem([text])  # todo - figure out how to rename it in the tree!
-    #     column = self.tree.currentColumn()
-    #     # self.tree.setCurrentItem(treeitem)
-    #     self.tree.setItemWidget(treeitem,column,None)
 
     def apply_dc_cb(self):
         text = self.dirichlet_bc.text()
@@ -535,9 +425,7 @@ class SubstrateDef(QWidget):
         self.enable_zmax.setEnabled(self.is_3D)
 
     def diffusion_coef_changed(self, text):
-        # print("Text: %s", text)
         self.param_d[self.current_substrate]["diffusion_coef"] = text
-        # log.info("diffusion_coef changed: %s", text)
 
     def decay_rate_changed(self, text):
         self.param_d[self.current_substrate]["decay_rate"] = text
@@ -546,39 +434,9 @@ class SubstrateDef(QWidget):
 
     def dirichlet_bc_changed(self, text):
         self.param_d[self.current_substrate]["dirichlet_bc"] = text
-        # if self.dirichlet_bc_enabled.isChecked():
-        #     self.dirichlet_xmin.setText(text)
-        #     self.dirichlet_xmax.setText(text)
-        #     self.dirichlet_ymin.setText(text)
-        #     self.dirichlet_ymax.setText(text)
-        #     self.dirichlet_zmin.setText(text)
-        #     self.dirichlet_zmax.setText(text)
 
     def dirichlet_toggle_cb(self):
         return  # until we determine a more logical way to deal with this
-
-        # print("dirichlet_toggle_cb()")
-        # self.param_d[self.current_substrate]["dirichlet_enabled"] = self.dirichlet_bc_enabled.isChecked()
-        # if self.dirichlet_bc_enabled.isChecked():
-        #     options_flag = True
-        # else:
-        #     options_flag = False
-        # self.enable_xmin.setChecked(options_flag)
-        # self.enable_xmax.setChecked(options_flag)
-        # self.enable_ymin.setChecked(options_flag)
-        # self.enable_ymax.setChecked(options_flag)
-        # self.enable_zmin.setChecked(options_flag)
-        # self.enable_zmax.setChecked(options_flag)
-
-        # if options_flag:
-        #     sval = self.dirichlet_bc.text() 
-        #     self.dirichlet_xmin.setText(sval)
-        #     self.dirichlet_xmax.setText(sval)
-        #     self.dirichlet_ymin.setText(sval)
-        #     self.dirichlet_ymax.setText(sval)
-        #     self.dirichlet_zmin.setText(sval)
-        #     self.dirichlet_zmax.setText(sval)
-
 
     # global to all substrates
     def gradients_cb(self):
@@ -615,9 +473,7 @@ class SubstrateDef(QWidget):
         self.param_d[self.current_substrate]["enable_zmax"] = self.enable_zmax.isChecked()
 
     #----------------------------------------------------------------------
-    # @QtCore.Slot()
     def new_substrate(self):
-        # print('------ new_substrate')
         while True:
             subname = "substrate%02d" % self.new_substrate_count
             if subname in self.config_tab.substrate_list:
@@ -629,11 +485,6 @@ class SubstrateDef(QWidget):
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
 
         self.param_d[subname] = copy.deepcopy(self.param_d[self.current_substrate])
-
-        # self.param_d[subname]["name"] = subname
-        # for k in self.param_d.keys():
-        #     print(" (pre-new vals)===>>> ",k, " : ", self.param_d[k])
-        # print()
 
         # Then "zero out" all entries(?)
         text = "0.0"

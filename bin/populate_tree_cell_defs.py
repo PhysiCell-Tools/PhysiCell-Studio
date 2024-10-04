@@ -161,7 +161,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 6: {'full_name': 'flow cytometry separated', 'short_name': 'flowcytosep', 'idx': 4, 'num_phases': 4},
                 7: {'full_name': 'cycling quiescent', 'short_name': 'quiescent', 'idx': 5, 'num_phases': 2}
             }
-            cell_def_tab.cycle_dropdown.setCurrentIndex(cycle_code_dict[cycle_code]['idx'])
+            cell_def_tab.cycle_tab.cycle_dropdown.setCurrentIndex(cycle_code_dict[cycle_code]['idx'])
             cell_def_tab.param_d[cell_def_name]['cycle'] = cycle_code_dict[cycle_code]['full_name']
             cell_def_tab.param_d[cell_def_name]['cycle_choice_idx'] = cycle_code_dict[cycle_code]['idx']
 
@@ -201,14 +201,14 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             is_duration = path.endswith("phase_durations")
             if is_duration:
-                cell_def_tab.cycle_rb2.setChecked(True)
+                cell_def_tab.cycle_tab.cycle_rb2.setChecked(True)
                 cell_def_tab.param_d[cell_def_name]['cycle_duration_flag'] = True
-                cell_def_tab.cycle_duration_flag = True   # rwh: TODO - why do this??
+                cell_def_tab.cycle_tab.cycle_duration_flag = True   # rwh: TODO - why do this??
             else:
                 cell_def_tab.cycle_rb1.setChecked(True)
                 cell_def_tab.param_d[cell_def_name]['cycle_duration_flag'] = False
-                cell_def_tab.cycle_duration_flag = False
-            cell_def_tab.customize_cycle_choices()
+                cell_def_tab.cycle_tab.cycle_duration_flag = False
+            cell_def_tab.cycle_tab.customize_cycle_choices()
 
             key_base_name = f"cycle_{cycle_code_dict[cycle_code]['short_name']}"
             for rate in pt_uep: 
@@ -1375,9 +1375,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
+    print("populate_tree_cell_defs.py:  Setting 0th cell")
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
     cell_def_tab.tree_item_clicked_cb(cell_def_tab.tree.topLevelItem(0), 0)  # and have its params shown
+    print("populate_tree_cell_defs.py:  Set 0th cell")
 
 
     #----------------------------------

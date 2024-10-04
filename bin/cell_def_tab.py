@@ -44,18 +44,17 @@ import inspect
 import string
 import random
 import numpy as np
-# import traceback
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5.QtCore import Qt, QRect, QEvent
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QIcon, QFont, QStandardItemModel, QValidator
-from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom, HoverWarning, HoverQuestion
+from studio_classes import QLabelSeparator, ExtendedCombo, QLineEdit_custom, OptionalDoubleValidator, DoubleValidatorOpenInterval, DoubleValidatorWidgetBounded, AttackRateValidator, QRadioButton_custom, HoverWarning, HoverQuestion, StudioTab, QComboBox_custom, QCheckBox_custom
 from rules_tab import create_reserved_words, find_and_replace_rule_cell
 from sbml_intra import SBML_ODEs
-# from PyQt5.QtCore import Qt
-# from cell_def_custom_data import CustomData
+from cell_def_cycle_tab import CycleTab
+from cell_def_tab_param_updates import CellDefParamUpdates
 
 class CellDefException(Exception):
     pass
@@ -79,30 +78,6 @@ class QLineEdit_color(QLineEdit):  # it's insane to have to do this!
         self.setStyleSheet(style)
         # self.setStyleSheet("background-color: white")
 
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name, **kwargs):
-        super().__init__(name, **kwargs)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                """
-        self.setStyleSheet(checkbox_style)
-
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
@@ -124,21 +99,16 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
+class CellDef(StudioTab):
+    def __init__(self, xml_creator):
+        super().__init__(xml_creator)
 
-class CellDef(QWidget):
-    def __init__(self, pytest_flag, config_tab=None):
-        super().__init__()
+        self.celldef_param_updates = CellDefParamUpdates(self)
 
         random.seed(42)   # for reproducibility (cough). Needed for pytest results.
-        self.pytest_flag = pytest_flag
-
-        self.config_tab = config_tab
-        # primary key = cell def name
-        # secondary keys: cycle_rate_choice, cycle_dropdown, 
         self.param_d = {}  # a dict of dicts
         self.num_dec = 5  # how many digits to right of decimal point?
 
-        # self.chemotactic_sensitivity_dict = {}   # rwh - bogus/not useful since we need per cell type
         self.default_sval = '0.0'  # default scalar value (as string)
         self.default_affinity = '1.0'
         self.default_bval = False
@@ -151,12 +121,6 @@ class CellDef(QWidget):
         self.row_color1 = "background-color: Tan"
         self.row_color2 =  "background-color: LightGreen"
 
-        self.combobox_stylesheet = """ 
-            QComboBox{
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
         self.checkbox_style = """
                 QCheckBox::indicator:pressed
                 {
@@ -197,7 +161,7 @@ class CellDef(QWidget):
         self.celltypes_list = []
 
         # Use a QStackedWidget to let us swap out sets of widgets, depending on the cycle model chosen.
-        self.stacked_cycle = QStackedWidget()
+        # self.cycle_tab.stacked_cycle = QStackedWidget()
 
         # transition rates
         self.stack_trate_live_idx = -1 
@@ -336,62 +300,13 @@ class CellDef(QWidget):
         self.scroll_cell_def_tree.setWidget(self.tree_w)
 
         #------------------
-        # self.cycle_tab = QWidget()
-        # self.death_tab = QWidget()
-        # self.volume_tab = QWidget()
-        # self.mechanics_tab = QWidget()
-        # self.motility_tab = QWidget()
-        # self.secretion_tab = QWidget()
-        # self.interaction_tab = QWidget()
-
         self.custom_data_tab = QWidget()
-        # self.custom_data_conserved = []  # rwh: do I use this?
-        # self.custom_data_name = []
-        # self.custom_data_value = []   # rwh: [text, conserved_flag] or [text, conserved_flag, units]?
-        # self.custom_data_units = []
-        # self.custom_data_description = []
-
-        # self.scroll_params = QScrollArea()
 
         self.tab_widget = QTabWidget()
-        # self.tab_params_widget = QTabWidget()
-        # self.splitter.addWidget(self.scroll_params)
         self.splitter.addWidget(self.tab_widget)
 
-        # self.tab_widget.setStyleSheet('''
-        # QTabWidget {
-        #     background: magenta;
-        #     border: none;
-        # }
-        # QTabBar::tab {
-        #     background: green;
-        # }
-        # ''')
-        phenotab_stylesheet = """ 
-            {
-            background-color: rgb(236,236,236)
-            }
-            QLineEdit {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QLabel {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
-        lineedit_stylesheet = """ 
-            background-color: rgb(236,236,236);
-            QLineEdit {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
-        self.tab_widget.addTab(self.create_cycle_tab(),"Cycle")
+        # self.tab_widget.addTab(self.create_cycle_tab(),"Cycle")
+        self.tab_widget.addTab(CycleTab(self),"Cycle")
         self.tab_widget.addTab(self.create_death_tab(),"Death")
         self.tab_widget.addTab(self.create_volume_tab(),"Volume")
         self.tab_widget.addTab(self.create_mechanics_tab(),"Mechanics")
@@ -403,14 +318,11 @@ class CellDef(QWidget):
         self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
         #---rwh
-        # self.custom_data_tab = CustomData(False)
-        # self.tab_widget.addTab(self.custom_data_tab,"Custom Data")
-        # self.custom_data_tab.param_d = self.param_d
-
         self.cell_types_tabs_layout = QGridLayout()
         self.cell_types_tabs_layout.addWidget(self.tab_widget, 0,0,1,1) # w, row, column, rowspan, colspan
-        # self.cell_types_tabs_layout.addWidget(self.tab_params_widget, 1,0,1,1) # w, row, column, rowspan, colspan
 
+    def get_current_celldef(self):
+        return self.current_cell_def
     #----------------------------------------------------------------------
     def check_valid_cell_defs(self):
         if self.auto_number_IDs_checkbox.isChecked():
@@ -768,165 +680,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
     #--------------------------------------------------------
-    def create_cycle_tab(self):
-        logging.debug(f'\n====================== create_cycle_tab ===================')
-        # self.group_cycle = QGroupBox()
-        self.params_cycle = QWidget()
-
-        stylesheet = """ 
-            QTabBar::tab:selected {background: orange;}  # dodgerblue
-
-            QLabel {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
-
-        # self.params_cycle.setStyleSheet("QLineEdit { background-color: white }")
-        self.params_cycle.setStyleSheet("background-color: rgb(236,236,236)")
-        # background:rgb(200,100,150)
-        self.vbox_cycle = QVBoxLayout()
-
-        #----------------------------
-        hbox = QHBoxLayout()
-        hbox.setSpacing(0)
-        hbox.setContentsMargins(0, 0, 0, 0)
-        self.cycle_rb1 = QRadioButton_custom("transition rate(s)      ")
-        self.cycle_rb1.toggled.connect(self.cycle_phase_transition_cb)
-        hbox.addWidget(self.cycle_rb1)
-
-        self.cycle_rb2 = QRadioButton_custom("duration(s)")
-        self.cycle_rb2.toggled.connect(self.cycle_phase_transition_cb)
-        hbox.addWidget(self.cycle_rb2)
-
-        hbox.addStretch(1)  # keeps buttons shoved to left (but border still too wide!)
-        radio_frame = QFrame()
-        radio_frame.setGeometry(QRect(10,10,100,20))
-        radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
-        radio_frame.setLayout(hbox)
-        radio_frame.setFixedWidth(250)  # omg
-        self.vbox_cycle.addWidget(radio_frame)
-
-        #----------------------------
-        self.cycle_dropdown = QComboBox()
-        # self.cycle_dropdown.setStyleSheet("background-color: rgb(236,236,236)")
-
-        # self.cycle_dropdown.setStyleSheet("background-color: white")
-        self.cycle_dropdown.setStyleSheet(self.combobox_stylesheet)
-        # self.cycle_dropdown.setStyleSheet("background-color: white")
-        # self.cycle_dropdown.setStyleSheet("text: black")
-        self.cycle_dropdown.setFixedWidth(300)
-        # self.cycle_dropdown.currentIndex.connect(self.cycle_changed_cb)
-        self.cycle_dropdown.currentIndexChanged.connect(self.cycle_changed_cb)
-        # self.cycle_dropdown.currentIndexChanged.connect(self.cycle_phase_transition_cb)
-
-        # Rf. Section 17 of User Guide and core/PhysiCell_constants.{h,cpp}
-        # static const int advanced_Ki67_cycle_model= 0;
-        # static const int basic_Ki67_cycle_model=1;
-        # static const int flow_cytometry_cycle_model=2;
-        # static const int live_apoptotic_cycle_model=3;
-        # static const int total_cells_cycle_model=4;
-        # static const int live_cells_cycle_model = 5; 
-        # static const int flow_cytometry_separated_cycle_model = 6; 
-        # static const int cycling_quiescent_model = 7; 
-        self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-        self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-        self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-        self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-        self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-        self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-        # self.cycle_dropdown.addItem("live apoptotic")
-        # self.cycle_dropdown.addItem("total cells")
-
-        # self.vbox.addWidget(self.cycle_dropdown)
-        # self.group_cycle.addWidget(self.cycle_dropdown)
-        self.vbox_cycle.addWidget(self.cycle_dropdown)
-
-        self.cycle_label = QLabel("Phenotype: cycle")
-        self.cycle_label.setStyleSheet("background-color: orange")
-        self.cycle_label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(self.cycle_label)
-
-
-        #-----------------------------
-        # We'll create a unique widget to hold different rates or durations, depending
-        # on which cycle and method of defining it (transition rates or duration times) is chosen.
-        # Then we will only display the relevant one, based on these choices.
-        # self.stacked_cycle = QStackedWidget()
-
-        # transition rates
-        self.stack_trate_live = QWidget()
-        self.stack_trate_Ki67 = QWidget()
-        self.stack_trate_advancedKi67 = QWidget()
-        self.stack_trate_flowcyto = QWidget()
-        self.stack_trate_flowcytosep = QWidget()
-        self.stack_trate_quiescent = QWidget()
-
-        # duration times
-        self.stack_duration_live = QWidget()
-        self.stack_duration_Ki67 = QWidget()
-        self.stack_duration_advancedKi67 = QWidget()
-        self.stack_duration_flowcyto = QWidget()
-        self.stack_duration_flowcytosep = QWidget()
-        self.stack_duration_quiescent = QWidget()
-
-
-        #===========================================================
-        #  Naming scheme for sets ("stacks") of cycle widgets:
-        #     cycle_<type>_trate<SE>[_changed] (S=start, E=end)
-        #     stack_trate_<type>[_idx]
-        #
-        #     cycle_<type>_duration<SE>[_changed] (S=start, E=end)
-        #     stack_duration_<type>[_idx]
-        #===========================================================
-
-        #------ Cycle transition rate (live) ----------------------
-        # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-
-        self.idx_stacked_widget = 0
-        self.build_cycle_layouts("live", 1)
-        self.build_cycle_layouts("Ki67", 2)
-        self.build_cycle_layouts("advancedKi67", 3)
-        self.build_cycle_layouts("flowcyto", 3)
-        self.build_cycle_layouts("flowcytosep", 4)
-        self.build_cycle_layouts("quiescent", 2)
-        self.stacked_cycle.setStyleSheet("QLineEdit { background-color: white }")
-
-        #---------------------------------------------
-        # After adding all combos of cycle widgets (groups) to the stacked widget, 
-        # add it to this panel.
-        self.vbox_cycle.addWidget(self.stacked_cycle)
-
-        self.vbox_cycle.addWidget(QHLine())
-
-        self.reset_cycle_button = QPushButton("Reset to PhysiCell defaults")
-        self.reset_cycle_button.setFixedWidth(200)
-        self.reset_cycle_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
-        self.reset_cycle_button.clicked.connect(self.reset_cycle_cb)
-        self.vbox_cycle.addWidget(self.reset_cycle_button)
-
-        self.vbox_cycle.addStretch()
-
-        self.params_cycle.setLayout(self.vbox_cycle)
-
-        return self.params_cycle
-
-    #--------------------------------------------------------
-    def reset_cycle_cb(self):   # new_cycle_params
-        # print("--- reset_cycle_cb:  self.current_cell_def= ",self.current_cell_def)
-        self.new_cycle_params(self.current_cell_def, False)
-        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
-
-    #--------------------------------------------------------
     def create_death_tab(self):
         death_tab = QWidget()
         death_tab.setStyleSheet("background-color: rgb(236,236,236)")
         death_tab.setStyleSheet("QLineEdit { background-color: white }")
-        # self.scroll_params = QScrollArea()
         death_tab_scroll = QScrollArea()
         glayout = QGridLayout()
 
@@ -1379,7 +1136,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.reset_death_button.setFixedWidth(200)
         self.reset_death_button.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         self.reset_death_button.clicked.connect(self.reset_death_cb)
-        # self.vbox_cycle.addWidget(self.reset_cycle_button)
         idr += 1
         glayout.addWidget(self.reset_death_button, idr,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -1394,7 +1150,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #--------------------------------------------------------
     def reset_death_cb(self):
-        # print("--- reset_death_cb:  self.current_cell_def= ",self.current_cell_def)
         self.new_death_params(self.current_cell_def)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
@@ -1439,15 +1194,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if radioBtn.isChecked():
             logging.debug(f'necrosis: ------>>{radioBtn.text()}')
 
-        # print("self.cycle_dropdown.currentText() = ",self.cycle_dropdown.currentText())
-        # print("self.cycle_dropdown.currentIndex() = ",self.cycle_dropdown.currentIndex())
-
-        # self.cycle_rows_vbox.clear()
-        # if radioBtn.text().find("duration"):
         if "duration" in radioBtn.text():
             logging.debug(f'necrosis_phase_transition_cb: --> duration')
             self.necrosis_duration_flag = True
-            # self.customize_cycle_choices()
             self.necrosis_01_trate.setReadOnly(True)
             self.necrosis_01_trate.setStyleSheet("background-color: lightgray")
             self.necrosis_01_fixed_trate.setEnabled(False)
@@ -1477,28 +1226,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.necrosis_12_trate.setReadOnly(False)
             self.necrosis_12_trate.setStyleSheet("background-color: white")  
             self.necrosis_12_fixed_trate.setEnabled(True)
-            # self.customize_cycle_choices()
-            # pass
 
         self.param_d[self.current_cell_def]['necrosis_duration_flag'] = self.necrosis_duration_flag
 
     #--------------------------------------------------------
     def create_volume_tab(self):
         volume_tab = QWidget()
-        lineedit_stylesheet = """ 
-            background-color: rgb(236,236,236);
-            QLineEdit {
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            """
         volume_tab.setStyleSheet("background-color: rgb(236,236,236)")
-        # volume_tab.setStyleSheet(lineedit_stylesheet)
-        # volume_tab.setStyleSheet("background-color: rgb(236,236,236)"
-            # "QLineEdit {color: #000000; background-color: #FFFFFF;}")
-        # volume_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
-        # vlayout = QVBoxLayout()
 
         label = QLabel("Phenotype: volume")
         label.setStyleSheet("background-color: orange")
@@ -1675,13 +1410,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         #------
-        # vlayout.setVerticalSpacing(10)  # rwh - argh
         volume_tab.setLayout(glayout)
         return volume_tab
 
     #--------------------------------------------------------
     def reset_volume_cb(self):
-        # print("--- reset_volume_cb:  self.current_cell_def= ",self.current_cell_def)
         self.new_volume_params(self.current_cell_def)
         self.tree_item_clicked_cb(self.tree.currentItem(), 0)
 
@@ -1689,25 +1422,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def create_mechanics_tab(self):
         mechanics_tab = QWidget()
         mechanics_tab.setStyleSheet("background-color: rgb(236,236,236)")
-        # mechanics_tab.setStyleSheet("QLineEdit { background-color: white }")
         glayout = QGridLayout()
 
         label = QLabel("Phenotype: mechanics")
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.vbox.addWidget(label)
 
         # opposite of 'is_movable' in C++
         self.unmovable_w = QCheckBox_custom("unmovable (not available yet)")
-        # self.unmovable_w.setStyleSheet(self.checkbox_style)
         self.unmovable_w.setEnabled(True)   # disabled until implemented in C++?
         self.unmovable_w.setChecked(False)
-        # self.unmovable_w.clicked.connect(self.unmovable_cb)
         idr = 0
-        # glayout.addWidget(self.unmovable_w, idr,0, 1,1) # w, row, column, rowspan, colspan
 
         label = QLabel("cell-cell adhesion strength")
-        # label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
         idr += 1
         idr = 0
@@ -1768,8 +1495,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_adhesion_affinity_dropdown = QComboBox()
-        self.cell_adhesion_affinity_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.cell_adhesion_affinity_dropdown = QComboBox_custom()
         glayout.addWidget(self.cell_adhesion_affinity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.cell_adhesion_affinity_dropdown.currentIndexChanged.connect(self.cell_adhesion_affinity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
@@ -2029,13 +1755,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.chemotaxis_enabled.clicked.connect(self.chemotaxis_enabled_cb)
         glayout.addWidget(self.chemotaxis_enabled, idr,1, 1,1) # w, row, column, rowspan, colspan
 
-        self.motility_substrate_dropdown = QComboBox()
-        self.motility_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
-        # self.motility_substrate_dropdown.setFixedWidth(240)
+        self.motility_substrate_dropdown = QComboBox_custom()
         idr += 1
         glayout.addWidget(self.motility_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
         self.motility_substrate_dropdown.currentIndexChanged.connect(self.motility_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
-        # self.motility_substrate_dropdown.addItem("oxygen")
 
         self.chemotaxis_direction_towards = QRadioButton_custom("towards")
         self.chemotaxis_direction_towards.clicked.connect(self.chemotaxis_direction_cb)
@@ -2072,9 +1795,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.normalize_each_gradient.clicked.connect(self.cell_def_param_changed)
         glayout.addWidget(self.normalize_each_gradient, idr,2, 1,1) # w, row, column, rowspan, colspan
 
-        self.motility2_substrate_dropdown = QComboBox()
-        self.motility2_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
-        # self.motility_substrate_dropdown.setFixedWidth(240)
+        self.motility2_substrate_dropdown = QComboBox_custom()
         idr += 1
         glayout.addWidget(self.motility2_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
         self.motility2_substrate_dropdown.currentIndexChanged.connect(self.motility2_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
@@ -2082,7 +1803,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label = QLabel("sensitivity")
         label.setFixedWidth(self.label_width)
         label.setAlignment(QtCore.Qt.AlignRight)
-        # idr += 1
         glayout.addWidget(label, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         self.chemo_sensitivity = QLineEdit_color()
@@ -2129,8 +1849,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         label.setStyleSheet("background-color: orange")
         label.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.secretion_substrate_dropdown = QComboBox()
-        self.secretion_substrate_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.secretion_substrate_dropdown = QComboBox_custom()
         idr = 0
         glayout.addWidget(self.secretion_substrate_dropdown, idr,0, 1,1) # w, row, column, rowspan, colspan
         self.secretion_substrate_dropdown.currentIndexChanged.connect(self.secretion_substrate_changed_cb)  # beware: will be triggered on a ".clear" too
@@ -2310,8 +2029,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.live_phagocytosis_dropdown = QComboBox()
-        self.live_phagocytosis_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.live_phagocytosis_dropdown = QComboBox_custom()
         glayout.addWidget(self.live_phagocytosis_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.live_phagocytosis_dropdown.currentIndexChanged.connect(self.live_phagocytosis_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
@@ -2335,23 +2053,24 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.attack_rate_dropdown = QComboBox()
-        self.attack_rate_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.attack_rate_dropdown = QComboBox_custom()
         glayout.addWidget(self.attack_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.attack_rate_dropdown.currentIndexChanged.connect(self.attack_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
         self.attack_rate = QLineEdit_custom()
         self.attack_rate.textChanged.connect(self.attack_rate_changed)
-        # if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented
-        #     validator = AttackRateValidator(self)
-        # else:
-        #     validator = DoubleValidatorWidgetBounded(bottom=0.0, top=self.config_tab.mechanics_dt, top_transform=lambda x: 1/x)
+        # save this for if/when immogenicity is implemented
+        ##############################################################################################
+        # if hasattr(self, 'immunogenicity_dropdown'): # then immunogenicity has been implemented    #
+        #     validator = AttackRateValidator(self)                                                  #
+        # else:                                                                                      #
+        #     validator = QtGui.QDoubleValidator(bottom=0.0)                                         #
+        ##############################################################################################
         validator = QtGui.QDoubleValidator(bottom=0.0) # no longer want to highlight the box red if rate is too high (just show warning (!) )
         self.attack_rate.setValidator(validator)
         glayout.addWidget(self.attack_rate , idr,2, 1,1) # w, row, column, rowspan, colspan
 
         units = QLabel(self.default_rate_units)
-        # units.setFixedWidth(self.units_width)
         units.setAlignment(QtCore.Qt.AlignLeft)
         glayout.addWidget(units, idr,3, 1,1) # w, row, column, rowspan, colspan
 
@@ -2399,8 +2118,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.fusion_rate_dropdown = QComboBox()
-        self.fusion_rate_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.fusion_rate_dropdown = QComboBox_custom()
         glayout.addWidget(self.fusion_rate_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.fusion_rate_dropdown.currentIndexChanged.connect(self.fusion_rate_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
@@ -2424,8 +2142,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         idr += 1
         glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        self.cell_transformation_dropdown = QComboBox()
-        self.cell_transformation_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.cell_transformation_dropdown = QComboBox_custom()
         glayout.addWidget(self.cell_transformation_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
         self.cell_transformation_dropdown.currentIndexChanged.connect(self.cell_transformation_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
 
@@ -2483,8 +2200,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # idr += 1
         # glayout.addWidget(label, idr,0, 1,1) # w, row, column, rowspan, colspan
 
-        # self.immunogenicity_dropdown = QComboBox()
-        # self.immunogenicity_dropdown.setStyleSheet(self.combobox_stylesheet)
+        # self.immunogenicity_dropdown = QComboBox_custom()
         # glayout.addWidget(self.immunogenicity_dropdown, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         # self.immunogenicity_dropdown.currentIndexChanged.connect(self.immunogenicity_dropdown_changed_cb)  # beware: will be triggered on a ".clear" too
@@ -2532,50 +2248,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def cell_adhesion_affinity_changed(self,text):
         # print("cell_adhesion_affinity_changed:  text=",text)
         self.param_d[self.current_cell_def]['cell_adhesion_affinity'][self.cell_adhesion_affinity_celltype] = text
-
-    #--------------------------------------------------------
-    def is_dt_set(self, label, time_step, dt_text):
-        if dt_text != "" and float(dt_text) != 0:
-            return True
-        label.show_icon()
-        label.setHoverText(f"WARNING: Current {time_step} is 0 (or unset). Make sure to set that value > 0.")
-        return False
-
-    def check_rate_too_fast(self, text, label, time_step="mechanics_dt"):
-        self.check_too_fast(text, label, time_step)
-    
-    def check_duration_too_fast(self, text, label, time_step="mechanics_dt"):
-        self.check_too_fast(text, label, time_step, is_duration=True)
-
-    def check_too_fast(self, text, label, time_step, is_duration=False):
-        if self.sender().validator().validate(text,0)[0]==QValidator.Intermediate:
-            return
-
-        if time_step == "diffusion_dt":
-            dt_text = self.config_tab.diffusion_dt.text()
-        elif time_step == "mechanics_dt":
-            dt_text = self.config_tab.mechanics_dt.text()
-        elif time_step == "phenotype_dt":
-            dt_text = self.config_tab.phenotype_dt.text()
-
-        if self.is_dt_set(label, time_step, dt_text) == False:
-            return
-
-        rate = float(text)
-        if is_duration:
-            if rate==0:
-                label.hide_icon()
-                return # if duration is set to 0, then they already know it is going to happen instantaneously
-            rate = 1/rate
-        dt = float(dt_text)
-        max_val = dt if is_duration else 1/dt # help the user with the max value depending on if it's a rate or duration
-        prob = rate * dt
-        if prob > 1:
-            label.show_icon()
-            phrase = f"duration < {time_step}" if is_duration else f"rate > 1/{time_step}"
-            label.setHoverText(f"WARNING: A {phrase} is instantaneous. May as well set to {max_val}.")
-        else:
-            label.hide_icon()
 
     #--------------------------------------------------------
     def set_relative_equilibrium_distance_cb(self, text):
@@ -2636,7 +2308,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.attack_rate.validator.validate(text, 0)[0] == QValidator.Intermediate:
             return
         
-        mech_dt_str = self.config_tab.mechanics_dt.text()
+        mech_dt_str = self.xml_creator.config_tab.mechanics_dt.text()
         if self.is_dt_set(self.attack_rate_fast_label, "mechanics_dt", mech_dt_str) == False:
             return
         
@@ -2991,7 +2663,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_initial_values(self):
 
         initial_states_editor = QHBoxLayout()
-        initial_states_dropdown = QComboBox()
+        initial_states_dropdown = QComboBox_custom()
         initial_states_dropdown.setFixedWidth(150)
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
@@ -3058,7 +2730,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         mutants_editor = QHBoxLayout()        
         
-        mutants_node_dropdown = QComboBox()
+        mutants_node_dropdown = QComboBox_custom()
         mutants_node_dropdown.setFixedWidth(150)
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
@@ -3122,7 +2794,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_parameter(self):
 
         parameters_editor = QHBoxLayout()
-        parameters_dropdown = QComboBox()
+        parameters_dropdown = QComboBox_custom()
         parameters_dropdown.setFixedWidth(150)
         if "list_parameters" in self.param_d[self.current_cell_def]["intracellular"]:
             for parameter in self.param_d[self.current_cell_def]["intracellular"]["list_parameters"]:
@@ -3191,21 +2863,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         inputs_editor = QHBoxLayout()
 
-        inputs_signal_dropdown = QComboBox()
-        inputs_signal_dropdown.setStyleSheet(self.combobox_stylesheet)
+        inputs_signal_dropdown = QComboBox_custom()
 
         for signal in self.physiboss_signals:
             inputs_signal_dropdown.addItem(signal)
         
-        inputs_node_dropdown = QComboBox()
-        inputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
+        inputs_node_dropdown = QComboBox_custom()
 
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 inputs_node_dropdown.addItem(node)
         
-        inputs_action = QComboBox()
-        inputs_action.setStyleSheet(self.combobox_stylesheet)
+        inputs_action = QComboBox_custom()
 
         inputs_action.addItem("activation")
         inputs_action.addItem("inhibition")
@@ -3324,21 +2993,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_output(self):
 
         outputs_editor = QHBoxLayout()
-        outputs_behaviour_dropdown = QComboBox()
-        outputs_behaviour_dropdown.setStyleSheet(self.combobox_stylesheet)
+        outputs_behaviour_dropdown = QComboBox_custom()
 
         for behaviour in self.physiboss_behaviours:
             outputs_behaviour_dropdown.addItem(behaviour)
         
-        outputs_node_dropdown = QComboBox()
-        outputs_node_dropdown.setStyleSheet(self.combobox_stylesheet)
+        outputs_node_dropdown = QComboBox_custom()
 
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
                 outputs_node_dropdown.addItem(node)
         
-        outputs_action = QComboBox()
-        outputs_action.setStyleSheet(self.combobox_stylesheet)
+        outputs_action = QComboBox_custom()
 
         outputs_action.addItem("activation")
         outputs_action.addItem("inhibition")
@@ -3457,7 +3123,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def physiboss_add_node_inheritance(self):
         
         node_inheritance_editor = QHBoxLayout()
-        node_inheritance_dropdown = QComboBox()
+        node_inheritance_dropdown = QComboBox_custom()
         node_inheritance_dropdown.setFixedWidth(200)
         if "list_nodes" in self.param_d[self.current_cell_def]["intracellular"]:
             for node in self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]:
@@ -3623,8 +3289,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         type_label = QLabel("Type")
         type_hbox.addWidget(type_label)
 
-        self.intracellular_type_dropdown = QComboBox()
-        self.intracellular_type_dropdown.setStyleSheet(self.combobox_stylesheet)
+        self.intracellular_type_dropdown = QComboBox_custom()
         self.intracellular_type_dropdown.setFixedWidth(300)
         self.intracellular_type_dropdown.currentIndexChanged.connect(self.intracellular_type_changed)
         self.intracellular_type_dropdown.addItem("none")
@@ -3939,50 +3604,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         intracellular_tab.setLayout(glayout)
         return intracellular_tab_scroll
-
-    #--------------------------------------------------------
-    def cell_def_param_changed(self, text, check=True, name=None):
-        if name==None:
-            name = self.sender().objectName()
-        if check:
-            if name not in self.param_d[self.current_cell_def].keys():
-                print(f'cell_def_param_changed: {name} not in {self.param_d[self.current_cell_def].keys()}')
-                raise KeyError(f'cell_def_param_changed: {name} not in {self.param_d[self.current_cell_def].keys()}')
-        self.param_d[self.current_cell_def][name] = text
-
-    # we could use lambda functions to accomplish most/all of this. but this keeps the initialization of the widgets simpler
-    def cell_def_mechano_rate_changed(self, text):
-        self.cell_def_mechano_changed(text, self.check_rate_too_fast)
-
-    def cell_def_mechano_duration_changed(self, text):
-        self.cell_def_mechano_changed(text, self.check_duration_too_fast)
-        
-    def cell_def_mechano_changed(self, text, fn):
-        self.cell_def_rate_changed(text, fn, "mechanics_dt")
-
-    def cell_def_pheno_rate_changed(self, text):
-        self.cell_def_pheno_changed(text, self.check_rate_too_fast)
-
-    def cell_def_pheno_duration_changed(self, text):
-        self.cell_def_pheno_changed(text, self.check_duration_too_fast)
-
-    def cell_def_pheno_changed(self, text, fn):
-        self.cell_def_rate_changed(text, fn, "phenotype_dt")
-
-    def cell_def_rate_changed(self, text, fn, time_step):
-        name = self.sender().objectName()
-        label = getattr(self, f"{name}_warning_label")
-        fn(text, label, time_step=time_step)
-        self.cell_def_param_changed(text, check=False, name=name)
-        
-    def cell_def_fixed_clicked(self, bval):
-        name = self.sender().objectName()
-        fixed_rate_name = f"{name}_trate"
-        fixed_duration_name = f"{name}_duration"
-        self.param_d[self.current_cell_def][fixed_rate_name] = bval
-        self.param_d[self.current_cell_def][fixed_duration_name] = bval
-        getattr(self, fixed_rate_name).setChecked(bval)   # sync rate and duration
-        getattr(self, fixed_duration_name).setChecked(bval)   # sync rate and duration
 
     # --- mechanics
     def enable_mech_params(self, bval):
@@ -4741,7 +4362,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_enable_checkbox = QCheckBox("Enable")
         self.par_dist_enable_checkbox.stateChanged.connect(self.par_dist_enable_cb)
 
-        self.par_distributions_combobox = QComboBox()
+        self.par_distributions_combobox = QComboBox_custom()
         self.par_distributions_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
         self.par_distributions_combobox.currentIndexChanged.connect(self.par_distribution_changed_cb)
 
@@ -5156,17 +4777,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #--------------------------------------------------------
     # @QtCore.Slot()
     def cycle_changed_cb(self, idx):
-        # pass
-        # print('------ cycle_changed_cb(): idx = ',idx)
-        # print('------ cycle_changed_cb(): item = ',str(self.cycle_dropdown.currentText()))
         if self.current_cell_def:
             self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
 
         self.customize_cycle_choices()
-        # QMessageBox.information(self, "Cycle Changed:",
-                #   "Current Cycle Index: %d" % idx )
 
-    # @QtCore.Slot()
     def motility_substrate_changed_cb(self, idx):
         logging.debug(f'------ motility_substrate_changed_cb(): idx = {idx}')
         logging.debug(f'       motility_substrate_changed_cb(): self.current_cell_def = {self.current_cell_def}')
@@ -5183,7 +4798,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def motility2_substrate_changed_cb(self, idx):  # dropdown widget
         logging.debug(f'------ motility2_substrate_changed_cb(): idx = {idx}')
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         subname = self.motility2_substrate_dropdown.currentText()
         logging.debug(f'   text (subname) = {subname}')
@@ -5212,14 +4826,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #---- in mechanics subtab
     def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
         print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
 
         celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['cell_adhesion_affinity_celltype'] = celltype_name
         self.cell_adhesion_affinity_celltype = celltype_name
         print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
 
-        # print("(dropdown) cell_adhesion_affinity= ",self.param_d[self.current_cell_def]["cell_adhesion_affinity"])
         if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
             self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
         else:
@@ -5242,13 +4853,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return
 
     def attack_rate_dropdown_changed_cb(self, idx):
-        # print('------ attack_rate_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.attack_rate_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['attack_rate_celltype'] = celltype_name
         self.attack_rate_celltype = celltype_name
-        # print("   self.attack_rate_celltype = ",celltype_name)
 
         if self.attack_rate_celltype in self.param_d[self.current_cell_def]["attack_rate"].keys():
             self.attack_rate.setText(self.param_d[self.current_cell_def]["attack_rate"][self.attack_rate_celltype])
@@ -5259,15 +4865,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return
 
     def fusion_rate_dropdown_changed_cb(self, idx):
-        # print('------ fusion_rate_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.fusion_rate_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['fusion_rate_celltype'] = celltype_name
-        # print("keys=",self.param_d[self.current_cell_def]['fusion_rate'].keys())
-        # print(self.param_d[self.current_cell_def]['fusion_rate'])
         self.fusion_rate_celltype = celltype_name
-        # print("   self.fusion_rate_celltype = ",celltype_name)
 
         if self.fusion_rate_celltype in self.param_d[self.current_cell_def]["fusion_rate"].keys():
             self.fusion_rate.setText(self.param_d[self.current_cell_def]["fusion_rate"][self.fusion_rate_celltype])
@@ -5278,15 +4877,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return
 
     def cell_transformation_dropdown_changed_cb(self, idx):
-        # print('\n------ cell_transformation_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.cell_transformation_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
         self.transformation_rate_celltype = celltype_name
-        # print("      self.transformation_rate_celltype= ",celltype_name)
-        # print(self.param_d[self.current_cell_def]["transformation_rate"].keys())
-        # print("       ",self.param_d[self.current_cell_def]["transformation_rate"])
 
         if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
             # print("       setText for ", self.transformation_rate_celltype, " = ",self.default_sval)
@@ -5299,13 +4891,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             return
 
     def immunogenicity_dropdown_changed_cb(self, idx):
-        # print('------ immunogenicity_dropdown_changed_cb(): idx = ',idx)
-        # self.advanced_chemotaxis_enabled_cb(self.param_d[self.current_cell_def]["motility_advanced_chemotaxis"])
-
         celltype_name = self.cell_transformation_dropdown.currentText()
-        # self.param_d[self.current_cell_def]['transformation_rate_celltype'] = celltype_name
         self.transformation_rate_celltype = celltype_name
-        # print("   self.transformation_rate_celltype= ",celltype_name)
 
         if self.transformation_rate_celltype in self.param_d[self.current_cell_def]["transformation_rate"].keys():
             self.transformation_rate.setText(self.param_d[self.current_cell_def]["transformation_rate"][self.transformation_rate_celltype])
@@ -5365,37 +4952,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.param_d[self.current_cell_def]['cycle_duration_flag'] = self.cycle_duration_flag
         
-    # Called whenever there's a toggle between "transition rate(s)" vs. "duration(S)", or if a
-    # different cycle model is chosen from the dropdown combobox.
-    def customize_cycle_choices(self):
-        if self.cycle_duration_flag:  # specifying duration times (radio button)
-            if self.cycle_dropdown.currentIndex() == 0:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_live_idx)
-            elif self.cycle_dropdown.currentIndex() == 1:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_Ki67_idx)
-            elif self.cycle_dropdown.currentIndex() == 2:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_advancedKi67_idx)
-            elif self.cycle_dropdown.currentIndex() == 3:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_flowcyto_idx)
-            elif self.cycle_dropdown.currentIndex() == 4:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_flowcytosep_idx)
-            elif self.cycle_dropdown.currentIndex() == 5:
-                self.stacked_cycle.setCurrentIndex(self.stack_duration_quiescent_idx)
-
-        else:  # specifying transition rates (radio button)
-            if self.cycle_dropdown.currentIndex() == 0:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_live_idx)
-            elif self.cycle_dropdown.currentIndex() == 1:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_Ki67_idx)
-            elif self.cycle_dropdown.currentIndex() == 2:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_advancedKi67_idx)
-            elif self.cycle_dropdown.currentIndex() == 3:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_flowcyto_idx)
-            elif self.cycle_dropdown.currentIndex() == 4:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_flowcytosep_idx)
-            elif self.cycle_dropdown.currentIndex() == 5:
-                self.stacked_cycle.setCurrentIndex(self.stack_trate_quiescent_idx)
-
     def chemotaxis_direction_cb(self):
         radioBtn = self.sender()
         if radioBtn.isChecked():
@@ -5403,41 +4959,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = True
             else:
                 self.param_d[self.current_cell_def]["motility_chemotaxis_towards"] = False
-
-
-    #---------------------------------------------
-    # @QtCore.Slot()
-    # def clear_rows_cb(self):
-    #     print("----- clearing all selected rows")
-
-    # @QtCore.Slot()
-    # def append_more_cb(self):
-    #     for idx in range(5):
-    #         # self.main_layout.addLayout(NewUserParam(self))
-    #         hbox = QHBoxLayout()
-    #         w = QCheckBox("")
-    #         w.setReadOnly(True)
-    #         self.custom_data_select.append(w)
-    #         hbox.addWidget(w)
-
-    #         w = QLineEdit()
-    #         self.custom_data_name.append(w)
-    #         hbox.addWidget(w)
-
-    #         w = QLineEdit()
-    #         self.custom_data_value.append(w)
-    #         # w.setValidator(QtGui.QDoubleValidator())
-    #         hbox.addWidget(w)
-
-    #         w = QLineEdit()
-    #         w.setFixedWidth(self.custom_data_units_width)
-    #         self.custom_data_units.append(w)
-    #         hbox.addWidget(w)
-
-    #         self.vbox.addLayout(hbox)
-    #         # self.main_layout.addLayout(hbox)
-    #         self.custom_var_count = self.custom_var_count + 1
-    #         print(self.custom_var_count)
 
     #-----------------------------------------------------------------------------------------
     # Fill them using the given model (the .xml)
@@ -6011,38 +5532,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def new_miscellaneous_params(self, cdname):
         self.param_d[cdname]["par_dists"] = {}
         self.param_d[cdname]["par_dists_disabled"] = True
-        
-    #-----------------------------------------------------------------------------------------
-    def update_cycle_params(self):
-        # pass
-        cdname = self.current_cell_def
-
-        # # if 'live' in self.param_d[cdname]['cycle']:
-        # #     self.cycle_dropdown.setCurrentIndex(0)
-        # # elif 'separated' in self.param_d[cdname]['cycle']:
-        # #     self.cycle_dropdown.setCurrentIndex(4)
-
-        # print(f'cell_def_tab: update_cycle_params(): self.param_d.keys()= {self.param_d.keys()}') 
-        if self.param_d[cdname]['cycle_duration_flag']:
-            self.cycle_rb2.setChecked(True)
-        else:
-            self.cycle_rb1.setChecked(True)
-
-            # self.param_d[self.current_cell_def]['cycle_choice_idx'] = idx
-        self.cycle_dropdown.setCurrentIndex(self.param_d[cdname]['cycle_choice_idx'])
-
-        for k, v in self.param_d[cdname].items():
-            if not k.startswith("cycle_"):
-                # not a cycle parameter
-                continue
-            if (not k.endswith("_trate")) and (not k.endswith("_duration")) and (not k.endswith("_fixed")):
-                # only updating those that end with these strings
-                continue
-            if isinstance(v, bool):
-                getattr(self, k).setChecked(v)
-            else:
-                getattr(self, k).setText(v)
-
+     
     #-----------------------------------------------------------------------------------------
     def update_death_params(self):
         # print("\n\n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -6112,20 +5602,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-----------------------------------------------------------------------------------------
     def update_mechanics_params(self):
-        # print("---------- update_mechanics_params()")
-        # print("---------- update_mechanics_params(): param_d= ",self.param_d)
         cdname = self.current_cell_def
-        # self.unmovable_w.setChecked(not self.param_d[self.current_cell_def]['is_movable'])
-        # self.enable_mech_params(self.param_d[self.current_cell_def]['is_movable'])
         self.cell_cell_adhesion_strength.setText(self.param_d[cdname]["mechanics_adhesion"])
         self.cell_cell_repulsion_strength.setText(self.param_d[cdname]["mechanics_repulsion"])
-        # self.cell_bm_adhesion_strength.setText(self.param_d[cdname]["mechanics_BM_adhesion"])
-        # self.cell_bm_repulsion_strength.setText(self.param_d[cdname]["mechanics_BM_repulsion"])
         self.relative_maximum_adhesion_distance.setText(self.param_d[cdname]["mechanics_adhesion_distance"])
 
-        # print("update_mechanics_params(): param_d= ",self.param_d)
-
-        # self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
         if self.cell_adhesion_affinity_celltype:
             logging.debug(f'key 0= {self.cell_adhesion_affinity_celltype}')
             logging.debug(f'keys 1= {self.param_d.keys()}')
@@ -6154,6 +5635,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     self.cell_adhesion_affinity_celltype = None
 
         self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
+        print(f"{self.param_d[cdname]['mechanics_relative_equilibrium_distance_enabled'] = }")
         self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
 
         self.set_absolute_equilibrium_distance.setText(self.param_d[cdname]["mechanics_absolute_equilibrium_distance"])
@@ -6508,7 +5990,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # fill in the GUI with this cell def's params
 
-        self.update_cycle_params()
+        self.cycle_tab.update_cycle_params()
         self.update_death_params()
         self.update_volume_params()
         self.update_mechanics_params()
@@ -7668,18 +7150,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml(self):
-        # pass
         logging.debug(f'\n\n----------- cell_def_tab.py: fill_xml(): ----------')
-        # print(f'\n\n----------- cell_def_tab.py: fill_xml(): ----------')
-        # print("self.param_d.keys() = ",self.param_d.keys())
-        # print()
-        # print("self.param_d['default'] = ",self.param_d['default'])
-        # print()
-        # print("self.param_d['cell_def02'] = ",self.param_d['cell_def02'])
-        # print()
-        # print("self.param_d['endothelial'] = ",self.param_d['endothelial'])
-        # print("\nself.param_d['endothelial']['cell_ID'] = ",self.param_d['endothelial']['cell_ID'])
-        # print("\nself.param_d['mesangial_matrix']['cell_ID'] = ",self.param_d['mesangial_matrix']['cell_ID'])
 
         uep = self.xml_root.find('.//cell_definitions') # guaranteed to exist since we start with a valid model
         if uep:
@@ -7707,7 +7178,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         idx = 0
         done = False
-        # while not done:
 
         num_outer_loops = len(self.param_d.keys())
         if self.auto_number_IDs_checkbox.isChecked():
@@ -7721,7 +7191,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         continue
 
                 logging.debug(f'\n--- key in param_d.keys() = {cdef}')
-                if cdef in cdefs_in_tree or self.pytest_flag:
+                if cdef in cdefs_in_tree or self.xml_creator.pytest_flag:
                     logging.debug(f'matched! {cdef}')
 
             # <cell_definition name="round cell" ID="0">
@@ -7784,96 +7254,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # Simple text summary of cell types phenotypes
     def summary(self, textW):
         print("cell_def_tab.py: ----------------- summary() ---------------")
-        # textW.appendPlainText("mary had a liittle lamb\nhis fleece was white.")
-
-        # l.8489
-        uep = self.xml_root.find('.//cell_definitions')
         for cdef in self.param_d.keys():
             textW.appendPlainText(">>> "+cdef)
             textW.appendPlainText("-- mechanics")
             textW.appendPlainText(self.param_d[cdef]['mechanics_adhesion'])
-
-            # l.7447
-            # combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
-            # cycle = ET.SubElement(pheno, "cycle",
-            #     {"code":self.cycle_combo_idx_code[combo_widget_idx],
-            #         "name":self.cycle_combo_idx_name[combo_widget_idx] } )
-            # textW.appendPlainText(cycle)
-
-    def finalize_glayout(self, glayout, glayout_name):
-        # loop over rows of glayout
-        dict_name = 'rate_fast_label'
-        if not hasattr(self, dict_name):
-            setattr(self, dict_name, {})
-        for i in range(glayout.rowCount()):
-            hover_warning = HoverWarning("")
-            getattr(self, dict_name)[f"{glayout_name}_{i}"] = hover_warning
-            glayout.addWidget(hover_warning, i, 5, 1, 1) # w, row, column, rowspan, colspan
-        vbox = QVBoxLayout()
-        w = QWidget()
-        w.setLayout(glayout)
-        vbox.addWidget(w)
-        vbox.addStretch()
-        return vbox
-    
-    def build_cycle_layouts(self, base_name, n_phases):
-        self.build_cycle_layout(base_name, n_phases, "trate")
-        self.build_cycle_layout(base_name, n_phases, "duration")
-
-    def build_cycle_layout(self, base_name, n_phases, suffix):
-        units_width = 35
-        cycle_base_name = f"cycle_{base_name}" # prepend "cycle_" to match previous name convention
-        glayout = QGridLayout()
-        for start_phase_index in range(n_phases):
-            if start_phase_index == n_phases-1:
-                end_phase_index = 0
-            else:
-                end_phase_index = start_phase_index+1
-
-            base_label_str = f"phase {start_phase_index}->{end_phase_index}"
-            label_end_str = "transition rate" if suffix=="trate" else "duration"
-            label_str = f"{base_label_str} {label_end_str}"
-            label = QLabel(label_str)
-            label.setFixedWidth(self.label_width)
-            label.setAlignment(QtCore.Qt.AlignRight)
-            glayout.addWidget(label, start_phase_index, 0, 1, 1) # w, row, column, rowspan, colspan
-
-            phases_name = f"{cycle_base_name}_{start_phase_index}{end_phase_index}"
-            name = f"{phases_name}_{suffix}"
-            qle = QLineEdit(objectName=name)
-            cb_fn = self.cell_def_pheno_rate_changed if suffix=="trate" else self.cell_def_pheno_duration_changed
-            qle.textChanged.connect(cb_fn)
-            qle.setValidator(QtGui.QDoubleValidator(bottom=0.0))
-            glayout.addWidget(qle, start_phase_index, 1, 1, 2) # w, row, column, rowspan, colspan
-            setattr(self, name, qle)
-
-            name_for_cb = f"{phases_name}_fixed"
-            fixed_attr_name= f"{name_for_cb}_{suffix}"
-            qcb = QCheckBox_custom("Fixed", maximumWidth=self.fixed_checkbox_column_width, objectName=name_for_cb)
-            qcb.clicked.connect(self.cell_def_fixed_clicked)
-            glayout.addWidget(qcb, start_phase_index, 3, 1, 1) # w, row, column, rowspan, colspan
-            setattr(self, fixed_attr_name, qcb)
-
-            units_str = self.default_rate_units if suffix=="trate" else self.default_time_units
-            units = QLabel(units_str)
-            units.setAlignment(QtCore.Qt.AlignCenter)
-            units.setFixedWidth(units_width)
-            glayout.addWidget(units, start_phase_index, 4, 1, 1) # w, row, column, rowspan, colspan
-
-            hover_warning = HoverWarning("")
-            glayout.addWidget(hover_warning, start_phase_index, 5, 1, 1) # w, row, column, rowspan, colspan
-            setattr(self, f"{name}_warning_label", hover_warning)
-
-        vbox = QVBoxLayout()
-        w = QWidget()
-        w.setLayout(glayout)
-        vbox.addWidget(w)
-        vbox.addStretch()
-
-        base_name_stack = f"stack_trate_{base_name}" if suffix=="trate" else f"stack_duration_{base_name}"
-        getattr(self, base_name_stack).setLayout(vbox)
-        setattr(self, f"{base_name_stack}_idx", self.idx_stacked_widget)
-        self.idx_stacked_widget += 1
-
-        self.stacked_cycle.addWidget(getattr(self, base_name_stack))
-            
