@@ -1018,6 +1018,9 @@ class Rules(QWidget):
             base_val = self.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
             base_val = self.celldef_tab.param_d[key0]["damage_repair_rate"]
+        elif "asymmetric" in behavior.split():
+            cell_type = behavior.split()[-1]
+            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_weight"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
             print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
@@ -2011,7 +2014,7 @@ class Rules(QWidget):
         # special
         response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
 
-        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]:  # verb
+        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to ","asymmetric division to "]:  # verb
             for ct in self.celldef_tab.param_d.keys():
                 response_l.append(verb + ct)
 
@@ -2227,7 +2230,7 @@ def find_isolated_string(s, name, start=0):
 
 def create_reserved_words():
     reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","asymmetric division to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
     reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
     reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
     return reserved_words

@@ -5019,6 +5019,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 # self.ics_tab.celltype_combobox.addItem(name)
 
+        self.cycle_tab.asym_div_normalize_probabilities() # to get the coloring right
         # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
