@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
-from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom, HoverWarning
+from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom, HoverWarning, StudioTab
 from studio_functions import style_sheet_template
 
 class RandomSeedIntValidator(QtGui.QValidator):
@@ -41,13 +41,11 @@ class RandomSeedIntValidator(QtGui.QValidator):
         else:
             return QtGui.QValidator.Invalid, text, pos
 
-class Config(QWidget):
+class Config(StudioTab):
     # def __init__(self, nanohub_flag):
     def __init__(self, xml_creator):
-        super().__init__()
+        super().__init__(xml_creator)
         # global self.config_params
-
-        self.xml_creator = xml_creator
 
         self.default_time_units = "min"
 
