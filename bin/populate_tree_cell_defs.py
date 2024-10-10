@@ -13,7 +13,8 @@ import sys
 import logging
 from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QMessageBox, QTableWidgetItem, QLineEdit
 
 
 def invertf2s(sval):  # takes a numeric string, converts to float, returns string with num_dec decimal places.
@@ -72,8 +73,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
     if uep:
         cell_def_tab.tree.clear()
-        idx = 0
-        for cell_def in uep:
+        for idx, cell_def in enumerate(uep):
             # <cell_definition name="default" ID="0">
             logging.debug(f'----- cell_def.tag= {cell_def.tag}')
             if cell_def.tag != "cell_definition":
@@ -124,13 +124,13 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             cell_def_tab.tree.resizeColumnToContents(idx)  # rwh (after adding ID column)
 
-            idx += 1
-
             # Now fill the param dict for each substrate and the Qt widget values for the 0th
 
             logging.debug(f'\n===== populate_tree():  cycle')
 
-            cycle_path = ".//cell_definition[" + str(idx) + "]//phenotype//cycle"
+            cell_definition_path = f".//cell_definition[" + str(idx+1) + "]" # xml indexing starts at 1, python starts at 0
+            phenotype_path = f"{cell_definition_path}//phenotype"
+            cycle_path = f"{phenotype_path}//cycle"
             cycle_code = int(uep.find(cycle_path).attrib['code'])
             logging.debug(f' >> cycle_path= {cycle_path}')
             logging.debug(f'   cycle code= {cycle_code}')
@@ -276,8 +276,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # 			<duration index="1" fixed_duration="true">86400.1</duration>
                     # 		</phase_durations>
 
-
-            death_path = ".//cell_definition[" + str(idx) + "]//phenotype//death//"
+            death_path = f"{phenotype_path}//death"
 
             # rwh: init death params to default? - yipeee, don't need now?
             # cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = False
@@ -297,7 +296,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
 
             # uep = cell_def_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
-            death_uep = uep.find(".//cell_definition[" + str(idx) + "]//phenotype//death")
+            death_uep = uep.find(death_path)
             logging.debug(f'death_uep={death_uep}')
 
             for death_model in death_uep.findall('model'):
@@ -475,32 +474,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             # # ---------  volume 
-                    # <volume>  
-                    # 	<total units="micron^3">2494</total>
-                    # 	<fluid_fraction units="dimensionless">0.75</fluid_fraction>
-                    # 	<nuclear units="micron^3">540</nuclear>
-                        
-                    # 	<fluid_change_rate units="1/min">0.05</fluid_change_rate>
-                    # 	<cytoplasmic_biomass_change_rate units="1/min">0.0045</cytoplasmic_biomass_change_rate>
-                    # 	<nuclear_biomass_change_rate units="1/min">0.0055</nuclear_biomass_change_rate>
-                        
-                    # 	<calcified_fraction units="dimensionless">0</calcified_fraction>
-                    # 	<calcification_rate units="1/min">0</calcification_rate>
-                        
-                    # 	<relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-
-            volume_path = ".//cell_definition[" + str(idx) + "]//phenotype//volume//"
+            volume_path = f"{phenotype_path}//volume//"
             logging.debug(f'volume_path={volume_path}')
-
-            # cell_def_tab.volume_total.setText(uep.find(volume_path+"total").text)
-            # cell_def_tab.volume_fluid_fraction.setText(uep.find(volume_path+"fluid_fraction").text)
-            # cell_def_tab.volume_nuclear.setText(uep.find(volume_path+"nuclear").text)
-            # cell_def_tab.volume_fluid_change_rate.setText(uep.find(volume_path+"fluid_change_rate").text)
-            # cell_def_tab.volume_cytoplasmic_biomass_change_rate.setText(uep.find(volume_path+"cytoplasmic_biomass_change_rate").text)
-            # cell_def_tab.volume_nuclear_biomass_change_rate.setText(uep.find(volume_path+"nuclear_biomass_change_rate").text)
-            # cell_def_tab.volume_calcified_fraction.setText(uep.find(volume_path+"calcified_fraction").text)
-            # cell_def_tab.volume_calcification_rate.setText(uep.find(volume_path+"calcification_rate").text)
-            # cell_def_tab.relative_rupture_volume.setText(uep.find(volume_path+"relative_rupture_volume").text)
 
             cell_def_tab.param_d[cell_def_name]["volume_total"] = uep.find(volume_path+"total").text
             cell_def_tab.param_d[cell_def_name]["volume_fluid_fraction"] = uep.find(volume_path+"fluid_fraction").text
@@ -515,17 +490,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             # # ---------  mechanics 
             logging.debug(f'\n===== populate_tree():  mechanics')
-                    # <mechanics> 
-                    # 	<cell_cell_adhesion_strength units="micron/min">0.4</cell_cell_adhesion_strength>
-                    # 	<cell_cell_repulsion_strength units="micron/min">10.0</cell_cell_repulsion_strength>
-                    # 	<relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
-                        
-                    # 	<options>
-                    # 		<set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
-                    # 		<set_absolute_equilibrium_distance enabled="false" units="micron">15.12</set_absolute_equilibrium_distance>
-                    # 	</options>
 
-            mechanics_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//"
+            mechanics_path = f"{phenotype_path}//mechanics//"
             logging.debug(f'mechanics_path={mechanics_path}')
 
             is_movable_tag =  uep.find(mechanics_path+"is_movable")
@@ -561,31 +527,13 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = mypath.text
             else:
                 cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = '10.0'
-            # >>>
-
-            # cell_def_tab.relative_maximum_adhesion_distance.setText(uep.find(mechanics_path+"relative_maximum_adhesion_distance").text)
 
             #----------
-            cell_adhesion_affinities_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//cell_adhesion_affinities"
+            cell_adhesion_affinities_path = f"{mechanics_path}cell_adhesion_affinities"
             logging.debug(f'---- cell_interactions_path= {cell_adhesion_affinities_path}')
-            # motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
-            # motility_chemotaxis_path = motility_options_path + "chemotaxis//"
-            # if uep.find(motility_chemotaxis_path) is None:
-
-            # if uep.find(motility_advanced_chemotaxis_path) is None:
             cap = uep.find(cell_adhesion_affinities_path)
             if cap is None:
-                # logging.debug(f'---- no cell_adhesion_affinities_path found. Setting to default values")
                 logging.debug(f'---- No cell_adhesion_affinities_path found. Setting to default.')
-
-                # for var in cap.findall('cell_adhesion_affinity'):
-                #     print(" --> ",var.attrib['name'])
-                #     name = var.attrib['name']
-
-                # cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
-                # print("\nFor now, you need to manually enter these into your .xml\n")
-                # sys.exit(-1)
-
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
                     logging.debug(f'---- Error: cell_definitions is not defined.')
@@ -600,26 +548,14 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 logging.debug(f'---- found cell_adhesion_affinities_path:')
                 cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
-                    # <cell_adhesion_affinities>
-	  				# 	<cell_adhesion_affinity name="bacteria">1</cell_adhesion_affinity> 
-	  				# 	<cell_adhesion_affinity name="blood vessel">1</cell_adhesion_affinity> 
                 for var in cap.findall('cell_adhesion_affinity'):
-                    celltype_name = var.attrib['name']
+                    other_celltype_name = var.attrib['name']
                     val = var.text
-                    # print(celltype_name,val)
-                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][celltype_name] = val
+                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][other_celltype_name] = val
                     logging.debug(f'--> {cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"]}')
 
-
-                # cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
-
-            # print("---> ",cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"])
-
             #----------
-            mechanics_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//mechanics//options//"
-            # cell_def_tab.set_relative_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text)
-
-            # cell_def_tab.set_absolute_equilibrium_distance.setText(uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text)
+            mechanics_options_path = f"{mechanics_path}options//"
 
             val =  uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text
             cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance"] = val
@@ -684,7 +620,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # 		</chemotaxis>
                     # 	</options>
 
-            motility_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//"
+            motility_path = f"{phenotype_path}//motility//"
             logging.debug(f'motility_path={motility_path}')
 
             val = uep.find(motility_path+"speed").text
@@ -696,7 +632,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             val = uep.find(motility_path+"migration_bias").text
             cell_def_tab.param_d[cell_def_name]["migration_bias"] = val
 
-            motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
+            motility_options_path = f"{motility_path}options//"
 
             # print(' motility options enabled', uep.find(motility_options_path +'enabled').text)
             if uep.find(motility_options_path +'enabled').text.lower() == 'true':
@@ -845,11 +781,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             #     <net_export_rate units="total substrate/min">0</net_export_rate> 
             # </substrate> 
 
-            secretion_path = ".//cell_definition[" + str(idx) + "]//phenotype//secretion//"
+            secretion_path = f"{phenotype_path}//secretion"
             logging.debug(f'secretion_path = {secretion_path}')
-            secretion_sub1_path = ".//cell_definition[" + str(idx) + "]//phenotype//secretion//substrate[1]//"
+            secretion_sub1_path = f"{secretion_path}//substrate[1]//"
 
-            uep_secretion = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//secretion")
+            uep_secretion = cell_def_tab.xml_root.find(secretion_path)
             logging.debug(f'uep_secretion = {uep_secretion}')
             
 
@@ -912,18 +848,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 jdx += 1
 
             logging.debug(f'------ done parsing secretion:')
-            # print("------ cell_def_tab.param_d = ",cell_def_tab.param_d)
             
 
             # # --------- cell_interactions  
             logging.debug(f'\n===== populate_tree():  cell_interactions')
-            cell_interactions_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_interactions"
+            cell_interactions_path = f"{phenotype_path}//cell_interactions"
             logging.debug(f'---- cell_interactions_path= {cell_interactions_path}')
-            # motility_options_path = ".//cell_definition[" + str(idx) + "]//phenotype//motility//options//"
-            # motility_chemotaxis_path = motility_options_path + "chemotaxis//"
-            # if uep.find(motility_chemotaxis_path) is None:
-
-            # if uep.find(motility_advanced_chemotaxis_path) is None:
             cep = uep.find(cell_interactions_path)
             if cep is None:
                 logging.debug(f'---- no cell_interactions found. Setting to default values')
@@ -979,26 +909,23 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 logging.debug(f'uep2= {uep2}')
                 cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"] = {}
                 for pr in uep2.findall('phagocytosis_rate'):
-                    celltype_name = pr.attrib['name']
+                    other_celltype_name = pr.attrib['name']
                     val = pr.text
-                    # print(celltype_name,val)
-                    cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"][celltype_name] = val
+                    cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"][other_celltype_name] = val
 
                 uep2 = uep.find(cell_interactions_path + "//attack_rates")
                 cell_def_tab.param_d[cell_def_name]["attack_rate"] = {}
                 for ar in uep2.findall('attack_rate'):
-                    celltype_name = ar.attrib['name']
+                    other_celltype_name = ar.attrib['name']
                     val = ar.text
-                    # print(celltype_name,val)
-                    cell_def_tab.param_d[cell_def_name]["attack_rate"][celltype_name] = val
+                    cell_def_tab.param_d[cell_def_name]["attack_rate"][other_celltype_name] = val
 
                 uep2 = uep.find(cell_interactions_path + "//fusion_rates")
                 cell_def_tab.param_d[cell_def_name]["fusion_rate"] = {}
                 for ar in uep2.findall('fusion_rate'):
-                    celltype_name = ar.attrib['name']
+                    other_celltype_name = ar.attrib['name']
                     val = ar.text
-                    # print(celltype_name,val)
-                    cell_def_tab.param_d[cell_def_name]["fusion_rate"][celltype_name] = val
+                    cell_def_tab.param_d[cell_def_name]["fusion_rate"][other_celltype_name] = val
 
             logging.debug(f' live_phagocytosis_rate= {cell_def_tab.param_d[cell_def_name]["live_phagocytosis_rate"]}')
             logging.debug(f' attack_rate= {cell_def_tab.param_d[cell_def_name]["attack_rate"]}')
@@ -1007,16 +934,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             # # --------- cell_transformations  
-            transformation_rates_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_transformations//transformation_rates"
+            transformation_rates_path = f"{phenotype_path}//cell_transformations//transformation_rates"
             logging.debug(f'---- transformation_rates_path = {transformation_rates_path}')
             print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
             trp = uep.find(transformation_rates_path)
-            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
-
             if trp is None:
                 print("---- No cell_transformations found.")
-                # print("\nFor now, you need to manually enter these into your .xml\n")
-                # sys.exit(-1)
                 logging.debug(f'---- No cell_transformations found. Setting to default values')
                 print(f'---- No cell_transformations found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
@@ -1035,20 +958,42 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
                 for tr in trp.findall('transformation_rate'):
-                    celltype_name = tr.attrib['name']
-                    # print("----------  celltype_name =",celltype_name)
+                    other_celltype_name = tr.attrib['name']
                     val = tr.text
-                    cell_def_tab.param_d[cell_def_name]['transformation_rate'][celltype_name] = val
-                    # print(cell_def_tab.param_d[cell_def_name]['transformation_rate'])
+                    cell_def_tab.param_d[cell_def_name]['transformation_rate'][other_celltype_name] = val
 
 
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
 
+            # # --------- cell_asymmetric_divisions
+            asymmetric_division_weights_path = f"{phenotype_path}//cell_asymmetric_divisions//asymmetric_division_weights"
+            logging.debug(f'---- asymmetric_division_weights_path = {asymmetric_division_weights_path}')
+            print(f'\n\n-----------\npopulate*.py: ---- asymmetric_division_weights_path = {asymmetric_division_weights_path}')
+            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+
+            cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"] = {}
+            cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+            if cds_uep is None:
+                logging.error(f'---- Error: cell_definitions is not defined.')
+                sys.exit(-1)
+            for var in cds_uep.findall('cell_definition'):
+                name = var.attrib['name']
+                cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"][name] = '0' if name != cell_def_name else '100'
+            adwp = uep.find(asymmetric_division_weights_path)
+            if adwp is not None:
+                for adw in adwp.findall('asymmetric_division_weight'):
+                    other_celltype_name = adw.attrib['name']
+                    val = adw.text
+                    cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"][other_celltype_name] = val
+                    print(f"Setting {cell_def_name}'s asymmetric_division_weight for {other_celltype_name} = {val}")
+
+            val = cell_def_tab.param_d[cell_def_0th]["asymmetric_division_weight"][cell_def_name]
+            cell_def_tab.cycle_tab.add_row_to_asym_div_table(cell_def_name, val)
 
             # # --------- cell_integrity  
-            cell_integrity_path = ".//cell_definition[" + str(idx) + "]//phenotype//cell_integrity"
+            cell_integrity_path = f"{phenotype_path}//cell_integrity"
             logging.debug(f'---- cell_integrity_path = {cell_integrity_path}')
             print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
             cip = uep.find(cell_integrity_path)
@@ -1098,7 +1043,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             #   </parameters>
             #   <scaling>0.25</scaling>
             # </intracellular>
-            intracellular_path = ".//cell_definitions//cell_definition[" + str(idx) + "]//phenotype//intracellular"
+            intracellular_path = f"{phenotype_path}//intracellular"
          
             uep_intracellular = cell_def_tab.xml_root.find(intracellular_path)
             cell_def_tab.param_d[cell_def_name]["intracellular"] = None
@@ -1123,7 +1068,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                     uep_settings = uep_intracellular.find("settings")
                     if uep_settings is not None:
-                        # print("cell def : " + cell_def_name + " : dt = " + uep_settings.find("intracellular_dt").text)
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"] = uep_settings.find("intracellular_dt").text if uep_settings.find("intracellular_dt") is not None else "12.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["scaling"] = uep_settings.find("scaling").text if uep_settings.find("scaling") is not None else "1.0"
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["time_stochasticity"] = uep_settings.find("time_stochasticity").text if uep_settings.find("time_stochasticity") is not None else "0.0"
@@ -1149,10 +1093,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                             for parameter in uep_intracellular_parameters:
                                 cell_def_tab.param_d[cell_def_name]["intracellular"]["parameters"].append({"name": parameter.attrib["intracellular_name"], "value": parameter.text})                    
 
-                    # print("cell def : " + cell_def_name + " : dt = " + cell_def_tab.param_d[cell_def_name]["intracellular"]["time_step"])
-                    # <initial_values>
-                    #     <initial_value intracellular_name="A">1</initial_value>
-                    #     <initial_value intracellular_name="C">0</initial_value>
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["initial_values"] = []
                     uep_intracellular_iv = uep_intracellular.find("initial_values")
                     if uep_intracellular_iv is not None:
@@ -1247,96 +1187,47 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             # # ---------  custom data 
             logging.debug(f'\n===== populate_tree():  custom data')
-            # <custom_data>  
-            # 	<receptor units="dimensionless">0.0</receptor>
-            # 	<cargo_release_o2_threshold units="mmHg">10</cargo_release_o2_threshold>
 
-            uep_custom_data = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//custom_data")
-            # custom_data_path = ".//cell_definition[" + str(cell_def_tab.idx_current_cell_def) + "]//custom_data//"
+            uep_custom_data = cell_def_tab.xml_root.find(f"{cell_definition_path}//custom_data")
             logging.debug(f'uep_custom_data= {uep_custom_data}')
-
-            # for jdx in range(cell_def_tab.custom_var_count):
-            #     cell_def_tab.custom_data_name[jdx].setText('')
-            #     cell_def_tab.custom_data_value[jdx].setText('')
-                
 
             jdx = 0
             # rwh/TODO: if we have more vars than we initially created rows for, we'll need
             # to call 'append_more_cb' for the excess.
             cell_def_tab.custom_var_count = 0
             cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
-            # print("------- in populate*:  param_d=",cell_def_tab.param_d)
-            # print("-------\n\n")
             if uep_custom_data:
-                # print("--------------- populate_tree: custom_dat for cell_def_name= ",cell_def_name)
-                # cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
                 logging.debug(f'--------------- populate_tree: (empty)custom_data = {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
                 for var in uep_custom_data:
-                    # print("-------- var in uep_",var)
-                    # print(jdx, ") ",var)
-                    # val = sub.find("secretion_rate").text
                     val = var.text
-                    # print("tag= ",var.tag)
-                    # print("val= ",val)
-                    # cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
-
-                    # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = val
-                    # if var.tag not in cell_def_tab.master_custom_varname:
                     if var.tag not in cell_def_tab.master_custom_var_d.keys():
-                        # cell_def_tab.master_custom_varname.append(var.tag)  # unique entries
                         cell_def_tab.master_custom_var_d[var.tag] = [cell_def_tab.custom_var_count, '', '']  # [row#, units, desc]
 
                     conserved_flag = False
                     logging.debug(f'var.attrib.keys() = {var.attrib.keys()}')
                     if 'conserved' in var.attrib.keys() and var.attrib['conserved'].lower() == 'true':
-                        # self.cells_csv.setChecked(True)
                         logging.debug(f'-------- conserved is true for {var}')
                         conserved_flag = True
 
-                    # units_str = "dimensionless"
-                    # desc_str = ""
                     if 'units' in var.attrib.keys():
                         units_str = var.attrib['units']
                         # for multiple cell types, use longest "units" string
                         if len(units_str) > len(cell_def_tab.master_custom_var_d[var.tag][1]):
                             cell_def_tab.master_custom_var_d[var.tag][1] = units_str  # hack: hard-coded index
-                        # cell_def_tab.custom_var_d[var.tag] = [units_str, desc_str]
-                        # logging.debug(f'--------- units_str= {units_str}')
 
                     if 'description' in var.attrib.keys():
                         desc_str = var.attrib['description']
                         # for multiple cell types, use longest "description" string
                         if len(desc_str) > len(cell_def_tab.master_custom_var_d[var.tag][2]):
                             cell_def_tab.master_custom_var_d[var.tag][2] = desc_str  # hack: hard-coded index
-                        # cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
-                        # logging.debug(f'--------- desc_str= {desc_str}')
 
-                    # print(f"populate():  master_custom_var_d= {cell_def_tab.master_custom_var_d}")
-                    # cell_def_tab.master_custom_units.append(units_str)
-                    # cell_def_tab.master_custom_desc.append(desc_str)
-                    # cell_def_tab.master_custom_var_d[var.tag]=[units_str, desc_str]
-
-                        # no can do: RuntimeError: dictionary changed size during iteration
-                        # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag+'__conserved'] = True
-
-                    # cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag, units_val]
                     cell_def_tab.param_d[cell_def_name]['custom_data'][var.tag] = [val, conserved_flag]
-                    # cell_def_tab.custom_var_d[var.tag] = [units_val, desc_str]
                     logging.debug(f'populate: cell_def_name= {cell_def_name} --> custom_data: {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
 
                     cell_def_tab.custom_var_count += 1
-            #     cell_def_tab.custom_data_name[jdx].setText(var.tag)
-            #     print("tag=",var.tag)
-            #     cell_def_tab.custom_data_value[jdx].setText(var.text)
-
-            #     if 'units' in var.keys():
-            #         cell_def_tab.custom_data_units[jdx].setText(var.attrib['units'])
-            #     jdx += 1
-
-                # print("--------- populate_tree: cell_def_tab.param_d[cell_def_name]['custom_data'] = ",cell_def_tab.param_d[cell_def_name]['custom_data'])
                 
             cell_def_tab.param_d[cell_def_name]["par_dists"] = {}
-            uep_par_dists = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//initial_parameter_distributions")
+            uep_par_dists = cell_def_tab.xml_root.find(f"{cell_definition_path}//initial_parameter_distributions")
             if uep_par_dists:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = uep_par_dists.attrib["enabled"].lower() != "true"
                 for par_dist in uep_par_dists:
@@ -1384,11 +1275,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
     #----------------------------------
     # at the end of <cell_definitions>
-        # <cell_rules type="csv" enabled="true">
-		# 	<folder>./config</folder>
-		# 	<filename>cell_rules.csv</filename>
-		# </cell_rules> 
-
     uep_cell_rules = cell_def_tab.xml_root.find(".//cell_definitions//cell_rules")
     if uep_cell_rules:
         rules_folder = uep_cell_rules.find(".//folder").text 

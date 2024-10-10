@@ -102,7 +102,7 @@ class MyQLineEdit(QLineEdit):
 class CellDef(StudioTab):
     def __init__(self, xml_creator):
         super().__init__(xml_creator)
-
+        
         self.celldef_param_updates = CellDefParamUpdates(self)
 
         random.seed(42)   # for reproducibility (cough). Needed for pytest results.
@@ -178,11 +178,6 @@ class CellDef(StudioTab):
         self.stack_duration_flowcyto_idx = -1 
         self.stack_duration_flowcytosep_idx = -1 
         self.stack_duration_quiescent_idx = -1 
-
-        # used in fill_xml_cycle()
-        self.cycle_combo_idx_code = {0:"5", 1:"1", 2:"0", 3:"2", 4:"6", 5:"7"}
-        # TODO: check if these names must be specific in the C++ 
-        self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
 
         self.stacked_volume = QStackedWidget()
 
@@ -303,6 +298,7 @@ class CellDef(StudioTab):
         self.custom_data_tab = QWidget()
 
         self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("background-color: rgb(236,236,236)")
         self.splitter.addWidget(self.tab_widget)
 
         # self.tab_widget.addTab(self.create_cycle_tab(),"Cycle")
@@ -408,6 +404,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def init_default_phenotype_params(self, cdname, reset_mapping):
         print("----- init_default_phenotype_params(self, cdname): reset_mapping=",reset_mapping)
         self.new_cycle_params(cdname, True)
+        self.new_asym_div_params(cdname, reset_mapping)
         self.new_death_params(cdname)
         self.new_volume_params(cdname)
         self.new_mechanics_params(cdname, reset_mapping)
@@ -575,8 +572,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['fusion_rate'][cdname_original]
             self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['transformation_rate'][cdname_original]
 
+            self.param_d[cdname]['asymmetric_division_weight'][cdname_copy] = self.param_d[cdname]['asymmetric_division_weight'][cdname_original]
+
             self.param_d[cdname]['cell_adhesion_affinity'][cdname_copy] = self.param_d[cdname]['cell_adhesion_affinity'][cdname_original]  # default affinity
            
+        self.param_d[cdname_original]['asymmetric_division_weight'][cdname_copy] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to new cell type
+        self.param_d[cdname_copy]['asymmetric_division_weight'][cdname_original] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to original cell type
         logging.debug(f'--> copy_cell_def():\n {self.param_d[cdname_copy]}')
         # print('2) copy_cell_def(): param_d.keys=',self.param_d.keys())
 
@@ -670,7 +671,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdef]['attack_rate'].pop(self.current_cell_def,0)
             self.param_d[cdef]['fusion_rate'].pop(self.current_cell_def,0)
             self.param_d[cdef]['transformation_rate'].pop(self.current_cell_def,0)
+            self.param_d[cdef]['asymmetric_division_weight'].pop(self.current_cell_def,0)
 
+        self.cycle_tab.delete_celltype(self.current_cell_def)
 
         item_idx = self.tree.indexFromItem(self.tree.currentItem()).row()   # rwh: apparently not used?
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.tree.currentItem()))
@@ -3829,7 +3832,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         vlayout = QVBoxLayout()
         hlayout = QHBoxLayout()
 
-        self.custom_data_search = QLineEdit()
+        self.custom_data_search = QLineEdit(styleSheet="background-color: white")
         self.custom_data_search.setFixedWidth(400)
         self.custom_data_search.setPlaceholderText("Search for Name...")
         self.custom_data_search.textChanged.connect(self.custom_data_search_cb)
@@ -3857,7 +3860,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.custom_data_table.setRowCount(self.max_custom_data_rows)
         # self.custom_data_table.setHorizontalHeaderLabels(['Conserve','Name','Value','Units','Desc'])
         self.custom_data_table.setHorizontalHeaderLabels(['Name','Value','Conserve','Units','Description'])
-
+        self.custom_data_table.setStyleSheet("background-color: white")
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.custom_data_table.horizontalHeader()       
         # header.setSectionResizeMode(0, QHeaderView.Stretch)
@@ -3895,7 +3898,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             w_varval.wcol = 1   # beware: hard-coded 
             # w_varval.idx = irow   # rwh: is .idx used?
             w_varval.setValidator(QtGui.QDoubleValidator())
-            # self.custom_data_table.setItem(irow, self.custom_icol_value, item)
             self.custom_data_table.setCellWidget(irow, self.custom_icol_value, w_varval)
             w_varval.textChanged[str].connect(self.custom_data_value_changed)  # being explicit about passing a string 
 
@@ -3962,11 +3964,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # self.custom_data_table.setItem(irow, self.custom_icol_desc, item)
             self.custom_data_table.setCellWidget(irow, self.custom_icol_desc, w_var_desc)
             w_var_desc.textChanged[str].connect(self.custom_data_desc_changed)  # being explicit about passing a string 
-
-
-
-        # self.custom_data_table.itemClicked.connect(self.custom_data_clicked_cb)
-        # self.custom_data_table.cellChanged.connect(self.custom_data_changed_cb)
 
         vlayout.addWidget(self.custom_data_table)
 
@@ -4996,6 +4993,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.attack_rate_dropdown.clear()
         self.fusion_rate_dropdown.clear()
         self.cell_transformation_dropdown.clear()
+        self.cycle_tab.reset_asym_div_table()
         # self.immunogenicity_dropdown.clear()
 
         self.cell_adhesion_affinity_dropdown.clear()
@@ -5003,7 +5001,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # vp = []   # pointers to <variable> nodes
         if uep:
             idx = 0
-            for var in uep.findall('cell_definition'):
+            for i, var in enumerate(uep.findall('cell_definition')):
                 # vp.append(var)
                 # print(" --> ",var.attrib['name'])
                 name = var.attrib['name']
@@ -5015,6 +5013,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 # self.immunogenicity_dropdown.addItem(name)
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
+
+                val = self.param_d[self.current_cell_def]['asymmetric_division_weight'][name]
+                self.cycle_tab.add_row_to_asym_div_table(name, val=val)
 
                 # self.ics_tab.celltype_combobox.addItem(name)
 
@@ -5040,6 +5041,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         if self.rules_tab:
             self.rules_tab.add_new_celltype(name)
 
+        self.cycle_tab.add_row_to_asym_div_table(name)
 
     #-----------------------------------------------------------------------------------------
     def delete_substrate(self, item_idx, new_substrate):
@@ -5330,6 +5332,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.param_d[cdname]['cycle_quiescent_01_fixed_duration'] = bval
         self.param_d[cdname]['cycle_quiescent_10_fixed_duration'] = True
+
+    def new_asym_div_params(self, cdname, reset_mapping):
+        if not reset_mapping:
+            return
+        self.param_d[cdname]['asymmetric_division_weight'] = {}
+        for cdname2 in self.param_d.keys():
+            self.param_d[cdname]['asymmetric_division_weight'][cdname2] = '0' if cdname != cdname2 else '100'
+            self.param_d[cdname2]['asymmetric_division_weight'][cdname] = '0' if cdname != cdname2 else '100'
 
     def new_death_params(self, cdname):
         sval = self.default_sval
@@ -6021,301 +6031,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
-    def fill_xml_cycle(self,pheno,cdef):
-        # ------- cycle ------- 
-        # <cycle code="5" name="live">  
-        # <cycle code="6" name="Flow cytometry model (separated)">  
-
-
-        # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-        # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-        # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-        # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-        # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-        # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-
-        # static const int advanced_Ki67_cycle_model= 0;
-        # static const int basic_Ki67_cycle_model=1;
-        # static const int flow_cytometry_cycle_model=2;
-        # static const int live_apoptotic_cycle_model=3;
-        # static const int total_cells_cycle_model=4;
-        # static const int live_cells_cycle_model = 5; 
-        # static const int flow_cytometry_separated_cycle_model = 6; 
-        # static const int cycling_quiescent_model = 7; 
-
-        # self.cycle_combo_idx_code = {0:"5", 1:"1", 2:"0", 3:"2", 4:"6", 5:"7"}
-        # TODO: check if these names must be specific in the C++ 
-        # self.cycle_combo_idx_name = {0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
-
-        combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
-        cycle = ET.SubElement(pheno, "cycle",
-            {"code":self.cycle_combo_idx_code[combo_widget_idx],
-                "name":self.cycle_combo_idx_name[combo_widget_idx] } )
-        cycle.text = self.indent12  # affects self.indent of child, i.e., <phase_transition_rates, for example.
-        cycle.tail = "\n" + self.indent10
-
-        #-- duration
-        # if self.cycle_duration_flag:
-        if self.param_d[cdef]['cycle_duration_flag']:
-            subelm = ET.SubElement(cycle, "phase_durations",{"units":self.default_time_units})
-            subelm.text = self.indent14
-            subelm.tail = self.indent12
-
-            #--- live
-            if combo_widget_idx == 0:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_live_00_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_live_00_duration']
-                live_duration = float(self.param_d[cdef]['cycle_live_00_duration'])
-                if abs(live_duration) < 1.e-6:
-                    msg = f"WARNING: {cdef} has Cycle=live with duration ~= 0 which will result in unrealistically high proliferation!"
-                    print(msg)
-                    msgBox = QMessageBox()
-                    msgBox.setTextFormat(Qt.RichText)
-                    msgBox.setText(msg)
-                    msgBox.setStandardButtons(QMessageBox.Ok)
-                    returnValue = msgBox.exec()
-                    # sys.exit(-1)
-                subelm2.tail = self.indent12
-
-            elif combo_widget_idx == 1:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_01_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_01_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_10_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_10_duration']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-            elif combo_widget_idx == 2:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_01_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_01_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_12_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_12_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_20_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_20_duration']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-            elif combo_widget_idx == 3:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_01_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_01_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_12_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_12_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_20_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_20_duration']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("flow cytometry sepaduration") # 0->1, 1->2, 2->3, 3->0
-            elif combo_widget_idx == 4:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_01_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_01_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_12_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_12_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_23_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_23_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_30_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"3", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_30_duration']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-            elif combo_widget_idx == 5:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_01_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_01_duration']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_10_fixed_duration']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "duration",{"index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_10_duration']
-                subelm2.tail = self.indent12
-
-
-
-        #-- transition rates
-        else:
-            subelm = ET.SubElement(cycle, "phase_transition_rates",{"units":self.default_rate_units})
-            subelm.text = self.indent14  # affects </cycle>, i.e., its parent
-            subelm.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("live cells")   # 0 -> 0
-            # self.cycle_dropdown.addItem("basic Ki67")   # 0 -> 1, 1 -> 0
-            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-            # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-            if combo_widget_idx == 0:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_live_00_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_live_00_trate']
-                subelm2.tail = self.indent12
-
-            elif combo_widget_idx == 1:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_01_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_01_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_Ki67_10_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_Ki67_10_trate']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("advanced Ki67")  # 0 -> 1, 1 -> 2, 2 -> 0
-            elif combo_widget_idx == 2:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_01_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_01_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_12_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_12_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_advancedKi67_20_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_advancedKi67_20_trate']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("flow cytometry") # 0 -> 1, 1 -> 2, 2 -> 0
-            elif combo_widget_idx == 3:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_01_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_01_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_12_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_12_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcyto_20_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcyto_20_trate']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("flow cytometry separated") # 0->1, 1->2, 2->3, 3->0
-            elif combo_widget_idx == 4:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_01_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_01_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_12_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"2", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_12_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_23_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"2", "end_index":"3", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_23_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_flowcytosep_30_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"3", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_flowcytosep_30_trate']
-                subelm2.tail = self.indent12
-
-            # self.cycle_dropdown.addItem("cycling quiescent") # 0 -> 1, 1 -> 0
-            elif combo_widget_idx == 5:
-                sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_01_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"0", "end_index":"1", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_01_trate']
-                subelm2.tail = self.indent14
-
-                sfix = "false"
-                if self.param_d[cdef]['cycle_quiescent_10_fixed_trate']:
-                    sfix = "true"
-                subelm2 = ET.SubElement(subelm, "rate",{"start_index":"1", "end_index":"0", "fixed_duration":sfix} )
-                subelm2.text = self.param_d[cdef]['cycle_quiescent_10_trate']
-                subelm2.tail = self.indent12
-
+   
     #-------------------------------------------------------------------
     # Read values from the GUI widgets and generate/write a new XML
     def fill_xml_death(self,pheno,cdname):  # we use "cdname" here instead of cdef (for easier copy/paste from elsewhere)
@@ -7221,7 +6937,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     pheno.text = self.indent10
                     pheno.tail = self.indent8
 
-                    self.fill_xml_cycle(pheno,cdef)
+                    self.cycle_tab.fill_xml(pheno,cdef)
                     self.fill_xml_death(pheno,cdef)
                     self.fill_xml_volume(pheno,cdef)
                     self.fill_xml_mechanics(pheno,cdef)

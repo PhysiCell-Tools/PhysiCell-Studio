@@ -28,7 +28,6 @@ class CellDefParamUpdates:
             if name not in self.parent.param_d[self.get_current_celldef()].keys():
                 print(f'cell_def_param_changed: {name} not in {self.parent.param_d[self.get_current_celldef()].keys()}')
                 raise KeyError(f'cell_def_param_changed: {name} not in {self.parent.param_d[self.get_current_celldef()].keys()}')
-        print(f"cell_def_param_changed: {name} = {text}")
         self.parent.param_d[self.get_current_celldef()][name] = text
 
     # we could use lambda functions to accomplish most/all of this. but this keeps the initialization of the widgets simpler
