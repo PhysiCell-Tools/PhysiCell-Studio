@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import QRect, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame, QLabel, QPushButton, QStackedWidget, QGridLayout, QLineEdit, QTabWidget, QTableWidget, QTableWidgetItem, QMessageBox
-from studio_classes import QRadioButton_custom, QHLine, QComboBox_custom, CellDefSubTab, QCheckBox_custom, HoverWarning
+from studio_classes import QRadioButton_custom, QHLine, QComboBox_custom, CellDefSubTab, QCheckBox_custom, HoverWarning, QLineEdit_custom
 from cell_def_tab_param_updates import CellDefParamUpdates
 
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -285,9 +285,9 @@ class CycleTab(CellDefSubTab):
             else:
                 getattr(self, k).setText(v)
 
-        self.asym_div_standard_table.itemChanged.disconnect()
+        self.asym_div_normalization = False
         self.update_division_function_params()
-        self.asym_div_standard_table.itemChanged.connect(self.asym_div_cb)
+        self.asym_div_normalization = True
 
     def create_division_function_tab(self):
         self.asym_div_standard_table = QTableWidget()
@@ -295,7 +295,6 @@ class CycleTab(CellDefSubTab):
         self.asym_div_standard_table.setRowCount(nrows)
         self.asym_div_standard_table.setColumnCount(2)
         self.asym_div_standard_table.setHorizontalHeaderLabels(["Cell Type", "Probability"])
-        self.asym_div_standard_table.itemChanged.connect(self.asym_div_cb)
         self.asym_div_current_cell_def_color = QtGui.QColor("lightblue")
         
         hbox = QHBoxLayout()
@@ -314,76 +313,71 @@ class CycleTab(CellDefSubTab):
         for row_idx in range(self.asym_div_standard_table.rowCount()):
             row_name = self.asym_div_standard_table.item(row_idx, 0).text()
             new_val = self.param_d[cdname]['asymmetric_division_weight'][row_name]
-            item = self.asym_div_standard_table.item(row_idx, 1)
+            item = self.asym_div_standard_table.cellWidget(row_idx, 1)
             item.setText(new_val)
             if row_name == cdname:
-                print(f"row name found: {row_name}")
-                if float(new_val) < 0 or float(new_val) > 100:
-                    item.setBackground(QtGui.QColor("red"))
-                else:
-                    item.setBackground(self.asym_div_current_cell_def_color)
-                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                item.setEnabled(False)
             else:
-                item.setBackground(QtGui.QColor("white"))
-                item.setFlags(item.flags() | Qt.ItemIsEditable)
+                item.setEnabled(True)
 
     def add_row_to_asym_div_table(self, cdname, val='0'):
-        self.asym_div_standard_table.itemChanged.disconnect()
+        self.asym_div_normalization = False
         row_idx = self.asym_div_standard_table.rowCount()
         item = QTableWidgetItem(cdname)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         self.asym_div_standard_table.insertRow(row_idx)
         self.asym_div_standard_table.setItem(row_idx, 0, item)
-        item = QTableWidgetItem(val)
+        item = QLineEdit_custom()
+        item.setText(val)
+        item.invalid_style = """
+            QLineEdit {
+                color: black;
+                background-color: rgba(255, 0, 0, 0.5);
+            }
+            """
+        item.setValidator(QtGui.QDoubleValidator(bottom=0.0, top=100.0))
+        item.row = row_idx
         if cdname == self.get_current_celldef():
-
-            item.setBackground(self.asym_div_current_cell_def_color)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setEnabled(False)
         else:
-            item.setBackground(QtGui.QColor("white"))
-            item.setFlags(item.flags() | Qt.ItemIsEditable)
-        self.asym_div_standard_table.setItem(row_idx, 1, item)
-        self.asym_div_standard_table.itemChanged.connect(self.asym_div_cb)
+            item.setEnabled(True)
+        self.asym_div_standard_table.setCellWidget(row_idx, 1, item)
+        item.textEdited.connect(self.asym_div_cb)
+        self.asym_div_normalization = True
 
-    def asym_div_cb(self, item):
-        if item.column() == 0:
-            # don't allow changing the cell type name
-            # I believe this will be called when renaming a cell type the right way
+    def asym_div_cb(self, text):
+        item = self.sender()
+        if item.check_validity(text) is False:
             return
-        row_idx = item.row()
+        row_idx = item.row
         cdname = self.asym_div_standard_table.item(row_idx, 0).text()
-        self.param_d[self.get_current_celldef()]['asymmetric_division_weight'][cdname] = item.text()
+        self.param_d[self.get_current_celldef()]['asymmetric_division_weight'][cdname] = text
         self.asym_div_normalize_probabilities()
 
     def asym_div_normalize_probabilities(self):
         print(f"asym_div_normalize_probabilities: {self.get_current_celldef()}")
-        self.asym_div_standard_table.itemChanged.disconnect()
+        if not self.asym_div_normalization:
+            return
+        self.asym_div_normalization = False
         total = 0
         for row_idx in range(self.asym_div_standard_table.rowCount()):
-            item = self.asym_div_standard_table.item(row_idx, 1)
-            next_val = float(item.text())
-            total += float(next_val)
+            item = self.asym_div_standard_table.cellWidget(row_idx, 1)
+            text = item.text()
+            next_val = float(text)
             if next_val < 0:
-                item.setBackground(QtGui.QColor("red"))
-            elif self.asym_div_standard_table.item(row_idx, 0).text() == self.get_current_celldef():
-                item.setBackground(self.asym_div_current_cell_def_color)
-            else:
-                item.setBackground(QtGui.QColor("white"))
+                item.check_validity(text)
+            total += float(next_val)
         if total != 100:
             # find row with current cell def name
             for row_idx in range(self.asym_div_standard_table.rowCount()):
                 row_name = self.asym_div_standard_table.item(row_idx, 0).text()
                 if row_name == self.get_current_celldef():
-                    item = self.asym_div_standard_table.item(row_idx, 1)
+                    item = self.asym_div_standard_table.cellWidget(row_idx, 1)
                     new_val = float(item.text()) + 100-total
                     item.setText(str(new_val))
                     self.param_d[row_name]['asymmetric_division_weight'][row_name] = str(new_val)
-                    if new_val < 0 or new_val > 100:
-                        item.setBackground(QtGui.QColor("red"))
-                    else:
-                        item.setBackground(self.asym_div_current_cell_def_color)
                     break
-        self.asym_div_standard_table.itemChanged.connect(self.asym_div_cb)
+        self.asym_div_normalization = True
 
     def delete_celltype(self, cdname):
         for row_idx in range(self.asym_div_standard_table.rowCount()):
@@ -397,7 +391,6 @@ class CycleTab(CellDefSubTab):
         self.asym_div_standard_table.setRowCount(0)
         self.asym_div_standard_table.setColumnCount(2)
         self.asym_div_standard_table.setHorizontalHeaderLabels(["Cell Type", "Probability"])
-        self.asym_div_standard_table.itemChanged.connect(self.asym_div_cb)
 
     def fill_xml(self,pheno,cdef):
         combo_widget_idx = self.param_d[cdef]["cycle_choice_idx"]
