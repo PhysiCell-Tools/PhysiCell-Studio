@@ -2671,7 +2671,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def transformation_rate_changed(self,text):
         celltype_name = self.cell_transformation_dropdown.currentText()
         self.param_d[self.current_cell_def]['transformation_rate'][celltype_name] = text
-        self.check_rate_too_fast(text, self.transformation_rate_fast_label)
+        self.check_rate_too_fast(text, self.transformation_rate_fast_label, time_step="phenotype_dt")
     #--------------------------------------------------------
     def damage_rate_changed(self,text):
         self.param_d[self.current_cell_def]['damage_rate'] = text
