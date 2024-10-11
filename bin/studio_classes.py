@@ -135,6 +135,28 @@ class QLineEdit_custom(QLineEdit):
             }
             """
 
+    def set_formatter(self, bval: bool=True, ndigits: int=5):
+        if bval:
+            self.editingFinished.connect(lambda: self.format_text(ndigits=ndigits))
+        else:
+            self.editingFinished.disconnect()
+
+    def format_text(self, ndigits: int=5):
+        try:
+            self.full_value = self.text()
+            value = float(self.full_value)
+            if value == 0:
+                formatted_text = "0"
+            elif abs(value) < 10**-ndigits:
+                formatted_text = f"{value:.{ndigits}e}"
+            else:
+                formatted_text = f"{value:.{ndigits}f}".rstrip('0').rstrip('.')
+            self.blockSignals(True)
+            self.setText(formatted_text)
+            self.blockSignals(False)
+        except ValueError:
+            pass
+
 radiobutton_style = """
 QRadioButton {
     spacing: 4px; /* Space between indicator and text */

@@ -231,50 +231,40 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_fixed_trate"] = bval
                 cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_fixed_duration"] = bval
 
+            # # --------- cell_asymmetric_divisions
+            asymmetric_division_probabilities_path = f"{cycle_path}//standard_asymmetric_division"
+            logging.debug(f'---- asymmetric_division_probabilities_path = {asymmetric_division_probabilities_path}')
+            print(f'\n\n-----------\npopulate*.py: ---- asymmetric_division_probabilities_path = {asymmetric_division_probabilities_path}')
+            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
+
+            cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"] = {}
+            cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+            if cds_uep is None:
+                logging.error(f'---- Error: cell_definitions is not defined.')
+                sys.exit(-1)
+            for var in cds_uep.findall('cell_definition'):
+                name = var.attrib['name']
+                cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"][name] = '0' if name != cell_def_name else '1.0'
+            adpp = uep.find(asymmetric_division_probabilities_path)
+            if adpp is not None:
+                print(f"found adpp={[e.tag for e in adpp.findall('*')]}")
+                for adp in adpp.findall('asymmetric_division_probability'):
+                    other_celltype_name = adp.attrib['name']
+                    val = adp.text
+                    print(f"found val={val}")
+                    cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"][other_celltype_name] = val
+            else:
+                print(f"populate_tree_cell_defs.py:  Error: missing asymmetric_division_probability")
+            val = cell_def_tab.param_d[cell_def_0th]["asymmetric_division_probability"][cell_def_name]
+            print(f"{val = }")
+            cell_def_tab.cycle_tab.add_row_to_asym_div_table(cell_def_name, val)
+
             # ---------  death 
             logging.debug(f'\n===== populate_tree():  death')
 
                     #------ using transition_rates
-                    # <death> 
-                    #   <model code="100" name="apoptosis"> 
-                        #     <death_rate units="1/min">0</death_rate>  
-                        #     <phase_transition_rates units="1/min">
-                        #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-                        #     </phase_transition_rates>
-                        #     <parameters>
-                        #         <unlysed_fluid_change_rate units="1/min">0.05</unlysed_fluid_change_rate>
-                        #         <lysed_fluid_change_rate units="1/min">0</lysed_fluid_change_rate>
-                        #         <cytoplasmic_biomass_change_rate units="1/min">1.66667e-02</cytoplasmic_biomass_change_rate>
-                        #         <nuclear_biomass_change_rate units="1/min">5.83333e-03</nuclear_biomass_change_rate>
-                        #         <calcification_rate units="1/min">0</calcification_rate>
-                        #         <relative_rupture_volume units="dimensionless">2.0</relative_rupture_volume>
-                        #     </parameters>
-                        # </model> 
-                    #   <model code="101" name="necrosis">
 
                     #------ using durations
-                    # <death>  
-                    # 	<model code="100" name="apoptosis"> 
-                    # 		<death_rate units="1/min">5.1e-05</death_rate>
-                    # 		<phase_durations units="min">
-                    # 			<duration index="0" fixed_duration="true">511</duration>
-                    # 		</phase_durations>
-                    # 		<parameters>
-                    # 			<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
-                    # 			<lysed_fluid_change_rate units="1/min">1.e-99</lysed_fluid_change_rate>
-                    # 			<cytoplasmic_biomass_change_rate units="1/min">1.61e-02</cytoplasmic_biomass_change_rate>
-                    # 			<nuclear_biomass_change_rate units="1/min">5.81e-03</nuclear_biomass_change_rate>
-                    # 			<calcification_rate units="1/min">0</calcification_rate>
-                    # 			<relative_rupture_volume units="dimensionless">2.1</relative_rupture_volume>
-                    # 		</parameters>
-                    # 	</model> 
-
-                    # 	<model code="101" name="necrosis">
-                    # 		<death_rate units="1/min">0.1</death_rate>
-                    # 		<phase_durations units="min">
-                    # 			<duration index="0" fixed_duration="true">0.1</duration>
-                    # 			<duration index="1" fixed_duration="true">86400.1</duration>
-                    # 		</phase_durations>
 
             death_path = f"{phenotype_path}//death"
 
@@ -307,26 +297,16 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     logging.debug(f'-------- parsing apoptosis!')
                     cell_def_tab.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
 
-                    # 	<model code="100" name="apoptosis"> 
-                    # 		<death_rate units="1/min">5.1e-05</death_rate>
-                    # 		<phase_durations units="min">
-                    # 			<duration index="0" fixed_duration="true">511</duration>
-                    # 		</phase_durations>
-                    # 		<parameters>
-                    # 			<unlysed_fluid_change_rate units="1/min">0.01</unlysed_fluid_change_rate>
                     pd_uep = death_model.find("phase_durations")
                     if pd_uep is not None:
                         logging.debug(f' >> pd_uep ={pd_uep}')
                         cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = True
-                        # cell_def_tab.apoptosis_rb2.setChecked(True)  # duration
 
                         for pd in pd_uep:   # <duration index= ... >
                             logging.debug(f'phase_duration= {pd}')
                             logging.debug(f'index= {pd.attrib["index"]}')
                             if  pd.attrib['index'] == "0":
-                    # 			<duration index="0" fixed_duration="true">86400.1</duration>
                                 cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = pd.text
-                                # print("populate(): apop phase0 duration= ",pd.text)  # rwh
                                 cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = invertf2s(pd.text)
                                 if  pd.attrib['fixed_duration'].lower() == "true":
                                     cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
@@ -335,18 +315,10 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
                                     cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
 
-                    # 			<duration index="1" fixed_duration="true">86400.1</duration>
-
                     else:  #  apoptosis transition rate
-                    #   <model code="100" name="apoptosis"> 
-                        #     <death_rate units="1/min">0</death_rate>  
-                        #     <phase_transition_rates units="1/min">
-                        #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-                        #     </phase_transition_rates>
                         tr_uep = death_model.find("phase_transition_rates")
                         if tr_uep is not None:
                             logging.debug(f' >> tr_uep ={tr_uep}')
-                            # cell_def_tab.apoptosis_rb1.setChecked(True)  # trate01
 
                             for tr in tr_uep:   # <rate start_index= ... >
                                 logging.debug(f'death: phase_transition_rates= {tr}')
@@ -362,11 +334,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                         cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
                                         cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
 
-                    # apoptosis_params_path = apoptosis_path + "parameters//"
                     params_uep = death_model.find("parameters")
-                    # apoptosis_params_path = apoptosis_path + "parameters//"
 
-                    # cell_def_tab.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
                     if params_uep is None:
                         logging.error(f'\npopulate_tree_cell_defs.py: Error: missing death params.\nIt is possible your .xml is the old hierarchical format\nand not the flattened, explicit format.  \nExiting.\n')
                         sys.exit(1)
@@ -416,13 +385,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                     #------------------------
                     else:  # necrosis transition rates
-                        #     <phase_transition_rates units="1/min">
-                        #         <rate start_index="0" end_index="1" fixed_duration="true">0.00193798</rate>
-                        #     </phase_transition_rates>
                         tr_uep = death_model.find("phase_transition_rates")
                         if tr_uep is not None:
                             logging.debug(f' >> tr_uep ={tr_uep}')
-                            # cell_def_tab.necrosis_rb1.setChecked(True)  
                             for tr in tr_uep:  # transition rate 
                                 logging.debug(f'death: phase_transition_rates= {tr}')
                                 logging.debug(f'start_index= {tr.attrib["start_index"]}')
@@ -434,17 +399,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     # else:
                                         # dval = rate * 60.0
                                     logging.debug(f' --- transition rate 01 (float) = {rate}')
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = tr.text
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = str(dval)
-                                    # cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(dval)
                                     cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(rate)
                                     cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = invertf2s(str(rate))
                                     if  tr.attrib['fixed_duration'].lower() == "true":
-                                        # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
                                     else:
-                                        # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
 
@@ -504,8 +464,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["is_movable"] = True
 
-            # cell_def_tab.cell_cell_adhesion_strength.setText(uep.find(mechanics_path+"cell_cell_adhesion_strength").text)
-            # cell_def_tab.cell_cell_repulsion_strength.setText(uep.find(mechanics_path+"cell_cell_repulsion_strength").text)
             val =  uep.find(mechanics_path+"cell_cell_adhesion_strength").text
             cell_def_tab.param_d[cell_def_name]["mechanics_adhesion"] = val
 
@@ -602,23 +560,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = '12'
             # >>>
 
-
             # # ---------  motility 
             logging.debug(f'\n===== populate_tree():  motility')
-                    # <motility>  
-                    # 	<speed units="micron/min">5.0</speed>
-                    # 	<persistence_time units="min">5.0</persistence_time>
-                    # 	<migration_bias units="dimensionless">0.5</migration_bias>
-                        
-                    # 	<options>
-                    # 		<enabled>true</enabled>
-                    # 		<use_2D>true</use_2D>
-                    # 		<chemotaxis>
-                    # 			<enabled>false</enabled>
-                    # 			<substrate>director signal</substrate>
-                    # 			<direction>1</direction>
-                    # 		</chemotaxis>
-                    # 	</options>
 
             motility_path = f"{phenotype_path}//motility//"
             logging.debug(f'motility_path={motility_path}')
@@ -634,7 +577,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             motility_options_path = f"{motility_path}options//"
 
-            # print(' motility options enabled', uep.find(motility_options_path +'enabled').text)
             if uep.find(motility_options_path +'enabled').text.lower() == 'true':
                 cell_def_tab.param_d[cell_def_name]["motility_enabled"] = True
             else:
@@ -645,11 +587,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["motility_use_2D"] = False
 
-                    # 		<chemotaxis>
-                    # 			<enabled>false</enabled>
-                    # 			<substrate>director signal</substrate>
-                    # 			<direction>1</direction>
-                    # 		</chemotaxis>
             motility_chemotaxis_path = motility_options_path + "chemotaxis//"
             if uep.find(motility_chemotaxis_path) is None:
                 cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = False
@@ -671,19 +608,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 else:
                     cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
 
-        #   <advanced_chemotaxis>
-        #     <enabled>false</enabled>
-        #     <normalize_each_gradient>false</normalize_each_gradient>
-        #     <chemotactic_sensitivities>
-        #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
-        #       <chemotactic_sensitivity substrate="toxin">0</chemotactic_sensitivity> 
-        #       <chemotactic_sensitivity substrate="quorum">0</chemotactic_sensitivity> 
-        #       <chemotactic_sensitivity substrate="pro-inflammatory">0</chemotactic_sensitivity> 
-        #       <chemotactic_sensitivity substrate="debris">0</chemotactic_sensitivity> 
-        #     </chemotactic_sensitivities>
-        #   </advanced_chemotaxis>
             motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis//"
-            # motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis"
             logging.debug(f'motility_advanced_chemotaxis_path= {motility_advanced_chemotaxis_path}')
 
 
@@ -694,7 +619,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 substrate_name = subelm.attrib['name']
                 cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate_name] = '0.0'
             logging.debug(f'chemotactic_sensitivity= {cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
-            # sys.exit(-1)
 
             if uep.find(motility_advanced_chemotaxis_path) is None:  # advanced_chemotaxis not present in .xml
                 logging.debug(f'---- no motility_advanced_chemotaxis_path found. Setting to default values')
@@ -966,31 +890,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
-
-            # # --------- cell_asymmetric_divisions
-            asymmetric_division_weights_path = f"{phenotype_path}//cell_asymmetric_divisions//asymmetric_division_weights"
-            logging.debug(f'---- asymmetric_division_weights_path = {asymmetric_division_weights_path}')
-            print(f'\n\n-----------\npopulate*.py: ---- asymmetric_division_weights_path = {asymmetric_division_weights_path}')
-            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
-
-            cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"] = {}
-            cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
-            if cds_uep is None:
-                logging.error(f'---- Error: cell_definitions is not defined.')
-                sys.exit(-1)
-            for var in cds_uep.findall('cell_definition'):
-                name = var.attrib['name']
-                cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"][name] = '0' if name != cell_def_name else '100'
-            adwp = uep.find(asymmetric_division_weights_path)
-            if adwp is not None:
-                for adw in adwp.findall('asymmetric_division_weight'):
-                    other_celltype_name = adw.attrib['name']
-                    val = adw.text
-                    cell_def_tab.param_d[cell_def_name]["asymmetric_division_weight"][other_celltype_name] = val
-                    print(f"Setting {cell_def_name}'s asymmetric_division_weight for {other_celltype_name} = {val}")
-
-            val = cell_def_tab.param_d[cell_def_0th]["asymmetric_division_weight"][cell_def_name]
-            cell_def_tab.cycle_tab.add_row_to_asym_div_table(cell_def_name, val)
 
             # # --------- cell_integrity  
             cell_integrity_path = f"{phenotype_path}//cell_integrity"

@@ -572,12 +572,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['fusion_rate'][cdname_copy] = self.param_d[cdname]['fusion_rate'][cdname_original]
             self.param_d[cdname]['transformation_rate'][cdname_copy] = self.param_d[cdname]['transformation_rate'][cdname_original]
 
-            self.param_d[cdname]['asymmetric_division_weight'][cdname_copy] = self.param_d[cdname]['asymmetric_division_weight'][cdname_original]
+            self.param_d[cdname]['asymmetric_division_probability'][cdname_copy] = self.param_d[cdname]['asymmetric_division_probability'][cdname_original]
 
             self.param_d[cdname]['cell_adhesion_affinity'][cdname_copy] = self.param_d[cdname]['cell_adhesion_affinity'][cdname_original]  # default affinity
            
-        self.param_d[cdname_original]['asymmetric_division_weight'][cdname_copy] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to new cell type
-        self.param_d[cdname_copy]['asymmetric_division_weight'][cdname_original] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to original cell type
+        self.param_d[cdname_original]['asymmetric_division_probability'][cdname_copy] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to new cell type
+        self.param_d[cdname_copy]['asymmetric_division_probability'][cdname_original] = '0'  # default to keeping asym div weights to other cell types, but assume no info on weight to original cell type
         logging.debug(f'--> copy_cell_def():\n {self.param_d[cdname_copy]}')
         # print('2) copy_cell_def(): param_d.keys=',self.param_d.keys())
 
@@ -671,7 +671,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdef]['attack_rate'].pop(self.current_cell_def,0)
             self.param_d[cdef]['fusion_rate'].pop(self.current_cell_def,0)
             self.param_d[cdef]['transformation_rate'].pop(self.current_cell_def,0)
-            self.param_d[cdef]['asymmetric_division_weight'].pop(self.current_cell_def,0)
+            self.param_d[cdef]['asymmetric_division_probability'].pop(self.current_cell_def,0)
 
         self.cycle_tab.delete_celltype(self.current_cell_def)
 
@@ -5014,7 +5014,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
-                val = self.param_d[self.current_cell_def]['asymmetric_division_weight'][name]
+                val = self.param_d[self.current_cell_def]['asymmetric_division_probability'][name]
                 self.cycle_tab.add_row_to_asym_div_table(name, val=val)
 
                 # self.ics_tab.celltype_combobox.addItem(name)
@@ -5337,10 +5337,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def new_asym_div_params(self, cdname, reset_mapping):
         if not reset_mapping:
             return
-        self.param_d[cdname]['asymmetric_division_weight'] = {}
+        self.param_d[cdname]['asymmetric_division_probability'] = {}
         for cdname2 in self.param_d.keys():
-            self.param_d[cdname]['asymmetric_division_weight'][cdname2] = '0' if cdname != cdname2 else '100'
-            self.param_d[cdname2]['asymmetric_division_weight'][cdname] = '0' if cdname != cdname2 else '100'
+            self.param_d[cdname]['asymmetric_division_probability'][cdname2] = '0' if cdname != cdname2 else '100'
+            self.param_d[cdname2]['asymmetric_division_probability'][cdname] = '0' if cdname != cdname2 else '100'
 
     def new_death_params(self, cdname):
         sval = self.default_sval

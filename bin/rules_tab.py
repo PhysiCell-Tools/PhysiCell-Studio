@@ -1018,9 +1018,9 @@ class Rules(QWidget):
             base_val = self.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
             base_val = self.celldef_tab.param_d[key0]["damage_repair_rate"]
-        elif "asymmetric" in behavior.split():
+        elif "asymmetric" == behavior.split()[0]:
             cell_type = behavior.split()[-1]
-            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_weight"][cell_type]
+            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
             print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
