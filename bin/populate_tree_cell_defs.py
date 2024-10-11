@@ -205,7 +205,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]['cycle_duration_flag'] = True
                 cell_def_tab.cycle_tab.cycle_duration_flag = True   # rwh: TODO - why do this??
             else:
-                cell_def_tab.cycle_rb1.setChecked(True)
+                cell_def_tab.cycle_tab.cycle_rb1.setChecked(True)
                 cell_def_tab.param_d[cell_def_name]['cycle_duration_flag'] = False
                 cell_def_tab.cycle_tab.cycle_duration_flag = False
             cell_def_tab.cycle_tab.customize_cycle_choices()
