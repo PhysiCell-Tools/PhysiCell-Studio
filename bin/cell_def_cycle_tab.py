@@ -293,16 +293,23 @@ class CycleTab(CellDefSubTab):
         self.asym_div_standard_table.setRowCount(nrows)
         self.asym_div_standard_table.setColumnCount(2)
         self.asym_div_standard_table.setHorizontalHeaderLabels(["Cell Type", "Probability"])
+
+        self.asym_div_enabled_checkbox = QCheckBox_custom("Asymmetric Division")
+        self.asym_div_enabled_checkbox.toggled.connect(self.cell_def_asym_div_enabled_toggled)
         
         hbox = QHBoxLayout()
         hbox.addWidget(self.asym_div_standard_table)
         hbox.addStretch()
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Asymmetric Division Probabilities"))
+        layout.addWidget(self.asym_div_enabled_checkbox)
         layout.addLayout(hbox)
         layout.addStretch()
         self.division_function_widget = QWidget()
         self.division_function_widget.setLayout(layout)
+
+    def cell_def_asym_div_enabled_toggled(self, bval):
+        self.asym_div_standard_table.setEnabled(bval)
+        self.param_d[self.get_current_celldef()]['asymmetric_division_enabled'] = bval
 
     def update_division_function_params(self):
         cdname = self.get_current_celldef()
@@ -320,6 +327,11 @@ class CycleTab(CellDefSubTab):
             else:
                 item.setEnabled(True)
         self.asym_div_normalize_probabilities()
+        if self.asym_div_enabled_checkbox.isChecked() == self.param_d[cdname]['asymmetric_division_enabled']:
+            # force the emission of the signal (necessary at studio startup)
+            self.asym_div_enabled_checkbox.toggled.emit(self.param_d[cdname]['asymmetric_division_enabled'])
+        else:
+            self.asym_div_enabled_checkbox.setChecked(self.param_d[cdname]['asymmetric_division_enabled'])
 
     def add_row_to_asym_div_table(self, cdname, val='0'):
         row_idx = self.asym_div_standard_table.rowCount()
@@ -665,7 +677,7 @@ class CycleTab(CellDefSubTab):
                 subelm2.tail = self.celldef_tab.indent12
 
         # asymmetric division
-        asym_div = ET.SubElement(cycle, "standard_asymmetric_division")
+        asym_div = ET.SubElement(cycle, "standard_asymmetric_division", {"enabled":str(self.param_d[cdef]['asymmetric_division_enabled'])})
         for other_cdname in self.param_d[cdef]['asymmetric_division_probability'].keys():
             asym_div_probability = ET.SubElement(asym_div, "asymmetric_division_probability", {"name":other_cdname, "units":"dimensionless"})
             asym_div_probability.text = self.param_d[cdef]['asymmetric_division_probability'][other_cdname]

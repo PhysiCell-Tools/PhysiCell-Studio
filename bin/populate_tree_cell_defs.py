@@ -244,19 +244,17 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 sys.exit(-1)
             for var in cds_uep.findall('cell_definition'):
                 name = var.attrib['name']
+                cell_def_tab.param_d[cell_def_name]["asymmetric_division_enabled"] = False
                 cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"][name] = '0' if name != cell_def_name else '1.0'
-            adpp = uep.find(asymmetric_division_probabilities_path)
-            if adpp is not None:
-                print(f"found adpp={[e.tag for e in adpp.findall('*')]}")
-                for adp in adpp.findall('asymmetric_division_probability'):
+            adp_uep = uep.find(asymmetric_division_probabilities_path)
+            if adp_uep is not None:
+                # enable it if the enabled attribute is not present or is true
+                cell_def_tab.param_d[cell_def_name]["asymmetric_division_enabled"] = ('enabled' not in adp_uep.attrib.keys() or adp_uep.attrib['enabled'].lower() == 'true')
+                for adp in adp_uep.findall('asymmetric_division_probability'):
                     other_celltype_name = adp.attrib['name']
                     val = adp.text
-                    print(f"found val={val}")
                     cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"][other_celltype_name] = val
-            else:
-                print(f"populate_tree_cell_defs.py:  Error: missing asymmetric_division_probability")
             val = cell_def_tab.param_d[cell_def_0th]["asymmetric_division_probability"][cell_def_name]
-            print(f"{val = }")
             cell_def_tab.cycle_tab.add_row_to_asym_div_table(cell_def_name, val)
 
             # ---------  death 

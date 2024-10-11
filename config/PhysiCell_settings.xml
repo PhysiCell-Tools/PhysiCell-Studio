@@ -92,10 +92,10 @@
                         <duration index="2" fixed_duration="true">239.980802</duration>
                         <duration index="3" fixed_duration="true">59.998800</duration>
                     </phase_durations>
-                    <standard_asymmetric_division>
-                        <asymmetric_division_probability name="default" units="dimensionless">0.5</asymmetric_division_probability>
-                        <asymmetric_division_probability name="progenitor" units="dimensionless">0.4</asymmetric_division_probability>
-                        <asymmetric_division_probability name="terminal" units="dimensionless">0.1</asymmetric_division_probability>
+                    <standard_asymmetric_division enabled="True">
+                        <asymmetric_division_probability name="default" units="dimensionless">-0.10000000000000009</asymmetric_division_probability>
+                        <asymmetric_division_probability name="progenitor" units="dimensionless">0.9</asymmetric_division_probability>
+                        <asymmetric_division_probability name="terminal" units="dimensionless">.2</asymmetric_division_probability>
                     </standard_asymmetric_division>
                 </cycle>
                 <death>
@@ -263,7 +263,7 @@
                     <phase_durations units="min">
                         <duration index="0" fixed_duration="false">1388.888889</duration>
                     </phase_durations>
-                    <standard_asymmetric_division>
+                    <standard_asymmetric_division enabled="True">
                         <asymmetric_division_probability name="default" units="dimensionless">0.1</asymmetric_division_probability>
                         <asymmetric_division_probability name="progenitor" units="dimensionless">0.5</asymmetric_division_probability>
                         <asymmetric_division_probability name="terminal" units="dimensionless">0.4</asymmetric_division_probability>
@@ -404,7 +404,7 @@
                     <phase_durations units="min">
                         <duration index="0" fixed_duration="false">1388.888889</duration>
                     </phase_durations>
-                    <standard_asymmetric_division>
+                    <standard_asymmetric_division enabled="True">
                         <asymmetric_division_probability name="default" units="dimensionless">0.1</asymmetric_division_probability>
                         <asymmetric_division_probability name="progenitor" units="dimensionless">0.1</asymmetric_division_probability>
                         <asymmetric_division_probability name="terminal" units="dimensionless">0.8</asymmetric_division_probability>
