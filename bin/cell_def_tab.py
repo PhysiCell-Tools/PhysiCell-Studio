@@ -5204,15 +5204,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["fusion_rate"][new_name] = self.param_d[cdname]["fusion_rate"].pop(old_name)
             self.param_d[cdname]["transformation_rate"][new_name] = self.param_d[cdname]["transformation_rate"].pop(old_name)
             self.param_d[cdname]["cell_adhesion_affinity"][new_name] = self.param_d[cdname]["cell_adhesion_affinity"].pop(old_name)
-        #     # print("--- new_name: ",new_name)
-        #     self.param_d[cdname]["motility_chemotaxis_substrate"] = new_name
-        #     self.param_d[cdname]["motility_advanced_chemotaxis_substrate"] = new_name
-        #     self.param_d[cdname]["secretion"][new_name] = self.param_d[cdname]["secretion"].pop(old_name)
+            self.param_d[cdname]["asymmetric_division_probability"][new_name] = self.param_d[cdname]["asymmetric_division_probability"].pop(old_name)
 
-        #     # print("--- new: ",self.param_d[cdname]["secretion"])
+        self.cycle_tab.cell_def_rename(old_name, new_name)
 
-        # if old_name == self.current_secretion_substrate:
-        #     self.current_secretion_substrate = new_name
         self.physiboss_update_list_signals()
         self.physiboss_update_list_behaviours()
 

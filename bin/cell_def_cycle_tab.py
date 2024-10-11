@@ -333,6 +333,13 @@ class CycleTab(CellDefSubTab):
         else:
             self.asym_div_enabled_checkbox.setChecked(self.param_d[cdname]['asymmetric_division_enabled'])
 
+    def cell_def_rename(self, old_name, new_name):
+        for row_idx in range(self.asym_div_standard_table.rowCount()):
+            row_name = self.asym_div_standard_table.item(row_idx, 0).text()
+            if row_name == old_name:
+                self.asym_div_standard_table.item(row_idx, 0).setText(new_name)
+                break
+            
     def add_row_to_asym_div_table(self, cdname, val='0'):
         row_idx = self.asym_div_standard_table.rowCount()
         item = QTableWidgetItem(cdname)
