@@ -442,7 +442,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def new_cell_def_named(self, cdname):
 
-        # Make a new substrate (that's a copy of the currently selected one)
+        # Make a new cell type (that's a copy of the currently selected one)
         self.param_d[cdname] = copy.deepcopy(self.param_d[self.current_cell_def])
         self.param_d[cdname]["ID"] = str(self.new_cell_def_count)
 
@@ -5329,13 +5329,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]['cycle_quiescent_01_fixed_duration'] = bval
         self.param_d[cdname]['cycle_quiescent_10_fixed_duration'] = True
 
-    def new_asym_div_params(self, cdname, reset_mapping):
-        if not reset_mapping:
+    def new_asym_div_params(self, cdname, creating_new_cell_in_studio):
+        if not creating_new_cell_in_studio:
             return
         self.param_d[cdname]['asymmetric_division_probability'] = {}
+        self.param_d[cdname]['asymmetric_division_enabled'] = False
         for cdname2 in self.param_d.keys():
-            self.param_d[cdname]['asymmetric_division_probability'][cdname2] = '0' if cdname != cdname2 else '100'
-            self.param_d[cdname2]['asymmetric_division_probability'][cdname] = '0' if cdname != cdname2 else '100'
+            self.param_d[cdname]['asymmetric_division_probability'][cdname2] = '0' if cdname != cdname2 else '1.0'
+            self.param_d[cdname2]['asymmetric_division_probability'][cdname] = '0' if cdname != cdname2 else '1.0'
 
     def new_death_params(self, cdname):
         sval = self.default_sval
@@ -5641,7 +5642,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     self.cell_adhesion_affinity_celltype = None
 
         self.set_relative_equilibrium_distance.setText(self.param_d[cdname]["mechanics_relative_equilibrium_distance"])
-        print(f"{self.param_d[cdname]['mechanics_relative_equilibrium_distance_enabled'] = }")
         self.set_relative_equilibrium_distance_enabled.setChecked(self.param_d[cdname]["mechanics_relative_equilibrium_distance_enabled"])
 
         self.set_absolute_equilibrium_distance.setText(self.param_d[cdname]["mechanics_absolute_equilibrium_distance"])
