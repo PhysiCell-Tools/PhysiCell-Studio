@@ -2604,14 +2604,15 @@ class VisBase():
             'fraction_released_at_death': lambda x: f'fraction released at death of {x}',
             'fraction_transferred_when_ingested': lambda x: f'fraction transferred when ingested of {x}'
         }
-        cell_scalar_prefixes = ['cell_adhesion_affinities','live_phagocytosis_rates','attack_rates','immunogenicities','fusion_rates','transformation_rates']
+        cell_scalar_prefixes = ['cell_adhesion_affinities','live_phagocytosis_rates','attack_rates','immunogenicities','fusion_rates','transformation_rates','asymmetric_division_probabilities']
         cell_scalar_replace = {
             'cell_adhesion_affinities': lambda x: f'adhesive affinity to {x}',
             'live_phagocytosis_rates': lambda x: f'(rate of) phagocytose {x}',
             'attack_rates': lambda x: f'(rate of) attack {x}',
             'immunogenicities': lambda x: f'immunogenicity to {x}',
             'fusion_rates': lambda x: f'(rate of) fuse to {x}',
-            'transformation_rates': lambda x: f'(rate of) transform to {x}'
+            'transformation_rates': lambda x: f'(rate of) transform to {x}',
+            'asymmetric_division_probabilities': lambda x: f'(probability of) asymmetric division to {x}'
         }
 
         for ind, scalar in enumerate(self.cell_scalars_l):
@@ -2648,20 +2649,89 @@ class VisBase():
         self.cell_scalars_l = list(mcds.data['discrete_cells']['data'])
 
         # Let's remove the ID which seems to be problematic. And reverse the order of vars so custom vars are at the top.
-        self.cell_scalars_l.remove('ID')
+        labels_to_ignore = [
+            "ID",
+            "position",
+            "total_volume",
+            "cell_type",
+            "cycle_model",
+            "current_phase",
+            "elapsed_time_in_phase",
+            "nuclear_volume",
+            "cytoplasmic_volume",
+            "fluid_fraction",
+            "calcified_fraction",
+            "orientation",
+            "polarity",
+            "velocity",
+            "pressure",
+            "number_of_nuclei",
+            "total_attack_time",
+            "contact_with_basement_membrane",
+            "current_cycle_phase_exit_rate",
+            "elapsed_time_in_phase",
+            "dead",
+            "current_death_model",
+            "death_rates",
+            "cytoplasmic_biomass_change_rate",
+            "nuclear_biomass_change_rate",
+            "fluid_change_rate",
+            "calcification_rate",
+            "target_solid_cytoplasmic",
+            "target_solid_nuclear",
+            "target_fluid_fraction",
+            "radius",
+            "nuclear_radius",
+            "surface_area",
+            "cell_cell_adhesion_strength",
+            "cell_BM_adhesion_strength",
+            "cell_cell_repulsion_strength",
+            "cell_BM_repulsion_strength",
+            "cell_adhesion_affinities",
+            "relative_maximum_adhesion_distance",
+            "maximum_number_of_attachments",
+            "attachment_elastic_constant",
+            "attachment_rate",
+            "detachment_rate",
+            "is_motile",
+            "persistence_time",
+            "migration_speed",
+            "migration_bias_direction",
+            "migration_bias",
+            "motility_vector",
+            "chemotaxis_index",
+            "chemotaxis_direction",
+            "chemotactic_sensitivities",
+            "secretion_rates",
+            "uptake_rates",
+            "saturation_densities",
+            "net_export_rates",
+            "internalized_total_substrates",
+            "fraction_released_at_death",
+            "fraction_transferred_when_ingested",
+            "apoptotic_phagocytosis_rate",
+            "necrotic_phagocytosis_rate",
+            "other_dead_phagocytosis_rate",
+            "live_phagocytosis_rates",
+            "attack_rates",
+            "immunogenicities",
+            "attack_target",
+            "attack_damage_rate",
+            "attack_duration",
+            "attack_total_damage_delivered",
+            "fusion_rates",
+            "transformation_rates",
+            "asymmetric_division_probabilities"
+        ]
+       
+        scalar_starts_with_some_label = lambda x: any(x.startswith(label) for label in labels_to_ignore)
+        self.cell_scalars_l = [x for x in self.cell_scalars_l if x not in labels_to_ignore and not scalar_starts_with_some_label(x)]
         self.cell_scalars_l.reverse()
 
-        # determine how to just extract the custom data vars
-        for idx in range(len(self.cell_scalars_l)):
-            if self.cell_scalars_l[idx].find("transformation_rates") >= 0:
-                break
-        # print("   post: idx=",idx)
-        self.cell_scalars_l = self.cell_scalars_l[0:idx]
-        # print("\n   post only custom data: ",self.cell_scalars_l)
+        idx = len(self.cell_scalars_l) # the custom vars
 
         # then append some preferred scalar values, alphabetically
         self.cell_scalars_l.extend(['cell_type','current_phase','cycle_model','damage','elapsed_time_in_phase','pressure'])
-        # print("   post append typical: ",self.cell_scalars_l)
 
         self.cell_scalar_combobox.addItems(self.cell_scalars_l)
         self.cell_scalar_combobox.insertSeparator(idx)
