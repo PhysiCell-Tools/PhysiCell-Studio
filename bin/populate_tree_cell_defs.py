@@ -242,9 +242,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             if cds_uep is None:
                 logging.error(f'---- Error: cell_definitions is not defined.')
                 sys.exit(-1)
+            cell_def_tab.param_d[cell_def_name]["asymmetric_division_enabled"] = False
             for var in cds_uep.findall('cell_definition'):
                 name = var.attrib['name']
-                cell_def_tab.param_d[cell_def_name]["asymmetric_division_enabled"] = False
                 cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"][name] = '0' if name != cell_def_name else '1.0'
             adp_uep = uep.find(asymmetric_division_probabilities_path)
             if adp_uep is not None:

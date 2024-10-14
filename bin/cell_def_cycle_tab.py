@@ -295,7 +295,7 @@ class CycleTab(CellDefSubTab):
         self.asym_div_standard_table.setHorizontalHeaderLabels(["Cell Type", "Probability"])
 
         self.asym_div_enabled_checkbox = QCheckBox_custom("Asymmetric Division")
-        self.asym_div_enabled_checkbox.toggled.connect(self.cell_def_asym_div_enabled_toggled)
+        self.asym_div_enabled_checkbox.toggled.connect(self.asym_div_enabled_cb)
         
         hbox = QHBoxLayout()
         hbox.addWidget(self.asym_div_standard_table)
@@ -307,7 +307,7 @@ class CycleTab(CellDefSubTab):
         self.division_function_widget = QWidget()
         self.division_function_widget.setLayout(layout)
 
-    def cell_def_asym_div_enabled_toggled(self, bval):
+    def asym_div_enabled_cb(self, bval):
         self.asym_div_standard_table.setEnabled(bval)
         self.param_d[self.get_current_celldef()]['asymmetric_division_enabled'] = bval
 
