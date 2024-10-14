@@ -7,6 +7,31 @@ from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QValidator, QDoubleValidator
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent, QByteArray
 
+class StudioTab(QWidget):
+    def __init__(self, xml_creator):
+        super().__init__()
+        self.xml_creator = xml_creator
+
+class CellDefSubTab(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.celldef_tab = parent
+        self.xml_creator = parent.xml_creator
+        self.param_d = self.celldef_tab.param_d # make this dict easily accessible here as well
+        setattr(self.celldef_tab, self.type_to_name(), self) # set this object as an attribute of the parent celldef_tab
+        
+    def type_to_name(self):
+        # take the name of the object class, e.g. CycleTab, and convert it to a lowercase string with underscores, e.g. cycle_tab
+        name = type(self).__name__
+        name = name[0].lower() + name[1:]
+        for i, letter in enumerate(name):
+            if letter.isupper():
+                name = name[:i] + '_' + letter.lower() + name[i+1:]
+        return name
+
+    def get_current_celldef(self):
+        return self.celldef_tab.current_cell_def
+
 # organizers
 class QHLine(QFrame):
     def __init__(self):
@@ -32,8 +57,8 @@ class QLabelSeparator(QLabel):
 
 # custom widgets
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
 
         checkbox_style = """
                 QCheckBox::indicator:checked {
@@ -110,6 +135,28 @@ class QLineEdit_custom(QLineEdit):
             }
             """
 
+    def set_formatter(self, bval: bool=True, ndigits: int=5):
+        if bval:
+            self.editingFinished.connect(lambda: self.format_text(ndigits=ndigits))
+        else:
+            self.editingFinished.disconnect()
+
+    def format_text(self, ndigits: int=5):
+        try:
+            self.full_value = self.text()
+            value = float(self.full_value)
+            if value == 0:
+                formatted_text = "0"
+            elif abs(value) < 10**-ndigits:
+                formatted_text = f"{value:.{ndigits}e}"
+            else:
+                formatted_text = f"{value:.{ndigits}f}".rstrip('0').rstrip('.')
+            self.blockSignals(True)
+            self.setText(formatted_text)
+            self.blockSignals(False)
+        except ValueError:
+            pass
+
 radiobutton_style = """
 QRadioButton {
     spacing: 4px; /* Space between indicator and text */
@@ -134,6 +181,10 @@ class QRadioButton_custom(QRadioButton):
         super(QRadioButton, self).__init__(text, **kwargs)
         self.setStyleSheet(radiobutton_style)
 
+class QComboBox_custom(QComboBox):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet("QComboBox{color: #000000; background-color: #FFFFFF;}")
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
         super( ExtendedCombo, self ).__init__( parent )
@@ -264,7 +315,6 @@ class HoverQuestion(HoverHelp):
         self.icon = "images:info.svg"
 
 # validators
-
 class DoubleValidatorWidgetBounded(QValidator):
     # a validator that uses other widgets to set the bounds of a QDoubleValidator
     def __init__(self, bottom=None, top=None, bottom_transform=lambda x: x, top_transform=lambda x: x):
