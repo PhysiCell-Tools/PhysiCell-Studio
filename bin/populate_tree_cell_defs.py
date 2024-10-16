@@ -211,23 +211,25 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             cell_def_tab.cycle_tab.customize_cycle_choices()
 
             key_base_name = f"cycle_{cycle_code_dict[cycle_code]['short_name']}"
-            for rate in pt_uep: 
-                logging.debug(f'{rate}')
+            for phase_element in pt_uep: 
+                logging.debug(f'{phase_element}')
                 if is_duration:
-                    phase_start_index = rate.attrib['index']
+                    phase_start_index = phase_element.attrib['index']
                     phase_end_index = (int(phase_start_index) + 1) % cycle_code_dict[cycle_code]['num_phases']
                 else:
-                    phase_start_index = rate.attrib['start_index']
-                    phase_end_index = rate.attrib['end_index']
+                    phase_start_index = phase_element.attrib['start_index']
+                    phase_end_index = phase_element.attrib['end_index']
                 key_with_phase = f"{key_base_name}_{phase_start_index}{phase_end_index}"
 
-                sval = rate.text
+                sval = phase_element.text
                 if is_duration:
-                    sval = invertf2s(sval) # work with the transition RATE value
-                cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_trate"] = sval
-                cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_duration"] = invertf2s(sval)
+                    cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_trate"] = invertf2s(sval)
+                    cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_duration"] = sval
+                else:
+                    cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_trate"] = sval
+                    cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_duration"] = invertf2s(sval)
 
-                bval = rate.attrib['fixed_duration'].lower() == "true"
+                bval = phase_element.attrib['fixed_duration'].lower() == "true"
                 cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_fixed_trate"] = bval
                 cell_def_tab.param_d[cell_def_name][f"{key_with_phase}_fixed_duration"] = bval
 
