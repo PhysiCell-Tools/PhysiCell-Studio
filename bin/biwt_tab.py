@@ -1,6 +1,7 @@
 """
 Authors:
 Daniel Bergman (dbergma5@jh.edu)
+Jeanette Johnson (jjohn450@jhmi.edu)
 Randy Heiland (heiland@iu.edu)
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
@@ -14,6 +15,15 @@ try:
     HAVE_ANNDATA = True
 except:
     HAVE_ANNDATA = False
+
+try:
+    import anndata2ri
+    # import rpy2.robjects as ro
+    from rpy2.robjects import pandas2ri, r
+    from rpy2.robjects.packages import importr
+    HAVE_RPY2 = True
+except:
+    HAVE_RPY2 = False
 
 BIWT_DEV_MODE = os.getenv('BIWT_DEV_MODE', 'False')
 if BIWT_DEV_MODE == 'True':
@@ -37,14 +47,18 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog, QButtonGroup, QSplitter, QSizePolicy, QSpinBox
 from PyQt5.QtGui import QIcon
 
-from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom
+from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom, LegendWindow
 
 class GoBackButton(QPushButton):
-    def __init__(self, parent, biwt):
+    def __init__(self, parent, biwt, pre_cb=None, post_cb=None):
         super().__init__(parent)
         self.setText("\u2190 Go back")
         self.setStyleSheet(f"QPushButton {{background-color: lightgreen; color: black;}}")
+        if pre_cb is not None:
+            self.clicked.connect(pre_cb)
         self.clicked.connect(biwt.go_back_to_prev_window)
+        if post_cb is not None:
+            self.clicked.connect(post_cb)
 
 class ContinueButton(QPushButton):
     def __init__(self, parent, cb, text="Continue \u2192",styleSheet="QPushButton {background-color: lightgreen; color: black;}"):
@@ -84,7 +98,9 @@ class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWin
         # col_names = list(self.biwt.adata.obs.columns)
         self.biwt.auto_continue = False
         self.column_combobox = QComboBox()
-        for col_name in self.biwt.data_columns.keys():
+        data_column_keys = list(self.biwt.data_columns.keys())
+        data_column_keys.sort()
+        for col_name in data_column_keys:
             self.column_combobox.addItem(col_name)
         if self.biwt.column_line_edit.text() in self.biwt.data_columns:
             s = "Select column that contains cell type info:"
@@ -269,7 +285,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
         hbox = QHBoxLayout()
 
-        go_back_button = GoBackButton(self, self.biwt)
+        go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
         continue_button = ContinueButton(self, self.process_window)
 
         hbox.addWidget(go_back_button)
@@ -278,6 +294,8 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
         self.dim_red_fig = None
         self.dim_red_canvas = None
+        self.legend_window = None
+
         for key_substring in ["umap","tsne","pca","spatial"]:
             if self.try_to_plot_dim_red(key_substring=key_substring):
                 splitter = QSplitter()
@@ -308,6 +326,16 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
                 vbox.addLayout(hbox)
                 vbox.addWidget(self.dim_red_canvas)
+
+                self.legend_button = QPushButton("Show Legend")
+                self.legend_button.clicked.connect(self.show_legend)
+
+                hbox = QHBoxLayout()
+                hbox.addStretch()
+                hbox.addWidget(self.legend_button)
+                hbox.addStretch()
+                vbox.addLayout(hbox)
+
                 right_side.setLayout(vbox)
                 splitter.addWidget(right_side)
                 vbox = QVBoxLayout()
@@ -315,6 +343,13 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
                 break
         
         self.setLayout(vbox)
+
+    def close_legend(self):
+        if self.legend_window is not None:
+            self.legend_window.close()
+
+    def show_legend(self):
+        self.legend_window.show()
 
     def create_dim_red_fig(self):
         self.dim_red_fig = plt.figure()
@@ -348,8 +383,9 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
             indices = range(v.shape[0])
         self.scatter = self.dim_red_ax.scatter(v[indices,0],v[indices,1],self.marker_size,c=temp.codes[indices]) # 0.18844459036110225 = 5/sqrt(704) where I found 5 to be a good size when working with 704 points
         scatter_objects, _ = self.scatter.legend_elements()
-        self.dim_red_fig.legend(scatter_objects, temp.categories,
-                    loc=8, title="Clusters",ncol=3, mode="expand")
+        self.legend_window = LegendWindow(self, legend_artists=scatter_objects, legend_labels=temp.categories, legend_title="Clusters")
+        # self.dim_red_fig.legend(scatter_objects, temp.categories,
+        #             loc=8, title="Clusters",ncol=3, mode="expand")
         title_str = f"{k} plot"
         if using_sample:
             title_str += f" (sampling only {len(indices)} points of {v.shape[0]})"
@@ -358,25 +394,25 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         self.dim_red_canvas.update()
         self.dim_red_canvas.draw()
 
-    def set_cell_type_to_keep(self, cell_type, check_merge_gp=True):
-        self.biwt.cell_type_dict_on_edit[cell_type] = cell_type
-        self.checkbox_dict_edit[cell_type].setEnabled(True)
-        self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["keep"])
-        if  check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type].text()):
+    def set_cell_type_to_keep(self, cell_type_to_keep, check_merge_gp=True):
+        self.biwt.cell_type_dict_on_edit[cell_type_to_keep] = cell_type_to_keep
+        self.checkbox_dict_edit[cell_type_to_keep].setEnabled(True)
+        self.checkbox_dict_edit[cell_type_to_keep].setStyleSheet(self.checkbox_style["keep"])
+        if  check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type_to_keep].text()):
             # check for merge group that is no longer merging
-            gp_preimage = [ctn for ctn, new_name in self.biwt.cell_type_dict_on_edit.items() if (ctn != cell_type and new_name == self.biwt.cell_type_dict_on_edit[cell_type])] # get cell types that map into this merge group
+            gp_preimage = [cell_type for cell_type, new_name in self.biwt.cell_type_dict_on_edit.items() if (cell_type != cell_type_to_keep and new_name == self.biwt.cell_type_dict_on_edit[cell_type_to_keep])] # get cell types that map into this merge group
             if len(gp_preimage)==1: # then delete this merge gp:
                 self.set_cell_type_to_keep(gp_preimage[0], check_merge_gp=False)
-            elif cell_type == self.biwt.cell_type_dict_on_edit[cell_type]: # make sure this current cell type did not set the merge group name
+            elif cell_type_to_keep == self.biwt.cell_type_dict_on_edit[cell_type_to_keep]: # make sure this current cell type did not set the merge group name
                 first_name = None
-                for ctn in gp_preimage:
+                for cell_type in gp_preimage:
                     if first_name is None:
-                        first_name = ctn
-                    self.biwt.cell_type_dict_on_edit[ctn] = first_name
+                        first_name = cell_type
+                    self.biwt.cell_type_dict_on_edit[cell_type] = first_name
 
-        self.biwt.cell_type_dict_on_edit[cell_type] = cell_type
-        self.checkbox_dict_edit[cell_type].setText(cell_type)
-        self.keep_button[cell_type].setEnabled(False)
+        self.biwt.cell_type_dict_on_edit[cell_type_to_keep] = cell_type_to_keep
+        self.checkbox_dict_edit[cell_type_to_keep].setText(cell_type_to_keep)
+        self.keep_button[cell_type_to_keep].setEnabled(False)
 
     def keep_cb(self):
         self.biwt.stale_futures = True
@@ -441,6 +477,8 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         self.merge_button.setEnabled(enable_merge_button)
 
     def process_window(self):
+        if self.legend_window is not None:
+            self.legend_window.close()
         self.biwt.continue_from_edit()
 
 class BioinformaticsWalkthroughWindow_RenameCellTypes(BioinformaticsWalkthroughWindow):
@@ -814,7 +852,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         super().__init__(biwt)
         print("------Setting cell type positions------")
 
-        self.ics_plot_area = None
+        self.biwt_plot_window = None
         self.create_cell_type_scroll_area()
         self.create_pos_scroll_area()
 
@@ -830,15 +868,15 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 
         splitter = QSplitter(QtCore.Qt.Vertical)
         splitter.addWidget(top_area)
-        self.ics_plot_area = BioinformaticsWalkthroughPlotWindow(self, self.biwt, self.biwt.config_tab)
+        self.biwt_plot_window = BioinformaticsWalkthroughPlotWindow(self, self.biwt, self.biwt.config_tab)
         self.plot_scroll_area = QScrollArea()
-        self.plot_scroll_area.setWidget(self.ics_plot_area)
+        self.plot_scroll_area.setWidget(self.biwt_plot_window)
         splitter.addWidget(self.plot_scroll_area)
 
         vbox = QVBoxLayout()
         vbox.addWidget(splitter)
 
-        go_back_button = GoBackButton(self, self.biwt)
+        go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
         self.continue_to_write_button = ContinueButton(self, self.process_window, styleSheet=self.biwt.qpushbutton_style_sheet)
         self.continue_to_write_button.setEnabled(False)
 
@@ -850,6 +888,10 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 
         self.setLayout(vbox)
      
+    def close_legend(self):
+        if self.biwt_plot_window.legend_window is not None:
+            self.biwt_plot_window.legend_window.close()
+    
     def create_cell_type_scroll_area(self):
         vbox_main = QVBoxLayout()
         label = QLabel("Select cell type(s) to place.\nGreyed out cell types have already been placed.")
@@ -1065,10 +1107,10 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.pos_scroll_area.setWidget(pos_scroll_area_widget)
 
     def cell_pos_button_group_cb(self):
-        if self.ics_plot_area:
-            self.ics_plot_area.sync_par_area()
+        if self.biwt_plot_window:
+            self.biwt_plot_window.sync_par_area()
         if self.biwt.use_spatial_data:
-            self.ics_plot_area.num_box.setEnabled(self.cell_pos_button_group.checkedId()==6) # only enable for spatial plotter
+            self.biwt_plot_window.num_box.setEnabled(self.cell_pos_button_group.checkedId()==6) # only enable for spatial plotter
          
     def spatial_button_cb(self, checked):
         if not checked:
@@ -1085,24 +1127,24 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         bval = self.is_any_cell_type_button_group_checked()
         if bval:
             # The plot is created and at least one is checked. See if the parameters are ready
-            self.ics_plot_area.sync_par_area() # this call is overkill, I just want to see if the parameters call for the Plot button being enabled
+            self.biwt_plot_window.sync_par_area() # this call is overkill, I just want to see if the parameters call for the Plot button being enabled
         else:
-            self.ics_plot_area.plot_cells_button.setEnabled(False)
+            self.biwt_plot_window.plot_cells_button.setEnabled(False)
 
     def select_all_button_cb(self):
         for cbd in self.checkbox_dict.values():
             if cbd.isEnabled():
                 cbd.setChecked(True)
         bval = self.is_any_cell_type_button_group_checked()
-        if self.ics_plot_area:
-            self.ics_plot_area.plot_cells_button.setEnabled(bval)
+        if self.biwt_plot_window:
+            self.biwt_plot_window.plot_cells_button.setEnabled(bval)
     
     def deselect_all_button_cb(self):
         for cbd in self.checkbox_dict.values():
             if cbd.isEnabled():
                 cbd.setChecked(False)
-        if self.ics_plot_area:
-            self.ics_plot_area.plot_cells_button.setEnabled(False)
+        if self.biwt_plot_window:
+            self.biwt_plot_window.plot_cells_button.setEnabled(False)
 
     def undo_button_cb(self):
         undone_cell_type = self.sender().objectName()
@@ -1122,18 +1164,28 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         # if we get here, then all cell types have been removed, turn off undo all
         self.undo_all_button.setEnabled(False)
 
-
     def replot_all_cells_after_undo(self):
-        self.ics_plot_area.ax0.cla()
-        self.ics_plot_area.format_axis()
+        self.biwt_plot_window.ax0.cla()
+        self.biwt_plot_window.format_axis()
+        self.biwt_plot_window.legend_artists = []
+        self.biwt_plot_window.legend_labels = []
         for cell_type in self.biwt.csv_array.keys():
-            if self.ics_plot_area.plot_is_2d:
-                sz = np.sqrt(self.ics_plot_area.cell_type_micron2_area_dict[cell_type] / np.pi)
-                self.ics_plot_area.circles(self.biwt.csv_array[cell_type], s=sz, color=self.ics_plot_area.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.ics_plot_area.alpha_value)
+            if self.biwt.csv_array[cell_type].shape[0] == 0:
+                continue # do not plot cell types with no cells
+            if self.biwt_plot_window.plot_is_2d:
+                sz = np.sqrt(self.biwt_plot_window.cell_type_micron2_area_dict[cell_type] / np.pi)
+                self.biwt_plot_window.circles(self.biwt.csv_array[cell_type], s=sz, color=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.biwt_plot_window.alpha_value)
+                legend_patch = Patch(facecolor=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                self.biwt_plot_window.legend_artists.append(legend_patch)
             else:
-                # sz = self.ics_plot_area.cell_type_pt_area_dict[cell_type]
-                self.ics_plot_area.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.ics_plot_area.color_by_celltype[cell_type], alpha=self.ics_plot_area.alpha_value)
-        self.ics_plot_area.sync_par_area() # easy way to redraw the patch for current plotting
+                # sz = self.biwt_plot_window.cell_type_pt_area_dict[cell_type]
+                collections = self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
+                scatter_objects, _ = collections.legend_elements()
+                self.biwt_plot_window.legend_artists.append(scatter_objects[0])
+            self.biwt_plot_window.legend_labels.append(cell_type)
+
+        self.biwt_plot_window.update_legend_window()
+        self.biwt_plot_window.sync_par_area() # easy way to redraw the patch for current plotting
         
         self.continue_to_write_button.setEnabled(False)
 
@@ -1144,6 +1196,8 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         self.undo_all_button.setEnabled(False)
 
     def process_window(self):
+        if self.biwt_plot_window.legend_window is not None:
+            self.biwt_plot_window.legend_window.close()
         self.biwt.continue_from_positions()
         
 class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
@@ -1211,7 +1265,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         self.add_cell_positions_to_file()
 
     def check_for_new_celldefs(self):
-        print("BioinformaticsWalkthroughPlotWindow: Checking for new cell definitions...")
         for cell_type in self.biwt.cell_types_list_final:
             if cell_type in self.biwt.celldef_tab.celltypes_list:
                 print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} found in current list of cell types. Not appending {cell_type}...")
@@ -1294,7 +1347,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         <html><ul>\
                         <li>Click: set (x0,y0)</li>\
                         <li>{self.shift_key_ucode}-click: set (w,h), r, or r1</li>\
-                        <li>{self.shift_key_ucode}-click: set r0</li>\
+                        <li>{self.ctrl_key_ucode}-click: set r0</li>\
                         <li>{self.alt_and_ctrl}-click: set \u03b81</li>\
                         <li>{self.alt_and_shift}-click: set \u03b82</li>\
                         <li>{self.alt_key_ucode}-click-and-drag: set (\u03b81,\u03b82)</li>\
@@ -1313,13 +1366,25 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.plot_cells_button.setStyleSheet(self.biwt.qpushbutton_style_sheet)
         self.plot_cells_button.clicked.connect(self.plot_cell_pos)
 
+        self.show_legend_button = QPushButton("Show Legend")
+        self.show_legend_button.setStyleSheet(self.biwt.qpushbutton_style_sheet)
+        self.show_legend_button.clicked.connect(self.show_legend_button_cb)
+
         vbox_left.addWidget(self.plot_cells_button)
+        vbox_left.addWidget(self.show_legend_button)
         vbox_left.addWidget(self.mouse_keyboard_label)
         vbox_left.addStretch(1)
 
         self.create_figure()
+
         hbox.addLayout(vbox_left)
-        hbox.addWidget(self.canvas)
+
+        vbox_right = QVBoxLayout()
+        vbox_right.addWidget(self.canvas)
+
+        vbox_right.addWidget(self.canvas)
+
+        hbox.addLayout(vbox_right)
         
         vbox.addLayout(hbox)
         
@@ -1415,9 +1480,12 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.cmd_z_str = "\u2318Z"
             self.cmd_shift_z_str = "\u21e7\u2318Z"
             self.alt_and_ctrl = "\u2325\u2303"
-            self.alt_and_shift = "\u2325\u2318"
+            self.alt_and_shift = "\u2325\u21e7"
             self.shift_key_ucode = "\u21e7"
             self.lower_par_key_modifier = QtCore.Qt.MetaModifier
+
+    def show_legend_button_cb(self):
+        self.legend_window.show()
 
     def create_patch_history(self):
         self.patch_history = []
@@ -2217,11 +2285,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
         self.plot_is_2d = self.plot_zmax - self. plot_zmin <= self.plot_zdel # if the domain height is larger than the voxel height, then we have a 3d simulation
         if self.plot_is_2d: 
-            print("\n\n2d projection\n\n")
             projection = None
         else:
             projection = '3d'
-            print("\n\n3d projection\n\n")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box',projection=projection)
         
@@ -2248,6 +2314,20 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             if self.biwt.use_spatial_data:
                 self.scatter_sizes = self.num_box.value() * self.single_scatter_sizes
 
+        self.legend_artists = []
+        self.legend_labels = []
+        self.legend_window = None
+        self.update_legend_window()
+        
+    def update_legend_window(self):
+        is_hidden = (self.legend_window is None) or (self.legend_window.isHidden()) # doesn't exist yet or is hidden, so don't display after update
+        if self.legend_window is not None:
+            self.legend_window.close()
+        self.legend_window = LegendWindow(self, legend_artists=self.legend_artists, legend_labels=self.legend_labels, legend_title="Cell Types")
+        # if the legend window is shown, update and refresh
+        if not is_hidden:
+            self.legend_window.show()
+            
     def canvas_in_focus(self, event):
         self.mouse_keyboard_label.setEnabled(True)
 
@@ -2299,9 +2379,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
                         if self.plot_is_2d:
                             self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.legend_artists.append(legend_patch)
                         else:
                             cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
-                            self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            scatter_objects, _ = collection.legend_elements()
+                            self.legend_artists.append(scatter_objects[0])
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
                         all_new = np.empty((0,3))
@@ -2311,19 +2395,24 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],all_new))
                         if self.plot_is_2d:
                             self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.legend_artists.append(legend_patch)
                         else:
-                            self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            scatter_objects, _ = collection.legend_elements()
+                            self.legend_artists.append(scatter_objects[0])
+                    self.legend_labels.append(cell_type)
                     self.pw.checkbox_dict[cell_type].setEnabled(False)
                     self.pw.checkbox_dict[cell_type].setChecked(False)
                     self.pw.undo_button[cell_type].setEnabled(True)
-                    self.pw.undo_all_button.setEnabled(True)
         else:
-            for ctn in self.pw.checkbox_dict.keys():
-                if self.pw.checkbox_dict[ctn].isChecked():
-                    self.plot_cell_pos_single(ctn)
+            for cell_type in self.pw.checkbox_dict.keys():
+                if self.pw.checkbox_dict[cell_type].isChecked():
+                    self.plot_cell_pos_single(cell_type)
+        self.pw.undo_all_button.setEnabled(True)
         self.canvas.update()
         self.canvas.draw()
-
+        self.update_legend_window()
         self.plot_cells_button.setEnabled(False)
 
         for b in self.pw.checkbox_dict.values():
@@ -2411,6 +2500,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         self.circles(self.new_pos, s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+        self.legend_artists.append(legend_patch)
+        self.legend_labels.append(cell_type)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2428,7 +2520,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         # sz = self.cell_type_micron2_area_dict[cell_type] * 0.036089556256 # empirically-determined value to scale area to points in 3d (scales typical cell volume's area to be 8pt)
-        self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        collection = self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        scatter_objects, _ = collection.legend_elements()
+        self.legend_artists.append(scatter_objects)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2524,10 +2618,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.ax0.sci(collection)
 
         return collection
-    
-    def cancel_cb(self):
-        self.hide() # this will work for now, but maybe a better way to handle closing the window?
-        pass
 
 class BioinformaticsWalkthrough(QWidget):
     def __init__(self, config_tab, celldef_tab, ics_tab):
@@ -2595,7 +2685,7 @@ class BioinformaticsWalkthrough(QWidget):
 
         vbox.addLayout(hbox)
 
-        label = QLabel("Currently supported (file format, data type) pairs: (h5ad, anndata) and (csv, NA)")
+        label = QLabel("Currently supported (file format, data type) pairs: (h5ad, anndata), (rds, Seurat/SingleCellExperiment), and (csv, NA)")
         vbox.addWidget(label)
 
         vbox.addWidget(QHLine())
@@ -2635,7 +2725,6 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.hide()
             self.current_window_idx += 1
             if self.stale_futures:
-                # print(f"\tFutures are stale. Deleting from {self.current_window_idx} to {len(self.previous_windows)}")
                 del self.previous_windows[self.current_window_idx-1:]
                 if type(self.window) is not BioinformaticsWalkthroughWindow_WarningWindow:
                     self.previous_windows.append(self.window)
@@ -2643,14 +2732,8 @@ class BioinformaticsWalkthrough(QWidget):
                     self.current_window_idx -= 1 # ok, actually, don't increase the index if the current window is a popup warning window
                 self.window = window_class(self)
             else:
-                # print(f"\tFutures are not stale. Using window {self.current_window_idx+1}...")
                 self.window = self.previous_windows[self.current_window_idx]
                 self.stale_futures = self.current_window_idx==len(self.previous_windows)-1 # if it's now the last one, mark it as stale
-                # if self.stale_futures:
-                    # print(f"\tFutures are now stale.")
-                # else:
-                    # print(f"\tFutures are still not stale.")
-            # self.previous_windows[self.current_window_idx-1].hide()
         else: # This is opening the very first window
             self.window = window_class(self)
 
@@ -2662,6 +2745,7 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.show()
 
     def go_back_to_prev_window(self):
+        print(f"Going back to previous window")
         if len(self.previous_windows)==self.current_window_idx:
             self.previous_windows.append(self.window)
         if self.stale_futures and self.current_window_idx < len(self.previous_windows)-1:
@@ -2711,12 +2795,17 @@ class BioinformaticsWalkthrough(QWidget):
         print(f"BIWT: Importing file {file_path}...")
         self.import_file(file_path)
 
-    def import_file(self,file_path):
+    def import_file(self, file_path):
         if file_path.endswith(".h5ad"):
-            self.import_file_from_h5ad(file_path)
+            import_successful = self.import_file_from_h5ad(file_path)
         elif file_path.endswith(".csv"):
-            self.import_file_from_csv(file_path)
+            import_successful = self.import_file_from_csv(file_path)
+        elif file_path.lower().endswith(".rds") or file_path.lower().endswith(".rda") or file_path.lower().endswith(".rdata"):
+            import_successful = self.import_file_from_r(file_path)
 
+        if not import_successful:
+            return
+            
         self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
 
         if self.auto_continue: # set in BioinformaticsWalkthroughWindow_ClusterColumn if the line edit is filled with a column name found in the data
@@ -2726,6 +2815,82 @@ class BioinformaticsWalkthrough(QWidget):
             self.window.hide()
             self.window.show()
 
+    def import_file_from_r(self,file_path):
+        if not HAVE_RPY2:
+            print("rpy2 not installed. Cannot import R file.")
+            return False
+        try:
+            importr_base = importr('base')
+        except Exception as e:
+            print(f"r-base not installed. Cannot import R file.\nError: {e}")
+            return False
+        try:
+            rdata = importr_base.readRDS(file_path)
+        except Exception as e:
+            print(f"Import failed while trying to read {file_path} as an R object.\nError: {e}")
+            return False
+        
+        print("rdata read")
+        try:
+            anndata2ri.activate()
+        except Exception as e:
+            print(f"anndata2ri not activated. Cannot import R object.\nError: {e}")
+            return False
+
+        classname = tuple(rdata.rclass)[0]
+        print(f"rdata class: {classname}")
+
+        reductions_slot_name = None
+
+        ####################
+        # another option that could work in these contexts (consider this suggestive rather than definitive):
+        # metadata = rdata.slots[slot_name]
+        # with (ro.default_converter + pandas2ri.converter).context():
+        #     print("Converting to pandas dataframe...")
+        #     data_columns = ro.conversion.get_conversion().rpy2py(metadata)
+        # with (ro.default_converter + pandas2ri.converter).context():
+        #     print("Converting to pandas dataframe...")
+        #     dim_reds = ro.conversion.get_conversion().rpy2py(reductions)
+        # for key in dim_reds.keys():
+        #     val = dim_reds[key]
+        #     with (ro.default_converter + pandas2ri.converter).context():
+        #         df[key] = ro.conversion.get_conversion().rpy2py(val.slots["cell.embeddings"])
+        ####################
+
+        if classname in ["SingleCellExperiment", "SummarizedExperiment"]: # not clear if SummarizedExperiment will work, but fingers crossed?
+            conv_adata = anndata2ri.rpy2py(rdata)
+            self.import_from_converted_anndata(conv_adata)
+        elif classname in ["Seurat"]:
+            # there is a way to do this using the rdata object loaded above, but this way works and also funnels it to import_from_converted_anndata
+            r("library(Seurat)")
+            r(f'x<-readRDS("{file_path}")')
+            conv_adata = r("as.SingleCellExperiment(x)")
+            self.import_from_converted_anndata(conv_adata)
+        else:
+            print(f"Class {classname} not recognized. Cannot import R object.")
+            return False
+
+        print("------------R data file loaded-------------")
+        print(f"Metadata loaded: {self.data_columns.head()}")
+
+        return True # at this point, we will consider the import successful, regardless of what happens below
+    
+    def import_from_converted_anndata(self, adata):
+        self.data_columns = adata.obs
+        self.data_vis_arrays = adata.obsm
+        self.search_for_h5ad_spatial_data()
+        return True
+    
+    # def search_for_r_spatial_data(self):
+    #     self.spatial_data_found = False
+    #     return
+    #     # the below does not adequately handle the seurat object case
+    #     self.spatial_data_found, key, self.spatial_data = self.search_vis_arrays_for("spatial")
+    #     if self.spatial_data_found:
+    #         self.spatial_data_key = key
+    #         self.spatial_data_location = f"rdata@reductions${key}"
+    #         return
+
     def import_file_from_csv(self,file_path):
         self.data_columns = pd.read_csv(file_path)
 
@@ -2733,35 +2898,35 @@ class BioinformaticsWalkthrough(QWidget):
 
         self.data_vis_arrays = {}
         self.search_columns_for_xyz()
+        return True
 
     def import_file_from_h5ad(self,file_path):
         if not HAVE_ANNDATA:
             print("anndata not installed. Cannot import h5ad file.")
-            return
+            return False
         try:
             adata = anndata.read_h5ad(file_path)
-        except:
-            print(f"Import failed while trying to read {file_path} as an anndata object.")
-            return
+        except Exception as e:
+            print(f"Import failed while trying to read {file_path} as an anndata object.\nError: {e}")
+            return False
         try:
             self.data_columns = adata.obs
             self.data_vis_arrays = adata.obsm
-        except:
-            print(f"Failed to read either obs or obsm from {file_path}.")
-            return
+        except Exception as e:
+            print(f"Failed to read either obs or obsm from {file_path}.\nError: {e}")
+            return False
 
         print("------------anndata object loaded-------------")
 
         self.search_for_h5ad_spatial_data()
+        return True
 
     def continue_from_import(self):
         if not self.spatial_data_found:
-            print("spatial data not found. continuing to editing cell types...")
             self.use_spatial_data = False
             self.collect_cell_type_data()
             self.edit_cell_types()
         else:
-            print("spatial data found. asking you about it now...")
             self.open_next_window(BioinformaticsWalkthroughWindow_SpatialQuery, show=True)
 
     def search_for_h5ad_spatial_data(self):
@@ -2775,21 +2940,24 @@ class BioinformaticsWalkthrough(QWidget):
         # merscope
         self.search_columns_for_xyz()
 
-    def search_columns_for_xyz(self):
-        x_data_found, _, x_data = self.search_columns_for("x", exact=True)
+        # visium data that just has row and col
+        self.search_columns_for_rowcol()
+
+    def search_columns_for_coords(self, xdata_colname, ydata_colname, zdata_colname):
+        x_data_found, _, x_data = self.search_columns_for(xdata_colname, exact=True)
         if x_data_found:
-            self.spatial_data_found, _, y_data = self.search_columns_for("y", exact=True)
+            self.spatial_data_found, _, y_data = self.search_columns_for(ydata_colname, exact=True)
             if not self.spatial_data_found:
                 return
-            z_data_found, _, z_data = self.search_columns_for("z", exact=True)
+            z_data_found, _, z_data = self.search_columns_for(zdata_colname, exact=True)
 
             if z_data_found:
                 self.spatial_data = np.hstack((x_data.values.reshape(-1,1),y_data.values.reshape(-1,1),z_data.values.reshape(-1,1)))
-                self.spatial_data_location = "columns 'x', 'y', and 'z'"
+                self.spatial_data_location = f"columns '{xdata_colname}', '{ydata_colname}', and '{zdata_colname}'"
             else:
                 print("\n\n\nz data not found. Assuming 2d data.\n\n\n")
                 self.spatial_data = np.hstack((x_data.values.reshape(-1,1),y_data.values.reshape(-1,1), np.zeros((len(x_data),1))))
-                self.spatial_data_location = "columns 'x' and 'y'"
+                self.spatial_data_location = f"columns '{xdata_colname}' and '{ydata_colname}'"
 
             new_key = "spatial"
             suffix = ""
@@ -2799,6 +2967,18 @@ class BioinformaticsWalkthrough(QWidget):
                 suffix = str(n)
             self.data_vis_arrays[f"{new_key}_{suffix}"] = self.spatial_data
             return
+        
+    def search_columns_for_xyz(self):
+        xdata_colname = "x"
+        ydata_colname = "y"
+        zdata_colname = "z"
+        return self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
+
+    def search_columns_for_rowcol(self):
+        xdata_colname = "imagerow"
+        ydata_colname = "imagecol"
+        zdata_colname = None # this will be used in an exact match, which should check if key=None which will be false (and not an error)
+        self.search_columns_for_coords(xdata_colname, ydata_colname, zdata_colname)
 
     def collect_cell_type_data(self):
         self.cell_types_original = self.data_columns[self.current_column]
@@ -2806,7 +2986,6 @@ class BioinformaticsWalkthrough(QWidget):
         self.cell_types_list_original.sort()
         self.cell_types_original = [str(x) for x in self.cell_types_original] # make sure the names are strings
         self.cell_types_list_original = [str(x) for x in self.cell_types_list_original] # make sure the names are strings
-        self.remaining_cell_types_list_original = copy.deepcopy(self.cell_types_list_original)
 
     def continue_from_spatial_query(self):
         self.collect_cell_type_data()
