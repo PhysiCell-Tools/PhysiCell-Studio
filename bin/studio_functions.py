@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMessageBox
 
-def show_warning(msg):
+def show_studio_warning_window(msg):
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setText(msg)

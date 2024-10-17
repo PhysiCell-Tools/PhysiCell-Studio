@@ -2,12 +2,38 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QWidget, QComboBox, QLabel, QCompleter, QToolTip, QVBoxLayout, QDialog
+from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QComboBox, QLabel, QCompleter, QToolTip, QRadioButton, QVBoxLayout, QDialog
+from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QValidator, QDoubleValidator
-from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent
+from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent, QByteArray
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+
+class StudioTab(QWidget):
+    def __init__(self, xml_creator):
+        super().__init__()
+        self.xml_creator = xml_creator
+
+class CellDefSubTab(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.celldef_tab = parent
+        self.xml_creator = parent.xml_creator
+        self.param_d = self.celldef_tab.param_d # make this dict easily accessible here as well
+        setattr(self.celldef_tab, self.type_to_name(), self) # set this object as an attribute of the parent celldef_tab
+        
+    def type_to_name(self):
+        # take the name of the object class, e.g. CycleTab, and convert it to a lowercase string with underscores, e.g. cycle_tab
+        name = type(self).__name__
+        name = name[0].lower() + name[1:]
+        for i, letter in enumerate(name):
+            if letter.isupper():
+                name = name[:i] + '_' + letter.lower() + name[i+1:]
+        return name
+
+    def get_current_celldef(self):
+        return self.celldef_tab.current_cell_def
 
 # organizers
 class QHLine(QFrame):
@@ -34,8 +60,8 @@ class QLabelSeparator(QLabel):
 
 # custom widgets
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
+    def __init__(self, name, **kwargs):
+        super().__init__(name, **kwargs)
 
         checkbox_style = """
                 QCheckBox::indicator:checked {
@@ -131,6 +157,56 @@ class QLineEdit_custom(QLineEdit):
             }
             """
 
+    def set_formatter(self, bval: bool=True, ndigits: int=5):
+        if bval:
+            self.editingFinished.connect(lambda: self.format_text(ndigits=ndigits))
+        else:
+            self.editingFinished.disconnect()
+
+    def format_text(self, ndigits: int=5):
+        try:
+            self.full_value = self.text()
+            value = float(self.full_value)
+            if value == 0:
+                formatted_text = "0"
+            elif abs(value) < 10**-ndigits:
+                formatted_text = f"{value:.{ndigits}e}"
+            else:
+                formatted_text = f"{value:.{ndigits}f}".rstrip('0').rstrip('.')
+            self.blockSignals(True)
+            self.setText(formatted_text)
+            self.blockSignals(False)
+        except ValueError:
+            pass
+
+radiobutton_style = """
+QRadioButton {
+    spacing: 4px; /* Space between indicator and text */
+    padding-left: 4px;
+}
+QRadioButton::indicator {
+    width: 12;
+    height: 12;
+}
+QRadioButton::indicator:unchecked {
+    image: url(images:RadioButtonUnchecked.svg);
+}
+QRadioButton::indicator:checked {
+    image: url(images:RadioButtonChecked.svg);
+}
+QRadioButton::indicator:disabled:checked {
+    image: url(images:RadioButtonDisabledChecked.svg);
+}
+"""
+class QRadioButton_custom(QRadioButton):
+    def __init__(self, text, **kwargs):
+        super(QRadioButton, self).__init__(text, **kwargs)
+        self.setStyleSheet(radiobutton_style)
+
+class QComboBox_custom(QComboBox):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet("QComboBox{color: #000000; background-color: #FFFFFF;}")
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
         super( ExtendedCombo, self ).__init__( parent )
@@ -174,15 +250,26 @@ class ExtendedCombo( QComboBox ):
 
 # hover widgets
 class HoverWidget(QWidget):
-    def __init__(self, hover_text=None, parent=None):
+    hover_enabled = True
+    def __init__(self, hover_text=None, parent=None, hover_enabled=True):
         super().__init__(parent)
         self.setMouseTracking(True)  # Enable mouse tracking
         self.hover_text = hover_text
-    
+        self.setStyleSheet("QToolTip { \
+                            background-color: black; \
+                            color: white; \
+                            border: 1px solid black; \
+                            border-radius: 5px; \
+                            padding: 5px; \
+                            }")
+        self.hover_enabled = hover_enabled
+
     def setHoverText(self, hover_text):
         self.hover_text = hover_text
 
     def event(self, event):
+        if not self.hover_enabled:
+            return super().event(event)
         if event.type() == QEvent.Enter:
             # Display tooltip when the mouse enters the checkbox
             QToolTip.showText(event.globalPos(), self.hover_text, self)
@@ -220,6 +307,35 @@ class HoverLabel(QLabel, HoverWidget):
             }
         """)
       
+class HoverSvgWidget(QSvgWidget, HoverWidget):
+    def __init__(self, hover_text, parent=None):
+        super().__init__(parent)
+        self.setHoverText(hover_text)
+
+class HoverHelp(HoverSvgWidget):
+    icon = None
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+
+    def show_icon(self):
+        self.load(self.icon)
+        self.hover_enabled = True
+
+    def hide_icon(self):
+        self.load(QByteArray()) # passing in an empty file path (self.load("")) works, but prints endless warnings about not being able to load the file
+        self.hover_enabled = False
+class HoverWarning(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:warning.svg"
+class HoverQuestion(HoverHelp):
+    def __init__(self, hover_text, parent=None, width=15, height=15):
+        super().__init__(hover_text, parent)
+        self.setFixedSize(width, height)
+        self.icon = "images:info.svg"
+
 # validators
 class DoubleValidatorWidgetBounded(QValidator):
     # a validator that uses other widgets to set the bounds of a QDoubleValidator
@@ -242,7 +358,7 @@ class DoubleValidatorWidgetBounded(QValidator):
             # then just record the info so the validator can access later
             self.top = top
             self.top_fn = top_transform
-        else:
+        elif top != None:
             # then just a normal top bound: transform if desired and set. then reset top and top_fn to None so they are not used later
             if top_transform is not None:
                 top = top_transform(top)

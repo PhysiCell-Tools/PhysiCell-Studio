@@ -212,7 +212,7 @@ class PhysiCellXMLCreator(QWidget):
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
 
-        self.config_tab = Config(self.studio_flag)
+        self.config_tab = Config(self)
         self.config_tab_index = 0
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
@@ -240,7 +240,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef(self.pytest_flag, self.config_tab)
+        self.celldef_tab = CellDef(self)
         self.celldef_tab.xml_root = self.xml_root
         if is_movable_flag:
             self.celldef_tab.is_movable_w.setEnabled(True)
@@ -272,7 +272,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.user_params_tab = UserParams()
+        self.user_params_tab = UserParams(self)
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 

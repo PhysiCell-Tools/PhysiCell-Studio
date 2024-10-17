@@ -15,6 +15,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QSpacerItem
 from PyQt5.QtGui import QDoubleValidator
 
+from studio_classes import StudioTab
+
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
@@ -66,17 +68,11 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
-
-class UserParams(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # self.current_param = None
+class UserParams(StudioTab):
+    def __init__(self, xml_creator):
+        super().__init__(xml_creator)
         self.xml_root = None
         self.count = 100
-        # self.max_rows = 100  # initially (TODO: check if enough for initial .xml)
-        # self.max_rows = 200  # initially (TODO: check if enough for initial .xml)
-        # self.max_rows = 125  # initially (TODO: check if enough for initial .xml)
 
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"
@@ -89,27 +85,6 @@ class UserParams(QWidget):
         self.combobox_width = 90
 
         self.scroll_area = QScrollArea()
-        # splitter.addWidget(self.scroll)
-        # self.cell_def_horiz_layout.addWidget(self.scroll)
-
-        stylesheet = """ 
-            QComboBox{
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton{
-                color: #000000;
-                background-color: #FFFFFF; 
-                border-style: outset;
-                border-radius: 10px;
-                border-color: black;
-                padding: 4px;
-            }
-            """
-                # border-style: outset;
-                # border-radius: 10px;
-                # border-color: black;
-                # padding: 4px;
 
         self.user_params = QWidget()
 
@@ -117,23 +92,15 @@ class UserParams(QWidget):
         self.max_rows = 100
         self.max_cols = 5
 
-        # self.enable_entire_table()
-        # self.table_disabled = False
-
         self.utable.setColumnCount(self.max_cols)
         self.utable.setRowCount(self.max_rows)
         self.utable.setHorizontalHeaderLabels(['Name','Type','Value','Units','Description'])
 
-        # self.user_params.setStyleSheet(stylesheet)
-
         self.main_layout = QVBoxLayout()
-        # self.main_layout.addStretch(0)
 
         #------------------
-        button_width = 200
+        # button_width = 200
         controls_hbox = QHBoxLayout()
-
-        # self.main_layout.addLayout(hbox)
 
         hlayout = QHBoxLayout()
         self.name_search = QLineEdit()
@@ -180,6 +147,7 @@ class UserParams(QWidget):
             w_varname.wrow = irow
             w_varname.wcol = self.var_icol_name
             w_varname.textChanged[str].connect(self.name_changed_cb)  # being explicit about passing a string 
+            w_varname.editingFinished.connect(self.name_change_finished_cb) 
 
             # ------- type
             w_var_type = MyQComboBox()
@@ -364,7 +332,8 @@ class UserParams(QWidget):
         self.add_row_utable(self.count - 1)
 
         # self.enable_all_custom_data()
-
+        if varname == "random_seed":
+            self.xml_creator.config_tab.random_seed_warning_label.hide_icon()
     #----------------------------------------
     # Not currently used
     def disable_table_cells_for_duplicate_name(self, widget=None):
@@ -568,6 +537,10 @@ class UserParams(QWidget):
             for ival in range(N):
                 self.add_row_utable(self.count + ival)
             self.count += N
+
+    def name_change_finished_cb(self):
+        if self.sender().text()=="random_seed":
+            self.xml_creator.config_tab.random_seed_warning_label.show_icon()
 
     #----------------------------------------
     def units_changed_cb(self, text):

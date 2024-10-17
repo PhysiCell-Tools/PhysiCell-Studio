@@ -29,7 +29,7 @@ import pandas as pd
 
 from multivariate_rules import Window_plot_rules
 from studio_classes import ExtendedCombo
-from studio_functions import show_warning
+from studio_functions import show_studio_warning_window
 
 class RulesPlotWindow(QWidget):
     def __init__(self):
@@ -496,27 +496,17 @@ class Rules(QWidget):
 
         delete_rule_btn = QPushButton("Delete rule")
         delete_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         delete_rule_btn.clicked.connect(self.delete_rule_cb)
         delete_rule_btn.setStyleSheet("background-color: yellow")
         hlayout.addWidget(delete_rule_btn)
 
         plot_rule_btn = QPushButton("Plot rule")
         plot_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         plot_rule_btn.clicked.connect(self.plot_rule_cb)
         plot_rule_btn.setStyleSheet("background-color: lightgreen")
         hlayout.addWidget(plot_rule_btn)
 
         hlayout.addStretch(1)
-
-        # btn_frame = QFrame()
-        # btn_frame.setGeometry(QRect(10,10,500,20))
-        # btn_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
-        # btn_frame.setLayout(hlayout)
-        # btn_frame.setFixedWidth(500)  # omg
-        # self.vbox_cycle.addWidget(radio_frame)
-
         #-------
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
@@ -532,13 +522,6 @@ class Rules(QWidget):
         self.clear_button.setStyleSheet("background-color: yellow")
         self.clear_button.clicked.connect(self.clear_rules)
         hlayout2.addWidget(self.clear_button) 
-
-        # self.validate_button = QPushButton("Validate all")
-        # self.validate_button.setEnabled(False)
-        # self.validate_button.setFixedWidth(150)
-        # self.validate_button.setStyleSheet("background-color: lightgreen")
-        # self.validate_button.clicked.connect(self.validate_rules_cb)
-        # hlayout.addWidget(self.validate_button) 
 
         self.rules_tab_layout.addLayout(hlayout2) 
         #----------------------
@@ -929,24 +912,24 @@ class Rules(QWidget):
             # print(behavior, cycle_model_idx )
             #{0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
             if (behavior == 'cycle entry' or behavior == 'exit from cycle phase 0'):
-                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_trate00']
-                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate01']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate01']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate01']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate01']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate01']
+                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_00_trate']
+                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_01_trate']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_01_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_01_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_01_trate']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_01_trate']
             elif (behavior == 'exit from cycle phase 1'):
-                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_trate10']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate12']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate12']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate12']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_trate10']
+                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_10_trate']
+                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_12_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_12_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_12_trate']
+                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_10_trate']
             elif (behavior == 'exit from cycle phase 2'):
-                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_trate20']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_trate20']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate23']
+                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_20_trate']
+                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_20_trate']
+                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_23_trate']
             elif (behavior == 'exit from cycle phase 3'):
-                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_trate30']
+                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_30_trate']
                         
         elif btokens[0] in self.substrates:
             key1 = 'secretion'
@@ -991,9 +974,9 @@ class Rules(QWidget):
         elif behavior == "relative maximum adhesion distance":
             base_val = self.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
         elif behavior == "cell attachment rate":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_attachment_rate']
+            base_val = self.celldef_tab.param_d[key0]['attachment_rate']
         elif behavior == "cell detachment rate":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_detachment_rate']
+            base_val = self.celldef_tab.param_d[key0]['detachment_rate']
         elif behavior == "maximum number of cell attachments":
             base_val = self.celldef_tab.param_d[key0]['mechanics_max_num_attachments']
 
@@ -1035,6 +1018,9 @@ class Rules(QWidget):
             base_val = self.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
             base_val = self.celldef_tab.param_d[key0]["damage_repair_rate"]
+        elif "asymmetric" == behavior.split()[0]:
+            cell_type = behavior.split()[-1]
+            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
             print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
@@ -1172,7 +1158,7 @@ class Rules(QWidget):
             except:
                 print("argh, exception opening or reading")
                 msg = "fill_rules(): " + full_rules_fname + " is using v1 syntax. Please upgrade."
-                show_warning(msg)
+                show_studio_warning_window(msg)
                 return
                 # sys.exit(1)
 
@@ -1194,7 +1180,7 @@ class Rules(QWidget):
                             cell_type = elm[0]
                             if cell_type not in self.celldef_tab.param_d.keys():
                                 print(f'ERROR: {cell_type} is not a valid cell type name')
-                                show_warning(f'ERROR: {cell_type} is not a valid cell type name')
+                                show_studio_warning_window(f'ERROR: {cell_type} is not a valid cell type name')
                                 return
 
                                 # self.rules_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
@@ -1203,12 +1189,12 @@ class Rules(QWidget):
                         elif len(elm) == 9:   # v1
                             print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} is using v1 syntax. Please upgrade\n')
                             msg = "fill_rules(): " + full_rules_fname + " is using v1 syntax. Please upgrade."
-                            show_warning(msg)
+                            show_studio_warning_window(msg)
                             return
                         else:
                             print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} has unknown syntax\n')
                             msg = f"fill_rules(): {full_rules_fname} has unknown syntax. len(elm)={len(elm)}"
-                            show_warning(msg)
+                            show_studio_warning_window(msg)
                             return
 
                         if elm[self.rules_response_idx] == "phagocytose dead cell":
@@ -1240,14 +1226,14 @@ class Rules(QWidget):
             # self.dialog_critical(str(e))
             # print("error opening config/cells_rules.csv")
                 print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
-                show_warning(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+                show_studio_warning_window(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # sys.exit(1)
         else:
             if self.rules_enabled_attr:
                 print(f'\n\n!!!  WARNING: fill_rules(): {full_rules_fname} is not a valid file !!!\n')
                 msg = "fill_rules(): " + full_rules_fname + " not valid"
-                show_warning(msg)
+                show_studio_warning_window(msg)
             # logging.error(f'fill_rules(): {full_rules_fname} is not a valid file')
 
     # else:  # should empty the Rules tab
@@ -1282,12 +1268,12 @@ class Rules(QWidget):
             signal = self.signal_combobox.currentText()
             # print("------------- plot_new_rule_cb(): signal= ",signal)
             if not self.valid_signal(signal):
-                show_warning( "Invalid signal: " + signal)
+                show_studio_warning_window( "Invalid signal: " + signal)
                 return
             behavior = self.response_combobox.currentText()
             # print("n------------- plot_new_rule_cb(): behavior= ",behavior)
             if not self.valid_behavior(behavior):
-                show_warning("Invalid behavior: " + behavior)
+                show_studio_warning_window("Invalid behavior: " + behavior)
                 return
             # Check if saturation value is compatible with increase/decrease behaviour
             direction = self.up_down_combobox.currentText()
@@ -1299,10 +1285,10 @@ class Rules(QWidget):
             saturation_val = float(self.rule_max_val.text())
             # print(base_val,saturation_val, direction)            
             if ( (saturation_val < base_val) and "increases" in self.up_down_combobox.currentText() ): 
-                show_warning(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
+                show_studio_warning_window(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
                 return
             if ( (saturation_val > base_val) and "decreases" in self.up_down_combobox.currentText() ): 
-                show_warning(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
+                show_studio_warning_window(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
                 return  
         except:
             print("\n------------- plot_new_rule_cb(): got exception validating signal, behavior. Return.")
@@ -1409,18 +1395,18 @@ class Rules(QWidget):
             signal = self.signal_combobox.currentText()
             # print("------------- add_rule_cb(): signal= ",signal)
             if not self.valid_signal(signal):
-                show_warning( "Invalid signal: " + signal)
+                show_studio_warning_window( "Invalid signal: " + signal)
                 return
             behavior = self.response_combobox.currentText()
             # print("n------------- add_rule_cb(): behavior= ",behavior)
             if not self.valid_behavior(behavior):
-                show_warning("Invalid behavior: " + behavior)
+                show_studio_warning_window("Invalid behavior: " + behavior)
                 return
             direction = self.up_down_combobox.currentText()
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
             if dup_rule >= 0:
-                show_warning(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule}). Either delete the rule in the table first or edit it manually.")
+                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule}). Either delete the rule in the table first or edit it manually.")
                 return
 
 
@@ -1436,10 +1422,10 @@ class Rules(QWidget):
             # Check if saturation value is compatible with increase/decrease behaviour
             # print(base_val,saturation_val, direction)            
             if ( (saturation_val < base_val) and "increases" in self.up_down_combobox.currentText() ): 
-                show_warning(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
+                show_studio_warning_window(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
                 return
             if ( (saturation_val > base_val) and "decreases" in self.up_down_combobox.currentText() ): 
-                show_warning(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
+                show_studio_warning_window(f"Error: Behavior {behavior} cannot be decreased with the given [Saturation value]. [Saturation value] must be lower than [Base value].")
                 return  
         except:
             print("\n------------- add_rule_cb(): got exception validating signal, behavior. Return.")
@@ -1484,7 +1470,7 @@ class Rules(QWidget):
             self.rules_table.cellWidget(irow, self.rules_celltype_idx).setText( self.celltype_combobox.currentText() )
         except:
             msg = f'add_rule_cb() Error: irow={irow}, idx={self.rules_celltype_idx}, widget={self.rules_table.cellWidget(irow, self.rules_celltype_idx)}.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return 
 
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
@@ -1634,7 +1620,7 @@ class Rules(QWidget):
         # if row < 0:
         if (row < 0) or (row+1 > self.num_rules) or (self.num_rules <= 0):
             msg = f'Error: Select a row with a rule before deleting.'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return
         # varname = self.custom_data_table.cellWidget(row,self.custom_icol_name).text()
         # print(" custom var name= ",varname)
@@ -1661,7 +1647,7 @@ class Rules(QWidget):
                 self.rules_table.cellWidget(irow,self.rules_celltype_idx).wrow -= 1  # sufficient to only decr the "name" column
             except:
                 msg = f'Warning: could not decrement row {irow} from the Rules table. Select a row before deleting.'
-                show_warning(msg)
+                show_studio_warning_window(msg)
                 return
 
             # print(f"   after removing {varname}, master_custom_var_d= ",self.master_custom_var_d)
@@ -1683,7 +1669,7 @@ class Rules(QWidget):
 
         irow = self.rules_table.currentRow()
         if irow < 0:
-            show_warning( "Select (click on) a row to plot.")
+            show_studio_warning_window( "Select (click on) a row to plot.")
             return
 
         try:
@@ -1692,13 +1678,13 @@ class Rules(QWidget):
             # print("\n------------- plot_rule_cb():  signal=",signal)
             # print("------------- plot_rule_cb(): signal= ",signal)
             if not self.valid_signal(signal):
-                show_warning( "Invalid signal: " + signal)
+                show_studio_warning_window( "Invalid signal: " + signal)
                 return
             behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
             # print("\n------------- plot_rule_cb():  behavior=",behavior)
             # print("n------------- plot_rule_cb(): behavior= ",behavior)
             if not self.valid_behavior(behavior):
-                show_warning("Invalid behavior: " + behavior)
+                show_studio_warning_window("Invalid behavior: " + behavior)
                 return
         except:
             print("\n------------- plot_rule_cb(): got exception validating signal, behavior. Return.")
@@ -1708,7 +1694,7 @@ class Rules(QWidget):
         
         if (irow < 0) or (self.num_rules == 0):
             msg = "You need to select a row in the table"
-            show_warning(msg)
+            show_studio_warning_window(msg)
             return
 
         # print("------------- plot_rule_cb(), irow=",irow)
@@ -1747,11 +1733,11 @@ class Rules(QWidget):
         direction_str = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
         if (saturation_val > base_val) and direction_str == "decreases":
             msg = f'saturation ({saturation_val}) is > base {base_val}, so we will change the Direction to "increases"'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( "increases" )
         elif (saturation_val < base_val) and direction_str == "increases": 
             msg = f'saturation ({saturation_val}) is < base {base_val}, so we will change the Direction to "decreases"'
-            show_warning(msg)
+            show_studio_warning_window(msg)
             self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( "decreases" )
 
         
@@ -1994,7 +1980,7 @@ class Rules(QWidget):
         self.response_combobox.addItems(self.response_l)
 
         self.response_combobox.setCurrentIndex(0)
-        self.celldef_tab.fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     def create_response_list(self):
         # TODO: figure out how best to organize these responses
@@ -2028,7 +2014,7 @@ class Rules(QWidget):
         # special
         response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
 
-        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]:  # verb
+        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to ","asymmetric division to "]:  # verb
             for ct in self.celldef_tab.param_d.keys():
                 response_l.append(verb + ct)
 
@@ -2089,7 +2075,7 @@ class Rules(QWidget):
                 if folder_name == None:
                     msg += " rules file "
                 msg += " missing from .xml"
-                # show_warning(msg)
+                # show_studio_warning_window(msg)
 
                 self.rules_folder.setText("")
                 self.rules_file.setText("")
@@ -2128,7 +2114,7 @@ class Rules(QWidget):
             # self.rules_text.setPlainText("")
             self.rules_folder.setText("config")
             self.rules_file.setText("rules.csv")
-            self.rules_enabled.setChecked(True)
+            # self.rules_enabled.setChecked(True)   # Sep 2024: comment out; error w/ physiboss model with no rules block provided in xml 
 
             self.clear_rules()
         return
@@ -2143,39 +2129,7 @@ class Rules(QWidget):
         indent8 = '\n        '
         indent10 = '\n          '
 
-        # <cell_rules type="csv" enabled="true">
-        #     <folder>.</folder>
-        #     <filename>test_rules.csv</filename>
-        # </cell_rules>      
-        # </cell_definitions>
-
-        # ---- v1
-        # uep = self.xml_root.find(".//cell_definitions")
-        # if not self.xml_root.find(".//cell_definitions//cell_rules"):
-        #     elm = ET.Element("cell_rules", 
-        #                 {"type":"csv", "enabled":"false" })
-        #     elm.tail = '\n' + indent8
-        #     elm.text = indent8
-
-        #     subelm = ET.SubElement(elm, 'folder')
-        #     subelm.text = self.rules_folder.text()
-        #     subelm.tail = indent8
-
-        #     subelm = ET.SubElement(elm, 'filename')
-        #     subelm.text = self.rules_file.text()
-        #     subelm.tail = indent8
-        #     uep.insert(0,elm)
-        # else:
-        #     self.xml_root.find(".//cell_rules//folder").text = self.rules_folder.text()
-        #     self.xml_root.find(".//cell_rules//filename").text = self.rules_file.text()
-
-        #     if self.rules_enabled.isChecked():
-        #         self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'true'
-        #     else:
-        #         self.xml_root.find(".//cell_definitions//cell_rules").attrib['enabled'] = 'false'
-
-
-        # ---- v2
+        # ---- v3
         uep = self.xml_root.find(".")
         if not self.xml_root.find(".//cell_rules"):
             enabled_flag = "false"
@@ -2191,7 +2145,7 @@ class Rules(QWidget):
             rulesets.text = indent8
 
             ruleset = ET.SubElement(rulesets,"ruleset", 
-                        {"protocol":"CBHG", "version":"2.0", "format":"csv", "enabled":enabled_flag })
+                        {"protocol":"CBHG", "version":"3.0", "format":"csv", "enabled":enabled_flag })
             ruleset.tail = '\n' + indent8
             ruleset.text = indent8
 
@@ -2215,7 +2169,9 @@ class Rules(QWidget):
                 self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['enabled'] = 'true'
             else:
                 self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['enabled'] = 'false'
-
+                
+            # force version update for users
+            self.xml_root.find(".//cell_rules//rulesets//ruleset").attrib['version'] = '3.0'
         return
     
     #-------------------------
@@ -2274,7 +2230,7 @@ def find_isolated_string(s, name, start=0):
 
 def create_reserved_words():
     reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","asymmetric division to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
     reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
     reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
     return reserved_words

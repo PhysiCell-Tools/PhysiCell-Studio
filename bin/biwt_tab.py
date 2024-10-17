@@ -47,7 +47,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog, QButtonGroup, QSplitter, QSizePolicy, QSpinBox
 from PyQt5.QtGui import QIcon
 
-from studio_classes import QHLine, QVLine, QCheckBox_custom, LegendWindow
+from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom, LegendWindow
 
 class GoBackButton(QPushButton):
     def __init__(self, parent, biwt, pre_cb=None, post_cb=None):
@@ -144,8 +144,8 @@ class BioinformaticsWalkthroughWindow_SpatialQuery(BioinformaticsWalkthroughWind
         label = QLabel(s)
 
         self.yes_no_group = QButtonGroup()
-        self.yes = QRadioButton("Yes")
-        self.no = QRadioButton("No")
+        self.yes = QRadioButton_custom("Yes")
+        self.no = QRadioButton_custom("No")
         self.yes_no_group.addButton(self.yes,0)
         self.yes_no_group.addButton(self.no,1)
         self.yes_no_group.idToggled.connect(self.yn_toggled)
@@ -368,7 +368,6 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         return True
 
     def plot_dim_red(self, k):
-        print(f"Plotting dim reduction for {k}")
         v = self.biwt.data_vis_arrays[k]
         self.n_points = len(v)
         if self.dim_red_fig is None:
@@ -559,25 +558,25 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         self.counts_button_group.idToggled.connect(self.counts_button_cb)
         counts_button_group_next_id = 0
 
-        self.use_counts_as_is_radio_button = QRadioButton("Use counts")
+        self.use_counts_as_is_radio_button = QRadioButton_custom("Use counts")
         self.use_counts_as_is_radio_button.setFixedWidth(counts_width)
         self.use_counts_as_is_radio_button.setChecked(True)
         self.counts_button_group.addButton(self.use_counts_as_is_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_props_radio_button = QRadioButton("Use proportions")
+        self.use_props_radio_button = QRadioButton_custom("Use proportions")
         self.use_props_radio_button.setFixedWidth(props_width)
         self.use_props_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_props_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_confluence_radio_button = QRadioButton("Set confluence (%)")
+        self.use_confluence_radio_button = QRadioButton_custom("Set confluence (%)")
         self.use_confluence_radio_button.setFixedWidth(confluence_width)
         self.use_confluence_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_confluence_radio_button,counts_button_group_next_id)
         counts_button_group_next_id += 1
 
-        self.use_manual_radio_button = QRadioButton("Set manually")
+        self.use_manual_radio_button = QRadioButton_custom("Set manually")
         self.use_manual_radio_button.setFixedWidth(manual_width)
         self.use_manual_radio_button.setChecked(False)
         self.counts_button_group.addButton(self.use_manual_radio_button,counts_button_group_next_id)
@@ -1266,7 +1265,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         self.add_cell_positions_to_file()
 
     def check_for_new_celldefs(self):
-        print("BioinformaticsWalkthroughPlotWindow: Checking for new cell definitions...")
         for cell_type in self.biwt.cell_types_list_final:
             if cell_type in self.biwt.celldef_tab.celltypes_list:
                 print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} found in current list of cell types. Not appending {cell_type}...")
@@ -2287,11 +2285,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
         self.plot_is_2d = self.plot_zmax - self. plot_zmin <= self.plot_zdel # if the domain height is larger than the voxel height, then we have a 3d simulation
         if self.plot_is_2d: 
-            print("\n\n2d projection\n\n")
             projection = None
         else:
             projection = '3d'
-            print("\n\n3d projection\n\n")
 
         self.ax0 = self.figure.add_subplot(111, adjustable='box',projection=projection)
         
@@ -2324,7 +2320,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.update_legend_window()
         
     def update_legend_window(self):
-        print("updating legend window")
         is_hidden = (self.legend_window is None) or (self.legend_window.isHidden()) # doesn't exist yet or is hidden, so don't display after update
         if self.legend_window is not None:
             self.legend_window.close()
@@ -2773,7 +2768,6 @@ class BioinformaticsWalkthrough(QWidget):
     
     def search_for(self, array_dict, pattern, exact=False):
         for k, v in array_dict.items():
-            print(f"searching for {pattern} in {k}")
             if exact:
                 if k == pattern:
                     return True, k, v
@@ -2929,12 +2923,10 @@ class BioinformaticsWalkthrough(QWidget):
 
     def continue_from_import(self):
         if not self.spatial_data_found:
-            print("spatial data not found. continuing to editing cell types...")
             self.use_spatial_data = False
             self.collect_cell_type_data()
             self.edit_cell_types()
         else:
-            print("spatial data found. asking you about it now...")
             self.open_next_window(BioinformaticsWalkthroughWindow_SpatialQuery, show=True)
 
     def search_for_h5ad_spatial_data(self):
