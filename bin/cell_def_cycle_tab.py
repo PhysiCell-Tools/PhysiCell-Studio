@@ -260,8 +260,8 @@ class CycleTab(CellDefSubTab):
             
     def reset_cycle_cb(self):   # new_cycle_params
         # print("--- reset_cycle_cb:  self.current_cell_def= ",self.current_cell_def)
-        self.new_cycle_params(self.current_cell_def, False)
-        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
+        self.celldef_tab.new_cycle_params(self.get_current_celldef(), False)
+        self.celldef_tab.tree_item_clicked_cb(self.celldef_tab.tree.currentItem(), 0)
 
     def update_cycle_params(self):
         # pass
