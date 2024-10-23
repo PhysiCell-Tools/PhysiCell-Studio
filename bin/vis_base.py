@@ -2381,7 +2381,6 @@ class VisBase():
         self.show_mechanics_grid = bval
         self.update_plots()
 
-
     #----------------------------------------------
     def cells_toggle_cb(self,bval):
         self.cells_checked_flag = bval

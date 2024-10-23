@@ -148,6 +148,11 @@ class Vis(VisBase, QWidget):
         self.plot_ymin = None
         self.plot_ymax = None
 
+        self.axes_x_center = 0
+        self.axes_y_center = 0
+        self.axes_x_radius = 100
+        self.axes_y_radius = 100
+
         self.use_defaults = True
         self.title_str = ""
 
@@ -308,6 +313,17 @@ class Vis(VisBase, QWidget):
         except:
             print("\nvis_tab.py:-------- Error writing snap.csv file")
         csv_file.close()
+
+    #--------------------------------------
+    def reset_axes_cb(self):
+        # print("vis_tab.py: reset_axes_cb")
+        # self.axes_x_center, axes_y_center, axes_x_radius, axes_y_radius, 
+        self.plot_xmin = self.axes_x_center - self.axes_x_radius
+        self.plot_xmax = self.axes_x_center + self.axes_x_radius
+
+        self.plot_ymin = self.axes_y_center - self.axes_y_radius
+        self.plot_ymax = self.axes_y_center + self.axes_y_radius
+        self.update_plots()
 
     #--------------------------------------
     # Dependent on 2D/3D

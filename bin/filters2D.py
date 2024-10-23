@@ -5,6 +5,7 @@ from studio_classes import DoubleValidatorWidgetBounded
 # from PyQt5.QtCore import QSortFilterProxyModel
 # from PyQt5.QtSvg import QSvgWidget
 # from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QDoubleValidator
 # from PyQt5.QtCore import QRectF, Qt
 
 class QHLine(QFrame):
@@ -71,6 +72,7 @@ class FilterUI2DWindow(QWidget):
         #------------
         idx_row = 0
         glayout.addWidget(QLabel("Cells:"), idx_row,0,1,2) # w, row, column, rowspan, colspan
+        # glayout.addWidget(QLabel("Cells:"), idx_row,0,1,4) # w, row, column, rowspan, colspan
 
         idx_row += 1
         self.cell_edge_checkbox = QCheckBox_custom('edge')
@@ -122,15 +124,63 @@ class FilterUI2DWindow(QWidget):
         #-----------------------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
-        idx_row += 1
         self.vbox.addLayout(glayout)
+
+        idx_row += 1
         self.aspect_11_checkbox = QCheckBox_custom('1:1 aspect')
         self.aspect_11_checkbox.setChecked(True)
         self.aspect_11_checkbox.clicked.connect(self.aspect_11_cb)
-        # idx_row += 1
         glayout.addWidget(self.aspect_11_checkbox, idx_row,0,1,3) # w, row, column, rowspan, colspan
 
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        self.vbox.addLayout(glayout)
+
+        # idx_row += 1
+        # glayout.addWidget(QLabel("Axes zoom:"), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        idx_row += 1
+        label = QLabel("xcenter")
+        glayout.addWidget(label, idx_row,0, 1,1) # w, row, column, rowspan, colspan
+        self.axes_xc = QLineEdit(str(self.vis_tab.axes_x_center))
+        self.axes_xc.setFixedWidth(70)
+        self.axes_xc.setValidator(QDoubleValidator())
+        self.axes_xc.textChanged.connect(self.axes_xc_changed)
+        glayout.addWidget(self.axes_xc , idx_row,1, 1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("ycenter")
+        glayout.addWidget(label, idx_row,2, 1,1) # w, row, column, rowspan, colspan
+        self.axes_yc = QLineEdit(str(self.vis_tab.axes_y_center))
+        self.axes_yc.setFixedWidth(70)
+        self.axes_yc.setValidator(QDoubleValidator())
+        self.axes_yc.textChanged.connect(self.axes_yc_changed)
+        glayout.addWidget(self.axes_yc , idx_row,3, 1,1) # w, row, column, rowspan, colspan
+
+        idx_row += 1
+        label = QLabel("xradius")
+        glayout.addWidget(label, idx_row,0, 1,1) # w, row, column, rowspan, colspan
+        self.axes_xr = QLineEdit(str(self.vis_tab.axes_x_radius))
+        self.axes_xr.setFixedWidth(70)
+        self.axes_xr.setValidator(QDoubleValidator())
+        self.axes_xr.textChanged.connect(self.axes_xr_changed)
+        glayout.addWidget(self.axes_xr , idx_row,1, 1,1) # w, row, column, rowspan, colspan
+
+        label = QLabel("yradius")
+        glayout.addWidget(label, idx_row,2, 1,1) # w, row, column, rowspan, colspan
+        self.axes_yr = QLineEdit(str(self.vis_tab.axes_y_radius))
+        self.axes_yr.setFixedWidth(70)
+        self.axes_yr.setValidator(QDoubleValidator())
+        self.axes_yr.textChanged.connect(self.axes_yr_changed)
+        glayout.addWidget(self.axes_yr , idx_row,3, 1,1) # w, row, column, rowspan, colspan
+
+        idx_row += 1
+        self.reset_axes_button = QPushButton("Reset axes")
+        self.reset_axes_button.setStyleSheet("background-color: lightgreen;")
+        self.reset_axes_button.clicked.connect(self.reset_axes_cb)
+        glayout.addWidget(self.reset_axes_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
+
         #--------------------------
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
         idx_row += 1
         glayout.addWidget(QLabel("Grids:"), idx_row,0,1,2) # w, row, column, rowspan, colspan
 
@@ -188,6 +238,7 @@ class FilterUI2DWindow(QWidget):
 
         self.setLayout(self.vbox)
         self.resize(200, 220)   # try to fix the size
+        # self.resize(250, 220)   # try to fix the size
 
 
     #--------
@@ -251,6 +302,31 @@ class FilterUI2DWindow(QWidget):
     def aspect_11_cb(self):
         # print("filters2D: aspect_11_cb()  self.aspect_11_checkbox.isChecked()= ",self.aspect_11_checkbox.isChecked())
         self.vis_tab.view_aspect_cb(self.aspect_11_checkbox.isChecked())   # vis_base
+
+    def axes_xc_changed(self,sval):
+        try:
+            self.vis_tab.axes_x_center = float(sval)
+        except:
+            pass
+    def axes_yc_changed(self,sval):
+        try:
+            self.vis_tab.axes_y_center = float(sval)
+        except:
+            pass
+
+    def axes_xr_changed(self,sval):
+        try:
+            self.vis_tab.axes_x_radius = float(sval)
+        except:
+            pass
+    def axes_yr_changed(self,sval):
+        try:
+            self.vis_tab.axes_y_radius = float(sval)
+        except:
+            pass
+    def reset_axes_cb(self):
+        self.vis_tab.reset_axes_cb()
+
 
     def voxel_grid_cb(self):
         self.vis_tab.voxel_grid_cb(self.voxel_grid_checkbox.isChecked())
