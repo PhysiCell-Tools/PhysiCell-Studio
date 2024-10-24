@@ -139,7 +139,7 @@ class FilterUI2DWindow(QWidget):
         # idx_row += 1
         # glayout.addWidget(QLabel("Axes zoom:"), idx_row,0,1,4) # w, row, column, rowspan, colspan
         idx_row += 1
-        label = QLabel("xcenter")
+        label = QLabel("xCenter")
         glayout.addWidget(label, idx_row,0, 1,1) # w, row, column, rowspan, colspan
         self.axes_xc = QLineEdit(str(self.vis_tab.axes_x_center))
         self.axes_xc.setFixedWidth(70)
@@ -147,7 +147,7 @@ class FilterUI2DWindow(QWidget):
         self.axes_xc.textChanged.connect(self.axes_xc_changed)
         glayout.addWidget(self.axes_xc , idx_row,1, 1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("ycenter")
+        label = QLabel("yCenter")
         glayout.addWidget(label, idx_row,2, 1,1) # w, row, column, rowspan, colspan
         self.axes_yc = QLineEdit(str(self.vis_tab.axes_y_center))
         self.axes_yc.setFixedWidth(70)
@@ -156,7 +156,7 @@ class FilterUI2DWindow(QWidget):
         glayout.addWidget(self.axes_yc , idx_row,3, 1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        label = QLabel("xradius")
+        label = QLabel("xRadius")
         glayout.addWidget(label, idx_row,0, 1,1) # w, row, column, rowspan, colspan
         self.axes_xr = QLineEdit(str(self.vis_tab.axes_x_radius))
         self.axes_xr.setFixedWidth(70)
@@ -164,7 +164,7 @@ class FilterUI2DWindow(QWidget):
         self.axes_xr.textChanged.connect(self.axes_xr_changed)
         glayout.addWidget(self.axes_xr , idx_row,1, 1,1) # w, row, column, rowspan, colspan
 
-        label = QLabel("yradius")
+        label = QLabel("yRadius")
         glayout.addWidget(label, idx_row,2, 1,1) # w, row, column, rowspan, colspan
         self.axes_yr = QLineEdit(str(self.vis_tab.axes_y_radius))
         self.axes_yr.setFixedWidth(70)
@@ -173,7 +173,7 @@ class FilterUI2DWindow(QWidget):
         glayout.addWidget(self.axes_yr , idx_row,3, 1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        self.reset_axes_button = QPushButton("Reset axes")
+        self.reset_axes_button = QPushButton("Update axes")
         self.reset_axes_button.setStyleSheet("background-color: lightgreen;")
         self.reset_axes_button.clicked.connect(self.reset_axes_cb)
         glayout.addWidget(self.reset_axes_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
