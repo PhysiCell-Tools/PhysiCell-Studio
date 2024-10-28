@@ -188,6 +188,7 @@ class Rules(QWidget):
         # -- damage
         # -- dead
         # -- total attack time
+        # -- damage delivered
         # -- time
         self.signal_l = []
 
@@ -675,7 +676,7 @@ class Rules(QWidget):
             # ------- CellType
             w_me = MyQLineEdit()
             w_me.setFrame(False)
-            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_ ]+$")
             name_validator = QtGui.QRegExpValidator(rx_valid_varname )
             w_me.setValidator(name_validator)
 
@@ -1959,7 +1960,7 @@ class Rules(QWidget):
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","damage delivered","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
@@ -2229,7 +2230,7 @@ def find_isolated_string(s, name, start=0):
         return ind
 
 def create_reserved_words():
-    reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
+    reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time", "damage delivered"]
     reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","asymmetric division to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
     reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
     reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
