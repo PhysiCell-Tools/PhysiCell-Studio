@@ -1041,20 +1041,24 @@ class Rules(QWidget):
             if "decreases" in self.up_down_combobox.currentText(): saturation_val = 0.0
             else: saturation_val = 1.0
         else:
-            if "decreases" in self.up_down_combobox.currentText(): 
-                # Avoid the annoying floating point epsilon (with lots of spurious 0s). Probably a better way.
-                idx_pt = str(float(base_val)).find('.')
-                num_decimal_digits = len(str(float(base_val))[idx_pt+1:])  # number of digits to right of '.'
-                saturation_val = self.scale_base_for_min * float(base_val)
-                saturation_val = round(saturation_val, num_decimal_digits+1) # "+ 1" only relevant for scaling ~= 0.1
-            else: 
-                saturation_val = self.scale_base_for_max * float(base_val)
+            # Silliness to avoid numerical noise appearing in computed saturation_val
+            base_val_p = np.format_float_positional(float(base_val))
+            lbv = len(base_val_p)
 
+            if "decreases" in self.up_down_combobox.currentText(): 
+                saturation_val = self.scale_base_for_min * float(base_val_p)
+                sat_val_p = np.format_float_positional(saturation_val)
+                saturation_val = float(sat_val_p[:lbv+1])
+            else: 
+                saturation_val = self.scale_base_for_max * float(base_val_p)
+                sat_val_p = np.format_float_positional(saturation_val)
+                saturation_val = round(float(sat_val_p), lbv)
 
             # behaviors with max response
             if ( behavior == 'migration bias' and saturation_val > 1 ): saturation_val = 1.0
             if ( behavior == 'is_movable' and saturation_val > 1 ): saturation_val = 1.0
-        self.rule_max_val.setText(str(saturation_val))
+
+        self.rule_max_val.setText(np.format_float_positional(saturation_val))
 
         # print(self.celldef_tab.param_d.keys())
         # for ct in self.celldef_tab.param_d.keys():
