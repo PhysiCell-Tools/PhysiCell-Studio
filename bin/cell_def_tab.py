@@ -241,6 +241,8 @@ class CellDef(StudioTab):
         self.physiboss_boolean_frame = QFrame()
         self.physiboss_signals = []
         self.physiboss_behaviours = []
+
+        self.dfba_frame = QFrame()
         items = []
         model = QtCore.QStringListModel()
         model.setStringList(["aaa","bbb"])
@@ -3190,10 +3192,146 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         for i, _ in reversed(list(enumerate(self.physiboss_node_specific_inheritance))):
             self.physiboss_remove_node_inheritance(i)
 
+    # ------- functions for dFBA ----------------
+
+    def clear_transport_exchanges(self):
+        # Iterate over existing transport exchanges in reverse order and remove them properly
+        for i in reversed(range(len(self.transport_exchanges))):
+            self.dfba_remove_exchange(i)
+
+    def clear_growth_model_params(self):
+        # Clear the growth model QLineEdit widgets
+        self.cell_density.clear()
+        self.max_growth_rate.clear()
+        self.objective_reaction.clear()
+
+    def choose_sbml_file(self):
+        # Method to open a file dialog to choose SBML file
+        filename, _ = QFileDialog.getOpenFileName(self, "Choose SBML File", "", "XML Files (*.xml);;All Files (*)")
+        if filename:
+            self.sbml_filename.setText(filename)
+
+    def dfba_sbml_filename_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]['sbml_filename'] = text
+
+    def dfba_cell_density_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['cell_density'] = text
+
+    def dfba_max_growth_rate_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['max_growth_rate'] = text
+
+    def dfba_objective_reaction_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['objective_reaction'] = text
+
+    def dfba_clicked_add_exchange(self):
+        self.add_exchange()
+        self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"].append({
+            'substrate': "",
+            'fba_flux': "",
+            'Km': "",
+            'Vmax': ""
+        })
+
+    def add_exchange(self):
+        exchange_editor = QHBoxLayout()
+
+        # Create a QComboBox for substrate selection
+        substrate_combo = QComboBox()
+        substrate_combo.setFixedWidth(150)
+        # Populate the combo box with the current list of substrates
+        substrate_combo.addItems(self.substrate_list)
+
+        fba_flux_edit = QLineEdit()
+        fba_flux_edit.setPlaceholderText("FBA Flux")
+        km_edit = QLineEdit()
+        km_edit.setPlaceholderText("Km (mM)")
+        vmax_edit = QLineEdit()
+        vmax_edit.setPlaceholderText("Vmax")
+
+        exchange_remove = QPushButton(icon=QIcon(sys.path[0] + "/icon/bin.svg"), parent=self)
+        exchange_remove.setStyleSheet("QPushButton { color: black }")
+
+        # ID of the new exchange for tracking changes and removal
+        id = len(self.transport_exchanges)
+        substrate_combo.currentIndexChanged.connect(lambda index, id=id: self.dfba_exchange_substrate_changed(id, index))
+        fba_flux_edit.textChanged.connect(lambda text, id=id: self.dfba_exchange_fba_flux_changed(id, text))
+        km_edit.textChanged.connect(lambda text, id=id: self.dfba_exchange_km_changed(id, text))
+        vmax_edit.textChanged.connect(lambda text, id=id: self.dfba_exchange_vmax_changed(id, text))
+        exchange_remove.clicked.connect(lambda _, id=id: self.dfba_clicked_remove_exchange(id))
+
+        exchange_editor.addWidget(substrate_combo)
+        exchange_editor.addWidget(fba_flux_edit)
+        exchange_editor.addWidget(km_edit)
+        exchange_editor.addWidget(vmax_edit)
+        exchange_editor.addWidget(exchange_remove)
+
+        self.transport_layout.addLayout(exchange_editor)
+        self.transport_exchanges.append(
+            (substrate_combo, fba_flux_edit, km_edit, vmax_edit, exchange_remove, exchange_editor))
+
+    def dfba_substrate_changed(self, id, index):
+        if index >= 0 and id < len(self.transport_exchanges):
+            self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id]["substrate"] = \
+            self.substrate_list[index]
+
+    def dfba_exchange_substrate_changed(self, id, index):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            substrate = self.substrate_list[index]
+            self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id][
+                'substrate'] = substrate
+    def dfba_exchange_fba_flux_changed(self, id, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id]['fba_flux'] = text
+
+    def dfba_exchange_km_changed(self, id, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id]['Km'] = text
+
+    def dfba_exchange_vmax_changed(self, id, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id]['Vmax'] = text
+
+    def dfba_clicked_remove_exchange(self, id):
+        self.dfba_remove_exchange(id)
+        del self.param_d[self.current_cell_def]["intracellular"]["transport_model"]["exchanges"][id]
+
+    def dfba_remove_exchange(self, id):
+        # Disconnect and remove widgets associated with a specific exchange
+        self.transport_exchanges[id][0].currentIndexChanged.disconnect()
+        self.transport_exchanges[id][0].deleteLater()
+        self.transport_exchanges[id][1].textChanged.disconnect()
+        self.transport_exchanges[id][1].deleteLater()
+        self.transport_exchanges[id][2].textChanged.disconnect()
+        self.transport_exchanges[id][2].deleteLater()
+        self.transport_exchanges[id][3].textChanged.disconnect()
+        self.transport_exchanges[id][3].deleteLater()
+        self.transport_exchanges[id][4].clicked.disconnect()
+        self.transport_exchanges[id][4].deleteLater()
+        del self.transport_exchanges[id]
+
+        # Here we should remap the clicked method to have the proper id
+        for i, exchange in enumerate(self.transport_exchanges):
+            substrate_combo, fba_flux_edit, km_edit, vmax_edit, remove_button, _ = exchange
+            substrate_combo.currentIndexChanged.disconnect()
+            substrate_combo.currentIndexChanged.connect(lambda index, i=i: self.dfba_exchange_substrate_changed(i, index))
+            fba_flux_edit.textChanged.disconnect()
+            fba_flux_edit.textChanged.connect(lambda text, i=i: self.dfba_exchange_fba_flux_changed(i, text))
+            km_edit.textChanged.disconnect()
+            km_edit.textChanged.connect(lambda text, i=i: self.dfba_exchange_km_changed(i, text))
+            vmax_edit.textChanged.disconnect()
+            vmax_edit.textChanged.connect(lambda text, i=i: self.dfba_exchange_vmax_changed(i, text))
+            remove_button.clicked.disconnect()
+            remove_button.clicked.connect(lambda _, i=i: self.dfba_clicked_remove_exchange(i))
+
     def intracellular_type_changed(self, index):
 
         self.physiboss_boolean_frame.hide()
         self.ode_sbml_frame.hide()
+        self.dfba_frame.hide()
         self.empty_frame.show()
 
         if index == 0 and self.current_cell_def is not None:
@@ -3270,9 +3408,31 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.param_d[self.current_cell_def]["intracellular"] = {}
                 self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
             self.ode_sbml_frame.show()
+
         elif index == 3:
-            pass
-            # logging.debug(f'intracellular is FBA')
+            logging.debug(f'intracellular is dFBA')
+            if self.param_d[self.current_cell_def]["intracellular"] is None:
+                self.param_d[self.current_cell_def]["intracellular"] = {"type": "dfba"}
+
+            if 'sbml_filename' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["sbml_filename"] = ""
+                self.sbml_filename.clear()
+
+            if 'transport_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["transport_model"] = {"exchanges": []}
+                self.clear_transport_exchanges()
+
+            if 'growth_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["growth_model"] = {}
+                self.clear_growth_model_params()
+
+                # Update the substrate dropdown for each existing transport exchange
+            for (substrate_combo, fba_flux_edit, km_edit, vmax_edit, exchange_remove,
+                exchange_editor) in self.transport_exchanges:
+                substrate_combo.clear()  # Clear current items
+                substrate_combo.addItems(self.substrate_list)  # Re-populate with the current list of substrates
+
+            self.dfba_frame.show()  # Show the dFBA frame
         else:
             pass
             # logging.debug(f'intracellular is Unkown')
@@ -3299,7 +3459,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.intracellular_type_dropdown.addItem("none")
         self.intracellular_type_dropdown.addItem("Boolean")
         self.intracellular_type_dropdown.addItem("ODEs")
-        # self.intracellular_type_dropdown.addItem("fba")
+        self.intracellular_type_dropdown.addItem("dFBA")
         # self.intracellular_type_dropdown.model().item(3).setEnabled(False)
         type_hbox.addWidget(self.intracellular_type_dropdown)
 
@@ -3581,6 +3741,102 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         glayout.addWidget(self.physiboss_boolean_frame)
         glayout.addStretch()
 
+        # -------  "dFBA" intracellular frame  -------
+
+        # Main layout
+        ly = QVBoxLayout()
+        self.dfba_frame.setLayout(ly)
+
+        # SBML file selection
+        sbml_hbox = QHBoxLayout()
+        sbml_label = QLabel("SBML Filename")
+        sbml_hbox.addWidget(sbml_label)
+
+        self.sbml_filename = QLineEdit()
+        # Connect the SBML filename change handler
+        self.sbml_filename.textChanged.connect(self.dfba_sbml_filename_changed)
+        sbml_hbox.addWidget(self.sbml_filename)
+
+        sbml_button = QPushButton("Choose SBML file")
+        sbml_button.clicked.connect(self.choose_sbml_file)
+        sbml_hbox.addWidget(sbml_button)
+
+        ly.addLayout(sbml_hbox)
+
+        # Transport Model GroupBox
+        transport_groupbox = QGroupBox("Transport Model")
+        self.transport_layout = QVBoxLayout()
+
+        # Headers for Transport Model
+        transport_labels = QHBoxLayout()
+        substrate_label = QLabel("Substrate")
+        fba_flux_label = QLabel("FBA Flux")
+        km_label = QLabel("Km (mM)")
+        vmax_label = QLabel("Vmax")
+
+        transport_labels.addWidget(substrate_label)
+        transport_labels.addWidget(fba_flux_label)
+        transport_labels.addWidget(km_label)
+        transport_labels.addWidget(vmax_label)
+
+        self.transport_layout.addLayout(transport_labels)
+
+        self.transport_exchanges = []
+        transport_groupbox.setLayout(self.transport_layout)
+
+        ly.addWidget(transport_groupbox)
+
+        # Button to add new exchange
+        exchange_addbutton = QPushButton("Add new exchange")
+        # Connect the add exchange button to its handler
+        exchange_addbutton.clicked.connect(self.dfba_clicked_add_exchange)
+        ly.addWidget(exchange_addbutton)
+
+        # Growth Model GroupBox
+        growth_groupbox = QGroupBox("Growth Model")
+        growth_layout = QVBoxLayout()
+
+        # Cell Density
+        cell_density_hbox = QHBoxLayout()
+        cell_density_label = QLabel("Cell Density (g/ml)")
+        cell_density_hbox.addWidget(cell_density_label)
+
+        self.cell_density = QLineEdit()
+        # Connect the cell density change handler
+        self.cell_density.textChanged.connect(self.dfba_cell_density_changed)
+        cell_density_hbox.addWidget(self.cell_density)
+
+        growth_layout.addLayout(cell_density_hbox)
+
+        # Max Growth Rate
+        max_growth_rate_hbox = QHBoxLayout()
+        max_growth_rate_label = QLabel("Max Growth Rate (1/min)")
+        max_growth_rate_hbox.addWidget(max_growth_rate_label)
+
+        self.max_growth_rate = QLineEdit()
+        # Connect the max growth rate change handler
+        self.max_growth_rate.textChanged.connect(self.dfba_max_growth_rate_changed)
+        max_growth_rate_hbox.addWidget(self.max_growth_rate)
+
+        growth_layout.addLayout(max_growth_rate_hbox)
+
+        # Objective Reaction
+        objective_reaction_hbox = QHBoxLayout()
+        objective_reaction_label = QLabel("Objective Reaction")
+        objective_reaction_hbox.addWidget(objective_reaction_label)
+
+        self.objective_reaction = QLineEdit()
+        # Connect the objective reaction change handler
+        self.objective_reaction.textChanged.connect(self.dfba_objective_reaction_changed)
+        objective_reaction_hbox.addWidget(self.objective_reaction)
+
+        growth_layout.addLayout(objective_reaction_hbox)
+
+        growth_groupbox.setLayout(growth_layout)
+        ly.addWidget(growth_groupbox)
+
+        glayout.addWidget(self.dfba_frame)
+        glayout.addStretch()
 
         # -------  "None" intracellular frame  -------
         vbox = QVBoxLayout()
@@ -5789,6 +6045,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def update_intracellular_params(self):
         cdname = self.current_cell_def
         if self.param_d[cdname]["intracellular"] is not None:
+            print("debugging itracellular type")
+            print(self.param_d[cdname]["intracellular"])
             if self.param_d[cdname]["intracellular"]["type"] == "maboss":
                 
                 self.physiboss_clear_initial_values()
@@ -5891,6 +6149,45 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.intracellular_type_dropdown.setCurrentIndex(2)
                 # if "sbml_filename" in self.param_d[cdname]["intracellular"].keys(): 
                     # self.ode_sbml_frame.sbml_file.setText(self.param_d[cdname]["intracellular"]["sbml_filename"])
+
+            elif self.param_d[cdname]["intracellular"]["type"] == "dfba":
+                print("------ Parsing dFBA intracellular params")
+                # Clear any existing dFBA-specific entries
+                self.clear_transport_exchanges()
+                self.clear_growth_model_params()
+                # Set the dropdown to the appropriate type for dFBA
+                self.intracellular_type_dropdown.setCurrentIndex(3)
+                # SBML Filename
+                if "sbml_filename" in self.param_d[cdname]["intracellular"].keys():
+                    self.sbml_filename.setText(self.param_d[cdname]["intracellular"]["sbml_filename"])
+                else:
+                    self.sbml_filename.clear()
+
+                # Populate Transport Model Exchanges
+                if "transport_model" in self.param_d[cdname]["intracellular"]:
+                    for i, exchange in enumerate(self.param_d[cdname]["intracellular"]["transport_model"]["exchanges"]):
+                        self.add_exchange()  # Use a centralized function to add an exchange
+                        substrate_combo, fba_flux_edit, km_edit, vmax_edit, _, _ = self.transport_exchanges[-1]
+                        # Set the substrate dropdown to the correct substrate
+                        if "substrate" in exchange:
+                            try:
+                                index = self.substrate_list.index(exchange["substrate"])
+                                substrate_combo.setCurrentIndex(index)
+                            except ValueError:
+                                print(
+                                    f"----- WARNING: Substrate '{exchange['substrate']}' not found in substrate list.")
+                        # Set other exchange parameters
+                        fba_flux_edit.setText(exchange.get("fba_flux", ""))
+                        km_edit.setText(exchange.get("Km", ""))
+                        vmax_edit.setText(exchange.get("Vmax", ""))
+
+                # Populate Growth Model Parameters
+                if "growth_model" in self.param_d[cdname]["intracellular"]:
+                    growth_model = self.param_d[cdname]["intracellular"]["growth_model"]
+                    self.cell_density.setText(growth_model.get("cell_density", ""))
+                    self.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
+                    self.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+
 
         else:
             self.intracellular_type_dropdown.setCurrentIndex(0)
@@ -6759,6 +7056,77 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                             t_last_tag.tail = self.indent14
                             
+                elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
+                    self.ode_sbml_frame.fill_xml(pheno, cdef)
+
+                elif self.param_d[cdef]['intracellular']['type'] == "dfba":
+                    # Ensure necessary elements are present before writing to XML
+                    if 'sbml_filename' not in self.param_d[cdef]['intracellular'] or \
+                            not self.param_d[cdef]['intracellular']['sbml_filename']:
+                        raise CellDefException("Missing SBML file in the " + cdef + " cell definition")
+
+                    # Create the intracellular element for dFBA
+                    intracellular = ET.SubElement(pheno, "intracellular", {"type": "dfba"})
+                    intracellular.text = self.indent12
+                    intracellular.tail = "\n" + self.indent10
+
+                    # Add SBML Filename
+                    sbml_filename = ET.SubElement(intracellular, "sbml_filename")
+                    sbml_filename.text = self.param_d[cdef]['intracellular']['sbml_filename']
+                    sbml_filename.tail = self.indent12
+
+                    # Add Transport Model exchanges if present
+                    if "transport_model" in self.param_d[cdef]['intracellular']:
+                        transport_model = ET.SubElement(intracellular, "transport_model")
+                        transport_model.text = self.indent14
+                        transport_model.tail = self.indent12
+
+                        if "exchanges" in self.param_d[cdef]['intracellular']['transport_model']:
+                            for exchange in self.param_d[cdef]['intracellular']['transport_model']['exchanges']:
+                                exchange_elem = ET.SubElement(transport_model, "exchange",
+                                                              {"substrate": exchange["substrate"]})
+                                exchange_elem.text = self.indent16
+                                exchange_elem.tail = self.indent14
+
+                                # Add exchange parameters (fba_flux, Km, Vmax)
+                                if "fba_flux" in exchange:
+                                    fba_flux_elem = ET.SubElement(exchange_elem, "fba_flux")
+                                    fba_flux_elem.text = exchange["fba_flux"]
+                                    fba_flux_elem.tail = self.indent18
+
+                                if "Km" in exchange:
+                                    km_elem = ET.SubElement(exchange_elem, "Km", {"units": "mM"})
+                                    km_elem.text = exchange["Km"]
+                                    km_elem.tail = self.indent18
+
+                                if "Vmax" in exchange:
+                                    vmax_elem = ET.SubElement(exchange_elem, "Vmax", {"units": "fmol/pg DW cell/min"})
+                                    vmax_elem.text = exchange["Vmax"]
+                                    vmax_elem.tail = self.indent16
+
+                    # Add Growth Model if present
+                    if "growth_model" in self.param_d[cdef]['intracellular']:
+                        growth_model = ET.SubElement(intracellular, "growth_model")
+                        growth_model.text = self.indent14
+                        growth_model.tail = self.indent12
+
+                        # Add growth model parameters (cell_density, max_growth_rate, objective_reaction)
+                        if "cell_density" in self.param_d[cdef]['intracellular']['growth_model']:
+                            cell_density_elem = ET.SubElement(growth_model, "cell_density", {"units": "g/ml"})
+                            cell_density_elem.text = self.param_d[cdef]['intracellular']['growth_model']["cell_density"]
+                            cell_density_elem.tail = self.indent16
+
+                        if "max_growth_rate" in self.param_d[cdef]['intracellular']['growth_model']:
+                            max_growth_rate_elem = ET.SubElement(growth_model, "max_growth_rate", {"units": "1/min"})
+                            max_growth_rate_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
+                                "max_growth_rate"]
+                            max_growth_rate_elem.tail = self.indent16
+
+                        if "objective_reaction" in self.param_d[cdef]['intracellular']['growth_model']:
+                            objective_reaction_elem = ET.SubElement(growth_model, "objective_reaction")
+                            objective_reaction_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
+                                "objective_reaction"]
+                            objective_reaction_elem.tail = self.indent12
                     
                     if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
                         tag_input.tail = self.indent12

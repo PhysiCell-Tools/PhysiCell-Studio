@@ -970,6 +970,78 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.physiboss_update_list_nodes()
                     cell_def_tab.physiboss_update_list_parameters()
 
+                elif uep_intracellular.attrib["type"] == "dfba":
+                    # --------- dFBA specific code
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "dfba"
+
+                    # SBML filename
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_filename"] = uep_intracellular.find(
+                        "sbml_filename").text if uep_intracellular.find("sbml_filename") is not None else ""
+
+                    # Transport model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"] = {"exchanges": []}
+                    uep_transport_model = uep_intracellular.find("transport_model")
+                    if uep_transport_model is not None:
+                        for exchange in uep_transport_model.findall("exchange"):
+                            substrate = exchange.attrib.get("substrate", "")
+                            fba_flux = exchange.find("fba_flux").text if exchange.find("fba_flux") is not None else ""
+                            km = exchange.find("Km").text if exchange.find("Km") is not None else ""
+                            vmax = exchange.find("Vmax").text if exchange.find("Vmax") is not None else ""
+
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"]["exchanges"].append(
+                                {
+                                    "substrate": substrate,
+                                    "fba_flux": fba_flux,
+                                    "Km": km,
+                                    "Vmax": vmax,
+                                })
+
+                    # Growth model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"] = {}
+                    uep_growth_model = uep_intracellular.find("growth_model")
+                    if uep_growth_model is not None:
+                        cell_density = uep_growth_model.find("cell_density").text if uep_growth_model.find(
+                            "cell_density") is not None else ""
+                        max_growth_rate = uep_growth_model.find("max_growth_rate").text if uep_growth_model.find(
+                            "max_growth_rate") is not None else ""
+                        objective_reaction = uep_growth_model.find("objective_reaction").text if uep_growth_model.find(
+                            "objective_reaction") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "cell_density"] = cell_density
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "max_growth_rate"] = max_growth_rate
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "objective_reaction"] = objective_reaction
+
+                    # Update widget values (specific to dFBA)
+                    cell_def_tab.clear_transport_exchanges()
+                    cell_def_tab.clear_growth_model_params()
+
+                    # Iterate over the exchanges and populate the UI
+                    for exchange in cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"][
+                        "exchanges"]:
+                        cell_def_tab.add_exchange()
+                        substrate_combo, fba_flux_edit, km_edit, vmax_edit, _, _ = cell_def_tab.transport_exchanges[-1]
+
+                        if "substrate" in exchange.keys():
+                            index = cell_def_tab.substrate_list.index(exchange["substrate"]) if exchange[
+                                                                                                    "substrate"] in cell_def_tab.substrate_list else -1
+                            if index != -1:
+                                substrate_combo.setCurrentIndex(index)
+
+                        fba_flux_edit.setText(exchange["fba_flux"])
+                        km_edit.setText(exchange["Km"])
+                        vmax_edit.setText(exchange["Vmax"])
+
+                    # Populate growth model parameters in the UI
+                    if "growth_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        growth_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"]
+
+                        cell_def_tab.cell_density.setText(growth_model.get("cell_density", ""))
+                        cell_def_tab.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
+                        cell_def_tab.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+
                 elif uep_intracellular.attrib["type"] == "roadrunner":
                     # <intracellular type="roadrunner">
                     #     <sbml_filename>./config/demo.xml</sbml_filename>
