@@ -22,7 +22,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
-from matplotlib import gridspec
+from matplotlib import gridspec, colormaps
 from collections import deque
 import glob
 
@@ -1232,7 +1232,10 @@ class ICs(QWidget):
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.ax0.set_aspect(1.0)
 
-        self.cmap = plt.cm.get_cmap("viridis")
+        try:
+            self.cmap = plt.cm.get_cmap("viridis")
+        except:
+            self.cmap = colormaps.get_cmap("viridis")
         self.setupSubstratePlotParameters()
         self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
         
