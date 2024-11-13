@@ -6045,7 +6045,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def update_intracellular_params(self):
         cdname = self.current_cell_def
         if self.param_d[cdname]["intracellular"] is not None:
-            print("debugging itracellular type")
+            print("debugging intracellular type")
             print(self.param_d[cdname]["intracellular"])
             if self.param_d[cdname]["intracellular"]["type"] == "maboss":
                 
@@ -6184,9 +6184,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 # Populate Growth Model Parameters
                 if "growth_model" in self.param_d[cdname]["intracellular"]:
                     growth_model = self.param_d[cdname]["intracellular"]["growth_model"]
-                    self.cell_density.setText(growth_model.get("cell_density", ""))
-                    self.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
-                    self.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+                    if "cell_density" in growth_model:
+                        self.cell_density.setText(growth_model["cell_density"])
+                    if "max_growth_rate" in growth_model:
+                        self.max_growth_rate.setText(growth_model["max_growth_rate"])
+                    if "objective_reaction" in growth_model:
+                        self.objective_reaction.setText(growth_model["objective_reaction"])
 
 
         else:
