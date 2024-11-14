@@ -2532,6 +2532,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
     def wedge_sample(self,N,x0,y0,r1, r0=0.0, th_lim=(0,2*np.pi)):
         i_start = 0
         self.new_pos = np.empty((N,3))
+        self.new_pos[:,2] = 0
         while i_start < N:
             if r0 == 0:
                 d = r1*np.sqrt(np.random.uniform(size=N-i_start))
