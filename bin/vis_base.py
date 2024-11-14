@@ -3200,6 +3200,7 @@ class VisBase():
         self.cancel_movie = False  # Add a flag to cancel the movie creation
 
         for frame in range(max_frame):
+            if self.animating_flag is False:  self.cancel_movie = True # Check if the pause button was pressed
             if self.cancel_movie:  # Check if the cancel button was pressed
                 print("Movie creation canceled.")
                 break
