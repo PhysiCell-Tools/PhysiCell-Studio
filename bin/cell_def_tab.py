@@ -5972,8 +5972,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 pdple.setText('') # do not let the previous cell def param values affect this cell def param values
 
     #-----------------------------------------------------------------------------------------
-    # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root()
+    def reset_to_blank(self):
+        self.clear_custom_data_tab()
+        self.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
+        self.current_cell_def = None
+        self.cell_adhesion_affinity_celltype = None
+        self.cycle_tab.reset_asym_div_table() # drb: at some point this will be self.cycle_tab.reset_to_blank() I suppose...
+
     def clear_custom_data_params(self):
+        # called from pmb.py: load_mode() -> show_sample_model() -> reset_xml_root() (drb: It seems that this is only called from model.py as of 2024-11-15)
         cdname = self.current_cell_def
         if not cdname:
             return

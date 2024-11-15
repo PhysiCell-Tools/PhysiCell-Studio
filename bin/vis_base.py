@@ -759,7 +759,6 @@ class VisBase():
         # Filter button
         self.cell_type_filter_button = QPushButton("Filter")
         self.cell_type_filter_button.setFixedWidth(100)
-        self.cell_type_filter_button.setEnabled(self.model3D_flag)
         self.cell_type_filter_button.clicked.connect(self.cell_type_filter_button_cb)
         self.cells_hbox.addWidget(self.cell_type_filter_button)
 
@@ -783,6 +782,7 @@ class VisBase():
         hbox.addItem(self.hz_stretch_item_2)
         self.vbox.addLayout(hbox)
 
+        self.initialize_cell_dict() # this is used in add_default_cell_vars (but that cb will call this, too (for now), so this just ensures it's initialized now)
         hbox = QHBoxLayout()
         self.full_list_button = QPushButton("full list")   # old: refresh
         self.full_list_button.setFixedWidth(100)
@@ -1634,10 +1634,7 @@ class VisBase():
     #-------------------------------------
     # def reset_xml_root(self):
     def reset_xml_root(self, config_file):
-        self.celldef_tab.clear_custom_data_tab()
-        self.celldef_tab.param_d.clear()  # seems unnecessary as being done in populate_tree. argh.
-        self.celldef_tab.current_cell_def = None
-        self.celldef_tab.cell_adhesion_affinity_celltype = None
+        self.celldef_tab.reset_to_blank()
 
         self.microenv_tab.param_d.clear()
 
@@ -1719,45 +1716,37 @@ class VisBase():
         # if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_dir():
         if dir_path == "":
             return
-        if Path(dir_path).is_dir():
-            print("select_plot_output_cb():  dir_path is valid")
-            self.output_dir = dir_path
-            self.output_folder.setText(dir_path)
-            # self.legend_tab.output_dir = dir_path
-            legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
-            # if Path(legend_file).is_file():
-            #     self.legend_tab.reload_legend()
-            # else:
-            #     self.legend_tab.clear_legend()
-
-            self.reset_model()
-            self.update_plots()
-
-            # June 2023 - also attempt to read PhysiCell_settings.xml and repopulate the Studio 
-            # self.run_tab.config_file = self.current_xml_file
-            config_file = os.path.join(self.output_dir, "PhysiCell_settings.xml")
-            print(f"vis_base.py: select_plot_output_cb():  config_file is {config_file}")
-            if not Path(config_file).is_file():
-                msgBox = QMessageBox()
-                msgBox.setIcon(QMessageBox.Information)
-                msgBox.setText(f"Unable to find a PhysiCell_settings.xml in {self.output_dir}, therefore parameters in the other GUI tabs will not be updated.")
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                msgBox.exec()
-                return
-            else:
-                self.run_tab.config_xml_name.setText(config_file)
-                self.show_sample_model(config_file)
-                # self.vis_tab.update_output_dir(self.config_tab.folder.text())
-
-
-        else:
+        if not Path(dir_path).is_dir():
             print("vis_base.py: output_folder_cb():  full_path_model_name is NOT valid")
 
+        print("select_plot_output_cb():  dir_path is valid")
+        self.output_dir = dir_path
+        self.output_folder.setText(dir_path)
+        legend_file = os.path.join(self.output_dir, 'legend.svg')  # hardcoded filename :(
+
+        self.reset_model()
+        self.update_plots()
+
+        # June 2023 - also attempt to read PhysiCell_settings.xml and repopulate the Studio 
+        # self.run_tab.config_file = self.current_xml_file
+        config_file = os.path.join(self.output_dir, "PhysiCell_settings.xml")
+        print(f"vis_base.py: select_plot_output_cb():  config_file is {config_file}")
+        if not Path(config_file).is_file():
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(f"Unable to find a PhysiCell_settings.xml in {self.output_dir}, therefore parameters in the other GUI tabs will not be updated.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+
+        self.run_tab.config_xml_name.setText(config_file)
+        self.show_sample_model(config_file)
+        # self.vis_tab.update_output_dir(self.config_tab.folder.text())
+        self.initialize_cell_dict(config_file)
 
     def disable_cell_scalar_widgets(self):
         self.cell_scalar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(False)
-        self.cell_type_filter_button.setEnabled(False)
         self.full_list_button.setEnabled(False)
         self.partial_button.setEnabled(False)
 
@@ -1820,7 +1809,6 @@ class VisBase():
             self.plot_cells_svg = False
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
-            self.cell_type_filter_button.setEnabled(True)
             self.full_list_button.setEnabled(True)
             self.partial_button.setEnabled(True)
 
@@ -2442,7 +2430,6 @@ class VisBase():
             # print("--- cells_toggle_cb:  conditional block 1")
             self.cell_scalar_combobox.setEnabled(not self.plot_cells_svg)
             self.cell_scalar_cbar_combobox.setEnabled(not self.plot_cells_svg)
-            self.cell_type_filter_button.setEnabled(not self.plot_cells_svg)
             self.full_list_button.setEnabled(not self.plot_cells_svg)
             self.partial_button.setEnabled(not self.plot_cells_svg)
             self.fix_cells_cmap_checkbox.setEnabled(not self.plot_cells_svg)
@@ -2469,7 +2456,6 @@ class VisBase():
             # print("--- cells_toggle_cb:  conditional block 2")
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
-            self.cell_type_filter_button.setEnabled(False)
             self.full_list_button.setEnabled(False)
             self.partial_button.setEnabled(False)
             self.fix_cells_cmap_checkbox.setEnabled(False)
@@ -2621,6 +2607,22 @@ class VisBase():
 
         self.update_plots()
 
+    def initialize_cell_dict(self, config_file=None):
+        self.cell_dict = {}
+        if config_file is None:
+            for cdname in self.celldef_tab.param_d.keys():
+                self.cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
+            return
+        
+        tree = ET.parse(config_file)
+        root = tree.getroot()
+        cell_defs = root.find('.//cell_definitions')
+        for cell_def in cell_defs.findall('cell_definition'):
+            name = cell_def.get('name')
+            ID = cell_def.get('ID')
+            self.cell_dict[ID] = name
+        return
+
     def replace_ids_with_names(self, xml_file_root):
         xmlpathfile, _ = xmlfile_to_xmlpathfile(xml_file_root, self.output_dir)
         tree = ET.parse(xmlpathfile)
@@ -2633,9 +2635,7 @@ class VisBase():
             ID = variable.get('ID')
             variable_dict[ID] = name
 
-        cell_dict = {}
-        for cdname in self.celldef_tab.param_d.keys():
-            cell_dict[self.celldef_tab.param_d[cdname]["ID"]] = cdname
+        self.initialize_cell_dict() # this is where it was originally called, so leaving this here just in case
 
         substrate_scalar_prefixes = ['chemotactic_sensitivities','secretion_rates','uptake_rates','saturation_densities','net_export_rates','internalized_total_substrates','fraction_released_at_death','fraction_transferred_when_ingested']
         substrate_scalar_replace = {
@@ -2662,7 +2662,7 @@ class VisBase():
         for ind, scalar in enumerate(self.cell_scalars_l):
             scalar_found, new_name = find_name_in_dict(scalar, variable_dict, substrate_scalar_prefixes, substrate_scalar_replace)
             if not scalar_found:
-                scalar_found, new_name = find_name_in_dict(scalar, cell_dict, cell_scalar_prefixes, cell_scalar_replace, state_type='cell definition')
+                scalar_found, new_name = find_name_in_dict(scalar, self.cell_dict, cell_scalar_prefixes, cell_scalar_replace, state_type='cell definition')
             if scalar_found:
                 self.cell_scalars_l[ind] = new_name
                 self.cell_scalar_human2mcds_dict[new_name] = scalar

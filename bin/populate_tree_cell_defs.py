@@ -268,24 +268,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             death_path = f"{phenotype_path}//death"
 
-            # rwh: init death params to default? - yipeee, don't need now?
-            # cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = False
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
-
-            # cell_def_tab.param_d[cell_def_name]['necrosis_duration_flag'] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
-            # cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = "0.0"
-            # cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
-
-            # uep = cell_def_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
             death_uep = uep.find(death_path)
             logging.debug(f'death_uep={death_uep}')
 
@@ -613,7 +595,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             # Just initialize sensitivities to default value (0) for all substrates
-            # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
             uep_microenv = cell_def_tab.xml_root.find(".//microenvironment_setup")
             for subelm in uep_microenv.findall('variable'):
                 substrate_name = subelm.attrib['name']
@@ -624,13 +605,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 logging.debug(f'---- no motility_advanced_chemotaxis_path found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
-                # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
-                # print("---- cell_def_tab.substrate_list= ",cell_def_tab.substrate_list)
-                # for substrate in cell_def_tab.substrate_list:
-                #     print("---- setting chemotactic_sensitivity= 0.0 for ",substrate)
-                #     cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
-                # sys.exit(-1)
 
             else:    # advanced_chemotaxis IS present in .xml
                 if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
@@ -643,13 +618,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 else:
                     cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
 
-                # val = uep.find(motility_chemotaxis_path +'substrate').text
                 # rwh: todo - why am I doing this? Is it necessary?
                 cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = "foobar"
-                # cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = None
-
-                # val = uep.find(motility_advanced_chemotaxis_path +'substrate').text  # NO! now substrate is an attribute!
-                # cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = val
 
                 if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
                     cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
@@ -664,46 +634,22 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 #-----
                 sensitivity_path = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
                 logging.debug(f'sensitivity_path= {sensitivity_path}')
-                # sys.exit(-1)
                 if uep.find(sensitivity_path) is None:
                     logging.debug(f'---- chemotactic_sensitivities not found. Set to defaults (0). ')
-                    # sys.exit(-1)
-        #       <chemotactic_sensitivity substrate="resource">0</chemotactic_sensitivity> 
                 else:
-                    # cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
                     logging.debug(f'---- found chemotactic_sensitivities: {uep.find(sensitivity_path)}')
                     for subelm in uep.find(sensitivity_path).findall('chemotactic_sensitivity'):
                         subname = subelm.attrib['substrate']
                         subval = subelm.text # float?
                         logging.debug(f'subelm={subelm}')
                         logging.debug(f' chemotactic_sensitivity--> {subname} = {subval}')
-                        # cell_def_tab.chemotactic_sensitivity_dict[subname] = subval
                         cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'][subname] = subval
                 logging.debug(f'{cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
 
                 cell_def_tab.motility2_substrate_changed_cb(0)  # update the sensitivity value in the widget
 
-                # val = uep.find(motility_chemotaxis_path +'substrate').text
-                # cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
-
-                # val = uep.find(motility_chemotaxis_path +'direction').text
-                # if val == '1':
-                #     cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
-                # else:
-                #     cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
-
-            # sys.exit(-1)
-
-
             # # ---------  secretion 
             logging.debug(f'\n===== populate_tree():  secretion')
-
-            # <substrate name="virus">
-            #     <secretion_rate units="1/min">0</secretion_rate>
-            #     <secretion_target units="substrate density">1</secretion_target>
-            #     <uptake_rate units="1/min">10</uptake_rate>
-            #     <net_export_rate units="total substrate/min">0</net_export_rate> 
-            # </substrate> 
 
             secretion_path = f"{phenotype_path}//secretion"
             logging.debug(f'secretion_path = {secretion_path}')
@@ -712,24 +658,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             uep_secretion = cell_def_tab.xml_root.find(secretion_path)
             logging.debug(f'uep_secretion = {uep_secretion}')
             
-
-            # e.g.: param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
-            # or,   param_d["cancer cell"]["oxygen"]["secretion_rate"] = 0.0
-            # or,   param_d["cancer cell"]["secretion"] = {"oxygen" : { "secretion_rate" : 42.0 } }
-            # cell_def_tab.param_d[cell_def_name]["secretion"] = {}  # a dict for these params
-
-            # Initialize (set to 0.0) all substrates' secretion params
-            # val = "0.0"
-            # print('----- populate_tree: cell_def_tab.substrate_list = ',cell_def_tab.substrate_list )
-            # for substrate_name in cell_def_tab.substrate_list:
-            #     print('----- populate_tree: substrate_name = ',substrate_name )
-            #     cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
-            #     cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_target"] = val
-            #     cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["uptake_rate"] = val
-            #     cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["net_export_rate"] = val
-            # foo = 1/0
-
-
             jdx = 0
             for sub in uep_secretion.findall('substrate'):
                 substrate_name = sub.attrib['name']
@@ -896,12 +824,9 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             logging.debug(f'---- cell_integrity_path = {cell_integrity_path}')
             print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
             cip = uep.find(cell_integrity_path)
-            # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
 
             if cip is None:
                 print("---- No cell_integrity found.")
-                # print("\nFor now, you need to manually enter these into your .xml\n")
-                # sys.exit(-1)
                 logging.debug(f'---- No cell_integrity found. Setting to default values')
                 print(f'---- No cell_integrity found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
@@ -917,31 +842,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
             logging.debug(f'------ done parsing cell_integrity:')
 
-            # sys.exit(-1)
-
-
             # # ---------  molecular 
             logging.debug(f'\n===== populate_tree():  molecular')
 
 
             # # ---------  intracellular 
             logging.debug(f'\n===== populate_tree():  intracellular')
-            # <intracellular type="maboss">
-            # 	<bnd_filename>./config/model_0.bnd</bnd_filename>
-            # 	<cfg_filename>./config/model.cfg</cfg_filename>
-            # 	<time_step>1</time_step>
-            # 	<initial_values>
-            # 		<initial_value node="A">1</initial_value>
-            # 		<initial_value node="C">0</initial_value>
-            # 	</initial_values>	
-            #   <mutations>
-            #       <mutation node="C">0.0</mutation>
-            #   </mutations>
-            #   <parameters>
-            #       <parameter name="$time_scale">0.2</parameter>
-            #   </parameters>
-            #   <scaling>0.25</scaling>
-            # </intracellular>
             intracellular_path = f"{phenotype_path}//intracellular"
          
             uep_intracellular = cell_def_tab.xml_root.find(intracellular_path)
