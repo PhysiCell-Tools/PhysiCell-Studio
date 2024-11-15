@@ -1103,13 +1103,21 @@ class VisBase():
             layout.addWidget(checkbox)
 
         def apply_filters():
+            checked_boxes = [cb for cb in checkboxes if cb.isChecked()]
+            if not checked_boxes:
+                QMessageBox.warning(dialog, "Warning", "At least one cell type must be selected.")
+                # Check the box previously checked
+                for idx, cell_type in enumerate(self.celltype_name):
+                    if( idx in self.celltype_filter ): checkboxes[idx].setChecked(True)
+                return
             self.celltype_filter = [itype for itype, cb in enumerate(checkboxes) if cb.isChecked()]
-            print(self.celltype_filter)
+            # print(self.celltype_filter)
             self.update_plots()
-            dialog.accept()
+            # dialog.accept() # close dialog if press the apply button
 
         apply_button = QPushButton("Apply")
         apply_button.clicked.connect(apply_filters)
+        apply_button.setStyleSheet("background-color: lightgreen")
         layout.addWidget(apply_button)
 
         dialog.setLayout(layout)
