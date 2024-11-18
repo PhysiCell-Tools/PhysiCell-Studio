@@ -7,6 +7,7 @@ Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
 """
 
+import shutil
 import sys
 import os
 import time
@@ -28,6 +29,7 @@ from collections import deque
 import glob
 import csv
 import pandas
+from matplotlib import animation
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
@@ -999,7 +1001,21 @@ class VisBase():
         self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
         self.vbox.addWidget(self.legend_svg_button)
 
-        #-----------
+        self.vbox.addWidget(QHLine())
+        hbox = QHBoxLayout()
+        self.movie_name_edit = QLineEdit()
+        self.movie_name_edit.setText("movie.mp4")
+        hbox.addWidget(self.movie_name_edit)
+        self.make_movie_button = QPushButton("Make Movie")
+        self.make_movie_button.setFixedWidth(120)
+        self.make_movie_button.clicked.connect(self.make_movie_cb)
+        hbox.addWidget(self.make_movie_button)
+        self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setFixedWidth(120)
+        self.cancel_button.clicked.connect(self.cancel_movie_cb)
+        hbox.addWidget(self.cancel_button)
+        self.vbox.addLayout(hbox)
+
         self.physiboss_qline = None
         
         self.cells_physiboss_rb = None
@@ -3154,7 +3170,73 @@ class VisBase():
 
         print("Load this model at: https://simularium.allencell.org/viewer")
 
+    def make_movie_cb(self):
+        # Check if ffmpeg is installed
+        if not shutil.which("ffmpeg"):
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText("WARNING: ffmpeg is not installed. Please install ffmpeg to generate the movie.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
+        print("Creating movie...")
+        fig, ax = plt.subplots()
+        ax.axis('off')  # Turn off the axis
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Remove borders
+        ims = []
+        original_frame = self.current_svg_frame  # Save the original frame number
 
+        # Determine the total number of frames
+        svg_pattern = self.output_dir + "/" + "snapshot*.svg"
+        svg_files = glob.glob(svg_pattern)
+        svg_files.sort()
+        max_frame = len(svg_files) - 1
+
+        # Simulate play button click
+        self.animating_flag = True
+        self.play_button.setText("Pause")
+        self.timer.start(1)
+
+        self.cancel_movie = False  # Add a flag to cancel the movie creation
+
+        for frame in range(max_frame):
+            if self.animating_flag is False:  self.cancel_movie = True # Check if the pause button was pressed
+            if self.cancel_movie:  # Check if the cancel button was pressed
+                print("Movie creation canceled.")
+                break
+            self.current_svg_frame = frame
+            self.update_plots()
+            self.canvas.draw_idle()  # Force a redraw of the canvas
+            self.canvas.flush_events()  # Ensure the canvas is updated
+            im = ax.imshow(self.canvas.buffer_rgba(), animated=True)
+            ims.append([im])
+
+        # Stop the animation
+        self.animating_flag = False
+        self.play_button.setText("Play")
+        self.timer.stop()
+
+        if not self.cancel_movie:  # Only save the movie if it was not canceled
+            # Get the movie name from the movie_name_edit field and ensure it has .mp4 extension
+            movie_name = self.movie_name_edit.text()
+            if not movie_name.endswith(".mp4"):
+                movie_name += ".mp4"
+
+            ani = animation.ArtistAnimation(fig, ims, interval=100, blit=True)
+            ani.save(movie_name, writer="ffmpeg", dpi=200)
+            print(f"Movie saved as {movie_name}")
+            # Show a message box with the movie name
+            msgBox = QMessageBox()
+            msgBox.setTextFormat(Qt.RichText)
+            msgBox.setText(f"Movie saved as <b>{movie_name}</b>")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+
+        self.current_svg_frame = original_frame  # Restore the original frame number
+
+    def cancel_movie_cb(self):
+        self.cancel_movie = True
+        
 def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='substrate'):
     # make a static variable for this function
     if not hasattr(find_name_in_dict, "warned_ids") or find_name_in_dict.current_warning_state_type != state_type:
@@ -3175,3 +3257,4 @@ def find_name_in_dict(scalar, state_dict, prefixes, replace_dict, state_type='su
                 return True, scalar
             return True, replace_dict[prefix](state_dict[id])
     return False, scalar
+
