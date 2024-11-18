@@ -829,14 +829,21 @@ class Vis(VisBase, QWidget):
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
-    
+        # Get the cell data
+        df_all_cells = mcds.get_cell_df()
+
+        if self.celltype_filter:
+            df_cells = df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]
+        else:
+            df_cells = df_all_cells
+
         try:
-            cell_scalar = mcds.get_cell_df()[cell_scalar_mcds_name]
+            cell_scalar = df_cells[cell_scalar_mcds_name]
         except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()[cell_scalar_mcds_name]")
+            print("vis_tab.py: plot_cell_scalar(): error performing df_cells[cell_scalar_mcds_name]")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msg = "plot_cell_scalar(): error from mcds.get_cell_df()[" + cell_scalar_mcds_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
+            msg = "plot_cell_scalar(): error from df_cells[" + cell_scalar_mcds_name + "]. You may be trying to use out-of-date scalars. Please reset the 'full list' or 'partial'."
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
@@ -849,7 +856,6 @@ class Vis(VisBase, QWidget):
             # self.plot_cells_svg = True
             # self.disable_cell_scalar_widgets()
             return
-    
                 
         if self.fix_cells_cmap_flag:
             vmin = self.cells_cmin_value
@@ -862,15 +868,15 @@ class Vis(VisBase, QWidget):
         # print("  len(cell_scalar) = ",len(cell_scalar))
         # fix_cmap = 0
         # print(f'   cell_scalar.min(), max() = {vmin}, {vmax}')
-        cell_vol = mcds.get_cell_df()['total_volume']
+        cell_vol = df_cells['total_volume']
         # print(f'   cell_vol.min(), max() = {cell_vol.min()}, {cell_vol.max()}')
 
         four_thirds_pi =  4.188790204786391
         cell_radii = np.divide(cell_vol, four_thirds_pi)
         cell_radii = np.power(cell_radii, 0.333333333333333333333333333333333333333)
 
-        xvals = mcds.get_cell_df()['position_x']
-        yvals = mcds.get_cell_df()['position_y']
+        xvals = df_cells['position_x']
+        yvals = df_cells['position_y']
 
         # self.title_str += "   cells: " + svals[2] + "d, " + svals[4] + "h, " + svals[7][:-3] + "m"
         # self.title_str = "(" + str(frame) + ") Current time: " + str(total_min) + "m"

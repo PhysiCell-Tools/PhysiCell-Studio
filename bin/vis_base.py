@@ -33,7 +33,7 @@ from matplotlib import animation
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from PyQt5.QtWidgets import QCompleter, QSizePolicy, QSpacerItem
+from PyQt5.QtWidgets import QCompleter, QSizePolicy, QSpacerItem, QDialog
 from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
@@ -450,6 +450,7 @@ class VisBase():
         self.physiboss_population_plot = None
         self.legend_svg_plot = None
         self.filterUI = None
+        self.celltype_filter = []  # if empty all default to all cell types
 
         self.celltype_name = []
         self.celltype_color = []
@@ -757,6 +758,12 @@ class VisBase():
             # self.cells_edge_checked_flag = True
             # hbox.addWidget(self.cell_edge_checkbox) 
 
+        # Filter button
+        self.cell_type_filter_button = QPushButton("Filter")
+        self.cell_type_filter_button.setFixedWidth(100)
+        self.cell_type_filter_button.setEnabled(self.model3D_flag)
+        self.cell_type_filter_button.clicked.connect(self.cell_type_filter_button_cb)
+        self.cells_hbox.addWidget(self.cell_type_filter_button)
 
         self.disable_cell_scalar_cb = False
         # self.cell_scalar_combobox = QComboBox()
@@ -1093,6 +1100,49 @@ class VisBase():
         # hack to bring to foreground
         self.filterUI.hide()
         self.filterUI.show()
+    
+    def show_filter_popup(self):
+        dialog = QDialog(self)
+        dialog.setMinimumWidth(300)
+        dialog.setWindowTitle("Select Cell Types to Filter")
+        dialog.setWindowModality(Qt.NonModal)  # Make the dialog non-blocking
+        layout = QVBoxLayout()
+
+        checkboxes = []
+        self.get_cell_types_from_config()
+        
+        for idx, cell_type in enumerate(self.celltype_name):
+            checkbox = QCheckBox(cell_type)
+            # preserve last checked values and if empty, check all
+            if ( (idx in self.celltype_filter) | (not self.celltype_filter) ):
+                checkbox.setChecked(True)
+            checkboxes.append(checkbox)
+            layout.addWidget(checkbox)
+
+        def apply_filters():
+            checked_boxes = [cb for cb in checkboxes if cb.isChecked()]
+            if not checked_boxes:
+                QMessageBox.warning(dialog, "Warning", "At least one cell type must be selected.")
+                # Check the box previously checked
+                for idx, cell_type in enumerate(self.celltype_name):
+                    if idx in self.celltype_filter:
+                        checkboxes[idx].setChecked(True)
+                return
+            self.celltype_filter = [itype for itype, cb in enumerate(checkboxes) if cb.isChecked()]
+            self.update_plots()
+            # dialog.accept() # close dialog if press the apply button
+
+        apply_button = QPushButton("Apply")
+        apply_button.clicked.connect(apply_filters)
+        apply_button.setStyleSheet("background-color: lightgreen")
+        layout.addWidget(apply_button)
+
+        dialog.setLayout(layout)
+        dialog.show()
+
+    def cell_type_filter_button_cb(self):
+        print("---- vis_base: cell_type_filter_button_cb()")
+        self.show_filter_popup()
 
     def phenotype_cb(self):
         # print("---- vis_base: phenotype_cb()")
@@ -1732,6 +1782,7 @@ class VisBase():
     def disable_cell_scalar_widgets(self):
         self.cell_scalar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(False)
+        self.cell_type_filter_button.setEnabled(False)
         self.full_list_button.setEnabled(False)
         self.partial_button.setEnabled(False)
 
@@ -1794,6 +1845,7 @@ class VisBase():
             self.plot_cells_svg = False
             self.cell_scalar_combobox.setEnabled(True)
             self.cell_scalar_cbar_combobox.setEnabled(True)
+            self.cell_type_filter_button.setEnabled(True)
             self.full_list_button.setEnabled(True)
             self.partial_button.setEnabled(True)
 
@@ -2415,6 +2467,7 @@ class VisBase():
             # print("--- cells_toggle_cb:  conditional block 1")
             self.cell_scalar_combobox.setEnabled(not self.plot_cells_svg)
             self.cell_scalar_cbar_combobox.setEnabled(not self.plot_cells_svg)
+            self.cell_type_filter_button.setEnabled(not self.plot_cells_svg)
             self.full_list_button.setEnabled(not self.plot_cells_svg)
             self.partial_button.setEnabled(not self.plot_cells_svg)
             self.fix_cells_cmap_checkbox.setEnabled(not self.plot_cells_svg)
@@ -2441,6 +2494,7 @@ class VisBase():
             # print("--- cells_toggle_cb:  conditional block 2")
             self.cell_scalar_combobox.setEnabled(False)
             self.cell_scalar_cbar_combobox.setEnabled(False)
+            self.cell_type_filter_button.setEnabled(False)
             self.full_list_button.setEnabled(False)
             self.partial_button.setEnabled(False)
             self.fix_cells_cmap_checkbox.setEnabled(False)
@@ -3127,6 +3181,7 @@ class VisBase():
             #         display_type=DISPLAY_TYPE.SPHERE,
             #     ),
             # },
+
             time_units=UnitData("m"),  # minutes; trying to just use "frame" --> undefined error, 
         )
 
