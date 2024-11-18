@@ -1155,11 +1155,11 @@ class VisBase():
 
     def get_cell_types_from_config(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("get_cell_types():  config_file=",config_file)
+        # print("get_cell_types():  config_file=",config_file)
         basename = os.path.basename(config_file)
-        print("get_cell_types():  basename=",basename)
+        # print("get_cell_types():  basename=",basename)
         out_config_file = os.path.join(self.output_dir, basename)
-        print("get_cell_types():  out_config_file=",out_config_file)
+        # print("get_cell_types():  out_config_file=",out_config_file)
 
         try:
             self.tree = ET.parse(out_config_file)
@@ -1397,12 +1397,12 @@ class VisBase():
     # ------ overridden for 3D (vis3D_tab.py)
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("build_physiboss_info(): get_cell_types():  config_file=",config_file)
+        print("build_physiboss_info():  config_file=",config_file)
         basename = os.path.basename(config_file)
-        print("get_cell_types():  basename=",basename)
+        print("build_physiboss_info():  basename=",basename)
         # out_config_file = os.path.join(self.output_dir, basename)
         out_config_file = config_file
-        print("get_cell_types():  out_config_file=",out_config_file)
+        print("build_physiboss_info():  out_config_file=",out_config_file)
 
         try:
             self.tree = ET.parse(config_file)
