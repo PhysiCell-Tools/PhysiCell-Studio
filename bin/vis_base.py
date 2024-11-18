@@ -1089,6 +1089,7 @@ class VisBase():
         dialog = QDialog(self)
         dialog.setMinimumWidth(300)
         dialog.setWindowTitle("Select Cell Types to Filter")
+        dialog.setWindowModality(Qt.NonModal)  # Make the dialog non-blocking
         layout = QVBoxLayout()
 
         checkboxes = []
@@ -1108,10 +1109,10 @@ class VisBase():
                 QMessageBox.warning(dialog, "Warning", "At least one cell type must be selected.")
                 # Check the box previously checked
                 for idx, cell_type in enumerate(self.celltype_name):
-                    if( idx in self.celltype_filter ): checkboxes[idx].setChecked(True)
+                    if idx in self.celltype_filter:
+                        checkboxes[idx].setChecked(True)
                 return
             self.celltype_filter = [itype for itype, cb in enumerate(checkboxes) if cb.isChecked()]
-            # print(self.celltype_filter)
             self.update_plots()
             # dialog.accept() # close dialog if press the apply button
 
@@ -1121,7 +1122,7 @@ class VisBase():
         layout.addWidget(apply_button)
 
         dialog.setLayout(layout)
-        dialog.exec()
+        dialog.show()
 
     def cell_type_filter_button_cb(self):
         print("---- vis_base: cell_type_filter_button_cb()")
