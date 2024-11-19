@@ -1102,10 +1102,13 @@ class VisBase():
         self.filterUI.show()
     
     def show_filter_popup(self):
-        dialog = QDialog(self)
-        dialog.setMinimumWidth(300)
-        dialog.setWindowTitle("Select Cell Types to Filter")
-        dialog.setWindowModality(Qt.NonModal)  # Make the dialog non-blocking
+        if hasattr(self, 'filter_dialog') and self.filter_dialog is not None:
+            self.filter_dialog.close()
+
+        self.filter_dialog = QDialog(self)
+        self.filter_dialog.setMinimumWidth(300)
+        self.filter_dialog.setWindowTitle("Select Cell Types to Filter")
+        self.filter_dialog.setWindowModality(Qt.NonModal)  # Make the self.filter_dialog non-blocking
         layout = QVBoxLayout()
 
         checkboxes = []
@@ -1122,23 +1125,24 @@ class VisBase():
         def apply_filters():
             checked_boxes = [cb for cb in checkboxes if cb.isChecked()]
             if not checked_boxes:
-                QMessageBox.warning(dialog, "Warning", "At least one cell type must be selected.")
+                QMessageBox.warning(self.filter_dialog, "Warning", "At least one cell type must be selected.")
                 # Check the box previously checked
                 for idx, cell_type in enumerate(self.celltype_name):
                     if idx in self.celltype_filter:
                         checkboxes[idx].setChecked(True)
                 return
             self.celltype_filter = [itype for itype, cb in enumerate(checkboxes) if cb.isChecked()]
+            self.initialize_cell_dict(config_file=self.run_tab.config_xml_name.text())
             self.update_plots()
-            # dialog.accept() # close dialog if press the apply button
+            # self.filter_dialog.accept() # close self.filter_dialog if press the apply button
 
         apply_button = QPushButton("Apply")
         apply_button.clicked.connect(apply_filters)
         apply_button.setStyleSheet("background-color: lightgreen")
         layout.addWidget(apply_button)
 
-        dialog.setLayout(layout)
-        dialog.show()
+        self.filter_dialog.setLayout(layout)
+        self.filter_dialog.show()
 
     def cell_type_filter_button_cb(self):
         print("---- vis_base: cell_type_filter_button_cb()")
