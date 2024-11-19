@@ -580,8 +580,16 @@ class Vis(VisBase, QWidget):
             numChildren += 1
 
         num_cells = 0
-        #  print('------ search cells')
+        if self.celltype_filter:
+            # if the list is not empty, filter the cells
+            filtered_names = [self.cell_dict[str(k)] for k in self.celltype_filter]
+            filter_out = lambda x: x.attrib['type'] not in filtered_names
+        else:
+            filter_out = lambda x: False # don't filter anything out
+
         for child in cells_parent:
+            if filter_out(child):
+                continue
             # print(child.tag, child.attrib)
             # print(f'------ attrib={child.attrib}\n')
             for circle in child:  # two circles in each child: outer + nucleus
