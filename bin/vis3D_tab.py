@@ -1913,8 +1913,9 @@ class Vis(VisBase, QWidget):
 
 
             # TODO: Hard-coded voxel_size, plus assuming centered at origin!
-            # voxel_size = 20   # rwh: fix hard-coded
-            voxel_size = 32   # rwh: fix hard-coded for furkan-transfer-v1.14RC
+            x_voxel_size = mcds.get_mesh_spacing()[0]
+            y_voxel_size = mcds.get_mesh_spacing()[1]
+            z_voxel_size = mcds.get_mesh_spacing()[2]
             # x0 = -(voxel_size * nx) / 2.0
             # y0 = -(voxel_size * ny) / 2.0
             # z0 = -(voxel_size * nz) / 2.0
@@ -1944,7 +1945,7 @@ class Vis(VisBase, QWidget):
                 return
 
             self.substrate_data.SetOrigin( x0, y0, z0 )  # lower-left-front point of domain bounding box
-            self.substrate_data.SetSpacing( voxel_size, voxel_size, voxel_size )
+            self.substrate_data.SetSpacing( x_voxel_size, y_voxel_size, z_voxel_size )
             vmin = 1.e30
             vmax = -vmin
             # for z in range( 0, nz+1 ) :  # if point data, not cell data
