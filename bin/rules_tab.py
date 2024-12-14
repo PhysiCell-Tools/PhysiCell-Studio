@@ -538,7 +538,10 @@ class Rules(QWidget):
     #--------------------------------------------------------
     def validate_saturation_value(self):
         max_val = float(self.rule_max_val.text())
-        base_val = float(self.rule_base_val.text())
+        try:
+            base_val = float(self.rule_base_val.text())
+        except:
+            return
         show_warning = False
         text = ''
         if self.up_down_combobox.currentText() == "increases":
