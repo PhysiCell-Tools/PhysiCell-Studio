@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from multivariate_rules import Window_plot_rules
-from studio_classes import ExtendedCombo
+from studio_classes import ExtendedCombo, HoverWarning
 from studio_functions import show_studio_warning_window
 
 class RulesPlotWindow(QWidget):
@@ -188,6 +188,7 @@ class Rules(QWidget):
         # -- damage
         # -- dead
         # -- total attack time
+        # -- damage delivered
         # -- time
         self.signal_l = []
 
@@ -282,6 +283,7 @@ class Rules(QWidget):
         self.up_down_combobox.setFixedWidth(110)
         self.up_down_combobox.addItem("increases")
         self.up_down_combobox.addItem("decreases")
+        self.up_down_combobox.currentIndexChanged.connect(self.up_down_combobox_changed_cb)
         hlayout.addWidget(self.up_down_combobox)
 
         hlayout.addStretch(1)
@@ -335,16 +337,15 @@ class Rules(QWidget):
         label = QLabel("Base value")
         lwidth = 72
         label.setFixedWidth(lwidth)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
         self.rule_base_val = QLineEdit()
         self.rule_base_val.setEnabled(False)
         self.rule_base_val.setStyleSheet("background-color: lightgray")
-        # self.rule_base_val.setText('1.e-5')
         self.rule_base_val.setText('0.1')
         self.rule_base_val.setValidator(QtGui.QDoubleValidator())
+        self.rule_base_val.textChanged.connect(self.rule_base_or_max_val_cb)
         hlayout.addWidget(self.rule_base_val)
 
         hlayout.addStretch(1)
@@ -379,10 +380,13 @@ class Rules(QWidget):
         hlayout.addWidget(label) 
 
         self.rule_max_val = QLineEdit()  # saturation value for behavior
-        # self.rule_max_val.setText('3.e-4')
         self.rule_max_val.setText('1.0')
         self.rule_max_val.setValidator(QtGui.QDoubleValidator())
+        self.rule_max_val.textChanged.connect(self.rule_base_or_max_val_cb)
         hlayout.addWidget(self.rule_max_val)
+
+        self.rule_max_val_warning_label = HoverWarning("")
+        hlayout.addWidget(self.rule_max_val_warning_label)
 
         hlayout.addStretch(1)
         self.rules_tab_layout.addLayout(hlayout) 
@@ -416,74 +420,10 @@ class Rules(QWidget):
         self.rules_tab_layout.addLayout(hlayout) 
 
 
-        #------------------------- OLD -------------------
-        # hlayout = QHBoxLayout()
-
-        # hbox = QHBoxLayout()
-        # label = QLabel("Behavior")
-        # # label.setAlignment(QtCore.Qt.AlignLeft)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # hbox.addWidget(label) 
-
-        # # self.response_combobox = QComboBox()
-        # self.response_model = QStandardItemModel()
-        # self.response_combobox = ExtendedCombo()
-        # self.response_combobox.setModel(self.response_model)
-        # self.response_combobox.setModelColumn(0)
-
-        # # self.response_combobox.setFixedWidth(300)
-        # hbox.addWidget(self.response_combobox) 
-        # # self.response_combobox.currentIndexChanged.connect(self.signal_combobox_changed_cb)  
-
-        # hlayout.addLayout(hbox)
-
-        # # self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
-        # #--------------
-        # self.up_down_combobox = QComboBox()
-        # self.up_down_combobox.setFixedWidth(110)
-        # self.up_down_combobox.addItem("increases")
-        # self.up_down_combobox.addItem("decreases")
-        # hlayout.addWidget(self.up_down_combobox)
-
-        # lwidth = 60
-        # label = QLabel("Half-max")
-        # label.setFixedWidth(lwidth)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # hlayout.addWidget(label) 
-
-        # self.rule_half_max = QLineEdit()
-        # self.rule_half_max.setText('0.5')
-        # self.rule_half_max.setFixedWidth(100)
-        # self.rule_half_max.setValidator(QtGui.QDoubleValidator())
-        # hlayout.addWidget(self.rule_half_max)
-
-        # label = QLabel("Hill power")
-        # label.setFixedWidth(lwidth)
-        # # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
-        # hlayout.addWidget(label) 
-
-        # self.rule_hill_power = QLineEdit()
-        # self.rule_hill_power.setText('4')
-        # self.rule_hill_power.setFixedWidth(30)
-        # self.rule_hill_power.setValidator(QtGui.QIntValidator())
-        # hlayout.addWidget(self.rule_hill_power)
-
-        # self.dead_cells_rule = False
-        # self.dead_cells_checkbox = MyQCheckBox("applies to dead cells")
-        # hlayout.addWidget(self.dead_cells_checkbox)
-
-        # self.rules_tab_layout.addLayout(hlayout) 
-
-        #---------------------------------------------------------
         #----------------------
         rules_table_vbox = self.create_rules_table()
-        # self.create_rules_table()
 
         self.rules_tab_layout.addLayout(rules_table_vbox) 
-        # self.rules_tab_layout.addWidget(rules_table) 
-        # self.rules_tab_layout.addWidget(self.rules_table) 
 
         #----------------------
         hlayout = QHBoxLayout()
@@ -496,27 +436,17 @@ class Rules(QWidget):
 
         delete_rule_btn = QPushButton("Delete rule")
         delete_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         delete_rule_btn.clicked.connect(self.delete_rule_cb)
         delete_rule_btn.setStyleSheet("background-color: yellow")
         hlayout.addWidget(delete_rule_btn)
 
         plot_rule_btn = QPushButton("Plot rule")
         plot_rule_btn.setFixedWidth(150)
-        # delete_rule_btn.setAlignment(QtCore.Qt.AlignLeft)
         plot_rule_btn.clicked.connect(self.plot_rule_cb)
         plot_rule_btn.setStyleSheet("background-color: lightgreen")
         hlayout.addWidget(plot_rule_btn)
 
         hlayout.addStretch(1)
-
-        # btn_frame = QFrame()
-        # btn_frame.setGeometry(QRect(10,10,500,20))
-        # btn_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
-        # btn_frame.setLayout(hlayout)
-        # btn_frame.setFixedWidth(500)  # omg
-        # self.vbox_cycle.addWidget(radio_frame)
-
         #-------
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
@@ -533,60 +463,38 @@ class Rules(QWidget):
         self.clear_button.clicked.connect(self.clear_rules)
         hlayout2.addWidget(self.clear_button) 
 
-        # self.validate_button = QPushButton("Validate all")
-        # self.validate_button.setEnabled(False)
-        # self.validate_button.setFixedWidth(150)
-        # self.validate_button.setStyleSheet("background-color: lightgreen")
-        # self.validate_button.clicked.connect(self.validate_rules_cb)
-        # hlayout.addWidget(self.validate_button) 
-
         self.rules_tab_layout.addLayout(hlayout2) 
         #----------------------
         hlayout = QHBoxLayout()
 
         groupbox = QGroupBox()
-        # hbox = QHBoxLayout()
-        # groupbox.setLayout(hbox)
         groupbox.setLayout(hlayout)
-        # person_groupbox.setLayout(form_layout)
 
         self.import_rules_button = QPushButton("Import")
         if self.nanohub_flag:
             self.import_rules_button.setEnabled(True)
         self.import_rules_button.setFixedWidth(100)
-        # self.import_rules_button.setStyleSheet("background-color: lightgreen")
         self.import_rules_button.setStyleSheet("background-color: yellow")
         self.import_rules_button.clicked.connect(self.import_rules_cb)
         hlayout.addWidget(self.import_rules_button) 
-        # hbox.addWidget(self.load_rules_button) 
-
-        # self.load_button = QPushButton("Load")
-        # self.load_button.setFixedWidth(100)
-        # self.load_button.setStyleSheet("background-color: lightgreen")
-        # self.load_button.clicked.connect(self.load_rules_cb)
-        # hlayout.addWidget(self.load_button) 
 
         self.save_button = QPushButton("Save")
         if self.nanohub_flag:
             self.save_button.setEnabled(True)
         self.save_button.setFixedWidth(100)
-        # self.save_button.setStyleSheet("background-color: lightgreen")
         self.save_button.setStyleSheet("background-color: yellow")
         self.save_button.clicked.connect(self.save_rules_cb)
-        # hbox.addWidget(self.save_button) 
         hlayout.addWidget(self.save_button) 
 
         hbox1 = QHBoxLayout()
         label = QLabel("folder")
         label.setFixedWidth(40)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox1.addWidget(label) 
         self.rules_folder = QLineEdit()
         if self.nanohub_flag:
             self.rules_folder.setEnabled(False)
         self.rules_folder.setFixedWidth(200)
-        # self.rules_folder.setAlignment(QtCore.Qt.AlignLeft)
         hbox1.addWidget(self.rules_folder) 
         hlayout.addLayout(hbox1) 
 
@@ -603,48 +511,15 @@ class Rules(QWidget):
         hbox2.addWidget(self.rules_file) 
         hlayout.addLayout(hbox2) 
 
-        # hlayout.addLayout(hbox) 
-        # hlayout.addWidget(groupbox) 
         groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
 
         #-------
-        # self.save_button = QPushButton("Save")
-        # self.save_button.setFixedWidth(100)
-        # self.save_button.setStyleSheet("background-color: lightgreen")
-        # self.save_button.clicked.connect(self.save_rules_cb)
-        # hlayout.addWidget(self.save_button) 
-
-        # self.rules_tab_layout.addLayout(hlayout) 
         self.rules_tab_layout.addWidget(groupbox) 
 
         self.rules_enabled = QCheckBox("enable")
         self.rules_tab_layout.addWidget(self.rules_enabled) 
 
         #----------------------
-        # try:
-        #     # with open("config/cell_rules.csv", 'rU') as f:
-        #     with open("config/rules.csv", 'rU') as f:
-        #         text = f.read()
-        #     self.rules_text.setPlainText(text)
-        # except Exception as e:
-        #     # self.dialog_critical(str(e))
-        #     # print("error opening config/cells_rules.csv")
-        #     print("rules_tab.py: error opening config/rules.csv")
-        #     logging.error(f'rules_tab.py: Error opening config/rules.csv')
-        #     # sys.exit(1)
-        # else
-        # else:
-            # update path value
-            # self.path = path
-
-            # update the text
-        # self.rules_text.setPlainText(text)
-            # self.update_title()
-
-
-        # self.vbox.addWidget(self.text)
-
-        #---------
         self.insert_hacky_blank_lines(self.rules_tab_layout)
 
         #==================================================================
@@ -661,24 +536,53 @@ class Rules(QWidget):
 
 
     #--------------------------------------------------------
+    def validate_saturation_value(self):
+        max_val = float(self.rule_max_val.text())
+        try:
+            base_val = float(self.rule_base_val.text())
+        except:
+            return
+        show_warning = False
+        text = ''
+        if self.up_down_combobox.currentText() == "increases":
+            if max_val < base_val:
+                show_warning = True
+                text = "Max value must be >= base value"
+        else:
+            if max_val > base_val:
+                show_warning = True
+                text = "Max value must be <= base value"
+        if show_warning:
+            self.rule_max_val_warning_label.setHoverText(text)
+            self.rule_max_val_warning_label.show_icon()
+        else:
+            self.rule_max_val_warning_label.hide_icon()
+    
+    def up_down_combobox_changed_cb(self, idx):
+        if self.rule_max_val.validator().validate(self.rule_max_val.text(), 0)[0] != QtGui.QValidator.Acceptable:
+            self.rule_max_val_warning_label.hide_icon()
+            return
+        self.validate_saturation_value()
+
+    def rule_base_or_max_val_cb(self, text):
+        if self.sender().validator().validate(text, 0)[0] != QtGui.QValidator.Acceptable:
+            self.rule_max_val_warning_label.hide_icon()
+            return
+        self.validate_saturation_value()
+
+    #--------------------------------------------------------
     def create_rules_table(self):
         rules_table_w = QWidget()
         rules_table_scroll = QScrollArea()
         vlayout = QVBoxLayout()
         self.rules_table = QTableWidget()
-        # self.rules_table.cellClicked.connect(self.rules_cell_was_clicked)
 
-        # self.rules_table.setColumnCount(10)
         self.rules_table.setColumnCount(9)
         self.rules_table.setRowCount(self.max_rule_table_rows)
         self.rules_table.setColumnHidden(8, True) # hidden column base value
 
         header = self.rules_table.horizontalHeader()       
-        # header.setSectionResizeMode(0, QHeaderView.Stretch)
-        # header.setSectionResizeMode(8, QHeaderView.ResizeToContents)  # arg, don't work as expected
-        # header.setSectionResizeMode(9, QHeaderView.ResizeToContents)
 
-        # self.rules_table.setHorizontalHeaderLabels(['CellType','Response','Min','Base','Max', 'Signal','Direction','Half-max','Hill power','Apply to dead'])
         self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
@@ -692,7 +596,7 @@ class Rules(QWidget):
             # ------- CellType
             w_me = MyQLineEdit()
             w_me.setFrame(False)
-            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
+            rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_ ]+$")
             name_validator = QtGui.QRegExpValidator(rx_valid_varname )
             w_me.setValidator(name_validator)
 
@@ -1035,6 +939,9 @@ class Rules(QWidget):
             base_val = self.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
             base_val = self.celldef_tab.param_d[key0]["damage_repair_rate"]
+        elif "asymmetric" == behavior.split()[0]:
+            cell_type = behavior.split()[-1]
+            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
             print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
@@ -1054,20 +961,24 @@ class Rules(QWidget):
             if "decreases" in self.up_down_combobox.currentText(): saturation_val = 0.0
             else: saturation_val = 1.0
         else:
-            if "decreases" in self.up_down_combobox.currentText(): 
-                # Avoid the annoying floating point epsilon (with lots of spurious 0s). Probably a better way.
-                idx_pt = str(float(base_val)).find('.')
-                num_decimal_digits = len(str(float(base_val))[idx_pt+1:])  # number of digits to right of '.'
-                saturation_val = self.scale_base_for_min * float(base_val)
-                saturation_val = round(saturation_val, num_decimal_digits+1) # "+ 1" only relevant for scaling ~= 0.1
-            else: 
-                saturation_val = self.scale_base_for_max * float(base_val)
+            # Silliness to avoid numerical noise appearing in computed saturation_val
+            base_val_p = np.format_float_positional(float(base_val))
+            lbv = len(base_val_p)
 
+            if "decreases" in self.up_down_combobox.currentText(): 
+                saturation_val = self.scale_base_for_min * float(base_val_p)
+                sat_val_p = np.format_float_positional(saturation_val)
+                saturation_val = float(sat_val_p[:lbv+1])
+            else: 
+                saturation_val = self.scale_base_for_max * float(base_val_p)
+                sat_val_p = np.format_float_positional(saturation_val)
+                saturation_val = round(float(sat_val_p), lbv)
 
             # behaviors with max response
             if ( behavior == 'migration bias' and saturation_val > 1 ): saturation_val = 1.0
             if ( behavior == 'is_movable' and saturation_val > 1 ): saturation_val = 1.0
-        self.rule_max_val.setText(str(saturation_val))
+
+        self.rule_max_val.setText(np.format_float_positional(saturation_val))
 
         # print(self.celldef_tab.param_d.keys())
         # for ct in self.celldef_tab.param_d.keys():
@@ -1973,7 +1884,7 @@ class Rules(QWidget):
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","damage delivered","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
@@ -2028,7 +1939,7 @@ class Rules(QWidget):
         # special
         response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
 
-        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to "]:  # verb
+        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to ","asymmetric division to "]:  # verb
             for ct in self.celldef_tab.param_d.keys():
                 response_l.append(verb + ct)
 
@@ -2243,8 +2154,8 @@ def find_isolated_string(s, name, start=0):
         return ind
 
 def create_reserved_words():
-    reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time"]
-    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
+    reserved_words_signals = ["contact with", "contact with live cell","contact with dead cell","contact with BM", "total attack time", "damage delivered"]
+    reserved_words_behaviors = ["secretion target","cycle entry","attack damage rate","attack duration","damage rate","damage repair rate","migration speed","migration bias","migration persistence time","chemotactic response to","cell-cell adhesion","cell-cell adhesion elastic constant","adhesive affinity to","relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell","fuse to","transform to","asymmetric division to","immunogenicity to","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
     reserved_words_cycle_phases = [f"exit from cycle phase {i}" for i in range(6)]
     reserved_words = reserved_words_signals + reserved_words_behaviors + reserved_words_cycle_phases
     return reserved_words

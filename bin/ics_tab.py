@@ -22,15 +22,16 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
-from matplotlib import gridspec
+from matplotlib import gridspec, colormaps
 from collections import deque
 import glob
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QRegExpValidator
 
-from studio_classes import QHLine,DoubleValidatorWidgetBounded, HoverQuestion
+from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -772,21 +773,34 @@ class ICs(QWidget):
         self.vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
-        self.save_button_substrates = QPushButton("Save Substrate")
+        self.save_button_substrates = QPushButton("Save")
         self.save_button_substrates.setFixedWidth(110)
         self.save_button_substrates.setStyleSheet("QPushButton {background-color: yellow; color: black;}")
         self.save_button_substrates.clicked.connect(self.save_substrate_cb)
         hbox.addWidget(self.save_button_substrates)
 
-        self.import_substrate_button = QPushButton("Import")
-        self.import_substrate_button.setFixedWidth(150)
-        self.import_substrate_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        self.import_substrate_button.clicked.connect(self.import_substrate_cb)
-        hbox.addWidget(self.import_substrate_button)
+        hbox.addWidget(QLabel("to:"))
+
+        self.substrate_save_folder = QLineEdit()
+        self.substrate_save_folder.setPlaceholderText("folder")
+        self.substrate_save_file = QLineEdit_custom()
+        csv_validator = QRegExpValidator(QtCore.QRegExp(r'^.+\.csv$'))
+        self.substrate_save_file.setValidator(csv_validator)
+        self.substrate_save_file.setPlaceholderText("file.csv")
+
+        hbox.addWidget(self.substrate_save_folder)
+        hbox.addWidget(QLabel("/"))
+        hbox.addWidget(self.substrate_save_file)
 
         hbox.addStretch()
 
         self.vbox.addLayout(hbox)
+
+        self.import_substrate_button = QPushButton("Import")
+        self.import_substrate_button.setFixedWidth(150)
+        self.import_substrate_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
+        self.import_substrate_button.clicked.connect(self.import_substrate_cb)
+        self.vbox.addWidget(self.import_substrate_button)
 
         #---------------------
         splitter = QSplitter()
@@ -1218,7 +1232,10 @@ class ICs(QWidget):
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.ax0.set_aspect(1.0)
 
-        self.cmap = plt.cm.get_cmap("viridis")
+        try:
+            self.cmap = plt.cm.get_cmap("viridis")
+        except:
+            self.cmap = colormaps.get_cmap("viridis")
         self.setupSubstratePlotParameters()
         self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
         
@@ -2120,12 +2137,7 @@ class ICs(QWidget):
             returnValue = msgBox.exec()
             return
 
-        # print("\n------- ics_tab.py: save_cb() -------")
-        # x = y = z = np.arange(0.0,5.0,1.0)
-        # np.savetxt('cells.csv', (x,y,z), delimiter=',')
-        # print(self.csv_array)
         dir_name = self.csv_folder.text()
-        # print(f'dir_name={dir_name}<end>')
         if len(dir_name) > 0 and not os.path.isdir(dir_name):
             os.makedirs(dir_name)
             time.sleep(1)
@@ -2170,8 +2182,21 @@ class ICs(QWidget):
             np.savetxt(full_fname, self.csv_array, delimiter=',')
 
     def save_substrate_cb(self):
-        filePath = QFileDialog.getSaveFileName(self,'',".")
-        self.full_substrate_ic_fname = filePath[0]
+        folder = self.substrate_save_folder.text()
+        filename = self.substrate_save_file.text()
+        if len(folder) == 0 or len(filename) == 0:
+            filePath = QFileDialog.getSaveFileName(self,'',".")
+            self.full_substrate_ic_fname = filePath[0]
+            folder = os.path.dirname(self.full_substrate_ic_fname)
+            filename = os.path.basename(self.full_substrate_ic_fname)
+            self.substrate_save_folder.setText(folder)
+            self.substrate_save_file.setText(filename)
+        else:
+            self.full_substrate_ic_fname = os.path.join(folder,filename)
+
+        if len(folder) > 0 and not os.path.isdir(folder):
+            os.makedirs(folder)
+            time.sleep(1)
 
         print("save_substrate_cb(): self.full_substrate_ic_fname=",self.full_substrate_ic_fname)
         

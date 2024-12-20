@@ -14,42 +14,33 @@ import csv
 
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
-# import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QGroupBox,QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton,QFileDialog,QTableWidget,QTableWidgetItem,QHeaderView
 from PyQt5.QtWidgets import QMessageBox, QCompleter, QSizePolicy
 from PyQt5.QtCore import QSortFilterProxyModel, Qt, QRect
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont
 from PyQt5.QtGui import QPixmap
-# from PyQt5.QtGui import QTextEdit
 from PyQt5 import QtWidgets
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
-# import pandas as pd
 
 # from multivariate_rules import Window_plot_rules
 from studio_classes import ExtendedCombo
 from studio_functions import show_studio_warning_window
 from xml_constants import *
 
-# from cell_def_tab import CellDef
-
-
-
 # Overloading the QLineEdit widget to let us map it to its variable name. Ugh.
 class MyQLineEdit(QLineEdit):
     vname = None
-    # idx = None  # index
     wrow = 0
     wcol = 0
     prev = None
 
 #----------------------------------------------------------------------
 class SBML_ODEs(QWidget):
-    # def __init__(self, nanohub_flag):
     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
         super().__init__()
 
@@ -576,7 +567,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","damage delivered","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]

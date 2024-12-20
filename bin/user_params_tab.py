@@ -15,6 +15,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QSpacerItem
 from PyQt5.QtGui import QDoubleValidator
 
+from studio_classes import StudioTab
+
 class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
     def __init__(self,name):
         super(QCheckBox, self).__init__(name)
@@ -66,18 +68,11 @@ class MyQLineEdit(QLineEdit):
     wcol = 0
     prev = None
 
-
-class UserParams(QWidget):
+class UserParams(StudioTab):
     def __init__(self, xml_creator):
-        super().__init__()
-
-        self.xml_creator = xml_creator
-        # self.current_param = None
+        super().__init__(xml_creator)
         self.xml_root = None
         self.count = 100
-        # self.max_rows = 100  # initially (TODO: check if enough for initial .xml)
-        # self.max_rows = 200  # initially (TODO: check if enough for initial .xml)
-        # self.max_rows = 125  # initially (TODO: check if enough for initial .xml)
 
         # rf. https://www.w3.org/TR/SVG11/types.html#ColorKeywords   - well, but not true on Mac?
         self.row_color1 = "background-color: Tan"
@@ -90,27 +85,6 @@ class UserParams(QWidget):
         self.combobox_width = 90
 
         self.scroll_area = QScrollArea()
-        # splitter.addWidget(self.scroll)
-        # self.cell_def_horiz_layout.addWidget(self.scroll)
-
-        stylesheet = """ 
-            QComboBox{
-                color: #000000;
-                background-color: #FFFFFF; 
-            }
-            QPushButton{
-                color: #000000;
-                background-color: #FFFFFF; 
-                border-style: outset;
-                border-radius: 10px;
-                border-color: black;
-                padding: 4px;
-            }
-            """
-                # border-style: outset;
-                # border-radius: 10px;
-                # border-color: black;
-                # padding: 4px;
 
         self.user_params = QWidget()
 
@@ -118,23 +92,15 @@ class UserParams(QWidget):
         self.max_rows = 100
         self.max_cols = 5
 
-        # self.enable_entire_table()
-        # self.table_disabled = False
-
         self.utable.setColumnCount(self.max_cols)
         self.utable.setRowCount(self.max_rows)
         self.utable.setHorizontalHeaderLabels(['Name','Type','Value','Units','Description'])
 
-        # self.user_params.setStyleSheet(stylesheet)
-
         self.main_layout = QVBoxLayout()
-        # self.main_layout.addStretch(0)
 
         #------------------
-        button_width = 200
+        # button_width = 200
         controls_hbox = QHBoxLayout()
-
-        # self.main_layout.addLayout(hbox)
 
         hlayout = QHBoxLayout()
         self.name_search = QLineEdit()
