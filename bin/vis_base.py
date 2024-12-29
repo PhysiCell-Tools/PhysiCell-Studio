@@ -352,6 +352,7 @@ class VisBase():
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.discrete_variable_observed = set()
+        self.cell_scalar_updated = True
 
         self.cell_scalar_human2mcds_dict = {} # initialize here for vis_tab.py
 
@@ -558,6 +559,8 @@ class VisBase():
 
         self.cax1 = None
         self.cax2 = None
+
+        self.cbar2 = None
 
         self.figsize_width_2Dplot = basic_length
         self.figsize_height_2Dplot = basic_length
@@ -1187,7 +1190,7 @@ class VisBase():
                 for var in uep.findall('cell_definition'):
                     name = var.attrib['name']
                     self.celltype_name.append(name)
-            print("get_cell_types_from_config(): ",self.celltype_name)
+            # print("get_cell_types_from_config(): ",self.celltype_name)
         except:
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -1728,6 +1731,7 @@ class VisBase():
 
     def cell_scalar_combobox_changed_cb(self, idx):
         self.discrete_variable_observed = set()
+        self.cell_scalar_updated = True
         self.update_plots()
     
     #-------------------------------------

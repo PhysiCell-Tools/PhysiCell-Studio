@@ -838,7 +838,11 @@ class Vis(VisBase, QWidget):
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
         # Get the cell data
-        df_all_cells = mcds.get_cell_df()
+        try:
+            df_all_cells = mcds.get_cell_df()
+        except:
+            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
+            return
 
         if self.celltype_filter:
             df_cells = df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]
@@ -952,6 +956,7 @@ class Vis(VisBase, QWidget):
         days = int(hrs/24)
         # print(f"mins={mins}, hrs={hrs}, days={days}")
         self.title_str = '%d days, %d hrs, %d mins' % (days, hrs-days*24, mins-hrs*60)
+        # self.title_str = '%f mins' % (total_min)  # rwh: custom
         self.title_str += " (" + str(num_cells) + " agents)"
 
         axes_min = mcds.get_mesh()[0][0][0][0]
@@ -1001,14 +1006,21 @@ class Vis(VisBase, QWidget):
             handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
             self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
 
-        else:
+        else:   # Note: vis_tab_ecm.py seems to avoid any memory leak and with simpler code
             # If it's not there, we create it
             if self.cax2 is None:
                 self.cax2 = self.figure.add_subplot(self.gs[1,0])
                 # ax2_divider = make_axes_locatable(self.ax0)
                 # self.cax2 = ax2_divider.append_axes("bottom", size="4%", pad="8%")
-            self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-            self.cbar2.ax.tick_params(labelsize=self.fontsize)
+            if self.cbar2 is None:
+                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
+                self.cbar2.ax.tick_params(labelsize=self.fontsize)
+            elif self.cell_scalar_updated:
+                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
+                self.cell_scalar_updated = False
+            else:
+                self.cbar2.update_normal(cell_plot)  # partial fix for memory leak
+
             self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
