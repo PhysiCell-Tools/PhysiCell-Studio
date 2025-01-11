@@ -26,7 +26,7 @@ class StudioSettings(QWidget):
 
         #------------
         idx_row = 0
-        self.min_size_checkbox = QCheckBox_custom('min size (1100x770)')
+        self.min_size_checkbox = QCheckBox_custom('min size (1100x790)')
         self.min_size_checkbox.setChecked(self.min_size)
         self.min_size_checkbox.clicked.connect(self.toggle_min_size_cb)
         idx_row += 1
@@ -65,7 +65,7 @@ class StudioSettings(QWidget):
 
     def toggle_min_size_cb(self):
         if self.min_size_checkbox.isChecked():
-            self.gui_w.setMinimumSize(1100, 770)  #width, height of window (avoid hard-coding in future)
+            self.gui_w.setMinimumSize(1100, 790)  #width, height of window (avoid hard-coding in future)
         else:
             self.gui_w.setMinimumSize(0, 0)  
 

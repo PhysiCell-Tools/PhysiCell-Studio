@@ -2,7 +2,8 @@
 vis_tab.py - provide visualization on Plot tab. Cells can be plotted on top of substrates/signals.
 
 Authors:
-Randy Heiland (heiland@iu.edu)
+Randy Heiland (heiland@iu.edu),
+Daniel Bergman, Vincent Noel, Heber Rocha, Marco Ruscone,
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
 """
@@ -14,9 +15,6 @@ import time
 # import inspect
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
-# from ipywidgets import Layout, Label, Text, Checkbox, Button, BoundedIntText, HBox, VBox, Box, \
-    # FloatText, Dropdown, SelectMultiple, RadioButtons, interactive
-# import matplotlib.pyplot as plt
 
 from vis_base import VisBase
 from matplotlib.colors import BoundaryNorm
@@ -25,7 +23,6 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
-#import colorcet as cc
 import cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
@@ -36,9 +33,6 @@ import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel,QMessageBox
-# from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-# from PyQt5.QtWidgets import QCompleter, QSizePolicy
-# from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QRectF, Qt
@@ -53,10 +47,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-# from PyQt5 import QtCore, QtWidgets
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-# from matplotlib.figure import Figure
 
 #-----------------------------
 #   Future idea of floating Plot window

@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from studio_classes import DoubleValidatorWidgetBounded
+from studio_classes import DoubleValidatorWidgetBounded, HoverQuestion
 # from PyQt5.QtWidgets import QCompleter, QSizePolicy
 # from PyQt5.QtCore import QSortFilterProxyModel
 # from PyQt5.QtSvg import QSvgWidget
@@ -106,6 +106,13 @@ class FilterUI2DWindow(QWidget):
         self.attachments_checkbox.setChecked(self.vis_tab.attachments_checked_flag)
         self.attachments_checkbox.clicked.connect(self.attachments_toggle_cb)
         glayout.addWidget(self.attachments_checkbox)
+
+        msg = """
+Note: only for .mat cell plots (not .svg)
+        """
+        self.attachments_question_label = HoverQuestion(msg)
+        self.attachments_question_label.show_icon()
+        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
 
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
