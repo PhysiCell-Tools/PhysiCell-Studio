@@ -2,7 +2,8 @@
 vis_tab.py - provide visualization on Plot tab. Cells can be plotted on top of substrates/signals.
 
 Authors:
-Randy Heiland (heiland@iu.edu)
+Randy Heiland (heiland@iu.edu),
+Daniel Bergman, Vincent Noel, Heber Rocha, Marco Ruscone,
 Dr. Paul Macklin (macklinp@iu.edu)
 Rf. Credits.md
 """
@@ -14,9 +15,6 @@ import time
 # import inspect
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from pathlib import Path
-# from ipywidgets import Layout, Label, Text, Checkbox, Button, BoundedIntText, HBox, VBox, Box, \
-    # FloatText, Dropdown, SelectMultiple, RadioButtons, interactive
-# import matplotlib.pyplot as plt
 
 from vis_base import VisBase
 from matplotlib.colors import BoundaryNorm
@@ -25,7 +23,6 @@ from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle, Ellipse, Rectangle
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
-#import colorcet as cc
 import cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
@@ -36,9 +33,6 @@ import pandas
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel,QMessageBox
-# from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-# from PyQt5.QtWidgets import QCompleter, QSizePolicy
-# from PyQt5.QtCore import QSortFilterProxyModel
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QRectF, Qt
@@ -53,10 +47,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-# from PyQt5 import QtCore, QtWidgets
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-# from matplotlib.figure import Figure
 
 #-----------------------------
 #   Future idea of floating Plot window
@@ -334,6 +325,10 @@ class Vis(VisBase, QWidget):
         self.ax0.cla()
         if self.substrates_checked_flag:  # do first so cells are plotted on top
             self.plot_substrate(self.current_frame)
+        
+        if self.attachments_checked_flag:
+            self.build_attachments(self.current_frame)
+        
         if self.cells_checked_flag:
             if self.plot_cells_svg:
                 self.plot_svg(self.current_frame)
@@ -387,6 +382,19 @@ class Vis(VisBase, QWidget):
 
         self.reset_model()
 
+    def build_attachments(self, frame):
+        fname = "output%08d_spring_attached_cells_graph.txt" % frame
+        path = os.path.join(self.output_dir, fname)
+        self.attachments = set()
+
+        if Path(path).is_file():
+            with open(path, 'r') as attachments_file:
+                for line in attachments_file.readlines()[1:]:
+                    cell, atts = line.split(":")
+                    if len(atts.strip()) > 0:
+                        for att in atts.split(","):
+                            self.attachments.add(tuple(sorted([int(cell), int(att.strip())])))
+            
     #------------------------------------------------------------
     # not currently used, but maybe useful
     def plot_vecs(self):
@@ -796,6 +804,10 @@ class Vis(VisBase, QWidget):
         else:
             cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
 
+        if self.attachments_checked_flag:
+            for c1,c2 in self.attachments:
+                self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
+    
         if self.cax2:
             try:
                 self.cax2.remove()
@@ -988,7 +1000,10 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-                
+        if self.attachments_checked_flag:
+            for c1,c2 in self.attachments:
+                self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
+    
         if( self.discrete_variable ): # Generic way: if variable is discrete
             # Then we don't need the cax2
             if self.cax2 is not None:

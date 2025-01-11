@@ -488,6 +488,8 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
+        self.attachments_checked_flag = False
+
         self.contour_mesh = True
         self.contour_lines = False
         self.num_contours = 50
@@ -763,7 +765,7 @@ class VisBase():
 
         # Filter button
         self.cell_type_filter_button = QPushButton("Filter")
-        self.cell_type_filter_button.setFixedWidth(100)
+        self.cell_type_filter_button.setFixedWidth(70)
         self.cell_type_filter_button.clicked.connect(self.cell_type_filter_button_cb)
         self.cells_hbox.addWidget(self.cell_type_filter_button)
 
@@ -960,7 +962,7 @@ class VisBase():
 
         #------------------
         self.vbox.addWidget(QHLine())
-
+        
         hbox = QHBoxLayout()
         label = QLabel("folder")
         label.setAlignment(QtCore.Qt.AlignRight)
@@ -1017,11 +1019,11 @@ class VisBase():
         self.movie_name_edit.setText("movie.mp4")
         hbox.addWidget(self.movie_name_edit)
         self.make_movie_button = QPushButton("Make Movie")
-        self.make_movie_button.setFixedWidth(120)
+        self.make_movie_button.setFixedWidth(100)
         self.make_movie_button.clicked.connect(self.make_movie_cb)
         hbox.addWidget(self.make_movie_button)
         self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setFixedWidth(120)
+        self.cancel_button.setFixedWidth(70)
         self.cancel_button.clicked.connect(self.cancel_movie_cb)
         hbox.addWidget(self.cancel_button)
         self.vbox.addLayout(hbox)

@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from studio_classes import DoubleValidatorWidgetBounded
+from studio_classes import DoubleValidatorWidgetBounded, HoverQuestion
 # from PyQt5.QtWidgets import QCompleter, QSizePolicy
 # from PyQt5.QtCore import QSortFilterProxyModel
 # from PyQt5.QtSvg import QSvgWidget
@@ -97,6 +97,22 @@ class FilterUI2DWindow(QWidget):
         self.cells_csv_button.clicked.connect(self.cells_csv_cb)
         glayout.addWidget(self.cells_csv_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
         #--------------------------------
+
+        #----------
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        idx_row += 1
+        self.attachments_checkbox = QCheckBox_custom('attachments')
+        self.attachments_checkbox.setChecked(self.vis_tab.attachments_checked_flag)
+        self.attachments_checkbox.clicked.connect(self.attachments_toggle_cb)
+        glayout.addWidget(self.attachments_checkbox)
+
+        msg = """
+Note: only for .mat cell plots (not .svg)
+        """
+        self.attachments_question_label = HoverQuestion(msg)
+        self.attachments_question_label.show_icon()
+        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
 
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
@@ -282,6 +298,11 @@ class FilterUI2DWindow(QWidget):
         # self.vis_tab.write_cells_csv_cb()
         self.vis_tab.phenotype_cb()
         pass
+
+    def attachments_toggle_cb(self, bval):
+        self.vis_tab.attachments_checked_flag = bval
+        self.vis_tab.update_plots()
+    
 
     def contour_mesh_cb(self):
         bval = self.contour_mesh_checkbox.isChecked()
