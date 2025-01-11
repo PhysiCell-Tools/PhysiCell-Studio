@@ -334,6 +334,10 @@ class Vis(VisBase, QWidget):
         self.ax0.cla()
         if self.substrates_checked_flag:  # do first so cells are plotted on top
             self.plot_substrate(self.current_frame)
+        
+        if self.attachments_checked_flag:
+            self.build_attachments(self.current_frame)
+        
         if self.cells_checked_flag:
             if self.plot_cells_svg:
                 self.plot_svg(self.current_frame)
@@ -387,6 +391,19 @@ class Vis(VisBase, QWidget):
 
         self.reset_model()
 
+    def build_attachments(self, frame):
+        fname = "output%08d_spring_attached_cells_graph.txt" % frame
+        path = os.path.join(self.output_dir, fname)
+        self.attachments = set()
+
+        if Path(path).is_file():
+            with open(path, 'r') as attachments_file:
+                for line in attachments_file.readlines()[1:]:
+                    cell, atts = line.split(":")
+                    if len(atts.strip()) > 0:
+                        for att in atts.split(","):
+                            self.attachments.add(tuple(sorted([int(cell), int(att.strip())])))
+            
     #------------------------------------------------------------
     # not currently used, but maybe useful
     def plot_vecs(self):
@@ -796,6 +813,10 @@ class Vis(VisBase, QWidget):
         else:
             cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
 
+        if self.attachments_checked_flag:
+            for c1,c2 in self.attachments:
+                self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
+    
         if self.cax2:
             try:
                 self.cax2.remove()
@@ -988,7 +1009,10 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-                
+        if self.attachments_checked_flag:
+            for c1,c2 in self.attachments:
+                self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
+    
         if( self.discrete_variable ): # Generic way: if variable is discrete
             # Then we don't need the cax2
             if self.cax2 is not None:

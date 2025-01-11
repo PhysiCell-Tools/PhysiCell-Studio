@@ -488,6 +488,8 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
+        self.attachments_checked_flag = False
+
         self.contour_mesh = True
         self.contour_lines = False
         self.num_contours = 50
@@ -960,7 +962,7 @@ class VisBase():
 
         #------------------
         self.vbox.addWidget(QHLine())
-
+        
         hbox = QHBoxLayout()
         label = QLabel("folder")
         label.setAlignment(QtCore.Qt.AlignRight)

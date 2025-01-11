@@ -98,6 +98,15 @@ class FilterUI2DWindow(QWidget):
         glayout.addWidget(self.cells_csv_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
         #--------------------------------
 
+        #----------
+        idx_row += 1
+        glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+        idx_row += 1
+        self.attachments_checkbox = QCheckBox_custom('attachments')
+        self.attachments_checkbox.setChecked(self.vis_tab.attachments_checked_flag)
+        self.attachments_checkbox.clicked.connect(self.attachments_toggle_cb)
+        glayout.addWidget(self.attachments_checkbox)
+
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
         idx_row += 1
@@ -282,6 +291,11 @@ class FilterUI2DWindow(QWidget):
         # self.vis_tab.write_cells_csv_cb()
         self.vis_tab.phenotype_cb()
         pass
+
+    def attachments_toggle_cb(self, bval):
+        self.vis_tab.attachments_checked_flag = bval
+        self.vis_tab.update_plots()
+    
 
     def contour_mesh_cb(self):
         bval = self.contour_mesh_checkbox.isChecked()
