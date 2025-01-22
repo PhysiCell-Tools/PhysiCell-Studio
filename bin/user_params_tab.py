@@ -599,59 +599,40 @@ class UserParams(StudioTab):
         # print(f'\n\n------------  user_params_tab: fill_gui --------------')
         # pass
         uep_user_params = self.xml_root.find(".//user_parameters")
-        # custom_data_path = ".//cell_definition[" + str(self.idx_current_cell_def) + "]//custom_data//"
-        # logging.debug(f'uep_user_params= {uep_user_params}')
+
+        if uep_user_params is None:
+            return
 
         idx = 0
         # rwh/TODO: if we have more vars than we initially created rows for, we'll need
         # to call 'append_more_cb' for the excess.
 
-        # <number_of_cells type="int" units="none" description="initial number of cells (for each cell type)">0</number_of_cells>
         for var in uep_user_params:
-            # type_cast = {"double":"float", "int":"int", "bool":"bool", "string":"", "divider":"Text"}
-            # print(idx, ") ",var)
-            # print(idx, ") tag= ",var.tag)
-            # print(idx, ") text= ",var.text)
             self.utable.cellWidget(idx,self.var_icol_name).setText(var.tag)
             self.utable.cellWidget(idx,self.var_icol_value).setText(var.text)
-            # self.utable.cellWidget(idx,self.var_icol_value).setText(var.text)
 
             if 'type' in var.keys():
-                # print("\n------------  var.attrib['type'] = ", var.attrib['type'])
                 if "divider" in var.attrib['type']:  # just for visual separation in Jupyter notebook
                     continue
 
                 # select appropriate dropdown/combobox item (double, int, bool, text)
                 elif "double" in var.attrib['type']:
-                    # self.type[idx].setCurrentIndex(0)   # combobox item
                     self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(0)
                 elif "int" in var.attrib['type']:
-                    # self.type[idx].setCurrentIndex(1)
                     self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(1)
                 elif "bool" in var.attrib['type']:
-                    # self.type[idx].setCurrentIndex(2)
                     self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(2)
                 else:
-                    # self.type[idx].setCurrentIndex(3)
                     self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(3)
             else:  # default 'double'
-                # self.type[idx].setCurrentIndex(0)
                 self.utable.cellWidget(idx,self.var_icol_type).setCurrentIndex(0)
 
             if 'units' in var.keys():
-                # self.units[idx].setText(var.attrib['units'])
                 self.utable.cellWidget(idx,self.var_icol_units).setText(var.attrib['units'])
             if 'description' in var.keys():
-                # self.description[idx].setText(var.attrib['description'])
-                # print("----- found description: ",var.attrib['description'])
                 self.utable.cellWidget(idx,self.var_icol_desc).setText(var.attrib['description'])
-            # else:
-            #     print("----- no description found. ")
 
             idx += 1
-
-        # self.count = idx
-        # self.enable_entire_table()
 
     #--------------------------------------------------------
     # Generate the .xml to reflect changes in the GUI
