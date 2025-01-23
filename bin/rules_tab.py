@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from multivariate_rules import Window_plot_rules
-from studio_classes import ExtendedCombo, HoverWarning
+from studio_classes import ExtendedCombo, HoverWarning, QVLine
 from studio_functions import show_studio_warning_window
 
 class RulesPlotWindow(QWidget):
@@ -194,52 +194,31 @@ class Rules(QWidget):
 
         self.response_l = []
 
+        top_half_hbox = QHBoxLayout()
+        top_left_half_vbox = QVBoxLayout()
+        top_right_half_vbox = QVBoxLayout()
+        top_half_hbox.addLayout(top_left_half_vbox)
+        top_half_hbox.addWidget(QVLine())
+        top_half_hbox.addLayout(top_right_half_vbox)
+        self.rules_tab_layout.addLayout(top_half_hbox)
 
-        idx_row = 0
-        # self.check1 = QCheckBox("")
-        # self.rules_tab_layout.addWidget(self.check1, idx_row,1,1,1)
         hlayout = QHBoxLayout()
-        # hlayout.addStretch(0)
-
-        # hbox1 = QHBoxLayout()
-        # hbox1.addWidget(QLabel("                 "))
-        # hlayout.addWidget(QLabel("                 "))
 
         label = QLabel("Cell Type")
         label.setFixedWidth(60)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setFixedHeight(25)
 
-        # label.setFixedWidth(300)
-        # hlayout.addWidget(label,1)
         hlayout.addWidget(label)
 
         self.celltype_combobox = QComboBox()
         self.celltype_combobox.setFixedWidth(200)
         self.celltype_combobox.currentIndexChanged.connect(self.celltype_combobox_changed_cb)  
-        # self.celltype_combobox.setFixedWidth(300)
-        # self.celltype_combobox.setAlignment(QtCore.Qt.AlignLeft)
-        # hlayout.addWidget(self.celltype_combobox,1) # w, expand, align
-        # hlayout.addWidget(self.celltype_combobox, 0) # w, expand, align
         hlayout.addWidget(self.celltype_combobox) # w, expand, align
-        # hlayout.addWidget(self.celltype_combobox,0,Qt.AlignLeft) # w, expand, align
-        # hlayout.addLayout(hbox1,1) # w, expand, align
-        # hlayout.addLayout(hbox1,0) # w, expand, align
-        # hlayout.addLayout(hbox1) # w, expand, align
-
 
         self.add_rule_button = QPushButton("Add rule")
-        # self.add_rule_button.setFixedWidth(150)
-        # self.add_rule_button.setAlignment(QtCore.Qt.AlignLeft)
-        # self.add_rule_button.setStyleSheet("background-color: rgb(250,100,100)")
         self.add_rule_button.setStyleSheet("background-color: lightgreen")
         self.add_rule_button.clicked.connect(self.add_rule_cb)
-        # idx_row += 1
         hlayout.addWidget(self.add_rule_button,0) 
-        # hlayout.addWidget(self.add_rule_button) 
-
-        # hlayout.addWidget(QLabel("                         ")) 
 
         self.plot_new_rule_button = QPushButton("Plot")
         self.plot_new_rule_button.setStyleSheet("background-color: lightgreen")
@@ -250,11 +229,10 @@ class Rules(QWidget):
         self.reuse_plot_w = QCheckBox("reuse plot window")
         self.reuse_plot_w.setChecked(self.reuse_plot_flag)
         self.reuse_plot_w.setEnabled(False)
-        # hlayout.addWidget(self.reuse_plot_w)
 
         #------------
         hlayout.addStretch(1)
-        self.rules_tab_layout.addLayout(hlayout) 
+        top_left_half_vbox.addLayout(hlayout) 
 
         #--------------
         hlayout = QHBoxLayout()
@@ -263,8 +241,6 @@ class Rules(QWidget):
         label = QLabel("----- Signal -----")
         label.setFixedWidth(lwidth)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         hlayout.addWidget(label) 
 
         label = QLabel("")
@@ -275,8 +251,6 @@ class Rules(QWidget):
         label.setFixedWidth(lwidth)
         label.setFixedWidth(150)
         label.setAlignment(QtCore.Qt.AlignCenter)
-        # label.setAlignment(QtCore.Qt.AlignLeft)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         hlayout.addWidget(label) 
 
         self.up_down_combobox = QComboBox()
@@ -287,21 +261,18 @@ class Rules(QWidget):
         hlayout.addWidget(self.up_down_combobox)
 
         hlayout.addStretch(1)
-        self.rules_tab_layout.addLayout(hlayout) 
+        top_left_half_vbox.addLayout(hlayout) 
 
         #----------------------------
         hlayout = QHBoxLayout()
-        # hlayout.addStretch(0)
 
         wwidth = 300
-        # self.signal_combobox = QComboBox()
         self.signal_model = QStandardItemModel()
         self.signal_combobox = ExtendedCombo()
         self.signal_combobox.setFixedWidth(wwidth)
         self.signal_combobox.setModel(self.signal_model)
         self.signal_combobox.setModelColumn(0)
 
-        # self.signal_combobox.setFixedWidth(300)
         self.signal_combobox.currentIndexChanged.connect(self.signal_combobox_changed_cb)  
         hlayout.addWidget(self.signal_combobox)
 
@@ -314,13 +285,24 @@ class Rules(QWidget):
         self.response_combobox.setModelColumn(0)
         self.response_combobox.currentIndexChanged.connect(self.response_combobox_changed_cb)  
 
-        # self.response_combobox.setFixedWidth(300)
-        # hbox.addWidget(self.response_combobox) 
         hlayout.addWidget(self.response_combobox) 
 
         hlayout.addStretch(1)
-        self.rules_tab_layout.addLayout(hlayout)
+        top_left_half_vbox.addLayout(hlayout)
 
+        top_right_half_vbox.addStretch(1)
+        hlayout = QHBoxLayout()
+        hlayout.addStretch(1)
+        rules_enabled_label = QLabel("Enable rules:")
+        hlayout.addWidget(rules_enabled_label)
+        self.rules_enabled = QCheckBox()
+        hlayout.addWidget(self.rules_enabled)
+        hlayout.addStretch(1)
+        top_right_half_vbox.addLayout(hlayout)
+
+        label = QLabel("Make sure to save rules below before running simulations!")
+        top_right_half_vbox.addWidget(label)
+        top_right_half_vbox.addStretch(1)
         #------------
         lwidth = 30
 
@@ -330,8 +312,6 @@ class Rules(QWidget):
         label = QLabel("")
         lwidth = 300
         label.setFixedWidth(lwidth)
-        # label.setAlignment(QtCore.Qt.AlignRight)
-        # label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
         label = QLabel("Base value")
@@ -349,14 +329,13 @@ class Rules(QWidget):
         hlayout.addWidget(self.rule_base_val)
 
         hlayout.addStretch(1)
-        self.rules_tab_layout.addLayout(hlayout)
+        top_left_half_vbox.addLayout(hlayout)
 
         #-------------------------------------
         hlayout = QHBoxLayout()
         lwidth = 60
         label = QLabel("Half-max")
         label.setFixedWidth(lwidth)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
@@ -375,7 +354,6 @@ class Rules(QWidget):
         #---
         label = QLabel("Saturation value")
         label.setFixedWidth(100)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
@@ -389,14 +367,13 @@ class Rules(QWidget):
         hlayout.addWidget(self.rule_max_val_warning_label)
 
         hlayout.addStretch(1)
-        self.rules_tab_layout.addLayout(hlayout) 
+        top_left_half_vbox.addLayout(hlayout) 
 
         #---------------------
         hlayout = QHBoxLayout()
 
         label = QLabel("Hill power")
         label.setFixedWidth(60)
-        # label.setAlignment(QtCore.Qt.AlignRight)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
@@ -417,7 +394,7 @@ class Rules(QWidget):
         self.dead_cells_checkbox = MyQCheckBox("apply to dead")
         hlayout.addWidget(self.dead_cells_checkbox)
 
-        self.rules_tab_layout.addLayout(hlayout) 
+        top_left_half_vbox.addLayout(hlayout)
 
 
         #----------------------
@@ -515,9 +492,6 @@ class Rules(QWidget):
 
         #-------
         self.rules_tab_layout.addWidget(groupbox) 
-
-        self.rules_enabled = QCheckBox("enable")
-        self.rules_tab_layout.addWidget(self.rules_enabled) 
 
         #----------------------
         self.insert_hacky_blank_lines(self.rules_tab_layout)
@@ -1314,16 +1288,12 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def add_rule_cb(self):
-
         try:
-            # print("\n------------- add_rule_cb()")
             signal = self.signal_combobox.currentText()
-            # print("------------- add_rule_cb(): signal= ",signal)
             if not self.valid_signal(signal):
                 show_studio_warning_window( "Invalid signal: " + signal)
                 return
             behavior = self.response_combobox.currentText()
-            # print("n------------- add_rule_cb(): behavior= ",behavior)
             if not self.valid_behavior(behavior):
                 show_studio_warning_window("Invalid behavior: " + behavior)
                 return
@@ -1342,10 +1312,7 @@ class Rules(QWidget):
             else: base_val = float(base_val)
             saturation_val = float(self.rule_max_val.text())
 
-            direction = self.up_down_combobox.currentText()
-
             # Check if saturation value is compatible with increase/decrease behaviour
-            # print(base_val,saturation_val, direction)            
             if ( (saturation_val < base_val) and "increases" in self.up_down_combobox.currentText() ): 
                 show_studio_warning_window(f"Error: Behavior {behavior} cannot be increased with the given [Saturation value]. [Saturation value] must be greater than [Base value].")
                 return
@@ -1369,10 +1336,6 @@ class Rules(QWidget):
         rule_str += ','
         rule_str += self.response_combobox.currentText()
         rule_str += ','
-        # rule_str += self.rule_min_val.text()
-        # rule_str += ','
-        # rule_str += self.rule_base_val.text()
-        # rule_str += ','
         rule_str += self.rule_max_val.text()
         rule_str += ','
         rule_str += self.rule_half_max.text()
@@ -1386,7 +1349,6 @@ class Rules(QWidget):
         print("add_rule_cb():---> ",rule_str)
 
         irow = self.num_rules
-        # print("add_rule_cb():self.num_rules= ",self.num_rules)
 
         # v2 synax:
         # cell type, signal, increases/decreases,behavior, param value at max response, half max, hill power, applies to dead?
@@ -1401,7 +1363,6 @@ class Rules(QWidget):
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_response_idx).setText( self.response_combobox.currentText() )  # behavior
-        # self.rules_table.cellWidget(irow, self.rules_minval_idx).setText( self.rule_min_val.text() )
         self.rules_table.cellWidget(irow, self.rules_baseval_idx).setText( self.rule_base_val.text() )
         self.rules_table.cellWidget(irow, self.rules_maxval_idx).setText( self.rule_max_val.text() )
         self.rules_table.cellWidget(irow, self.rules_halfmax_idx).setText( self.rule_half_max.text() )
@@ -1412,9 +1373,8 @@ class Rules(QWidget):
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
 
         self.num_rules += 1
-        # print("add_rule_cb(): post-incr, self.num_rules= ",self.num_rules)
 
-        # self.rules_text.appendPlainText(rule_str)
+        self.rules_enabled.setChecked(True)
         return
 
     #--------------------------------------------------------
