@@ -1430,15 +1430,11 @@ def main():
     palette.setColor(QPalette.ToolTipBase, Qt.black)
     palette.setColor(QPalette.ToolTipText, Qt.white)
 
-    # for QLineEdit()
     palette.setColor(QPalette.Base, Qt.white)
     palette.setColor(QPalette.Text, Qt.black)
 
-    # palette.setColor(QPalette.Button, QColor(230, 230, 0))  # light yellow: affects tree widget header and table headers
     palette.setColor(QPalette.Button, QColor(255, 255, 255))  # white: affects tree widget header and table headers
 
-    # palette.setColor(QPalette.ButtonText, Qt.white)  # e.g., header for tree widgets??
-    # palette.setColor(QPalette.ButtonText, Qt.green)  # e.g., header for tree widgets??
     palette.setColor(QPalette.ButtonText, Qt.black)  # e.g., header for tree widget too?!
 
     palette.setColor(QPalette.BrightText, Qt.red)
@@ -1448,13 +1444,8 @@ def main():
     palette.setColor(QPalette.HighlightedText, Qt.black)
 
     studio_app.setPalette(palette)
-    # studio_app.setStyleSheet("QCheckBox { background-color: red }")
-    # studio_app.setStyleSheet("QLineEdit { background-color: white }; QComboBox { height: 34 } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
     studio_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
-
-    # studio_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
-
 
     # rules_flag = False
     if rules_flag:

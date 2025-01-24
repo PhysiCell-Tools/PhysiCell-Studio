@@ -57,7 +57,7 @@ class RulesPlotWindow(QWidget):
 #---------------------
 
 # Overloading the QCheckBox widget 
-class MyQCheckBox(QCheckBox):  # it's insane to have to do this!
+class MyQCheckBox(QCheckBox):  # leaving this here since (and not replacing with QCheckBox_custom since this also introduces new fields)
     def __init__(self,name=""):
         super(QCheckBox, self).__init__(name)
 
@@ -226,7 +226,7 @@ class Rules(QWidget):
         hlayout.addWidget(self.plot_new_rule_button,0) 
 
         self.reuse_plot_flag = True
-        self.reuse_plot_w = QCheckBox("reuse plot window")
+        self.reuse_plot_w = MyQCheckBox("reuse plot window")
         self.reuse_plot_w.setChecked(self.reuse_plot_flag)
         self.reuse_plot_w.setEnabled(False)
 
@@ -295,7 +295,7 @@ class Rules(QWidget):
         hlayout.addStretch(1)
         rules_enabled_label = QLabel("Enable rules:")
         hlayout.addWidget(rules_enabled_label)
-        self.rules_enabled = QCheckBox()
+        self.rules_enabled = MyQCheckBox()
         hlayout.addWidget(self.rules_enabled)
         hlayout.addStretch(1)
         top_right_half_vbox.addLayout(hlayout)
