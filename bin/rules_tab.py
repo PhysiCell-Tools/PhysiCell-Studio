@@ -17,7 +17,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QGroupBox,QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton,QFileDialog,QTableWidget,QTableWidgetItem,QHeaderView
 from PyQt5.QtWidgets import QMessageBox, QCompleter, QSizePolicy
 from PyQt5.QtCore import QSortFilterProxyModel, Qt, QRect
-from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtGui import QStandardItem, QStandardItemModel, QRegExpValidator
 # from PyQt5.QtGui import QTextEdit
 from PyQt5 import QtWidgets
 
@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 from multivariate_rules import Window_plot_rules
-from studio_classes import ExtendedCombo, HoverWarning, QVLine
+from studio_classes import ExtendedCombo, HoverWarning, QVLine, QLineEdit_custom, HoverQuestion
 from studio_functions import show_studio_warning_window
 
 class RulesPlotWindow(QWidget):
@@ -301,7 +301,62 @@ class Rules(QWidget):
         top_right_half_vbox.addLayout(hlayout)
 
         label = QLabel("Make sure to save rules below before running simulations!")
-        top_right_half_vbox.addWidget(label)
+        hlayout = QHBoxLayout()
+        hlayout.addStretch(1)
+        hlayout.addWidget(label)
+        hlayout.addStretch(1)
+        top_right_half_vbox.addLayout(hlayout)
+
+        hlayout = QHBoxLayout()
+        self.save_button = QPushButton("Save")
+        if self.nanohub_flag:
+            self.save_button.setEnabled(True)
+        self.save_button.setFixedWidth(100)
+        self.save_button.setStyleSheet("background-color: yellow")
+        self.save_button.clicked.connect(self.save_rules_cb)
+        hlayout.addWidget(self.save_button)
+
+        hlayout.addWidget(QLabel("to:"))
+
+        self.rules_folder = QLineEdit()
+        self.rules_folder.setPlaceholderText("folder")
+        if self.nanohub_flag:
+            self.rules_folder.setEnabled(False)
+        # self.rules_folder.setFixedWidth(200)
+        hlayout.addWidget(self.rules_folder)
+
+        hlayout.addWidget(QLabel(os.path.sep))
+
+        self.rules_file = QLineEdit_custom()
+        csv_validator = QRegExpValidator(QtCore.QRegExp(r'^.+\.csv$'))
+        self.rules_file.setValidator(csv_validator)
+        self.rules_file.setPlaceholderText("file.csv")
+        if self.nanohub_flag:
+            self.rules_file.setEnabled(True)
+        # self.rules_file.setFixedWidth(200)
+        hlayout.addWidget(self.rules_file) 
+
+        top_right_half_vbox.addLayout(hlayout)
+
+        hlayout = QHBoxLayout()
+        hlayout.addStretch(1)
+
+        self.import_rules_button = QPushButton("Import")
+        if self.nanohub_flag:
+            self.import_rules_button.setEnabled(True)
+        self.import_rules_button.setFixedWidth(100)
+        self.import_rules_button.setStyleSheet("background-color: yellow")
+        self.import_rules_button.clicked.connect(self.import_rules_cb)
+        hlayout.addWidget(self.import_rules_button) 
+
+        self.import_rules_question_label = HoverQuestion("Open a file dialog to select a new rules file to import.")
+        self.import_rules_question_label.show_icon()
+        hlayout.addWidget(self.import_rules_question_label)
+        
+        hlayout.addStretch(1)
+
+        top_right_half_vbox.addLayout(hlayout)
+
         top_right_half_vbox.addStretch(1)
         #------------
         lwidth = 30
@@ -441,58 +496,6 @@ class Rules(QWidget):
         hlayout2.addWidget(self.clear_button) 
 
         self.rules_tab_layout.addLayout(hlayout2) 
-        #----------------------
-        hlayout = QHBoxLayout()
-
-        groupbox = QGroupBox()
-        groupbox.setLayout(hlayout)
-
-        self.import_rules_button = QPushButton("Import")
-        if self.nanohub_flag:
-            self.import_rules_button.setEnabled(True)
-        self.import_rules_button.setFixedWidth(100)
-        self.import_rules_button.setStyleSheet("background-color: yellow")
-        self.import_rules_button.clicked.connect(self.import_rules_cb)
-        hlayout.addWidget(self.import_rules_button) 
-
-        self.save_button = QPushButton("Save")
-        if self.nanohub_flag:
-            self.save_button.setEnabled(True)
-        self.save_button.setFixedWidth(100)
-        self.save_button.setStyleSheet("background-color: yellow")
-        self.save_button.clicked.connect(self.save_rules_cb)
-        hlayout.addWidget(self.save_button) 
-
-        hbox1 = QHBoxLayout()
-        label = QLabel("folder")
-        label.setFixedWidth(40)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        hbox1.addWidget(label) 
-        self.rules_folder = QLineEdit()
-        if self.nanohub_flag:
-            self.rules_folder.setEnabled(False)
-        self.rules_folder.setFixedWidth(200)
-        hbox1.addWidget(self.rules_folder) 
-        hlayout.addLayout(hbox1) 
-
-        hbox2 = QHBoxLayout()
-        label = QLabel("file")
-        label.setFixedWidth(20)
-        label.setAlignment(QtCore.Qt.AlignRight)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        hbox2.addWidget(label) 
-        self.rules_file = QLineEdit()
-        if self.nanohub_flag:
-            self.rules_file.setEnabled(True)
-        self.rules_file.setFixedWidth(200)
-        hbox2.addWidget(self.rules_file) 
-        hlayout.addLayout(hbox2) 
-
-        groupbox.setStyleSheet("QGroupBox { border: 1px solid black;}")
-
-        #-------
-        self.rules_tab_layout.addWidget(groupbox) 
-
         #----------------------
         self.insert_hacky_blank_lines(self.rules_tab_layout)
 

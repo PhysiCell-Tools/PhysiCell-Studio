@@ -761,7 +761,7 @@ class ICs(QWidget):
         self.substrate_save_file.setPlaceholderText("file.csv")
 
         hbox.addWidget(self.substrate_save_folder)
-        hbox.addWidget(QLabel("/"))
+        hbox.addWidget(QLabel(os.path.sep))
         hbox.addWidget(self.substrate_save_file)
 
         hbox.addStretch()
