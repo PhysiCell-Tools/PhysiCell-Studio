@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QRegExpValidator
 
-from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom
+from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -42,30 +42,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-
-class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
-    def __init__(self,name):
-        super(QCheckBox, self).__init__(name)
-
-        checkbox_style = """
-                QCheckBox::indicator:checked {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                    image: url(images:checkmark.png);
-                }
-                QCheckBox::indicator:unchecked
-                {
-                    background-color: rgb(255,255,255);
-                    border: 1px solid #5A5A5A;
-                    width : 15px;
-                    height : 15px;
-                    border-radius : 3px;
-                }
-                """
-        self.setStyleSheet(checkbox_style)
 
 class ICs(QWidget):
 
@@ -203,10 +179,6 @@ class ICs(QWidget):
                 background-color: #FFFFFF; 
             }
             """
-            # QCheckBox::indicator{
-            #     color: #000000;
-            #     background-color: #FFFFFF; 
-            # }
         
         self.stylesheet = """ 
             QLineEdit:disabled {
@@ -789,7 +761,7 @@ class ICs(QWidget):
         self.substrate_save_file.setPlaceholderText("file.csv")
 
         hbox.addWidget(self.substrate_save_folder)
-        hbox.addWidget(QLabel("/"))
+        hbox.addWidget(QLabel(os.path.sep))
         hbox.addWidget(self.substrate_save_file)
 
         hbox.addStretch()
