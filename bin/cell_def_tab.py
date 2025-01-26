@@ -5422,8 +5422,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         print("new_motility_params(): ",cdname)
         sval = self.default_sval
         self.param_d[cdname]["speed"] = '1.0'
-        self.param_d[cdname]["persistence_time"] = '1.0'
-        self.param_d[cdname]["migration_bias"] = '0.0'
+        self.param_d[cdname]["persistence_time"] = '5.0'
+        self.param_d[cdname]["migration_bias"] = '0.5'
 
         self.param_d[cdname]["motility_enabled"] = False
         self.param_d[cdname]["motility_use_2D"] = True
