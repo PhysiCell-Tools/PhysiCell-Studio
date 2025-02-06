@@ -111,19 +111,9 @@ class SBML_ODEs(QWidget):
         self.response_l = []
 
         idx_row = 0
-        # self.check1 = QCheckBox("")
-        # self.sbml_tab_layout.addWidget(self.check1, idx_row,1,1,1)
         hlayout = QHBoxLayout()
-        # hlayout.addStretch(0)
-
-        # hbox1 = QHBoxLayout()
-        # hbox1.addWidget(QLabel("                 "))
-        # hlayout.addWidget(QLabel("                 "))
 
         self.ode_sbml_frame = QFrame()
-        # self.ode_sbml_frame.setFixedSize(600, 800)
-        # vbox = QVBoxLayout()
-        # self.sbml_tab_layout = QVBoxLayout()
 
         #----------------------------
         # insanity.

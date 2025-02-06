@@ -4338,7 +4338,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             
         par_dist_label = QLabelSeparator("Parameter Distributions")
 
-        self.par_dist_cell_type_disabled_checkbox = QCheckBox(f"Disable all parameter distributions for {self.current_cell_def}")
+        self.par_dist_cell_type_disabled_checkbox = QCheckBox_custom(f"Disable all parameter distributions for {self.current_cell_def}")
         self.par_dist_cell_type_disabled_checkbox.stateChanged.connect(self.par_dist_cell_type_disabled_cb)
 
         self.par_dist_display_button = QPushButton("Display/update distributions for current cell type.")
@@ -4356,14 +4356,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.par_dist_behavior_combobox.currentIndexChanged.connect(self.par_dist_behavior_changed_cb)
         self.par_dist_behavior_combobox.editTextChanged.connect(self.par_dist_behavior_text_changed_cb)
 
-        self.par_dist_enable_checkbox = QCheckBox("Enable")
+        self.par_dist_enable_checkbox = QCheckBox_custom("Enable")
         self.par_dist_enable_checkbox.stateChanged.connect(self.par_dist_enable_cb)
 
         self.par_distributions_combobox = QComboBox_custom()
         self.par_distributions_combobox.addItems(["None", "Uniform", "Log Uniform", "Normal", "Log Normal", "Log10 Normal"])
         self.par_distributions_combobox.currentIndexChanged.connect(self.par_distribution_changed_cb)
 
-        self.par_dist_enforce_base_checkbox = QCheckBox("Enforce base value within distribution")
+        self.par_dist_enforce_base_checkbox = QCheckBox_custom("Enforce base value within distribution")
         self.par_dist_enforce_base_checkbox.stateChanged.connect(self.par_dist_enforce_base_cb)
         self.par_dist_enforce_base_question_label = HoverQuestion("Enforced at PhysiCell runtime.")
 
@@ -5422,8 +5422,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         print("new_motility_params(): ",cdname)
         sval = self.default_sval
         self.param_d[cdname]["speed"] = '1.0'
-        self.param_d[cdname]["persistence_time"] = '1.0'
-        self.param_d[cdname]["migration_bias"] = '0.0'
+        self.param_d[cdname]["persistence_time"] = '5.0'
+        self.param_d[cdname]["migration_bias"] = '0.5'
 
         self.param_d[cdname]["motility_enabled"] = False
         self.param_d[cdname]["motility_use_2D"] = True
