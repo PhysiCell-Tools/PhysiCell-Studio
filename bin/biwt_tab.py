@@ -786,7 +786,8 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         self.biwt.stale_futures = True
         total_count = 0
         for qle in self.type_manual.values():
-            total_count += int(qle.text())
+            if qle.hasAcceptableInput():
+                total_count += int(qle.text())
         self.total_manual.setText(str(total_count))
 
     def counts_button_cb(self, id):
@@ -2713,6 +2714,8 @@ class BioinformaticsWalkthrough(QWidget):
         base_widget.setLayout(vbox)
         self.layout = QVBoxLayout(self)  # leave this!
         self.layout.addWidget(base_widget)
+
+        self.spatial_data_found = False
 
         if BIWT_DEV_MODE:
             biwt_dev_mode(self)
