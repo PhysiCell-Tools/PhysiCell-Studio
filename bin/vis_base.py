@@ -1120,7 +1120,7 @@ class VisBase():
         self.get_cell_types_from_config()
         
         for idx, cell_type in enumerate(self.celltype_name):
-            checkbox = QCheckBox(cell_type)
+            checkbox = QCheckBox_custom(cell_type)
             # preserve last checked values and if empty, check all
             if ( (idx in self.celltype_filter) | (not self.celltype_filter) ):
                 checkbox.setChecked(True)

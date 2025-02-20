@@ -13,7 +13,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
 # from PyQt5.QtWidgets import QMessageBox
 
 from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom, HoverWarning, StudioTab

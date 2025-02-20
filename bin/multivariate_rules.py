@@ -11,6 +11,8 @@ from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+from studio_classes import QCheckBox_custom
+
 def Multivariate_hillFunc(signals_U, halfmaxs_U, hillpowers_U, signals_D, halfmaxs_D, hillpowers_D):
     sum_U = 0; sum_D = 0 
     for id_Up in range(len(signals_U)):
@@ -295,7 +297,7 @@ class Window_plot_rules(QMainWindow):
         self.layout.addWidget(self.scroll_area)
         # Check box of axes
         signal_hbox_plot_options = QHBoxLayout()
-        self.checkbox = QCheckBox('Fixed y-axis (min and max)')
+        self.checkbox = QCheckBox_custom('Fixed y-axis (min and max)')
         self.checkbox.setCheckState(2)  # 2 corresponds to Checked state
         signal_hbox_plot_options.addWidget( self.checkbox )
         # Float to min and max signal
