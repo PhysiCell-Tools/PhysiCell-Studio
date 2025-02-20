@@ -79,10 +79,10 @@ class BioinformaticsWalkthroughWindow(QWidget):
         self.biwt = biwt
         self.biwt.stale_futures = True # initializing a window means that any future windows are stale
 
-        self.cell_definitions_preferences = {}
-        if not hasattr(self.biwt, 'cell_definitions_preferences'):
-            self.biwt.cell_definitions_preferences = {}
-        self.cell_definitions_preferences = self.biwt.cell_definitions_preferences
+        self.cell_definitions_registry = {}
+        if not hasattr(self.biwt, 'cell_definitions_registry'):
+            self.biwt.cell_definitions_registry = {}
+        self.cell_definitions_registry = self.biwt.cell_definitions_registry
 
 class BioinformaticsWalkthroughWindow_WarningWindow(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt, layout, continue_cb):
@@ -1214,7 +1214,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt):
         super().__init__(biwt)
-        self.cell_definitions_preferences = biwt.cell_definitions_preferences
+        self.cell_definitions_registry = biwt.cell_definitions_registry
 
         print("------Writing cell positions to file------")
 
@@ -1302,7 +1302,7 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         self.add_xml_defaults(root)
         cell_definitions = root.find("cell_definitions")
 
-        for cell_type, template in self.cell_definitions_preferences.items():
+        for cell_type, template in self.cell_definitions_registry.items():
             cell_definitions.append(template)
         
         tree.write(xml_file_path, encoding="utf-8", xml_declaration=True)
@@ -1325,11 +1325,11 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         self.biwt.xml_creator.__init__("PhysiCell_new.xml",self.biwt.xml_creator.studio_flag, self.biwt.xml_creator.skip_validate_flag, self.biwt.xml_creator.rules_flag, self.biwt.xml_creator.model3D_flag, self.biwt.xml_creator.tensor_flag, exec_file, self.biwt.xml_creator.nanohub_flag, False, self.biwt.xml_creator.pytest_flag, self.biwt.xml_creator.biwt_flag, parent = None)
        
 
-        # directory = str(os.getcwd())
-        # command = [
-        #     "python", os.path.join(directory, "bin", "studio.py"), "--biwt", "-c", "PhysiCell_new.xml"
-        # ]
-        # subprocess.run(command, check=True)
+        directory = str(os.getcwd())
+        command = [
+            "python", os.path.join(directory, "bin", "studio.py"), "--biwt", "-c", "PhysiCell_new.xml"
+        ]
+        subprocess.run(command, check=True)
         
     def set_file_name(self):
         dir_name = self.csv_folder.text()
@@ -3177,7 +3177,7 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
         self.dropdowns = []
 
         list_cell_types = ["Normal Epithelial", "Default", "Normal Mesenchymal", "Fibroblast", "Tumor Epithelial", "Tumor Mesenchymal",
-                           "Macrophage", "CD8 T Cell", "M0 Macrophage", "M1 Macrophage", "Th2 CD4 T cell"]
+                           "Macrophage", "M0 Macrophage", "M1 Macrophage", "Th2 CD4 T cell"]
         list_cell_types.sort(key=lambda x: (x != 'Default', x))
         self.model = QStringListModel(list_cell_types)
 
@@ -3220,33 +3220,15 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
         self.resize(400, 600)
 
     def handle_dropdown_change(self):
-        cell_type_input = self.sender().objectName
-        selected_template = self.sender().currentText()
-        cell_type_template = self.create_new_cell_definition(cell_type_input, selected_template)
-        self.cell_definitions_preferences[cell_type_input] = cell_type_template
+        self.cell_definitions_registry[self.sender().objectName] = self.create_new_cell_definition(self.sender().objectName, self.sender().currentText())
 
     def create_new_cell_definition(self, cell_type_input = "Default", template_name="Default"):
         cell_definition = ET.Element("cell_definition", name = cell_type_input, ID=str(BioinformaticsWalkthrough_LoadCellParameters.current_id))
         BioinformaticsWalkthrough_LoadCellParameters.current_id += 1
-        template_functions = {
-            "Normal Epithelial": get_epithelial_normal,
-            "Default": get_default,
-            "Normal Mesenchymal": get_mesenchymal_normal,
-            "Fibroblast": get_fibroblast,
-            "Tumor Epithelial": get_tumor_epithlial,
-            "Tumor Mesenchymal": get_mesenchymal_tumor,
-            "Macrophage": get_machrophage,
-            "CD8 T Cell":  get_CD8_T_cell,
-            "M0 Macrophage": get_M0_macrophage,
-            "M1 Macrophage": get_M1_macrophage,
-            "M2 Macrophage":get_M2_macrophage,
-            "Th2 CD4 T cell": get_Th2_CD4_T_cell
-        }
 
-        if template_name in template_functions:
-            template = template_functions[template_name]()
-            cell_definition.append(ET.fromstring(template))
-
+        template_variable_name = f"{template_name.replace(' ', '_').lower()}_template" 
+        selected_template = globals().get(template_variable_name, default_template)
+        cell_definition.append(ET.fromstring(selected_template))
         return cell_definition
 
     def process_window(self):
