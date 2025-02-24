@@ -1377,9 +1377,9 @@ class VisBase():
             # for itype, ctname in enumerate(self.celltypes_list):
             # print("  self.celltype_name=",self.celltype_name)
             # for itype in range(self.discrete_scalar_len[self.discrete_scalar]):
-            for itype in self.discrete_scalar_vals[self.discrete_scalar]:
+            for index_disc_scalar, itype in enumerate(self.discrete_scalar_vals[self.discrete_scalar]):
                 # print("  cell_counts_cb(): itype= ",itype)
-                ctcolor = 'C' + str(itype)   # use random colors from matplotlib
+                ctcolor = 'C' + str(index_disc_scalar)   # use random colors from matplotlib
                 # print("  ctcolor=",ctcolor)
                 # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
 
