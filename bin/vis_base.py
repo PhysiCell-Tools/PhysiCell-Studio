@@ -1146,6 +1146,11 @@ class VisBase():
         apply_button.setStyleSheet("background-color: lightgreen")
         layout.addWidget(apply_button)
 
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.filter_dialog.close)
+        close_button.setStyleSheet("background-color: lightgreen")
+        layout.addWidget(close_button)
+
         self.filter_dialog.setLayout(layout)
         self.filter_dialog.show()
 
