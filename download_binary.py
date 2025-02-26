@@ -11,7 +11,7 @@ import tarfile
 import stat
 import shutil
 
-physicell_version = "1.14.0"
+physicell_version = "1.14.2"
 repo_physicell = "MathCancer/PhysiCell"
 physiboss_version = "v2.2.3"
 repo_physiboss = "sysbio-curie/PhysiBoSS"
@@ -29,14 +29,20 @@ list_models = {
 def print_usage():
      print("Usage : python download_binary.py <model>")
      print("")
-     print("Models available : %s" % (",".join(list_models.keys())))
+     print("Models available : %s" % (", ".join(list_models.keys())))
 
+model = 'template_BM'  # this BM (Boolean Model) version seems to be reliably accessible
+# print("sys.argv=",sys.argv)
+# print("len(sys.argv)=",len(sys.argv))
 if len(sys.argv) < 2:
      print_usage()
      model = 'template_BM'  # this BM (Boolean Model) version seems to be reliably accessible
     #  exit(1)
+else:
+     model = sys.argv[1]
+     print("model = ",model)
      
-     
+# print("choices: ", list_models.keys())
 if model in ["-h", "--help"] or model not in list_models.keys():
      print_usage()
      exit(1)
@@ -124,4 +130,4 @@ new_name = "project" if not mb_file.endswith("win.tar.gz") else "project.exe"
 st = os.stat(new_name)
 os.chmod(new_name, st.st_mode | stat.S_IEXEC)
 
-print('> Done. You can now run %s\n' % new_name)
+# print('> Done. You can now run %s\n' % new_name)
