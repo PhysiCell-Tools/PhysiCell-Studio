@@ -1141,21 +1141,25 @@ class VisBase():
             self.update_plots()
             # self.filter_dialog.accept() # close self.filter_dialog if press the apply button
 
+        hbox = QHBoxLayout()
         apply_button = QPushButton("Apply")
+        apply_button.setFixedWidth(75)
         apply_button.clicked.connect(apply_filters)
         apply_button.setStyleSheet("background-color: lightgreen")
-        layout.addWidget(apply_button)
+        hbox.addWidget(apply_button)
 
         close_button = QPushButton("Close")
+        close_button.setFixedWidth(75)
         close_button.clicked.connect(self.filter_dialog.close)
         close_button.setStyleSheet("background-color: lightgreen")
-        layout.addWidget(close_button)
+        hbox.addWidget(close_button)
+        layout.addLayout(hbox)
 
         self.filter_dialog.setLayout(layout)
         self.filter_dialog.show()
 
     def cell_type_filter_button_cb(self):
-        print("---- vis_base: cell_type_filter_button_cb()")
+        # print("---- vis_base: cell_type_filter_button_cb()")
         self.show_filter_popup()
 
     def phenotype_cb(self):
