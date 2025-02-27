@@ -42,7 +42,7 @@ from matplotlib.collections import PatchCollection
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from pretty_print_xml import pretty_print
-from BIWT_parameters.cell_specific_parameters import *
+import BIWT_parameters.cell_specific_parameters as cell_params
 from BIWT_parameters.xml_defaults import xml_defaults
 
 from pathlib import Path
@@ -78,11 +78,6 @@ class BioinformaticsWalkthroughWindow(QWidget):
         self.setWindowTitle(f"Bioinformatics Import Walkthrough: Step {biwt.current_window_idx+1}")
         self.biwt = biwt
         self.biwt.stale_futures = True # initializing a window means that any future windows are stale
-
-        self.cell_definitions_registry = {}
-        if not hasattr(self.biwt, 'cell_definitions_registry'):
-            self.biwt.cell_definitions_registry = {}
-        self.cell_definitions_registry = self.biwt.cell_definitions_registry
 
 class BioinformaticsWalkthroughWindow_WarningWindow(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt, layout, continue_cb):
@@ -3170,14 +3165,20 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
         super().__init__(biwt)
         print("----Loading cell parameters----")
 
+        if not hasattr(self.biwt, 'cell_definitions_registry'):
+            self.biwt.cell_definitions_registry = {}
+        self.cell_definitions_registry = self.biwt.cell_definitions_registry
+
         vbox = QVBoxLayout()
         instruction_label = QLabel("Select your cell types:")
         vbox.addWidget(instruction_label)
         vbox_scroll_area = QVBoxLayout()
         self.dropdowns = []
 
-        list_cell_types = ["Normal Epithelial", "Default", "Normal Mesenchymal", "Fibroblast", "Tumor Epithelial", "Tumor Mesenchymal",
-                           "Macrophage", "M0 Macrophage", "M1 Macrophage", "Th2 CD4 T cell"]
+        list_cell_types = []
+        list_cell_types.extend([name.replace('_template', '').replace('_', ' ').title() 
+                        for name in dir(cell_params) if name.endswith('_template')])
+
         list_cell_types.sort(key=lambda x: (x != 'Default', x))
         self.model = QStringListModel(list_cell_types)
 
@@ -3227,7 +3228,7 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
         BioinformaticsWalkthrough_LoadCellParameters.current_id += 1
 
         template_variable_name = f"{template_name.replace(' ', '_').lower()}_template" 
-        selected_template = globals().get(template_variable_name, default_template)
+        selected_template = getattr(cell_params, template_variable_name, cell_params.default_template)
         cell_definition.append(ET.fromstring(selected_template))
         return cell_definition
 
