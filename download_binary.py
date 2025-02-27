@@ -114,7 +114,7 @@ try:
     # print("tar.getnames() = ",tar.getnames())
     # print("tar_filenames[0] = ",tar_filenames[0])
     binary_name = tar_filenames[0]   # not sure if this is guaranteed
-    print("binary_name = ",binary_name)
+    print(f'binary_name = {binary_name}\n')
     # tar.extractall()
     tar.extract(binary_name)
     # binary_name = [names for names in tar.getnames() if not names.endswith(".dll")][0]
