@@ -987,7 +987,7 @@ class VisBase():
         hbox = QHBoxLayout()
         self.cell_counts_button = QPushButton("Population plot")
         # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        bwidth = 120
+        bwidth = 130
         self.cell_counts_button.setFixedWidth(bwidth)
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         hbox.addWidget(self.cell_counts_button)
