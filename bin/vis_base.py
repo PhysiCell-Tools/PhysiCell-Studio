@@ -987,7 +987,7 @@ class VisBase():
         hbox = QHBoxLayout()
         self.cell_counts_button = QPushButton("Population plot")
         # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        bwidth = 120
+        bwidth = 130
         self.cell_counts_button.setFixedWidth(bwidth)
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         hbox.addWidget(self.cell_counts_button)
@@ -1141,16 +1141,25 @@ class VisBase():
             self.update_plots()
             # self.filter_dialog.accept() # close self.filter_dialog if press the apply button
 
+        hbox = QHBoxLayout()
         apply_button = QPushButton("Apply")
+        apply_button.setFixedWidth(75)
         apply_button.clicked.connect(apply_filters)
         apply_button.setStyleSheet("background-color: lightgreen")
-        layout.addWidget(apply_button)
+        hbox.addWidget(apply_button)
+
+        close_button = QPushButton("Close")
+        close_button.setFixedWidth(75)
+        close_button.clicked.connect(self.filter_dialog.close)
+        close_button.setStyleSheet("background-color: lightgreen")
+        hbox.addWidget(close_button)
+        layout.addLayout(hbox)
 
         self.filter_dialog.setLayout(layout)
         self.filter_dialog.show()
 
     def cell_type_filter_button_cb(self):
-        print("---- vis_base: cell_type_filter_button_cb()")
+        # print("---- vis_base: cell_type_filter_button_cb()")
         self.show_filter_popup()
 
     def phenotype_cb(self):
@@ -1340,20 +1349,22 @@ class VisBase():
                     # print("--- rgb after split=",rgb)
                     ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
                     # print("--- converted rgb=",ctcolor)
-                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                if self.celltype_filter:
+                    yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                else:
+                    yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
                 # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
                 # print("  yval=",yval)
-
-                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
+                if yval.sum() > 0: # only plot if there are cells of this type
+                    self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
 
 
             self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
             self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
             self.population_plot[self.discrete_scalar].ax0.set_title("cell_type", fontsize=10)
-            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center left', prop={'size': 8})
             self.population_plot[self.discrete_scalar].canvas.update()
             self.population_plot[self.discrete_scalar].canvas.draw()
-            # self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
             self.population_plot[self.discrete_scalar].show()
 
         #--------
@@ -1387,18 +1398,40 @@ class VisBase():
                 # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & True) for idx in range(len(mcds)))] )
 
                 # TODO: fix this hackiness. Do we want to avoid counting dead cells??
-                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                if self.discrete_scalar == 'current_death_model': # Hack: because current_death_model is not working in PhysiCell, using cycle_model instead  
+                    if self.celltype_filter: # Cell type filter applied here
+                        yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                    else:
+                        yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cycle_model'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                else:
+                    if self.celltype_filter: # Cell type filter applied here
+                        yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                    else:
+                        yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
                 # print("  yval=",yval)
 
+                # if (self.discrete_scalar == 'cycle_model'): mylabel = 
+                # else:
+                # Check if exist any cells in the entire simulation with self.discrete_scalar occuring
                 mylabel = str(itype)
-                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=mylabel, linewidth=lw, color=ctcolor)
+                bool_list = ['is_motile', 'dead']
+                if( yval.sum() > 0 or self.discrete_scalar in bool_list): # only plot if there are cells with this scalar or boolean
+                    if (self.discrete_scalar == 'cycle_model' or self.discrete_scalar == 'current_death_model'): mylabel = self.cycle_models[itype]
+                    elif (self.discrete_scalar == 'current_phase'): mylabel = self.cycle_phases[itype]
+                    elif (self.discrete_scalar in bool_list ): mylabel = str(bool(itype))
+                    # Plot only if there are cells with this scalar
+                    self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=mylabel, linewidth=lw, color=ctcolor)
                 # self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, linewidth=lw, color=ctcolor)
+                # print(self.discrete_scalar, itype, mylabel, yval.sum() )
 
-
+            
             self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
             self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
-            self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar, fontsize=10)
-            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            if self.celltype_filter:
+                self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar + " (filtered by cell type)", fontsize=10)
+            else:
+                self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar, fontsize=10)
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center left', prop={'size': 8})
             self.population_plot[self.discrete_scalar].canvas.update()
             self.population_plot[self.discrete_scalar].canvas.draw()
             self.population_plot[self.discrete_scalar].show()
