@@ -313,19 +313,23 @@ class CycleTab(CellDefSubTab):
 
     def update_division_function_params(self):
         cdname = self.get_current_celldef()
-        for row_idx in range(self.asym_div_standard_table.rowCount()):
-            row_name = self.asym_div_standard_table.item(row_idx, 0).text()
-            new_val = self.param_d[cdname]['asymmetric_division_probability'][row_name]
-            item = self.asym_div_standard_table.cellWidget(row_idx, 1)
-            item.blockSignals(True) # when changing cell types, do not impose the condition that probs sum to 1
-            item.setText(new_val)
-            item.check_validity(new_val)
-            item.format_text()
-            item.blockSignals(False)
-            if row_name == cdname:
-                item.setEnabled(False)
-            else:
-                item.setEnabled(True)
+        try:
+            for row_idx in range(self.asym_div_standard_table.rowCount()):
+                row_name = self.asym_div_standard_table.item(row_idx, 0).text()
+                new_val = self.param_d[cdname]['asymmetric_division_probability'][row_name]
+                item = self.asym_div_standard_table.cellWidget(row_idx, 1)
+                item.blockSignals(True) # when changing cell types, do not impose the condition that probs sum to 1
+                item.setText(new_val)
+                item.check_validity(new_val)
+                item.format_text()
+                item.blockSignals(False)
+                if row_name == cdname:
+                    item.setEnabled(False)
+                else:
+                    item.setEnabled(True)
+        except:
+            print("cell_def_cycle_tab.py: update_division_function_params() - exception!")
+            pass
         self.asym_div_normalize_probabilities()
         if self.asym_div_enabled_checkbox.isChecked() == self.param_d[cdname]['asymmetric_division_enabled']:
             # force the emission of the signal (necessary at studio startup)
