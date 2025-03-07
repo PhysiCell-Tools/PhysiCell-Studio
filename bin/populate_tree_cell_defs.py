@@ -57,6 +57,15 @@ def validate_cell_defs(cell_defs_elm, skip_validate):
             sys.exit(-1)
     logging.debug(f'=======================  end validate_cell_defs(): =======================\n\n')
 
+def handle_parse_error(section_str):
+    msg = f'\npopulate_tree_cell_defs.py:\nError: parsing {section_str} params.\nYou are probably trying to use an older config file\nthat does not meet the Studio requirements. Each\ncell_definition needs to provide ALL parameters.\nTry to fix the config file.\n'
+    print(msg)
+    logging.error(msg)
+    # msgBox = QMessageBox()
+    # msgBox.setText(msg)
+    # msgBox.setStandardButtons(QMessageBox.Ok)
+    # returnValue = msgBox.exec()
+    sys.exit(-1)
 
 def populate_tree_cell_defs(cell_def_tab, skip_validate):
     logging.debug(f'=======================  populate_tree_cell_defs(): ======================= ')
@@ -261,392 +270,394 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             # ---------  death 
             logging.debug(f'\n===== populate_tree():  death')
-
+            try:
                     #------ using transition_rates
-
                     #------ using durations
+                death_path = f"{phenotype_path}//death"
+                death_uep = uep.find(death_path)
+                logging.debug(f'death_uep={death_uep}')
 
-            death_path = f"{phenotype_path}//death"
+                for death_model in death_uep.findall('model'):
+                    #-----------------------------------
+                    # apoptosis only has 1 rate | duration (necrosis has 2) -------------------------
+                    if "apoptosis" in death_model.attrib["name"].lower():
+                        logging.debug(f'-------- parsing apoptosis!')
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
 
-            death_uep = uep.find(death_path)
-            logging.debug(f'death_uep={death_uep}')
+                        pd_uep = death_model.find("phase_durations")
+                        if pd_uep is not None:
+                            logging.debug(f' >> pd_uep ={pd_uep}')
+                            cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = True
 
-            for death_model in death_uep.findall('model'):
+                            for pd in pd_uep:   # <duration index= ... >
+                                logging.debug(f'phase_duration= {pd}')
+                                logging.debug(f'index= {pd.attrib["index"]}')
+                                if  pd.attrib['index'] == "0":
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = pd.text
+                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = invertf2s(pd.text)
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
+                                    else:
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
+
+                        else:  #  apoptosis transition rate
+                            tr_uep = death_model.find("phase_transition_rates")
+                            if tr_uep is not None:
+                                logging.debug(f' >> tr_uep ={tr_uep}')
+
+                                for tr in tr_uep:   # <rate start_index= ... >
+                                    logging.debug(f'death: phase_transition_rates= {tr}')
+                                    logging.debug(f'start_index= {tr.attrib["start_index"]}')
+
+                                    if  tr.attrib['start_index'] == "0":
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = tr.text
+                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = invertf2s(tr.text)
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
+                                            cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
+                                        else:
+                                            cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
+                                            cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
+
+                        params_uep = death_model.find("parameters")
+
+                        if params_uep is None:
+                            print(f'\npopulate_tree_cell_defs.py: Error: missing death params.\nYou are probably trying to use an older config file that does not meet the Studio requirements.\nExiting.\n')
+                            logging.error(f'\npopulate_tree_cell_defs.py: Error: missing death params.\nIt is possible your .xml is the old hierarchical format\nand not the flattened, explicit format.  \nExiting.\n')
+                            # sys.exit(1)
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_calcif_rate"] = params_uep.find("calcification_rate").text
+                        cell_def_tab.param_d[cell_def_name]["apoptosis_rel_rupture_volume"] = params_uep.find("relative_rupture_volume").text
 
                 #-----------------------------------
-                # apoptosis only has 1 rate | duration (necrosis has 2) -------------------------
-                if "apoptosis" in death_model.attrib["name"].lower():
-                    logging.debug(f'-------- parsing apoptosis!')
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
+                # necrosis_params_path = necrosis_path + "parameters//"
+                    elif "necrosis" in death_model.attrib["name"].lower():
+                        logging.debug(f'-------- parsing necrosis!')
+                        cell_def_tab.param_d[cell_def_name]["necrosis_death_rate"] = death_model.find('death_rate').text
 
-                    pd_uep = death_model.find("phase_durations")
-                    if pd_uep is not None:
-                        logging.debug(f' >> pd_uep ={pd_uep}')
-                        cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = True
+                        # necrosis has 2 rates | durations (apoptosis only has 1) -------------------------
+                        pd_uep = death_model.find("phase_durations")
+                        #------------------------
+                        if pd_uep is not None:   # necrosis durations
+                            logging.debug(f' >> pd_uep ={pd_uep}')
+                            # cell_def_tab.necrosis_rb2.setChecked(True)  # duration
+                            cell_def_tab.param_d[cell_def_name]['necrosis_duration_flag'] = True
 
-                        for pd in pd_uep:   # <duration index= ... >
-                            logging.debug(f'phase_duration= {pd}')
-                            logging.debug(f'index= {pd.attrib["index"]}')
-                            if  pd.attrib['index'] == "0":
-                                cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = pd.text
-                                cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = invertf2s(pd.text)
-                                if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
-                                else:
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
-
-                    else:  #  apoptosis transition rate
-                        tr_uep = death_model.find("phase_transition_rates")
-                        if tr_uep is not None:
-                            logging.debug(f' >> tr_uep ={tr_uep}')
-
-                            for tr in tr_uep:   # <rate start_index= ... >
-                                logging.debug(f'death: phase_transition_rates= {tr}')
-                                logging.debug(f'start_index= {tr.attrib["start_index"]}')
-
-                                if  tr.attrib['start_index'] == "0":
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_trate"] = tr.text
-                                    cell_def_tab.param_d[cell_def_name]["apoptosis_01_duration"] = invertf2s(tr.text)
-                                    if  tr.attrib['fixed_duration'].lower() == "true":
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = True
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = True
-                                    else:
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
-                                        cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_duration"] = False
-
-                    params_uep = death_model.find("parameters")
-
-                    if params_uep is None:
-                        logging.error(f'\npopulate_tree_cell_defs.py: Error: missing death params.\nIt is possible your .xml is the old hierarchical format\nand not the flattened, explicit format.  \nExiting.\n')
-                        sys.exit(1)
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_calcif_rate"] = params_uep.find("calcification_rate").text
-                    cell_def_tab.param_d[cell_def_name]["apoptosis_rel_rupture_volume"] = params_uep.find("relative_rupture_volume").text
-
-            #-----------------------------------
-            # necrosis_params_path = necrosis_path + "parameters//"
-                elif "necrosis" in death_model.attrib["name"].lower():
-                    logging.debug(f'-------- parsing necrosis!')
-                    cell_def_tab.param_d[cell_def_name]["necrosis_death_rate"] = death_model.find('death_rate').text
-
-                    # necrosis has 2 rates | durations (apoptosis only has 1) -------------------------
-                    pd_uep = death_model.find("phase_durations")
-                    #------------------------
-                    if pd_uep is not None:   # necrosis durations
-                        logging.debug(f' >> pd_uep ={pd_uep}')
-                        # cell_def_tab.necrosis_rb2.setChecked(True)  # duration
-                        cell_def_tab.param_d[cell_def_name]['necrosis_duration_flag'] = True
-
-                        for pd in pd_uep:   # <duration index= ... >
-                            logging.debug(f'{pd}')
-                            logging.debug(f'index= {pd.attrib["index"]}')
-                            if  pd.attrib['index'] == "0":
-                                cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = pd.text
-                                cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = invertf2s(pd.text)
-                                if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
-                                else:
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
-
-                            elif  pd.attrib['index'] == "1":
-                                cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = pd.text
-                                cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = invertf2s(pd.text)
-                                if  pd.attrib['fixed_duration'].lower() == "true":
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = True
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
-                                else:
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
-
-                    #------------------------
-                    else:  # necrosis transition rates
-                        tr_uep = death_model.find("phase_transition_rates")
-                        if tr_uep is not None:
-                            logging.debug(f' >> tr_uep ={tr_uep}')
-                            for tr in tr_uep:  # transition rate 
-                                logging.debug(f'death: phase_transition_rates= {tr}')
-                                logging.debug(f'start_index= {tr.attrib["start_index"]}')
-                                if  tr.attrib['start_index'] == "0":
-                                    rate = float(tr.text)
-                                    if abs(rate) < 1.e-6:   # rwh: necessary??
-                                        rate = 1.e-6
-                                        # dval = 9.e99
-                                    # else:
-                                        # dval = rate * 60.0
-                                    logging.debug(f' --- transition rate 01 (float) = {rate}')
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(rate)
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = invertf2s(str(rate))
-                                    if  tr.attrib['fixed_duration'].lower() == "true":
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
+                            for pd in pd_uep:   # <duration index= ... >
+                                logging.debug(f'{pd}')
+                                logging.debug(f'index= {pd.attrib["index"]}')
+                                if  pd.attrib['index'] == "0":
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = pd.text
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = invertf2s(pd.text)
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
                                     else:
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
                                         cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
 
-                                elif  tr.attrib['start_index'] == "1":
-                                    rate = float(tr.text)
-                                    if abs(rate) < 1.e-6:
-                                        rate = 1.e-6
-                                    logging.debug(f' --- transition rate 12 (float) = {rate}')
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = str(rate)
-                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = invertf2s(str(rate))
-                                    if  tr.attrib['fixed_duration'].lower() == "true":
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
+                                elif  pd.attrib['index'] == "1":
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = pd.text
+                                    cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = invertf2s(pd.text)
+                                    if  pd.attrib['fixed_duration'].lower() == "true":
                                         cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = True
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
                                     else:
-                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
                                         cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
 
+                        #------------------------
+                        else:  # necrosis transition rates
+                            tr_uep = death_model.find("phase_transition_rates")
+                            if tr_uep is not None:
+                                logging.debug(f' >> tr_uep ={tr_uep}')
+                                for tr in tr_uep:  # transition rate 
+                                    logging.debug(f'death: phase_transition_rates= {tr}')
+                                    logging.debug(f'start_index= {tr.attrib["start_index"]}')
+                                    if  tr.attrib['start_index'] == "0":
+                                        rate = float(tr.text)
+                                        if abs(rate) < 1.e-6:   # rwh: necessary??
+                                            rate = 1.e-6
+                                            # dval = 9.e99
+                                        # else:
+                                            # dval = rate * 60.0
+                                        logging.debug(f' --- transition rate 01 (float) = {rate}')
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_trate"] = str(rate)
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_01_duration"] = invertf2s(str(rate))
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = True
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = True
+                                        else:
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_trate"] = False
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_01_fixed_duration"] = False
 
-                    params_uep = death_model.find("parameters")
+                                    elif  tr.attrib['start_index'] == "1":
+                                        rate = float(tr.text)
+                                        if abs(rate) < 1.e-6:
+                                            rate = 1.e-6
+                                        logging.debug(f' --- transition rate 12 (float) = {rate}')
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_trate"] = str(rate)
+                                        cell_def_tab.param_d[cell_def_name]["necrosis_12_duration"] = invertf2s(str(rate))
+                                        if  tr.attrib['fixed_duration'].lower() == "true":
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = True
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = True
+                                        else:
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_trate"] = False
+                                            cell_def_tab.param_d[cell_def_name]["necrosis_12_fixed_duration"] = False
 
-                    cell_def_tab.param_d[cell_def_name]["necrosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["necrosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["necrosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["necrosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
-                    cell_def_tab.param_d[cell_def_name]["necrosis_calcif_rate"] = params_uep.find("calcification_rate").text
-                    cell_def_tab.param_d[cell_def_name]["necrosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
+                        params_uep = death_model.find("parameters")
 
+                        cell_def_tab.param_d[cell_def_name]["necrosis_unlysed_rate"] = params_uep.find("unlysed_fluid_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["necrosis_lysed_rate"] = params_uep.find("lysed_fluid_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["necrosis_cyto_rate"] = params_uep.find("cytoplasmic_biomass_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["necrosis_nuclear_rate"] = params_uep.find("nuclear_biomass_change_rate").text
+                        cell_def_tab.param_d[cell_def_name]["necrosis_calcif_rate"] = params_uep.find("calcification_rate").text
+                        cell_def_tab.param_d[cell_def_name]["necrosis_rel_rupture_rate"] = params_uep.find("relative_rupture_volume").text
+            except:
+                handle_parse_error('death')
 
             # # ---------  volume 
             volume_path = f"{phenotype_path}//volume//"
             logging.debug(f'volume_path={volume_path}')
-
-            cell_def_tab.param_d[cell_def_name]["volume_total"] = uep.find(volume_path+"total").text
-            cell_def_tab.param_d[cell_def_name]["volume_fluid_fraction"] = uep.find(volume_path+"fluid_fraction").text
-            cell_def_tab.param_d[cell_def_name]["volume_nuclear"] = uep.find(volume_path+"nuclear").text
-            cell_def_tab.param_d[cell_def_name]["volume_fluid_change_rate"] = uep.find(volume_path+"fluid_change_rate").text
-            cell_def_tab.param_d[cell_def_name]["volume_cytoplasmic_rate"] = uep.find(volume_path+"cytoplasmic_biomass_change_rate").text
-            cell_def_tab.param_d[cell_def_name]["volume_nuclear_rate"] = uep.find(volume_path+"nuclear_biomass_change_rate").text
-            cell_def_tab.param_d[cell_def_name]["volume_calcif_fraction"] = uep.find(volume_path+"calcified_fraction").text
-            cell_def_tab.param_d[cell_def_name]["volume_calcif_rate"] = uep.find(volume_path+"calcification_rate").text
-            cell_def_tab.param_d[cell_def_name]["volume_rel_rupture_vol"] = uep.find(volume_path+"relative_rupture_volume").text
-
+            try:
+                cell_def_tab.param_d[cell_def_name]["volume_total"] = uep.find(volume_path+"total").text
+                cell_def_tab.param_d[cell_def_name]["volume_fluid_fraction"] = uep.find(volume_path+"fluid_fraction").text
+                cell_def_tab.param_d[cell_def_name]["volume_nuclear"] = uep.find(volume_path+"nuclear").text
+                cell_def_tab.param_d[cell_def_name]["volume_fluid_change_rate"] = uep.find(volume_path+"fluid_change_rate").text
+                cell_def_tab.param_d[cell_def_name]["volume_cytoplasmic_rate"] = uep.find(volume_path+"cytoplasmic_biomass_change_rate").text
+                cell_def_tab.param_d[cell_def_name]["volume_nuclear_rate"] = uep.find(volume_path+"nuclear_biomass_change_rate").text
+                cell_def_tab.param_d[cell_def_name]["volume_calcif_fraction"] = uep.find(volume_path+"calcified_fraction").text
+                cell_def_tab.param_d[cell_def_name]["volume_calcif_rate"] = uep.find(volume_path+"calcification_rate").text
+                cell_def_tab.param_d[cell_def_name]["volume_rel_rupture_vol"] = uep.find(volume_path+"relative_rupture_volume").text
+            except:
+                handle_parse_error('volume')
 
             # # ---------  mechanics 
             logging.debug(f'\n===== populate_tree():  mechanics')
 
             mechanics_path = f"{phenotype_path}//mechanics//"
             logging.debug(f'mechanics_path={mechanics_path}')
-
-            is_movable_tag =  uep.find(mechanics_path+"is_movable")
-            if is_movable_tag:
-                val =  uep.find(mechanics_path+"is_movable").text
-                if val.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["is_movable"] = True
+            try:
+                is_movable_tag =  uep.find(mechanics_path+"is_movable")
+                if is_movable_tag:
+                    val =  uep.find(mechanics_path+"is_movable").text
+                    if val.lower() == 'true':
+                        cell_def_tab.param_d[cell_def_name]["is_movable"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["is_movable"] = False
                 else:
-                    cell_def_tab.param_d[cell_def_name]["is_movable"] = False
-            else:
-                cell_def_tab.param_d[cell_def_name]["is_movable"] = True
+                    cell_def_tab.param_d[cell_def_name]["is_movable"] = True
 
-            val =  uep.find(mechanics_path+"cell_cell_adhesion_strength").text
-            cell_def_tab.param_d[cell_def_name]["mechanics_adhesion"] = val
+                val =  uep.find(mechanics_path+"cell_cell_adhesion_strength").text
+                cell_def_tab.param_d[cell_def_name]["mechanics_adhesion"] = val
 
-            val =  uep.find(mechanics_path+"cell_cell_repulsion_strength").text
-            cell_def_tab.param_d[cell_def_name]["mechanics_repulsion"] = val
+                val =  uep.find(mechanics_path+"cell_cell_repulsion_strength").text
+                cell_def_tab.param_d[cell_def_name]["mechanics_repulsion"] = val
 
-            val =  uep.find(mechanics_path+"relative_maximum_adhesion_distance").text
-            cell_def_tab.param_d[cell_def_name]["mechanics_adhesion_distance"] = val
+                val =  uep.find(mechanics_path+"relative_maximum_adhesion_distance").text
+                cell_def_tab.param_d[cell_def_name]["mechanics_adhesion_distance"] = val
 
-            # <<< new (June 2022) mechanics params
-            mypath =  uep.find(mechanics_path+"cell_BM_adhesion_strength")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = '4.0'
+                # <<< new (June 2022) mechanics params
+                mypath =  uep.find(mechanics_path+"cell_BM_adhesion_strength")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_BM_adhesion"] = '4.0'
 
-            mypath =  uep.find(mechanics_path+"cell_BM_repulsion_strength")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = '10.0'
+                mypath =  uep.find(mechanics_path+"cell_BM_repulsion_strength")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_BM_repulsion"] = '10.0'
 
-            #----------
-            cell_adhesion_affinities_path = f"{mechanics_path}cell_adhesion_affinities"
-            logging.debug(f'---- cell_interactions_path= {cell_adhesion_affinities_path}')
-            cap = uep.find(cell_adhesion_affinities_path)
-            if cap is None:
-                logging.debug(f'---- No cell_adhesion_affinities_path found. Setting to default.')
-                cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
-                if cds_uep is None:
-                    logging.debug(f'---- Error: cell_definitions is not defined.')
-                    sys.exit(-1)
+                #----------
+                cell_adhesion_affinities_path = f"{mechanics_path}cell_adhesion_affinities"
+                logging.debug(f'---- cell_interactions_path= {cell_adhesion_affinities_path}')
+                cap = uep.find(cell_adhesion_affinities_path)
+                if cap is None:
+                    logging.debug(f'---- No cell_adhesion_affinities_path found. Setting to default.')
+                    cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
+                    if cds_uep is None:
+                        logging.debug(f'---- Error: cell_definitions is not defined.')
+                        # sys.exit(-1)
 
-                sval = '1.0'
-                for var in cds_uep.findall('cell_definition'):
-                    logging.debug(f' --> {var.attrib["name"]}')
-                    name = var.attrib['name']
-                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][name] = sval
+                    sval = '1.0'
+                    for var in cds_uep.findall('cell_definition'):
+                        logging.debug(f' --> {var.attrib["name"]}')
+                        name = var.attrib['name']
+                        cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][name] = sval
 
-            else:
-                logging.debug(f'---- found cell_adhesion_affinities_path:')
-                cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
-                for var in cap.findall('cell_adhesion_affinity'):
-                    other_celltype_name = var.attrib['name']
-                    val = var.text
-                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][other_celltype_name] = val
-                    logging.debug(f'--> {cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"]}')
+                else:
+                    logging.debug(f'---- found cell_adhesion_affinities_path:')
+                    cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"] = {}
+                    for var in cap.findall('cell_adhesion_affinity'):
+                        other_celltype_name = var.attrib['name']
+                        val = var.text
+                        cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"][other_celltype_name] = val
+                        logging.debug(f'--> {cell_def_tab.param_d[cell_def_name]["cell_adhesion_affinity"]}')
 
-            #----------
-            mechanics_options_path = f"{mechanics_path}options//"
+                #----------
+                mechanics_options_path = f"{mechanics_path}options//"
 
-            val =  uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text
-            cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance"] = val
+                val =  uep.find(mechanics_options_path+"set_relative_equilibrium_distance").text
+                cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance"] = val
 
-            val =  uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text
-            cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance"] = val
+                val =  uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").text
+                cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance"] = val
 
-            rel_eq_bval = uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true'
-            cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = rel_eq_bval
+                rel_eq_bval = uep.find(mechanics_options_path+"set_relative_equilibrium_distance").attrib['enabled'].lower() == 'true'
+                cell_def_tab.param_d[cell_def_name]["mechanics_relative_equilibrium_distance_enabled"] = rel_eq_bval
 
-            abs_eq_bval = uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true'
-            cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = abs_eq_bval
+                abs_eq_bval = uep.find(mechanics_options_path+"set_absolute_equilibrium_distance").attrib['enabled'].lower() == 'true'
+                cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = abs_eq_bval
 
-            if cell_def_name==cell_def_0th:
-                print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
-                cell_def_tab.set_relative_equilibrium_distance_enabled.setChecked(rel_eq_bval)
-                cell_def_tab.set_relative_equilibrium_distance_enabled.stateChanged.emit(rel_eq_bval)
-                cell_def_tab.set_absolute_equilibrium_distance_enabled.setChecked(abs_eq_bval)
-                cell_def_tab.set_absolute_equilibrium_distance_enabled.stateChanged.emit(abs_eq_bval)
+                if cell_def_name==cell_def_0th:
+                    print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
+                    cell_def_tab.set_relative_equilibrium_distance_enabled.setChecked(rel_eq_bval)
+                    cell_def_tab.set_relative_equilibrium_distance_enabled.stateChanged.emit(rel_eq_bval)
+                    cell_def_tab.set_absolute_equilibrium_distance_enabled.setChecked(abs_eq_bval)
+                    cell_def_tab.set_absolute_equilibrium_distance_enabled.stateChanged.emit(abs_eq_bval)
 
-            # <<< new (June 2022) mechanics params
-            mypath =  uep.find(mechanics_path+"attachment_elastic_constant")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = '0.01'
+                # <<< new (June 2022) mechanics params
+                mypath =  uep.find(mechanics_path+"attachment_elastic_constant")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_elastic_constant"] = '0.01'
 
-            mypath =  uep.find(mechanics_path+"attachment_rate")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["attachment_rate"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["attachment_rate"] = '0.0'
+                mypath =  uep.find(mechanics_path+"attachment_rate")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["attachment_rate"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["attachment_rate"] = '0.0'
 
-            mypath =  uep.find(mechanics_path+"detachment_rate")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["detachment_rate"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["detachment_rate"] = '0.0'
+                mypath =  uep.find(mechanics_path+"detachment_rate")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["detachment_rate"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["detachment_rate"] = '0.0'
 
-            mypath =  uep.find(mechanics_path+"maximum_number_of_attachments")
-            if mypath is not None:
-                cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = mypath.text
-            else:
-                cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = '12'
-            # >>>
+                mypath =  uep.find(mechanics_path+"maximum_number_of_attachments")
+                if mypath is not None:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = mypath.text
+                else:
+                    cell_def_tab.param_d[cell_def_name]["mechanics_max_num_attachments"] = '12'
+
+            except:
+                handle_parse_error('mechanics')
 
             # # ---------  motility 
             logging.debug(f'\n===== populate_tree():  motility')
 
             motility_path = f"{phenotype_path}//motility//"
             logging.debug(f'motility_path={motility_path}')
+            try:
+                val = uep.find(motility_path+"speed").text
+                cell_def_tab.param_d[cell_def_name]["speed"] = val
 
-            val = uep.find(motility_path+"speed").text
-            cell_def_tab.param_d[cell_def_name]["speed"] = val
+                val = uep.find(motility_path+"persistence_time").text
+                cell_def_tab.param_d[cell_def_name]["persistence_time"] = val
 
-            val = uep.find(motility_path+"persistence_time").text
-            cell_def_tab.param_d[cell_def_name]["persistence_time"] = val
+                val = uep.find(motility_path+"migration_bias").text
+                cell_def_tab.param_d[cell_def_name]["migration_bias"] = val
 
-            val = uep.find(motility_path+"migration_bias").text
-            cell_def_tab.param_d[cell_def_name]["migration_bias"] = val
+                motility_options_path = f"{motility_path}options//"
 
-            motility_options_path = f"{motility_path}options//"
-
-            if uep.find(motility_options_path +'enabled').text.lower() == 'true':
-                cell_def_tab.param_d[cell_def_name]["motility_enabled"] = True
-            else:
-                cell_def_tab.param_d[cell_def_name]["motility_enabled"] = False
-
-            if uep.find(motility_options_path +'use_2D').text.lower() == 'true':
-                cell_def_tab.param_d[cell_def_name]["motility_use_2D"] = True
-            else:
-                cell_def_tab.param_d[cell_def_name]["motility_use_2D"] = False
-
-            motility_chemotaxis_path = motility_options_path + "chemotaxis//"
-            if uep.find(motility_chemotaxis_path) is None:
-                cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = False
-                cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = ""
-                cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
-            else:
-                if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = True
+                if uep.find(motility_options_path +'enabled').text.lower() == 'true':
+                    cell_def_tab.param_d[cell_def_name]["motility_enabled"] = True
                 else:
+                    cell_def_tab.param_d[cell_def_name]["motility_enabled"] = False
+
+                if uep.find(motility_options_path +'use_2D').text.lower() == 'true':
+                    cell_def_tab.param_d[cell_def_name]["motility_use_2D"] = True
+                else:
+                    cell_def_tab.param_d[cell_def_name]["motility_use_2D"] = False
+
+                motility_chemotaxis_path = motility_options_path + "chemotaxis//"
+                if uep.find(motility_chemotaxis_path) is None:
                     cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = False
-
-                val = uep.find(motility_chemotaxis_path +'substrate').text
-                cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
-                logging.debug(f'\n----------- populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = {cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"]}')
-
-                val = uep.find(motility_chemotaxis_path +'direction').text
-                if val == '1':
+                    cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = ""
                     cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
                 else:
-                    cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
+                    if uep.find(motility_chemotaxis_path +'enabled').text.lower() == 'true':
+                        cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["motility_chemotaxis"] = False
 
-            motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis//"
-            logging.debug(f'motility_advanced_chemotaxis_path= {motility_advanced_chemotaxis_path}')
+                    val = uep.find(motility_chemotaxis_path +'substrate').text
+                    cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = val
+                    logging.debug(f'\n----------- populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"] = {cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_substrate"]}')
+
+                    val = uep.find(motility_chemotaxis_path +'direction').text
+                    if val == '1':
+                        cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["motility_chemotaxis_towards"] = False
+
+                motility_advanced_chemotaxis_path = motility_options_path + "advanced_chemotaxis//"
+                logging.debug(f'motility_advanced_chemotaxis_path= {motility_advanced_chemotaxis_path}')
 
 
-            # Just initialize sensitivities to default value (0) for all substrates
-            uep_microenv = cell_def_tab.xml_root.find(".//microenvironment_setup")
-            for subelm in uep_microenv.findall('variable'):
-                substrate_name = subelm.attrib['name']
-                cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate_name] = '0.0'
-            logging.debug(f'chemotactic_sensitivity= {cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
+                # Just initialize sensitivities to default value (0) for all substrates
+                uep_microenv = cell_def_tab.xml_root.find(".//microenvironment_setup")
+                for subelm in uep_microenv.findall('variable'):
+                    substrate_name = subelm.attrib['name']
+                    cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate_name] = '0.0'
+                logging.debug(f'chemotactic_sensitivity= {cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
 
-            if uep.find(motility_advanced_chemotaxis_path) is None:  # advanced_chemotaxis not present in .xml
-                logging.debug(f'---- no motility_advanced_chemotaxis_path found. Setting to default values')
-                cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
-                cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
-                cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
-
-            else:    # advanced_chemotaxis IS present in .xml
-                if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = True
-                else:
+                if uep.find(motility_advanced_chemotaxis_path) is None:  # advanced_chemotaxis not present in .xml
+                    logging.debug(f'---- no motility_advanced_chemotaxis_path found. Setting to default values')
                     cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
-
-                if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
-                else:
+                    cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = ""
                     cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
 
-                # rwh: todo - why am I doing this? Is it necessary?
-                cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = "foobar"
+                else:    # advanced_chemotaxis IS present in .xml
+                    if uep.find(motility_advanced_chemotaxis_path +'enabled').text.lower() == 'true':
+                        cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis"] = False
 
-                if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
-                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
-                else:
-                    cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
+                    if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
+                        cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
 
-                cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
-                for substrate in cell_def_tab.substrate_list:
-                    # cell_def_tab.chemotactic_sensitivity_dict[substrate] = 0.0
-                    cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
+                    # rwh: todo - why am I doing this? Is it necessary?
+                    cell_def_tab.param_d[cell_def_name]["motility_advanced_chemotaxis_substrate"] = "foobar"
 
-                #-----
-                sensitivity_path = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
-                logging.debug(f'sensitivity_path= {sensitivity_path}')
-                if uep.find(sensitivity_path) is None:
-                    logging.debug(f'---- chemotactic_sensitivities not found. Set to defaults (0). ')
-                else:
-                    logging.debug(f'---- found chemotactic_sensitivities: {uep.find(sensitivity_path)}')
-                    for subelm in uep.find(sensitivity_path).findall('chemotactic_sensitivity'):
-                        subname = subelm.attrib['substrate']
-                        subval = subelm.text # float?
-                        logging.debug(f'subelm={subelm}')
-                        logging.debug(f' chemotactic_sensitivity--> {subname} = {subval}')
-                        cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'][subname] = subval
-                logging.debug(f'{cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
+                    if uep.find(motility_advanced_chemotaxis_path +'normalize_each_gradient').text.lower() == 'true':
+                        cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = True
+                    else:
+                        cell_def_tab.param_d[cell_def_name]["normalize_each_gradient"] = False
 
-                cell_def_tab.motility2_substrate_changed_cb(0)  # update the sensitivity value in the widget
+                    cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'] = {}
+                    for substrate in cell_def_tab.substrate_list:
+                        # cell_def_tab.chemotactic_sensitivity_dict[substrate] = 0.0
+                        cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"][substrate] = '0.0'
+
+                    #-----
+                    sensitivity_path = motility_options_path + "advanced_chemotaxis//chemotactic_sensitivities"
+                    logging.debug(f'sensitivity_path= {sensitivity_path}')
+                    if uep.find(sensitivity_path) is None:
+                        logging.debug(f'---- chemotactic_sensitivities not found. Set to defaults (0). ')
+                    else:
+                        logging.debug(f'---- found chemotactic_sensitivities: {uep.find(sensitivity_path)}')
+                        for subelm in uep.find(sensitivity_path).findall('chemotactic_sensitivity'):
+                            subname = subelm.attrib['substrate']
+                            subval = subelm.text # float?
+                            logging.debug(f'subelm={subelm}')
+                            logging.debug(f' chemotactic_sensitivity--> {subname} = {subval}')
+                            cell_def_tab.param_d[cell_def_name]['chemotactic_sensitivity'][subname] = subval
+                    logging.debug(f'{cell_def_tab.param_d[cell_def_name]["chemotactic_sensitivity"]}')
+
+                    cell_def_tab.motility2_substrate_changed_cb(0)  # update the sensitivity value in the widget
+            except:
+                handle_parse_error('motility')
 
             # # ---------  secretion 
             logging.debug(f'\n===== populate_tree():  secretion')
@@ -657,49 +668,51 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
             uep_secretion = cell_def_tab.xml_root.find(secretion_path)
             logging.debug(f'uep_secretion = {uep_secretion}')
-            
-            jdx = 0
-            for sub in uep_secretion.findall('substrate'):
-                substrate_name = sub.attrib['name']
-                if jdx == 0:
-                    cell_def_tab.current_secretion_substrate = substrate_name
+            try:
+                jdx = 0
+                for sub in uep_secretion.findall('substrate'):
+                    substrate_name = sub.attrib['name']
+                    if jdx == 0:
+                        cell_def_tab.current_secretion_substrate = substrate_name
 
-                logging.debug(f'{jdx}) -- secretion substrate = {substrate_name}')
-                # cell_def_tab.param_d[cell_def_tab.current_cell_def]["secretion"][substrate_name]["secretion_rate"] = {}
-                cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name] = {}
+                    logging.debug(f'{jdx}) -- secretion substrate = {substrate_name}')
+                    # cell_def_tab.param_d[cell_def_tab.current_cell_def]["secretion"][substrate_name]["secretion_rate"] = {}
+                    cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name] = {}
 
-                tptr = sub.find("secretion_rate")
-                if tptr is not None:
-                    val = tptr.text
-                else:
-                    val = "0.0"
-                cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
-                # print(cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name] )
+                    tptr = sub.find("secretion_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_rate"] = val
+                    # print(cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name] )
 
-                tptr = sub.find("secretion_target")
-                if tptr is not None:
-                    val = tptr.text
-                else:
-                    val = "0.0"
-                cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_target"] = val
+                    tptr = sub.find("secretion_target")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["secretion_target"] = val
 
-                tptr = sub.find("uptake_rate")
-                if tptr is not None:
-                    val = tptr.text
-                else:
-                    val = "0.0"
-                cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["uptake_rate"] = val
+                    tptr = sub.find("uptake_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["uptake_rate"] = val
 
-                tptr = sub.find("net_export_rate")
-                if tptr is not None:
-                    val = tptr.text
-                else:
-                    val = "0.0"
-                cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["net_export_rate"] = val
+                    tptr = sub.find("net_export_rate")
+                    if tptr is not None:
+                        val = tptr.text
+                    else:
+                        val = "0.0"
+                    cell_def_tab.param_d[cell_def_name]["secretion"][substrate_name]["net_export_rate"] = val
 
-                jdx += 1
+                    jdx += 1
 
-            logging.debug(f'------ done parsing secretion:')
+                logging.debug(f'------ done parsing secretion:')
+            except:
+                handle_parse_error('secretion')
             
 
             # # --------- cell_interactions  
@@ -721,7 +734,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
                     logging.debug(f'---- Error: cell_definitions is not defined.')
-                    sys.exit(-1)
+                    # sys.exit(-1)
 
                 sval = '0.0'
                 for var in cds_uep.findall('cell_definition'):
@@ -799,7 +812,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
                 if cds_uep is None:
                     logging.error(f'---- Error: cell_definitions is not defined.')
-                    sys.exit(-1)
+                    # sys.exit(-1)
 
                 sval = '0.0'
                 for var in cds_uep.findall('cell_definition'):
