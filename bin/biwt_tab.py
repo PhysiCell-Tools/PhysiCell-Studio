@@ -1180,9 +1180,9 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
                 self.biwt_plot_window.legend_artists.append(legend_patch)
             else:
                 # sz = self.biwt_plot_window.cell_type_pt_area_dict[cell_type]
-                collections = self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
-                scatter_objects, _ = collections.legend_elements()
-                self.biwt_plot_window.legend_artists.append(scatter_objects[0])
+                self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
+                handle = plt.Line2D([], [], marker='o', color='w', markerfacecolor=self.biwt_plot_window.color_by_celltype[cell_type], markersize=8)
+                self.biwt_plot_window.legend_artists.append(handle)
             self.biwt_plot_window.legend_labels.append(cell_type)
 
         self.biwt_plot_window.update_legend_window()
@@ -2375,6 +2375,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                     cell_radius = np.sqrt(self.cell_type_micron2_area_dict[cell_type] / np.pi)
                     cell_coords = np.hstack((self.spatial_base_coords[idx_cell_type,0:2] * [width, height] + [x0,y0],np.zeros((sum(idx_cell_type),1))))
                     idx_inbounds = [(cc[0]>=self.plot_xmin and cc[0]<=self.plot_xmax and cc[1]>=self.plot_ymin and cc[1]<=self.plot_ymax) for cc in cell_coords]
+                    if not self.plot_is_2d:
+                        cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
+                        idx_inbounds = [idx_inbounds and (cc[2]>=self.plot_zmin and cc[2]<=self.plot_zmax) for cc in cell_coords]
                     cell_coords = cell_coords[idx_inbounds,:]
                     if n_per_spot==1:
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
@@ -2383,10 +2386,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                             legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
                             self.legend_artists.append(legend_patch)
                         else:
-                            cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
-                            collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
+                            self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='black', markeredgewidth=0.5)
+                            self.legend_artists.append(handle)
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
                         all_new = np.empty((0,3))
@@ -2399,9 +2401,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                             legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
                             self.legend_artists.append(legend_patch)
                         else:
-                            collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
+                            self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='black', markeredgewidth=0.5)
+                            self.legend_artists.append(handle)
                     self.legend_labels.append(cell_type)
                     self.pw.checkbox_dict[cell_type].setEnabled(False)
                     self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2521,9 +2523,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         # sz = self.cell_type_micron2_area_dict[cell_type] * 0.036089556256 # empirically-determined value to scale area to points in 3d (scales typical cell volume's area to be 8pt)
-        collection = self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-        scatter_objects, _ = collection.legend_elements()
-        self.legend_artists.append(scatter_objects)
+        self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+        handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='black', markeredgewidth=0.5)
+        self.legend_artists.append(handle)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
