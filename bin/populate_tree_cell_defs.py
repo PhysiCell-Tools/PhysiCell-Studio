@@ -1014,9 +1014,37 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
                             "objective_reaction"] = objective_reaction
 
+                        # Death model
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"] = {}
+                        uep_death_model = uep_intracellular.find("death_model")
+                        if uep_death_model is not None:
+                            enabled_attr = uep_death_model.get("enabled", "false")
+                            enabled = enabled_attr.lower() == "true"
+
+                            death_type = uep_death_model.find("death_type").text if uep_death_model.find(
+                                "death_type") is not None else ""
+                            death_trigger_flux = uep_death_model.find("death_trigger_flux").text if uep_death_model.find(
+                                "death_trigger_flux") is not None else ""
+                            death_flux_threshold = uep_death_model.find("death_flux_threshold").text if uep_death_model.find(
+                                "death_flux_threshold") is not None else ""
+                            death_rate_increase = uep_death_model.find("death_rate_increase").text if uep_death_model.find(
+                                "death_rate_increase") is not None else ""
+
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                                "enabled"] = enabled
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                                "death_type"] = death_type
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                                "death_trigger_flux"] = death_trigger_flux
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                                "death_flux_threshold"] = death_flux_threshold
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                                "death_rate_increase"] = death_rate_increase
+
                     # Update widget values (specific to dFBA)
                     cell_def_tab.clear_transport_exchanges()
                     cell_def_tab.clear_growth_model_params()
+                    cell_def_tab.clear_death_model_params()
 
                     # Iterate over the exchanges and populate the UI
                     for exchange in cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"][
@@ -1041,6 +1069,15 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.cell_density.setText(growth_model.get("cell_density", ""))
                         cell_def_tab.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
                         cell_def_tab.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+
+                    # Populate death model parameters in the UI
+                    if "death_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        death_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"]
+                        cell_def_tab.enable_death_checkbox.setChecked(death_model.get("enabled", False))
+                        cell_def_tab.cell_density.setText(death_model.get("death_type", ""))
+                        cell_def_tab.death_trigger_flux.setText(death_model.get("death_trigger_flux", ""))
+                        cell_def_tab.death_flux_threshold.setText(death_model.get("death_flux_threshold", ""))
+                        cell_def_tab.death_rate_increase.setText(death_model.get("death_rate_increase", ""))
 
                 elif uep_intracellular.attrib["type"] == "roadrunner":
                     # <intracellular type="roadrunner">

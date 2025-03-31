@@ -3205,6 +3205,15 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.max_growth_rate.clear()
         self.objective_reaction.clear()
 
+    def clear_death_model_params(self):
+        # Clear the growth model QLineEdit widgets
+        self.death_type.clear()
+        self.death_trigger_flux.clear()
+        self.death_flux_threshold.clear()
+        self.death_rate_increase.clear()
+        # Reset the death enable checkbox
+        self.enable_death_checkbox.setChecked(False)
+
     def choose_sbml_file(self):
         # Method to open a file dialog to choose SBML file
         filename, _ = QFileDialog.getOpenFileName(self, "Choose SBML File", "", "XML Files (*.xml);;All Files (*)")
@@ -3226,6 +3235,26 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def dfba_objective_reaction_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['objective_reaction'] = text
+
+    def dfba_enable_death_changed(self, state):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["death_model"]['enabled'] = bool(state)
+
+    def dfba_death_type_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["death_model"]['death_type'] = text
+
+    def dfba_death_trigger_flux_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["death_model"]['death_trigger_flux'] = text
+
+    def dfba_death_flux_threshold_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["death_model"]['death_flux_threshold'] = text
+
+    def dfba_death_rate_increase_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["death_model"]['death_rate_increase'] = text
 
     def dfba_clicked_add_exchange(self):
         self.add_exchange()
@@ -3326,6 +3355,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             vmax_edit.textChanged.connect(lambda text, i=i: self.dfba_exchange_vmax_changed(i, text))
             remove_button.clicked.disconnect()
             remove_button.clicked.connect(lambda _, i=i: self.dfba_clicked_remove_exchange(i))
+
+    # Method to toggle visibility based on checkbox
+    def toggle_death_parameters(self):
+        enabled = self.enable_death_checkbox.isChecked()
+        self.death_type.setEnabled(enabled)
+        self.death_trigger_flux.setEnabled(enabled)
+        self.death_flux_threshold.setEnabled(enabled)
+        self.death_rate_increase.setEnabled(enabled)
 
     def intracellular_type_changed(self, index):
 
@@ -3835,8 +3872,72 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         growth_groupbox.setLayout(growth_layout)
         ly.addWidget(growth_groupbox)
 
+        # Death Model GroupBox
+        death_groupbox = QGroupBox("Death Model")
+        death_layout = QVBoxLayout()
+
+        # Enable Death Checkbox
+        enable_death_hbox = QHBoxLayout()
+        self.enable_death_checkbox = QCheckBox("Enable Metabolic-dependent Death")
+        self.enable_death_checkbox.setChecked(False)
+        self.enable_death_checkbox.stateChanged.connect(self.toggle_death_parameters)
+        self.enable_death_checkbox.stateChanged.connect(self.dfba_enable_death_changed)
+
+        enable_death_hbox.addWidget(self.enable_death_checkbox)
+        death_layout.addLayout(enable_death_hbox)
+
+        # Death type
+        death_type_hbox = QHBoxLayout()
+        death_type_label = QLabel("Type of death (Necrosis/Apoptosis)")
+        death_type_hbox.addWidget(death_type_label)
+
+        self.death_type = QLineEdit()
+        self.death_type.textChanged.connect(self.dfba_death_type_changed)
+        death_type_hbox.addWidget(self.death_type)
+
+        death_layout.addLayout(death_type_hbox)
+
+        # Death Trigger Flux
+        death_trigger_flux_hbox = QHBoxLayout()
+        death_trigger_flux_label = QLabel("Flux to modulate death")
+        death_trigger_flux_hbox.addWidget(death_trigger_flux_label)
+
+        self.death_trigger_flux = QLineEdit()
+        self.death_trigger_flux.textChanged.connect(self.dfba_death_trigger_flux_changed)
+        death_trigger_flux_hbox.addWidget(self.death_trigger_flux)
+
+        death_layout.addLayout(death_trigger_flux_hbox)
+
+        # Death Lower Bound
+        death_flux_threshold_hbox = QHBoxLayout()
+        death_flux_threshold_label = QLabel("Lower bound for death flux")
+        death_flux_threshold_hbox.addWidget(death_flux_threshold_label)
+
+        self.death_flux_threshold = QLineEdit()
+        self.death_flux_threshold.textChanged.connect(self.dfba_death_flux_threshold_changed)
+        death_flux_threshold_hbox.addWidget(self.death_flux_threshold)
+
+        death_layout.addLayout(death_flux_threshold_hbox)
+
+        # Death rate increase
+        death_rate_increase_hbox = QHBoxLayout()
+        death_rate_increase_label = QLabel("Death rate increase coefficient")
+        death_rate_increase_hbox.addWidget(death_rate_increase_label)
+
+        self.death_rate_increase = QLineEdit()
+        self.death_rate_increase.textChanged.connect(self.dfba_death_rate_increase_changed)
+        death_rate_increase_hbox.addWidget(self.death_rate_increase)
+
+        death_layout.addLayout(death_rate_increase_hbox)
+
+        death_groupbox.setLayout(death_layout)
+        ly.addWidget(death_groupbox)
+
         glayout.addWidget(self.dfba_frame)
         glayout.addStretch()
+
+        # Initially disable death parameter fields
+        self.toggle_death_parameters()
 
         # -------  "None" intracellular frame  -------
         vbox = QVBoxLayout()
@@ -6191,6 +6292,23 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     if "objective_reaction" in growth_model:
                         self.objective_reaction.setText(growth_model["objective_reaction"])
 
+                if "death_model" in self.param_d[cdname]["intracellular"]:
+                    death_model = self.param_d[cdname]["intracellular"]["death_model"]
+
+                    if "enabled" in death_model:
+                        self.enable_death_checkbox.setChecked(death_model["enabled"])
+                    else:
+                        self.enable_death_checkbox.setChecked(False)
+
+                    if "death_type" in death_model:
+                        self.death_type.setText(death_model["death_type"])
+                    if "death_trigger_flux" in death_model:
+                        self.death_trigger_flux.setText(death_model["death_trigger_flux"])
+                    if "death_flux_threshold" in death_model:
+                        self.death_flux_threshold.setText(death_model["death_flux_threshold"])
+                    if "death_rate_increase" in death_model:
+                        self.death_rate_increase.setText(death_model["death_rate_increase"])
+
 
         else:
             self.intracellular_type_dropdown.setCurrentIndex(0)
@@ -7135,6 +7253,38 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         tag_input.tail = self.indent12
                     elif tag_output is not None:
                         tag_output.tail = self.indent12
+
+                    if "death_model" in self.param_d[cdef]['intracellular']:
+                        death_model = ET.SubElement(intracellular, "death_model",
+                                                    {"enabled": str(
+                                                        self.param_d[cdef]['intracellular']['death_model'].get(
+                                                            'enabled', False)).lower()})
+                        death_model.text = self.indent14
+                        death_model.tail = self.indent12
+
+                        # Add growth model parameters (death_type, death_trigger_flux, death_flux_threshold, death_rate_increase)
+                        if "death_type" in self.param_d[cdef]['intracellular']['death_model']:
+                            death_type_elem = ET.SubElement(death_model, "death_type", {"units": "g/ml"})
+                            death_type_elem.text = self.param_d[cdef]['intracellular']['death_model']["death_type"]
+                            death_type_elem.tail = self.indent16
+
+                        if "death_trigger_flux" in self.param_d[cdef]['intracellular']['death_model']:
+                            death_trigger_flux_elem = ET.SubElement(death_model, "death_trigger_flux", {"units": "1/min"})
+                            death_trigger_flux_elem.text = self.param_d[cdef]['intracellular']['death_model'][
+                                "death_trigger_flux"]
+                            death_trigger_flux_elem.tail = self.indent16
+
+                        if "death_flux_threshold" in self.param_d[cdef]['intracellular']['death_model']:
+                            death_flux_threshold_elem = ET.SubElement(death_model, "death_flux_threshold")
+                            death_flux_threshold_elem.text = self.param_d[cdef]['intracellular']['death_model'][
+                                "death_flux_threshold"]
+                            death_flux_threshold_elem.tail = self.indent12
+
+                        if "death_rate_increase" in self.param_d[cdef]['intracellular']['death_model']:
+                            death_rate_increase_elem = ET.SubElement(death_model, "death_rate_increase")
+                            death_rate_increase_elem.text = self.param_d[cdef]['intracellular']['death_model'][
+                                "death_rate_increase"]
+                            death_rate_increase_elem.tail = self.indent12
 
 
             elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
