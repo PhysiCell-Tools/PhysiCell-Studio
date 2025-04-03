@@ -1074,7 +1074,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     if "death_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
                         death_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"]
                         cell_def_tab.enable_death_checkbox.setChecked(death_model.get("enabled", False))
-                        cell_def_tab.cell_density.setText(death_model.get("death_type", ""))
+                        cell_def_tab.death_type.setText(death_model.get("death_type", ""))
                         cell_def_tab.death_trigger_flux.setText(death_model.get("death_trigger_flux", ""))
                         cell_def_tab.death_flux_threshold.setText(death_model.get("death_flux_threshold", ""))
                         cell_def_tab.death_rate_increase.setText(death_model.get("death_rate_increase", ""))
