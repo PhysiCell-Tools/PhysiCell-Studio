@@ -716,18 +716,6 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('equal')
         else:
             self.ax0.set_aspect('auto')
-            
-        names_observed = ["Active", "Inactive", "Other cell type"]
-        boolean_colors = ["green", "red", "grey"]
-        
-        # Creating empty plots to add the legend
-        lp = lambda i: plt.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
-                                label="Feature {:g}".format(i), ls="", marker="o")[0]
-        handles = [lp(i) for i in range(3)]
-        try: # cautionary for out of date mpl versions, e.g., nanoHUB
-            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
-        except:
-            pass
     
     #-----------------------------------------------------
     # def cell_scalar_cbar_combobox_changed_cb(self,idx):
@@ -835,7 +823,18 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('equal')
         else:
             self.ax0.set_aspect('auto')
-    
+        
+        names_observed = ["Active", "Inactive", "Other cell type"]
+        boolean_colors = ["green", "red", "grey"]
+        
+        # Creating empty plots to add the legend
+        lp = lambda i: plt.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
+                                label="Feature {:g}".format(i), ls="", marker="o")[0]
+        handles = [lp(i) for i in range(3)]
+        try: # cautionary for out of date mpl versions, e.g., nanoHUB
+            self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
+        except:
+            pass
     
     def plot_cell_scalar(self, frame):
         if self.disable_cell_scalar_cb:
