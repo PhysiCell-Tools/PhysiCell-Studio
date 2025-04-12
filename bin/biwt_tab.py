@@ -1260,7 +1260,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         with open(self.full_fname, 'w') as f:
             f.write('x,y,z,type\n')
         self.add_cell_positions_to_file()
-        self.rerun_physicell()
 
     def finish_append_button_cb(self):
         self.check_for_new_celldefs()
@@ -1271,7 +1270,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
                 print(f"{self.full_fname} is not properly formatted for appending.\nIt needs to start with 'x,y,z,type,...'")
                 return
         self.add_cell_positions_to_file()
-        self.rerun_physicell()
 
     def check_for_new_celldefs(self):
         self.append_cell_definition_to_xml()
@@ -1308,23 +1306,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
             wrapped_xml_str = f"<{key}>{xml_str.strip()}</{key}>"
             xml_element = ET.fromstring(wrapped_xml_str)
             root.append(xml_element)
-
-    def rerun_physicell(self):
-
-
-        if platform.system() == "Windows":
-            exec_file = 'project.exe'
-        else:
-            exec_file = 'project'  # for template sample
-
-        self.biwt.xml_creator.__init__("PhysiCell_new.xml",self.biwt.xml_creator.studio_flag, self.biwt.xml_creator.skip_validate_flag, self.biwt.xml_creator.rules_flag, self.biwt.xml_creator.model3D_flag, self.biwt.xml_creator.tensor_flag, exec_file, self.biwt.xml_creator.nanohub_flag, False, self.biwt.xml_creator.pytest_flag, self.biwt.xml_creator.biwt_flag, parent = None)
-       
-
-        directory = str(os.getcwd())
-        command = [
-            "python", os.path.join(directory, "bin", "studio.py"), "--biwt", "-c", "PhysiCell_new.xml"
-        ]
-        subprocess.run(command, check=True)
         
     def set_file_name(self):
         dir_name = self.csv_folder.text()
