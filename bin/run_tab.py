@@ -283,7 +283,7 @@ class RunModel(QWidget):
                 exec_str = self.exec_name.text()
                 xml_str = self.config_xml_name.text()
                 print("\n--- run_tab:  xml_str before run is ",xml_str)
-                print("--- run_tab:  exec_str before run is ",xml_str)
+                print("--- run_tab:  exec_str before run is ",exec_str)
                 if self.nanohub_flag:
                     self.p.start("submit",["--local",exec_str,xml_str])
                 else:
