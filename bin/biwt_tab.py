@@ -47,7 +47,7 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout, QFileDialog, QButtonGroup, QSplitter, QSizePolicy, QSpinBox
 from PyQt5.QtGui import QIcon
 
-from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom, LegendWindow
+from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom, LegendWindow, QLineEdit_custom
 
 class GoBackButton(QPushButton):
     def __init__(self, parent, biwt, pre_cb=None, post_cb=None):
@@ -1175,14 +1175,14 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
                 continue # do not plot cell types with no cells
             if self.biwt_plot_window.plot_is_2d:
                 sz = np.sqrt(self.biwt_plot_window.cell_type_micron2_area_dict[cell_type] / np.pi)
-                self.biwt_plot_window.circles(self.biwt.csv_array[cell_type], s=sz, color=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.biwt_plot_window.alpha_value)
-                legend_patch = Patch(facecolor=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                self.biwt_plot_window.circles(self.biwt.csv_array[cell_type], s=sz, color=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.biwt_plot_window.alpha_value)
+                legend_patch = Patch(facecolor=self.biwt_plot_window.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5)
                 self.biwt_plot_window.legend_artists.append(legend_patch)
             else:
                 # sz = self.biwt_plot_window.cell_type_pt_area_dict[cell_type]
-                collections = self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
-                scatter_objects, _ = collections.legend_elements()
-                self.biwt_plot_window.legend_artists.append(scatter_objects[0])
+                self.biwt_plot_window.ax0.scatter(self.biwt.csv_array[cell_type][:,0],self.biwt.csv_array[cell_type][:,1],self.biwt.csv_array[cell_type][:,2], s=8.0, color=self.biwt_plot_window.color_by_celltype[cell_type], alpha=self.biwt_plot_window.alpha_value)
+                handle = plt.Line2D([], [], marker='o', color='w', markerfacecolor=self.biwt_plot_window.color_by_celltype[cell_type], markersize=8)
+                self.biwt_plot_window.legend_artists.append(handle)
             self.biwt_plot_window.legend_labels.append(cell_type)
 
         self.biwt_plot_window.update_legend_window()
@@ -1329,7 +1329,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.plot_zdel = float(self.config_tab.zdel.text())
         self.plot_dz = self.plot_zmax - self.plot_zmin
 
-        self.plot_is_2d = self.plot_zmax - self. plot_zmin <= self.plot_zdel # if the domain height is larger than the voxel height, then we have a 3d simulation
+        self.plot_is_2d = self.plot_zmax - self.plot_zmin <= self.plot_zdel # if the domain height is larger than the voxel height, then we have a 3d simulation
 
         self.create_patch_history()
 
@@ -1519,7 +1519,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.par_label.append(QLabel())
                 self.par_label[i].setAlignment(QtCore.Qt.AlignRight)
                 self.par_label[i].setFixedWidth(par_label_width)
-                self.par_text.append(QLineEdit())
+                self.par_text.append(QLineEdit_custom())
                 self.par_text[i].setFixedWidth(par_text_width)
                 self.par_text[i].setStyleSheet(self.biwt.qlineedit_style_sheet)
                 self.par_text[i].editingFinished.connect(self.par_editing_finished)
@@ -2237,11 +2237,20 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         for pt in self.par_text:
             if not pt.isEnabled():
                 break
-            if not pt.hasAcceptableInput():
-                self.plot_cells_button.setEnabled(False)
-                self.current_pars_acceptable = False
-                return # do not update unless all are ready
-            self.current_pars.append(float(pt.text()))
+            if pt.check_validity():
+                try: # this could fail if the text has a comma, e.g. 1,000
+                    new_val = float(pt.text())
+                except ValueError:
+                    pt.setStyleSheet(pt.invalid_style)
+                else:
+                    self.current_pars.append(new_val)
+                    continue
+
+            # if here, then the text is not valid (possibly because it has a comma which float cannot parse)    
+            self.plot_cells_button.setEnabled(False)
+            self.current_pars_acceptable = False
+            return # do not update unless all are ready
+            
         self.current_pars_acceptable = True
 
     def spatial_plotter(self):
@@ -2375,18 +2384,20 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                     cell_radius = np.sqrt(self.cell_type_micron2_area_dict[cell_type] / np.pi)
                     cell_coords = np.hstack((self.spatial_base_coords[idx_cell_type,0:2] * [width, height] + [x0,y0],np.zeros((sum(idx_cell_type),1))))
                     idx_inbounds = [(cc[0]>=self.plot_xmin and cc[0]<=self.plot_xmax and cc[1]>=self.plot_ymin and cc[1]<=self.plot_ymax) for cc in cell_coords]
+                    if not self.plot_is_2d:
+                        cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
+                        idx_inbounds = [idx_inbounds and (cc[2]>=self.plot_zmin and cc[2]<=self.plot_zmax) for cc in cell_coords]
                     cell_coords = cell_coords[idx_inbounds,:]
                     if n_per_spot==1:
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
                         if self.plot_is_2d:
-                            self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5)
                             self.legend_artists.append(legend_patch)
                         else:
-                            cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
-                            collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
+                            self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+                            handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='none', markeredgewidth=0.5)
+                            self.legend_artists.append(handle)
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
                         all_new = np.empty((0,3))
@@ -2395,13 +2406,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                             all_new = np.vstack((all_new,self.new_pos))
                         self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],all_new))
                         if self.plot_is_2d:
-                            self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                            self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5)
                             self.legend_artists.append(legend_patch)
                         else:
-                            collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
+                            self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+                            handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='none', markeredgewidth=0.5)
+                            self.legend_artists.append(handle)
                     self.legend_labels.append(cell_type)
                     self.pw.checkbox_dict[cell_type].setEnabled(False)
                     self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2500,8 +2511,8 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             print("unknown patch")
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
-        self.circles(self.new_pos, s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-        legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+        self.circles(self.new_pos, s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+        legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5)
         self.legend_artists.append(legend_patch)
         self.legend_labels.append(cell_type)
 
@@ -2521,9 +2532,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.biwt.csv_array[cell_type] = np.append(self.biwt.csv_array[cell_type],self.new_pos,axis=0)
 
         # sz = self.cell_type_micron2_area_dict[cell_type] * 0.036089556256 # empirically-determined value to scale area to points in 3d (scales typical cell volume's area to be 8pt)
-        collection = self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-        scatter_objects, _ = collection.legend_elements()
-        self.legend_artists.append(scatter_objects)
+        self.ax0.scatter(self.new_pos[:,0],self.new_pos[:,1],self.new_pos[:,2], s=(0.75*self.biwt.cell_volume[cell_type]/np.pi)**(1/3), color=self.color_by_celltype[cell_type], edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+        handle = plt.Line2D([], [], marker='o', color=self.color_by_celltype[cell_type], markersize=8.0, markeredgecolor='none', markeredgewidth=0.5)
+        self.legend_artists.append(handle)
 
         self.pw.checkbox_dict[cell_type].setEnabled(False)
         self.pw.checkbox_dict[cell_type].setChecked(False)
@@ -2885,16 +2896,6 @@ class BioinformaticsWalkthrough(QWidget):
         self.search_for_h5ad_spatial_data()
         return True
     
-    # def search_for_r_spatial_data(self):
-    #     self.spatial_data_found = False
-    #     return
-    #     # the below does not adequately handle the seurat object case
-    #     self.spatial_data_found, key, self.spatial_data = self.search_vis_arrays_for("spatial")
-    #     if self.spatial_data_found:
-    #         self.spatial_data_key = key
-    #         self.spatial_data_location = f"rdata@reductions${key}"
-    #         return
-
     def import_file_from_csv(self,file_path):
         self.data_columns = pd.read_csv(file_path)
 
@@ -2987,9 +2988,11 @@ class BioinformaticsWalkthrough(QWidget):
     def collect_cell_type_data(self):
         self.cell_types_original = self.data_columns[self.current_column]
         self.cell_types_list_original = self.cell_types_original.unique().tolist()
+        print(f"1. cell_types_list_original = {self.cell_types_list_original}")
+        self.cell_types_list_original = [str(ct) for ct in self.cell_types_list_original]
+        print(f"2. cell_types_list_original = {self.cell_types_list_original}")
         self.cell_types_list_original.sort()
-        self.cell_types_original = [str(x) for x in self.cell_types_original] # make sure the names are strings
-        self.cell_types_list_original = [str(x) for x in self.cell_types_list_original] # make sure the names are strings
+        print(f"3. cell_types_list_original = {self.cell_types_list_original}")
 
     def continue_from_spatial_query(self):
         self.collect_cell_type_data()
