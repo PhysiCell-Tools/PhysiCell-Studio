@@ -7,17 +7,12 @@ def biwt_dev_mode(biwt):
     # file_name = "./data/cells.csv"
     # file_name = "/Users/danielbergman/seq-to-ic-test/data_all/inputdata_download.Rds"
     # file_name = "/Users/danielbergman/pdac-ecm/image_data/j1568sobj_2.rds"
-    file_name = "~/seq-to-ic-test/data_all/visium_adata.h5ad"
+    file_name = "./config/cell_000.csv"
     file_name = os.path.expanduser(file_name)
     print(f"Importing {file_name}")
-    if "Zhuang" in file_name:
-        biwt.column_line_edit.setText("subclass")
-    elif file_name.lower().endswith(".rds"):
-        biwt.column_line_edit.setText("celltype")
-    else:
-        biwt.column_line_edit.setText("cluster")
+    biwt.column_line_edit.setText("CCq25")
     biwt.import_file(file_name)
-    window_to_stop_on = "BioinformaticsWalkthroughWindow_WritePositions"
+    window_to_stop_on = "BioinformaticsWalkthroughWindow_PositionsWindow"
     while biwt.window.__class__.__name__ != window_to_stop_on:
         print(f"Current window: {str(type(biwt.window))}")
         try: 

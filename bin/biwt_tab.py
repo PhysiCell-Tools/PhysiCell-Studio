@@ -48,6 +48,7 @@ from PyQt5.QtWidgets import QApplication,QWidget,QLineEdit,QHBoxLayout,QVBoxLayo
 from PyQt5.QtGui import QIcon
 
 from studio_classes import QHLine, QVLine, QCheckBox_custom, QRadioButton_custom, LegendWindow, QLineEdit_custom
+from abc import ABC, abstractmethod, ABCMeta
 
 class GoBackButton(QPushButton):
     def __init__(self, parent, biwt, pre_cb=None, post_cb=None):
@@ -67,27 +68,49 @@ class ContinueButton(QPushButton):
         self.setStyleSheet(styleSheet)
         self.clicked.connect(cb)
 
-class BioinformaticsWalkthroughWindow(QWidget):
+# Get the metaclass of QWidget (typically sip.wrappertype)
+WidgetMeta = type(QWidget)
+
+# Create a metaclass that inherits from both
+class WidgetABCMeta(WidgetMeta, ABCMeta):
+    pass
+
+class BioinformaticsWalkthroughWindow(QWidget, metaclass=WidgetABCMeta):
     def __init__(self, biwt):
         super().__init__()
-        self.setWindowTitle(f"Bioinformatics Import Walkthrough: Step {biwt.current_window_idx+1}")
+        self.setWindowTitle(f"BioInformatics WalkThrough: Step {biwt.current_window_idx+1}")
         self.biwt = biwt
-        self.biwt.stale_futures = True # initializing a window means that any future windows are stale
+        self.biwt.stale_futures = True  # initializing a window means that any future windows are stale
+
+    def create_continue_button(self, cb=None, **kwargs):
+        if cb is None:
+            cb = self.process_window
+        continue_button = ContinueButton(self, cb, **kwargs)
+        return continue_button
+
+    @abstractmethod
+    def process_window(self):
+        pass
 
 class BioinformaticsWalkthroughWindow_WarningWindow(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt, layout, continue_cb):
         super().__init__(biwt)
+        self.setWindowTitle(f"BioInformatics WalkThrough Warning: Step {biwt.current_window_idx}")
         vbox = QVBoxLayout()
         vbox.addLayout(layout)
 
         self.go_back_button = GoBackButton(self, self.biwt)
-        self.continue_button = ContinueButton(self, continue_cb)
+        self.continue_cb = continue_cb
+        self.continue_button = self.create_continue_button()
         hbox_gb_cont = QHBoxLayout()
         hbox_gb_cont.addWidget(self.go_back_button)
         hbox_gb_cont.addWidget(self.continue_button)
 
         vbox.addLayout(hbox_gb_cont)
         self.setLayout(vbox)
+
+    def process_window(self):
+        self.continue_cb()
         
 class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt):
@@ -95,7 +118,6 @@ class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWin
 
         print("------Selecting cell type column------")
 
-        # col_names = list(self.biwt.adata.obs.columns)
         self.biwt.auto_continue = False
         self.column_combobox = QComboBox()
         data_column_keys = list(self.biwt.data_columns.keys())
@@ -119,7 +141,7 @@ class BioinformaticsWalkthroughWindow_ClusterColumn(BioinformaticsWalkthroughWin
         vbox.addWidget(self.column_combobox)
 
         hbox = QHBoxLayout()
-        continue_button = ContinueButton(self, self.process_window)
+        continue_button = self.create_continue_button()
         hbox.addWidget(continue_button)
 
         vbox.addLayout(hbox)
@@ -155,7 +177,7 @@ class BioinformaticsWalkthroughWindow_SpatialQuery(BioinformaticsWalkthroughWind
         hbox_yn.addWidget(self.no)
 
         self.go_back_button = GoBackButton(self, self.biwt)
-        self.continue_button = ContinueButton(self, self.process_window)
+        self.continue_button = self.create_continue_button()
         hbox_gb_cont = QHBoxLayout()
         hbox_gb_cont.addWidget(self.go_back_button)
         hbox_gb_cont.addWidget(self.continue_button)
@@ -286,7 +308,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         hbox = QHBoxLayout()
 
         go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
-        continue_button = ContinueButton(self, self.process_window)
+        continue_button = self.create_continue_button()
 
         hbox.addWidget(go_back_button)
         hbox.addWidget(continue_button)
@@ -513,7 +535,7 @@ class BioinformaticsWalkthroughWindow_RenameCellTypes(BioinformaticsWalkthroughW
 
         hbox = QHBoxLayout()
         go_back_button = GoBackButton(self, self.biwt)
-        continue_button = ContinueButton(self, self.process_window)
+        continue_button = self.create_continue_button()
 
         hbox.addWidget(go_back_button)
         hbox.addWidget(continue_button)
@@ -699,7 +721,7 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         hbox = QHBoxLayout()
 
         go_back_to_rename = GoBackButton(self, self.biwt)
-        continue_to_cell_pos = ContinueButton(self, self.process_window)
+        continue_to_cell_pos = self.create_continue_button()
 
         hbox.addWidget(go_back_to_rename)
         hbox.addWidget(continue_to_cell_pos)
@@ -878,7 +900,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         vbox.addWidget(splitter)
 
         go_back_button = GoBackButton(self, self.biwt, pre_cb=self.close_legend)
-        self.continue_to_write_button = ContinueButton(self, self.process_window, styleSheet=self.biwt.qpushbutton_style_sheet)
+        self.continue_to_write_button = self.create_continue_button(styleSheet=self.biwt.qpushbutton_style_sheet)
         self.continue_to_write_button.setEnabled(False)
 
         hbox_write = QHBoxLayout()
@@ -1064,21 +1086,21 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         grid_layout.addLayout(vbox,rI,cI,1,1)
         rI, cI = [rI,cI+1] if cI < cmax else [rI+1,0]
 
-        vbox = QVBoxLayout()
-        rainbow_button = QPushButton(icon=QIcon(sys.path[0] + "/icon/rainbow.svg"),enabled=False, iconSize=icon_size, checkable=True, checked=False) # not ready for this yet
-        rainbow_button.setFixedSize(button_width,button_height)
-        rainbow_button.setStyleSheet(qpushbutton_style_sheet) 
-        self.cell_pos_button_group.addButton(rainbow_button,next_button_id)
-        next_button_id += 1
-        vbox.addWidget(rainbow_button)
+        # vbox = QVBoxLayout()
+        # rainbow_button = QPushButton(icon=QIcon(sys.path[0] + "/icon/rainbow.svg"),enabled=False, iconSize=icon_size, checkable=True, checked=False) # not ready for this yet
+        # rainbow_button.setFixedSize(button_width,button_height)
+        # rainbow_button.setStyleSheet(qpushbutton_style_sheet) 
+        # self.cell_pos_button_group.addButton(rainbow_button,next_button_id)
+        # next_button_id += 1
+        # vbox.addWidget(rainbow_button)
 
-        label = QLabel("Rainbow\n(why not?!)\nWork in progess...")
-        label.setFixedWidth(button_width)
-        label.setAlignment(QtCore.Qt.AlignCenter)
-        vbox.addWidget(label)
+        # label = QLabel("Rainbow\n(why not?!)\nWork in progess...")
+        # label.setFixedWidth(button_width)
+        # label.setAlignment(QtCore.Qt.AlignCenter)
+        # vbox.addWidget(label)
 
-        grid_layout.addLayout(vbox,rI,cI,1,1)
-        rI, cI = [rI,cI+1] if cI < cmax else [rI+1,0]
+        # grid_layout.addLayout(vbox,rI,cI,1,1)
+        # rI, cI = [rI,cI+1] if cI < cmax else [rI+1,0]
         if self.biwt.use_spatial_data:
             self.spatial_plotter_id = next_button_id
             vbox = QVBoxLayout()
@@ -1111,7 +1133,7 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
         if self.biwt_plot_window:
             self.biwt_plot_window.sync_par_area()
         if self.biwt.use_spatial_data:
-            self.biwt_plot_window.num_box.setEnabled(self.cell_pos_button_group.checkedId()==6) # only enable for spatial plotter
+            self.biwt_plot_window.num_box.setEnabled(self.cell_pos_button_group.checkedId()==self.spatial_plotter_id) # only enable for spatial plotter
          
     def spatial_button_cb(self, checked):
         if not checked:
@@ -1496,7 +1518,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.patch_history.append([self.default_disc_pars()])
         self.patch_history.append([self.default_annulus_pars()])
         self.patch_history.append([self.default_wedge_pars()])
-        self.patch_history.append([self.default_wedge_pars()]) # rainbow
         self.patch_history.append([self.default_spatial_pars()]) # spatial
         self.patch_history_idx = len(self.patch_history) * [0]
 
@@ -1600,25 +1621,32 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.mpl_cid = []
 
         id = self.pw.cell_pos_button_group.checkedId()
-        if id==0:
+        if id==0: # everywhere
             for pt in self.par_text:
                 pt.setEnabled(False)
             for pl in self.par_label:
                 pl.setText("")
-            self.current_plotter = self.everywhere_plotter
+            self.current_plotter = self.everywhere_2d_plotter if self.plot_is_2d else self.everywhere_3d_plotter
         
         else: # set callbacks common to all
             self.mpl_cid.append(self.canvas.mpl_connect("button_release_event", self.mouse_released_cb)) # only appending to history on release; the motion doesn't add to history because it holds focus and so editingFinished signal not emitted while canvas holds focus
-            if id==1:
+            if id==1: # rectangle
                 self.par_label[0].setText("x0")
                 self.par_label[1].setText("y0")
-                self.par_label[2].setText("width")
-                self.par_label[3].setText("height")
-                self.mpl_cid.append(self.canvas.mpl_connect("button_press_event", self.rectangle_mouse_press))
-                self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.rectangle_mouse_motion))
-                self.current_plotter = self.rectangle_plotter
+                if self.plot_is_2d:
+                    self.par_label[2].setText("width")
+                    self.par_label[3].setText("height")
+                    self.mpl_cid.append(self.canvas.mpl_connect("button_press_event", self.rectangle_mouse_press))
+                    self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.rectangle_mouse_motion))
+                    self.current_plotter = self.rectangle_2d_plotter
+                else:
+                    self.par_label[2].setText("z0")
+                    self.par_label[3].setText("width")
+                    self.par_label[4].setText("height")
+                    self.par_label[5].setText("depth")
+                    self.current_plotter = self.rectangle_3d_plotter
 
-            elif id==2:
+            elif id==2: # disc
                 self.par_label[0].setText("x0")
                 self.par_label[1].setText("y0")
                 self.par_label[2].setText("r")
@@ -1626,7 +1654,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.disc_mouse_motion))
                 self.current_plotter = self.disc_plotter
 
-            elif id==3:
+            elif id==3: # annulus
                 self.par_label[0].setText("x0")
                 self.par_label[1].setText("y0")
                 self.par_label[2].setText("r0")
@@ -1635,7 +1663,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.annulus_mouse_motion))
                 self.current_plotter = self.annulus_plotter
 
-            elif id==4:
+            elif id==4: # wedge
                 self.par_label[0].setText("x0")
                 self.par_label[1].setText("y0")
                 self.par_label[2].setText("r0")
@@ -1645,17 +1673,8 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.mpl_cid.append(self.canvas.mpl_connect("button_press_event", self.wedge_mouse_press))
                 self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.wedge_mouse_motion))
                 self.current_plotter = self.wedge_plotter
-
-            elif id==5:
-                self.par_label[0].setText("x0")
-                self.par_label[1].setText("y0")
-                self.par_label[2].setText("r0")
-                self.par_label[3].setText("r1")
-                self.par_label[4].setText("\u03b81 (\u00b0)")
-                self.par_label[5].setText("\u03b82 (\u00b0)")
-                self.current_plotter = self.wedge_plotter
         
-            elif id==6:
+            elif id==self.pw.spatial_plotter_id: # spatial plotter
                 self.par_label[0].setText("x0")
                 self.par_label[1].setText("y0")
                 if self.plot_is_2d:
@@ -1669,6 +1688,9 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.mpl_cid.append(self.canvas.mpl_connect("button_press_event", self.rectangle_mouse_press))
                 self.mpl_cid.append(self.canvas.mpl_connect("motion_notify_event", self.rectangle_mouse_motion))
                 self.current_plotter = self.spatial_plotter
+                print(f"sync_par_area(): setting spatial_plotter")
+                self.read_par_texts()
+                print(f"sync_par_area(): self.current_pars={self.current_pars}")
 
             self.activate_par_texts(id, self.current_plotter)
         self.current_plotter()
@@ -1694,19 +1716,23 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 return
             pt.setText(str(pars[idx]))
 
-    def everywhere_plotter(self):
-        if self.plot_is_2d:
-            if self.preview_patch is None:
-                self.preview_patch = self.ax0.add_patch(Rectangle((self.plot_xmin,self.plot_ymin),self.plot_dx,self.plot_dy,alpha=0.2))
-            else:
-                self.preview_patch.set_bounds(self.plot_xmin,self.plot_ymin,self.plot_dx,self.plot_dy)
-        else:
-            faces = rectangular_prism_faces(self.plot_xmin,self.plot_xmax,self.plot_ymin,self.plot_ymax,self.plot_zmin,self.plot_zmax)
-            self.preview_patch = self.ax0.add_collection3d(Poly3DCollection(faces, alpha=0.2, facecolors='gray', linewidths=1, edgecolors='black'))
-        self.plot_cells_button.setEnabled(self.pw.is_any_cell_type_button_group_checked())
-
+    def complete_plotter(self, valid_parameters = True):
+        self.plot_cells_button.setEnabled(valid_parameters and self.pw.is_any_cell_type_button_group_checked())
         self.canvas.update()
         self.canvas.draw()
+
+    def everywhere_2d_plotter(self):
+        if self.preview_patch is None:
+            self.preview_patch = self.ax0.add_patch(Rectangle((self.plot_xmin,self.plot_ymin),self.plot_dx,self.plot_dy,alpha=0.2))
+        else:
+            self.preview_patch.set_bounds(self.plot_xmin,self.plot_ymin,self.plot_dx,self.plot_dy)
+
+        self.complete_plotter()
+
+    def everywhere_3d_plotter(self):
+        faces = rectangular_prism_faces(self.plot_xmin,self.plot_xmax,self.plot_ymin,self.plot_ymax,self.plot_zmin,self.plot_zmax)
+        self.preview_patch = self.ax0.add_collection3d(Poly3DCollection(faces, alpha=0.2, facecolors='gray', linewidths=1, edgecolors='black'))
+        self.complete_plotter()
 
     def get_x0y0(self):
         return float(self.par_text[0].text()), float(self.par_text[1].text())
@@ -1758,7 +1784,14 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
     def default_rectangle_pars(self):
         x0y0 = self.default_x0y0()
-        return [*x0y0,*self.default_wh(x0y0 = x0y0)]
+        if self.plot_is_2d:
+            return [*x0y0,*self.default_wh(x0y0 = x0y0)]
+        else:
+            x0, y0 = x0y0
+            w, h = self.default_wh(x0y0 = x0y0)
+            z0 = 0.5*(self.plot_zmin+self.plot_zmax)
+            d = 0.75*(self.plot_zmax - z0)
+            return [x0, y0, z0, w, h, d]
     
     def default_x0y0(self):
         return (0.5*(self.plot_xmin+self.plot_xmax),0.5*(self.plot_ymin+self.plot_ymax))
@@ -1887,28 +1920,39 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         y1 = event.ydata
         return 57.295779513082323 * np.arctan2(y1-y0,x1-x0) # convert to degrees
 
-    def rectangle_plotter(self):
-        if self.plot_is_2d:
-            self.read_par_texts()
-            if not self.current_pars_acceptable:
-                return
-            x0, y0, width, height = self.current_pars
-            if self.preview_patch is None:
-                self.preview_patch = self.ax0.add_patch(Rectangle((x0,y0),width,height,alpha=0.2))
-            else:
-                self.preview_patch.set_bounds(x0,y0,width,height)
+    def rectangle_2d_plotter(self):
+        self.read_par_texts()
+        if not self.current_pars_acceptable:
+            return
+        x0, y0, width, height = self.current_pars
+        if self.preview_patch is None:
+            self.preview_patch = self.ax0.add_patch(Rectangle((x0,y0),width,height,alpha=0.2))
+        else:
+            self.preview_patch.set_bounds(x0,y0,width,height)
 
         # check left edge of rect is left of right edge of domain, right edge of rect is right of left edge of domain (similar in y direction)
-        bval = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
+        valid_parameters = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
         if not self.plot_is_2d: # FIX (this will need a fix once we have 3d plotting fully implemented)
             z0 = self.plot_zmin
             depth = self.plot_zmax - self.plot_zmin
-            bval = bval and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
+            valid_parameters = valid_parameters and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
 
-        self.plot_cells_button.setEnabled(bval and self.pw.is_any_cell_type_button_group_checked())
+        self.complete_plotter(valid_parameters)
 
-        self.canvas.update()
-        self.canvas.draw()
+    def rectangle_3d_plotter(self):
+        self.read_par_texts()
+        if not self.current_pars_acceptable:
+            return
+        x0, y0, z0, width, height, depth = self.current_pars
+        if self.preview_patch is None:
+            self.preview_patch = self.ax0.add_collection3d(Poly3DCollection(rectangular_prism_faces(x0,x0+width,y0,y0+height,z0,z0+depth), alpha=0.2, facecolors='gray', linewidths=1, edgecolors='black'))
+        else:
+            self.preview_patch.set_verts(rectangular_prism_faces(x0,x0+width,y0,y0+height,z0,z0+depth))
+
+        # check left edge of rect is left of right edge of domain, right edge of rect is right of left edge of domain (similar in y direction)
+        valid_parameters = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
+
+        self.complete_plotter(valid_parameters)
 
     def disc_plotter(self):
         if self.plot_is_2d:
@@ -1923,16 +1967,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
             # check the disc intersects the domain in non-trivial manner
             r2 = self.get_distance2_to_domain(x0, y0)[0]
-        bval = r2 < r*r # make sure the distance from center of Circle to domain is less than radius of circle
+        valid_parameters = r2 < r*r # make sure the distance from center of Circle to domain is less than radius of circle
         if not self.plot_is_2d: # FIX (this will need a fix once we have 3d plotting fully implemented)
             z0 = self.plot_zmin
             depth = self.plot_zmax - self.plot_zmin
-            bval = bval and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
+            valid_parameters = valid_parameters and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
 
-        self.plot_cells_button.setEnabled(bval and self.pw.is_any_cell_type_button_group_checked())
-
-        self.canvas.update()
-        self.canvas.draw()
+        self.complete_plotter(valid_parameters)
 
     def get_distance2_to_domain(self, x0, y0):
         if x0 < self.plot_xmin:
@@ -1980,15 +2021,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 print("\tBIWT WARNING: You likely can use an update to matplotlib to fix a bug in their Annulus plots.\n\tWe'll take care of it for now.")
                 self.annulus_setter(x0,y0,r1,width*(1-np.finfo(width).eps))
 
-        bval = (r2 < r1*r1) and (cr2 > r0*r0)
+        valid_parameters = (r2 < r1*r1) and (cr2 > r0*r0)
         if not self.plot_is_2d: # FIX (this will need a fix once we have 3d plotting fully implemented)
             z0 = self.plot_zmin
             depth = self.plot_zmax - self.plot_zmin
-            bval = bval and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
-        self.plot_cells_button.setEnabled(bval and self.pw.is_any_cell_type_button_group_checked())
-
-        self.canvas.update()
-        self.canvas.draw()
+            valid_parameters = valid_parameters and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
+        
+        self.complete_plotter(valid_parameters)
 
     def annulus_setter(self, x0, y0, r1, width):
         if self.preview_patch is None:
@@ -2032,17 +2071,15 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             else:
                 self.preview_patch.set(center=(x0,y0),radius=r1,theta1=th1,theta2=th2,width=r1-r0)
         
-        bval = (r2 < r1*r1) and (cr2 > r0*r0)
+        valid_parameters = (r2 < r1*r1) and (cr2 > r0*r0)
 
-        bval = bval and self.wedge_in_domain(x0,y0,r0,r1,th1,th2,dx,dy,r2)
+        valid_parameters = valid_parameters and self.wedge_in_domain(x0,y0,r0,r1,th1,th2,dx,dy,r2)
         if not self.plot_is_2d: # FIX (this will need a fix once we have 3d plotting fully implemented)
             z0 = self.plot_zmin
             depth = self.plot_zmax - self.plot_zmin
-            bval = bval and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
-        self.plot_cells_button.setEnabled(bval and self.pw.is_any_cell_type_button_group_checked())
+            valid_parameters = valid_parameters and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
 
-        self.canvas.update()
-        self.canvas.draw()
+        self.complete_plotter(valid_parameters)
 
     def wedge_in_domain(self,x0,y0,r0,r1,th1,th2,dx,dy,r2):
         th1, th2 = normalize_thetas(th1,th2)
@@ -2258,6 +2295,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         if not self.current_pars_acceptable:
             return
         if self.plot_is_2d:
+            print(f"current pars = {self.current_pars}")
             x0, y0, width, height = self.current_pars
             if self.preview_patch is None:
                 print(f"----initializing spatial plotter-----")
@@ -2274,16 +2312,13 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.preview_patch.set_offsets(offset)
 
             # check left edge of rect is left of right edge of domain, right edge of rect is right of left edge of domain (similar in y direction)
-            bval = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
+            valid_parameters = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
         else: # FIX (this will need a fix once we have 3d plotting fully implemented)
             x0, y0, z0, width, height, depth = self.current_pars
-            bval = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
-            bval = bval and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
+            valid_parameters = (x0 < self.plot_xmax) and (x0+width > self.plot_xmin) and (y0 < self.plot_ymax) and (y0+height > self.plot_ymin) # make sure the rectangle intersects the domain with positive area
+            valid_parameters = valid_parameters and (z0 < self.plot_zmax) and (z0+depth > self.plot_zmin)
 
-        self.plot_cells_button.setEnabled(bval and self.pw.is_any_cell_type_button_group_checked())
-
-        self.canvas.update()
-        self.canvas.draw()
+        self.complete_plotter(valid_parameters)
 
     def create_figure(self):
         self.figure = plt.figure()
@@ -2364,11 +2399,14 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
     def format_axis(self):
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
+        self.ax0.set_xlabel('X (μm)')
+        self.ax0.set_ylabel('Y (μm)')
         if self.plot_is_2d:
             self.ax0.set_aspect(1.0)
         else:
             self.ax0.set_zlim(self.plot_zmin, self.plot_zmax)
             self.ax0.set_box_aspect([1,1,1])
+            self.ax0.set_zlabel('Z (μm)')
 
     def plot_cell_pos(self):
         self.preview_constrained_to_axes = False
@@ -2522,7 +2560,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
     def plot_cell_pos_single_3d(self, cell_type):
         N = self.biwt.cell_counts[cell_type]
-        if self.current_plotter == self.everywhere_plotter:
+        if self.current_plotter == self.everywhere_3d_plotter:
             x0, y0, z0 = [self.plot_xmin, self.plot_ymin, self.plot_zmin]
             width, height, depth = [self.plot_dx, self.plot_dy, self.plot_dz]
             x = x0 + width * np.random.uniform(size=(N,1))
