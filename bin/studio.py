@@ -1382,7 +1382,6 @@ def main():
         parser.add_argument("-b ", "--bare", "--basic", help="no plotting, etc ", action="store_true")
         parser.add_argument("-3 ", "--three", "--3D", help="assume a 3D model", action="store_true")
         parser.add_argument("-t ", "--tensor",  help="for 3D ellipsoid cells", action="store_true")
-        parser.add_argument("-r ", "--rules", "--Rules", help="display Rules tab" , action="store_true")
         parser.add_argument("-x ", "--skip_validate", help="do not attempt to validate the config (.xml) file" , action="store_true")
         parser.add_argument("--nanohub", help="run as if on nanoHUB", action="store_true")
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
@@ -1401,10 +1400,6 @@ def main():
         print("unknown=",unknown)
         if unknown:
             print("len(unknown)= ",len(unknown))
-            # if unknown[0] == "--rules" and len(unknown)==1:
-            #     print("studio.py: setting rules_flag = True")
-            #     rules_flag = True
-            # else:
             print("Invalid argument(s): ",unknown)
             print("Use '--help' to see options.")
             sys.exit(-1)
@@ -1422,9 +1417,6 @@ def main():
             studio_flag = False
             model3D_flag = False
             # print("done with args.studio")
-        if args.rules:
-            logging.debug(f'studio.py: Show Rules tab')
-            rules_flag = True
         if args.nanohub:
             logging.debug(f'studio.py: nanoHUB mode')
             nanohub_flag = True
@@ -1523,7 +1515,7 @@ def main():
     # studio_app.setStyleSheet("QLineEdit { background-color: white };QPushButton { background-color: green } ")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
 
 
-    # rules_flag = False
+    rules_flag = True
     if rules_flag:
         try:
             from rules_tab import Rules
@@ -1538,7 +1530,6 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    # print("calling PhysiCellXMLCreator with rules_flag= ",rules_flag)
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, is_movable_flag, pytest_flag, biwt_flag
                              )
     print("size=",ex.size())
