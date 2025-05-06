@@ -1031,7 +1031,7 @@ class Vis(VisBase, QWidget):
                                     label="Feature {:g}".format(i), ls="", marker="o")[0]
             handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
             try: # cautionary for out of date mpl versions, e.g., nanoHUB
-                self.ax0.legend(handles=handles,labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
+                self.ax0.legend(handles=handles,title=cell_scalar_humanreadable_name, labels=names_observed, loc='upper center', bbox_to_anchor=(0.5, -0.15),ncols=4)
             except:
                 pass
 
