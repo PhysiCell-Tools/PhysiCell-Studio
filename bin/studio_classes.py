@@ -112,7 +112,7 @@ class LegendWindow(QDialog):
 
 class QLineEdit_custom(QLineEdit):
     def __init__(self, **kwargs):
-        super(QLineEdit, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.validator = None  # Add a validator attribute
         self.textChanged.connect(self.check_validity)
         self.check_validity(self.text())
