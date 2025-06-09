@@ -277,11 +277,11 @@ class Vis(VisBase, QWidget):
         self.canvas.update()
         self.canvas.draw()
 
-        if self.save_png:
-            self.png_frame += 1
-            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
-            print("---->  ", png_file)
-            self.figure.savefig(png_file)
+        if self.save_frame:
+            self.frame_ind += 1
+            frame_file = os.path.join(self.output_dir, f"frame{self.frame_ind:04d}{self.save_frame_filetype}")
+            print("---->  ", frame_file)
+            self.figure.savefig(frame_file)
 
     #------------------------------
     # Depends on 2D/3D

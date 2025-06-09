@@ -191,10 +191,16 @@ Note: only for .mat cell plots (not .svg)
         glayout.addWidget(self.mech_grid_size , idx_row,2, 1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
-        self.save_png_checkbox = QCheckBox_custom('save frame*.png')
-        self.save_png_checkbox.clicked.connect(self.save_png_cb)
+        self.save_frame_checkbox = QCheckBox_custom('save frame*')
+        self.save_frame_checkbox.clicked.connect(self.save_frame_cb)
         idx_row += 1
-        glayout.addWidget(self.save_png_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.save_frame_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.save_frame_filetype = QComboBox()
+        self.save_frame_filetype.addItems(['.png', '.svg', '.jpg'])
+        self.save_frame_filetype.currentIndexChanged.connect(self.save_frame_filetype_cb)
+        self.save_frame_filetype.setCurrentIndex(0)  # default to png
+        glayout.addWidget(self.save_frame_filetype, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #--------------------
         # axes_act = view3D_menu.addAction("Axes")
@@ -335,9 +341,12 @@ Note: only for .mat cell plots (not .svg)
         except:
             pass
 
-    def save_png_cb(self):
-        self.vis_tab.png_frame = 0
-        self.vis_tab.save_png = self.save_png_checkbox.isChecked()
+    def save_frame_cb(self):
+        self.vis_tab.frame_ind = 0
+        self.vis_tab.save_frame = self.save_frame_checkbox.isChecked()
+
+    def save_frame_filetype_cb(self):
+        self.vis_tab.save_frame_filetype = self.save_frame_filetype.currentText()
         
     #--------
     def yz_slice_cb(self):

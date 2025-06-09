@@ -324,8 +324,9 @@ class VisBase():
         self.rules_tab = rules_tab
         self.ics_tab = ics_tab
 
-        self.png_frame = 0
-        self.save_png= False
+        self.frame_ind = 0
+        self.save_frame_filetype = '.png'
+        self.save_frame= False
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
