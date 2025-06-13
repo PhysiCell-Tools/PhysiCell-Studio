@@ -615,9 +615,6 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         self.type_manual = {}
         self.type_confluence = {}
 
-        self.prop_box_callback_paused = False
-        self.conf_box_callback_paused = False
-
         num_validator = QtGui.QIntValidator()
         num_validator.setBottom(0)
 
@@ -628,33 +625,30 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
             label = QLabel(cell_type)
             label.setFixedWidth(names_width)
 
-            type_count = QLineEdit(enabled=False)
+            type_count = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
             type_count.setText(str(self.biwt.cell_counts[cell_type]))
             type_count.setFixedWidth(counts_width)
-            type_count.setStyleSheet(self.biwt.qlineedit_style_sheet)
 
-            self.type_prop[cell_type] = QLineEdit(enabled=False)
+            self.type_prop[cell_type] = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
+            self.type_prop[cell_type].setObjectName(str(idx))
             self.type_prop[cell_type].setText(str(self.biwt.cell_counts[cell_type]))
             self.type_prop[cell_type].setFixedWidth(props_width)
-            self.type_prop[cell_type].setStyleSheet(self.biwt.qlineedit_style_sheet)
             self.type_prop[cell_type].setValidator(num_validator)
-            self.type_prop[cell_type].setObjectName(str(idx))
-            self.type_prop[cell_type].textChanged.connect(self.prop_box_changed_cb)
+            self.type_prop[cell_type].textEdited.connect(self.prop_box_edited_cb)
 
-            self.type_confluence[cell_type] = QLineEdit(enabled=False)
-            self.type_confluence[cell_type].setFixedWidth(confluence_width)
-            self.type_confluence[cell_type].setStyleSheet(self.biwt.qlineedit_style_sheet)
-            self.type_confluence[cell_type].setValidator(QtGui.QDoubleValidator(bottom=0))
+            self.type_confluence[cell_type] = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
             self.type_confluence[cell_type].setObjectName(str(idx))
-            self.type_confluence[cell_type].textChanged.connect(self.confluence_box_changed_cb)
+            self.type_confluence[cell_type].setFixedWidth(confluence_width)
+            self.type_confluence[cell_type].setValidator(QtGui.QDoubleValidator(bottom=0))
+            self.type_confluence[cell_type].textEdited.connect(self.confluence_box_edited_cb)
+            self.type_confluence[cell_type].set_formatter(ndigits=2)
 
-            self.type_manual[cell_type] = QLineEdit(enabled=False)
+            self.type_manual[cell_type] = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
             self.type_manual[cell_type].setText(str(self.biwt.cell_counts[cell_type]))
-            self.type_manual[cell_type].setFixedWidth(manual_width)
-            self.type_manual[cell_type].setStyleSheet(self.biwt.qlineedit_style_sheet)
-            self.type_manual[cell_type].setValidator(num_validator)
             self.type_manual[cell_type].setObjectName(str(idx))
-            self.type_manual[cell_type].textChanged.connect(self.manual_box_changed_cb)
+            self.type_manual[cell_type].setFixedWidth(manual_width)
+            self.type_manual[cell_type].setValidator(num_validator)
+            self.type_manual[cell_type].textEdited.connect(self.manual_box_edited_cb)
             
             vbox_cols[0].addWidget(label)
             vbox_cols[1].addWidget(type_count)
@@ -665,33 +659,34 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         label = QLabel("Total")
         label.setFixedWidth(names_width)
 
-        type_count = QLineEdit(enabled=False)
+        type_count = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
         type_count.setText(str(len(self.biwt.cell_types_final)))
         type_count.setFixedWidth(counts_width)
-        type_count.setStyleSheet(self.biwt.qlineedit_style_sheet)
 
-        self.total_prop = QLineEdit(enabled=False)
+        self.total_prop = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
         self.total_prop.setText(str(len(self.biwt.cell_types_final)))
         self.total_prop.setFixedWidth(props_width)
-        self.total_prop.setStyleSheet(self.biwt.qlineedit_style_sheet)
         self.total_prop.setValidator(num_validator)
-        self.total_prop.textChanged.connect(self.prop_box_changed_cb)
+        self.total_prop.textEdited.connect(self.prop_box_edited_cb)
         self.total_prop.setObjectName("total_prop")
 
-        self.total_conf = QLineEdit(enabled=False)
-        self.total_conf.setFixedWidth(confluence_width)
-        self.total_conf.setStyleSheet(self.biwt.qlineedit_style_sheet)
-        self.total_conf.setValidator(QtGui.QDoubleValidator(bottom=0))
-        self.total_conf.textChanged.connect(self.confluence_box_changed_cb)
+        self.total_conf = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
         self.total_conf.setObjectName("total_conf")
+        self.total_conf.setFixedWidth(confluence_width)
+        self.total_conf.setValidator(QtGui.QDoubleValidator(bottom=0))
+        self.total_conf.textChanged.disconnect()
+        # set a special textChanged callback for setting the style based on the input, turning it red if the input is invalid OR if the input is greater than 100
+        self.total_conf.textChanged.connect(lambda _: self.total_conf.setStyleSheet(self.total_conf.valid_style) if (self.total_conf.hasAcceptableInput() and float(self.total_conf.text()) <= 100.0 ) else self.total_conf.setStyleSheet(self.total_conf.invalid_style))
+        self.total_conf.textEdited.connect(self.confluence_box_edited_cb)
+        self.total_conf.set_formatter(ndigits=2)
 
-        self.total_manual = QLineEdit(enabled=False)
+        self.total_manual = QLineEdit_custom(disabled_color="rgb(200,200,200)", enabled=False)
         self.total_manual.setText(str(len(self.biwt.cell_types_final)))
         self.total_manual.setFixedWidth(manual_width)
-        self.total_manual.setStyleSheet(self.biwt.qlineedit_style_sheet)
         self.total_manual.setValidator(num_validator)
 
-        self.total_conf.setText("100") # this triggers the cb, which sets the manual column (see below) so force a toggle next
+        self.total_conf.setText("100")
+        self.total_conf.textEdited.emit("100") # this triggers the cb, which sets the manual column (see below) so force a toggle next
         self.use_manual_radio_button.setChecked(True) 
         self.use_counts_as_is_radio_button.setChecked(True) 
 
@@ -738,15 +733,12 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
             self.prop_total_area_one[cell_type] = (((9*np.pi*self.biwt.cell_volume[cell_type]**2) / 16) ** (1./3)) / volume_env
             self.prop_dot_ratios += (self.cell_type_props[idx] * self.prop_total_area_one[cell_type])
 
-    def prop_box_changed_cb(self, text):
+    def prop_box_edited_cb(self, text):
         self.biwt.stale_futures = True
-        if self.prop_box_callback_paused:
-            return
         type_prop_sender = self.sender()
         if type_prop_sender.hasAcceptableInput() is False:
             return
         current_name = type_prop_sender.objectName()
-        self.prop_box_callback_paused = True
         if current_name=="total_prop":
             mult = int(text)
             self.total_manual.setText(text)
@@ -760,18 +752,19 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
                 continue
             self.type_prop[cell_type].setText(str(round(mult * self.cell_type_props[idx])))
             self.type_manual[cell_type].setText(str(round(mult * self.cell_type_props[idx])))
-        self.prop_box_callback_paused = False
 
-    def confluence_box_changed_cb(self, text):
+        self.manual_box_edited_cb(None)  # update the manual counts
+
+    def confluence_box_edited_cb(self, text):
         self.biwt.stale_futures = True
-        if self.conf_box_callback_paused:
-            return
         type_conf_sender = self.sender()
         if type_conf_sender.hasAcceptableInput() is False:
             return
+
         current_name = type_conf_sender.objectName()
-        self.conf_box_callback_paused = True
         current_conf = float(text)
+        type_conf_sender.full_value = text
+
         if current_name=="total_conf":
             mult = current_conf
             mult /= self.prop_dot_ratios
@@ -789,21 +782,16 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
             new_conf = mult * self.cell_type_props[idx] * self.prop_total_area_one[cell_type]
             total_conf += new_conf
             self.type_confluence[cell_type].setText(str(new_conf))
+            self.type_confluence[cell_type].format_text(ndigits=2)
         if current_name!="total_conf":
             self.total_conf.setText(str(total_conf))
+            self.total_conf.format_text(ndigits=2)
         counts, total = self.convert_confluence_to_counts()
         for cell_type, n in counts.items():
             self.type_manual[cell_type].setText(str(n))
         self.total_manual.setText(str(total))
         
-        if total_conf > 100:
-            self.total_conf.setStyleSheet("QLineEdit {background-color : red; color : black;}")
-        else:
-            self.total_conf.setStyleSheet(self.biwt.qlineedit_style_sheet)
-            
-        self.conf_box_callback_paused = False
-        
-    def manual_box_changed_cb(self, text):
+    def manual_box_edited_cb(self, _):
         self.biwt.stale_futures = True
         total_count = 0
         for qle in self.type_manual.values():
@@ -834,10 +822,6 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         for qw in self.type_confluence.values():
             qw.setEnabled(enable_confluence)
         self.total_conf.setEnabled(enable_confluence)
-        if enable_confluence and float(self.total_conf.text()) > 100:
-            self.total_conf.setStyleSheet("QLineEdit {background-color : red; color : black;}")
-        else:
-            self.total_conf.setStyleSheet(self.biwt.qlineedit_style_sheet)
         if enable_confluence:
             current_values, current_total = self.convert_confluence_to_counts()
         
@@ -852,7 +836,7 @@ class BioinformaticsWalkthroughWindow_CellCounts(BioinformaticsWalkthroughWindow
         total = 0
         counts = {}
         for cell_type in self.biwt.cell_types_list_final:
-            n = round(0.01 * float(self.type_confluence[cell_type].text()) / self.prop_total_area_one[cell_type])
+            n = round(0.01 * self.type_confluence[cell_type].get_full_value() / self.prop_total_area_one[cell_type])
             counts[cell_type] = n
             total += n
         return counts, total
@@ -1588,7 +1572,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.par_label[i].setFixedWidth(par_label_width)
                 self.par_text.append(QLineEdit_custom())
                 self.par_text[i].setFixedWidth(par_text_width)
-                self.par_text[i].setStyleSheet(self.biwt.qlineedit_style_sheet)
                 self.par_text[i].editingFinished.connect(self.par_editing_finished)
 
                 hbox.addWidget(self.par_label[i])
@@ -1613,7 +1596,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.par_label[i].setFixedWidth(par_label_width)
                 self.par_text.append(QLineEdit_custom())
                 self.par_text[i].setFixedWidth(par_text_width)
-                self.par_text[i].setStyleSheet(self.biwt.qlineedit_style_sheet)
                 self.par_text[i].editingFinished.connect(self.par_editing_finished)
 
                 hbox.addWidget(self.par_label[i])
@@ -2945,16 +2927,6 @@ class BioinformaticsWalkthrough(QWidget):
 
         self.start_walkthrough()
 
-        self.qlineedit_style_sheet = """
-            QLineEdit:disabled {
-                background-color: rgb(200,200,200);
-                color: black;
-            }
-            QLineEdit:enabled {
-                background-color: white;
-                color: black;
-            }
-            """
         self.qpushbutton_style_sheet = """
             QPushButton:enabled {
                 background-color : lightgreen;
@@ -2968,7 +2940,6 @@ class BioinformaticsWalkthrough(QWidget):
         hbox = QHBoxLayout()
         hbox.addStretch()
         title_label = QLabel('<p style="font-size:32px; text-decoration:underline;"><b>B</b>io<b>I</b>nformatics <b>W</b>alk<b>T</b>hrough (BIWT)</p>')
-        # title_label = QLabel("<b>B</b>io<b>I</b>nformatics <b>W</b>alk<b>T</b>hrough (BIWT)")
         hbox.addWidget(title_label)
         hbox.addStretch()
         vbox.addLayout(hbox)

@@ -7,12 +7,12 @@ def biwt_dev_mode(biwt):
     # file_name = "./data/cells.csv"
     # file_name = "/Users/danielbergman/seq-to-ic-test/data_all/inputdata_download.Rds"
     # file_name = "/Users/danielbergman/pdac-ecm/image_data/j1568sobj_2.rds"
-    file_name = "./config/cell_000.csv"
+    file_name = "/Users/dbergman1/Research/BIWT/biwt-test-data/sample_4.h5ad"
     file_name = os.path.expanduser(file_name)
     print(f"Importing {file_name}")
-    biwt.column_line_edit.setText("CCq25")
+    biwt.column_line_edit.setText("mle_cell_type")
     biwt.import_file(file_name)
-    window_to_stop_on = "BioinformaticsWalkthroughWindow_PositionsWindow"
+    window_to_stop_on = "BioinformaticsWalkthroughWindow_SpatialQuery"
     while biwt.window.__class__.__name__ != window_to_stop_on:
         print(f"Current window: {str(type(biwt.window))}")
         try: 
