@@ -15,7 +15,7 @@ def biwt_dev_mode(biwt):
     window_to_stop_on = "BioinformaticsWalkthroughWindow_SpatialQuery"
     while biwt.window.__class__.__name__ != window_to_stop_on:
         print(f"Current window: {str(type(biwt.window))}")
-        try: 
+        try:
             if biwt.window.__class__.__name__ == "BioinformaticsWalkthroughWindow_PositionsWindow":
                 biwt.window.biwt_plot_window.plot_cell_pos()
             biwt.window.process_window()
