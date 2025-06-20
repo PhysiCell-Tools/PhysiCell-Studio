@@ -81,13 +81,6 @@ class FilterUI2DWindow(QWidget):
         self.graph_display_combobox.setCurrentIndex(0)  # default to NONE
         glayout.addWidget(self.graph_display_combobox)
 
-        msg = """
-Note: only for .mat cell plots (not .svg)
-        """
-        self.attachments_question_label = HoverQuestion(msg)
-        self.attachments_question_label.show_icon()
-        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
-
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
         idx_row += 1
