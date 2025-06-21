@@ -74,20 +74,25 @@ class FilterUI2DWindow(QWidget):
         #----------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+
         idx_row += 1
+        label = QLabel("Graph display:")
+        glayout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
         self.graph_display_combobox = QComboBox()
         self.graph_display_combobox.addItems(['NONE', 'neighbors', 'attachments', 'spring attachments'])
         self.graph_display_combobox.currentIndexChanged.connect(self.graph_display_changed_cb)
         self.graph_display_combobox.setCurrentIndex(0)  # default to NONE
-        glayout.addWidget(self.graph_display_combobox)
+        glayout.addWidget(self.graph_display_combobox, idx_row,1,1,2) # w, row, column, rowspan, colspan
 
         msg = """
-1. If plotting with SVG, requires the SVG and full data saves to be synced.
-2. If filtering on cell types, ALL edges will still be plotted, including for filtered out cells.
+This overlays edges representing cell-cell interactions on the Plot tab. Note the following:
+- If plotting with SVG, requires the SVG and full data saves to be synced.
+- If filtering on cell types, ALL edges will still be plotted, including for filtered out cells.
         """
         self.attachments_question_label = HoverQuestion(msg)
         self.attachments_question_label.show_icon()
-        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.attachments_question_label, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
