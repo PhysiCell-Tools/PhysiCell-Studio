@@ -376,6 +376,10 @@ class Vis(VisBase, QWidget):
 
     def get_current_cells_df(self):
         xml_file_root = "output%08d.xml" % self.current_frame
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        if not Path(xml_file).is_file():
+            print("ERROR: file not found", xml_file)
+            return None
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
         return self.get_mcds_cells_df(mcds)
 
