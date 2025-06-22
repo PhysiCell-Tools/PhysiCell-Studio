@@ -489,7 +489,7 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
-        self.attachments_checked_flag = False
+        self.graph_display_type = 'NONE'
 
         self.contour_mesh = True
         self.contour_lines = False

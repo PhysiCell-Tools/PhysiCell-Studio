@@ -325,7 +325,7 @@ class Vis(VisBase, QWidget):
         if self.substrates_checked_flag:  # do first so cells are plotted on top
             self.plot_substrate(self.current_frame)
         
-        if self.attachments_checked_flag:
+        if self.graph_display_type != 'NONE':
             self.build_attachments(self.current_frame)
         
         if self.cells_checked_flag:
@@ -335,6 +335,14 @@ class Vis(VisBase, QWidget):
                 self.plot_cell_physiboss(self.current_frame)
             else:
                 self.plot_cell_scalar(self.current_frame)
+
+            if self.graph_display_type != 'NONE':
+                df_cells = self.get_current_cells_df()
+                if df_cells is not None:
+                    xvals = df_cells['position_x']
+                    yvals = df_cells['position_y']
+                    for c1,c2 in self.attachments:
+                        self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
 
         # show grid(s), but only if Cells or Substrates checked?
         if self.show_voxel_grid:
@@ -355,6 +363,25 @@ class Vis(VisBase, QWidget):
             print("---->  ", frame_file)
             self.figure.savefig(frame_file)
 
+    def get_mcds_cells_df(self, mcds):
+        try:
+            df_all_cells = mcds.get_cell_df()
+        except:
+            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
+            return
+        if self.celltype_filter:
+            return df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]
+        else:
+            return df_all_cells
+
+    def get_current_cells_df(self):
+        xml_file_root = "output%08d.xml" % self.current_frame
+        xml_file = os.path.join(self.output_dir, xml_file_root)
+        if not Path(xml_file).is_file():
+            print("ERROR: file not found", xml_file)
+            return None
+        mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        return self.get_mcds_cells_df(mcds)
 
     #------------------------------
     # Depends on 2D/3D
@@ -382,7 +409,15 @@ class Vis(VisBase, QWidget):
         self.reset_model()
 
     def build_attachments(self, frame):
-        fname = "output%08d_spring_attached_cells_graph.txt" % frame
+        if self.graph_display_type == 'neighbors':
+            fname = "output%08d_cell_neighbor_graph.txt" % frame
+        elif self.graph_display_type == 'attachments':
+                fname = "output%08d_attached_cells_graph.txt" % frame
+        elif self.graph_display_type == 'spring attachments':
+            fname = "output%08d_spring_attached_cells_graph.txt" % frame
+        else:
+            print("vis_tab.py: build_attachments(): ERROR: graph_display_type not set to neighbors, attachments, or spring attachments")
+            return
         path = os.path.join(self.output_dir, fname)
         self.attachments = set()
 
@@ -803,7 +838,7 @@ class Vis(VisBase, QWidget):
         else:
             cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax)
 
-        if self.attachments_checked_flag:
+        if self.graph_display_type != 'NONE':
             for c1,c2 in self.attachments:
                 self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
     
@@ -858,18 +893,8 @@ class Vis(VisBase, QWidget):
             return
 
         mcds = pyMCDS(xml_file_root, self.output_dir, microenv=False, graph=False, verbose=False)
+        df_cells = self.get_mcds_cells_df(mcds)
         total_min = mcds.get_time()  # warning: can return float that's epsilon from integer value
-        # Get the cell data
-        try:
-            df_all_cells = mcds.get_cell_df()
-        except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
-            return
-
-        if self.celltype_filter:
-            df_cells = df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]
-        else:
-            df_cells = df_all_cells
 
         try:
             cell_scalar = df_cells[cell_scalar_mcds_name]
@@ -1010,9 +1035,6 @@ class Vis(VisBase, QWidget):
         # print("# axes = ",num_axes)
         # if num_axes > 1: 
         # if self.axis_id_cellscalar:
-        if self.attachments_checked_flag:
-            for c1,c2 in self.attachments:
-                self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
     
         if( self.discrete_variable ): # Generic way: if variable is discrete
             # Then we don't need the cax2

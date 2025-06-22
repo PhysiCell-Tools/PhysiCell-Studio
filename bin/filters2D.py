@@ -74,18 +74,25 @@ class FilterUI2DWindow(QWidget):
         #----------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+
         idx_row += 1
-        self.attachments_checkbox = QCheckBox_custom('attachments')
-        self.attachments_checkbox.setChecked(self.vis_tab.attachments_checked_flag)
-        self.attachments_checkbox.clicked.connect(self.attachments_toggle_cb)
-        glayout.addWidget(self.attachments_checkbox)
+        label = QLabel("Graph display:")
+        glayout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.graph_display_combobox = QComboBox()
+        self.graph_display_combobox.addItems(['NONE', 'neighbors', 'attachments', 'spring attachments'])
+        self.graph_display_combobox.currentIndexChanged.connect(self.graph_display_changed_cb)
+        self.graph_display_combobox.setCurrentIndex(0)  # default to NONE
+        glayout.addWidget(self.graph_display_combobox, idx_row,1,1,2) # w, row, column, rowspan, colspan
 
         msg = """
-Note: only for .mat cell plots (not .svg)
+This overlays edges representing cell-cell interactions on the Plot tab. Note the following:
+- If plotting with SVG, requires the SVG and full data saves to be synced.
+- If filtering on cell types, ALL edges will still be plotted, including for filtered out cells.
         """
         self.attachments_question_label = HoverQuestion(msg)
         self.attachments_question_label.show_icon()
-        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.attachments_question_label, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
@@ -278,8 +285,8 @@ Note: only for .mat cell plots (not .svg)
         self.vis_tab.phenotype_cb()
         pass
 
-    def attachments_toggle_cb(self, bval):
-        self.vis_tab.attachments_checked_flag = bval
+    def graph_display_changed_cb(self):
+        self.vis_tab.graph_display_type = self.graph_display_combobox.currentText()
         self.vis_tab.update_plots()
     
 
