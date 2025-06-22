@@ -37,9 +37,9 @@ from pyMCDS import pyMCDS
 #----------------------------------------------------------------------
 class Vis(VisBase, QWidget):
 
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, galaxy_flag):
 
-        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
+        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag, galaxy_flag=galaxy_flag)
 
         self.figure = None
 
@@ -547,10 +547,13 @@ class Vis(VisBase, QWidget):
         # self.canvas.update()
         # self.canvas.draw()
 
-        if self.save_png:
-            self.png_frame += 1
-            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
-            print("---->  ", png_file)
+        if self.save_frame:
+            if self.save_frame_filetype != '.png':
+                print(f"\n\n----WARNING----\n\t3D printing not supported for {self.save_frame_filetype} filetype. Using .png instead.\n")
+                self.save_frame_filetype = '.png'
+            self.frame_ind += 1
+            frame_file = os.path.join(self.output_dir, f"frame{self.frame_ind:04d}{self.save_frame_filetype}")
+            print("---->  ", frame_file)
             windowto_image_filter = vtkWindowToImageFilter()
             windowto_image_filter.SetInput(self.vtkWidget.GetRenderWindow())
             windowto_image_filter.SetScale(1)  # image quality
@@ -563,7 +566,7 @@ class Vis(VisBase, QWidget):
                 windowto_image_filter.ReadFrontBufferOff()
                 windowto_image_filter.Update()
 
-            self.png_writer.SetFileName(png_file)
+            self.png_writer.SetFileName(frame_file)
             self.png_writer.SetInputConnection(windowto_image_filter.GetOutputPort())
             self.png_writer.Write()
 
