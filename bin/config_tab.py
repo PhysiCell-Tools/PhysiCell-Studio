@@ -304,7 +304,7 @@ class Config(StudioTab):
         self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.folder = QLineEdit()
-        if self.nanohub_flag:
+        if self.nanohub_flag or self.xml_creator.galaxy_flag:
             self.folder.setEnabled(False)
         self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
@@ -507,7 +507,7 @@ class Config(StudioTab):
         self.csv_folder = QLineEdit()
         self.csv_folder.setFixedWidth(filename_width)
         self.csv_folder.setStyleSheet(style_sheet_template(QLineEdit))
-        if self.nanohub_flag:
+        if self.nanohub_flag or self.xml_creator.galaxy_flag:
             self.folder.setEnabled(False)
         hbox.addWidget(self.csv_folder)
 
@@ -751,6 +751,8 @@ class Config(StudioTab):
         self.num_threads.setText(self.xml_root.find(".//omp_num_threads").text)
 
         self.folder.setText(self.xml_root.find(".//save//folder").text)
+        if self.xml_creator.galaxy_flag:
+            self.folder.setText("output")
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
