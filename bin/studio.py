@@ -1086,6 +1086,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         msg.setFixedWidth(500)
         msg.exec_()
 
+    def show_info_message(self, message):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText(message)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec_()
 
     def load_model(self,name):
         if self.studio_flag:
