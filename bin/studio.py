@@ -23,6 +23,7 @@ import argparse
 import logging
 import traceback
 import shutil # for possible copy of file
+import zipfile
 import glob
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
