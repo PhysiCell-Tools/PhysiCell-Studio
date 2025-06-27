@@ -107,7 +107,6 @@ class PhysiCellXMLCreator(QWidget):
         else:
             from vis_tab import Vis 
 
-        # self.current_xml_file = ""
         self.studio_flag = studio_flag 
         # self.view_shading = None
         self.skip_validate_flag = skip_validate_flag 
@@ -263,17 +262,8 @@ class PhysiCellXMLCreator(QWidget):
         populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
         # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
 
-        # self.celldef_tab.enable_interaction_callbacks()
 
-        # print("\n\n---- studio.py: post populate_tree_cell_defs():")
-        # for cdef in self.celldef_tab.param_d.keys():
-        #     print(f'{cdef} --> {self.celldef_tab.param_d[cdef]["transformation_rate"]}')
-
-        # print(self.celldef_tab.param_d)
-        # print(self.celldef_tab.param_d)
-
-        # self.celldef_tab.fill_substrates_comboboxes() # do before populate?
-        print("\n\n---- studio.py: calling celldef_tab.fill_celltypes_comboboxes()")
+        # print("\n\n---- studio.py: calling celldef_tab.fill_celltypes_comboboxes()")
         self.celldef_tab.fill_celltypes_comboboxes()
 
         self.microenv_tab.celldef_tab = self.celldef_tab
@@ -361,7 +351,6 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            # self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.celldef_tab, self.rules_flag, self.download_menu)
             self.run_tab = RunModel(self)
 
             self.homedir = os.getcwd()
@@ -404,7 +393,6 @@ class PhysiCellXMLCreator(QWidget):
             self.tabWidget.addTab(self.run_tab,"Run")
 
             # config_tab needed for 3D domain boundary outline
-            # self.vis_tab = Vis(self.studio_flag, self.nanohub_flag, self.config_tab, self.celldef_tab, self.run_tab, self.model3D_flag, self.tensor_flag, self.ecm_flag)
             self.vis_tab = Vis(self.studio_flag, self.rules_flag, self.nanohub_flag, self.config_tab, self.microenv_tab, self.celldef_tab, self.user_params_tab, self.rules_tab, self.ics_tab, self.run_tab, self.model3D_flag, self.tensor_flag, self.ecm_flag, self.galaxy_flag)
             # if not self.nanohub_flag:
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
@@ -450,7 +438,7 @@ class PhysiCellXMLCreator(QWidget):
             #     self.legend_tab.reload_legend()
 
             self.vis_tab.reset_model()
-            
+
 
         vlayout.addWidget(self.tabWidget)
         # self.addTab(self.sbml_tab,"SBML")
@@ -817,7 +805,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         try:
             # self.celldef_tab.config_path = self.current_save_file
-
             # self.celldef_tab.config_path = self.current_xml_file
             # print("save_as_cb():  doing config_tab.fill_xml")
             # self.config_tab.fill_xml()
@@ -873,7 +860,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # self.user_params_tab.fill_xml()
             # if self.rules_flag:
             #     self.rules_tab.fill_xml()
-            
+
             if not self.update_xml_from_gui():
                 return
 
@@ -1533,8 +1520,8 @@ def main():
         # parser.add_argument("--is_movable", help="checkbox for mechanics is_movable", action="store_true")
         parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e ", "--exec", type=str, help="executable model")
-        # parser.add_argument("-p ", "--pconfig", help="use config/PhysiCell_settings.xml", action="store_true")
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
+
         if platform.system() == "Windows":
             exec_file = 'project.exe'
         else:
@@ -1596,13 +1583,6 @@ def main():
             else:
                 print("exec_file is NOT valid: ", args.exec)
                 sys.exit()
-        # if args.pconfig:
-        #     config_file = "config/PhysiCell_settings.xml"
-        #     if Path(config_file).is_file():
-        #         print("config/PhysiCell_settings.xml is valid")
-        #     else:
-        #         print("config_file is NOT valid: ", config_file)
-        #         sys.exit()
         if args.biwt_flag:
             biwt_flag = True
     except:
