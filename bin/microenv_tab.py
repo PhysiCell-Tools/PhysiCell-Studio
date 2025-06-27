@@ -12,7 +12,9 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 # from ElementTree_pretty import prettify
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import *
+# from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QFrame,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QPushButton,QLabel,QScrollArea,QTreeWidget,QTreeWidgetItem,QSplitter,QMessageBox
+
 from PyQt5.QtGui import QIcon, QDoubleValidator
 from studio_classes import QCheckBox_custom
 
@@ -389,9 +391,13 @@ class SubstrateDef(QWidget):
 
 
     def update_3D(self):
-        zmax = float(self.config_tab.zmax.text())
-        zmin = float(self.config_tab.zmin.text())
-        zdel = float(self.config_tab.zdel.text())
+        try:
+            zmax = float(self.config_tab.zmax.text())
+            zmin = float(self.config_tab.zmin.text())
+            zdel = float(self.config_tab.zdel.text())
+        except:
+            self.popup_msg("Invalid value in Z domain of Config tab.")
+            return
         self.is_3D = False
         if (zmax-zmin) > zdel:
             self.is_3D = True
@@ -588,7 +594,8 @@ class SubstrateDef(QWidget):
         if num_items == 1:
             # print("Not allowed to delete all substrates.")
             # QMessageBox.information(self, "Not allowed to delete all substrates")
-            self.show_delete_warning()
+            # self.show_delete_warning()
+            self.popup_msg("Not allowed to delete all substrates.")
             return
 
         # rwh: BEWARE of mutating the dict?
@@ -894,6 +901,21 @@ class SubstrateDef(QWidget):
             logging.debug(f'microrenv_tab.py: key in param_d.keys() = {substrate}')
             if substrate in substrates_in_tree:
                 logging.debug(f'matched! {substrate}')
+                print("----> ",self.param_d[substrate])
+                for key in self.param_d[substrate]:
+                    if "enable" not in key and "units" not in key:   # hacky
+                        try:
+                            print("--- attempt to do float on key= ",key)
+                            foo = float(self.param_d[substrate][key])
+                        except:
+                            self.popup_msg("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
+                            # msgBox = QMessageBox()
+                            # msgBox.setIcon(QMessageBox.Information)
+                            # msgBox.setText("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
+                            # msgBox.setStandardButtons(QMessageBox.Ok)
+                            # # returnValue = msgBox.exec()
+                            # msgBox.exec()
+                            return False
 
                 elm = ET.Element("variable", 
                         {"name":substrate, "units":"dimensionless", "ID":str(idx)})
@@ -983,5 +1005,15 @@ class SubstrateDef(QWidget):
             self.xml_root.find(".//microenvironment_setup//options//initial_condition//filename").text = self.ics_tab.full_substrate_ic_fname
         elif (self.xml_root.find(".//microenvironment_setup//options//initial_condition") is not None) and (self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['type'].lower()=="csv"): # then make sure this is disabled
             self.xml_root.find(".//microenvironment_setup//options//initial_condition").attrib['enabled'] = 'false'
+
+        return True
+
+    def popup_msg(self, msg):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText(msg)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
+
     def clear_gui(self):
         pass
