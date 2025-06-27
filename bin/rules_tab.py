@@ -2074,30 +2074,37 @@ class Rules(QWidget):
         return
     
     def find_and_replace_rule_row(self, old_name, new_name, irow, super_strings):
-        column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
-        for icol in column_indices:
-            old_text = self.rules_table.cellWidget(irow, icol).text()
-            new_text = find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
-            self.rules_table.cellWidget(irow, icol).setText(new_text)
-        return
+        try:
+            column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
+            for icol in column_indices:
+                old_text = self.rules_table.cellWidget(irow, icol).text()
+                new_text = find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
+                self.rules_table.cellWidget(irow, icol).setText(new_text)
+        except:
+            pass
     
 def find_and_replace_rule_cell(old_name, new_name, super_strings, s):
-    if s==old_name:
-        return new_name
-    
-    # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
-    # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
-    # so first check if any of the super strings are in the given string
-    for super_string in super_strings:
-        if find_isolated_string(s, super_string) != -1:
-            print(f"      skipping {s} because it contains {super_string}")
-            return s
-    
-    ind = find_isolated_string(s, old_name)
-    if ind != -1:
-        print(f"      replacing {old_name} with {new_name} in {s}")
-        return s[0:ind] + new_name + s[(ind+len(old_name)):]
-    return s
+    try:
+        if s==old_name:
+            return new_name
+        
+        # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
+        # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
+        # so first check if any of the super strings are in the given string
+        for super_string in super_strings:
+            if find_isolated_string(s, super_string) != -1:
+                print(f"      skipping {s} because it contains {super_string}")
+                return s
+        
+        ind = find_isolated_string(s, old_name)
+        if ind != -1:
+            print(f"      replacing {old_name} with {new_name} in {s}")
+            return s[0:ind] + new_name + s[(ind+len(old_name)):]
+        return s
+    except:
+        msg = "rules_tab:  Error replacing a string in a rule. Perhaps an invalid cell type or other."
+        show_studio_warning_window(msg)
+        return ""
 
 def find_isolated_string(s, name, start=0):
     # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example
