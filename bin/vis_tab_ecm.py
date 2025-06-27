@@ -60,9 +60,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, galaxy_flag):
 
-        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
+        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag, galaxy_flag=galaxy_flag)
 
         self.figure = None
 
@@ -120,6 +120,11 @@ class Vis(VisBase, QWidget):
         self.plot_xmax = None
         self.plot_ymin = None
         self.plot_ymax = None
+
+        self.axes_x_center = 0
+        self.axes_y_center = 0
+        self.axes_x_radius = 100
+        self.axes_y_radius = 100
 
         self.use_defaults = True
         self.title_str = ""
@@ -248,6 +253,17 @@ class Vis(VisBase, QWidget):
     #     # self.view_aspect_square = bval
     #     self.view_aspect_toggle_cb(bval)
 
+
+    #--------------------------------------
+    def reset_axes_cb(self):
+        # print("vis_tab.py: reset_axes_cb")
+        # self.axes_x_center, axes_y_center, axes_x_radius, axes_y_radius, 
+        self.plot_xmin = self.axes_x_center - self.axes_x_radius
+        self.plot_xmax = self.axes_x_center + self.axes_x_radius
+
+        self.plot_ymin = self.axes_y_center - self.axes_y_radius
+        self.plot_ymax = self.axes_y_center + self.axes_y_radius
+        self.update_plots()
 
     #--------------------------------------
     # Dependent on 2D/3D
