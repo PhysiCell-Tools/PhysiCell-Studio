@@ -64,7 +64,9 @@ try:
     simularium_installed = True
 except:
     simularium_installed = False
-        
+    
+import physiboss_models
+    
 # from sbml_tab import SBMLParams 
 
 def SingleBrowse(self):
@@ -171,7 +173,10 @@ class PhysiCellXMLCreator(QWidget):
             # read_file = os.path.join(self.absolute_data_dir, model_name + ".xml")
 
         self.p = None # Necessary to download files!
-
+        self.physiboss_models_db = physiboss_models.Database()
+        self.physiboss_models_menu = None
+        self.physiboss_models_menus = {}
+        self.physiboss_models_configs = {}
         # Menus
         vlayout = QVBoxLayout(self)
         # vlayout.setContentsMargins(5, 35, 5, 5)
@@ -607,6 +612,25 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Save user project", self.save_user_proj_cb)
                 file_menu.addAction("Load user project", self.load_user_proj_cb)
 
+                file_menu.addSeparator()
+                self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
+                for model in self.physiboss_models_db.keys():
+                    if len(self.physiboss_models_db.models_versions[model]) == 1:
+                        self.physiboss_models_menus.update(
+                            {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
+                        )
+                    else:
+                        versions_menus = []
+                        versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
+                        
+                        for version, _ in self.physiboss_models_db.models_versions[model]:
+                            action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
+                            versions_menus.append((version, action))
+                        self.physiboss_models_menus.update(
+                            {model: (versions_menu, versions_menus)}
+                        )     
+                
+
         if self.galaxy_flag:
             file_menu.addAction("get from History", self.get_galaxy_history_cb)
             self.download_menu = file_menu.addMenu('put on History')
@@ -956,6 +980,83 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             print(f"--- Warning: cannot copy custom_modules/*")
 
 
+    #---------------------------------
+    def load_physiboss_model_cb(self, model_name, version=None):
+        print(f"studio.py: load_physiboss_model_cb(): model_name={model_name}, version={version}")
+        if model_name not in self.physiboss_models_db.keys():
+            print(f"--- Warning: {model_name} not found in physiboss_models_db")
+            return
+        for menu in self.physiboss_models_menus.values():
+            if isinstance(menu, QAction):
+                if menu.text().startswith("✓"):
+                    menu.setText(f" {menu.text()[1:]}")
+            elif isinstance(menu, tuple):
+                if menu[0].title().startswith("✓"):
+                    menu[0].setTitle(f" {menu[0].title()[1:]}")
+                    for _, menu_version in menu[1]:
+                        if menu_version.text().startswith("✓"):
+                            menu_version.setText(f" {menu_version.text()[1:]}")
+                            
+        if isinstance(self.physiboss_models_menus[model_name], QAction):
+            self.physiboss_models_menus[model_name].setText(f"✓{self.physiboss_models_menus[model_name].text()[1:]}")
+        elif isinstance(self.physiboss_models_menus[model_name], tuple):
+            self.physiboss_models_menus[model_name][0].setTitle(f"✓{self.physiboss_models_menus[model_name][0].title()[1:]}")
+            if version is not None:
+                for t_version, menu_version in self.physiboss_models_menus[model_name][1]:
+                    if t_version == version:
+                        menu_version.setText(f"✓{menu_version.text()[1:]}")
+            else:
+                self.physiboss_models_menus[model_name][1][0].setTitle(f"✓ {self.physiboss_models_menus[model_name][1][0].title()[1:]}")
+        # self.physiboss_models_menus[model_name].setChecked(True)  # disable menu item
+        
+        self.run_tab.cancel_model_cb()
+        print(self.physiboss_models_db.models_versions[model_name])
+        print([model_release for model_version, model_release in self.physiboss_models_db.models_versions[model_name] if version == model_version])
+        self.physiboss_models_db.download_model(model_name, os.getcwd(), version=version,backup=True)
+        print(f"studio.py: model {model_name} loaded")
+        print(self.physiboss_models_db.current_model_yaml)
+        print(self.physiboss_models_db.current_model_info)
+        
+        self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info['config'][0])
+        self.config_file = self.current_xml_file
+
+        self.show_sample_model()
+        self.run_tab.config_xml_name.setText(self.current_xml_file)
+        self.run_tab.exec_name.setText(os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info['binary']))
+        
+        if "__separator__" not in self.physiboss_models_menus:
+            self.physiboss_models_menus.update({"__separator__": self.physiboss_models_menu.addSeparator()})
+            self.physiboss_models_menus.update({"__config_selector__": self.physiboss_models_menu.addMenu("Select configuration")})
+        else:
+            for config in self.physiboss_models_configs.values():
+                self.physiboss_models_menus["__config_selector__"].removeAction(config)
+                # del config  # remove old config menus
+                
+        self.physiboss_models_configs = {}
+        i=0
+        for config in self.physiboss_models_db.current_model_info['config']:
+            label = ("✓" if i==0 else " ") + " " + config
+            config_menu = self.physiboss_models_menus["__config_selector__"].addAction(label, lambda c=config: self.load_physiboss_config_cb(c))
+            self.physiboss_models_configs.update({config: config_menu})
+            i+=1
+        
+        # self.vis_tab.update_output_dir(self.config_tab.folder.text())
+
+    def load_physiboss_config_cb(self, config):
+        print(f"studio.py: load_physiboss_config_cb(): model_name={config}")
+        print(self.physiboss_models_configs)
+        self.run_tab.cancel_model_cb()
+        for _, config_menu in self.physiboss_models_configs.items():
+            if config_menu.text().startswith("✓"):
+                config_menu.setText(f" {config_menu.text()[1:]}")
+        self.physiboss_models_configs[config].setText(f"✓{self.physiboss_models_configs[config].text()[1:]}")
+        self.current_xml_file = os.path.join(os.getcwd(), config)
+        
+        self.config_file = self.current_xml_file
+
+        self.show_sample_model()
+        self.run_tab.config_xml_name.setText(self.current_xml_file)
+        
     #---------------------------------
     def load_user_proj_studio_template(self, proj_path):
         try:
