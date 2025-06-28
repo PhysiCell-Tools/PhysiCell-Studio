@@ -568,13 +568,26 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         #-----
         file_menu = menubar.addMenu('&File')
         if self.nanohub_flag:
-            model_menu = menubar.addMenu('&Model')
-            model_menu.addAction("template", self.template_cb)
-            model_menu.addAction("biorobots", self.biorobots_cb)
-            model_menu.addAction("tumor_immune", self.tumor_immune_cb)
+            pass   # rwh Feb 2025
+            # model_menu = menubar.addMenu('&Model')
+            # model_menu.addAction("template", self.template_cb)
+            # model_menu.addAction("biorobots", self.biorobots_cb)
+            # model_menu.addAction("tumor_immune", self.tumor_immune_cb)
+
+            file_menu.addAction("Open (upload) mymodel.xml", self.upload_config_cb)
+            file_menu.addAction("Open (upload) myrules.csv", self.upload_rules_cb)
+            file_menu.addAction("Open (upload) mycells.csv", self.upload_cells_cb)
+
+            self.download_menu = file_menu.addMenu('Download')
+            self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
+            self.download_csv_item = self.download_menu.addAction("Download cells,rules (.csv) data", self.download_csv_cb)
+            self.download_rules_item = self.download_menu.addAction("Download rules.txt", self.download_rules_cb)
+            self.download_output_item = self.download_menu.addAction("Download all output data", self.download_output_cb)
 
         #--------------
         else:
+            self.download_menu = None
+
             file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
             file_menu.addAction("Save as", self.save_as_cb)
             file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
@@ -601,18 +614,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_zipped_csv_item = self.download_menu.addAction("all_csv.zip", self.download_zipped_csv_galaxy_cb)
             self.download_all_zipped_item = self.download_menu.addAction("all_output.zip", self.download_all_zipped_galaxy_cb)
 
-        if self.nanohub_flag:
-            self.download_menu = file_menu.addMenu('Download')
-            self.download_config_item = self.download_menu.addAction("Download config.xml", self.download_config_cb)
-            self.download_csv_item = self.download_menu.addAction("Download cells,rules (.csv) data", self.download_csv_cb)
-            self.download_rules_item = self.download_menu.addAction("Download rules.txt", self.download_rules_cb)
-            self.download_output_item = self.download_menu.addAction("Download all output data", self.download_output_cb)
-            # self.download_svg_item = self.download_menu.addAction("Download cell (.svg) data", self.download_svg_cb)
-            # self.download_mat_item = self.download_menu.addAction("Download full (.mat) data", self.download_full_cb)
-            # self.download_graph_item = self.download_menu.addAction("Download cell graph (.txt) data", self.download_graph_cb)
-        else:
-            self.download_menu = None
-
         #-------------------------
         if self.model3D_flag:
             view3D_menu = menubar.addMenu('&View')
@@ -630,10 +631,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 view_menu.triggered.connect(self.view2D_cb)
 
                 vis2D_filterUI_act = view_menu.addAction("Plot options", self.filterUI_cb)
-                vis2D_model_summary_act = view_menu.addAction("Model summary", self.model_summary_cb)
+                if not self.nanohub_flag:
+                    vis2D_model_summary_act = view_menu.addAction("Model summary", self.model_summary_cb)
 
 
-        if not self.galaxy_flag:
+        if not self.nanohub_flag and not self.galaxy_flag:
             action_menu = menubar.addMenu('&Action')
             action_menu.addAction("Run", self.run_model_cb, QtGui.QKeySequence('Ctrl+r'))
 
@@ -1312,6 +1314,44 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
 
     #---------- nanoHUB functions
+    def upload_config_cb(self):
+        if self.nanohub_flag:
+            cwd = os.getcwd()
+            logging.debug(f'upload_config_cb(): cwd={cwd}')
+            try:
+                logging.debug(f'upload_config_cb(): pre- importfile mymodel.xml')
+                os.system("importfile mymodel.xml")
+                logging.debug(f'upload_config_cb(): post- importfile mymodel.xml')
+            except:
+                logging.debug(f'upload_config_cb(): failed try: Unable to importfile mymodel.xml')
+
+            logging.debug(f'upload_config_cb(): pre- self.load_model')
+            self.load_model("mymodel")
+            logging.debug(f'upload_config_cb(): post- self.load_model')
+
+    def upload_rules_cb(self):
+        if self.nanohub_flag:
+            cwd = os.getcwd()
+            logging.debug(f'upload_rules_cb(): cwd={cwd}')
+            try:
+                logging.debug(f'upload_rules_cb(): pre- importfile myrules.csv')
+                os.system("importfile myrules.csv")
+                logging.debug(f'upload_rules_cb(): post- importfile myrules.csv')
+            except:
+                logging.debug(f'upload_rules_cb(): failed try: Unable to importfile myrules.csv')
+
+    def upload_cells_cb(self):
+        if self.nanohub_flag:
+            cwd = os.getcwd()
+            logging.debug(f'upload_cells_cb(): cwd={cwd}')
+            try:
+                logging.debug(f'upload_cells_cb(): pre- importfile mycells.csv')
+                os.system("importfile mycells.csv")
+                logging.debug(f'upload_cells_cb(): post- importfile mycells.csv')
+            except:
+                logging.debug(f'upload_cells_cb(): failed try: Unable to importfile mycells.csv')
+
+    #----------------------------------
     def download_config_cb(self):
         if self.nanohub_flag:
             try:
