@@ -904,18 +904,20 @@ class SubstrateDef(QWidget):
                 print("----> ",self.param_d[substrate])
                 for key in self.param_d[substrate]:
                     if "enable" not in key and "units" not in key:   # hacky
-                        try:
-                            print("--- attempt to do float on key= ",key)
-                            foo = float(self.param_d[substrate][key])
-                        except:
-                            self.popup_msg("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
-                            # msgBox = QMessageBox()
-                            # msgBox.setIcon(QMessageBox.Information)
-                            # msgBox.setText("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
-                            # msgBox.setStandardButtons(QMessageBox.Ok)
-                            # # returnValue = msgBox.exec()
-                            # msgBox.exec()
-                            return False
+                        sfx = key[-4:]
+                        if ("min" in sfx or "max" in sfx) and self.param_d[substrate]["enable_"+sfx]:   # hacky
+                            try:
+                                print("--- attempt to do float on key= ",key)
+                                foo = float(self.param_d[substrate][key])
+                            except:
+                                self.popup_msg("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
+                                # msgBox = QMessageBox()
+                                # msgBox.setIcon(QMessageBox.Information)
+                                # msgBox.setText("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
+                                # msgBox.setStandardButtons(QMessageBox.Ok)
+                                # # returnValue = msgBox.exec()
+                                # msgBox.exec()
+                                return False
 
                 elm = ET.Element("variable", 
                         {"name":substrate, "units":"dimensionless", "ID":str(idx)})
