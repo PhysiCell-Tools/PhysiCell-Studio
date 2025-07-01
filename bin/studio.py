@@ -614,8 +614,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
                 file_menu.addSeparator()
                 self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
-                for model in self.physiboss_models_db.keys():
-                    if len(self.physiboss_models_db.models_versions[model]) == 1:
+                for model in self.physiboss_models_db.all():
+                    if len(self.physiboss_models_db.versions(model)) == 1:
                         self.physiboss_models_menus.update(
                             {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
                         )
@@ -623,7 +623,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                         versions_menus = []
                         versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
                         
-                        for version, _ in self.physiboss_models_db.models_versions[model]:
+                        for version in self.physiboss_models_db.versions(model):
                             action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
                             versions_menus.append((version, action))
                         self.physiboss_models_menus.update(
@@ -983,7 +983,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #---------------------------------
     def load_physiboss_model_cb(self, model_name, version=None):
         print(f"studio.py: load_physiboss_model_cb(): model_name={model_name}, version={version}")
-        if model_name not in self.physiboss_models_db.keys():
+        if model_name not in self.physiboss_models_db.all():
             print(f"--- Warning: {model_name} not found in physiboss_models_db")
             return
         for menu in self.physiboss_models_menus.values():
@@ -1010,19 +1010,15 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.physiboss_models_menus[model_name].setChecked(True)  # disable menu item
         
         self.run_tab.cancel_model_cb()
-        print(self.physiboss_models_db.models_versions[model_name])
-        print([model_release for model_version, model_release in self.physiboss_models_db.models_versions[model_name] if version == model_version])
         self.physiboss_models_db.download_model(model_name, os.getcwd(), version=version,backup=True)
         print(f"studio.py: model {model_name} loaded")
-        print(self.physiboss_models_db.current_model_yaml)
-        print(self.physiboss_models_db.current_model_info)
         
-        self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info['config'][0])
+        self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['config'][0])
         self.config_file = self.current_xml_file
 
         self.show_sample_model()
         self.run_tab.config_xml_name.setText(self.current_xml_file)
-        self.run_tab.exec_name.setText(os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info['binary']))
+        self.run_tab.exec_name.setText(os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['binary']))
         
         if "__separator__" not in self.physiboss_models_menus:
             self.physiboss_models_menus.update({"__separator__": self.physiboss_models_menu.addSeparator()})
@@ -1034,7 +1030,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 
         self.physiboss_models_configs = {}
         i=0
-        for config in self.physiboss_models_db.current_model_info['config']:
+        for config in self.physiboss_models_db.current_model_info()['config']:
             label = ("✓" if i==0 else " ") + " " + config
             config_menu = self.physiboss_models_menus["__config_selector__"].addAction(label, lambda c=config: self.load_physiboss_config_cb(c))
             self.physiboss_models_configs.update({config: config_menu})
