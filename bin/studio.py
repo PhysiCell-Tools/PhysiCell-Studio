@@ -55,7 +55,7 @@ from galaxy_history import GalaxyHistoryWindow
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
-    print("----- cannot import from galaxy_ie_helpers ")
+    print("----- Note: cannot import from galaxy_ie_helpers ")
     pass
 
 try:
@@ -65,7 +65,12 @@ try:
 except:
     simularium_installed = False
     
-import physiboss_models
+try:
+    import physiboss_models
+except:
+    print("----- Error: cannot import physiboss_models")
+    print("      Please re-run 'pip install -r requirements.txt'")
+    sys.exit(-1)
     
 # from sbml_tab import SBMLParams 
 
@@ -1796,8 +1801,7 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag
-                             )
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag)
     print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes
