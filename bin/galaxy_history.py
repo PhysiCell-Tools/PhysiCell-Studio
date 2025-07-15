@@ -14,7 +14,7 @@ from PyQt5.QtGui import QIntValidator
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
-    print("----- cannot import from galaxy_ie_helpers ")
+    print("----- Note: cannot import from galaxy_ie_helpers ")
     pass
 
 class ScrollLabel(QScrollArea):

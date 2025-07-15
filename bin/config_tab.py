@@ -13,8 +13,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 from PyQt5 import QtCore, QtGui
 # from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup    # , QMessageBox
-# from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QRadioButton,QPushButton, QLabel,QComboBox,QScrollArea,QGridLayout, QFileDialog,QSpinBox,QDoubleSpinBox, QButtonGroup, QMessageBox
 
 from studio_classes import QLabelSeparator, QLineEdit_custom, QCheckBox_custom, QRadioButton_custom, HoverWarning, StudioTab
 from studio_functions import style_sheet_template
@@ -42,15 +41,10 @@ class RandomSeedIntValidator(QtGui.QValidator):
             return QtGui.QValidator.Invalid, text, pos
 
 class Config(StudioTab):
-    # def __init__(self, nanohub_flag):
     def __init__(self, xml_creator):
         super().__init__(xml_creator)
-        # global self.config_params
 
         self.default_time_units = "min"
-
-        # self.nanohub_flag = nanohub_flag
-        self.nanohub_flag = False
 
         self.vis_tab = None
         self.ics_tab = None
@@ -304,7 +298,7 @@ class Config(StudioTab):
         self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
         self.folder = QLineEdit()
-        if self.nanohub_flag or self.xml_creator.galaxy_flag:
+        if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
             self.folder.setEnabled(False)
         self.config_tab_layout.addWidget(self.folder, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
@@ -507,7 +501,7 @@ class Config(StudioTab):
         self.csv_folder = QLineEdit()
         self.csv_folder.setFixedWidth(filename_width)
         self.csv_folder.setStyleSheet(style_sheet_template(QLineEdit))
-        if self.nanohub_flag or self.xml_creator.galaxy_flag:
+        if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
             self.folder.setEnabled(False)
         hbox.addWidget(self.csv_folder)
 
@@ -727,21 +721,6 @@ class Config(StudioTab):
 
         if self.xml_root.find(".//user_parameters//random_seed") is not None:
             self.random_seed_warning_label.show_icon()
-
-        # self.disable_auto_springs.setChecked(False)
-        # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
-        #     if self.xml_root.find(".//disable_automated_spring_adhesions").text.lower() == "true":
-        #         self.disable_auto_springs.setChecked(True)
-
-        # No, let's not do this
-        # if self.xml_root.find(".//disable_automated_spring_adhesions") is not None:
-        #     msg = f"NOTE: disable_automated_spring_adhesions in .xml is deprecated."
-        #     print(msg)
-        #     msgBox = QMessageBox()
-        #     msgBox.setTextFormat(Qt.RichText)
-        #     msgBox.setText(msg)
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     returnValue = msgBox.exec()
         
         self.max_time.setText(self.xml_root.find(".//max_time").text)
         self.diffusion_dt.setText(self.xml_root.find(".//dt_diffusion").text)
@@ -753,6 +732,8 @@ class Config(StudioTab):
         self.folder.setText(self.xml_root.find(".//save//folder").text)
         if self.xml_creator.galaxy_flag:
             self.folder.setText("output")
+        elif self.xml_creator.nanohub_flag:
+            self.folder.setText("tmpdir")
         
         self.svg_interval.setText(self.xml_root.find(".//SVG//interval").text)
         # NOTE: do this *after* filling the mcds_interval, directly above, due to the callback/constraints on them??
@@ -828,22 +809,47 @@ class Config(StudioTab):
 
         # print(f"\nconfig_tab: fill_xml: =self.xml_root = {self.xml_root}" )
         # print("config_tab: fill_xml: xmin=",self.xmin.text() )
-        self.xml_root.find(".//x_min").text = self.xmin.text()
-        self.xml_root.find(".//x_max").text = self.xmax.text()
-        self.xml_root.find(".//dx").text = self.xdel.text()
+        # self.xml_root.find(".//x_min").text = self.xmin.text()
+        try:
+            self.xml_root.find(".//x_min").text = str(float(self.xmin.text()))
+            self.xml_root.find(".//x_max").text = str(float(self.xmax.text()))
+            xdel = float(self.xdel.text())
 
-        self.xml_root.find(".//y_min").text = self.ymin.text()
-        self.xml_root.find(".//y_max").text = self.ymax.text()
-        self.xml_root.find(".//dy").text = self.ydel.text()
+            self.xml_root.find(".//y_min").text = str(float(self.ymin.text()))
+            self.xml_root.find(".//y_max").text = str(float(self.ymax.text()))
+            ydel = float(self.ydel.text())
 
-        self.xml_root.find(".//z_min").text = self.zmin.text()
-        self.xml_root.find(".//z_max").text = self.zmax.text()
-        self.xml_root.find(".//dz").text = self.zdel.text()
+            zmin = float(self.zmin.text())
+            self.xml_root.find(".//z_min").text = str(zmin)
+            zmax = float(self.zmax.text())
+            self.xml_root.find(".//z_max").text = str(zmax)
+            zdel = float(self.zdel.text())
+
+            if xdel <= 0 or ydel <= 0 or zdel <= 0:
+                raise Exception
+
+            self.xml_root.find(".//dx").text = str(xdel)
+            self.xml_root.find(".//dy").text = str(ydel)
+            self.xml_root.find(".//dz").text = str(zdel)
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("You seem to have invalid Domain parameter values in Config Basics. Please fix them.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            # returnValue = msgBox.exec()
+            msgBox.exec()
+            return False
+            # msgBox.buttonClicked.connect(msgButtonClick)
+
+            # msg = QMessageBox()
+            # msg.setIcon(QMessageBox.Critical)
+            # msg.setText("Warning")
+            # msg.setInformativeText('The output intervals for SVG and full (in Config Basics) do not match.')
+            # msg.setWindowTitle("Warning")
+            # msg.exec_()
+
 
         # is this model 2D or 3D?
-        zmax = float(self.zmax.text())
-        zmin = float(self.zmin.text())
-        zdel = float(self.zdel.text())
         if (zmax-zmin) > zdel:
             self.xml_root.find(".//domain//use_2D").text = 'false'
         else:
@@ -998,7 +1004,7 @@ class Config(StudioTab):
         if self.xml_root.find(".//initial_conditions") is None: 
             print("\n ===  Warning: Original XML is missing <initial_conditions> block.")
             print("        Will not insert into saved file.\n")
-            return
+            return True
 
         if self.cells_csv.isChecked():
             self.xml_root.find(".//initial_conditions//cell_positions").attrib['enabled'] = 'true'
@@ -1037,6 +1043,8 @@ class Config(StudioTab):
         # xml_root.find(".//SVG").find(".//interval").text = str(self.svg_interval.value)
         # xml_root.find(".//full_data").find(".//enable").text = str(self.toggle_mcds.value)
         # xml_root.find(".//full_data").find(".//interval").text = str(self.mcds_interval.value)
+
+        return True
 
             #-----------------------------------------------------------
     def import_seeding_cb(self):

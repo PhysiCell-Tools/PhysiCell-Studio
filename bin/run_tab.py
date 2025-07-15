@@ -20,21 +20,23 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import QProcess
 from cell_def_tab import CellDefException
+from studio_classes import StudioTab
+
 class QHLine(QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
-class RunModel(QWidget):
-    def __init__(self, nanohub_flag, tab_widget, celldef_tab, rules_flag, download_menu):
-        super().__init__()
+class RunModel(StudioTab):
+    def __init__(self, xml_creator):
+        super().__init__(xml_creator)
 
-        self.nanohub_flag = nanohub_flag
-        self.tab_widget = tab_widget
-        self.celldef_tab = celldef_tab
-        self.rules_flag = rules_flag
-        self.download_menu = download_menu
+        # self.nanohub_flag = self.xml_creator.nanohub_flag
+        # self.tab_widget = self.xml_creator.tab_widget
+        # self.celldef_tab = self.xml_creator.celldef_tab
+        self.rules_flag = self.xml_creator.rules_flag
+        self.download_menu = self.xml_creator.download_menu
 
         #-------------------------------------------
         # used with nanoHUB app
@@ -44,15 +46,15 @@ class RunModel(QWidget):
         self.config_file = None
 
         # these get set in pmb.py
-        self.config_tab = None
+        # self.config_tab = None
         self.microenv_tab = None
-        self.celldef_tab = None
+        # self.celldef_tab = None
         self.user_params_tab = None
         self.rules_tab = None
-        self.vis_tab = None
+        # self.vis_tab = None
         # self.legend_tab = None
 
-        self.tree = None
+        # self.tree = None
 
         self.output_dir = 'output'
 
@@ -93,7 +95,7 @@ class RunModel(QWidget):
 
         hbox.addWidget(QLabel("Exec:"))
         self.exec_name = QLineEdit()
-        if self.nanohub_flag:
+        if self.xml_creator.nanohub_flag:
             self.exec_name.setText('myproj')
             # self.exec_name.setEnabled(False)
         else:
@@ -129,29 +131,6 @@ class RunModel(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.scroll)
 
-#------------------------------
-    # replicate what we do in the "save" function in the main module
-    def update_xml_from_gui(self):
-        if not self.user_params_tab.validate_utable():
-            self.show_error_message("run_tab.py: update_xml_from_gui(): Error: invalid user params table.")
-            self.enable_run(True)
-            return False
-
-        self.config_tab.fill_xml()
-        self.microenv_tab.fill_xml()
-        self.celldef_tab.fill_xml()
-        self.user_params_tab.fill_xml()
-        if self.rules_flag:
-            self.rules_tab.fill_xml()
-        
-        return True
-
-        # self.vis_tab.circle_radius = ET.parse(self.xml_root)
-        # tree = ET.parse(xml_file)
-        # root = tree.getroot()
-        # rwh - warning: assumes "R_circle" name won't change
-        # self.vis_tab.mech_voxel_size = float(self.xml_root.find(".//user_parameters//mechanics_voxel_size").text)
-        # print("\n\n------------- run_tab(): self.vis_tab.mech_voxel_size = ",self.vis_tab.mech_voxel_size)
         
     def message(self, s):
         self.text.appendPlainText(s)
@@ -166,10 +145,10 @@ class RunModel(QWidget):
             self.show_error_message(f"Exec file {exec_file} does not exist.")
             return
 
-        self.celldef_tab.check_valid_cell_defs()
+        self.xml_creator.celldef_tab.check_valid_cell_defs()
 
-        if self.config_tab.save_svg.isChecked() and self.config_tab.save_full.isChecked():
-            if float(self.config_tab.svg_interval.text()) != float(self.config_tab.full_interval.text()):
+        if self.xml_creator.config_tab.save_svg.isChecked() and self.xml_creator.config_tab.save_full.isChecked():
+            if float(self.xml_creator.config_tab.svg_interval.text()) != float(self.xml_creator.config_tab.full_interval.text()):
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText("Warning")
@@ -184,10 +163,10 @@ class RunModel(QWidget):
             if True: # copy normal workflow of an app, strange as it is
                 # make sure we are where we started (app's root dir)
                 # logging.debug(f'\n------>>>> doing os.chdir to {self.current_dir}')
-                os.chdir(self.current_dir)
+                os.chdir(self.xml_creator.current_dir)
                 # remove any previous data
                 # NOTE: this dir name needs to match the <folder>  in /data/<config_file.xml>
-                if self.nanohub_flag:
+                if self.xml_creator.nanohub_flag:
                     os.system('rm -rf tmpdir*')
                     time.sleep(1)
                     if os.path.isdir('tmpdir'):
@@ -202,7 +181,7 @@ class RunModel(QWidget):
                     new_config_file = Path(tdir,"config.xml")
                     self.output_dir = '.'
                 else:
-                    self.output_dir = self.config_tab.folder.text()
+                    self.output_dir = self.xml_creator.config_tab.folder.text()
                     os.system('rm -rf ' + self.output_dir)
                     logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
                     try:
@@ -212,14 +191,7 @@ class RunModel(QWidget):
                     time.sleep(1)
                     tdir = os.path.abspath(self.output_dir)
 
-
-                #   Only req'd for nanoHUB??
-                # print("run_tab.py: ----> here 3")
-                # new_config_file = Path(tdir,"config.xml")
-                # self.celldef_tab.config_path = new_config_file
-                # print("run_tab.py: ----> here 4")
-
-                if not self.update_xml_from_gui():
+                if not self.xml_creator.update_xml_from_gui():   # if there was a problem, e.g., missing params
                     # self.run_button.setEnabled(True)
                     self.enable_run(True)
                     return
@@ -227,7 +199,7 @@ class RunModel(QWidget):
                 # logging.debug(f'run_tab.py: ----> writing modified model to {self.config_file}')
                 # print("run_tab.py: ----> new_config_file = ",new_config_file)
                 # print("run_tab.py: ----> self.config_file = ",self.config_file)
-                self.tree.write(self.config_file)
+                self.xml_creator.tree.write(self.config_file)
                 # print("run_tab.py: ----> here 5")
                 pretty_print(self.config_file, self.config_file)
 
@@ -236,11 +208,8 @@ class RunModel(QWidget):
                 print(f"run_tab.py:  also copy to {abs_default_config_file }")
                 shutil.copy(self.config_file, default_config_file)
 
-                # self.tree.write(new_config_file)  # saves modified XML to <output_dir>/config.xml 
-                # sys.exit(1)
-
-                # Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
-                if self.nanohub_flag:
+                # nanoHUB: Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
+                if self.xml_creator.nanohub_flag:
                     tdir = os.path.abspath('tmpdir')
                     os.chdir(tdir)   # run exec from here on nanoHUB
                 # sub.update(tdir)
@@ -251,26 +220,26 @@ class RunModel(QWidget):
             # if auto_load_params:
 
             if self.vis_tab:
-                self.vis_tab.reset_domain_box()
-                # self.vis_tab.reset_axes()
-                self.vis_tab.reset_model_flag = True
-                self.vis_tab.reset_plot_range()
-                self.vis_tab.init_plot_range(self.config_tab) # heaven help the person who needs to understand this
-                self.vis_tab.output_folder.setText(self.output_dir) 
+                self.xml_creator.vis_tab.reset_domain_box()
+                # self.xml_creator.vis_tab.reset_axes()
+                self.xml_creator.vis_tab.reset_model_flag = True
+                self.xml_creator.vis_tab.reset_plot_range()
+                self.xml_creator.vis_tab.init_plot_range(self.xml_creator.config_tab) # heaven help the person who needs to understand this
+                self.xml_creator.vis_tab.output_folder.setText(self.output_dir) 
 
-                self.vis_tab.output_dir = self.output_dir
+                self.xml_creator.vis_tab.output_dir = self.output_dir
                 # self.legend_tab.output_dir = self.output_dir
-                self.vis_tab.reset_model()
-                self.vis_tab.update_plots()
+                self.xml_creator.vis_tab.reset_model()
+                self.xml_creator.vis_tab.update_plots()
 
                 # Problem with this is that it only looks at the currently selected cell type
                 # Also, build_physiboss_info will look into all cell types, and if they are no boolean network, will hide everything
                 print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
-                self.vis_tab.build_physiboss_info()              
+                self.xml_creator.vis_tab.build_physiboss_info()              
 
             if self.p is None:  # No process running.
                 self.enable_run(False)
-                self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
+                # self.tab_widget.setTabEnabled(6, True)   # enable (allow to be selected) the Plot tab
                 # self.tab_widget.setTabEnabled(7, True)   # enable Legend tab
                 self.message("Executing process")
                 self.p = QProcess()  # Keep a reference to the QProcess (e.g. on self) while it's running.
@@ -284,7 +253,7 @@ class RunModel(QWidget):
                 xml_str = self.config_xml_name.text()
                 print("\n--- run_tab:  xml_str before run is ",xml_str)
                 print("--- run_tab:  exec_str before run is ",exec_str)
-                if self.nanohub_flag:
+                if self.xml_creator.nanohub_flag:
                     self.p.start("submit",["--local",exec_str,xml_str])
                 else:
                     # logging.debug(f'\nrun_tab.py: running: {exec_str}, {xml_str}')
@@ -321,7 +290,7 @@ class RunModel(QWidget):
     def cancel_model_cb(self):
         # logging.debug(f'===========  cancel_model_cb():  ============')
         if self.p:  # process running.
-            if self.nanohub_flag:
+            if self.xml_creator.nanohub_flag:
                 self.p.terminate()
             else:
                 self.p.kill()   # I *think* this worked better for Windows (but still worked for other OSes, on the desktop)
@@ -352,8 +321,8 @@ class RunModel(QWidget):
         self.message("Process finished.")
         self.enable_run(True)
         # print("-- process finished.")
-        self.vis_tab.first_plot_cb("foo")
-        if self.nanohub_flag:
+        self.xml_creator.vis_tab.first_plot_cb("foo")
+        if self.xml_creator.nanohub_flag:
             self.download_menu.setEnabled(True)
         self.p = None
         self.run_button.setEnabled(True)

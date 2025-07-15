@@ -1324,9 +1324,7 @@ class VisBase():
         #--------
         if self.discrete_scalar == 'cell_type':   # number not known until run time
             # if not self.population_plot[self.discrete_scalar]:
-            if self.population_plot[self.discrete_scalar] is None:
-                self.population_plot[self.discrete_scalar] = PopulationPlotWindow()
-
+            self.population_plot[self.discrete_scalar] = PopulationPlotWindow() # don't test if already exists!
             self.population_plot[self.discrete_scalar].ax0.cla()
 
             # ctype_plot = []
