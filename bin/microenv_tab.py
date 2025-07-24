@@ -622,6 +622,9 @@ class SubstrateDef(QWidget):
         # print('------      new name=',self.tree.currentItem().text(0))
         self.current_substrate = self.tree.currentItem().text(0)
 
+        # update the param values for the newly selected substrate
+        self.tree_item_clicked_cb(self.tree.currentItem(), 0)
+
         # do this last
         self.celldef_tab.delete_substrate(item_idx, self.current_substrate)
         self.config_tab.delete_substrate(item_idx)

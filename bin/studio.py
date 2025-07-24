@@ -64,23 +64,20 @@ try:
     simularium_installed = True
 except:
     simularium_installed = False
-    
+
+PHYSIBOSS_MODELS_IMPORTED = False
 try:
     import physiboss_models
-except:
-    print("----- Error: cannot import physiboss_models")
-    print("      Please re-run 'pip install -r requirements.txt'")
-    sys.exit(-1)
-    
-# from sbml_tab import SBMLParams 
+except ImportError:
+    print("----- Warning: physiboss_models not imported.")
+    print("      You can try to run 'pip install -r requirements.txt'")
+    print("      PhysiBoSS model loading functionality will be disabled.")
+    PHYSIBOSS_MODELS_IMPORTED = False
+else:
+    PHYSIBOSS_MODELS_IMPORTED = True
 
 def SingleBrowse(self):
-        # if len(self.csv) < 2:
     filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
-
-        #     if filePath != "" and not filePath in self.csv:
-        #         self.csv.append(filePath)
-        # print(self.csv)
 
 def startup_notice():
     msgBox = QMessageBox()
@@ -172,19 +169,23 @@ class PhysiCellXMLCreator(QWidget):
             # NOTE: if your C++ needs to also have an absolute path to data dir, do so via an env var
             # os.environ['KIDNEY_DATA_PATH'] = self.absolute_data_dir
 
-            # docDirectory = os.path.join(binDirectory,'..','doc')
-            # self.absolute_doc_dir = os.path.abspath(docDirectory)
-            # print("-------- absolute_doc_dir =",self.absolute_doc_dir)
-            # read_file = os.path.join(self.absolute_data_dir, model_name + ".xml")
+        if PHYSIBOSS_MODELS_IMPORTED:
+            self.physiboss_models_flag = True
+            try:
+                self.p = None # Necessary to download files!
+                self.physiboss_models_db = physiboss_models.Database()
+                self.physiboss_models_menu = None
+                self.physiboss_models_menus = {}
+                self.physiboss_models_configs = {}
+            except:
+                self.physiboss_models_flag = False
+                msgBox = QMessageBox()
+                msgBox.setText(f'Unable to create the physiboss_models.Database(). It requires being online.')
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                returnValue = msgBox.exec()
 
-        self.p = None # Necessary to download files!
-        self.physiboss_models_db = physiboss_models.Database()
-        self.physiboss_models_menu = None
-        self.physiboss_models_menus = {}
-        self.physiboss_models_configs = {}
         # Menus
         vlayout = QVBoxLayout(self)
-        # vlayout.setContentsMargins(5, 35, 5, 5)
         menuWidget = QWidget(self.menu())
         vlayout.addWidget(menuWidget)
 
@@ -618,23 +619,26 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Load user project", self.load_user_proj_cb)
 
                 file_menu.addSeparator()
-                self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
-                for model in self.physiboss_models_db.all():
-                    if len(self.physiboss_models_db.versions(model)) == 1:
-                        self.physiboss_models_menus.update(
-                            {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
-                        )
-                    else:
-                        versions_menus = []
-                        versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
-                        
-                        for version in self.physiboss_models_db.versions(model):
-                            action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
-                            versions_menus.append((version, action))
-                        self.physiboss_models_menus.update(
-                            {model: (versions_menu, versions_menus)}
-                        )     
-                
+                if PHYSIBOSS_MODELS_IMPORTED and self.physiboss_models_flag:
+                    self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
+                    try:
+                        for model in self.physiboss_models_db.all():
+                            if len(self.physiboss_models_db.versions(model)) == 1:
+                                self.physiboss_models_menus.update(
+                                    {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
+                                )
+                            else:
+                                versions_menus = []
+                                versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
+
+                                for version in self.physiboss_models_db.versions(model):
+                                    action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
+                                    versions_menus.append((version, action))
+                                self.physiboss_models_menus.update(
+                                    {model: (versions_menu, versions_menus)}
+                                )
+                    except:
+                        pass
 
         if self.galaxy_flag:
             file_menu.addAction("get from History", self.get_galaxy_history_cb)
@@ -988,58 +992,65 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #---------------------------------
     def load_physiboss_model_cb(self, model_name, version=None):
         print(f"studio.py: load_physiboss_model_cb(): model_name={model_name}, version={version}")
-        if model_name not in self.physiboss_models_db.all():
-            print(f"--- Warning: {model_name} not found in physiboss_models_db")
-            return
-        for menu in self.physiboss_models_menus.values():
-            if isinstance(menu, QAction):
-                if menu.text().startswith("✓"):
-                    menu.setText(f" {menu.text()[1:]}")
-            elif isinstance(menu, tuple):
-                if menu[0].title().startswith("✓"):
-                    menu[0].setTitle(f" {menu[0].title()[1:]}")
-                    for _, menu_version in menu[1]:
-                        if menu_version.text().startswith("✓"):
-                            menu_version.setText(f" {menu_version.text()[1:]}")
-                            
-        if isinstance(self.physiboss_models_menus[model_name], QAction):
-            self.physiboss_models_menus[model_name].setText(f"✓{self.physiboss_models_menus[model_name].text()[1:]}")
-        elif isinstance(self.physiboss_models_menus[model_name], tuple):
-            self.physiboss_models_menus[model_name][0].setTitle(f"✓{self.physiboss_models_menus[model_name][0].title()[1:]}")
-            if version is not None:
-                for t_version, menu_version in self.physiboss_models_menus[model_name][1]:
-                    if t_version == version:
-                        menu_version.setText(f"✓{menu_version.text()[1:]}")
-            else:
-                self.physiboss_models_menus[model_name][1][0].setTitle(f"✓ {self.physiboss_models_menus[model_name][1][0].title()[1:]}")
-        # self.physiboss_models_menus[model_name].setChecked(True)  # disable menu item
-        
-        self.run_tab.cancel_model_cb()
-        self.physiboss_models_db.download_model(model_name, os.getcwd(), version=version,backup=True)
-        print(f"studio.py: model {model_name} loaded")
-        
-        self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['config'][0])
-        self.config_file = self.current_xml_file
+        try:
+            if model_name not in self.physiboss_models_db.all():
+                print(f"--- Warning: {model_name} not found in physiboss_models_db")
+                return
+            for menu in self.physiboss_models_menus.values():
+                if isinstance(menu, QAction):
+                    if menu.text().startswith("✓"):
+                        menu.setText(f" {menu.text()[1:]}")
+                elif isinstance(menu, tuple):
+                    if menu[0].title().startswith("✓"):
+                        menu[0].setTitle(f" {menu[0].title()[1:]}")
+                        for _, menu_version in menu[1]:
+                            if menu_version.text().startswith("✓"):
+                                menu_version.setText(f" {menu_version.text()[1:]}")
+                                
+            if isinstance(self.physiboss_models_menus[model_name], QAction):
+                self.physiboss_models_menus[model_name].setText(f"✓{self.physiboss_models_menus[model_name].text()[1:]}")
+            elif isinstance(self.physiboss_models_menus[model_name], tuple):
+                self.physiboss_models_menus[model_name][0].setTitle(f"✓{self.physiboss_models_menus[model_name][0].title()[1:]}")
+                if version is not None:
+                    for t_version, menu_version in self.physiboss_models_menus[model_name][1]:
+                        if t_version == version:
+                            menu_version.setText(f"✓{menu_version.text()[1:]}")
+                else:
+                    self.physiboss_models_menus[model_name][1][0].setTitle(f"✓ {self.physiboss_models_menus[model_name][1][0].title()[1:]}")
+            # self.physiboss_models_menus[model_name].setChecked(True)  # disable menu item
+            
+            self.run_tab.cancel_model_cb()
+            self.physiboss_models_db.download_model(model_name, os.getcwd(), version=version,backup=True)
+            print(f"studio.py: model {model_name} loaded")
+            
+            self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['config'][0])
+            self.config_file = self.current_xml_file
 
-        self.show_sample_model()
-        self.run_tab.config_xml_name.setText(self.current_xml_file)
-        self.run_tab.exec_name.setText(os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['binary']))
-        
-        if "__separator__" not in self.physiboss_models_menus:
-            self.physiboss_models_menus.update({"__separator__": self.physiboss_models_menu.addSeparator()})
-            self.physiboss_models_menus.update({"__config_selector__": self.physiboss_models_menu.addMenu("Select configuration")})
-        else:
-            for config in self.physiboss_models_configs.values():
-                self.physiboss_models_menus["__config_selector__"].removeAction(config)
-                # del config  # remove old config menus
-                
-        self.physiboss_models_configs = {}
-        i=0
-        for config in self.physiboss_models_db.current_model_info()['config']:
-            label = ("✓" if i==0 else " ") + " " + config
-            config_menu = self.physiboss_models_menus["__config_selector__"].addAction(label, lambda c=config: self.load_physiboss_config_cb(c))
-            self.physiboss_models_configs.update({config: config_menu})
-            i+=1
+            self.show_sample_model()
+            self.run_tab.config_xml_name.setText(self.current_xml_file)
+            self.run_tab.exec_name.setText(os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['binary']))
+            
+            if "__separator__" not in self.physiboss_models_menus:
+                self.physiboss_models_menus.update({"__separator__": self.physiboss_models_menu.addSeparator()})
+                self.physiboss_models_menus.update({"__config_selector__": self.physiboss_models_menu.addMenu("Select configuration")})
+            else:
+                for config in self.physiboss_models_configs.values():
+                    self.physiboss_models_menus["__config_selector__"].removeAction(config)
+                    # del config  # remove old config menus
+                    
+            self.physiboss_models_configs = {}
+            i=0
+            for config in self.physiboss_models_db.current_model_info()['config']:
+                label = ("✓" if i==0 else " ") + " " + config
+                config_menu = self.physiboss_models_menus["__config_selector__"].addAction(label, lambda c=config: self.load_physiboss_config_cb(c))
+                self.physiboss_models_configs.update({config: config_menu})
+                i+=1
+
+        except:
+            msgBox = QMessageBox()
+            msgBox.setText(f'Unable to do load_physiboss_model_cb(). It requires being online.')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            returnValue = msgBox.exec()
         
         # self.vis_tab.update_output_dir(self.config_tab.folder.text())
 
