@@ -977,6 +977,15 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     # SBML filename
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_filename"] = uep_intracellular.find(
                         "sbml_filename").text if uep_intracellular.find("sbml_filename") is not None else ""
+                    
+                    # Settings and intracellular_dt
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"] = {}
+                    uep_settings = uep_intracellular.find("settings")
+                    if uep_settings is not None:
+                        intracellular_dt = uep_settings.find("intracellular_dt").text if uep_settings.find(
+                            "intracellular_dt") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"] = intracellular_dt
 
                     # Transport model
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"] = {"exchanges": []}
@@ -1002,6 +1011,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     if uep_growth_model is not None:
                         cell_density = uep_growth_model.find("cell_density").text if uep_growth_model.find(
                             "cell_density") is not None else ""
+                        reference_volume = uep_growth_model.find("reference_volume").text if uep_growth_model.find(
+                            "reference_volume") is not None else ""
                         max_growth_rate = uep_growth_model.find("max_growth_rate").text if uep_growth_model.find(
                             "max_growth_rate") is not None else ""
                         objective_reaction = uep_growth_model.find("objective_reaction").text if uep_growth_model.find(
@@ -1009,6 +1020,8 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
                             "cell_density"] = cell_density
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "reference_volume"] = reference_volume
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
                             "max_growth_rate"] = max_growth_rate
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
@@ -1042,9 +1055,15 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                 "death_rate_increase"] = death_rate_increase
 
                     # Update widget values (specific to dFBA)
+                    cell_def_tab.clear_intracellular_dt()
                     cell_def_tab.clear_transport_exchanges()
                     cell_def_tab.clear_growth_model_params()
                     cell_def_tab.clear_death_model_params()
+
+                    # Populate intracellular dt in the settings
+                    if "intracellular_dt" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        intracellular_dt = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"]
+                        cell_def_tab.intracellular_dt.setText(intracellular_dt)
 
                     # Iterate over the exchanges and populate the UI
                     for exchange in cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"][
@@ -1067,6 +1086,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         growth_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"]
 
                         cell_def_tab.cell_density.setText(growth_model.get("cell_density", ""))
+                        cell_def_tab.reference_volume.setText(growth_model.get("reference_volume", ""))
                         cell_def_tab.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
                         cell_def_tab.objective_reaction.setText(growth_model.get("objective_reaction", ""))
 

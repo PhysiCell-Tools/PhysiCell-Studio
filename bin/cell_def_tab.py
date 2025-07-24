@@ -3199,14 +3199,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         for i in reversed(range(len(self.transport_exchanges))):
             self.dfba_remove_exchange(i)
 
+    def clear_intracellular_dt(self):
+        # Clear the intracellular dt QLineEdit widget
+        self.intracellular_dt.clear()
+
     def clear_growth_model_params(self):
         # Clear the growth model QLineEdit widgets
         self.cell_density.clear()
+        self.reference_volume.clear()
         self.max_growth_rate.clear()
         self.objective_reaction.clear()
 
     def clear_death_model_params(self):
-        # Clear the growth model QLineEdit widgets
+        # Clear the death model QLineEdit widgets
         self.death_type.clear()
         self.death_trigger_flux.clear()
         self.death_flux_threshold.clear()
@@ -3227,6 +3232,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def dfba_cell_density_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
             self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['cell_density'] = text
+
+    def dfba_reference_volume_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["growth_model"]['reference_volume'] = text
+
+    def dfba_intracellular_dt_changed(self, text):
+        if self.param_d[self.current_cell_def]["intracellular"] is not None:
+            self.param_d[self.current_cell_def]["intracellular"]["settings"]["intracellular_dt"] = text
 
     def dfba_max_growth_rate_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
@@ -3455,6 +3468,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.param_d[self.current_cell_def]["intracellular"]["sbml_filename"] = ""
                 self.sbml_filename.clear()
 
+            if 'settings' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["settings"] = {}
+                self.clear_intracellular_dt()
+                self.intracellular_dt.setText("0.01")
+
             if 'transport_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["transport_model"] = {"exchanges": []}
                 self.clear_transport_exchanges()
@@ -3462,6 +3480,16 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             if 'growth_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["growth_model"] = {}
                 self.clear_growth_model_params()
+
+            if 'death_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["death_model"] = {
+                    'enabled': False,
+                    'death_type': "",
+                    'death_trigger_flux': "",
+                    'death_flux_threshold': "",
+                    'death_rate_increase': ""
+                }
+                self.clear_death_model_params()
 
                 # Update the substrate dropdown for each existing transport exchange
             for (substrate_combo, fba_flux_edit, km_edit, vmax_edit, exchange_remove,
@@ -3800,6 +3828,19 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         ly.addLayout(sbml_hbox)
 
+        # intracellular_dt
+
+        intracellular_dt_hbox = QHBoxLayout()
+        intracellular_dt_label = QLabel("Intracellular dt (min)")
+        intracellular_dt_hbox.addWidget(intracellular_dt_label)
+
+        self.intracellular_dt = QLineEdit()
+        # Connect the intracellular dt change handler
+        self.intracellular_dt.textChanged.connect(self.dfba_intracellular_dt_changed)
+        intracellular_dt_hbox.addWidget(self.intracellular_dt)
+
+        ly.addLayout(intracellular_dt_hbox)
+
         # Transport Model GroupBox
         transport_groupbox = QGroupBox("Transport Model")
         self.transport_layout = QVBoxLayout()
@@ -3844,6 +3885,18 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         cell_density_hbox.addWidget(self.cell_density)
 
         growth_layout.addLayout(cell_density_hbox)
+
+        # Reference Volume
+        reference_volume_hbox = QHBoxLayout()
+        reference_volume_label = QLabel("Reference Volume (um^3)")
+        reference_volume_hbox.addWidget(reference_volume_label)
+
+        self.reference_volume = QLineEdit()
+        # Connect the reference volume change handler
+        self.reference_volume.textChanged.connect(self.dfba_reference_volume_changed)
+        reference_volume_hbox.addWidget(self.reference_volume)
+
+        growth_layout.addLayout(reference_volume_hbox)
 
         # Max Growth Rate
         max_growth_rate_hbox = QHBoxLayout()
@@ -6264,6 +6317,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 else:
                     self.sbml_filename.clear()
 
+                # Populate the intracellular dt in the settings
+                if "setting" in self.param_d[cdname]["intracellular"].keys():
+                    if "intracellular_dt" in self.param_d[cdname]["intracellular"]["setting"].keys():
+                        self.intracellular_dt.setText(self.param_d[cdname]["intracellular"]["setting"]["intracellular_dt"])
+                    else:
+                        self.intracellular_dt.setText("0.01")  # Default to 0.1 if not set
+
                 # Populate Transport Model Exchanges
                 if "transport_model" in self.param_d[cdname]["intracellular"]:
                     for i, exchange in enumerate(self.param_d[cdname]["intracellular"]["transport_model"]["exchanges"]):
@@ -6287,11 +6347,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     growth_model = self.param_d[cdname]["intracellular"]["growth_model"]
                     if "cell_density" in growth_model:
                         self.cell_density.setText(growth_model["cell_density"])
+                    if "reference_volume" in growth_model:
+                        self.reference_volume.setText(growth_model["reference_volume"])
                     if "max_growth_rate" in growth_model:
                         self.max_growth_rate.setText(growth_model["max_growth_rate"])
                     if "objective_reaction" in growth_model:
                         self.objective_reaction.setText(growth_model["objective_reaction"])
 
+                # Populate Death Model Parameters
                 if "death_model" in self.param_d[cdname]["intracellular"]:
                     death_model = self.param_d[cdname]["intracellular"]["death_model"]
 
@@ -7196,6 +7259,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     sbml_filename.text = self.param_d[cdef]['intracellular']['sbml_filename']
                     sbml_filename.tail = self.indent12
 
+                    # Add Time Step (intracellular_dt)
+                    settings = ET.SubElement(intracellular, "settings")
+                    intracellular_dt = ET.SubElement(settings, "intracellular_dt", {"units": "min"})
+                    intracellular_dt.text = self.param_d[cdef]['intracellular']['settings']['intracellular_dt']
+                    intracellular_dt.tail = self.indent12
+
                     # Add Transport Model exchanges if present
                     if "transport_model" in self.param_d[cdef]['intracellular']:
                         transport_model = ET.SubElement(intracellular, "transport_model")
@@ -7237,6 +7306,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                             cell_density_elem.text = self.param_d[cdef]['intracellular']['growth_model']["cell_density"]
                             cell_density_elem.tail = self.indent16
 
+                        if "reference_volume" in self.param_d[cdef]['intracellular']['growth_model']:
+                            reference_volume_elem = ET.SubElement(growth_model, "reference_volume", {"units": "pg"})
+                            reference_volume_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
+                                "reference_volume"]
+                            reference_volume_elem.tail = self.indent16
+
                         if "max_growth_rate" in self.param_d[cdef]['intracellular']['growth_model']:
                             max_growth_rate_elem = ET.SubElement(growth_model, "max_growth_rate", {"units": "1/min"})
                             max_growth_rate_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
@@ -7262,7 +7337,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         death_model.text = self.indent14
                         death_model.tail = self.indent12
 
-                        # Add growth model parameters (death_type, death_trigger_flux, death_flux_threshold, death_rate_increase)
+                        # Add death model parameters (death_type, death_trigger_flux, death_flux_threshold, death_rate_increase)
                         if "death_type" in self.param_d[cdef]['intracellular']['death_model']:
                             death_type_elem = ET.SubElement(death_model, "death_type", {"units": "g/ml"})
                             death_type_elem.text = self.param_d[cdef]['intracellular']['death_model']["death_type"]
