@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabe
 
 import numpy as np
 import scipy.io
-from pyMCDS import pyMCDS
+from pyMCDS import pyMCDS, xmlfile_to_xmlpathfile
 
 #----------------------------------------------------------------------
 class Vis(VisBase, QWidget):
@@ -1422,11 +1422,21 @@ class Vis(VisBase, QWidget):
         return lut
 
     # discrete color map
-    def get_cell_type_colors_lut(self, num_cell_types):
+    def get_cell_type_colors_lut(self, xml_file, cell_scalar_str, cell_scalar_val):
+        # only here if using discrete colors
         # https://kitware.github.io/vtk-examples/site/Python/Modelling/DiscreteMarchingCubes/
-        print("---- get_cell_type_colors_lut(): num_cell_types= ",num_cell_types)
+        print("---- get_cell_type_colors_lut(): cell_scalar_val= ",cell_scalar_val)
+        if cell_scalar_str == "cell_type":
+            xmlpathfile, _ = xmlfile_to_xmlpathfile(xml_file, self.output_dir)
+            tree = ET.parse(xmlpathfile)
+            root = tree.getroot()
+            cell_types_nodes = root.findall(".//cellular_information//cell_populations//cell_population//custom//simplified_data//cell_types//type")
+            self.num_cell_types = len(cell_types_nodes)
+            print("get_cell_type_colors_lut(): self.num_cell_types = ",self.num_cell_types)
+        else:
+            self.num_cell_types = len(np.unique(cell_scalar_val))
         lut = vtkLookupTable()
-        lut.SetNumberOfTableValues(num_cell_types)
+        lut.SetNumberOfTableValues(self.num_cell_types)
         lut.Build()
 
         # ics_tab.py uses:
@@ -1473,11 +1483,11 @@ class Vis(VisBase, QWidget):
         for idx in range(13):
             # print(" idx=",idx)
             lut.SetTableValue(idx, cell_colors[idx])
-            if idx >= num_cell_types-1:
+            if idx >= self.num_cell_types-1:
                 break
 
         np.random.seed(42)
-        for idx in range(13,num_cell_types):  # random beyond those hard-coded
+        for idx in range(13,self.num_cell_types):  # random beyond those hard-coded
             lut.SetTableValue(idx, np.random.uniform(), np.random.uniform(), np.random.uniform(), 1)
 
         return lut
@@ -1541,10 +1551,6 @@ class Vis(VisBase, QWidget):
             print(f"vis3D_tab.py: plot_cells3D(): full_fname {full_fname} does not exist, leaving!")
             return
 
-        # print("------------- plot_cells3D: pyMCDS reading info from ",full_fname)
-        # mcds = pyMCDS(xml_file, 'output')   # will read in BOTH cells and substrates info
-        # mcds = pyMCDS(xml_file, self.output_dir)   # will read in BOTH cells and substrates info
-        # mcds = pyMCDS(xml_file, self.output_dir, microenv=False, graph=False, verbose=False)
         mcds = pyMCDS(xml_file, self.output_dir, microenv=read_microenv_flag, graph=False, verbose=False)
         current_time = mcds.get_time()
         # print('time=', current_time )
@@ -1564,72 +1570,30 @@ class Vis(VisBase, QWidget):
 
         #-----------
         if self.cells_checked_flag:
-            # mcds = pyMCDS_cells(xml_file, 'tmpdir')  
-            # mcds = pyMCDS_cells(xml_file, 'output')  
-            # mcds = pyMCDS(xml_file, 'output')  
-
-            # print("mcds.data dict_keys= ",mcds.data['discrete_cells'].keys())   # dict_keys(...)
-
-            # ncells = len(mcds.data['discrete_cells']['ID'])
             ncells = len(mcds.data['discrete_cells']['data']['ID'])
-            # print('ncells=', ncells)
             if ncells == 0:
                 return
             self.title_str += ", # cells=" + str(ncells)
 
             global xyz
             xyz = np.zeros((ncells, 3))
-            # xyz[:, 0] = mcds.data['discrete_cells']['position_x']
-            # xyz[:, 1] = mcds.data['discrete_cells']['position_y']
-            # xyz[:, 2] = mcds.data['discrete_cells']['position_z']
             xyz[:, 0] = mcds.data['discrete_cells']['data']['position_x']
             xyz[:, 1] = mcds.data['discrete_cells']['data']['position_y']
             xyz[:, 2] = mcds.data['discrete_cells']['data']['position_z']
-            #xyz = xyz[:1000]
-            # print("position_x = ",xyz[:,0])
-            xmin = min(xyz[:,0])
-            xmax = max(xyz[:,0])
-            # print("xmin = ",xmin)
-            # print("xmax = ",xmax)
 
-            ymin = min(xyz[:,1])
-            ymax = max(xyz[:,1])
-            # print("ymin = ",ymin)
-            # print("ymax = ",ymax)
-
-            zmin = min(xyz[:,2])
-            zmax = max(xyz[:,2])
-            # print("zmin = ",zmin)
-            # print("zmax = ",zmax)
-
-            # cell_type = mcds.data['discrete_cells']['cell_type']
             cell_scalar_str = self.cell_scalar_combobox.currentText()
             if len(cell_scalar_str) == 0:
                 cell_scalar_str = 'cell_type'
             if cell_scalar_str in self.cell_scalar_human2mcds_dict.keys():
                 cell_scalar_str = self.cell_scalar_human2mcds_dict[cell_scalar_str]
-            # print("\n------- cell_scalar_str= ",cell_scalar_str)
             self.scalar_bar_cells.SetTitle(cell_scalar_str)
-            # cell_type = mcds.data['discrete_cells']['data']['cell_type']
             cell_scalar_val = mcds.data['discrete_cells']['data'][cell_scalar_str]
-            # print(type(cell_type))
-            # print(cell_type)
 
-            # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead','number_of_nuclei','polarity']  # check for discrete type scalar, ugh.
             if cell_scalar_str in self.discrete_cell_scalars:  # check for discrete type scalar, ugh.
-                # print("------------- plot_cells3D: have discrete cell scalars")
-                unique_cell_type = np.unique(cell_scalar_val)
-                self.num_discrete_cell_val = len(unique_cell_type)
-                # print("\nunique_cell_type = ",unique_cell_type )
-                # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
-
-                # lut = self.get_diverging_lut1()
                 if self.lut_discrete is None:
-                    self.lut_discrete = self.get_cell_type_colors_lut(self.num_discrete_cell_val)  # TODO: only call when necessary
+                    self.lut_discrete = self.get_cell_type_colors_lut(xml_file, cell_scalar_str, cell_scalar_val)  # TODO: only call when necessary
                     self.cells_mapper.SetLookupTable(self.lut_discrete)
             else:
-                # self.cells_mapper.SetLookupTable(self.lut_viridis)
-                # print("------------- plot_cells3D: have continuous (non-discrete) cell scalars. lut_cells=",self.lut_cells)
                 self.cells_mapper.SetLookupTable(self.lut_cells)
 
             #------------
@@ -1753,65 +1717,28 @@ class Vis(VisBase, QWidget):
 
                 self.cell_data.CopyComponent(0, self.tags, 0)
 
-
-            cellID_color_dict = {}
-            # for idx in range(ncells):
             random.seed(42)
-            # for utype in unique_cell_type:
-            #     # colors.InsertTuple3(0, randint(0,255), randint(0,255), randint(0,255)) # reddish
-            #     cellID_color_dict[utype] = [random.randint(0,255), random.randint(0,255), random.randint(0,255)]
-
-            # hardcode colors for now
-            # cellID_color_dict[0.0]=[170,170,170]  # cancer cell
-            # cellID_color_dict[1.0]=[255,0,0]  # endothelial
-            # print("color dict=",cellID_color_dict)
-
-            # self.colors.SetNumberOfTuples(self.polydata.GetNumberOfPoints())  # ncells
-            # for idx in range(ncells):
-            # # for idx in range(len(unique_cell_type)):
-            #     # colors.InsertTuple3(idx, randint(0,255), randint(0,255), randint(0,255)) 
-            #     # if idx < 5:
-            #         # print(idx,cellID_color_dict[cell_type[idx]])
-            #     self.colors.InsertTuple3(idx, cellID_color_dict[cell_type[idx]][0], cellID_color_dict[cell_type[idx]][1], cellID_color_dict[cell_type[idx]][2])
-
-
-            # self.glyph.SetScaleModeToDataScalingOn()
 
             if not self.tensor_flag:   # typical spheres
-                # self.glyph.SetScaleModeToScaleByVector ()
                 self.glyph.SetScaleModeToScaleByScalar ()
-                # self.glyph.SetColorModeToColorByVector ()
-                # print("glyph range= ",self.glyph.GetRange())
-                # print("self.num_discrete_cell_val= ",self.num_discrete_cell_val)
 
-            # self.cells_mapper.SetScalarRange(0,num_cell_types)
-            if self.fix_cells_cmap_checkbox.isChecked():
+            if cell_scalar_str == 'cell_type':
+                self.cells_mapper.SetScalarRange(0, self.num_cell_types-1)
+            elif self.fix_cells_cmap_checkbox.isChecked():
                 self.cells_mapper.SetScalarRange(self.cells_cmin_value, self.cells_cmax_value)
             else:
                 self.cells_mapper.SetScalarRange(self.cell_scalar_min, self.cell_scalar_max)
-            # print(inspect.stack()[0][3],"--- cells_mapper.SetScalarRange = ",self.cell_scalar_min, ', ',self.cell_scalar_max)
-            # self.glyph.SetRange(0.0, 0.11445075055913652)
-            # self.glyph.SetScaleFactor(3.0)
 
-            # print("self.cells_mapper.GetLookupTable()= ",self.cells_mapper.GetLookupTable())
             self.scalar_bar_cells.SetLookupTable(self.cells_mapper.GetLookupTable())
 
-            # glyph.ScalingOn()
-            # self.glyph.SetScalarRange(0, vmax)
             self.glyph.Update()
 
             #----------------------------------------------
             # if we are clipping (extracting) the cells using a clip plane
             clipped_cells_flag = False
-            # polydata = self.glyph.GetOutput()
 
             if self.voxel_size is None:
                 self.get_domain_params()
-            # self.voxel_size = 20   # rwh: fix hard-coded
-            # x0 = -(self.voxel_size * self.nx) / 2.0
-            # y0 = -(self.voxel_size * self.ny) / 2.0
-            # z0 = -(self.voxel_size * self.nz) / 2.0
-            # print(f"---- vis3D: plot_cells3D(): self.x0,self.y0,self.z0= {self.x0},{self.y0},{self.z0}")
 
             self.ugrid_clipped = self.ugrid   # original
 
