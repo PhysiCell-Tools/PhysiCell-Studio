@@ -64,23 +64,20 @@ try:
     simularium_installed = True
 except:
     simularium_installed = False
-    
+
+PHYSIBOSS_MODELS_IMPORTED = False
 try:
     import physiboss_models
-except:
-    print("----- Error: cannot import physiboss_models")
-    print("      Please re-run 'pip install -r requirements.txt'")
-    sys.exit(-1)
-    
-# from sbml_tab import SBMLParams 
+except ImportError:
+    print("----- Warning: physiboss_models not imported.")
+    print("      You can try to run 'pip install -r requirements.txt'")
+    print("      PhysiBoSS model loading functionality will be disabled.")
+    PHYSIBOSS_MODELS_IMPORTED = False
+else:
+    PHYSIBOSS_MODELS_IMPORTED = True
 
 def SingleBrowse(self):
-        # if len(self.csv) < 2:
     filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
-
-        #     if filePath != "" and not filePath in self.csv:
-        #         self.csv.append(filePath)
-        # print(self.csv)
 
 def startup_notice():
     msgBox = QMessageBox()
@@ -172,19 +169,15 @@ class PhysiCellXMLCreator(QWidget):
             # NOTE: if your C++ needs to also have an absolute path to data dir, do so via an env var
             # os.environ['KIDNEY_DATA_PATH'] = self.absolute_data_dir
 
-            # docDirectory = os.path.join(binDirectory,'..','doc')
-            # self.absolute_doc_dir = os.path.abspath(docDirectory)
-            # print("-------- absolute_doc_dir =",self.absolute_doc_dir)
-            # read_file = os.path.join(self.absolute_data_dir, model_name + ".xml")
+        if PHYSIBOSS_MODELS_IMPORTED:
+            self.p = None # Necessary to download files!
+            self.physiboss_models_db = physiboss_models.Database()
+            self.physiboss_models_menu = None
+            self.physiboss_models_menus = {}
+            self.physiboss_models_configs = {}
 
-        self.p = None # Necessary to download files!
-        self.physiboss_models_db = physiboss_models.Database()
-        self.physiboss_models_menu = None
-        self.physiboss_models_menus = {}
-        self.physiboss_models_configs = {}
         # Menus
         vlayout = QVBoxLayout(self)
-        # vlayout.setContentsMargins(5, 35, 5, 5)
         menuWidget = QWidget(self.menu())
         vlayout.addWidget(menuWidget)
 
@@ -618,23 +611,23 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Load user project", self.load_user_proj_cb)
 
                 file_menu.addSeparator()
-                self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
-                for model in self.physiboss_models_db.all():
-                    if len(self.physiboss_models_db.versions(model)) == 1:
-                        self.physiboss_models_menus.update(
-                            {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
-                        )
-                    else:
-                        versions_menus = []
-                        versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
-                        
-                        for version in self.physiboss_models_db.versions(model):
-                            action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
-                            versions_menus.append((version, action))
-                        self.physiboss_models_menus.update(
-                            {model: (versions_menu, versions_menus)}
-                        )     
-                
+                if PHYSIBOSS_MODELS_IMPORTED:
+                    self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
+                    for model in self.physiboss_models_db.all():
+                        if len(self.physiboss_models_db.versions(model)) == 1:
+                            self.physiboss_models_menus.update(
+                                {model: self.physiboss_models_menu.addAction(f"  {model}", lambda m=model: self.load_physiboss_model_cb(m))}
+                            )
+                        else:
+                            versions_menus = []
+                            versions_menu = self.physiboss_models_menu.addMenu(f"  {model}")
+
+                            for version in self.physiboss_models_db.versions(model):
+                                action = versions_menu.addAction(f"  {version}", (lambda m=model, v=version: self.load_physiboss_model_cb(m, v)))
+                                versions_menus.append((version, action))
+                            self.physiboss_models_menus.update(
+                                {model: (versions_menu, versions_menus)}
+                            )
 
         if self.galaxy_flag:
             file_menu.addAction("get from History", self.get_galaxy_history_cb)
