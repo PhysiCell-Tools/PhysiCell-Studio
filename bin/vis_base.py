@@ -1015,7 +1015,7 @@ class VisBase():
         self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
         self.vbox.addWidget(self.legend_svg_button)
 
-        if not self.galaxy_flag:
+        if not self.galaxy_flag and not self.model3D_flag:
             self.vbox.addWidget(QHLine())
             hbox = QHBoxLayout()
             self.movie_name_edit = QLineEdit()
