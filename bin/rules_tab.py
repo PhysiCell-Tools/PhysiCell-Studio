@@ -434,8 +434,8 @@ class Rules(QWidget):
 
         self.rule_hill_power = QLineEdit()
         self.rule_hill_power.setText('4')
-        self.rule_hill_power.setFixedWidth(30)
-        self.rule_hill_power.setValidator(QtGui.QIntValidator())
+        self.rule_hill_power.setFixedWidth(90)
+        self.rule_hill_power.setValidator(QtGui.QDoubleValidator())
         hlayout.addWidget(self.rule_hill_power)
 
         #---
@@ -1002,7 +1002,7 @@ class Rules(QWidget):
             behavior_irow = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
             saturation_irow = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
             halfmax_irow = float(self.rules_table.cellWidget(irow, self.rules_halfmax_idx).text())
-            hillpower_irow = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+            hillpower_irow = float(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
             if self.rules_table.cellWidget(irow,self.rules_applydead_idx).isChecked():
                 dead_irow = 1
             else:
@@ -1214,7 +1214,7 @@ class Rules(QWidget):
         # X = np.linspace(min_val,max_val, 101) 
 
         half_max = float(self.rule_half_max.text())
-        hill_power = int(self.rule_hill_power.text())
+        hill_power = float(self.rule_hill_power.text())
         base_val = self.rule_base_val.text()
         if base_val == '??':
             if "decreases" in self.up_down_combobox.currentText(): base_val = 1.0
@@ -1304,7 +1304,7 @@ class Rules(QWidget):
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
             if dup_rule >= 0:
-                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule}). Either delete the rule in the table first or edit it manually.")
+                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule+1}). Either delete the rule in the table first or edit it manually.")
                 return
 
 
@@ -1604,7 +1604,7 @@ class Rules(QWidget):
 
         # NO! Use the actual base value in the appropriate subtab for behavior
         # base_val = self.rules_table.cellWidget(irow, self.rules_baseval_idx).text()
-        hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+        hill_power = float(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
 
         behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
         self.update_base_value_by_name(behavior, False)
