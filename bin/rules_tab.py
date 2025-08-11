@@ -120,10 +120,12 @@ class Rules(QWidget):
 
         self.update_rules_for_custom_data = True
 
-        self.max_rule_table_cols = 9   # v2: cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead, baseval
+        self.max_rule_table_cols = 10   # v2: use, cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead, baseval
 
         # table columns' indices
         icol = 0
+        self.rule_use_idx = icol
+        icol = +1
         self.rules_celltype_idx = icol
         icol += 1
         self.rules_signal_idx = icol
@@ -554,13 +556,14 @@ class Rules(QWidget):
         vlayout = QVBoxLayout()
         self.rules_table = QTableWidget()
 
-        self.rules_table.setColumnCount(9)
+        self.rules_table.setColumnCount(self.max_rule_table_cols)
         self.rules_table.setRowCount(self.max_rule_table_rows)
-        self.rules_table.setColumnHidden(8, True) # hidden column base value
+        # self.rules_table.setColumnHidden(8, True) # hidden column base value
+        self.rules_table.setColumnHidden(9, True) # hardcoded: hidden column base value
 
         header = self.rules_table.horizontalHeader()       
 
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
+        self.rules_table.setHorizontalHeaderLabels(['Use','CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -569,6 +572,19 @@ class Rules(QWidget):
             
         for irow in range(self.max_rule_table_rows):
             # print("------------ rules table row # ",irow)
+
+            # ------- rule used checkbox
+            w_me = MyQCheckBox()
+            w_me.vname = "foobar0"  
+            w_me.wrow = irow
+            w_me.wcol = self.rule_use_idx
+
+            # rwh NB! Leave these lines in (for less confusing clicking/coloring of cell)
+            item = QTableWidgetItem('')
+            item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            self.rules_table.setItem(irow, self.rule_use_idx, item)
+
+            self.rules_table.setCellWidget(irow, self.rule_use_idx, w_me)
 
             # ------- CellType
             w_me = MyQLineEdit()
@@ -1032,6 +1048,7 @@ class Rules(QWidget):
                 self.rules_table.cellWidget(irow, idx).setText('')
 
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
+            # self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
 
         self.num_rules = 0
 
@@ -1075,11 +1092,11 @@ class Rules(QWidget):
                     for elm in csv_reader:
                         # csv_reader_obj = csv.reader(f)
                         # irow = 0
-                        print("elm= ",elm)
-                        print("len(elm)= ",len(elm))
-                        if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
+                        # print("fill_rules(): elm= ",elm)
+                        # if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
+                        if len(elm)+2 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
 
-                            cell_type = elm[0]
+                            cell_type = elm[0]  # hardcode
                             if cell_type not in self.celldef_tab.param_d.keys():
                                 print(f'ERROR: {cell_type} is not a valid cell type name')
                                 show_studio_warning_window(f'ERROR: {cell_type} is not a valid cell type name')
@@ -1112,6 +1129,7 @@ class Rules(QWidget):
                             self.fill_rule_row(irow, elm)
 
                         if elm[self.rules_response_idx] == "damage rate" and hasattr(self.celldef_tab, "pre_v1_14_0_damage_rate") and self.celldef_tab.pre_v1_14_0_damage_rate:
+                            print("fill_rules(): got to 5")
                             self.rules_table.cellWidget(irow, self.rules_response_idx).setText("attack damage rate")
                             msg = "\"damage rate\" no longer refers to the rate of damage dealt, but rather the rate at which damage accumulates in the given cell type."
                             msg += f"\n{elm[0]} had a rule affecting \"damage rate\" that has been replaced with \"attack damage rate\" to fit the new version."
@@ -1127,7 +1145,7 @@ class Rules(QWidget):
             except Exception as e:
             # self.dialog_critical(str(e))
             # print("error opening config/cells_rules.csv")
-                print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+                print(f'fill_rules(): Error opening or reading {full_rules_fname}')
                 show_studio_warning_window(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # sys.exit(1)
@@ -1145,18 +1163,24 @@ class Rules(QWidget):
         return
 
     def fill_rule_row(self, irow, elm):
-        for icol in range(self.max_rule_table_cols-2): 
-            # print("icol=",icol)
-            self.rules_table.cellWidget(irow, icol).setText(elm[icol])
-        self.rules_table.cellWidget(irow, 8).setText('??') # load base value
+        print("---- fill_rule_row(): elm=",elm)  # e.g. ['default', 'pressure', 'decreases', 'cycle entry', '0.0', '0.5', '4', '0']
+        # for icol in range(0,self.max_rule_table_cols-3):   # hardcode end of list
+        self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
 
-        # if int(elm[7]) == 0:  # hard-code
-        if int(elm[self.max_rule_table_cols-2]) == 0:
-            print("setting dead checkbox False")
+        for icol in range(0,7):   # hardcode indices
+            # print("    icol=",icol)
+            self.rules_table.cellWidget(irow, icol+1).setText(elm[icol])
+        # self.rules_table.cellWidget(irow, 8).setText('??') # load base value
+        # print("    =",icol)
+        self.rules_table.cellWidget(irow, 9).setText('??') # hardcoded: load base value
+
+        if int(elm[7]) == 0:  # hardcode index for "apply to dead"
+            print("set]ing dead checkbox False")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
         else:
             print("setting dead checkbox True")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(True)
+
     #-----------------------------------------------------------
     def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
@@ -1263,7 +1287,6 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def check_for_duplicate(self, cell_type_new,signal_new,behavior_new,direction_new):
         print("check_for_duplicate(): num_rules=",self.num_rules)
-        # for irow in range(self.max_rule_table_rows):
         for irow in range(self.num_rules):
         # self.rules_celltype_idx = 0
         # self.rules_response_idx = 1
@@ -1284,7 +1307,7 @@ class Rules(QWidget):
                     behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
                     if behavior == behavior_new:
                         direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
-                        if direction == direction_new:
+                        if (direction == direction_new) and (self.rules_table.cellWidget(irow, self.rule_use_idx).isChecked() ):
                             return irow
 
         return -1
@@ -1301,10 +1324,12 @@ class Rules(QWidget):
                 show_studio_warning_window("Invalid behavior: " + behavior)
                 return
             direction = self.up_down_combobox.currentText()
+
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
+            print("\n------------- add_rule_cb(): num_rules= ",self.num_rules)
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
-            if dup_rule >= 0:
-                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule+1}). Either delete the rule in the table first or edit it manually.")
+            if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule+1}). Either delete the rule in the table, or edit it manually, or toggle it off.")
                 return
 
 
@@ -1362,6 +1387,8 @@ class Rules(QWidget):
             msg = f'add_rule_cb() Error: irow={irow}, idx={self.rules_celltype_idx}, widget={self.rules_table.cellWidget(irow, self.rules_celltype_idx)}.'
             show_studio_warning_window(msg)
             return 
+
+        self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
 
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
@@ -1717,6 +1744,15 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def save_rules_cb(self):
+
+        #   Logic for duplicates is more complex if we ever want to attempt it; for now rely on PhysiCell's msg, e.g.:
+        #    "Error! Signal substrate and Response increases were already part of the rule.
+        #       See possible fixes at https://github.com/physicell-training/PhysiCell_common_errors"
+        # dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
+        # if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+        #     show_studio_warning_window(f"Error saving rules: You have duplicate signal-behavior rules (row {dup_rule+1}). Either delete the duplicate(s), or edit it manually, or toggle it off.")
+        #     return
+
         folder_name = self.rules_folder.text()
         file_name = self.rules_file.text()
         print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
@@ -1741,9 +1777,11 @@ class Rules(QWidget):
         # self.rules_hillpower_idx = 8
         # self.rules_applydead_idx = 9
                     rule_str = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
-                    print("   irow=",irow, ", col 1 text=",rule_str)
                     if rule_str == '':
                         break
+                    if self.rules_table.cellWidget(irow,self.rule_use_idx).isChecked() is False:
+                        rule_str = "//" + rule_str
+                    print("   irow=",irow, ", col 1 text=",rule_str)
                     rule_str += ','
                     rule_str += self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
                     rule_str += ','
