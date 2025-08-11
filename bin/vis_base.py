@@ -2019,7 +2019,7 @@ class VisBase():
         xml_file = "initial.xml"
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
-            print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            # print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
         # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
@@ -2156,7 +2156,7 @@ class VisBase():
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
