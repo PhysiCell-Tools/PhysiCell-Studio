@@ -511,7 +511,7 @@ class ICs(QWidget):
 
         # hbox = QHBoxLayout()
         self.import_button = QPushButton("Import (cell type name syntax only)")
-        self.import_button.setFixedWidth(230)
+        self.import_button.setFixedWidth(260)
         self.import_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         self.import_button.clicked.connect(self.import_cb)
         self.vbox.addWidget(self.import_button)

@@ -141,7 +141,7 @@ class CellDef(StudioTab):
         self.new_cell_def_count = 0
         self.label_width = 210
         self.units_width = 35
-        self.fixed_checkbox_column_width = 60
+        self.fixed_checkbox_column_width = 65
         self.idx_current_cell_def = 1    # 1-offset for XML (ElementTree, ET)
         self.xml_root = None
         self.config_path = None
@@ -1777,7 +1777,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         radio_frame = QFrame()
         radio_frame.setStyleSheet("QFrame{ border : 1px solid black; }")
         radio_frame.setLayout(hbox)
-        radio_frame.setFixedWidth(170)  # omg
+        radio_frame.setFixedWidth(175)
         glayout.addWidget(radio_frame, idr,1, 1,1) # w, row, column, rowspan, colspan
 
         idr += 1
