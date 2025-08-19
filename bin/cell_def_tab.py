@@ -5228,7 +5228,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             if "par_dists" in self.param_d[cdname].keys():
                 behavior_keys = list(self.param_d[cdname]["par_dists"].keys()) # do this to avoid changing keys while iterating
                 for behavior in behavior_keys:
-                    if behavior == '':
+                    if behavior == '' or behavior == None:
                         continue # empty behaviors seem to crop up sometimes
                     new_behavior_name = find_and_replace_rule_cell(old_name, new_name, super_strings, behavior)
                     if new_behavior_name != behavior:
