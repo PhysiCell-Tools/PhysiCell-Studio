@@ -207,7 +207,7 @@ class Rules(QWidget):
         hlayout = QHBoxLayout()
 
         label = QLabel("Cell Type")
-        label.setFixedWidth(60)
+        label.setFixedWidth(65)
         label.setAlignment(QtCore.Qt.AlignCenter)
 
         hlayout.addWidget(label)
@@ -390,7 +390,7 @@ class Rules(QWidget):
 
         #-------------------------------------
         hlayout = QHBoxLayout()
-        lwidth = 60
+        lwidth = 65
         label = QLabel("Half-max")
         label.setFixedWidth(lwidth)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -410,7 +410,7 @@ class Rules(QWidget):
 
         #---
         label = QLabel("Saturation value")
-        label.setFixedWidth(100)
+        label.setFixedWidth(115)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
@@ -430,7 +430,7 @@ class Rules(QWidget):
         hlayout = QHBoxLayout()
 
         label = QLabel("Hill power")
-        label.setFixedWidth(60)
+        label.setFixedWidth(70)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 

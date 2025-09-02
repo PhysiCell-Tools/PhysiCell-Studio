@@ -28,7 +28,7 @@ class CycleTab(CellDefSubTab):
     def create_base_cycle_tab(self):
         self.cycle_duration_flag = False
         self.label_width = 210
-        self.fixed_checkbox_column_width = 60
+        self.fixed_checkbox_column_width = 65
         self.default_time_units = "min"
         self.default_rate_units = "1/min"
 
