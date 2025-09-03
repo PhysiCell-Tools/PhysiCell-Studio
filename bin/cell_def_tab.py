@@ -2513,7 +2513,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 ):
                 list_nodes = []
                 with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
-                    list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
+                    list_nodes = sorted([node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")])
             
                 if len(list_nodes) > 0:
                     self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_nodes
@@ -2617,7 +2617,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         #     node = tokens[0].strip().replace(".is_internal", "")
                         #     if value:
                         #         list_internal_nodes.append(node)
-                
+                list_parameters = sorted(list_parameters)
                 # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
                 if len(list_parameters) > 0:
                     self.param_d[self.current_cell_def]["intracellular"]["list_parameters"] = list_parameters
