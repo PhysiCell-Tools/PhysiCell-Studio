@@ -3209,10 +3209,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()
                 self.physiboss_clear_node_inheritance()
-                self.physiboss_time_step.setText("12.0")
-                self.physiboss_time_stochasticity.setText("0.0")
-                self.physiboss_scaling.setText("1.0")
-                self.physiboss_starttime.setText("0.0")
+                self.physiboss_time_step.setText("")
+                self.physiboss_time_stochasticity.setText("")
+                self.physiboss_scaling.setText("")
+                self.physiboss_starttime.setText("")
                 self.physiboss_global_inheritance_checkbox.setChecked(False)
                 self.param_d[self.current_cell_def]["intracellular"] = None
                 
