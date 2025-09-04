@@ -1217,6 +1217,8 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         file_label = QLabel("file")
         self.csv_file = QLineEdit(self.biwt.csv_file.text())
 
+        self.full_fname = None
+
         hbox = QHBoxLayout()
         hbox.addWidget(folder_label)
         hbox.addWidget(self.csv_folder)
@@ -3094,15 +3096,18 @@ class BioinformaticsWalkthrough(QWidget):
         
     ### Finish
     def close_up(self):
-        plt.style.use("default")
-        self.ics_tab.clear_cb()
-        self.ics_tab.import_from_file(self.full_fname)
+        if self.full_fname is None:
+            print("No file written. Exiting BIWT.")
+        else:
+            plt.style.use("default")
+            self.ics_tab.clear_cb()
+            self.ics_tab.import_from_file(self.full_fname)
+            self.ics_tab.csv_folder.setText(self.csv_folder.text())
+            self.ics_tab.output_file.setText(self.csv_file.text())
+            self.config_tab.cells_csv.setChecked(True)
+            self.config_tab.csv_folder.setText(self.csv_folder.text())
+            self.config_tab.csv_file.setText(self.csv_file.text())
         self.ics_tab.tab_widget.setCurrentIndex(self.ics_tab.base_tab_id)
-        self.ics_tab.csv_folder.setText(self.csv_folder.text())
-        self.ics_tab.output_file.setText(self.csv_file.text())
-        self.config_tab.cells_csv.setChecked(True)
-        self.config_tab.csv_folder.setText(self.csv_folder.text())
-        self.config_tab.csv_file.setText(self.csv_file.text())
         self.close()
         self.window.close()
         print("BioinformaticsWalkthroughWindow: Colors will likely change in the ICs tab due to previous cell types being present.")
