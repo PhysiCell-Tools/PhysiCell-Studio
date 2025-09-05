@@ -8,7 +8,7 @@ dependencies:
   - matplotlib
   - scipy
   - pandas
-  - anndata
+  - anndata>=0.12.2
   - pip
   - pip:
     - pyqt5

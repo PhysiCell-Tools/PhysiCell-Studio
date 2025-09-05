@@ -3,6 +3,6 @@ matplotlib
 scipy
 pandas
 simulariumio[physicell]
-anndata
+anndata>=0.12.2
 requests
 git+https://github.com/PhysiBoSS-Models/physiboss-models/
