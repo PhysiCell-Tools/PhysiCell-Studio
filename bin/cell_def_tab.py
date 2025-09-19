@@ -2416,7 +2416,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for custom_data in self.master_custom_var_d.keys():
                 self.physiboss_signals.append("custom:" + custom_data)
 
-            self.physiboss_signals += ["contact with live cell", "contact with dead cell", "contact with basement membrane", "damage", "dead", "total attack time", "time", "damage delivered"]
+            self.physiboss_signals += ["contact with live cell", "contact with dead cell", "contact with basement membrane", "damage", "dead", "attacking", "total attack time", "time", "damage delivered"]
 
             for i, (name, _, _, _, _, _, _, _) in enumerate(self.physiboss_inputs):
                 name.currentIndexChanged.disconnect()
