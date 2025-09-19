@@ -100,9 +100,11 @@ class SignalWidget(QWidget):
         self.sig_max = sig_halfmax*(1+frac_var)
         self.sig_halfmax_min = sig_halfmax*(1-frac_var)
         self.sig_halfmax_max = sig_halfmax*(1+frac_var)
-        self.sig_hillpower = sig_hillpower
         self.sig_hillpower_min = round(sig_hillpower*(1-frac_var))
         self.sig_hillpower_max = round(sig_hillpower*(1+frac_var))
+        # print(f"Signal Range: {self.sig_min}, {self.sig_max}")
+        # print(f"Half max Range: {self.sig_halfmax_min}, {self.sig_halfmax_max}")
+        # print(f"Hill power Range: {self.sig_hillpower_min}, {self.sig_hillpower_max}")
         self.init_ui()
     def init_ui(self):
         layout = QHBoxLayout()
@@ -112,10 +114,11 @@ class SignalWidget(QWidget):
         self.slider_signal = LabeledSlider(self.sig_name,  Signal_values)
         self.slider_halfmax_signal = LabeledSlider("Half max", HalfMax_signal_values) 
         self.slider_hillpower = LabeledSlider("Hill power", HillPower_values)
-        # Set initial value
+        # Set initial value - center value of sliders
         self.slider_signal.slider.setValue(round(0.5*len(Signal_values)) - 1)
         self.slider_halfmax_signal.slider.setValue(round(0.5*len(HalfMax_signal_values)) - 1) 
-        self.slider_hillpower.slider.setValue( self.slider_hillpower.tickIndex(str(self.sig_hillpower)) )
+        hillpower_index = int(len(HillPower_values)/2)
+        self.slider_hillpower.slider.setValue(hillpower_index)
         layout.addWidget(self.slider_signal)
         layout.addWidget(self.slider_halfmax_signal)
         layout.addWidget(self.slider_hillpower)
@@ -179,11 +182,13 @@ class MainPlot(QMainWindow):
             if (Selected_sig == widget.sig_name):
                 sig_value = np.linspace(self.min_signal.value(), self.max_signal.value(), num=1000)
                 widget.slider_signal.slider.setEnabled(False)
+                widget.slider_signal.label.setStyleSheet("color: gray;") # gray color on the label
                 # If have two rules to same signal and behavior with different directions (increase and decrease)
                 if (halfMax_value): halfMax_value2 = sig_halfmax # If it is the second rule
                 else: halfMax_value = sig_halfmax # If it is the first rules
             else:
                 widget.slider_signal.slider.setEnabled(True)
+                widget.slider_signal.label.setStyleSheet("color: black;") # black color on the label
                 sig_value = float( widget.slider_signal.tickValue( widget.slider_signal.slider.value() ) ) 
             if ( widget.sig_direction == 'increases' ):
                 listSigUpReg.append(sig_value); listHalfMaxUpReg.append(sig_halfmax); listHillPowerUpReg.append(sig_hillpower)
@@ -258,7 +263,7 @@ class Window_plot_rules(QMainWindow):
         behavior_hbox.addWidget(QLabel('\tBehavior:')); behavior_hbox.addWidget( self.combobox_behavior )
         self.layout.addLayout(behavior_hbox)
         # Variance of behavior
-        behavior_hbox.addWidget(QLabel('\t +/- Behavior input variation +/- (%):'))
+        behavior_hbox.addWidget(QLabel('\t +/- Behavior range scale +/- (%):'))
         self.behavior_variation = QSpinBox()
         self.behavior_variation.setMinimum(1)
         self.behavior_variation.setMaximum(500)
@@ -282,7 +287,7 @@ class Window_plot_rules(QMainWindow):
         self.combobox_signal_plot = QComboBox()
         signal_hbox_plot.addWidget( self.combobox_signal_plot )
         # Variance of signals to plot
-        signal_hbox_plot.addWidget(QLabel('\t Signal input variation +/- (%):'))
+        signal_hbox_plot.addWidget(QLabel('\t Signal range scale +/- (%):'))
         self.signal_variation = QSpinBox()
         self.signal_variation.setMinimum(1)
         self.signal_variation.setMaximum(500)
@@ -301,7 +306,7 @@ class Window_plot_rules(QMainWindow):
         self.checkbox.setCheckState(2)  # 2 corresponds to Checked state
         signal_hbox_plot_options.addWidget( self.checkbox )
         # Float to min and max signal
-        signal_hbox_plot_options.addWidget(QLabel('\t Signal range - Min:'))
+        signal_hbox_plot_options.addWidget(QLabel('\t Set signal range - Min:'))
         self.float_min_signal = QDoubleSpinBox()
         self.float_min_signal.setMinimum(-float('inf'))
         signal_hbox_plot_options.addWidget( self.float_min_signal )
@@ -313,7 +318,7 @@ class Window_plot_rules(QMainWindow):
         # Add the plot
         self.Figure = MainPlot(self.combobox_cell,self.combobox_behavior,self.combobox_signal_plot,self.layout_behavior_sliders, self.layout_signals, self.checkbox, self.float_min_signal, self.float_max_signal)
         self.layout.addWidget( self.Figure )
-        # Initialize if the daframae is defiend
+        # Initialize if the dataframe is defined
         if isinstance(dataframe, pd.DataFrame): 
             # Clear the combo box of cells and populate
             self.combobox_cell.clear()
@@ -379,8 +384,12 @@ class Window_plot_rules(QMainWindow):
         self.sliders_behavior = BehaviorWidget( self.combobox_behavior.currentText(), baseBehavior, maxBehavior, minBehavior, 0.01*self.behavior_variation.value() )
         self.layout_behavior_sliders.addWidget( self.sliders_behavior )
         # Disable sliders
-        if len(list_DownReg) == 0: self.sliders_behavior.slider_down_behavior.setEnabled(False)
-        if len(list_UpReg) == 0: self.sliders_behavior.slider_up_behavior.setEnabled(False)
+        if len(list_DownReg) == 0: 
+            self.sliders_behavior.slider_down_behavior.setEnabled(False)
+            self.sliders_behavior.slider_down_behavior.label.setStyleSheet("color: gray;") # gray color on the label
+        if len(list_UpReg) == 0: 
+            self.sliders_behavior.slider_up_behavior.setEnabled(False)
+            self.sliders_behavior.slider_up_behavior.label.setStyleSheet("color: gray;") # gray color on the label
 
         # Get the signals list
         list_signals = self.dataframe.loc[(self.dataframe["cell"] == self.combobox_cell.currentText()) &
