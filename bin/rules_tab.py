@@ -1919,7 +1919,7 @@ class Rules(QWidget):
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","damage delivered","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","attacking","total attack time","damage delivered","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
