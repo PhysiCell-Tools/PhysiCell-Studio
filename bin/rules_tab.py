@@ -680,7 +680,7 @@ class Rules(QWidget):
 
             # ------- Hill power
             w_me = MyQLineEdit()
-            w_me.setValidator(QtGui.QIntValidator())
+            w_me.setValidator(QtGui.QDoubleValidator())
             w_me.setFrame(False)
             w_me.vname = w_me  
             w_me.wrow = irow
