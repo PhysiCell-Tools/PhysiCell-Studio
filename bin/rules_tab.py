@@ -485,7 +485,7 @@ class Rules(QWidget):
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
 
-        self.plot_rules_button = QPushButton("Plot rules")
+        self.plot_rules_button = QPushButton("Analyze rules")
         self.plot_rules_button.setFixedWidth(150)
         self.plot_rules_button.setStyleSheet("background-color: lightgreen")
         self.plot_rules_button.clicked.connect(self.plot_rules)
@@ -575,6 +575,10 @@ class Rules(QWidget):
 
             # ------- rule used checkbox
             w_me = MyQCheckBox()
+            # w_me = MyQCheckBox(parent=self.rules_table)
+            # parent = self.table
+            w_me.clicked.connect(self.toggle_check_for_duplicate)
+
             w_me.vname = "foobar0"  
             w_me.wrow = irow
             w_me.wcol = self.rule_use_idx
@@ -784,9 +788,13 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def celltype_combobox_changed_cb(self, idx):
         self.celltype_name = self.celltype_combobox.currentText()
-        if self.signal:
-            print("        signal= ", self.signal)
-        print("          ", self.celldef_tab.param_d.keys())
+        # if self.signal:
+        #     print("        signal= ", self.signal)
+        # print("   keys= ", self.celldef_tab.param_d.keys())
+        # print("   self.celldef_tab.param_d[self.celltype_name]= ", self.celldef_tab.param_d[self.celltype_name])
+
+        # Need to:
+        self.update_base_value()
 
     #-----------------------------------------------------------
     def custom_data_rename(self, old_name, new_name):
@@ -1010,6 +1018,8 @@ class Rules(QWidget):
         dataframe = pd.DataFrame(columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
         dataframe = dataframe.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
         for irow in range(self.max_rule_table_rows):
+            if self.rules_table.cellWidget(irow,self.rule_use_idx) is None:
+                break
             if self.rules_table.cellWidget(irow,self.rule_use_idx).isChecked() is False:
                 print("         rule_use_idx is False; skip this row")
                 continue
@@ -1319,8 +1329,69 @@ class Rules(QWidget):
             return False
 
     #-----------------------------------------------------------
+    def toggle_check_for_duplicate(self, bval):
+
+        if not bval:
+            return
+
+        # print("---- toggle_check_for_duplicate: self =", self )
+        checkbox = self.sender()
+        # print(": checkbox =", checkbox )
+        # print(": dir(checkbox) =", dir(checkbox) )
+        irow = checkbox.wrow
+
+        print(f'   irow={irow}, self.num_rules={self.num_rules}')
+        if irow < 0:
+            print("\n[toggle_check_for_duplicate] Error: invalid row selection")
+            return
+
+        cell_type = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+        signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+        behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+        direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+
+        dup_rule = self.check_for_duplicate_toggle(cell_type, signal, behavior, direction, irow)
+        # print(f"[toggle_check_for_duplicate] dup_rule= {dup_rule}")
+        if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+            # show_studio_warning_window(f'Warning: this row ({irow}) is a duplicate rule of row {dup_rule+1}. Both define "{signal}-{direction}-{behavior}" for the same cell type. You need to uncheck or delete one of them.')
+            show_studio_warning_window(f'Warning: this row ({irow+1}) is a duplicate rule of row {dup_rule+1}. Both define "{signal}-{direction}-{behavior}" for the same cell type. You need to uncheck or delete one of them.')
+            return
+
+    #-----------------------------------------------------------
+    # Called when we attempt to toggle on an existing new rule (at row_toggle). We need to check all other rules for a duplicate.
+    def check_for_duplicate_toggle(self, cell_type_new,signal_new,behavior_new,direction_new, row_toggle):
+        # print(f'check_for_duplicate_toggle(): num_rules={self.num_rules}, row_toggle={row_toggle}')
+        for irow in range(self.num_rules):
+            if irow == row_toggle:
+                continue
+        # self.rules_celltype_idx = 0
+        # self.rules_response_idx = 1
+        # self.rules_minval_idx = 2
+        # self.rules_baseval_idx = 3
+        # self.rules_maxval_idx = 4
+        # self.rules_signal_idx = 5
+        # self.rules_direction_idx = 6
+        # self.rules_halfmax_idx = 7
+        # self.rules_hillpower_idx = 8
+        # self.rules_applydead_idx = 9
+            cell_type = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+            # if cell_type == '':
+                # break
+            if cell_type == cell_type_new:
+                signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+                if signal == signal_new:
+                    behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+                    if behavior == behavior_new:
+                        direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+                        if (direction == direction_new) and (self.rules_table.cellWidget(irow, self.rule_use_idx).isChecked() ):
+                            return irow
+
+        return -1
+    
+    #-----------------------------------------------------------
+    # Called when we attempt to add a new rule. Note that we only need to check all existing ("num_rules") rules.
     def check_for_duplicate(self, cell_type_new,signal_new,behavior_new,direction_new):
-        print("check_for_duplicate(): num_rules=",self.num_rules)
+        # print("check_for_duplicate(): num_rules=",self.num_rules)
         for irow in range(self.num_rules):
         # self.rules_celltype_idx = 0
         # self.rules_response_idx = 1
@@ -1363,7 +1434,7 @@ class Rules(QWidget):
             print("\n------------- add_rule_cb(): num_rules= ",self.num_rules)
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
             if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
-                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule+1}). Either delete the rule in the table, or edit it manually, or toggle it off.")
+                show_studio_warning_window(f"Error: You already have this signal-direction-behavior ({signal}-{direction}-{behavior}) defined for this cell type at row {dup_rule+1}. Either delete or uncheck that rule before adding a replacement.")
                 return
 
 
