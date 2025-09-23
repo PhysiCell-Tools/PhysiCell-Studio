@@ -3267,7 +3267,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         elif index == 2:
             # logging.debug(f'intracellular is SBML ODEs')
             if "intracellular" not in self.param_d[self.current_cell_def].keys():
-                self.param_d[self.current_cell_def]["intracellular"] = None
+                self.param_d[self.current_cell_def]["intracellular"] = {}
+                self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
             self.ode_sbml_frame.show()
         elif index == 3:
             pass
@@ -6574,16 +6575,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         #-----  rwh: Sep 2024
         # self.param_d[cdef]['intracellular'] = {}
-        if "none" in self.intracellular_type_dropdown.currentText():
-            self.param_d[cdef]['intracellular'] = None
+        # if "none" in self.intracellular_type_dropdown.currentText():
+        #     self.param_d[cdef]['intracellular'] = None
+        #     logging.debug(f"DELETE intracellular for {cdef}")
         # elif "Boolean" in self.intracellular_type_dropdown.currentText():
         #     self.param_d[cdef]['intracellular'] = {}
         #     self.param_d[cdef]['intracellular']['type'] = "maboss"
-        elif "ODEs" in self.intracellular_type_dropdown.currentText():
-            print(f'\n\n------------------- cell_def_tab.py:  fill_xml_intracellular()')
-            self.param_d[cdef]['intracellular'] = {}
-            self.param_d[cdef]['intracellular']['type'] = "roadrunner"
-            print(f'------------------- ',self.param_d[cdef]['intracellular'])
 
         if self.param_d[cdef]['intracellular'] is not None:
             print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
