@@ -822,8 +822,12 @@ class Rules(QWidget):
         behavior = self.response_combobox.currentText()
         self.update_base_value_by_name(behavior, True)
 
-    def update_base_value_by_name(self, behavior, update_widgets):
-        key0 = self.celltype_combobox.currentText()
+    def update_base_value_by_name(self, behavior, update_widgets, cell_type = None):
+        # update behavior of specified cell type (if None, use current in combobox)
+        if cell_type is not None:
+            key0 = cell_type
+        else:
+            key0 = self.celltype_combobox.currentText()
         btokens = behavior.split()
         if len(btokens) == 0:
             return
@@ -1038,7 +1042,7 @@ class Rules(QWidget):
             else:
                 dead_irow = 0
             # base value
-            self.update_base_value_by_name(behavior_irow, False) # It's not the better approach
+            self.update_base_value_by_name(behavior_irow, False, cell_irow)
             base_behavior_irow = self.base_val
 
             if base_behavior_irow == '??':  # don't think we ever have this now
@@ -1739,7 +1743,7 @@ class Rules(QWidget):
         hill_power = float(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
 
         behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
-        self.update_base_value_by_name(behavior, False)
+        self.update_base_value_by_name(behavior, False, self.rules_table.cellWidget(irow, self.rules_celltype_idx).text())
         base_val = self.base_val
 
         if base_val == '??':  # don't think we ever have this now
