@@ -1504,7 +1504,7 @@ class VisBase():
                                 if value:
                                     list_internal_nodes.append(node)
 
-                    list_output_nodes = list(set(list_nodes).difference(set(list_internal_nodes)))
+                    list_output_nodes = sorted(list(set(list_nodes).difference(set(list_internal_nodes))))
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
