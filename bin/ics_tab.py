@@ -534,7 +534,7 @@ class ICs(QWidget):
         # self.vbox.addWidget(diagram)
 
         #---------------------
-        self.vbox.addWidget(QHLine())
+        # self.vbox.addWidget(QHLine())
 
         hbox = QHBoxLayout()
         self.save_button = QPushButton("Save")
