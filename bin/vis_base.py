@@ -307,7 +307,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, galaxy_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -324,14 +324,16 @@ class VisBase():
         self.rules_tab = rules_tab
         self.ics_tab = ics_tab
 
-        self.png_frame = 0
-        self.save_png= False
+        self.frame_ind = 0
+        self.save_frame_filetype = '.png'
+        self.save_frame= False
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
         self.ecm_flag = ecm_flag 
+        self.galaxy_flag = galaxy_flag 
 
         if not self.model3D_flag:
             # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
@@ -488,7 +490,7 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
-        self.attachments_checked_flag = False
+        self.graph_display_type = 'NONE'
 
         self.contour_mesh = True
         self.contour_lines = False
@@ -1013,20 +1015,21 @@ class VisBase():
         self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
         self.vbox.addWidget(self.legend_svg_button)
 
-        self.vbox.addWidget(QHLine())
-        hbox = QHBoxLayout()
-        self.movie_name_edit = QLineEdit()
-        self.movie_name_edit.setText("movie.mp4")
-        hbox.addWidget(self.movie_name_edit)
-        self.make_movie_button = QPushButton("Make Movie")
-        self.make_movie_button.setFixedWidth(100)
-        self.make_movie_button.clicked.connect(self.make_movie_cb)
-        hbox.addWidget(self.make_movie_button)
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setFixedWidth(70)
-        self.cancel_button.clicked.connect(self.cancel_movie_cb)
-        hbox.addWidget(self.cancel_button)
-        self.vbox.addLayout(hbox)
+        if not self.galaxy_flag and not self.model3D_flag:
+            self.vbox.addWidget(QHLine())
+            hbox = QHBoxLayout()
+            self.movie_name_edit = QLineEdit()
+            self.movie_name_edit.setText("movie.mp4")
+            hbox.addWidget(self.movie_name_edit)
+            self.make_movie_button = QPushButton("Make Movie")
+            self.make_movie_button.setFixedWidth(100)
+            self.make_movie_button.clicked.connect(self.make_movie_cb)
+            hbox.addWidget(self.make_movie_button)
+            self.cancel_button = QPushButton("Cancel")
+            self.cancel_button.setFixedWidth(70)
+            self.cancel_button.clicked.connect(self.cancel_movie_cb)
+            hbox.addWidget(self.cancel_button)
+            self.vbox.addLayout(hbox)
 
         self.physiboss_qline = None
         
@@ -1321,9 +1324,7 @@ class VisBase():
         #--------
         if self.discrete_scalar == 'cell_type':   # number not known until run time
             # if not self.population_plot[self.discrete_scalar]:
-            if self.population_plot[self.discrete_scalar] is None:
-                self.population_plot[self.discrete_scalar] = PopulationPlotWindow()
-
+            self.population_plot[self.discrete_scalar] = PopulationPlotWindow() # don't test if already exists!
             self.population_plot[self.discrete_scalar].ax0.cla()
 
             # ctype_plot = []
@@ -2018,7 +2019,7 @@ class VisBase():
         xml_file = "initial.xml"
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
-            print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            # print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
         # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
@@ -2155,7 +2156,7 @@ class VisBase():
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")

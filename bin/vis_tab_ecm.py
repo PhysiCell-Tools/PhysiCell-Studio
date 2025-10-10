@@ -60,9 +60,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, galaxy_flag):
 
-        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag)
+        super(Vis,self).__init__(studio_flag=studio_flag, rules_flag=rules_flag,  nanohub_flag=nanohub_flag, config_tab=config_tab, microenv_tab=microenv_tab, celldef_tab=celldef_tab, user_params_tab=user_params_tab, rules_tab=rules_tab, ics_tab=ics_tab, run_tab=run_tab, model3D_flag=model3D_flag,tensor_flag=tensor_flag, ecm_flag=ecm_flag, galaxy_flag=galaxy_flag)
 
         self.figure = None
 
@@ -120,6 +120,11 @@ class Vis(VisBase, QWidget):
         self.plot_xmax = None
         self.plot_ymin = None
         self.plot_ymax = None
+
+        self.axes_x_center = 0
+        self.axes_y_center = 0
+        self.axes_x_radius = 100
+        self.axes_y_radius = 100
 
         self.use_defaults = True
         self.title_str = ""
@@ -250,6 +255,17 @@ class Vis(VisBase, QWidget):
 
 
     #--------------------------------------
+    def reset_axes_cb(self):
+        # print("vis_tab.py: reset_axes_cb")
+        # self.axes_x_center, axes_y_center, axes_x_radius, axes_y_radius, 
+        self.plot_xmin = self.axes_x_center - self.axes_x_radius
+        self.plot_xmax = self.axes_x_center + self.axes_x_radius
+
+        self.plot_ymin = self.axes_y_center - self.axes_y_radius
+        self.plot_ymax = self.axes_y_center + self.axes_y_radius
+        self.update_plots()
+
+    #--------------------------------------
     # Dependent on 2D/3D
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
@@ -277,11 +293,11 @@ class Vis(VisBase, QWidget):
         self.canvas.update()
         self.canvas.draw()
 
-        if self.save_png:
-            self.png_frame += 1
-            png_file = os.path.join(self.output_dir, f"frame{self.png_frame:04d}.png")
-            print("---->  ", png_file)
-            self.figure.savefig(png_file)
+        if self.save_frame:
+            self.frame_ind += 1
+            frame_file = os.path.join(self.output_dir, f"frame{self.frame_ind:04d}{self.save_frame_filetype}")
+            print("---->  ", frame_file)
+            self.figure.savefig(frame_file)
 
     #------------------------------
     # Depends on 2D/3D

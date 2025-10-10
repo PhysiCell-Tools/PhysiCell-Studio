@@ -245,7 +245,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # # --------- cell_asymmetric_divisions
             asymmetric_division_probabilities_path = f"{cycle_path}//standard_asymmetric_division"
             logging.debug(f'---- asymmetric_division_probabilities_path = {asymmetric_division_probabilities_path}')
-            print(f'\n\n-----------\npopulate*.py: ---- asymmetric_division_probabilities_path = {asymmetric_division_probabilities_path}')
+            # print(f'\n\n-----------\npopulate*.py: ---- asymmetric_division_probabilities_path = {asymmetric_division_probabilities_path}')
             # cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
 
             cell_def_tab.param_d[cell_def_name]["asymmetric_division_probability"] = {}
@@ -285,6 +285,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.param_d[cell_def_name]["apoptosis_death_rate"] = death_model.find('death_rate').text
 
                         pd_uep = death_model.find("phase_durations")
+                        tr_uep = death_model.find("phase_transition_rates")
+                        if pd_uep is None and tr_uep is None:
+                            print("\n----------------------------")
+                            print("\n--- Error parsing apoptosis.")
+                            print("You need to provide either 'phase_durations' or 'phase_transition_rates'")
+                            sys.exit(1)
                         if pd_uep is not None:
                             logging.debug(f' >> pd_uep ={pd_uep}')
                             cell_def_tab.param_d[cell_def_name]['apoptosis_duration_flag'] = True
@@ -303,7 +309,6 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                         cell_def_tab.param_d[cell_def_name]["apoptosis_01_fixed_trate"] = False
 
                         else:  #  apoptosis transition rate
-                            tr_uep = death_model.find("phase_transition_rates")
                             if tr_uep is not None:
                                 logging.debug(f' >> tr_uep ={tr_uep}')
 
