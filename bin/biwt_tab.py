@@ -1563,6 +1563,8 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         rI = 0
         cI = 0
         cmax = 2
+        nonnegative_validator = QtGui.QDoubleValidator()
+        nonnegative_validator.setBottom(0)
         if self.plot_is_2d:
             for i in range(6):
                 hbox = QHBoxLayout()
@@ -1583,8 +1585,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.par_text[1].setValidator(coord_validator)
             self.par_text[4].setValidator(coord_validator) # theta 1
             self.par_text[5].setValidator(coord_validator) # theta 2
-            nonnegative_validator = QtGui.QDoubleValidator()
-            nonnegative_validator.setBottom(0)
+
             for i in range(2,4):
                 self.par_text[i].setValidator(nonnegative_validator)
         else: # 3d plotting pars
@@ -1606,7 +1607,6 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             for i in [0,1,2,5,6]: # x0, y0, z0, theta 1, theta 2
                 self.par_text[i].setValidator(coord_validator)
 
-            nonnegative_validator.setBottom(0)
             for i in [3,4]: # r0, r1
                 self.par_text[i].setValidator(nonnegative_validator)
 
