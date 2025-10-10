@@ -166,6 +166,12 @@ class BioinformaticsWalkthroughWindow_SpatialQuery(BioinformaticsWalkthroughWind
         hbox_gb_cont.addWidget(self.continue_button)
 
         vbox = QVBoxLayout()
+
+        header = QLabel("Spatial Prompt")
+        header.setAlignment(Qt.AlignCenter)
+        header.setStyleSheet("font-size: 18pt; font-weight: bold; margin-bottom: 10px;")
+        vbox.addWidget(header)
+
         vbox.addWidget(label)
         vbox.addLayout(hbox_yn)
         vbox.addLayout(hbox_gb_cont)
@@ -310,6 +316,12 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
                 right_side = QWidget()
                 vbox = QVBoxLayout()
+
+                if self.biwt.perform_spot_deconvolution:
+                    note = QLabel("Dimensionality reduction plot is colored based on the highest probability cell type.")
+                    note.setStyleSheet("color: gray; font-style: italic;")
+                    vbox.addWidget(note)
+
                 self.obsm_keys_combobox = QComboBox()
                 # for i, k in enumerate(self.biwt.adata.obsm.keys()):
                 for i, k in enumerate(self.biwt.data_vis_arrays.keys()):
@@ -378,7 +390,12 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         if self.dim_red_fig is None:
             self.create_dim_red_fig()
         
-        temp = pd.CategoricalIndex(self.biwt.cell_types_original)
+        if self.biwt.perform_spot_deconvolution:
+            temp = pd.CategoricalIndex(self.biwt.cell_types_max)
+        
+        else:
+            temp = pd.CategoricalIndex(self.biwt.cell_types_original)
+
         using_sample = False
         if v.shape[0] > 1e5:
             # 100000 random indices from 0 to v.shape[0] - 1
@@ -426,6 +443,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
     def delete_cb(self):
         self.biwt.stale_futures = True
+        deleted_cell_types = set()
         for cell_type in self.checkbox_dict_edit.keys():
             if self.checkbox_dict_edit[cell_type].isChecked():
                 self.biwt.cell_type_dict_on_edit[cell_type] = None
@@ -434,22 +452,40 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
                 self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["delete"])
 
                 self.keep_button[cell_type].setEnabled(True)
+                deleted_cell_types.add(cell_type)
+
+        if self.biwt.perform_spot_deconvolution:
+            for prob_dict in self.biwt.cell_prob_feature_dicts:
+                for del_type in deleted_cell_types:
+                    prob_dict.pop(del_type, None)
 
     def merge_cb(self):
         self.biwt.stale_futures = True
         self.merge_id += 1
         first_name = None
+        merged_cell_types = []
+        
         for cell_type in self.checkbox_dict_edit.keys():
             if self.checkbox_dict_edit[cell_type].isChecked():
                 if first_name is None:
                     first_name = cell_type
                 self.biwt.cell_type_dict_on_edit[cell_type] = first_name
+                merged_cell_types.append(cell_type)
                 self.checkbox_dict_edit[cell_type].setChecked(False)
                 self.checkbox_dict_edit[cell_type].setEnabled(False)
                 self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["merge"])
                 self.checkbox_dict_edit[cell_type].setText(f"{cell_type} \u21d2 Merge Gp. #{self.merge_id}")
 
                 self.keep_button[cell_type].setEnabled(True)
+
+        if self.biwt.perform_spot_deconvolution:
+            merged_name = first_name
+
+            for prob_dict in self.biwt.cell_prob_feature_dicts:
+                merged_prob = 0.0
+                for ct in merged_cell_types:
+                    merged_prob += prob_dict.pop(ct, 0.0)
+                prob_dict[merged_name] = prob_dict.get(merged_name, 0.0) + merged_prob
 
     def marker_size_changed_cb(self, text):
         if not self.marker_size_edit.hasAcceptableInput():
@@ -1321,9 +1357,22 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
 
     def add_cell_positions_to_file(self):
         with open(self.full_fname, 'a') as f:
-            for cell_type in self.biwt.csv_array.keys():
-                for pos in self.biwt.csv_array[cell_type]:
-                    f.write(f'{pos[0]},{pos[1]},{pos[2]},{cell_type}\n')
+            if self.biwt.perform_spot_deconvolution:
+                for spot_info in self.biwt.plotted_cell_types_per_spot:
+                    spot_coords = spot_info['spot_coords']      # The center coordinate of the spot
+                    cell_types = spot_info['cell_types']        # List of cell types assigned to this spot
+                    sub_spots = spot_info['sub_spots']
+
+                    for i in range(len(cell_types)):
+                        x, y = sub_spots[i][0], sub_spots[i][1]
+                        z = spot_coords[2] if len(spot_coords) > 2 else 0
+                        cell_type = cell_types[i]
+                        f.write(f"{x},{y},{z},{cell_type}\n")
+
+            else: 
+                for cell_type in self.biwt.csv_array.keys():
+                    for pos in self.biwt.csv_array[cell_type]:
+                        f.write(f'{pos[0]},{pos[1]},{pos[2]},{cell_type}\n')
 
     def process_window(self):
         self.biwt.full_fname = self.full_fname
@@ -2290,7 +2339,11 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 self.initial_width = width
                 self.initial_height = height
                 initial_coords = self.spatial_base_coords * [width, height] + [x0,y0]
-                self.preview_patch = self.ax0.scatter(initial_coords[:,0],initial_coords[:,1], self.scatter_sizes, 'gray', alpha=0.5)
+
+                if self.biwt.perform_spot_deconvolution:
+                    self.preview_patch = self.ax0.scatter(initial_coords[:,0],initial_coords[:,1], self.biwt.deconvolution_scatter_size, 'gray', alpha=0.5)
+                else:
+                    self.preview_patch = self.ax0.scatter(initial_coords[:,0],initial_coords[:,1], self.scatter_sizes, 'gray', alpha=0.5)
                 self.initial_offsets = self.preview_patch.get_offsets()
             else:
                 print(f"----updating spatial plotter-----")
@@ -2338,15 +2391,29 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         self.canvas.update()
         self.canvas.draw()
 
-        self.cell_type_micron2_area_dict = {cell_type: (((9*np.pi*V**2) / 16) ** (1./3)) for cell_type, V in self.biwt.cell_volume.items()}
-        if self.biwt.use_spatial_data or (not self.plot_is_2d):
-            dx, dy = self.ax0.transData.transform((1,1))-self.ax0.transData.transform((0,0)) # # pixels/ micron
-            area_scale_factor = dx*dy  * (72/self.figure.dpi)**2
-            fudge_factor = 1.258199089131739 # empirically-defined value to multiply area (in pts) to represent true area in microns on plot
+        
+        dx, dy = self.ax0.transData.transform((1,1))-self.ax0.transData.transform((0,0)) # # pixels/ micron
+        area_scale_factor = dx*dy  * (72/self.figure.dpi)**2
+        fudge_factor = 1.258199089131739 # empirically-defined value to multiply area (in pts) to represent true area in microns on plot
+        default_volume = 2494
+        standard_volume_area = (((9 * np.pi * default_volume**2) / 16) ** (1. / 3))
+
+    #Calculates scatter sizes for cells using fixed scaling if deconvolution is on, otherwise computes sizes from cell volumes with optional spatial scaling
+        if self.biwt.perform_spot_deconvolution:
+            standard_scatter_size = fudge_factor * area_scale_factor * standard_volume_area
+            self.biwt.deconvolution_scatter_size = self.num_box.value() * standard_scatter_size
+            self.cell_type_micron2_area_dict = {cell_type: standard_volume_area for cell_type in self.biwt.cell_types_list_final}
             self.cell_type_pt_area_dict = {cell_type: fudge_factor * area_scale_factor * A for cell_type, A in self.cell_type_micron2_area_dict.items()}
             self.single_scatter_sizes = np.array([self.cell_type_pt_area_dict[ctn] for ctn in self.biwt.cell_types_final])
-            if self.biwt.use_spatial_data:
-                self.scatter_sizes = self.num_box.value() * self.single_scatter_sizes
+
+        else:
+            self.cell_type_micron2_area_dict = {cell_type: (((9*np.pi*V**2) / 16) ** (1./3)) for cell_type, V in self.biwt.cell_volume.items()}
+
+            if self.biwt.use_spatial_data or (not self.plot_is_2d):
+                self.cell_type_pt_area_dict = {cell_type: fudge_factor * area_scale_factor * A for cell_type, A in self.cell_type_micron2_area_dict.items()}
+                self.single_scatter_sizes = np.array([self.cell_type_pt_area_dict[ctn] for ctn in self.biwt.cell_types_final])
+                if self.biwt.use_spatial_data:
+                    self.scatter_sizes = self.num_box.value() * self.single_scatter_sizes
 
         self.legend_artists = []
         self.legend_labels = []
@@ -2396,49 +2463,133 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
     def plot_cell_pos(self):
         self.preview_constrained_to_axes = False
+        n_per_spot = self.num_box.value()
         if self.pw.cell_pos_button_group.checkedId()==self.pw.spatial_plotter_id:
             if self.plot_is_2d:
                 x0, y0, width, height = self.current_pars
             else:
                 x0, y0, z0, width, height, depth = self.current_pars
-            n_per_spot = self.num_box.value()
-            for cell_type in self.pw.checkbox_dict.keys():
-                if self.pw.checkbox_dict[cell_type].isChecked():
-                    idx_cell_type = [ctn==cell_type for ctn in self.biwt.cell_types_final]
-                    cell_radius = np.sqrt(self.cell_type_micron2_area_dict[cell_type] / np.pi)
-                    cell_coords = np.hstack((self.spatial_base_coords[idx_cell_type,0:2] * [width, height] + [x0,y0],np.zeros((sum(idx_cell_type),1))))
-                    idx_inbounds = [(cc[0]>=self.plot_xmin and cc[0]<=self.plot_xmax and cc[1]>=self.plot_ymin and cc[1]<=self.plot_ymax) for cc in cell_coords]
-                    cell_coords = cell_coords[idx_inbounds,:]
-                    if n_per_spot==1:
-                        self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
-                        if self.plot_is_2d:
-                            self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
-                            self.legend_artists.append(legend_patch)
+
+            if self.biwt.perform_spot_deconvolution:
+                selected_cell_types = {
+                    ct for ct, checkbox in self.pw.checkbox_dict.items() if checkbox.isChecked()
+                }
+                self.plotted_cell_types_per_spot = []
+
+                cell_radius = np.sqrt((((9*np.pi*2494**2) / 16) ** (1./3))  / np.pi)
+                cell_coords = np.hstack((self.spatial_base_coords[:, 0:2] * [width, height] + [x0, y0], np.zeros((self.spatial_base_coords.shape[0], 1))))
+                idx_inbounds = [(cc[0] >= self.plot_xmin and cc[0] <= self.plot_xmax and cc[1] >= self.plot_ymin and cc[1] <= self.plot_ymax) for cc in cell_coords]
+                
+                for idx, pos in enumerate(cell_coords):
+                    prob_values = self.biwt.cell_prob_feature_dicts[idx]
+                    filtered_probs = {k: v for k, v in prob_values.items() if v > 0.1 and k.replace('_probability', '') in selected_cell_types}
+                    total_prob = sum(filtered_probs.values())
+                    spot_counts = {k: int((v / total_prob) * n_per_spot) for k, v in filtered_probs.items()}
+                    assigned = sum(spot_counts.values())
+                    remainder = n_per_spot - assigned
+                    sorted_probs = sorted(filtered_probs.items(), key=lambda x: x[1], reverse=True)
+                    i = 0
+                    while remainder > 0 and i < len(sorted_probs):
+                        spot_counts[sorted_probs[i][0]] += 1
+                        remainder -= 1
+                        i += 1
+
+                    color_sequence = []
+                    cell_type_sequence = []
+                    
+                    for prob_feature, count in spot_counts.items():
+                        feature_name = prob_feature.replace('_probability', '')
+                        color =  self.color_by_celltype[feature_name]
+                        color_sequence.extend([color] * count)
+                        cell_type_sequence.extend([feature_name] * count)
+
+                    if len(color_sequence) == 0:
+                        # Assign default grey color to avoid crash if no cell types pass 10% threshold
+                        color_sequence = ['gray'] * n_per_spot
+                        cell_type_sequence = ['Unknown'] * n_per_spot
+                    else:
+                        while len(color_sequence) < n_per_spot:
+                            color_sequence.append(color_sequence[0]) 
+                            cell_type_sequence.append(cell_type_sequence[0])
+                    color_sequence = color_sequence[:n_per_spot]
+                    cell_type_sequence = cell_type_sequence[:n_per_spot]
+
+                    if n_per_spot == 1:
+                        ct = cell_type_sequence[0]
+                        color = color_sequence[0]
+                        coord = np.array(pos).reshape(1, 3)
+                        if ct not in self.biwt.csv_array:
+                            self.biwt.csv_array[ct] = coord
                         else:
-                            cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
-                            collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
+                            self.biwt.csv_array[ct] = np.vstack((self.biwt.csv_array[ct], coord))
+                        self.circles(coord, s=cell_radius, color=color, edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
-                        all_new = np.empty((0,3))
-                        for cc in cell_coords:
-                            self.wedge_sample(n_per_spot, cc[0], cc[1], r)
-                            all_new = np.vstack((all_new,self.new_pos))
-                        self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],all_new))
-                        if self.plot_is_2d:
-                            self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
-                            self.legend_artists.append(legend_patch)
+                        self.wedge_sample(n_per_spot, pos[0], pos[1], r)
+                        sub_spots = np.copy(self.new_pos)
+                        
+                        for i, color in enumerate(color_sequence):
+                            self.circles(sub_spots[i], s=cell_radius, color=color, edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+
+                        self.plotted_cell_types_per_spot.append({
+                            'spot_coords': pos,
+                            'cell_types': cell_type_sequence,
+                            'sub_spots': sub_spots
+                        })
+
+                for cell_name in self.color_by_celltype:
+                    if cell_name in selected_cell_types:
+                        legend_patch = Patch(facecolor=self.color_by_celltype[cell_name], edgecolor='black', linewidth=0.5)
+                        self.legend_artists.append(legend_patch)
+                        self.legend_labels.append(cell_name) 
+
+                for ct in selected_cell_types:
+                    checkbox = self.pw.checkbox_dict.get(ct)
+                    if checkbox is not None:
+                        checkbox.setChecked(False)
+                        checkbox.setEnabled(False)
+                    self.pw.undo_button[ct].setEnabled(True)
+            
+
+            else:
+                    for cell_type in self.pw.checkbox_dict.keys():
+                        if self.pw.checkbox_dict[cell_type].isChecked():
+                            idx_cell_type = [ctn==cell_type for ctn in self.biwt.cell_types_final]
+                            cell_radius = np.sqrt(self.cell_type_micron2_area_dict[cell_type] / np.pi)
+                            cell_coords = np.hstack((self.spatial_base_coords[idx_cell_type,0:2] * [width, height] + [x0,y0],np.zeros((sum(idx_cell_type),1))))
+                            idx_inbounds = [(cc[0]>=self.plot_xmin and cc[0]<=self.plot_xmax and cc[1]>=self.plot_ymin and cc[1]<=self.plot_ymax) for cc in cell_coords]
+                            cell_coords = cell_coords[idx_inbounds,:]
+                        if n_per_spot==1:
+                            self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],cell_coords))
+                            if self.plot_is_2d:
+                                self.circles(cell_coords, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                                legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                                self.legend_artists.append(legend_patch)
+                            else:
+                                cell_coords[:,2] = self.spatial_base_coords[idx_cell_type,2] * depth + z0
+                                collection = self.ax0.scatter(cell_coords[:,0],cell_coords[:,1],cell_coords[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                                scatter_objects, _ = collection.legend_elements()
+                                self.legend_artists.append(scatter_objects[0])
                         else:
-                            collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
-                            scatter_objects, _ = collection.legend_elements()
-                            self.legend_artists.append(scatter_objects[0])
-                    self.legend_labels.append(cell_type)
-                    self.pw.checkbox_dict[cell_type].setEnabled(False)
-                    self.pw.checkbox_dict[cell_type].setChecked(False)
-                    self.pw.undo_button[cell_type].setEnabled(True)
+                            r = cell_radius * np.sqrt(n_per_spot)
+                            all_new = np.empty((0,3))
+                            for cc in cell_coords:
+                                self.wedge_sample(n_per_spot, cc[0], cc[1], r)
+                                all_new = np.vstack((all_new,self.new_pos))
+                            self.biwt.csv_array[cell_type] = np.vstack((self.biwt.csv_array[cell_type],all_new))
+                            if self.plot_is_2d:
+                                self.circles(all_new, s=cell_radius, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                                legend_patch = Patch(facecolor=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5)
+                                self.legend_artists.append(legend_patch)
+                            else:
+                                collection = self.ax0.scatter(all_new[:,0],all_new[:,1],all_new[:,2], s=8.0, color=self.color_by_celltype[cell_type], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                                scatter_objects, _ = collection.legend_elements()
+                                self.legend_artists.append(scatter_objects[0])
+                        self.legend_labels.append(cell_type)
+                        self.pw.checkbox_dict[cell_type].setEnabled(False)
+                        self.pw.checkbox_dict[cell_type].setChecked(False)
+                        self.pw.undo_button[cell_type].setEnabled(True)
         else:
             for cell_type in self.pw.checkbox_dict.keys():
                 if self.pw.checkbox_dict[cell_type].isChecked():
@@ -2749,8 +2900,12 @@ class BioinformaticsWalkthrough(QWidget):
         self.layout = QVBoxLayout(self)  # leave this!
         self.layout.addWidget(base_widget)
 
+        self.probability_data_found = False
+        self.probability_columns = []
+        self.perform_spot_deconvolution = False
         self.spatial_data_found = False
-
+        self.plotted_cell_types_per_spot = []
+        
         if BIWT_DEV_MODE:
             biwt_dev_mode(self)
 
@@ -2843,15 +2998,19 @@ class BioinformaticsWalkthrough(QWidget):
 
         if not import_successful:
             return
-            
-        self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
 
-        if self.auto_continue: # set in BioinformaticsWalkthroughWindow_ClusterColumn if the line edit is filled with a column name found in the data
-            self.current_column = self.column_line_edit.text()
-            self.continue_from_import()
+        if self.probability_data_found and self.spatial_data_found:
+            self.open_next_window(BioinformaticsWalkthroughWindow_SpotDeconvolutionQuery, show=True)
+
         else:
-            self.window.hide()
-            self.window.show()
+            self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
+
+            if self.auto_continue: # set in BioinformaticsWalkthroughWindow_ClusterColumn if the line edit is filled with a column name found in the data
+                self.current_column = self.column_line_edit.text()
+                self.continue_from_import()
+            else:
+                self.window.hide()
+                self.window.show()
 
     def import_file_from_r(self,file_path):
         if not HAVE_RPY2:
@@ -2944,6 +3103,7 @@ class BioinformaticsWalkthrough(QWidget):
             return False
         try:
             adata = anndata.read_h5ad(file_path)
+            self.adata = adata
         except Exception as e:
             print(f"Import failed while trying to read {file_path} as an anndata object.\nError: {e}")
             return False
@@ -2957,6 +3117,7 @@ class BioinformaticsWalkthrough(QWidget):
         print("------------anndata object loaded-------------")
 
         self.search_for_h5ad_spatial_data()
+        self.search_for_h5ad_probability_data()
         return True
 
     def continue_from_import(self):
@@ -2966,6 +3127,11 @@ class BioinformaticsWalkthrough(QWidget):
             self.edit_cell_types()
         else:
             self.open_next_window(BioinformaticsWalkthroughWindow_SpatialQuery, show=True)
+
+    def search_for_h5ad_probability_data(self):
+        self.probability_columns = [col for col in self.data_columns if col.endswith("_probability")]
+        self.probability_data_found = bool(self.probability_columns)
+        return self.probability_data_found
 
     def search_for_h5ad_spatial_data(self):
         # space ranger for visium data
@@ -3029,6 +3195,42 @@ class BioinformaticsWalkthrough(QWidget):
         self.collect_cell_type_data()
         self.edit_cell_types()
 
+    def continue_from_spotdeconvolutionquery(self):
+        if self.perform_spot_deconvolution:
+            adata = self.adata
+            probability_columns = [
+                col for col in adata.obs.columns
+                if col.endswith("_probability") and adata.obs[col].sum() > 0
+            ]
+            self.cell_types_list_original = sorted(set(col.replace("_probability", "") for col in probability_columns))
+
+
+            prob_matrix = adata.obs[probability_columns].values
+            max_prob_indices = prob_matrix.argmax(axis=1) #for each row/data point, assign the cell type with the highest probability
+            cell_types = [col.replace("_probability", "") for col in probability_columns]
+            cell_type_labels = [cell_types[i] for i in max_prob_indices] 
+            self.cell_types_max = [str(x) for x in cell_type_labels]
+            self.cell_types_list_max = sorted(set(self.cell_types_max))
+
+            self.cell_prob_feature_dicts = []
+            for idx in range(len(cell_type_labels)):
+                cell_dict = {
+                    prob_feature.replace("_probability", ""): self.data_columns[prob_feature][idx]
+                    for prob_feature in probability_columns
+                }
+                self.cell_prob_feature_dicts.append(cell_dict)
+
+            self.edit_cell_types()
+
+        else: 
+            self.open_next_window(BioinformaticsWalkthroughWindow_ClusterColumn, show=False)
+            if self.auto_continue:
+                self.current_column = self.column_line_edit.text()
+                self.continue_from_import()
+            else:
+                self.window.hide()
+                self.window.show()
+
     ### Edit cell types
     def edit_cell_types(self):
         self.open_next_window(BioinformaticsWalkthroughWindow_EditCellTypes, show=True)
@@ -3071,14 +3273,32 @@ class BioinformaticsWalkthrough(QWidget):
             self.continue_from_rename_check()
         
     def continue_from_rename_check(self):  
-        if self.use_spatial_data:
-            self.cell_types_final, self.spatial_data_final = zip(*[(self.cell_type_dict_on_rename[ctn], pos) for ctn, pos in zip(self.cell_types_original, self.spatial_data) if ctn in self.cell_type_dict_on_rename.keys()])
-            self.spatial_data_final = np.vstack([*self.spatial_data_final])
-        else:
-            self.cell_types_final = [self.cell_type_dict_on_rename[ctn] for ctn in self.cell_types_original if ctn in self.cell_type_dict_on_rename.keys()]
 
-        self.count_final_cell_types()
-        self.compute_cell_volumes() # used in confluence computations, and in spatial_plotter
+        if self.perform_spot_deconvolution:
+            renamed_mapping = self.cell_type_dict_on_rename
+            updated_dicts = []
+            cell_types_final_set = set()
+
+            for prob_dict in self.cell_prob_feature_dicts:
+                new_prob_dict = {}
+                for orig_ct, prob_value in prob_dict.items():
+                    renamed_ct = renamed_mapping.get(orig_ct, orig_ct)
+                    new_prob_dict[renamed_ct] = new_prob_dict.get(renamed_ct, 0.0) + prob_value
+                    cell_types_final_set.add(renamed_ct)
+                updated_dicts.append(new_prob_dict)
+            self.cell_prob_feature_dicts = updated_dicts
+            self.cell_types_final = sorted(cell_types_final_set)
+            self.spatial_data_final = np.array(self.adata.obsm.get("spatial"))
+
+        else:
+            if self.use_spatial_data:
+                self.cell_types_final, self.spatial_data_final = zip(*[(self.cell_type_dict_on_rename[ctn], pos) for ctn, pos in zip(self.cell_types_original, self.spatial_data) if ctn in self.cell_type_dict_on_rename.keys()])
+                self.spatial_data_final = np.vstack([*self.spatial_data_final])
+            else:
+                self.cell_types_final = [self.cell_type_dict_on_rename[ctn] for ctn in self.cell_types_original if ctn in self.cell_type_dict_on_rename.keys()]
+
+            self.count_final_cell_types()
+            self.compute_cell_volumes() # used in confluence computations, and in spatial_plotter
         if self.use_spatial_data:
             self.set_cell_positions()
         else:
@@ -3163,7 +3383,7 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
         list_cell_types.sort(key=lambda x: (x != 'Default', x))
         self.model = QStringListModel(list_cell_types)
 
-        for cell_type in self.biwt.cell_types_list_original:
+        for cell_type in self.biwt.cell_types_list_final:
             hbox = QHBoxLayout()
             cell_type_label = QLabel(f"{cell_type} \u21d2 ")
             hbox.addWidget(cell_type_label)
@@ -3215,6 +3435,54 @@ class BioinformaticsWalkthrough_LoadCellParameters(BioinformaticsWalkthroughWind
 
     def process_window(self):
         self.biwt.continue_from_parameters()
+
+class BioinformaticsWalkthroughWindow_SpotDeconvolutionQuery(BioinformaticsWalkthroughWindow):
+    def __init__(self, biwt):
+        super().__init__(biwt)
+        self.biwt = biwt
+
+        print("------Asking if you want to perform spot deconvolution------")
+
+        s = f"It seems this data may contain spatial coordinates and cell type probabilities. \n"
+        s += "Would you like to use this for spot deconvolution?"
+        label = QLabel(s)
+
+        self.yes_no_group = QButtonGroup()
+        self.yes = QRadioButton_custom("Yes")
+        self.no = QRadioButton_custom("No")
+        self.yes_no_group.addButton(self.yes,0)
+        self.yes_no_group.addButton(self.no,1)
+        self.yes_no_group.idToggled.connect(self.yn_toggled)
+        self.yes.setChecked(True)
+        hbox_yn = QHBoxLayout()
+        hbox_yn.addWidget(self.yes)
+        hbox_yn.addWidget(self.no)
+
+        self.go_back_button = GoBackButton(self, self.biwt)
+        self.continue_button = ContinueButton(self, self.process_window)
+        hbox_gb_cont = QHBoxLayout()
+        hbox_gb_cont.addWidget(self.go_back_button)
+        hbox_gb_cont.addWidget(self.continue_button)
+
+        vbox = QVBoxLayout()
+
+        header = QLabel("Spot Deconvolution Prompt")
+        header.setAlignment(Qt.AlignCenter)
+        header.setStyleSheet("font-size: 18pt; font-weight: bold; margin-bottom: 10px;")
+        vbox.addWidget(header)
+
+        vbox.addWidget(label)
+        vbox.addLayout(hbox_yn)
+        vbox.addLayout(hbox_gb_cont)
+        self.setLayout(vbox)
+
+    def yn_toggled(self,id):
+        self.biwt.stale_futures = True
+        self.biwt.perform_spot_deconvolution = id==0
+        self.biwt.use_spatial_data=True
+
+    def process_window(self):
+        self.biwt.continue_from_spotdeconvolutionquery()
 
 def create_checkboxes_for_cell_types(vbox, cell_types):
     checkbox_dict = {}
