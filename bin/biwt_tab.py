@@ -2334,7 +2334,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
         if not self.current_pars_acceptable:
             return
         x0, y0, z0, r = self.current_pars
-        self.annulus_setter_3d(x0, y0, x0, r)
+        self.annulus_setter_3d(x0, y0, z0, r)
 
         # check the disc intersects the domain in non-trivial manner
         r2 = self.get_distance2_to_domain_3d(x0, y0, z0)[0]
