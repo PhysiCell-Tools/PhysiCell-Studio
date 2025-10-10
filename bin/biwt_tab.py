@@ -1645,6 +1645,8 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
             self.current_pars_acceptable = False
             return # do not update unless all are ready
 
+        self.current_pars_acceptable = True
+
     def append_to_history(self):
         id = self.pw.cell_pos_button_group.checkedId()
         if self.patch_history_idx[id] < len(self.patch_history[id])-1:
