@@ -45,7 +45,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab, biwt_flag, xml_creator):
+    def __init__(self, config_tab, celldef_tab, biwt_flag, nanohub_flag, xml_creator):
         super().__init__()
         # global self.config_params
 
@@ -56,6 +56,7 @@ class ICs(QWidget):
         self.xml_creator = xml_creator
 
         self.biwt_flag = biwt_flag
+        self.nanohub_flag = nanohub_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -63,7 +64,6 @@ class ICs(QWidget):
         self.cell_radius = 8.412710547954228   # from PhysiCell_phenotype.cpp
         self.spacing = 1.0
 
-        # self.color_by_celltype = ['gray','red','green','yellow','cyan','magenta','blue','brown','black','orange','seagreen','gold']
         self.color_by_celltype = ['gray','red','yellow','green','blue','magenta','orange','lime','cyan','hotpink','peachpuff','darkseagreen','lightskyblue']
         self.alpha_value = 1.0
 
@@ -77,8 +77,6 @@ class ICs(QWidget):
         self.plot_ymax = 500
         self.plot_zmin = -20
         self.plot_zmax = 20
-
-        # self.nanohub_flag = nanohub_flag
 
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
@@ -513,7 +511,7 @@ class ICs(QWidget):
 
         # hbox = QHBoxLayout()
         self.import_button = QPushButton("Import (cell type name syntax only)")
-        self.import_button.setFixedWidth(230)
+        self.import_button.setFixedWidth(260)
         self.import_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
         self.import_button.clicked.connect(self.import_cb)
         self.vbox.addWidget(self.import_button)
@@ -536,7 +534,7 @@ class ICs(QWidget):
         # self.vbox.addWidget(diagram)
 
         #---------------------
-        self.vbox.addWidget(QHLine())
+        # self.vbox.addWidget(QHLine())
 
         hbox = QHBoxLayout()
         self.save_button = QPushButton("Save")
@@ -599,12 +597,18 @@ class ICs(QWidget):
 
 
         hbox = QHBoxLayout()
+        ic_substrates_enabled_label = QLabel("Enable substrate ICs:")
+        hbox.addWidget(ic_substrates_enabled_label)
+        self.ic_substrates_enabled = QCheckBox_custom("")
+        hbox.addWidget(self.ic_substrates_enabled)
+        hbox.addStretch(1)
+
         label = QLabel("Substrate")
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         
         self.substrate_combobox = QComboBox()
-        self.substrate_combobox.setFixedWidth(200)  # how wide is sufficient?
+        self.substrate_combobox.setFixedWidth(150)  # how wide is sufficient?
         self.substrate_combobox.currentIndexChanged.connect(self.substrate_combobox_changed_cb)
         hbox.addWidget(self.substrate_combobox)
 
@@ -619,7 +623,6 @@ class ICs(QWidget):
         self.ic_substrate_question_label.show_icon()
         hbox.addWidget(self.ic_substrate_question_label)
 
-        hbox.addStretch(1)
         self.vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -807,11 +810,6 @@ class ICs(QWidget):
         self.show_plot_range = False
 
         return splitter
-
-    def update_colors_list(self):
-        if len(self.celldef_tab.celltypes_list) >= len(self.color_by_celltype):
-            # print("ics_tab: update_colors_list(): exceeded # of colors. Grow it.")
-            self.color_by_celltype.append('white')  # match what's done in PhysiCell
 
     def fill_celltype_combobox(self):
         logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.celldef_tab.celltypes_list}')
@@ -1171,11 +1169,11 @@ class ICs(QWidget):
 
                 if (self.cells_edge_checked_flag):
                     try:
-                        self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                        self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
                     except (ValueError):
                         pass
                 else:
-                    self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+                    self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
                 self.ax0.set_aspect(1.0)
 
@@ -1186,6 +1184,11 @@ class ICs(QWidget):
                 self.canvas.update()
                 self.canvas.draw()
 
+    def get_cell_type_color(self, cell_type_index):
+        if cell_type_index < len(self.color_by_celltype):
+            return self.color_by_celltype[cell_type_index]
+        else:
+            return "white"
 
     def create_figure(self):
         # print("\nics_tab:  --------- create_figure(): ------- creating figure, canvas, ax0")
@@ -1238,6 +1241,12 @@ class ICs(QWidget):
         if self.mouse_pressed is False:
             self.update_substrate_plot(check_time_delay=False)
             return
+        # if unchecked and the file exists, check it
+        if not self.ic_substrates_enabled.isChecked() and \
+           self.substrate_save_folder.text() != "" and \
+           self.substrate_save_file.text() != "" and \
+           os.path.isfile(os.path.join(self.substrate_save_folder.text(), self.substrate_save_file.text())):
+            self.ic_substrates_enabled.setChecked(True)
         x, y, z = self.getPos(event)
         if (x is None) or (y is None) or (z is None):
             self.current_voxel_subs = None
@@ -1499,7 +1508,7 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                # self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                # self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
                 self.circles(xvals,yvals, s=rvals, color=cell_colors, edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
@@ -1623,11 +1632,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1722,11 +1731,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1816,11 +1825,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1881,11 +1890,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -1979,12 +1988,12 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             # except (ValueError):
             except:
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -2067,11 +2076,11 @@ class ICs(QWidget):
 
         if (self.cells_edge_checked_flag):
             try:
-                self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
             except (ValueError):
                 pass
         else:
-            self.circles(xvals,yvals, s=rvals, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+            self.circles(xvals,yvals, s=rvals, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
         self.ax0.set_aspect(1.0)
 
@@ -2181,7 +2190,7 @@ class ICs(QWidget):
         if ~nonzero_substrates.any():
             # then no substrates are being saved; just disable ics and move on
             print("---- All substrate ics are 0. Not saving and disabling ics")
-            self.enable_csv_for_substrate_ics = False
+            self.ic_substrates_enabled.setChecked(False)
             return
         
         print("----- Writing .csv file for substrate")
@@ -2191,7 +2200,7 @@ class ICs(QWidget):
         substrates_to_save = [self.substrate_list[i] for i in range(len(self.substrate_list)) if nonzero_substrates[i]]
         header = f'x,y,z,{",".join(substrates_to_save)}'
         np.savetxt(self.full_substrate_ic_fname, np.concatenate((X,Y,Z,C), axis=1), delimiter=',',header=header,comments='')
-        self.enable_csv_for_substrate_ics = True
+        self.ic_substrates_enabled.setChecked(True)
 
     #--------------------------------------------------
     def import_cb(self):
@@ -2278,12 +2287,12 @@ class ICs(QWidget):
                         if (self.cells_edge_checked_flag):
                             try:
                                 # print(f"calling self.circles with {xval}, {yval}")
-                                self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                                self.circles(xval,yval, s=rval, color=self.get_cell_type_color(cell_type_index), edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
                             except (ValueError):
                                 print("Exception:  self.circles")
                                 pass
                         else:
-                            self.circles(xval,yval, s=rval, color=self.color_by_celltype[cell_type_index], alpha=self.alpha_value)
+                            self.circles(xval,yval, s=rval, color=self.get_cell_type_color(cell_type_index), alpha=self.alpha_value)
 
                         self.numcells_l.append(1)
 
@@ -2305,9 +2314,24 @@ class ICs(QWidget):
         self.csv_folder.setText(self.config_tab.csv_folder.text())
         self.output_file.setText(self.config_tab.csv_file.text())
         self.fill_substrate_combobox()
+        self.fill_ic_substrates_widgets()
         if self.biwt_flag:
             self.biwt_tab.fill_gui()
-        
+
+    def fill_ic_substrates_widgets(self):
+        substrate_initial_condition_element = self.config_tab.xml_root.find(".//microenvironment_setup//options//initial_condition")
+        if substrate_initial_condition_element is None or substrate_initial_condition_element.attrib["enabled"].lower() == "false":
+            self.ic_substrates_enabled.setChecked(False)
+            return
+        path_to_file = substrate_initial_condition_element.find(".//filename").text
+        if os.path.isfile(path_to_file):
+            self.ic_substrates_enabled.setChecked(True)
+            self.substrate_save_folder.setText(os.path.dirname(path_to_file))
+            self.substrate_save_file.setText(os.path.basename(path_to_file))
+            self.full_substrate_ic_fname = path_to_file
+            self.import_substrate_from_file()
+        else:
+            self.ic_substrates_enabled.setChecked(False)
 
     def on_enter_axes(self, event):
         self.mouse_on_axes = True
@@ -2502,20 +2526,20 @@ class ICs(QWidget):
         self.plot_zz = np.arange(0,self.nz)*self.zdel+self.plot_zmin+0.5*self.zdel
         self.current_substrate_values = np.zeros((self.ny, self.nx)) # set it up for plotting
         self.all_substrate_values = np.zeros((self.ny, self.nx, len(self.substrate_list)))
-        self.enable_csv_for_substrate_ics = False # since we're reseting this here, might as well disable this
 
     def import_substrate_cb(self):
         filePath = QFileDialog.getOpenFileName(self,'',".")
-        full_path_file_name = filePath[0]
+        self.full_substrate_ic_fname = filePath[0]
 
-        self.import_substrate_from_file(full_path_file_name)
+        self.import_substrate_from_file()
 
-    def import_substrate_from_file(self, full_path_file_name):
-        if (len(full_path_file_name) == 0) or (not Path(full_path_file_name).is_file()):
-            print("import_substrate_from_file():  full_path_file_name is NOT valid")
+    def import_substrate_from_file(self):
+        if (len(self.full_substrate_ic_fname) == 0) or (not Path(self.full_substrate_ic_fname).is_file()):
+            print("import_substrate_from_file():  self.full_substrate_ic_fname is NOT valid")
+            self.ic_substrates_enabled.setChecked(False)
             return
 
-        with open(full_path_file_name, newline='') as csvfile:
+        with open(self.full_substrate_ic_fname, newline='') as csvfile:
             data = list(csv.reader(csvfile))
             if data[0][0]=='x': # check for header row
                 substrate_names = data[0][3:]
@@ -2528,12 +2552,15 @@ class ICs(QWidget):
                 # we could help the user out and load up what is there to work with, but they're probably better served by just getting a reality check with a reset to zeros
                 print(f"WARNING: Substrate IC CSV did not have the correct number of voxels ({data.shape[0]}!={self.nx*self.ny}). Reseting all concentrations to 0.")
                 self.setupSubstratePlotParameters()
+                self.ic_substrates_enabled.setChecked(False)
             else:
                 self.all_substrate_values[:,:,col_inds] = data[:,3:].reshape((self.ny, self.nx, -1))
                 self.current_substrate_values = self.all_substrate_values[:,:,self.substrate_combobox.currentIndex()]
+                self.ic_substrates_enabled.setChecked(True)
             check_time_delay = False
             self.update_substrate_plot(check_time_delay)
-
+        return
+        
     def checkForNewGrid(self):
         if float(self.config_tab.xmin.text())!=self.plot_xmin or float(self.config_tab.xmax.text())!=self.plot_xmax or float(self.config_tab.xdel.text())!=self.xdel \
             or float(self.config_tab.ymin.text())!=self.plot_ymin or float(self.config_tab.ymax.text())!=self.plot_ymax or float(self.config_tab.ydel.text())!=self.ydel:

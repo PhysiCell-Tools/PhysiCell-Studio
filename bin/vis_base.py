@@ -307,7 +307,7 @@ class QHLine(QFrame):
 #---------------------------------------------------------------
 class VisBase():
 
-    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, **kw):
+    def __init__(self, studio_flag, rules_flag, nanohub_flag, config_tab, microenv_tab, celldef_tab, user_params_tab, rules_tab, ics_tab, run_tab, model3D_flag, tensor_flag, ecm_flag, galaxy_flag, **kw):
         # super().__init__()
         # global self.config_params
         super(VisBase,self).__init__(**kw)
@@ -324,14 +324,16 @@ class VisBase():
         self.rules_tab = rules_tab
         self.ics_tab = ics_tab
 
-        self.png_frame = 0
-        self.save_png= False
+        self.frame_ind = 0
+        self.save_frame_filetype = '.png'
+        self.save_frame= False
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
         print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
         self.ecm_flag = ecm_flag 
+        self.galaxy_flag = galaxy_flag 
 
         if not self.model3D_flag:
             # self.discrete_cell_scalars = ['cell_type', 'cycle_model', 'current_phase','is_motile','current_death_model','dead', 'number_of_nuclei']
@@ -488,7 +490,7 @@ class VisBase():
         self.fix_cmap_flag = False
         self.cells_edge_checked_flag = True
 
-        self.attachments_checked_flag = False
+        self.graph_display_type = 'NONE'
 
         self.contour_mesh = True
         self.contour_lines = False
@@ -987,7 +989,7 @@ class VisBase():
         hbox = QHBoxLayout()
         self.cell_counts_button = QPushButton("Population plot")
         # self.cell_counts_button.setStyleSheet("QPushButton {background-color: lightgreen; color: black;}")
-        bwidth = 120
+        bwidth = 130
         self.cell_counts_button.setFixedWidth(bwidth)
         self.cell_counts_button.clicked.connect(self.cell_counts_cb)
         hbox.addWidget(self.cell_counts_button)
@@ -1013,20 +1015,21 @@ class VisBase():
         self.legend_svg_button.clicked.connect(self.legend_svg_plot_cb)
         self.vbox.addWidget(self.legend_svg_button)
 
-        self.vbox.addWidget(QHLine())
-        hbox = QHBoxLayout()
-        self.movie_name_edit = QLineEdit()
-        self.movie_name_edit.setText("movie.mp4")
-        hbox.addWidget(self.movie_name_edit)
-        self.make_movie_button = QPushButton("Make Movie")
-        self.make_movie_button.setFixedWidth(100)
-        self.make_movie_button.clicked.connect(self.make_movie_cb)
-        hbox.addWidget(self.make_movie_button)
-        self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setFixedWidth(70)
-        self.cancel_button.clicked.connect(self.cancel_movie_cb)
-        hbox.addWidget(self.cancel_button)
-        self.vbox.addLayout(hbox)
+        if not self.galaxy_flag and not self.model3D_flag:
+            self.vbox.addWidget(QHLine())
+            hbox = QHBoxLayout()
+            self.movie_name_edit = QLineEdit()
+            self.movie_name_edit.setText("movie.mp4")
+            hbox.addWidget(self.movie_name_edit)
+            self.make_movie_button = QPushButton("Make Movie")
+            self.make_movie_button.setFixedWidth(100)
+            self.make_movie_button.clicked.connect(self.make_movie_cb)
+            hbox.addWidget(self.make_movie_button)
+            self.cancel_button = QPushButton("Cancel")
+            self.cancel_button.setFixedWidth(70)
+            self.cancel_button.clicked.connect(self.cancel_movie_cb)
+            hbox.addWidget(self.cancel_button)
+            self.vbox.addLayout(hbox)
 
         self.physiboss_qline = None
         
@@ -1141,16 +1144,25 @@ class VisBase():
             self.update_plots()
             # self.filter_dialog.accept() # close self.filter_dialog if press the apply button
 
+        hbox = QHBoxLayout()
         apply_button = QPushButton("Apply")
+        apply_button.setFixedWidth(75)
         apply_button.clicked.connect(apply_filters)
         apply_button.setStyleSheet("background-color: lightgreen")
-        layout.addWidget(apply_button)
+        hbox.addWidget(apply_button)
+
+        close_button = QPushButton("Close")
+        close_button.setFixedWidth(75)
+        close_button.clicked.connect(self.filter_dialog.close)
+        close_button.setStyleSheet("background-color: lightgreen")
+        hbox.addWidget(close_button)
+        layout.addLayout(hbox)
 
         self.filter_dialog.setLayout(layout)
         self.filter_dialog.show()
 
     def cell_type_filter_button_cb(self):
-        print("---- vis_base: cell_type_filter_button_cb()")
+        # print("---- vis_base: cell_type_filter_button_cb()")
         self.show_filter_popup()
 
     def phenotype_cb(self):
@@ -1312,9 +1324,7 @@ class VisBase():
         #--------
         if self.discrete_scalar == 'cell_type':   # number not known until run time
             # if not self.population_plot[self.discrete_scalar]:
-            if self.population_plot[self.discrete_scalar] is None:
-                self.population_plot[self.discrete_scalar] = PopulationPlotWindow()
-
+            self.population_plot[self.discrete_scalar] = PopulationPlotWindow() # don't test if already exists!
             self.population_plot[self.discrete_scalar].ax0.cla()
 
             # ctype_plot = []
@@ -1340,20 +1350,22 @@ class VisBase():
                     # print("--- rgb after split=",rgb)
                     ctcolor = [float(rgb[0])/255., float(rgb[1])/255., float(rgb[2])/255.]
                     # print("--- converted rgb=",ctcolor)
-                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                if self.celltype_filter:
+                    yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
+                else:
+                    yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 100.) == True)) for idx in range(len(mcds))] )
                 # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cell_type'] == itype) == True)) for idx in range(len(mcds))] )
                 # print("  yval=",yval)
-
-                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
+                if yval.sum() > 0: # only plot if there are cells of this type
+                    self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=ctname, linewidth=lw, color=ctcolor)
 
 
             self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
             self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
             self.population_plot[self.discrete_scalar].ax0.set_title("cell_type", fontsize=10)
-            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center left', prop={'size': 8})
             self.population_plot[self.discrete_scalar].canvas.update()
             self.population_plot[self.discrete_scalar].canvas.draw()
-            # self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
             self.population_plot[self.discrete_scalar].show()
 
         #--------
@@ -1387,18 +1399,40 @@ class VisBase():
                 # yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & True) for idx in range(len(mcds)))] )
 
                 # TODO: fix this hackiness. Do we want to avoid counting dead cells??
-                yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                if self.discrete_scalar == 'current_death_model': # Hack: because current_death_model is not working in PhysiCell, using cycle_model instead  
+                    if self.celltype_filter: # Cell type filter applied here
+                        yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                    else:
+                        yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data']['cycle_model'] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                else:
+                    if self.celltype_filter: # Cell type filter applied here
+                        yval = np.array( [(np.count_nonzero((np.isin(mcds[idx].data['discrete_cells']['data']['cell_type'], self.celltype_filter)) & (mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
+                    else:
+                        yval = np.array( [(np.count_nonzero((mcds[idx].data['discrete_cells']['data'][self.discrete_scalar] == itype) & (mcds[idx].data['discrete_cells']['data']['cycle_model'] < 999.) == True)) for idx in range(len(mcds))] )
                 # print("  yval=",yval)
 
+                # if (self.discrete_scalar == 'cycle_model'): mylabel = 
+                # else:
+                # Check if exist any cells in the entire simulation with self.discrete_scalar occuring
                 mylabel = str(itype)
-                self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=mylabel, linewidth=lw, color=ctcolor)
+                bool_list = ['is_motile', 'dead']
+                if( yval.sum() > 0 or self.discrete_scalar in bool_list): # only plot if there are cells with this scalar or boolean
+                    if (self.discrete_scalar == 'cycle_model' or self.discrete_scalar == 'current_death_model'): mylabel = self.cycle_models[itype]
+                    elif (self.discrete_scalar == 'current_phase'): mylabel = self.cycle_phases[itype]
+                    elif (self.discrete_scalar in bool_list ): mylabel = str(bool(itype))
+                    # Plot only if there are cells with this scalar
+                    self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, label=mylabel, linewidth=lw, color=ctcolor)
                 # self.population_plot[self.discrete_scalar].ax0.plot(tval, yval, linewidth=lw, color=ctcolor)
+                # print(self.discrete_scalar, itype, mylabel, yval.sum() )
 
-
+            
             self.population_plot[self.discrete_scalar].ax0.set_xlabel('time (mins)')
             self.population_plot[self.discrete_scalar].ax0.set_ylabel('# of cells')
-            self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar, fontsize=10)
-            self.population_plot[self.discrete_scalar].ax0.legend(loc='center right', prop={'size': 8})
+            if self.celltype_filter:
+                self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar + " (filtered by cell type)", fontsize=10)
+            else:
+                self.population_plot[self.discrete_scalar].ax0.set_title(self.discrete_scalar, fontsize=10)
+            self.population_plot[self.discrete_scalar].ax0.legend(loc='center left', prop={'size': 8})
             self.population_plot[self.discrete_scalar].canvas.update()
             self.population_plot[self.discrete_scalar].canvas.draw()
             self.population_plot[self.discrete_scalar].show()
@@ -1985,7 +2019,7 @@ class VisBase():
         xml_file = "initial.xml"
         full_fname = os.path.join(self.output_dir, xml_file)
         if not os.path.exists(full_fname):
-            print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
+            # print(f"vis_base.py: get_domain_params(): full_fname {full_fname} does not exist, leaving!")
             return
 
         # print("------------- get_domain_params(): pyMCDS reading info from ",full_fname)
@@ -2122,7 +2156,7 @@ class VisBase():
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_tab:reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
