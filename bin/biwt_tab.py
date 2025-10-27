@@ -1851,17 +1851,20 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 
                 for idx, pos in enumerate(cell_coords):
                     prob_values = self.biwt.cell_prob_feature_dicts[idx]
-                    filtered_probs = {k: v for k, v in prob_values.items() if v > 0.1 and k.replace('_probability', '') in selected_cell_types}
-                    total_prob = sum(filtered_probs.values())
-                    spot_counts = {k: int((v / total_prob) * n_per_spot) for k, v in filtered_probs.items()}
-                    assigned = sum(spot_counts.values())
-                    remainder = n_per_spot - assigned
-                    sorted_probs = sorted(filtered_probs.items(), key=lambda x: x[1], reverse=True)
-                    i = 0
-                    while remainder > 0 and i < len(sorted_probs):
-                        spot_counts[sorted_probs[i][0]] += 1
-                        remainder -= 1
-                        i += 1
+                    filtered_probs = {k: v for k, v in prob_values.items() if k.replace('_probability', '') in selected_cell_types}
+                    # priorities are proportional to the probability and...
+                    # the (inverse of the) geometric mean of (current count +1) and (current count +2)
+                    # this is a variation on the Equal Proportions Method (https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html)
+                    # for computing state representation in the US House of Representatives
+                    # but this starts with 0 in each "state" (cell type) rather than 1 
+                    # hence the denominator cannot be sqrt(n*(n+1)) but rather sqrt((n+1)*(n+2))
+                    # this proves to favor higher probability cell types more strongly at low counts, a result that seems desirable here
+                    priorities = {k: v / np.sqrt(2) for k, v in filtered_probs.items()}
+                    spot_counts = {k: 0 for k in filtered_probs.keys()}
+                    for i in range(n_per_spot):
+                        next_key = max(priorities, key=priorities.get)
+                        spot_counts[next_key] += 1
+                        priorities[next_key] = filtered_probs[next_key] / np.sqrt((spot_counts[next_key] + 1) * (spot_counts[next_key] + 2))
 
                     color_sequence = []
                     cell_type_sequence = []
@@ -3516,11 +3519,8 @@ class BioinformaticsWalkthrough(QWidget):
     def collect_cell_type_data(self):
         self.cell_types_original = self.data_columns[self.current_column]
         self.cell_types_list_original = self.cell_types_original.unique().tolist()
-        print(f"1. cell_types_list_original = {self.cell_types_list_original}")
         self.cell_types_list_original = [str(ct) for ct in self.cell_types_list_original]
-        print(f"2. cell_types_list_original = {self.cell_types_list_original}")
         self.cell_types_list_original.sort()
-        print(f"3. cell_types_list_original = {self.cell_types_list_original}")
 
     def continue_from_spatial_query(self):
         self.collect_cell_type_data()
