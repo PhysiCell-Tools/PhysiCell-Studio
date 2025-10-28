@@ -425,11 +425,9 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
             using_sample = True
         else:
             indices = range(v.shape[0])
-        self.scatter = self.dim_red_ax.scatter(v[indices,0],v[indices,1],self.marker_size,c=temp.codes[indices]) # 0.18844459036110225 = 5/sqrt(704) where I found 5 to be a good size when working with 704 points
+        self.scatter = self.dim_red_ax.scatter(v[indices,0],v[indices,1],self.marker_size,c=temp.codes[indices])
         scatter_objects, _ = self.scatter.legend_elements()
         self.legend_window = LegendWindow(self, legend_artists=scatter_objects, legend_labels=temp.categories, legend_title="Clusters")
-        # self.dim_red_fig.legend(scatter_objects, temp.categories,
-        #             loc=8, title="Clusters",ncol=3, mode="expand")
         title_str = f"{k} plot"
         if using_sample:
             title_str += f" (sampling only {len(indices)} points of {v.shape[0]})"
@@ -442,7 +440,7 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         self.biwt.cell_type_dict_on_edit[cell_type_to_keep] = cell_type_to_keep
         self.checkbox_dict_edit[cell_type_to_keep].setEnabled(True)
         self.checkbox_dict_edit[cell_type_to_keep].setStyleSheet(self.checkbox_style["keep"])
-        if  check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type_to_keep].text()):
+        if check_merge_gp and ("\u21d2 Merge Gp. #" in self.checkbox_dict_edit[cell_type_to_keep].text()):
             # check for merge group that is no longer merging
             gp_preimage = [cell_type for cell_type, new_name in self.biwt.cell_type_dict_on_edit.items() if (cell_type != cell_type_to_keep and new_name == self.biwt.cell_type_dict_on_edit[cell_type_to_keep])] # get cell types that map into this merge group
             if len(gp_preimage)==1: # then delete this merge gp:
@@ -476,11 +474,6 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
                 self.keep_button[cell_type].setEnabled(True)
                 deleted_cell_types.add(cell_type)
 
-        if self.biwt.perform_spot_deconvolution:
-            for prob_dict in self.biwt.cell_prob_feature_dicts:
-                for del_type in deleted_cell_types:
-                    prob_dict.pop(del_type, None)
-
     def merge_cb(self):
         self.biwt.stale_futures = True
         self.merge_id += 1
@@ -500,25 +493,13 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
                 self.keep_button[cell_type].setEnabled(True)
 
-        if self.biwt.perform_spot_deconvolution:
-            merged_name = first_name
-
-            for prob_dict in self.biwt.cell_prob_feature_dicts:
-                merged_prob = 0.0
-                for ct in merged_cell_types:
-                    merged_prob += prob_dict.pop(ct, 0.0)
-                prob_dict[merged_name] = prob_dict.get(merged_name, 0.0) + merged_prob
-
     def marker_size_changed_cb(self, text):
         if not self.marker_size_edit.hasAcceptableInput():
             return
         self.marker_size = float(text)
         self.scatter.set_sizes(self.marker_size + np.zeros_like(self.scatter.get_sizes()))
-        # self.scatter.draw()
         self.dim_red_canvas.update()
         self.dim_red_canvas.draw()
-        # for scatter_plot in self.scatter[0]:
-        #     scatter_plot.set_sizes
 
     def obsm_keys_combobox_changed_cb(self, idx):
         key = self.obsm_keys_combobox.currentText()
@@ -588,9 +569,8 @@ class BioinformaticsWalkthroughWindow_RenameCellTypes(BioinformaticsWalkthroughW
         self.biwt.stale_futures = True
 
     def process_window(self):
-
         self.biwt.cell_types_list_final = []
-        self.biwt.cell_type_dict_on_rename = {}
+        self.biwt.cell_type_dict_on_rename = {} # dictionary mapping original cell_type to final, renamed cell type; if the original cell type was deleted, will not be a key in this dict
         for intermediate_type in self.biwt.intermediate_types:
             self.biwt.cell_types_list_final.append(self.new_name_line_edit[intermediate_type].text())
             for cell_type in self.biwt.intermediate_type_pre_image[intermediate_type]:
@@ -1851,7 +1831,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                 
                 for idx, pos in enumerate(cell_coords):
                     prob_values = self.biwt.cell_prob_feature_dicts[idx]
-                    filtered_probs = {k: v for k, v in prob_values.items() if k.replace('_probability', '') in selected_cell_types}
+                    filtered_probs = {k: v for k, v in prob_values.items() if k in selected_cell_types}
                     # priorities are proportional to the probability and...
                     # the (inverse of the) geometric mean of (current count +1) and (current count +2)
                     # this is a variation on the Equal Proportions Method (https://www.census.gov/topics/public-sector/congressional-apportionment/about/computing.html)
@@ -1870,7 +1850,7 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
                     cell_type_sequence = []
                     
                     for prob_feature, count in spot_counts.items():
-                        feature_name = prob_feature.replace('_probability', '')
+                        feature_name = prob_feature
                         color =  self.color_by_celltype[feature_name]
                         color_sequence.extend([color] * count)
                         cell_type_sequence.extend([feature_name] * count)
@@ -3567,8 +3547,8 @@ class BioinformaticsWalkthrough(QWidget):
         self.open_next_window(BioinformaticsWalkthroughWindow_EditCellTypes, show=True)
 
     def continue_from_edit(self):
-        self.intermediate_types = [] # types used after editing (keep, merge, delete) but before rename
-        self.intermediate_type_pre_image = {} # dictionary where keys are intermediate cell types and values are the original cell types that map to them
+        self.intermediate_types = [] # types used after editing (keep, merge, delete=None) but before rename
+        self.intermediate_type_pre_image = {} # dictionary where keys are intermediate cell types and values are the original cell types that map to them (though removed cell types are not included)
         original_cell_type_list = list(self.cell_type_dict_on_edit.keys())
         original_cell_type_list.sort()
         for cell_type in original_cell_type_list:
@@ -3604,23 +3584,24 @@ class BioinformaticsWalkthrough(QWidget):
             self.continue_from_rename_check()
         
     def continue_from_rename_check(self):  
-
         if self.perform_spot_deconvolution:
             renamed_mapping = self.cell_type_dict_on_rename
             updated_dicts = []
             cell_types_final_set = set()
-
-            for prob_dict in self.cell_prob_feature_dicts:
+            self.spatial_data_final = np.empty((0, len(self.spatial_data[0])))  # initialize as an 0 x d array, where d is the dimension of spatial data
+            for prob_dict, spatial_data in zip(self.cell_prob_feature_dicts, self.spatial_data):
                 new_prob_dict = {}
                 for orig_ct, prob_value in prob_dict.items():
+                    if orig_ct not in renamed_mapping.keys():
+                        continue
                     renamed_ct = renamed_mapping.get(orig_ct, orig_ct)
                     new_prob_dict[renamed_ct] = new_prob_dict.get(renamed_ct, 0.0) + prob_value
                     cell_types_final_set.add(renamed_ct)
-                updated_dicts.append(new_prob_dict)
+                if sum(new_prob_dict.values()) > 0:
+                    updated_dicts.append(new_prob_dict)
+                    self.spatial_data_final = np.vstack([self.spatial_data_final, spatial_data])
             self.cell_prob_feature_dicts = updated_dicts
             self.cell_types_final = sorted(cell_types_final_set)
-            self.spatial_data_final = np.array(self.adata.obsm.get("spatial"))
-
         else:
             if self.use_spatial_data:
                 self.cell_types_final, self.spatial_data_final = zip(*[(self.cell_type_dict_on_rename[ctn], pos) for ctn, pos in zip(self.cell_types_original, self.spatial_data) if ctn in self.cell_type_dict_on_rename.keys()])
