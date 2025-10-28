@@ -414,7 +414,6 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
         
         if self.biwt.perform_spot_deconvolution:
             temp = pd.CategoricalIndex(self.biwt.cell_types_max)
-        
         else:
             temp = pd.CategoricalIndex(self.biwt.cell_types_original)
 
@@ -463,7 +462,6 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
 
     def delete_cb(self):
         self.biwt.stale_futures = True
-        deleted_cell_types = set()
         for cell_type in self.checkbox_dict_edit.keys():
             if self.checkbox_dict_edit[cell_type].isChecked():
                 self.biwt.cell_type_dict_on_edit[cell_type] = None
@@ -472,20 +470,17 @@ class BioinformaticsWalkthroughWindow_EditCellTypes(BioinformaticsWalkthroughWin
                 self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["delete"])
 
                 self.keep_button[cell_type].setEnabled(True)
-                deleted_cell_types.add(cell_type)
 
     def merge_cb(self):
         self.biwt.stale_futures = True
         self.merge_id += 1
         first_name = None
-        merged_cell_types = []
         
         for cell_type in self.checkbox_dict_edit.keys():
             if self.checkbox_dict_edit[cell_type].isChecked():
                 if first_name is None:
                     first_name = cell_type
                 self.biwt.cell_type_dict_on_edit[cell_type] = first_name
-                merged_cell_types.append(cell_type)
                 self.checkbox_dict_edit[cell_type].setChecked(False)
                 self.checkbox_dict_edit[cell_type].setEnabled(False)
                 self.checkbox_dict_edit[cell_type].setStyleSheet(self.checkbox_style["merge"])
