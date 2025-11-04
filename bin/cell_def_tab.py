@@ -5037,7 +5037,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.cell_adhesion_affinity_dropdown.addItem(name)
 
         if self.ics_tab:
-            self.ics_tab.update_colors_list()
             self.ics_tab.celltype_combobox.addItem(name)
         if self.rules_tab:
             self.rules_tab.add_new_celltype(name)

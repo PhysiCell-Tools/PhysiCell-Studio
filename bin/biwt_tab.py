@@ -1274,7 +1274,6 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
             else:
                 print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} not found in current list of cell types. Appending {cell_type}...")
                 self.biwt.celldef_tab.new_cell_def_named(cell_type)
-                self.biwt.ics_tab.update_colors_list()
 
     def set_file_name(self):
         dir_name = self.csv_folder.text()
