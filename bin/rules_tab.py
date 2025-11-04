@@ -1084,13 +1084,14 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def fill_rules(self, full_rules_fname):
-        # print("\n---------------- fill_rules():  full_rules_fname=",full_rules_fname)
+        print("\n---------------- fill_rules():  full_rules_fname=",full_rules_fname)
         self.clear_rules()
 
         if os.path.isfile(full_rules_fname):
             try:
                 with open(full_rules_fname) as csvfile:
-                    csv_reader = csv.reader(self.strip_comments(csvfile))
+                    csv_reader = csv.reader(self.strip_comments(csvfile)) # strips out all comments which is not helpful in our latest attempt to gracefully handle toggling rules on/off
+
                     # csv_reader = csv.reader(csvfile)
                     print("     fill_rules():  past csv.reader #1")
                     for elm in csv_reader:
@@ -1107,7 +1108,7 @@ class Rules(QWidget):
         if os.path.isfile(full_rules_fname):
             try:
                 with open(full_rules_fname, 'r') as csvfile:
-                    # csv_reader = csv.reader(self.strip_comments(csvfile))
+                    # csv_reader = csv.reader(self.strip_comments(csvfile)) # comment out to now handle toggling rules
                     csv_reader = csv.reader(csvfile)
                     print("     fill_rules():  past csv.reader #2")
                     irow = self.num_rules  # append
@@ -1126,6 +1127,15 @@ class Rules(QWidget):
                         # irow = 0
                         print("fill_rules(): elm= ",elm)
                         print("fill_rules(): len(elm)= ",len(elm))
+
+                        # more hacks (until we XML-ify the rules); this handles cell_rules.csv in immune-function-sample
+                        if len(elm) < 8:
+                            print("--- skip this comment due to # elms < 8")
+                            continue
+                        if (elm[7] != '0') and (elm[7] != '1'):
+                            print(f'--- skip this comment due to last entry = {elm[7]}, not "0" or "1"')
+                            continue
+
                         # if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
                         if len(elm)+2 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
                             print("------- processing valid # of elms")
@@ -1138,7 +1148,9 @@ class Rules(QWidget):
                                     continue
                                 elif len(elm) == 8:  # probably/hopefully a commented out rule
                                     # self.fill_rule_row(irow, elm, toggle_val)
-                                    elm[0] = elm[0][2:]
+                                    elm[0] = elm[0][2:].lstrip()   # another hack (lstrip) if spaces before cell type
+                                    # elm[0] = text.lstrip()
+                                    # print("------- after stripping off //, we have elm[0]=",elm[0])
                                     self.fill_rule_row(irow, elm, toggle_val)
                                     irow += 1  # but let's still count it in "num_rules"
                                     continue
