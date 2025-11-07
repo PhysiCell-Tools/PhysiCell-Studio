@@ -120,10 +120,12 @@ class Rules(QWidget):
 
         self.update_rules_for_custom_data = True
 
-        self.max_rule_table_cols = 9   # v2: cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead, baseval
+        self.max_rule_table_cols = 10   # v2: use, cell type, signal, direction, behavior, max, half-max, Hill power, apply to dead, baseval
 
         # table columns' indices
         icol = 0
+        self.rule_use_idx = icol
+        icol = +1
         self.rules_celltype_idx = icol
         icol += 1
         self.rules_signal_idx = icol
@@ -205,7 +207,7 @@ class Rules(QWidget):
         hlayout = QHBoxLayout()
 
         label = QLabel("Cell Type")
-        label.setFixedWidth(60)
+        label.setFixedWidth(65)
         label.setAlignment(QtCore.Qt.AlignCenter)
 
         hlayout.addWidget(label)
@@ -388,7 +390,7 @@ class Rules(QWidget):
 
         #-------------------------------------
         hlayout = QHBoxLayout()
-        lwidth = 60
+        lwidth = 65
         label = QLabel("Half-max")
         label.setFixedWidth(lwidth)
         label.setAlignment(QtCore.Qt.AlignCenter)
@@ -408,7 +410,7 @@ class Rules(QWidget):
 
         #---
         label = QLabel("Saturation value")
-        label.setFixedWidth(100)
+        label.setFixedWidth(115)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
@@ -428,14 +430,14 @@ class Rules(QWidget):
         hlayout = QHBoxLayout()
 
         label = QLabel("Hill power")
-        label.setFixedWidth(60)
+        label.setFixedWidth(70)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hlayout.addWidget(label) 
 
         self.rule_hill_power = QLineEdit()
         self.rule_hill_power.setText('4')
-        self.rule_hill_power.setFixedWidth(30)
-        self.rule_hill_power.setValidator(QtGui.QIntValidator())
+        self.rule_hill_power.setFixedWidth(90)
+        self.rule_hill_power.setValidator(QtGui.QDoubleValidator())
         hlayout.addWidget(self.rule_hill_power)
 
         #---
@@ -483,7 +485,7 @@ class Rules(QWidget):
         hlayout2 = QHBoxLayout()
         hlayout2.addWidget(groupbox) 
 
-        self.plot_rules_button = QPushButton("Plot rules")
+        self.plot_rules_button = QPushButton("Analyze rules")
         self.plot_rules_button.setFixedWidth(150)
         self.plot_rules_button.setStyleSheet("background-color: lightgreen")
         self.plot_rules_button.clicked.connect(self.plot_rules)
@@ -554,13 +556,14 @@ class Rules(QWidget):
         vlayout = QVBoxLayout()
         self.rules_table = QTableWidget()
 
-        self.rules_table.setColumnCount(9)
+        self.rules_table.setColumnCount(self.max_rule_table_cols)
         self.rules_table.setRowCount(self.max_rule_table_rows)
-        self.rules_table.setColumnHidden(8, True) # hidden column base value
+        # self.rules_table.setColumnHidden(8, True) # hidden column base value
+        self.rules_table.setColumnHidden(9, True) # hardcoded: hidden column base value
 
         header = self.rules_table.horizontalHeader()       
 
-        self.rules_table.setHorizontalHeaderLabels(['CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
+        self.rules_table.setHorizontalHeaderLabels(['Use','CellType','Signal','Direction','Behavior', 'Saturation value','Half-max','Hill power','Apply to dead','Base value'])
 
         # Don't like the behavior these offer, e.g., locks down width of 0th column :/
         # header = self.rules_table.horizontalHeader()       
@@ -569,6 +572,23 @@ class Rules(QWidget):
             
         for irow in range(self.max_rule_table_rows):
             # print("------------ rules table row # ",irow)
+
+            # ------- rule used checkbox
+            w_me = MyQCheckBox()
+            # w_me = MyQCheckBox(parent=self.rules_table)
+            # parent = self.table
+            w_me.clicked.connect(self.toggle_check_for_duplicate)
+
+            w_me.vname = "foobar0"  
+            w_me.wrow = irow
+            w_me.wcol = self.rule_use_idx
+
+            # rwh NB! Leave these lines in (for less confusing clicking/coloring of cell)
+            item = QTableWidgetItem('')
+            item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            self.rules_table.setItem(irow, self.rule_use_idx, item)
+
+            self.rules_table.setCellWidget(irow, self.rule_use_idx, w_me)
 
             # ------- CellType
             w_me = MyQLineEdit()
@@ -660,7 +680,7 @@ class Rules(QWidget):
 
             # ------- Hill power
             w_me = MyQLineEdit()
-            w_me.setValidator(QtGui.QIntValidator())
+            w_me.setValidator(QtGui.QDoubleValidator())
             w_me.setFrame(False)
             w_me.vname = w_me  
             w_me.wrow = irow
@@ -768,9 +788,13 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def celltype_combobox_changed_cb(self, idx):
         self.celltype_name = self.celltype_combobox.currentText()
-        if self.signal:
-            print("        signal= ", self.signal)
-        print("          ", self.celldef_tab.param_d.keys())
+        # if self.signal:
+        #     print("        signal= ", self.signal)
+        # print("   keys= ", self.celldef_tab.param_d.keys())
+        # print("   self.celldef_tab.param_d[self.celltype_name]= ", self.celldef_tab.param_d[self.celltype_name])
+
+        # Need to:
+        self.update_base_value()
 
     #-----------------------------------------------------------
     def custom_data_rename(self, old_name, new_name):
@@ -798,8 +822,12 @@ class Rules(QWidget):
         behavior = self.response_combobox.currentText()
         self.update_base_value_by_name(behavior, True)
 
-    def update_base_value_by_name(self, behavior, update_widgets):
-        key0 = self.celltype_combobox.currentText()
+    def update_base_value_by_name(self, behavior, update_widgets, cell_type = None):
+        # update behavior of specified cell type (if None, use current in combobox)
+        if cell_type is not None:
+            key0 = cell_type
+        else:
+            key0 = self.celltype_combobox.currentText()
         btokens = behavior.split()
         if len(btokens) == 0:
             return
@@ -990,9 +1018,15 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def plot_rules(self):
+        print("\n--------------- plot_rules")
         dataframe = pd.DataFrame(columns=['cell', 'signal', 'direction', 'behavior', 'saturation', 'half_max', 'hill_power', 'dead', 'base_behavior'])
         dataframe = dataframe.astype({'cell':str, 'signal':str, 'direction':str, 'behavior':str, 'saturation':float, 'half_max':float, 'hill_power':int,  'dead':int,  'base_behavior':float})
         for irow in range(self.max_rule_table_rows):
+            if self.rules_table.cellWidget(irow,self.rule_use_idx) is None:
+                break
+            if self.rules_table.cellWidget(irow,self.rule_use_idx).isChecked() is False:
+                print("         rule_use_idx is False; skip this row")
+                continue
             cell_irow = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
             if (cell_irow == ''): 
                 if irow == 0: return # No rules
@@ -1002,13 +1036,13 @@ class Rules(QWidget):
             behavior_irow = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
             saturation_irow = float(self.rules_table.cellWidget(irow, self.rules_maxval_idx).text())
             halfmax_irow = float(self.rules_table.cellWidget(irow, self.rules_halfmax_idx).text())
-            hillpower_irow = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+            hillpower_irow = float(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
             if self.rules_table.cellWidget(irow,self.rules_applydead_idx).isChecked():
                 dead_irow = 1
             else:
                 dead_irow = 0
             # base value
-            self.update_base_value_by_name(behavior_irow, False) # It's not the better approach
+            self.update_base_value_by_name(behavior_irow, False, cell_irow)
             base_behavior_irow = self.base_val
 
             if base_behavior_irow == '??':  # don't think we ever have this now
@@ -1028,14 +1062,17 @@ class Rules(QWidget):
     def clear_rules(self):
         # print("\n---------------- clear_rules():")
         for irow in range(self.num_rules):
-            for idx in range(self.num_cols):
+            self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(False)
+            for idx in range(1,self.num_cols):
                 self.rules_table.cellWidget(irow, idx).setText('')
 
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
+            # self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
 
         self.num_rules = 0
 
     #-----------------------------------------------------------
+    # deprecated?
     def strip_comments(self, csvfile):
         for row in csvfile:
             # raw = row.split('#')[0].strip()
@@ -1054,7 +1091,8 @@ class Rules(QWidget):
             try:
                 with open(full_rules_fname) as csvfile:
                     csv_reader = csv.reader(self.strip_comments(csvfile))
-                    # print("     fill_rules():  past csv.reader")
+                    # csv_reader = csv.reader(csvfile)
+                    print("     fill_rules():  past csv.reader #1")
                     for elm in csv_reader:
                         print("elm #0 = ",elm)
             except:
@@ -1069,24 +1107,49 @@ class Rules(QWidget):
         if os.path.isfile(full_rules_fname):
             try:
                 with open(full_rules_fname, 'r') as csvfile:
-                    csv_reader = csv.reader(self.strip_comments(csvfile))
-                    # print("     fill_rules():  past csv.reader")
+                    # csv_reader = csv.reader(self.strip_comments(csvfile))
+                    csv_reader = csv.reader(csvfile)
+                    print("     fill_rules():  past csv.reader #2")
                     irow = self.num_rules  # append
-                    for elm in csv_reader:
+                    for elm in csv_reader:   # for each rule or comment
+                        # raw = row.split('/')[0].strip()
+                        print("  elm[0]= ",elm[0])
+                        toggle_val = True
+                        if elm[0][0] == '/':
+                            print("  elm[0]=='/'  --> toggle_val=True")
+                            toggle_val = False
+                            # print("  elm[0]=='/'  --> skip")
+                            # continue
+                            
+
                         # csv_reader_obj = csv.reader(f)
                         # irow = 0
-                        print("elm= ",elm)
-                        print("len(elm)= ",len(elm))
-                        if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
+                        print("fill_rules(): elm= ",elm)
+                        print("fill_rules(): len(elm)= ",len(elm))
+                        # if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
+                        if len(elm)+2 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
+                            print("------- processing valid # of elms")
 
-                            cell_type = elm[0]
+                            cell_type = elm[0]  # hardcode
+                            print("------- cell_type= ",cell_type)
+                            if cell_type[0] == '/':   # do we have a commented out rule, or maybe just a comment
+                                if len(elm) < 8:  # hardcode
+                                    print("  cell_type[0]=='/'  and len(elm)<8 --> skip (probably a real comment)")
+                                    continue
+                                elif len(elm) == 8:  # probably/hopefully a commented out rule
+                                    # self.fill_rule_row(irow, elm, toggle_val)
+                                    elm[0] = elm[0][2:]
+                                    self.fill_rule_row(irow, elm, toggle_val)
+                                    irow += 1  # but let's still count it in "num_rules"
+                                    continue
+
                             if cell_type not in self.celldef_tab.param_d.keys():
                                 print(f'ERROR: {cell_type} is not a valid cell type name')
                                 show_studio_warning_window(f'ERROR: {cell_type} is not a valid cell type name')
                                 return
 
                                 # self.rules_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
-                            self.fill_rule_row(irow, elm)
+                            self.fill_rule_row(irow, elm, toggle_val)
 
                         elif len(elm) == 9:   # v1
                             print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} is using v1 syntax. Please upgrade\n')
@@ -1105,13 +1168,14 @@ class Rules(QWidget):
 
                             irow += 1
                             elm[self.rules_response_idx] = "phagocytose necrotic cell"
-                            self.fill_rule_row(irow, elm)
+                            self.fill_rule_row(irow, elm, toggle_val)
 
                             irow += 1
                             elm[self.rules_response_idx] = "phagocytose other dead cell"
-                            self.fill_rule_row(irow, elm)
+                            self.fill_rule_row(irow, elm, toggle_val)
 
                         if elm[self.rules_response_idx] == "damage rate" and hasattr(self.celldef_tab, "pre_v1_14_0_damage_rate") and self.celldef_tab.pre_v1_14_0_damage_rate:
+                            print("fill_rules(): got to 5")
                             self.rules_table.cellWidget(irow, self.rules_response_idx).setText("attack damage rate")
                             msg = "\"damage rate\" no longer refers to the rate of damage dealt, but rather the rate at which damage accumulates in the given cell type."
                             msg += f"\n{elm[0]} had a rule affecting \"damage rate\" that has been replaced with \"attack damage rate\" to fit the new version."
@@ -1121,13 +1185,14 @@ class Rules(QWidget):
                         irow += 1
 
                     self.num_rules = irow
-                    print("fill_rules():  num_rules=",self.num_rules)
+                    print("\n--------- fill_rules():  num_rules=",self.num_rules)
+                    print("\n--------------------------------------\n\n",self.num_rules)
 
                     # self.rules_text.setPlainText(text)
             except Exception as e:
             # self.dialog_critical(str(e))
             # print("error opening config/cells_rules.csv")
-                print(f'rules_tab.py: Error opening or reading {full_rules_fname}')
+                print(f'fill_rules(): Error opening or reading {full_rules_fname}')
                 show_studio_warning_window(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # sys.exit(1)
@@ -1144,19 +1209,26 @@ class Rules(QWidget):
     #     self.rules_file.setText("")
         return
 
-    def fill_rule_row(self, irow, elm):
-        for icol in range(self.max_rule_table_cols-2): 
-            # print("icol=",icol)
-            self.rules_table.cellWidget(irow, icol).setText(elm[icol])
-        self.rules_table.cellWidget(irow, 8).setText('??') # load base value
+    def fill_rule_row(self, irow, elm, toggle_val):
+        print(f"---- fill_rule_row(): elm={elm}, toggle_val={toggle_val}")  # e.g. ['default', 'pressure', 'decreases', 'cycle entry', '0.0', '0.5', '4', '0']
+        # for icol in range(0,self.max_rule_table_cols-3):   # hardcode end of list
+        # self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
+        self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(toggle_val)
 
-        # if int(elm[7]) == 0:  # hard-code
-        if int(elm[self.max_rule_table_cols-2]) == 0:
-            print("setting dead checkbox False")
+        for icol in range(0,7):   # hardcode indices
+            # print("    icol=",icol)
+            self.rules_table.cellWidget(irow, icol+1).setText(elm[icol])
+        # self.rules_table.cellWidget(irow, 8).setText('??') # load base value
+        # print("    =",icol)
+        self.rules_table.cellWidget(irow, 9).setText('??') # hardcoded: load base value
+
+        if int(elm[7]) == 0:  # hardcode index for "apply to dead"
+            print("set]ing dead checkbox False")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
         else:
             print("setting dead checkbox True")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(True)
+
     #-----------------------------------------------------------
     def hill(self, x, base_val = 0.0, saturation_val = 1.0, half_max = 0.5 , hill_power = 2 ):
         z = (x / half_max)** hill_power; 
@@ -1214,7 +1286,7 @@ class Rules(QWidget):
         # X = np.linspace(min_val,max_val, 101) 
 
         half_max = float(self.rule_half_max.text())
-        hill_power = int(self.rule_hill_power.text())
+        hill_power = float(self.rule_hill_power.text())
         base_val = self.rule_base_val.text()
         if base_val == '??':
             if "decreases" in self.up_down_combobox.currentText(): base_val = 1.0
@@ -1261,9 +1333,69 @@ class Rules(QWidget):
             return False
 
     #-----------------------------------------------------------
+    def toggle_check_for_duplicate(self, bval):
+
+        if not bval:
+            return
+
+        # print("---- toggle_check_for_duplicate: self =", self )
+        checkbox = self.sender()
+        # print(": checkbox =", checkbox )
+        # print(": dir(checkbox) =", dir(checkbox) )
+        irow = checkbox.wrow
+
+        print(f'   irow={irow}, self.num_rules={self.num_rules}')
+        if irow < 0:
+            print("\n[toggle_check_for_duplicate] Error: invalid row selection")
+            return
+
+        cell_type = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+        signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+        behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+        direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+
+        dup_rule = self.check_for_duplicate_toggle(cell_type, signal, behavior, direction, irow)
+        # print(f"[toggle_check_for_duplicate] dup_rule= {dup_rule}")
+        if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+            # show_studio_warning_window(f'Warning: this row ({irow}) is a duplicate rule of row {dup_rule+1}. Both define "{signal}-{direction}-{behavior}" for the same cell type. You need to uncheck or delete one of them.')
+            show_studio_warning_window(f'Warning: this row ({irow+1}) is a duplicate rule of row {dup_rule+1}. Both define "{signal}-{direction}-{behavior}" for the same cell type. You need to uncheck or delete one of them.')
+            return
+
+    #-----------------------------------------------------------
+    # Called when we attempt to toggle on an existing new rule (at row_toggle). We need to check all other rules for a duplicate.
+    def check_for_duplicate_toggle(self, cell_type_new,signal_new,behavior_new,direction_new, row_toggle):
+        # print(f'check_for_duplicate_toggle(): num_rules={self.num_rules}, row_toggle={row_toggle}')
+        for irow in range(self.num_rules):
+            if irow == row_toggle:
+                continue
+        # self.rules_celltype_idx = 0
+        # self.rules_response_idx = 1
+        # self.rules_minval_idx = 2
+        # self.rules_baseval_idx = 3
+        # self.rules_maxval_idx = 4
+        # self.rules_signal_idx = 5
+        # self.rules_direction_idx = 6
+        # self.rules_halfmax_idx = 7
+        # self.rules_hillpower_idx = 8
+        # self.rules_applydead_idx = 9
+            cell_type = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
+            # if cell_type == '':
+                # break
+            if cell_type == cell_type_new:
+                signal = self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
+                if signal == signal_new:
+                    behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
+                    if behavior == behavior_new:
+                        direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
+                        if (direction == direction_new) and (self.rules_table.cellWidget(irow, self.rule_use_idx).isChecked() ):
+                            return irow
+
+        return -1
+    
+    #-----------------------------------------------------------
+    # Called when we attempt to add a new rule. Note that we only need to check all existing ("num_rules") rules.
     def check_for_duplicate(self, cell_type_new,signal_new,behavior_new,direction_new):
-        print("check_for_duplicate(): num_rules=",self.num_rules)
-        # for irow in range(self.max_rule_table_rows):
+        # print("check_for_duplicate(): num_rules=",self.num_rules)
         for irow in range(self.num_rules):
         # self.rules_celltype_idx = 0
         # self.rules_response_idx = 1
@@ -1284,7 +1416,7 @@ class Rules(QWidget):
                     behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
                     if behavior == behavior_new:
                         direction = self.rules_table.cellWidget(irow, self.rules_direction_idx).text()
-                        if direction == direction_new:
+                        if (direction == direction_new) and (self.rules_table.cellWidget(irow, self.rule_use_idx).isChecked() ):
                             return irow
 
         return -1
@@ -1301,10 +1433,12 @@ class Rules(QWidget):
                 show_studio_warning_window("Invalid behavior: " + behavior)
                 return
             direction = self.up_down_combobox.currentText()
+
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
+            print("\n------------- add_rule_cb(): num_rules= ",self.num_rules)
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
-            if dup_rule >= 0:
-                show_studio_warning_window(f"Error: You already have this signal-behavior defined for this cell type (row {dup_rule}). Either delete the rule in the table first or edit it manually.")
+            if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+                show_studio_warning_window(f"Error: You already have this signal-direction-behavior ({signal}-{direction}-{behavior}) defined for this cell type at row {dup_rule+1}. Either delete or uncheck that rule before adding a replacement.")
                 return
 
 
@@ -1362,6 +1496,8 @@ class Rules(QWidget):
             msg = f'add_rule_cb() Error: irow={irow}, idx={self.rules_celltype_idx}, widget={self.rules_table.cellWidget(irow, self.rules_celltype_idx)}.'
             show_studio_warning_window(msg)
             return 
+
+        self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
 
         self.rules_table.cellWidget(irow, self.rules_signal_idx).setText( self.signal_combobox.currentText() )
         self.rules_table.cellWidget(irow, self.rules_direction_idx).setText( self.up_down_combobox.currentText() )
@@ -1604,10 +1740,10 @@ class Rules(QWidget):
 
         # NO! Use the actual base value in the appropriate subtab for behavior
         # base_val = self.rules_table.cellWidget(irow, self.rules_baseval_idx).text()
-        hill_power = int(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
+        hill_power = float(self.rules_table.cellWidget(irow, self.rules_hillpower_idx).text())
 
         behavior = self.rules_table.cellWidget(irow, self.rules_response_idx).text()
-        self.update_base_value_by_name(behavior, False)
+        self.update_base_value_by_name(behavior, False, self.rules_table.cellWidget(irow, self.rules_celltype_idx).text())
         base_val = self.base_val
 
         if base_val == '??':  # don't think we ever have this now
@@ -1717,6 +1853,15 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def save_rules_cb(self):
+
+        #   Logic for duplicates is more complex if we ever want to attempt it; for now rely on PhysiCell's msg, e.g.:
+        #    "Error! Signal substrate and Response increases were already part of the rule.
+        #       See possible fixes at https://github.com/physicell-training/PhysiCell_common_errors"
+        # dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
+        # if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
+        #     show_studio_warning_window(f"Error saving rules: You have duplicate signal-behavior rules (row {dup_rule+1}). Either delete the duplicate(s), or edit it manually, or toggle it off.")
+        #     return
+
         folder_name = self.rules_folder.text()
         file_name = self.rules_file.text()
         print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
@@ -1741,9 +1886,11 @@ class Rules(QWidget):
         # self.rules_hillpower_idx = 8
         # self.rules_applydead_idx = 9
                     rule_str = self.rules_table.cellWidget(irow, self.rules_celltype_idx).text()
-                    print("   irow=",irow, ", col 1 text=",rule_str)
                     if rule_str == '':
                         break
+                    if self.rules_table.cellWidget(irow,self.rule_use_idx).isChecked() is False:
+                        rule_str = "//" + rule_str
+                    print("   irow=",irow, ", col 1 text=",rule_str)
                     rule_str += ','
                     rule_str += self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
                     rule_str += ','
@@ -1847,7 +1994,7 @@ class Rules(QWidget):
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","total attack time","damage delivered","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","attacking","total attack time","damage delivered","time","apoptotic","necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
         cell_def0 = list(self.celldef_tab.param_d.keys())[0]
@@ -2074,30 +2221,37 @@ class Rules(QWidget):
         return
     
     def find_and_replace_rule_row(self, old_name, new_name, irow, super_strings):
-        column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
-        for icol in column_indices:
-            old_text = self.rules_table.cellWidget(irow, icol).text()
-            new_text = find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
-            self.rules_table.cellWidget(irow, icol).setText(new_text)
-        return
+        try:
+            column_indices = [self.rules_celltype_idx, self.rules_signal_idx, self.rules_response_idx]
+            for icol in column_indices:
+                old_text = self.rules_table.cellWidget(irow, icol).text()
+                new_text = find_and_replace_rule_cell(old_name, new_name, super_strings, old_text)
+                self.rules_table.cellWidget(irow, icol).setText(new_text)
+        except:
+            pass
     
 def find_and_replace_rule_cell(old_name, new_name, super_strings, s):
-    if s==old_name:
-        return new_name
-    
-    # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
-    # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
-    # so first check if any of the super strings are in the given string
-    for super_string in super_strings:
-        if find_isolated_string(s, super_string) != -1:
-            print(f"      skipping {s} because it contains {super_string}")
-            return s
-    
-    ind = find_isolated_string(s, old_name)
-    if ind != -1:
-        print(f"      replacing {old_name} with {new_name} in {s}")
-        return s[0:ind] + new_name + s[(ind+len(old_name)):]
-    return s
+    try:
+        if s==old_name:
+            return new_name
+        
+        # there is a possibility that the old_name is a substring of some other element in the list (e.g. "mac" is being changed to "TAM" and "macrophage" is also in the list)
+        # in this case, we need to be careful to only replace the old_name and not the other element containing it (e.g. "macrophage" should not be changed to "TAMrophage")
+        # so first check if any of the super strings are in the given string
+        for super_string in super_strings:
+            if find_isolated_string(s, super_string) != -1:
+                print(f"      skipping {s} because it contains {super_string}")
+                return s
+        
+        ind = find_isolated_string(s, old_name)
+        if ind != -1:
+            print(f"      replacing {old_name} with {new_name} in {s}")
+            return s[0:ind] + new_name + s[(ind+len(old_name)):]
+        return s
+    except:
+        msg = "rules_tab:  Error replacing a string in a rule. Perhaps an invalid cell type or other."
+        show_studio_warning_window(msg)
+        return ""
 
 def find_isolated_string(s, name, start=0):
     # now make sure that neither side of the old_name is a non-space character. this will protect against simple substrate names like "a" from changing the "a" in "intracellular", for example

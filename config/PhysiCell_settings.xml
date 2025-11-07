@@ -92,20 +92,6 @@
                         <duration index="2" fixed_duration="true">240.</duration>
                         <duration index="3" fixed_duration="true">60.</duration>
                     </phase_durations>
-                    <standard_asymmetric_division enabled="False">
-                        <asymmetric_division_probability name="default" units="dimensionless">1.0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Cortex_1" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Cortex_2" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Cortex_3" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Cortex_4" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Dentate_gyrus" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Fiber_tracts" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Hippocampus" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Hypothalamus_1" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Lateral_ventricle" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Striatum" units="dimensionless">0</asymmetric_division_probability>
-                        <asymmetric_division_probability name="Thalamus_1" units="dimensionless">0</asymmetric_division_probability>
-                    </standard_asymmetric_division>
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
@@ -155,17 +141,6 @@
                     <relative_maximum_adhesion_distance units="dimensionless">1.25</relative_maximum_adhesion_distance>
                     <cell_adhesion_affinities>
                         <cell_adhesion_affinity name="default">1</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Cortex_1">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Cortex_2">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Cortex_3">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Cortex_4">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Dentate_gyrus">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Fiber_tracts">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Hippocampus">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Hypothalamus_1">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Lateral_ventricle">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Striatum">1.0</cell_adhesion_affinity>
-                        <cell_adhesion_affinity name="Thalamus_1">1.0</cell_adhesion_affinity>
                     </cell_adhesion_affinities>
                     <options>
                         <set_relative_equilibrium_distance enabled="false" units="dimensionless">1.8</set_relative_equilibrium_distance>
@@ -211,63 +186,19 @@
                     <other_dead_phagocytosis_rate units="1/min">0.0</other_dead_phagocytosis_rate>
                     <live_phagocytosis_rates>
                         <phagocytosis_rate name="default" units="1/min">0</phagocytosis_rate>
-                        <phagocytosis_rate name="Cortex_1" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Cortex_2" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Cortex_3" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Cortex_4" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Dentate_gyrus" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Fiber_tracts" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Hippocampus" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Hypothalamus_1" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Lateral_ventricle" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Striatum" units="1/min">0.0</phagocytosis_rate>
-                        <phagocytosis_rate name="Thalamus_1" units="1/min">0.0</phagocytosis_rate>
                     </live_phagocytosis_rates>
                     <attack_rates>
                         <attack_rate name="default" units="1/min">0</attack_rate>
-                        <attack_rate name="Cortex_1" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Cortex_2" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Cortex_3" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Cortex_4" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Dentate_gyrus" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Fiber_tracts" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Hippocampus" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Hypothalamus_1" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Lateral_ventricle" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Striatum" units="1/min">0.0</attack_rate>
-                        <attack_rate name="Thalamus_1" units="1/min">0.0</attack_rate>
                     </attack_rates>
                     <attack_damage_rate units="1/min">1</attack_damage_rate>
                     <attack_duration units="min">0.1</attack_duration>
                     <fusion_rates>
                         <fusion_rate name="default" units="1/min">0</fusion_rate>
-                        <fusion_rate name="Cortex_1" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Cortex_2" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Cortex_3" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Cortex_4" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Dentate_gyrus" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Fiber_tracts" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Hippocampus" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Hypothalamus_1" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Lateral_ventricle" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Striatum" units="1/min">0.0</fusion_rate>
-                        <fusion_rate name="Thalamus_1" units="1/min">0.0</fusion_rate>
                     </fusion_rates>
                 </cell_interactions>
                 <cell_transformations>
                     <transformation_rates>
                         <transformation_rate name="default" units="1/min">0</transformation_rate>
-                        <transformation_rate name="Cortex_1" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Cortex_2" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Cortex_3" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Cortex_4" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Dentate_gyrus" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Fiber_tracts" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Hippocampus" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Hypothalamus_1" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Lateral_ventricle" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Striatum" units="1/min">0.0</transformation_rate>
-                        <transformation_rate name="Thalamus_1" units="1/min">0.0</transformation_rate>
                     </transformation_rates>
                 </cell_transformations>
                 <cell_integrity>
@@ -314,7 +245,7 @@
     </cell_definitions>
 
     <initial_conditions>
-        <cell_positions type="csv" enabled="true">
+        <cell_positions type="csv" enabled="false">
             <folder>./config</folder>
             <filename>cells.csv</filename>
         </cell_positions>

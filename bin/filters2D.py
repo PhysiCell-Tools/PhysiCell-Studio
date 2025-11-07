@@ -74,18 +74,25 @@ class FilterUI2DWindow(QWidget):
         #----------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
+
         idx_row += 1
-        self.attachments_checkbox = QCheckBox_custom('attachments')
-        self.attachments_checkbox.setChecked(self.vis_tab.attachments_checked_flag)
-        self.attachments_checkbox.clicked.connect(self.attachments_toggle_cb)
-        glayout.addWidget(self.attachments_checkbox)
+        label = QLabel("Graph display:")
+        glayout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.graph_display_combobox = QComboBox()
+        self.graph_display_combobox.addItems(['NONE', 'neighbors', 'attachments', 'spring attachments'])
+        self.graph_display_combobox.currentIndexChanged.connect(self.graph_display_changed_cb)
+        self.graph_display_combobox.setCurrentIndex(0)  # default to NONE
+        glayout.addWidget(self.graph_display_combobox, idx_row,1,1,2) # w, row, column, rowspan, colspan
 
         msg = """
-Note: only for .mat cell plots (not .svg)
+This overlays edges representing cell-cell interactions on the Plot tab. Note the following:
+- If plotting with SVG, requires the SVG and full data saves to be synced.
+- If filtering on cell types, ALL edges will still be plotted, including for filtered out cells.
         """
         self.attachments_question_label = HoverQuestion(msg)
         self.attachments_question_label.show_icon()
-        glayout.addWidget(self.attachments_question_label, idx_row,1,1,4) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.attachments_question_label, idx_row,3,1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,4) # w, row, column, rowspan, colspan
@@ -191,10 +198,16 @@ Note: only for .mat cell plots (not .svg)
         glayout.addWidget(self.mech_grid_size , idx_row,2, 1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
-        self.save_png_checkbox = QCheckBox_custom('save frame*.png')
-        self.save_png_checkbox.clicked.connect(self.save_png_cb)
+        self.save_frame_checkbox = QCheckBox_custom('save frame*')
+        self.save_frame_checkbox.clicked.connect(self.save_frame_cb)
         idx_row += 1
-        glayout.addWidget(self.save_png_checkbox, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.save_frame_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.save_frame_filetype = QComboBox()
+        self.save_frame_filetype.addItems(['.png', '.svg', '.jpg'])
+        self.save_frame_filetype.currentIndexChanged.connect(self.save_frame_filetype_cb)
+        self.save_frame_filetype.setCurrentIndex(0)  # default to png
+        glayout.addWidget(self.save_frame_filetype, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #--------------------
         # axes_act = view3D_menu.addAction("Axes")
@@ -272,8 +285,8 @@ Note: only for .mat cell plots (not .svg)
         self.vis_tab.phenotype_cb()
         pass
 
-    def attachments_toggle_cb(self, bval):
-        self.vis_tab.attachments_checked_flag = bval
+    def graph_display_changed_cb(self):
+        self.vis_tab.graph_display_type = self.graph_display_combobox.currentText()
         self.vis_tab.update_plots()
     
 
@@ -335,9 +348,12 @@ Note: only for .mat cell plots (not .svg)
         except:
             pass
 
-    def save_png_cb(self):
-        self.vis_tab.png_frame = 0
-        self.vis_tab.save_png = self.save_png_checkbox.isChecked()
+    def save_frame_cb(self):
+        self.vis_tab.frame_ind = 0
+        self.vis_tab.save_frame = self.save_frame_checkbox.isChecked()
+
+    def save_frame_filetype_cb(self):
+        self.vis_tab.save_frame_filetype = self.save_frame_filetype.currentText()
         
     #--------
     def yz_slice_cb(self):

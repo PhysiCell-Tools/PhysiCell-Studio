@@ -1,10 +1,10 @@
 import sys
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, QEvent, QTimer
 from PyQt5.QtWidgets import QFrame, QCheckBox, QWidget, QLineEdit, QComboBox, QLabel, QCompleter, QToolTip, QRadioButton, QVBoxLayout, QDialog
 from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtGui import QValidator, QDoubleValidator
+from PyQt5.QtGui import QValidator, QDoubleValidator, QFocusEvent
 from PyQt5.QtCore import Qt, QSortFilterProxyModel, QEvent, QByteArray
 
 import matplotlib.pyplot as plt
@@ -111,11 +111,14 @@ class LegendWindow(QDialog):
         self.setLayout(layout)
 
 class QLineEdit_custom(QLineEdit):
-    def __init__(self, **kwargs):
-        super(QLineEdit, self).__init__(**kwargs)
+    def __init__(self, disabled_color="gray", **kwargs):
+        super().__init__(**kwargs)
         self.validator = None  # Add a validator attribute
         self.textChanged.connect(self.check_validity)
+        self.disabled_color = disabled_color
+        self.create_styles()
         self.check_validity(self.text())
+        self.full_value = None
 
     def setValidator(self, validator):
         super().setValidator(validator)
@@ -133,29 +136,30 @@ class QLineEdit_custom(QLineEdit):
 
     def check_current_validity(self):
         self.check_validity(self.text())
-        
-    valid_style = """
-            QLineEdit {
-                color: black;
-                background-color: white;
-            }
-            QLineEdit:disabled
-            {
-                color: black;
-                background-color:gray;
-            }
-            """
 
-    invalid_style = """
-            QLineEdit {
-                color: black;
-                background-color: rgba(255, 0, 0, 0.5);
-            }
-            QLineEdit:disabled {
-                color: black;
-                background-color:gray;
-            }
-            """
+    def create_styles(self):    
+        self.valid_style = f"""
+                QLineEdit {{
+                    color: black;
+                    background-color: white;
+                }}
+                QLineEdit:disabled
+                {{
+                    color: black;
+                    background-color:{self.disabled_color};
+                }}
+                """
+
+        self.invalid_style = f"""
+                QLineEdit {{
+                    color: black;
+                    background-color: rgba(255, 0, 0, 0.5);
+                }}
+                QLineEdit:disabled {{
+                    color: black;
+                    background-color:{self.disabled_color};
+                }}
+                """
 
     def set_formatter(self, bval: bool=True, ndigits: int=5):
         if bval:
@@ -178,6 +182,21 @@ class QLineEdit_custom(QLineEdit):
             self.blockSignals(False)
         except ValueError:
             pass
+
+    def get_full_value(self):
+        if self.full_value is None:
+            print("Warning: full_value is None. Returning None.")
+            return None
+        try:
+            return float(self.full_value)
+        except ValueError:
+            print(f"Warning: Could not convert full_value '{self.full_value}' to float. Returning None.")
+            return None
+        
+    def focusInEvent(self, event: QFocusEvent):
+        super().focusInEvent(event)
+        if self.full_value is not None:
+            self.setText(self.full_value)
 
 radiobutton_style = """
 QRadioButton {
