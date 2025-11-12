@@ -771,6 +771,9 @@ class Vis(VisBase, QWidget):
         
         try:
             cell_types = mcds.get_cell_df()["cell_type"]
+            if (cell_types.index.duplicated().any()):
+                print("Warning: duplicated cell IDs found in ", xml_file_root, "; using first instance.")
+                cell_types = cell_types.groupby(cell_types.index).first()
         except:
             print("vis_tab.py: plot_cell_physiboss(): error performing mcds.get_cell_df()['cell_type']")
             return
