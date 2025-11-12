@@ -2513,7 +2513,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 ):
                 list_nodes = []
                 with open(os.path.join(os.getcwd(), t_intracellular["bnd_filename"]), 'r') as bnd_file:
-                    list_nodes = [node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")]
+                    list_nodes = sorted([node.split(" ")[1].strip() for node in bnd_file.readlines() if node.strip().lower().startswith("node")])
             
                 if len(list_nodes) > 0:
                     self.param_d[self.current_cell_def]["intracellular"]["list_nodes"] = list_nodes
@@ -2617,7 +2617,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         #     node = tokens[0].strip().replace(".is_internal", "")
                         #     if value:
                         #         list_internal_nodes.append(node)
-                
+                list_parameters = sorted(list_parameters)
                 # list_output_nodes = list(set(self.param_d[self.current_cell_def]["intracellular"]["list_nodes"]).difference(set(list_internal_nodes)))
                 if len(list_parameters) > 0:
                     self.param_d[self.current_cell_def]["intracellular"]["list_parameters"] = list_parameters
@@ -3209,10 +3209,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.physiboss_clear_inputs()
                 self.physiboss_clear_outputs()
                 self.physiboss_clear_node_inheritance()
-                self.physiboss_time_step.setText("12.0")
-                self.physiboss_time_stochasticity.setText("0.0")
-                self.physiboss_scaling.setText("1.0")
-                self.physiboss_starttime.setText("0.0")
+                self.physiboss_time_step.setText("")
+                self.physiboss_time_stochasticity.setText("")
+                self.physiboss_scaling.setText("")
+                self.physiboss_starttime.setText("")
                 self.physiboss_global_inheritance_checkbox.setChecked(False)
                 self.param_d[self.current_cell_def]["intracellular"] = None
                 
@@ -3267,7 +3267,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         elif index == 2:
             # logging.debug(f'intracellular is SBML ODEs')
             if "intracellular" not in self.param_d[self.current_cell_def].keys():
-                self.param_d[self.current_cell_def]["intracellular"] = None
+                self.param_d[self.current_cell_def]["intracellular"] = {}
+                self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
             self.ode_sbml_frame.show()
         elif index == 3:
             pass
@@ -6572,206 +6573,202 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             logging.debug(f'------ ["intracellular"]: for {cdef}')
             logging.debug(f'{self.param_d[cdef]["intracellular"]}')
 
-            #-----  rwh: Sep 2024
-            # self.param_d[cdef]['intracellular'] = {}
-            if "none" in self.intracellular_type_dropdown.currentText():
-                self.param_d[cdef]['intracellular'] = None
-            # elif "Boolean" in self.intracellular_type_dropdown.currentText():
-            #     self.param_d[cdef]['intracellular'] = {}
-            #     self.param_d[cdef]['intracellular']['type'] = "maboss"
-            elif "ODEs" in self.intracellular_type_dropdown.currentText():
-                print(f'\n\n------------------- cell_def_tab.py:  fill_xml_intracellular()')
-                self.param_d[cdef]['intracellular'] = {}
-                self.param_d[cdef]['intracellular']['type'] = "roadrunner"
-                print(f'------------------- ',self.param_d[cdef]['intracellular'])
+        #-----  rwh: Sep 2024
+        # self.param_d[cdef]['intracellular'] = {}
+        # if "none" in self.intracellular_type_dropdown.currentText():
+        #     self.param_d[cdef]['intracellular'] = None
+        #     logging.debug(f"DELETE intracellular for {cdef}")
+        # elif "Boolean" in self.intracellular_type_dropdown.currentText():
+        #     self.param_d[cdef]['intracellular'] = {}
+        #     self.param_d[cdef]['intracellular']['type'] = "maboss"
 
-            if self.param_d[cdef]['intracellular'] is not None:
-                print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
+        if self.param_d[cdef]['intracellular'] is not None:
+            print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
 
-                if self.param_d[cdef]['intracellular']['type'] == "maboss":
-                            
-                    # Checking if you should prevent saving because of missing input
-                    if 'bnd_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['bnd_filename'] in [None, ""]:
-                        raise CellDefException("Missing BND file in the " + cdef + " cell definition ")
-
-                    if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
-                        raise CellDefException("Missing CFG file in the " + cdef + " cell definition ")
-
-                    intracellular = ET.SubElement(pheno, "intracellular", {"type": "maboss"})
-                    intracellular.text = self.indent12  # affects indent of child
-                    intracellular.tail = "\n" + self.indent10
-
-                    bnd_filename = ET.SubElement(intracellular, "bnd_filename")
-                    bnd_filename.text = self.param_d[cdef]['intracellular']['bnd_filename']
-                    bnd_filename.tail = self.indent12
-
-                    cfg_filename = ET.SubElement(intracellular, "cfg_filename")
-                    cfg_filename.text = self.param_d[cdef]['intracellular']['cfg_filename']
-                    cfg_filename.tail = self.indent12
-
-                    if len(self.param_d[cdef]['intracellular']['initial_values']) > 0:
-                        initial_values = ET.SubElement(intracellular, "initial_values")
-                        initial_values.text = self.indent14
-                        initial_values.tail = self.indent12
+            if self.param_d[cdef]['intracellular']['type'] == "maboss":
                         
-                        for initial_value_def in self.param_d[cdef]['intracellular']['initial_values']:
-                            if initial_value_def["node"] != "" and initial_value_def["value"] != "":
-                                initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": initial_value_def["node"]})
-                                initial_value.text = initial_value_def["value"]
-                                initial_value.tail = self.indent14
-                        initial_value.tail = self.indent12
-                        
-                    # Settings
-                    settings = ET.SubElement(intracellular, "settings")
-                    settings.text = self.indent14
-                    settings.tail = self.indent12
+                # Checking if you should prevent saving because of missing input
+                if 'bnd_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['bnd_filename'] in [None, ""]:
+                    raise CellDefException("Missing BND file in the " + cdef + " cell definition ")
+
+                if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
+                    raise CellDefException("Missing CFG file in the " + cdef + " cell definition ")
+
+                intracellular = ET.SubElement(pheno, "intracellular", {"type": "maboss"})
+                intracellular.text = self.indent12  # affects indent of child
+                intracellular.tail = "\n" + self.indent10
+
+                bnd_filename = ET.SubElement(intracellular, "bnd_filename")
+                bnd_filename.text = self.param_d[cdef]['intracellular']['bnd_filename']
+                bnd_filename.tail = self.indent12
+
+                cfg_filename = ET.SubElement(intracellular, "cfg_filename")
+                cfg_filename.text = self.param_d[cdef]['intracellular']['cfg_filename']
+                cfg_filename.tail = self.indent12
+
+                if len(self.param_d[cdef]['intracellular']['initial_values']) > 0:
+                    initial_values = ET.SubElement(intracellular, "initial_values")
+                    initial_values.text = self.indent14
+                    initial_values.tail = self.indent12
+                    
+                    for initial_value_def in self.param_d[cdef]['intracellular']['initial_values']:
+                        if initial_value_def["node"] != "" and initial_value_def["value"] != "":
+                            initial_value = ET.SubElement(initial_values, "initial_value", {"intracellular_name": initial_value_def["node"]})
+                            initial_value.text = initial_value_def["value"]
+                            initial_value.tail = self.indent14
+                    initial_value.tail = self.indent12
+                    
+                # Settings
+                settings = ET.SubElement(intracellular, "settings")
+                settings.text = self.indent14
+                settings.tail = self.indent12
+            
+                time_step = ET.SubElement(settings, "intracellular_dt")
+                time_step.text = self.param_d[cdef]['intracellular']['time_step']
+                time_step.tail = self.indent14
                 
-                    time_step = ET.SubElement(settings, "intracellular_dt")
-                    time_step.text = self.param_d[cdef]['intracellular']['time_step']
-                    time_step.tail = self.indent14
-                    
-                    time_stochasticity = ET.SubElement(settings, "time_stochasticity")
-                    time_stochasticity.text = self.param_d[cdef]['intracellular']['time_stochasticity']
-                    time_stochasticity.tail = self.indent14
-                    
-                    scaling = ET.SubElement(settings, "scaling")
-                    scaling.text = self.param_d[cdef]['intracellular']['scaling']
-                    scaling.tail = self.indent12
-                    
-                    start_time = ET.SubElement(settings, "start_time")
-                    start_time.text = self.param_d[cdef]['intracellular']['start_time']
-                    start_time.tail = self.indent12
-                    
-                    inheritance = ET.SubElement(settings, "inheritance", {"global": self.param_d[cdef]['intracellular']['global_inheritance']})
-                    if len(self.param_d[cdef]["intracellular"]["node_inheritance"]) > 0:
-                        for node_inheritance_def in self.param_d[cdef]["intracellular"]["node_inheritance"]:
-                            if node_inheritance_def["node"] != "" and node_inheritance_def["flag"] != "":
-                                node_inheritance = ET.SubElement(inheritance, "inherit_node", {"intracellular_name": node_inheritance_def["node"]})
-                                node_inheritance.text = node_inheritance_def["flag"]
-                                node_inheritance.tail = self.indent16
+                time_stochasticity = ET.SubElement(settings, "time_stochasticity")
+                time_stochasticity.text = self.param_d[cdef]['intracellular']['time_stochasticity']
+                time_stochasticity.tail = self.indent14
+                
+                scaling = ET.SubElement(settings, "scaling")
+                scaling.text = self.param_d[cdef]['intracellular']['scaling']
+                scaling.tail = self.indent12
+                
+                start_time = ET.SubElement(settings, "start_time")
+                start_time.text = self.param_d[cdef]['intracellular']['start_time']
+                start_time.tail = self.indent12
+                
+                inheritance = ET.SubElement(settings, "inheritance", {"global": self.param_d[cdef]['intracellular']['global_inheritance']})
+                if len(self.param_d[cdef]["intracellular"]["node_inheritance"]) > 0:
+                    for node_inheritance_def in self.param_d[cdef]["intracellular"]["node_inheritance"]:
+                        if node_inheritance_def["node"] != "" and node_inheritance_def["flag"] != "":
+                            node_inheritance = ET.SubElement(inheritance, "inherit_node", {"intracellular_name": node_inheritance_def["node"]})
+                            node_inheritance.text = node_inheritance_def["flag"]
+                            node_inheritance.tail = self.indent16
 
-                    if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
-                        scaling.tail = self.indent14
-                        mutants = ET.SubElement(settings, "mutations")
-                        mutants.text = self.indent16
-                        mutants.tail = self.indent14
+                if len(self.param_d[cdef]["intracellular"]["mutants"]) > 0:
+                    scaling.tail = self.indent14
+                    mutants = ET.SubElement(settings, "mutations")
+                    mutants.text = self.indent16
+                    mutants.tail = self.indent14
+                    
+                    for mutant_def in self.param_d[cdef]["intracellular"]["mutants"]:
+                        if mutant_def["node"] != "" and mutant_def["value"] != "":
+                            mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": mutant_def["node"]})
+                            mutant.text = mutant_def["value"]
+                            mutant.tail = self.indent16
+
+                    mutant.tail = self.indent12
+
+                if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
+                    scaling.tail = self.indent14
+
+                    parameters = ET.SubElement(settings, "parameters")
+                    parameters.text = self.indent16
+                    parameters.tail = self.indent14
+                    
+                    for parameter_def in self.param_d[cdef]['intracellular']['parameters']:
+                        if parameter_def["name"] != "" and parameter_def["value"] != "":
+                            parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": parameter_def["name"]})
+                            parameter.text = parameter_def["value"]
+                            parameter.tail = self.indent16
+
+                    parameter.tail = self.indent12
+
+                # Mapping
+                if len(self.param_d[cdef]['intracellular']['inputs']) > 0 or len(self.param_d[cdef]['intracellular']['outputs']) > 0:
+                    mapping = ET.SubElement(intracellular, "mapping")
+                    mapping.text = self.indent14
+                    mapping.tail = self.indent12
+
+                    tag_input = None
+                    for input in self.param_d[cdef]['intracellular']['inputs']:
                         
-                        for mutant_def in self.param_d[cdef]["intracellular"]["mutants"]:
-                            if mutant_def["node"] != "" and mutant_def["value"] != "":
-                                mutant = ET.SubElement(mutants, "mutation", {"intracellular_name": mutant_def["node"]})
-                                mutant.text = mutant_def["value"]
-                                mutant.tail = self.indent16
+                        if input['name'] != '' and input['node'] != '' and input['threshold'] != '' and input['action'] != '':
+                            attribs = {
+                                'physicell_name': input['name'], 'intracellular_name': input['node'], 
+                            }
 
-                        mutant.tail = self.indent12
+                            tag_input = ET.SubElement(mapping, 'input', attribs)
+                            tag_input.text = self.indent16
+                            tag_input.tail = self.indent14
 
-                    if len(self.param_d[cdef]['intracellular']['parameters']) > 0:
-                        scaling.tail = self.indent14
+                            tag_input_settings = ET.SubElement(tag_input, "settings")
+                            tag_input_settings.text = self.indent18
+                            tag_input_settings.tail = self.indent16
+                            tag_input_action = ET.SubElement(tag_input_settings, "action")
+                            tag_input_action.text = input["action"]
+                            tag_input_action.tail = self.indent18
 
-                        parameters = ET.SubElement(settings, "parameters")
-                        parameters.text = self.indent16
-                        parameters.tail = self.indent14
-                        
-                        for parameter_def in self.param_d[cdef]['intracellular']['parameters']:
-                            if parameter_def["name"] != "" and parameter_def["value"] != "":
-                                parameter = ET.SubElement(parameters, "parameter", {"intracellular_name": parameter_def["name"]})
-                                parameter.text = parameter_def["value"]
-                                parameter.tail = self.indent16
+                            tag_input_threshold = ET.SubElement(tag_input_settings, "threshold")
+                            tag_input_threshold.text = input["threshold"]
+                            tag_input_threshold.tail = self.indent18
 
-                        parameter.tail = self.indent12
+                            t_last_tag = tag_input_threshold
+                            if input["inact_threshold"] != input["threshold"]:
+                                tag_input_inact_threshold = ET.SubElement(tag_input_settings, "inact_threshold")
+                                tag_input_inact_threshold.text = input["inact_threshold"]
+                                tag_input_inact_threshold.tail = self.indent18
+                                t_last_tag = tag_input_inact_threshold
+                            if input["smoothing"] != "":
+                                tag_input_smoothing = ET.SubElement(tag_input_settings, "smoothing")
+                                tag_input_smoothing.text = input["smoothing"]
+                                tag_input_smoothing.tail = self.indent18
+                                t_last_tag = tag_input_smoothing
 
-                    # Mapping
-                    if len(self.param_d[cdef]['intracellular']['inputs']) > 0 or len(self.param_d[cdef]['intracellular']['outputs']) > 0:
-                        mapping = ET.SubElement(intracellular, "mapping")
-                        mapping.text = self.indent14
-                        mapping.tail = self.indent12
-
-                        tag_input = None
-                        for input in self.param_d[cdef]['intracellular']['inputs']:
+                            t_last_tag.tail = self.indent14
                             
-                            if input['name'] != '' and input['node'] != '' and input['threshold'] != '' and input['action'] != '':
-                                attribs = {
-                                    'physicell_name': input['name'], 'intracellular_name': input['node'], 
-                                }
+                    tag_output = None
+                    for output in self.param_d[cdef]['intracellular']['outputs']:
 
-                                tag_input = ET.SubElement(mapping, 'input', attribs)
-                                tag_input.text = self.indent16
-                                tag_input.tail = self.indent14
+                        if output['name'] != '' and output['node'] != '' and output['value'] != '' and output['action'] != '':
+                            attribs = {
+                                'physicell_name': output['name'], 'intracellular_name': output['node'], 
+                            }
 
-                                tag_input_settings = ET.SubElement(tag_input, "settings")
-                                tag_input_settings.text = self.indent18
-                                tag_input_settings.tail = self.indent16
-                                tag_input_action = ET.SubElement(tag_input_settings, "action")
-                                tag_input_action.text = input["action"]
-                                tag_input_action.tail = self.indent18
-
-                                tag_input_threshold = ET.SubElement(tag_input_settings, "threshold")
-                                tag_input_threshold.text = input["threshold"]
-                                tag_input_threshold.tail = self.indent18
-
-                                t_last_tag = tag_input_threshold
-                                if input["inact_threshold"] != input["threshold"]:
-                                    tag_input_inact_threshold = ET.SubElement(tag_input_settings, "inact_threshold")
-                                    tag_input_inact_threshold.text = input["inact_threshold"]
-                                    tag_input_inact_threshold.tail = self.indent18
-                                    t_last_tag = tag_input_inact_threshold
-                                if input["smoothing"] != "":
-                                    tag_input_smoothing = ET.SubElement(tag_input_settings, "smoothing")
-                                    tag_input_smoothing.text = input["smoothing"]
-                                    tag_input_smoothing.tail = self.indent18
-                                    t_last_tag = tag_input_smoothing
-
-                                t_last_tag.tail = self.indent14
-                                
-                        tag_output = None
-                        for output in self.param_d[cdef]['intracellular']['outputs']:
-
-                            if output['name'] != '' and output['node'] != '' and output['value'] != '' and output['action'] != '':
-                                attribs = {
-                                    'physicell_name': output['name'], 'intracellular_name': output['node'], 
-                                }
-
-                                tag_output = ET.SubElement(mapping, 'output', attribs)
-                                tag_output.text = self.indent16
-                                tag_output.tail = self.indent12
-                                
-                                tag_output_settings = ET.SubElement(tag_output, "settings")
-                                tag_output_settings.text = self.indent18
-                                tag_output_settings.tail = self.indent14
-
-                                tag_output_action = ET.SubElement(tag_output_settings, "action")
-                                tag_output_action.text = output["action"]
-                                tag_output_action.tail = self.indent18
-
-                                tag_output_value = ET.SubElement(tag_output_settings, "value")
-                                tag_output_value.text = output["value"]
-                                tag_output_value.tail = self.indent18
-
-                                t_last_tag = tag_output_value
-
-                                if output["basal_value"] != output["value"]:
-                                    tag_output_base_value = ET.SubElement(tag_output_settings, "base_value")
-                                    tag_output_base_value.text = output["basal_value"]
-                                    tag_output_base_value.tail = self.indent18
-                                    t_last_tag = tag_output_base_value
-                                
-                                if output["smoothing"] != "":
-                                    tag_output_smoothing = ET.SubElement(tag_output_settings, "smoothing")
-                                    tag_output_smoothing.text = output["smoothing"]
-                                    tag_output_smoothing.tail = self.indent18
-                                    t_last_tag = tag_output_smoothing
-
-                                t_last_tag.tail = self.indent14
-                                
-                        
-                        if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
-                            tag_input.tail = self.indent12
-                        elif tag_output is not None:
+                            tag_output = ET.SubElement(mapping, 'output', attribs)
+                            tag_output.text = self.indent16
                             tag_output.tail = self.indent12
+                            
+                            tag_output_settings = ET.SubElement(tag_output, "settings")
+                            tag_output_settings.text = self.indent18
+                            tag_output_settings.tail = self.indent14
 
+                            tag_output_action = ET.SubElement(tag_output_settings, "action")
+                            tag_output_action.text = output["action"]
+                            tag_output_action.tail = self.indent18
 
-                elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
-                    self.ode_sbml_frame.fill_xml(pheno, cdef)
+                            tag_output_value = ET.SubElement(tag_output_settings, "value")
+                            tag_output_value.text = output["value"]
+                            tag_output_value.tail = self.indent18
+
+                            t_last_tag = tag_output_value
+
+                            if output["basal_value"] != output["value"]:
+                                tag_output_base_value = ET.SubElement(tag_output_settings, "base_value")
+                                tag_output_base_value.text = output["basal_value"]
+                                tag_output_base_value.tail = self.indent18
+                                t_last_tag = tag_output_base_value
+                            
+                            if output["smoothing"] != "":
+                                tag_output_smoothing = ET.SubElement(tag_output_settings, "smoothing")
+                                tag_output_smoothing.text = output["smoothing"]
+                                tag_output_smoothing.tail = self.indent18
+                                t_last_tag = tag_output_smoothing
+
+                            t_last_tag.tail = self.indent14
+                            
                     
+                    if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
+                        tag_input.tail = self.indent12
+                    elif tag_output is not None:
+                        tag_output.tail = self.indent12
+
+
+            elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
+                self.ode_sbml_frame.fill_xml(pheno, cdef)
+                
 
         if self.debug_print_fill_xml:
             logging.debug(f'\n')

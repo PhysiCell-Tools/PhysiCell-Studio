@@ -1,15 +1,15 @@
 <PhysiCell_settings version="devel-version">
 
     <domain>
-        <x_min>-500</x_min>
-        <x_max>500</x_max>
-        <y_min>-500</y_min>
-        <y_max>500</y_max>
-        <z_min>-10</z_min>
-        <z_max>10</z_max>
-        <dx>20</dx>
-        <dy>20</dy>
-        <dz>20</dz>
+        <x_min>-500.0</x_min>
+        <x_max>500.0</x_max>
+        <y_min>-500.0</y_min>
+        <y_max>500.0</y_max>
+        <z_min>-10.0</z_min>
+        <z_max>10.0</z_max>
+        <dx>20.0</dx>
+        <dy>20.0</dy>
+        <dz>20.0</dz>
         <use_2D>true</use_2D>
     </domain>
 
@@ -92,6 +92,9 @@
                         <duration index="2" fixed_duration="true">240.</duration>
                         <duration index="3" fixed_duration="true">60.</duration>
                     </phase_durations>
+                    <standard_asymmetric_division enabled="False">
+                        <asymmetric_division_probability name="default" units="dimensionless">1.0</asymmetric_division_probability>
+                    </standard_asymmetric_division>
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
@@ -245,7 +248,7 @@
     </cell_definitions>
 
     <initial_conditions>
-        <cell_positions type="csv" enabled="false">
+        <cell_positions type="csv" enabled="true">
             <folder>./config</folder>
             <filename>cells.csv</filename>
         </cell_positions>

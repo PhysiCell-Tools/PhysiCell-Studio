@@ -412,13 +412,17 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
 
     #-----------------------------------------------------------
     # Read the existing mappings in the table, called by validate_params() before fill_xml()
-    def read_map(self):
-        print("\n\n----------------sbml_intra.py:  read_map():")
+    def read_map(self, cdef=None):
+        
+        if cdef is not None:
+            cdef = self.celldef_tab.current_cell_def
+            
+        print(f"\n\n----------------sbml_intra.py:  read_map({cdef}):")
 
-        if "sbml_maps" in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"].keys():
-            self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"].clear()
+        if "sbml_maps" in self.celldef_tab.param_d[cdef]["intracellular"].keys():
+            self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"].clear()
         else:
-             self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"] = []
+             self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"] = []
 
         # cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"] = 
         # [['PC_substrate', 'oxygen', 'Oxygen'], ['PC_substrate', 'lactate', 'Lactate'], ['PC_substrate', 'glucose', 'Glucose'], ['PC_phenotype', 'da', 'apoptosis_rate'], ['PC_phenotype', 'mms', 'migration_speed'], ['PC_phenotype', 'ssr_lactate', 'Lac_Secretion_Rate'], ['PC_phenotype', 'ctr_0_0', 'Transition_Rate']]
@@ -436,19 +440,19 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
 
             if len(species) > 0:
                 if len(substrate) > 0:
-                    self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"].append(["PC_substrate",substrate, species])
+                    self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"].append(["PC_substrate",substrate, species])
                     self.num_maps += 1
                 elif len(pheno) > 0:
-                    self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"].append(["PC_phenotype",pheno, species])
+                    self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"].append(["PC_phenotype",pheno, species])
                     self.num_maps += 1
                 elif len(custom_var) > 0:
-                    self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"].append(["PC_custom_data",custom_var, species])
+                    self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"].append(["PC_custom_data",custom_var, species])
                     self.num_maps += 1
                 else:
                     pass
 
         print("---------- read_map():  num_maps=",self.num_maps)
-        print("           sbml_maps= ", self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"])
+        print("           sbml_maps= ", self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"])
 
         return
     #-----------------------------------------------------------
@@ -682,7 +686,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # self.celldef_tab.param_d[cdef]["intracellular"]["intracellular_dt"] = float(self.dt_w.text())
         self.celldef_tab.param_d[cdef]["intracellular"]["intracellular_dt"] = self.dt_w.text()
 
-        self.read_map()    # read the current mappings in the table; refilling the "sbml_maps" dict
+        self.read_map(cdef)    # read the current mappings in the table; refilling the "sbml_maps" dict
 
         if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'sbml_maps'")
