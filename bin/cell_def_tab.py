@@ -3227,7 +3227,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     def dfba_sbml_filename_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
-            self.param_d[self.current_cell_def]["intracellular"]['sbml_filename'] = text
+            self.param_d[self.current_cell_def]["intracellular"]["settings"]['sbml_filename'] = text
 
     def dfba_cell_density_changed(self, text):
         if self.param_d[self.current_cell_def]["intracellular"] is not None:
@@ -3464,14 +3464,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             if self.param_d[self.current_cell_def]["intracellular"] is None:
                 self.param_d[self.current_cell_def]["intracellular"] = {"type": "dfba"}
 
-            if 'sbml_filename' not in self.param_d[self.current_cell_def]["intracellular"].keys():
-                self.param_d[self.current_cell_def]["intracellular"]["sbml_filename"] = ""
-                self.sbml_filename.clear()
-
             if 'settings' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["settings"] = {}
                 self.clear_intracellular_dt()
                 self.intracellular_dt.setText("0.01")
+                self.param_d[self.current_cell_def]["intracellular"]["settings"]["sbml_filename"] = ""
+                self.sbml_filename.clear()
 
             if 'transport_model' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["transport_model"] = {"exchanges": []}
@@ -6311,14 +6309,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.clear_growth_model_params()
                 # Set the dropdown to the appropriate type for dFBA
                 self.intracellular_type_dropdown.setCurrentIndex(3)
-                # SBML Filename
-                if "sbml_filename" in self.param_d[cdname]["intracellular"].keys():
-                    self.sbml_filename.setText(self.param_d[cdname]["intracellular"]["sbml_filename"])
-                else:
-                    self.sbml_filename.clear()
 
-                # Populate the intracellular dt in the settings
+                # Populate the intracellular dt in the settings and the SBML filename
                 if "setting" in self.param_d[cdname]["intracellular"].keys():
+                    if "sbml_filename" in self.param_d[cdname]["intracellular"]["setting"].keys():
+                        self.sbml_filename.setText(self.param_d[cdname]["intracellular"]["setting"]["sbml_filename"])
+                    else:
+                        self.sbml_filename.clear()
                     if "intracellular_dt" in self.param_d[cdname]["intracellular"]["setting"].keys():
                         self.intracellular_dt.setText(self.param_d[cdname]["intracellular"]["setting"]["intracellular_dt"])
                     else:
@@ -7245,8 +7242,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 elif self.param_d[cdef]['intracellular']['type'] == "dfba":
                     # Ensure necessary elements are present before writing to XML
-                    if 'sbml_filename' not in self.param_d[cdef]['intracellular'] or \
-                            not self.param_d[cdef]['intracellular']['sbml_filename']:
+                    if 'sbml_filename' not in self.param_d[cdef]['intracellular']["settings"] or \
+                            not self.param_d[cdef]['intracellular']["settings"]['sbml_filename']:
                         raise CellDefException("Missing SBML file in the " + cdef + " cell definition")
 
                     # Create the intracellular element for dFBA
@@ -7254,13 +7251,13 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     intracellular.text = self.indent12
                     intracellular.tail = "\n" + self.indent10
 
-                    # Add SBML Filename
-                    sbml_filename = ET.SubElement(intracellular, "sbml_filename")
-                    sbml_filename.text = self.param_d[cdef]['intracellular']['sbml_filename']
-                    sbml_filename.tail = self.indent12
 
                     # Add Time Step (intracellular_dt)
                     settings = ET.SubElement(intracellular, "settings")
+                    # Add SBML Filename
+                    sbml_filename = ET.SubElement(settings, "sbml_filename")
+                    sbml_filename.text = self.param_d[cdef]['intracellular']["settings"]['sbml_filename']
+                    sbml_filename.tail = self.indent12
                     intracellular_dt = ET.SubElement(settings, "intracellular_dt", {"units": "min"})
                     intracellular_dt.text = self.param_d[cdef]['intracellular']['settings']['intracellular_dt']
                     intracellular_dt.tail = self.indent12

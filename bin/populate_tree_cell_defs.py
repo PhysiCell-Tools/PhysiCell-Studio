@@ -973,15 +973,14 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 elif uep_intracellular.attrib["type"] == "dfba":
                     # --------- dFBA specific code
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "dfba"
-
-                    # SBML filename
-                    cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_filename"] = uep_intracellular.find(
-                        "sbml_filename").text if uep_intracellular.find("sbml_filename") is not None else ""
                     
-                    # Settings and intracellular_dt
+                    # Settings SBML filename and intracellular_dt
                     cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"] = {}
                     uep_settings = uep_intracellular.find("settings")
                     if uep_settings is not None:
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"] = uep_settings.find(
+                        "sbml_filename").text if uep_settings.find("sbml_filename") is not None else ""
+                        
                         intracellular_dt = uep_settings.find("intracellular_dt").text if uep_settings.find(
                             "intracellular_dt") is not None else ""
 
@@ -1059,6 +1058,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.clear_transport_exchanges()
                     cell_def_tab.clear_growth_model_params()
                     cell_def_tab.clear_death_model_params()
+
+                    # Populate SBML filename in the settings
+                    if "sbml_filename" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        sbml_filename = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"]
+                        cell_def_tab.sbml_filename.setText(sbml_filename)
 
                     # Populate intracellular dt in the settings
                     if "intracellular_dt" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
