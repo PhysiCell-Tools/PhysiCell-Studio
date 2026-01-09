@@ -148,22 +148,11 @@ class ICs(QWidget):
         self.current_substrate_ind = None
         self.full_substrate_ic_fname = "./config/ics.csv"
 
-        self.setupSubstratePlotParameters()
+        self.setup_substrate_plot_parameters()
 
         self.substrate_value_updater = self.point_updater
         self.substrate_updater_pars = {}
         self.substrate_color_pars = {}
-
-        # after reading the docs and thinking about it, this is what I (DB) think is happening:
-        # ICs has installed an event filter for itself (self). So, any event being sent to ICs is first intercepted by this filter.
-        # What filter you ask? The function eventFilter that belongs to this class below!
-        # Any event that goes to ICs first gets sent through that filter.
-        # If the filter returns True, the event is discarded and not sent on; this would be bad because then nothing would work because no events would make it past the filter.
-        # If the filter returns False, then the event passes along to the target objects (self in this case) or any other installed event filters (those would actually take precedence over self).
-        # Though now I'm wondering how you could set this up to filter events to other targets since they all seem to be processed by the same eventFilter function, which brings into question why you'd pass in the target here...
-        self.installEventFilter(self)
-
-        # self.output_dir = "."   # for nanoHUB
 
         #-------------------------------------------
         # label_width = 110
@@ -1131,7 +1120,7 @@ class ICs(QWidget):
         self.plot_zmax = float(self.config_tab.zmax.text())
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
-        self.setupSubstratePlotParameters()
+        self.setup_substrate_plot_parameters()
         # self.update_plots()
         self.canvas.update()
         self.canvas.draw()
@@ -1211,7 +1200,7 @@ class ICs(QWidget):
             self.cmap = plt.cm.get_cmap("viridis")
         except:
             self.cmap = colormaps.get_cmap("viridis")
-        self.setupSubstratePlotParameters()
+        self.setup_substrate_plot_parameters()
         self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
         
         ax1_divider = make_axes_locatable(self.ax0)
@@ -2513,7 +2502,7 @@ class ICs(QWidget):
         if self.brush_combobox.currentText() == "gaussian_rectangle":
             self.setupGaussianRectangleUpdater()
 
-    def setupSubstratePlotParameters(self):
+    def setup_substrate_plot_parameters(self):
         self.xdel = float(self.config_tab.xdel.text())
         self.nx = int(np.ceil((self.plot_xmax - self.plot_xmin) / self.xdel))
         self.plot_xx = np.arange(0,self.nx)*self.xdel+self.plot_xmin+0.5*self.xdel
@@ -2523,8 +2512,11 @@ class ICs(QWidget):
         self.zdel = float(self.config_tab.zdel.text())
         self.nz = 1 # only let this work for 2d
         self.plot_zz = np.arange(0,self.nz)*self.zdel+self.plot_zmin+0.5*self.zdel
-        self.current_substrate_values = np.zeros((self.ny, self.nx)) # set it up for plotting
         self.all_substrate_values = np.zeros((self.ny, self.nx, len(self.substrate_list)))
+        if self.current_substrate_ind is not None:
+            self.current_substrate_values = self.all_substrate_values[:,:,self.current_substrate_ind]
+        else:
+            self.current_substrate_values = np.zeros((self.ny, self.nx)) # set it up for plotting
 
     def import_substrate_cb(self):
         filePath = QFileDialog.getOpenFileName(self,'',".")
@@ -2550,7 +2542,7 @@ class ICs(QWidget):
             if data.shape[0] != (self.nx*self.ny):
                 # we could help the user out and load up what is there to work with, but they're probably better served by just getting a reality check with a reset to zeros
                 print(f"WARNING: Substrate IC CSV did not have the correct number of voxels ({data.shape[0]}!={self.nx*self.ny}). Reseting all concentrations to 0.")
-                self.setupSubstratePlotParameters()
+                self.setup_substrate_plot_parameters()
                 self.ic_substrates_enabled.setChecked(False)
             else:
                 self.all_substrate_values[:,:,col_inds] = data[:,3:].reshape((self.ny, self.nx, -1))
@@ -2560,22 +2552,20 @@ class ICs(QWidget):
             self.update_substrate_plot(check_time_delay)
         return
         
-    def checkForNewGrid(self):
+    def check_for_new_grid(self):
         if float(self.config_tab.xmin.text())!=self.plot_xmin or float(self.config_tab.xmax.text())!=self.plot_xmax or float(self.config_tab.xdel.text())!=self.xdel \
             or float(self.config_tab.ymin.text())!=self.plot_ymin or float(self.config_tab.ymax.text())!=self.plot_ymax or float(self.config_tab.ydel.text())!=self.ydel:
             self.reset_plot_range()
-            self.setupSubstratePlotParameters()
+            self.setup_substrate_plot_parameters()
             self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
             self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
             self.substrate_plot = self.ax0.imshow(self.current_substrate_values, origin="lower",extent=(0, 1, 0, 1), transform=self.ax0.transAxes, vmin=0,vmax=1, interpolation='nearest')
             self.canvas.update()
             self.canvas.draw()
 
-    def eventFilter(self, source, event):
-        if event.type() == QtCore.QEvent.Show:
-            self.checkForNewGrid()
-        return False # A False return value makes sure that this intercepted event goes on to the target object or any other eventFilter's
-    
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.check_for_new_grid()
 
     def fix_cmap_toggle_cb(self,bval):
         # print("fix_cmap_toggle_cb():")
