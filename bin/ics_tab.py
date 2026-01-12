@@ -1208,9 +1208,6 @@ class ICs(QWidget):
         self.cbar1 = self.figure.colorbar(self.substrate_plot, cax=self.cax1)
         self.cbar1.ax.tick_params(labelsize=self.fontsize)
         self.cbar1.set_label(self.substrate_combobox.currentText()) 
-        
-        self.time_of_last_substrate_plot_update = time.time()
-        self.substrate_plot_time_delay = 0.1
 
         self.canvas.update()
         self.canvas.draw()
@@ -1227,7 +1224,8 @@ class ICs(QWidget):
             return
         self.mouse_pressed = not (self.mouse_pressed)
         if self.mouse_pressed is False:
-            self.update_substrate_plot(check_time_delay=False)
+            self.last_xy = None
+            self.update_substrate_plot()
             return
         # if unchecked and the file exists, check it
         if not self.ic_substrates_enabled.isChecked() and \
@@ -1237,12 +1235,13 @@ class ICs(QWidget):
             self.ic_substrates_enabled.setChecked(True)
         x, y, z = self.getPos(event)
         if (x is None) or (y is None) or (z is None):
+            self.last_xy = None
             self.current_voxel_subs = None
             return
         self.current_voxel_subs = self.getAllVoxelSubs(x, y ,z)
+        self.last_xy = (self.current_voxel_subs[0], self.current_voxel_subs[1])
         self.substrate_value_updater()
-        check_time_delay = True
-        self.update_substrate_plot(check_time_delay)
+        self.update_substrate_plot()
 
     def mouseMoved(self, event):
         if self.mouse_on_axes is False:
@@ -1259,39 +1258,47 @@ class ICs(QWidget):
             return # only do something if in new voxel
         self.current_voxel_subs = current_voxel_subs     
         self.substrate_value_updater()   
-        check_time_delay = True
-        self.update_substrate_plot(check_time_delay)
+        self.update_substrate_plot()
 
     def mouseLeftFigure(self, event):
         self.mouse_pressed = False
-        self.update_substrate_plot(check_time_delay=False)
+        self.update_substrate_plot()
 
     def null_updater(self):
         return
     
     def point_updater(self):
-        self.current_substrate_values[self.current_voxel_subs[1],self.current_voxel_subs[0]] = self.current_substrate_set_value
+        for xi, yi in self.bresenham_points():
+            self.current_substrate_values[yi, xi] = self.current_substrate_set_value
 
     def rectangle_updater(self):
-        # (i,j) refering to the (x,y) coordinates even though the matrix is the transpose of this
-        min_i = max(0,self.current_voxel_subs[0]-self.substrate_updater_pars["x_ind_stretch"])
-        max_i = min(self.nx,self.current_voxel_subs[0]+self.substrate_updater_pars["x_ind_stretch"]+1)
-        min_j = max(0,self.current_voxel_subs[1]-self.substrate_updater_pars["y_ind_stretch"])
-        max_j = min(self.ny,self.current_voxel_subs[1]+self.substrate_updater_pars["y_ind_stretch"]+1)
-        self.current_substrate_values[min_j:max_j,min_i:max_i] = self.current_substrate_set_value
+        for xi, yi in self.bresenham_points():
+            # (i,j) refering to the (x,y) coordinates even though the matrix is the transpose of this
+            min_i = max(0,xi-self.substrate_updater_pars["x_ind_stretch"])
+            max_i = min(self.nx,xi+self.substrate_updater_pars["x_ind_stretch"]+1)
+            min_j = max(0,yi-self.substrate_updater_pars["y_ind_stretch"])
+            max_j = min(self.ny,yi+self.substrate_updater_pars["y_ind_stretch"]+1)
+            self.current_substrate_values[min_j:max_j,min_i:max_i] = self.current_substrate_set_value
 
     def gaussian_rectangle_updater(self):
-        dx = self.substrate_updater_pars["x_ind_stretch"]-self.current_voxel_subs[0]
-        min_i_rect = max(0,dx)
-        max_i_rect = min(2*self.substrate_updater_pars["x_ind_stretch"] + 1,self.nx + dx)
-        min_i_all = min_i_rect - dx
-        max_i_all = max_i_rect - dx
-        dy = self.substrate_updater_pars["y_ind_stretch"]-self.current_voxel_subs[1]
-        min_j_rect = max(0,dy)
-        max_j_rect = min(2*self.substrate_updater_pars["y_ind_stretch"] + 1,self.ny + dy)
-        min_j_all = min_j_rect - dy
-        max_j_all = max_j_rect - dy
-        self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all] = np.maximum(self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all],self.current_substrate_set_value[min_j_rect:max_j_rect,min_i_rect:max_i_rect])
+        for xi, yi in self.bresenham_points():
+            dx = self.substrate_updater_pars["x_ind_stretch"]-xi
+            min_i_rect = max(0,dx)
+            max_i_rect = min(2*self.substrate_updater_pars["x_ind_stretch"] + 1,self.nx + dx)
+            min_i_all = min_i_rect - dx
+            max_i_all = max_i_rect - dx
+            dy = self.substrate_updater_pars["y_ind_stretch"]-yi
+            min_j_rect = max(0,dy)
+            max_j_rect = min(2*self.substrate_updater_pars["y_ind_stretch"] + 1,self.ny + dy)
+            min_j_all = min_j_rect - dy
+            max_j_all = max_j_rect - dy
+            self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all] = np.maximum(self.current_substrate_values[min_j_all:max_j_all,min_i_all:max_i_all],self.current_substrate_set_value[min_j_rect:max_j_rect,min_i_rect:max_i_rect])
+
+    def bresenham_points(self):
+        x0, y0 = self.last_xy
+        x1, y1 = self.current_voxel_subs[0:2]
+        self.last_xy = (x1, y1)
+        return bresenham(x0, y0, x1, y1)
 
     def getAllVoxelSubs(self, x, y, z):
         x = self.getSingleVoxelSub(x, self.plot_xmin, self.xdel)
@@ -1312,13 +1319,9 @@ class ICs(QWidget):
         remainder = (x-xmin) % dx
         return x - remainder + 0.5 * dx
     
-    def update_substrate_plot(self, check_time_delay):
-        if (not check_time_delay) or (time.time() > self.time_of_last_substrate_plot_update+self.substrate_plot_time_delay):
-            self.substrate_plot.set_data(self.current_substrate_values)
-            # self.substrate_plot.set_clim(vmin=np.min(self.current_substrate_values),vmax=np.max(self.current_substrate_values))
-            self.canvas.update()
-            self.canvas.draw()
-            self.time_of_last_substrate_plot_update = time.time()
+    def update_substrate_plot(self):
+        self.substrate_plot.set_data(self.current_substrate_values)
+        self.canvas.draw_idle()
 
     def circles(self, x, y, s, c='b', vmin=None, vmax=None, **kwargs):
         """
@@ -2343,7 +2346,6 @@ class ICs(QWidget):
     def substrate_combobox_changed_cb(self):
         self.current_substrate_ind = self.substrate_combobox.currentIndex()
         self.current_substrate_values = self.all_substrate_values[:,:,self.current_substrate_ind]
-        check_time_delay = False
         if self.substrate_combobox.currentText() not in self.substrate_color_pars.keys():
             self.substrate_color_pars[self.substrate_combobox.currentText()] = {"fixed":False,"cmin":0,"cmax":1,"scale":"auto"}
         self.fix_cmap_checkbox.setChecked(self.substrate_color_pars[self.substrate_combobox.currentText()]["fixed"])
@@ -2353,7 +2355,7 @@ class ICs(QWidget):
         self.color_scale_combobox.setCurrentText(self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"])
         self.cbar1.set_label(self.substrate_combobox.currentText())
         self.update_substrate_clims()
-        self.update_substrate_plot(check_time_delay)
+        self.update_substrate_plot()
 
     def brush_combobox_changed_cb(self):
         if self.brush_combobox.currentText() == "point":
@@ -2548,8 +2550,7 @@ class ICs(QWidget):
                 self.all_substrate_values[:,:,col_inds] = data[:,3:].reshape((self.ny, self.nx, -1))
                 self.current_substrate_values = self.all_substrate_values[:,:,self.substrate_combobox.currentIndex()]
                 self.ic_substrates_enabled.setChecked(True)
-            check_time_delay = False
-            self.update_substrate_plot(check_time_delay)
+            self.update_substrate_plot()
         return
         
     def check_for_new_grid(self):
@@ -2568,7 +2569,6 @@ class ICs(QWidget):
         self.check_for_new_grid()
 
     def fix_cmap_toggle_cb(self,bval):
-        # print("fix_cmap_toggle_cb():")
         self.fix_cmap_flag = bval
         self.cmin.setEnabled(bval)
         self.cmax.setEnabled(bval)
@@ -2588,7 +2588,6 @@ class ICs(QWidget):
             pass
 
     def update_substrate_clims(self):
-        # if  self.fix_cmap_checkbox.isChecked() is True:
         if  self.substrate_color_pars[self.substrate_combobox.currentText()]["fixed"] is True:
             min_val = float(self.substrate_color_pars[self.substrate_combobox.currentText()]["cmin"])
             min_pos_val = min_val
@@ -2598,15 +2597,12 @@ class ICs(QWidget):
             min_pos_val = np.min(self.current_substrate_values[self.current_substrate_values>0],initial=float(self.substrate_set_value.text()))
             max_val = max(float(self.substrate_set_value.text()),np.max(self.current_substrate_values))
         if (min_pos_val>0) and ((self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"]=="log") or (self.substrate_color_pars[self.substrate_combobox.currentText()]["scale"]=="auto" and max_val > 100*min_pos_val)):
-            self.substrate_plot.set_norm(matplotlib.colors.LogNorm(vmin=min_pos_val, vmax=max_val))
-            self.substrate_plot.set_clim(vmin=min_pos_val,vmax=max_val)
+            norm = matplotlib.colors.LogNorm(vmin=min_pos_val, vmax=max_val)
         else:
-            self.substrate_plot.set_norm(matplotlib.colors.Normalize(vmin=min_val, vmax=max_val))
-            self.substrate_plot.set_clim(vmin=min_val,vmax=max_val)
-        self.update_substrate_plot(check_time_delay=False)
-        # except: # for initialization
-        #     print("     hit exception")
-        #     pass
+            norm = matplotlib.colors.Normalize(vmin=min_val, vmax=max_val)
+        self.substrate_plot.set_norm(norm)
+        self.cbar1.update_normal(self.substrate_plot)
+        self.update_substrate_plot()
 
     def color_scale_combobox_changed_cb(self):
         try:
@@ -2614,3 +2610,26 @@ class ICs(QWidget):
             self.update_substrate_clims()
         except:
             pass
+
+def bresenham(x0, y0, x1, y1):
+    points = []
+
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx - dy
+
+    while True:
+        points.append((x0, y0))
+        if x0 == x1 and y0 == y1:
+            break
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x0 += sx
+        if e2 < dx:
+            err += dx
+            y0 += sy
+
+    return points
