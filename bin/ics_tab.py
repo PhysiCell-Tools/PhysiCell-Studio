@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QRegExpValidator
 
-from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom
+from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -136,8 +136,6 @@ class ICs(QWidget):
 
         self.figsize_width_svg = basic_length
         self.figsize_height_svg = basic_length
-
-        self.mouse_on_axes = False
 
         self.mouse_pressed = False
         self.current_voxel_subs = None
@@ -630,12 +628,12 @@ class ICs(QWidget):
         label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(label)
         
-        self.substrate_set_value = QLineEdit()
+        self.substrate_set_value = QLineEdit_custom()
         self.substrate_set_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
         self.substrate_set_value.setEnabled(True)
         self.substrate_set_value.setText(str(self.current_substrate_set_value))
         self.substrate_set_value.textChanged.connect(self.substrate_set_value_changed_cb)
-        self.substrate_set_value.setValidator(QtGui.QDoubleValidator(0.,10000.,4))
+        self.substrate_set_value.setValidator(QtGui.QDoubleValidator(bottom=0.0))
         hbox.addWidget(self.substrate_set_value)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         self.vbox.addLayout(hbox)
@@ -645,36 +643,33 @@ class ICs(QWidget):
         self.substrate_par_1_label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(self.substrate_par_1_label)
 
-        self.substrate_par_1_value = QLineEdit()
+        self.substrate_par_1_value = QLineEdit_custom()
         self.substrate_par_1_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
         self.substrate_par_1_value.setEnabled(False)
         self.substrate_par_1_value.textChanged.connect(self.substrate_par_1_value_changed_cb)
-        self.substrate_par_1_value.setStyleSheet(style_sheet_template(QLineEdit))
-        self.substrate_par_1_value.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        self.substrate_par_1_value.setValidator(DoubleValidatorOpenInterval(bottom=0.0))
         hbox.addWidget(self.substrate_par_1_value)
 
         self.substrate_par_2_label = QLabel()
         self.substrate_par_2_label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(self.substrate_par_2_label)
 
-        self.substrate_par_2_value = QLineEdit()
+        self.substrate_par_2_value = QLineEdit_custom()
         self.substrate_par_2_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
         self.substrate_par_2_value.setEnabled(False)
         self.substrate_par_2_value.textChanged.connect(self.substrate_par_2_value_changed_cb)
-        self.substrate_par_2_value.setStyleSheet(style_sheet_template(QLineEdit))
-        self.substrate_par_2_value.setValidator(QtGui.QDoubleValidator(0.,10000.,2))
+        self.substrate_par_2_value.setValidator(DoubleValidatorOpenInterval(bottom=0.0))
         hbox.addWidget(self.substrate_par_2_value)
 
         self.substrate_par_3_label = QLabel()
         self.substrate_par_3_label.setAlignment(QtCore.Qt.AlignRight)
         hbox.addWidget(self.substrate_par_3_label)
 
-        self.substrate_par_3_value = QLineEdit()
+        self.substrate_par_3_value = QLineEdit_custom()
         self.substrate_par_3_value.setFixedWidth(fixed_width_value)  # how wide is sufficient?
         self.substrate_par_3_value.setEnabled(False)
         self.substrate_par_3_value.textChanged.connect(self.substrate_par_3_value_changed_cb)
-        self.substrate_par_3_value.setStyleSheet(style_sheet_template(QLineEdit))
-        self.substrate_par_3_value.setValidator(QtGui.QDoubleValidator(0.,10000.,3))
+        self.substrate_par_3_value.setValidator(DoubleValidatorOpenInterval(bottom=0.0))
         hbox.addWidget(self.substrate_par_3_value)
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
         
@@ -1244,7 +1239,7 @@ class ICs(QWidget):
         self.update_substrate_plot()
 
     def mouseMoved(self, event):
-        if self.mouse_on_axes is False:
+        if event.inaxes != self.ax0:
             return
         self.displayCurrentCoordinates(event)
         if (self.create_point is True) or (self.mouse_pressed is False):
@@ -2325,14 +2320,18 @@ class ICs(QWidget):
             self.ic_substrates_enabled.setChecked(False)
 
     def on_enter_axes(self, event):
-        self.mouse_on_axes = True
         current_location = self.getPos(event)
-        self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
+        if self.mouse_pressed:
+            x, y, z = current_location
+            current_voxel_subs = self.getAllVoxelSubs(x, y, z)
+            self.last_xy = (current_voxel_subs[0], current_voxel_subs[1])
+        if event.inaxes == self.ax0:
+            self.ax0.set_title(f"(x,y) = ({round(current_location[0])}, {round(current_location[1])})")
         self.canvas.update()
         self.canvas.draw()
 
     def on_leave_axes(self, event):
-        self.mouse_on_axes = False
+        self.last_xy = None
         self.ax0.set_title("")
         self.canvas.update()
         self.canvas.draw()
@@ -2390,13 +2389,9 @@ class ICs(QWidget):
     def setupRectangleUpdater(self):
         self.substrate_updater_pars = {}
         updater_ready = True
-        try:
-            R1 = float(self.substrate_par_1_value.text())
-        except:
-            updater_ready = False
-        try:
-            R2 = float(self.substrate_par_2_value.text())
-        except:
+        R1 = float(self.substrate_par_1_value.text()) if self.substrate_par_1_value.hasAcceptableInput() else None
+        R2 = float(self.substrate_par_2_value.text()) if self.substrate_par_2_value.hasAcceptableInput() else None
+        if R1 is None or R2 is None:
             updater_ready = False
 
         if updater_ready is False:
@@ -2411,17 +2406,10 @@ class ICs(QWidget):
     def setupGaussianRectangleUpdater(self):
         self.substrate_updater_pars = {}
         updater_ready = True
-        try:
-            R1 = float(self.substrate_par_1_value.text())
-        except:
-            updater_ready = False
-        try:
-            R2 = float(self.substrate_par_2_value.text())
-        except:
-            updater_ready = False
-        try:
-            sigma = float(self.substrate_par_3_value.text())
-        except:
+        R1 = float(self.substrate_par_1_value.text()) if self.substrate_par_1_value.hasAcceptableInput() else None
+        R2 = float(self.substrate_par_2_value.text()) if self.substrate_par_2_value.hasAcceptableInput() else None
+        sigma = float(self.substrate_par_3_value.text()) if self.substrate_par_3_value.hasAcceptableInput() else None
+        if R1 is None or R2 is None or sigma is None:
             updater_ready = False
 
         if updater_ready is False:
