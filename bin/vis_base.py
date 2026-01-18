@@ -1340,7 +1340,7 @@ class VisBase():
                         ctcolor = "gold"
                         # print("  now cell_counts_cb(): ctcolor (1)=",ctcolor)
                 except:
-                    ctcolor = 'C' + str(itype)   # use random colors from matplotlib; rwh TODO: avoid yellow, etc
+                    ctcolor = 'C' + str(itype)   # use random colors from matplotlib; TODO: avoid yellow, etc
                     # print("  cell_counts_cb(): ctcolor (2)=",ctcolor)
                 if 'rgb' in ctcolor:
                     rgb = ctcolor.replace('rgb','')
@@ -1701,7 +1701,7 @@ class VisBase():
         
     #-------------------------------------
     # def reset_xml_root(self):
-    def reset_xml_root(self, config_file):
+    def reset_xml_root_v0(self, config_file):
         self.celldef_tab.reset_to_blank()
 
         self.microenv_tab.param_d.clear()
@@ -1752,11 +1752,11 @@ class VisBase():
         # logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
         print(f'\nvis_base.py: show_sample_model(): self.config_file = {config_file}')
         self.tree = ET.parse(config_file)
-        print(f'studio: show_sample_model(): self.tree = {self.tree}')
+        print(f'        show_sample_model(): self.tree = {self.tree}')
         if self.studio_flag:
-            self.run_tab.tree = self.tree  #rwh
+            self.run_tab.tree = self.tree  
         # self.xml_root = self.tree.getroot()
-        self.reset_xml_root(config_file)
+        # self.reset_xml_root(config_file)  # comment out 1/18/26
 
         title_prefix = "PhysiCell Model Builder: "
         if self.studio_flag:
@@ -1775,6 +1775,15 @@ class VisBase():
         print(f"output_folder_cb(): old={self.output_dir}")
         self.output_dir = self.output_folder.text()
         print(f"                    new={self.output_dir}")
+
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Note: this will let you plot results from a selected output folder, however it will not populate the Studio with the model parameters associated with that output folder. To do the latter, Cancel this and use File -> Open")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Cancel:
+            return
+
         # filePath = QFileDialog.getOpenFileName(self,'',".")
         dir_path = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
 
@@ -1808,7 +1817,7 @@ class VisBase():
             msgBox.exec()
             return
 
-        self.run_tab.config_xml_name.setText(config_file)
+        # self.run_tab.config_xml_name.setText(config_file)   # comment out 1/18/26
         self.show_sample_model(config_file)
         # self.vis_tab.update_output_dir(self.config_tab.folder.text())
         self.initialize_cell_dict(config_file)
@@ -2040,8 +2049,7 @@ class VisBase():
         # print("get_domain_params(): nx,ny,nz = ",self.nx,self.ny,self.nz)
         # self.substrate_data.SetDimensions( self.nx+1, self.ny+1, self.nz+1 )
 
-        # rwh ??
-        # self.voxel_size = 20   # rwh: fix hard-coded
+        # self.voxel_size = 20   # fix hard-coded
         # self.x0 = -(self.voxel_size * self.nx) / 2.0
         # self.y0 = -(self.voxel_size * self.ny) / 2.0
         # self.z0 = -(self.voxel_size * self.nz) / 2.0
@@ -2149,7 +2157,7 @@ class VisBase():
 
 
     def reset_model(self):
-        # print("--------- vis_base: reset_model ----------")
+        print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
@@ -2325,7 +2333,7 @@ class VisBase():
 
         if self.cells_svg_rb.isChecked():
             svg_pattern = self.output_dir + "/" + "snapshot*.svg"
-            svg_files = glob.glob(svg_pattern)   # rwh: problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
+            svg_files = glob.glob(svg_pattern)   # problematic with celltypes3 due to snapshot_standard*.svg and snapshot<8digits>.svg
             svg_files.sort()
             # print('last_plot_cb(): svg_files (after sort)= ',svg_files)
             num_xml = len(xml_files)
