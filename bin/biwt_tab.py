@@ -1873,11 +1873,10 @@ class BioinformaticsWalkthroughPlotWindow(QWidget):
 
                     else:
                         r = cell_radius * np.sqrt(n_per_spot)
-                        self.wedge_sample_2d(n_per_spot, pos[0], pos[1], r)
-                        sub_spots = np.copy(self.new_pos)
-                        
+                        sub_spots = self.wedge_sample_2d(n_per_spot, pos[0], pos[1], r)                        
                         for i, color in enumerate(color_sequence):
-                            self.circles(sub_spots[i], s=cell_radius, color=color, edgecolor='black', linewidth=0.5, alpha=self.alpha_value)
+                            self.circles(sub_spots[i], s=cell_radius, color=color, edgecolor='none', linewidth=0.5, alpha=self.alpha_value)
+
 
                         self.plotted_cell_types_per_spot.append({
                             'spot_coords': pos,
