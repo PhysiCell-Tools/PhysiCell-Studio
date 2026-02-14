@@ -116,7 +116,7 @@ class Rules(QWidget):
         self.scale_base_for_max = 10.0
         self.scale_base_for_min = 0.1
 
-        self.max_rule_table_rows = 99
+        self.max_rule_table_rows = 499
 
         self.update_rules_for_custom_data = True
 
@@ -1447,7 +1447,7 @@ class Rules(QWidget):
             direction = self.up_down_combobox.currentText()
 
             # Avoid this in PhysiCell: "Warning! Signal substrate was already part of the rule. Ignoring input."
-            print("\n------------- add_rule_cb(): num_rules= ",self.num_rules)
+            # print("\n------------- add_rule_cb(): num_rules= ",self.num_rules)
             dup_rule = self.check_for_duplicate(self.celltype_combobox.currentText(), signal, behavior, direction)
             if dup_rule >= 0 and self.rules_table.cellWidget(dup_rule,self.rule_use_idx).isChecked():
                 show_studio_warning_window(f"Error: You already have this signal-direction-behavior ({signal}-{direction}-{behavior}) defined for this cell type at row {dup_rule+1}. Either delete or uncheck that rule before adding a replacement.")
@@ -1495,7 +1495,7 @@ class Rules(QWidget):
             rule_str += '1'
         else:
             rule_str += '0'
-        print("add_rule_cb():---> ",rule_str)
+        # print("add_rule_cb():---> ",rule_str)
 
         irow = self.num_rules
 
