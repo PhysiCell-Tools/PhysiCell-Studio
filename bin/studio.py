@@ -338,7 +338,7 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             logging.debug(f'studio.py: creating ICs, Run, and Plot tabs')
-            self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.biwt_flag, self.nanohub_flag)
+            self.ics_tab = ICs(self.config_tab, self.celldef_tab, self.biwt_flag, self.nanohub_flag, self)
             self.config_tab.ics_tab = self.ics_tab
             self.microenv_tab.ics_tab = self.ics_tab
             self.ics_tab.fill_celltype_combobox()
