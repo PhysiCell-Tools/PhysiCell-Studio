@@ -6307,19 +6307,20 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 # Clear any existing dFBA-specific entries
                 self.clear_transport_exchanges()
                 self.clear_growth_model_params()
+                self.clear_death_model_params()
                 # Set the dropdown to the appropriate type for dFBA
                 self.intracellular_type_dropdown.setCurrentIndex(3)
 
                 # Populate the intracellular dt in the settings and the SBML filename
-                if "setting" in self.param_d[cdname]["intracellular"].keys():
-                    if "sbml_filename" in self.param_d[cdname]["intracellular"]["setting"].keys():
-                        self.sbml_filename.setText(self.param_d[cdname]["intracellular"]["setting"]["sbml_filename"])
+                if "settings" in self.param_d[cdname]["intracellular"].keys():
+                    if "sbml_filename" in self.param_d[cdname]["intracellular"]["settings"].keys():
+                        self.sbml_filename.setText(self.param_d[cdname]["intracellular"]["settings"]["sbml_filename"])
                     else:
                         self.sbml_filename.clear()
-                    if "intracellular_dt" in self.param_d[cdname]["intracellular"]["setting"].keys():
-                        self.intracellular_dt.setText(self.param_d[cdname]["intracellular"]["setting"]["intracellular_dt"])
+                    if "intracellular_dt" in self.param_d[cdname]["intracellular"]["settings"].keys():
+                        self.intracellular_dt.setText(self.param_d[cdname]["intracellular"]["settings"]["intracellular_dt"])
                     else:
-                        self.intracellular_dt.setText("0.01")  # Default to 0.1 if not set
+                        self.intracellular_dt.setText("0.01")  # Default to 0.01 if not set
 
                 # Populate Transport Model Exchanges
                 if "transport_model" in self.param_d[cdname]["intracellular"]:

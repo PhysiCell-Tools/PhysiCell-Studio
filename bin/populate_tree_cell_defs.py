@@ -1026,32 +1026,32 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                         cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
                             "objective_reaction"] = objective_reaction
 
-                        # Death model
-                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"] = {}
-                        uep_death_model = uep_intracellular.find("death_model")
-                        if uep_death_model is not None:
-                            enabled_attr = uep_death_model.get("enabled", "false")
-                            enabled = enabled_attr.lower() == "true"
+                    # Death model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"] = {}
+                    uep_death_model = uep_intracellular.find("death_model")
+                    if uep_death_model is not None:
+                        enabled_attr = uep_death_model.get("enabled", "false")
+                        enabled = enabled_attr.lower() == "true"
 
-                            death_type = uep_death_model.find("death_type").text if uep_death_model.find(
-                                "death_type") is not None else ""
-                            death_trigger_flux = uep_death_model.find("death_trigger_flux").text if uep_death_model.find(
-                                "death_trigger_flux") is not None else ""
-                            death_flux_threshold = uep_death_model.find("death_flux_threshold").text if uep_death_model.find(
-                                "death_flux_threshold") is not None else ""
-                            death_rate_increase = uep_death_model.find("death_rate_increase").text if uep_death_model.find(
-                                "death_rate_increase") is not None else ""
+                        death_type = uep_death_model.find("death_type").text if uep_death_model.find(
+                            "death_type") is not None else ""
+                        death_trigger_flux = uep_death_model.find("death_trigger_flux").text if uep_death_model.find(
+                            "death_trigger_flux") is not None else ""
+                        death_flux_threshold = uep_death_model.find("death_flux_threshold").text if uep_death_model.find(
+                            "death_flux_threshold") is not None else ""
+                        death_rate_increase = uep_death_model.find("death_rate_increase").text if uep_death_model.find(
+                            "death_rate_increase") is not None else ""
 
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
-                                "enabled"] = enabled
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
-                                "death_type"] = death_type
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
-                                "death_trigger_flux"] = death_trigger_flux
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
-                                "death_flux_threshold"] = death_flux_threshold
-                            cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
-                                "death_rate_increase"] = death_rate_increase
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "enabled"] = enabled
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_type"] = death_type
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_trigger_flux"] = death_trigger_flux
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_flux_threshold"] = death_flux_threshold
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_rate_increase"] = death_rate_increase
 
                     # Update widget values (specific to dFBA)
                     cell_def_tab.clear_intracellular_dt()
