@@ -3195,29 +3195,28 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     # ------- functions for dFBA ----------------
 
     def clear_transport_exchanges(self):
-        # Iterate over existing transport exchanges in reverse order and remove them properly
         for i in reversed(range(len(self.transport_exchanges))):
             self.dfba_remove_exchange(i)
 
     def clear_intracellular_dt(self):
-        # Clear the intracellular dt QLineEdit widget
+        self.intracellular_dt.blockSignals(True)
         self.intracellular_dt.clear()
+        self.intracellular_dt.blockSignals(False)
 
     def clear_growth_model_params(self):
-        # Clear the growth model QLineEdit widgets
-        self.cell_density.clear()
-        self.reference_volume.clear()
-        self.max_growth_rate.clear()
-        self.objective_reaction.clear()
+        for widget in (self.cell_density, self.reference_volume, self.max_growth_rate, self.objective_reaction):
+            widget.blockSignals(True)
+            widget.clear()
+            widget.blockSignals(False)
 
     def clear_death_model_params(self):
-        # Clear the death model QLineEdit widgets
-        self.death_type.clear()
-        self.death_trigger_flux.clear()
-        self.death_flux_threshold.clear()
-        self.death_rate_increase.clear()
-        # Reset the death enable checkbox
+        for widget in (self.death_type, self.death_trigger_flux, self.death_flux_threshold, self.death_rate_increase):
+            widget.blockSignals(True)
+            widget.clear()
+            widget.blockSignals(False)
+        self.enable_death_checkbox.blockSignals(True)
         self.enable_death_checkbox.setChecked(False)
+        self.enable_death_checkbox.blockSignals(False)
 
     def choose_sbml_file(self):
         # Method to open a file dialog to choose SBML file
@@ -6320,7 +6319,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     if "intracellular_dt" in self.param_d[cdname]["intracellular"]["settings"].keys():
                         self.intracellular_dt.setText(self.param_d[cdname]["intracellular"]["settings"]["intracellular_dt"])
                     else:
-                        self.intracellular_dt.setText("0.01")  # Default to 0.01 if not set
+                        self.intracellular_dt.setText("0.01")  # Default to 0.01 if not set (diffusion dt)
 
                 # Populate Transport Model Exchanges
                 if "transport_model" in self.param_d[cdname]["intracellular"]:
@@ -6351,6 +6350,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         self.max_growth_rate.setText(growth_model["max_growth_rate"])
                     if "objective_reaction" in growth_model:
                         self.objective_reaction.setText(growth_model["objective_reaction"])
+                    print("IS THERE A BUG HERE?", self.param_d[cdname]["intracellular"])
 
                 # Populate Death Model Parameters
                 if "death_model" in self.param_d[cdname]["intracellular"]:
