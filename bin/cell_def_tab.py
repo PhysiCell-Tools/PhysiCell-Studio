@@ -6350,7 +6350,6 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         self.max_growth_rate.setText(growth_model["max_growth_rate"])
                     if "objective_reaction" in growth_model:
                         self.objective_reaction.setText(growth_model["objective_reaction"])
-                    print("IS THERE A BUG HERE?", self.param_d[cdname]["intracellular"])
 
                 # Populate Death Model Parameters
                 if "death_model" in self.param_d[cdname]["intracellular"]:
