@@ -970,6 +970,139 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.physiboss_update_list_nodes()
                     cell_def_tab.physiboss_update_list_parameters()
 
+                elif uep_intracellular.attrib["type"] == "dfba":
+                    # --------- dFBA specific code
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "dfba"
+                    
+                    # Settings SBML filename and intracellular_dt
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"] = {}
+                    uep_settings = uep_intracellular.find("settings")
+                    if uep_settings is not None:
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"] = uep_settings.find(
+                        "sbml_filename").text if uep_settings.find("sbml_filename") is not None else ""
+                        
+                        intracellular_dt = uep_settings.find("intracellular_dt").text if uep_settings.find(
+                            "intracellular_dt") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"] = intracellular_dt
+
+                    # Transport model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"] = {"exchanges": []}
+                    uep_transport_model = uep_intracellular.find("transport_model")
+                    if uep_transport_model is not None:
+                        for exchange in uep_transport_model.findall("exchange"):
+                            substrate = exchange.attrib.get("substrate", "")
+                            fba_flux = exchange.find("fba_flux").text if exchange.find("fba_flux") is not None else ""
+                            km = exchange.find("Km").text if exchange.find("Km") is not None else ""
+                            vmax = exchange.find("Vmax").text if exchange.find("Vmax") is not None else ""
+
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"]["exchanges"].append(
+                                {
+                                    "substrate": substrate,
+                                    "fba_flux": fba_flux,
+                                    "Km": km,
+                                    "Vmax": vmax,
+                                })
+
+                    # Growth model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"] = {}
+                    uep_growth_model = uep_intracellular.find("growth_model")
+                    if uep_growth_model is not None:
+                        cell_density = uep_growth_model.find("cell_density").text if uep_growth_model.find(
+                            "cell_density") is not None else ""
+                        reference_volume = uep_growth_model.find("reference_volume").text if uep_growth_model.find(
+                            "reference_volume") is not None else ""
+                        max_growth_rate = uep_growth_model.find("max_growth_rate").text if uep_growth_model.find(
+                            "max_growth_rate") is not None else ""
+                        objective_reaction = uep_growth_model.find("objective_reaction").text if uep_growth_model.find(
+                            "objective_reaction") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "cell_density"] = cell_density
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "reference_volume"] = reference_volume
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "max_growth_rate"] = max_growth_rate
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "objective_reaction"] = objective_reaction
+
+                    # Death model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"] = {}
+                    uep_death_model = uep_intracellular.find("death_model")
+                    if uep_death_model is not None:
+                        enabled_attr = uep_death_model.get("enabled", "false")
+                        enabled = enabled_attr.lower() == "true"
+
+                        death_type = uep_death_model.find("death_type").text if uep_death_model.find(
+                            "death_type") is not None else ""
+                        death_trigger_flux = uep_death_model.find("death_trigger_flux").text if uep_death_model.find(
+                            "death_trigger_flux") is not None else ""
+                        death_flux_threshold = uep_death_model.find("death_flux_threshold").text if uep_death_model.find(
+                            "death_flux_threshold") is not None else ""
+                        death_rate_increase = uep_death_model.find("death_rate_increase").text if uep_death_model.find(
+                            "death_rate_increase") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "enabled"] = enabled
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_type"] = death_type
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_trigger_flux"] = death_trigger_flux
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_flux_threshold"] = death_flux_threshold
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_rate_increase"] = death_rate_increase
+
+                    # Update widget values (specific to dFBA)
+                    cell_def_tab.clear_intracellular_dt()
+                    cell_def_tab.clear_transport_exchanges()
+                    cell_def_tab.clear_growth_model_params()
+                    cell_def_tab.clear_death_model_params()
+
+                    # Populate SBML filename in the settings
+                    if "sbml_filename" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        sbml_filename = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"]
+                        cell_def_tab.sbml_filename.setText(sbml_filename)
+
+                    # Populate intracellular dt in the settings
+                    if "intracellular_dt" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        intracellular_dt = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"]
+                        cell_def_tab.intracellular_dt.setText(intracellular_dt)
+
+                    # Iterate over the exchanges and populate the UI
+                    for exchange in cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"][
+                        "exchanges"]:
+                        cell_def_tab.add_exchange()
+                        substrate_combo, fba_flux_edit, km_edit, vmax_edit, _, _ = cell_def_tab.transport_exchanges[-1]
+
+                        if "substrate" in exchange.keys():
+                            index = cell_def_tab.substrate_list.index(exchange["substrate"]) if exchange[
+                                                                                                    "substrate"] in cell_def_tab.substrate_list else -1
+                            if index != -1:
+                                substrate_combo.setCurrentIndex(index)
+
+                        fba_flux_edit.setText(exchange["fba_flux"])
+                        km_edit.setText(exchange["Km"])
+                        vmax_edit.setText(exchange["Vmax"])
+
+                    # Populate growth model parameters in the UI
+                    if "growth_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        growth_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"]
+
+                        cell_def_tab.cell_density.setText(growth_model.get("cell_density", ""))
+                        cell_def_tab.reference_volume.setText(growth_model.get("reference_volume", ""))
+                        cell_def_tab.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
+                        cell_def_tab.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+
+                    # Populate death model parameters in the UI
+                    if "death_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        death_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"]
+                        cell_def_tab.enable_death_checkbox.setChecked(death_model.get("enabled", False))
+                        cell_def_tab.death_type.setText(death_model.get("death_type", ""))
+                        cell_def_tab.death_trigger_flux.setText(death_model.get("death_trigger_flux", ""))
+                        cell_def_tab.death_flux_threshold.setText(death_model.get("death_flux_threshold", ""))
+                        cell_def_tab.death_rate_increase.setText(death_model.get("death_rate_increase", ""))
+
                 elif uep_intracellular.attrib["type"] == "roadrunner":
                     # <intracellular type="roadrunner">
                     #     <sbml_filename>./config/demo.xml</sbml_filename>
