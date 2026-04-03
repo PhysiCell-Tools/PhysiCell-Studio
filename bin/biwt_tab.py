@@ -31,19 +31,15 @@ if BIWT_DEV_MODE == 'True':
 BIWT_DEV_MODE = BIWT_DEV_MODE=='True'
 
 import copy
-import platform
 import numpy as np
 import pandas as pd
 import time
-import subprocess
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Patch, Rectangle, Annulus, Wedge
 from matplotlib.collections import PatchCollection
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from pretty_print_xml import pretty_print
 import BIWT_parameters.cell_specific_parameters as cell_params
-from BIWT_parameters.xml_defaults import xml_defaults
 
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -1227,7 +1223,6 @@ class BioinformaticsWalkthroughWindow_PositionsWindow(BioinformaticsWalkthroughW
 class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWindow):
     def __init__(self, biwt):
         super().__init__(biwt)
-        self.cell_definitions_registry = biwt.cell_definitions_registry
 
         print("------Writing cell positions to file------")
 
@@ -1292,41 +1287,13 @@ class BioinformaticsWalkthroughWindow_WritePositions(BioinformaticsWalkthroughWi
         self.add_cell_positions_to_file()
 
     def check_for_new_celldefs(self):
-        self.append_cell_definition_to_xml()
         for cell_type in self.biwt.cell_types_list_final:
             if cell_type in self.biwt.celldef_tab.celltypes_list:
                 print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} found in current list of cell types. Not appending {cell_type}...")
             else:
                 print(f"BioinformaticsWalkthroughPlotWindow: {cell_type} not found in current list of cell types. Appending {cell_type}...")
-                # self.biwt.celldef_tab.new_cell_def_named(cell_type)
-                self.biwt.ics_tab.update_colors_list()
+                self.biwt.celldef_tab.new_cell_def_named(cell_type)
 
-    def append_cell_definition_to_xml(self):
-        xml_file_path = 'PhysiCell_new.xml'
-
-        if os.path.exists(xml_file_path):
-            tree = ET.parse(xml_file_path)
-            root = tree.getroot()
-
-        else:
-            root = ET.Element('PhysiCell_new', version="devel-version")
-            tree = ET.ElementTree(root)
-            self.add_xml_defaults(root)
-
-        cell_definitions = root.find("cell_definitions")
-
-        for cell_type, template in self.cell_definitions_registry.items():
-            cell_definitions.append(template)
-        
-        tree.write(xml_file_path, encoding="utf-8", xml_declaration=True)
-        pretty_print(xml_file_path,xml_file_path)
-
-    def add_xml_defaults(self,root):
-        for key, xml_str in xml_defaults.items():
-            wrapped_xml_str = f"<{key}>{xml_str.strip()}</{key}>"
-            xml_element = ET.fromstring(wrapped_xml_str)
-            root.append(xml_element)
-        
     def set_file_name(self):
         dir_name = self.csv_folder.text()
         if len(dir_name) > 0 and not os.path.isdir(dir_name):
