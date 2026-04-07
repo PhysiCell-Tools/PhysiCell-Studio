@@ -3407,7 +3407,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # print("PhysiBoSS")
             logging.debug(f'intracellular is boolean')
             if self.param_d[self.current_cell_def]["intracellular"] is None:
-                self.param_d[self.current_cell_def]["intracellular"] = {"type": "maboss"}
+                self.param_d[self.current_cell_def]["intracellular"] = {}
+            self.param_d[self.current_cell_def]["intracellular"]["type"] = "maboss"
                 
             if 'initial_values' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["initial_values"] = []
@@ -3455,13 +3456,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             # logging.debug(f'intracellular is SBML ODEs')
             if "intracellular" not in self.param_d[self.current_cell_def].keys():
                 self.param_d[self.current_cell_def]["intracellular"] = {}
-                self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
+            self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
             self.ode_sbml_frame.show()
 
         elif index == 3:
             logging.debug(f'intracellular is dFBA')
             if self.param_d[self.current_cell_def]["intracellular"] is None:
-                self.param_d[self.current_cell_def]["intracellular"] = {"type": "dfba"}
+                self.param_d[self.current_cell_def]["intracellular"] = {}
+            self.param_d[self.current_cell_def]["intracellular"]["type"] = "dfba"
 
             if 'settings' not in self.param_d[self.current_cell_def]["intracellular"].keys():
                 self.param_d[self.current_cell_def]["intracellular"]["settings"] = {}
