@@ -1,4 +1,14 @@
+# Validate one of our XML models against a schema
+# alternatively, use:
+#     xmllint --schema schema.xsd model_good_1.xml
+#
+import sys
 from lxml import etree
+
+if len(sys.argv) < 2:
+    print("Missing: <.xml>")
+    print(f"e.g.\npython {sys.argv[0]} biorobots.xml")
+    sys.exit()
 
 # Load the schema
 with open("schema.xsd", "rb") as f:
