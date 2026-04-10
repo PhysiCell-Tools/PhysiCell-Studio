@@ -195,7 +195,7 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
         self.mech_grid_size.setFixedWidth(30)
         self.mech_grid_size.textChanged.connect(self.mech_grid_size_changed)
         self.mech_grid_size.returnPressed.connect(self.mech_grid_cb)
-        self.mech_grid_size.setValidator(DoubleValidatorWidgetBounded(bottom=1, top=999))
+        self.mech_grid_size.setValidator(DoubleValidatorWidgetBounded(bottom=1, top=9999))
         glayout.addWidget(self.mech_grid_size , idx_row,2, 1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
