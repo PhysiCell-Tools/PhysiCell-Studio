@@ -148,7 +148,7 @@ class Rules(QWidget):
         icol += 1
 
         self.num_cols = icol
-        print("self.num_cols = ",self.num_cols)
+        # print("self.num_cols = ",self.num_cols)
 
         self.num_rules = 0
 
@@ -1114,10 +1114,10 @@ class Rules(QWidget):
                     irow = self.num_rules  # append
                     for elm in csv_reader:   # for each rule or comment
                         # raw = row.split('/')[0].strip()
-                        print("  elm[0]= ",elm[0])
+                        # print("  elm[0]= ",elm[0])
                         toggle_val = True
                         if elm[0][0] == '/':
-                            print("  elm[0]=='/'  --> toggle_val=True")
+                            # print("  elm[0]=='/'  --> toggle_val=True")
                             toggle_val = False
                             # print("  elm[0]=='/'  --> skip")
                             # continue
@@ -1125,8 +1125,8 @@ class Rules(QWidget):
 
                         # csv_reader_obj = csv.reader(f)
                         # irow = 0
-                        print("fill_rules(): elm= ",elm)
-                        print("fill_rules(): len(elm)= ",len(elm))
+                        # print("fill_rules(): elm= ",elm)
+                        # print("fill_rules(): len(elm)= ",len(elm))
 
                         # more hacks (until we XML-ify the rules); this handles cell_rules.csv in immune-function-sample
                         if len(elm) < 8:
@@ -1138,13 +1138,13 @@ class Rules(QWidget):
 
                         # if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
                         if len(elm)+2 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
-                            print("------- processing valid # of elms")
+                            # print("------- processing valid # of elms")
 
                             cell_type = elm[0]  # hardcode
-                            print("------- cell_type= ",cell_type)
+                            # print("------- cell_type= ",cell_type)
                             if cell_type[0] == '/':   # do we have a commented out rule, or maybe just a comment
                                 if len(elm) < 8:  # hardcode
-                                    print("  cell_type[0]=='/'  and len(elm)<8 --> skip (probably a real comment)")
+                                    # print("  cell_type[0]=='/'  and len(elm)<8 --> skip (probably a real comment)")
                                     continue
                                 elif len(elm) == 8:  # probably/hopefully a commented out rule
                                     # self.fill_rule_row(irow, elm, toggle_val)
@@ -1164,12 +1164,12 @@ class Rules(QWidget):
                             self.fill_rule_row(irow, elm, toggle_val)
 
                         elif len(elm) == 9:   # v1
-                            print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} is using v1 syntax. Please upgrade\n')
+                            # print(f'WARNING: fill_rules(): {full_rules_fname} is using v1 syntax. Please upgrade\n')
                             msg = "fill_rules(): " + full_rules_fname + " is using v1 syntax. Please upgrade."
                             show_studio_warning_window(msg)
                             return
                         else:
-                            print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} has unknown syntax\n')
+                            # print(f'\n\n  WARNING: fill_rules(): {full_rules_fname} has unknown syntax\n')
                             msg = f"fill_rules(): {full_rules_fname} has unknown syntax. len(elm)={len(elm)}"
                             show_studio_warning_window(msg)
                             return
@@ -1187,7 +1187,7 @@ class Rules(QWidget):
                             self.fill_rule_row(irow, elm, toggle_val)
 
                         if elm[self.rules_response_idx] == "damage rate" and hasattr(self.celldef_tab, "pre_v1_14_0_damage_rate") and self.celldef_tab.pre_v1_14_0_damage_rate:
-                            print("fill_rules(): got to 5")
+                            # print("fill_rules(): got to 5")
                             self.rules_table.cellWidget(irow, self.rules_response_idx).setText("attack damage rate")
                             msg = "\"damage rate\" no longer refers to the rate of damage dealt, but rather the rate at which damage accumulates in the given cell type."
                             msg += f"\n{elm[0]} had a rule affecting \"damage rate\" that has been replaced with \"attack damage rate\" to fit the new version."
@@ -1197,8 +1197,8 @@ class Rules(QWidget):
                         irow += 1
 
                     self.num_rules = irow
-                    print("\n--------- fill_rules():  num_rules=",self.num_rules)
-                    print("\n--------------------------------------\n\n",self.num_rules)
+                    # print("\n--------- fill_rules():  num_rules=",self.num_rules)
+                    # print("\n--------------------------------------\n\n",self.num_rules)
 
                     # self.rules_text.setPlainText(text)
             except Exception as e:
@@ -2078,14 +2078,14 @@ class Rules(QWidget):
     #-----------------------------------------------------------
     def fill_gui(self):
         # logging.debug(f'\n\n------------\nrules_tab.py: fill_gui():')
-        print(f'\n\n------------\nrules_tab.py: fill_gui():')
+        # print(f'\n\n------------\nrules_tab.py: fill_gui():')
 
         self.clear_comboboxes()
 
         # print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
         for key in self.celldef_tab.param_d.keys():
             # logging.debug(f'cell type ---> {key}')
-            print(f'cell type ---> {key}')
+            # print(f'cell type ---> {key}')
             self.celltype_combobox.addItem(key)
             # self.signal_combobox.addItem(key)
             # break
@@ -2095,7 +2095,7 @@ class Rules(QWidget):
         self.substrates.clear()
         for key in self.microenv_tab.param_d.keys():
             # logging.debug(f'substrate type ---> {key}')
-            print(f'substrate type ---> {key}')
+            # print(f'substrate type ---> {key}')
             if key == 'gradients' or key == 'track_in_agents':
                 pass
             else:
@@ -2108,13 +2108,13 @@ class Rules(QWidget):
 
         #----------------------------------
         uep = self.xml_root.find(".//cell_rules//rulesets//ruleset")
-        print(f'rules_tab.py: fill_gui(): <cell_rules> =  {uep}')
+        # print(f'rules_tab.py: fill_gui(): <cell_rules> =  {uep}')
         if uep:
             folder_name = uep.find(".//folder").text
-            print(f'rules_tab.py: fill_gui():  folder_name =  {folder_name}')
+            # print(f'rules_tab.py: fill_gui():  folder_name =  {folder_name}')
             self.rules_folder.setText(folder_name)
             file_name = uep.find(".//filename").text
-            print(f'rules_tab.py: fill_gui():  file_name =  {file_name}')
+            # print(f'rules_tab.py: fill_gui():  file_name =  {file_name}')
             if folder_name == None or file_name == None:
                 msg = "rules_tab.py: "
                 if folder_name == None:
@@ -2131,7 +2131,7 @@ class Rules(QWidget):
 
             self.rules_file.setText(file_name)
             cwd = os.getcwd()
-            print("fill_rules():  os.getcwd()=",cwd)
+            # print("fill_rules():  os.getcwd()=",cwd)
             full_rules_fname = os.path.join(cwd, folder_name, file_name)
 
             self.rules_enabled_attr = False
@@ -2141,7 +2141,7 @@ class Rules(QWidget):
             else:
                 self.rules_enabled.setChecked(False)
 
-            print(f'rules_tab.py: fill_gui()----- calling fill_rules() with  full_rules_fname=  {full_rules_fname}')
+            # print(f'rules_tab.py: fill_gui()----- calling fill_rules() with  full_rules_fname=  {full_rules_fname}')
             # if not self.nanohub_flag:
             #     full_path_rules_name = os.path.abspath(os.path.join(self.homedir,'tmpdir',folder_name, file_name))
             #     print(f'import_rules_cb():  fill_gui()-- NOW calling fill_rules() with ={full_path_rules_name}')
