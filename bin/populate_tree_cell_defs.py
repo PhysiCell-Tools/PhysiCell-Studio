@@ -522,7 +522,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = abs_eq_bval
 
                 if cell_def_name==cell_def_0th:
-                    print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
+                    # print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
                     cell_def_tab.set_relative_equilibrium_distance_enabled.setChecked(rel_eq_bval)
                     cell_def_tab.set_relative_equilibrium_distance_enabled.stateChanged.emit(rel_eq_bval)
                     cell_def_tab.set_absolute_equilibrium_distance_enabled.setChecked(abs_eq_bval)
@@ -806,12 +806,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # # --------- cell_transformations  
             transformation_rates_path = f"{phenotype_path}//cell_transformations//transformation_rates"
             logging.debug(f'---- transformation_rates_path = {transformation_rates_path}')
-            print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
+            # print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
             trp = uep.find(transformation_rates_path)
             if trp is None:
-                print("---- No cell_transformations found.")
+                # print("---- No cell_transformations found.")
                 logging.debug(f'---- No cell_transformations found. Setting to default values')
-                print(f'---- No cell_transformations found. Setting to default values')
+                # print(f'---- No cell_transformations found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
@@ -822,7 +822,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 sval = '0.0'
                 for var in cds_uep.findall('cell_definition'):
                     logging.debug(f' --> {var.attrib["name"]}')
-                    print(f"ugh!---- setting {cell_def_name}'s cell_transformations for {name} = default=0.0")
+                    # print(f"ugh!---- setting {cell_def_name}'s cell_transformations for {name} = default=0.0")
                     name = var.attrib['name']
                     cell_def_tab.param_d[cell_def_name]["transformation_rate"][name] = sval
             else:
@@ -834,30 +834,30 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
-            print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
+            # print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
 
             # # --------- cell_integrity  
             cell_integrity_path = f"{phenotype_path}//cell_integrity"
             logging.debug(f'---- cell_integrity_path = {cell_integrity_path}')
-            print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
+            # print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
             cip = uep.find(cell_integrity_path)
 
             if cip is None:
-                print("---- No cell_integrity found.")
+                # print("---- No cell_integrity found.")
                 logging.debug(f'---- No cell_integrity found. Setting to default values')
-                print(f'---- No cell_integrity found. Setting to default values')
+                # print(f'---- No cell_integrity found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = '0.0'
             else:
-                print(f"---- found cell_integrity for {cell_def_name}")
+                # print(f"---- found cell_integrity for {cell_def_name}")
                 val = cip.find("damage_rate").text
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
                 val = cip.find("damage_repair_rate").text
                 cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = val
 
             logging.debug(f' damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
-            print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
+            # print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
             logging.debug(f'------ done parsing cell_integrity:')
 
             # # ---------  molecular 
@@ -1222,11 +1222,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
-    print("populate_tree_cell_defs.py:  Setting 0th cell")
+    # print("populate_tree_cell_defs.py:  Setting 0th cell")
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
     cell_def_tab.tree_item_clicked_cb(cell_def_tab.tree.topLevelItem(0), 0)  # and have its params shown
-    print("populate_tree_cell_defs.py:  Set 0th cell")
+    # print("populate_tree_cell_defs.py:  Set 0th cell")
 
 
     #----------------------------------
