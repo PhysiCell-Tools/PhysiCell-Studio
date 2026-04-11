@@ -44,7 +44,7 @@ class SBML_ODEs(QWidget):
     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
         super().__init__()
 
-        print("\n---------- creating SBML_ODEs(QWidget)")
+        # print("\n---------- creating SBML_ODEs(QWidget)")
         self.nanohub_flag = nanohub_flag
         self.homedir = '.'  # reset in studio.py
         self.absolute_data_dir = None   # updated in studio.py
@@ -80,7 +80,7 @@ class SBML_ODEs(QWidget):
         icol += 1
 
         self.num_cols = icol
-        print("self.num_cols = ",self.num_cols)
+        # print("self.num_cols = ",self.num_cols)
 
         self.num_maps = 0
 
@@ -239,9 +239,9 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # self.layout.addWidget(self.scroll)
 
         #---------------------------------------------------------
-        print("\n---------- calling create_mapping_table")
+        # print("\n---------- calling create_mapping_table")
         mapping_table_vbox = self.create_mapping_table()
-        print("\n---------- back from create_mapping_table")
+        # print("\n---------- back from create_mapping_table")
         self.sbml_tab_layout.addLayout(mapping_table_vbox) 
         # print("\n---------- at 1")
         # self.ode_sbml_frame.setLayout(self.sbml_tab_layout)
@@ -263,9 +263,9 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # print("\n---------- at 5")
 
         self.layout = QVBoxLayout(self)  # leave this!
-        print("\n---------- at 6")
+        # print("\n---------- at 6")
         self.layout.addWidget(self.scroll)
-        print("\n---------- end of SBML_ODEs")
+        # print("\n---------- end of SBML_ODEs")
 
 
     #--------------------------------------------------------
