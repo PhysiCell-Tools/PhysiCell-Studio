@@ -404,7 +404,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #----------------------------------------------------------------------
     # Set all the default params to what they are in PhysiCell (C++), e.g., *_standard_models.cpp, etc.
     def init_default_phenotype_params(self, cdname, reset_mapping):
-        print("----- init_default_phenotype_params(self, cdname): reset_mapping=",reset_mapping)
+        # print("----- init_default_phenotype_params(self, cdname): reset_mapping=",reset_mapping)
         self.new_cycle_params(cdname, True)
         self.new_asym_div_params(cdname, reset_mapping)
         self.new_death_params(cdname)
@@ -5800,7 +5800,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["volume_rel_rupture_vol"] = '2'
 
     def new_mechanics_params(self, cdname_new, reset_mapping):  # rf. PhysiCell core/*_phenotype.cpp constructor
-        print("---- new_mechanics_params(): cdname_new= ",cdname_new)
+        # print("---- new_mechanics_params(): cdname_new= ",cdname_new)
         sval = self.default_sval
 
         # self.param_d[cdname_new]['is_movable'] = False
@@ -5847,7 +5847,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]["chemotactic_sensitivity"][substrate_name] = '0.0'
 
     def new_secretion_params(self, cdname):
-        print("new_secretion_params(): ",cdname)
+        # print("new_secretion_params(): ",cdname)
         # print("new_secretion_params(): self.current_secretion_substrate = ",self.current_secretion_substrate)
         # print("        self.param_d[cdname]['secretion'] = ",self.param_d[cdname]["secretion"])
         sval = self.default_sval
