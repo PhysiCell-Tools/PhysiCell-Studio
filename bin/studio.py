@@ -699,9 +699,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         self.microenv_tab.param_d.clear()
 
-        print(f"\nreset_xml_root() self.tree = {self.tree}")
+        # print(f"\nreset_xml_root() self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
-        print(f"reset_xml_root() self.xml_root = {self.xml_root}")
+        # print(f"reset_xml_root() self.xml_root = {self.xml_root}")
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
@@ -1261,10 +1261,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # self.current_xml_file = os.path.join(self.studio_config_dir, name + ".xml")
         self.current_xml_file = os.path.join("config", name + ".xml")
         logging.debug(f'studio.py: load_model(): self.current_xml_file= {self.current_xml_file}')
-        print(f'studio.py: load_model(): self.current_xml_file= {self.current_xml_file}')
+        # print(f'studio.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
         logging.debug(f'studio.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
-        print(f'studio.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
+        # print(f'studio.py: load_model(): {self.xml_root.find(".//cell_definitions//cell_rules")}')
 
         # if self.xml_root.find(".//cell_definitions//cell_rules"):
         # self.current_save_file = current_xml_file
