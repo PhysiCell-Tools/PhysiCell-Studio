@@ -19,6 +19,7 @@ Rf. Credits.md
 import os
 import platform
 import sys
+import time
 import argparse
 import logging
 import traceback
@@ -245,8 +246,8 @@ class PhysiCellXMLCreator(QWidget):
             # self.config_tab.folder.setEnabled(False)
             # self.config_tab.csv_folder.setText('')
             self.config_tab.csv_folder.setEnabled(False)
-        else:
-            print("studio.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
+        # else:
+        #     print("studio.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
         self.microenv_tab = SubstrateDef(self.config_tab)
         self.microenv_tab_index = 1
@@ -284,7 +285,7 @@ class PhysiCellXMLCreator(QWidget):
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
-        print("studio.py: cell_rules (in xml_root)= ",self.xml_root.find(".//cell_definitions//cell_rules"))
+        # print("studio.py: cell_rules (in xml_root)= ",self.xml_root.find(".//cell_definitions//cell_rules"))
         # if self.xml_root.find(".//cell_definitions//cell_rules"):
 
         #------------------
@@ -1120,6 +1121,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     #---------------------------------
     def load_user_proj_cb(self):
+        print("-------------- load_user_proj_cb")
         if not os.path.isfile(os.path.join(self.current_dir, "main.cpp")):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -1153,11 +1155,22 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                     print(f"copying {f} to {d}")
                     shutil.copy(f, d)
 
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nUse File->Open to load the .xml configuration file.")
-            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            returnValue = msgBox.exec()
+            try:
+                time.sleep(1)
+                self.load_model("PhysiCell_settings")
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                # msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nUse File->Open to load the .xml configuration file.")
+                msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nStudio should now contain parameters from config/PhysiCell_settings.xml (but if you want a different .xml, you can File->Open)")
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                returnValue = msgBox.exec()
+            except:
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText("Error loading config/PhysiCell_settings.xml. Perhaps your user_project did not define it. You can File->Open a .xml manually.")
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                returnValue = msgBox.exec()
+
 
         except:
             msgBox = QMessageBox()
@@ -1230,17 +1243,23 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         msgBox.exec_()
 
     def load_model(self,name):
+        # print("-------- load_model(): name=",name)
         if self.studio_flag:
             self.run_tab.cancel_model_cb()  # if a sim is already running, cancel it
             self.vis_tab.physiboss_vis_checkbox = None    # default: assume a non-boolean intracellular model
             self.vis_tab.physiboss_vis_flag = False
             if self.vis_tab.physiboss_vis_checkbox:
                 self.vis_tab.physiboss_vis_checkbox.setChecked(False)
+        # print("-------- load_model(): #2")
 
+        try:
+            # print("-------- doing chdir")
+            os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
+        except:
+            print(f"Unable to chdir to {self.current_dir}")
 
-        os.chdir(self.current_dir)  # just in case we were in /tmpdir (and it crashed/failed, leaving us there)
-
-        self.current_xml_file = os.path.join(self.studio_config_dir, name + ".xml")
+        # self.current_xml_file = os.path.join(self.studio_config_dir, name + ".xml")
+        self.current_xml_file = os.path.join("config", name + ".xml")
         logging.debug(f'studio.py: load_model(): self.current_xml_file= {self.current_xml_file}')
         print(f'studio.py: load_model(): self.current_xml_file= {self.current_xml_file}')
 
@@ -1814,7 +1833,7 @@ def main():
             # print("Warning: Rules module not found.\n")
 
     ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag)
-    print("size=",ex.size())
+    # print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes
     # ex.config_tab.config_params.update()  # attempt to refresh, to show checkboxes!
