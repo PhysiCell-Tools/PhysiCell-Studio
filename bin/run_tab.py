@@ -299,12 +299,24 @@ class RunModel(StudioTab):
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
-        stderr = bytes(data).decode("utf8")
+        try:
+            # Try UTF-8 decoding first (standard encoding)
+            stderr = bytes(data).decode("utf8")
+        except UnicodeDecodeError:
+            # If UTF-8 fails, try GBK encoding (common for Chinese Windows systems)
+            # This fixes UnicodeDecodeError crashes when PhysiCell outputs Chinese characters
+            stderr = bytes(data).decode("gbk")
         self.message(stderr)
 
     def handle_stdout(self):
         data = self.p.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
+        try:
+            # Try UTF-8 decoding first (standard encoding)
+            stdout = bytes(data).decode("utf8")
+        except UnicodeDecodeError:
+            # If UTF-8 fails, try GBK encoding (common for Chinese Windows systems)
+            # This fixes UnicodeDecodeError crashes when PhysiCell outputs Chinese characters
+            stdout = bytes(data).decode("gbk")
         self.message(stdout)
 
     def handle_state(self, state):
