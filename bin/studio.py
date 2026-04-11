@@ -538,11 +538,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
 
     def model_summary_cb(self):
-        print("studio.py: model_summary_cb")
+        # print("studio.py: model_summary_cb")
         self.vis_tab.model_summary_cb()
 
     def filterUI_cb(self):
-        print("studio.py: filterUI_cb")
+        # print("studio.py: filterUI_cb")
         self.vis_tab.filterUI_cb()
 
     def get_galaxy_history_cb(self):
@@ -552,7 +552,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.galaxy_historyUI.show()
 
     def run_model_cb(self):
-        print("studio.py: run_model_cb")
+        # print("studio.py: run_model_cb")
         self.run_tab.run_model_cb()
 
     def menu(self):
@@ -743,14 +743,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     def show_sample_model(self):
         logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
-        print(f'\nstudio: show_sample_model(): self.config_file = {self.config_file}')
+        # print(f'\nstudio: show_sample_model(): self.config_file = {self.config_file}')
         try:
             self.tree = ET.parse(self.config_file)
         except:
             self.show_error_message(f"Error: unable to parse XML file {self.config_file}")
             return
 
-        print(f'studio: show_sample_model(): self.tree = {self.tree}')
+        # print(f'studio: show_sample_model(): self.tree = {self.tree}')
         if self.studio_flag:
             self.run_tab.tree = self.tree  #rwh
         # self.xml_root = self.tree.getroot()
@@ -764,22 +764,22 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         filePath = QFileDialog.getOpenFileName(self,'',".")
         # print("\n\nopen_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
-        print("\n\nopen_as_cb():  full_path_model_name =",full_path_model_name )
+        # print("\n\nopen_as_cb():  full_path_model_name =",full_path_model_name )
         logging.debug(f'\nstudio.py: open_as_cb():  full_path_model_name ={full_path_model_name}')
         # if (len(full_path_model_name) > 0) and Path(full_path_model_name):
         if (len(full_path_model_name) > 0) and Path(full_path_model_name).is_file():
-            print("open_as_cb():  filePath is valid")
+            # print("open_as_cb():  filePath is valid")
             logging.debug(f'     filePath is valid')
-            print("           len(full_path_model_name) = ", len(full_path_model_name) )
+            # print("           len(full_path_model_name) = ", len(full_path_model_name) )
             logging.debug(f'     len(full_path_model_name) = {len(full_path_model_name)}' )
             # fname = os.path.basename(full_path_model_name)
             self.current_xml_file = full_path_model_name
 
             self.config_file = self.current_xml_file
-            print("open_as_cb():  self.config_file = ",self.config_file)
+            # print("open_as_cb():  self.config_file = ",self.config_file)
             if self.studio_flag:
                 self.run_tab.config_file = self.current_xml_file
-                print("open_as_cb():  setting run_tab.config_file = ",self.run_tab.config_file)
+                # print("open_as_cb():  setting run_tab.config_file = ",self.run_tab.config_file)
                 self.run_tab.config_xml_name.setText(self.current_xml_file)
 
             self.show_sample_model()
@@ -817,12 +817,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
         filePath = QFileDialog.getSaveFileName(self,'',".")
         # filePath = QFileDialog.getSaveFileName(self,'Save file',".",".xml")
-        print("save_as_cb():  filePath=",filePath)
+        # print("save_as_cb():  filePath=",filePath)
         full_path_model_name = filePath[0]
-        print("save_as_cb():  full_path_model_name =",full_path_model_name )
+        # print("save_as_cb():  full_path_model_name =",full_path_model_name )
         if (len(full_path_model_name) > 0) and Path(full_path_model_name):
-            print("save_as_cb():  filePath is valid")
-            print("len(full_path_model_name) = ", len(full_path_model_name) )
+            # print("save_as_cb():  filePath is valid")
+            # print("len(full_path_model_name) = ", len(full_path_model_name) )
             # self.current_save_file = full_path_model_name
             orig_file_name = self.current_xml_file
             self.current_xml_file =full_path_model_name 
@@ -860,10 +860,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             # self.setWindowTitle(self.title_prefix + self.current_xml_file)  # No!
 
             # print("\n\n ===================================")
-            print("studio.py:  save_as_cb: writing to: ",self.current_xml_file)
+            # print("studio.py:  save_as_cb: writing to: ",self.current_xml_file)
 
             self.tree.write(self.current_xml_file)
-            print("studio.py:  save_as_cb: doing pretty_print ")
+            # print("studio.py:  save_as_cb: doing pretty_print ")
             pretty_print(self.current_xml_file, self.current_xml_file)
 
             # Revert/retain original .xml file
@@ -905,7 +905,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
             # print("\n\n ===================================")
             # print("studio.py:  save_cb: writing to: ",out_file)
-            print("studio.py:  save_cb: writing to: ",self.current_xml_file)
+            # print("studio.py:  save_cb: writing to: ",self.current_xml_file)
 
             # self.tree.write(out_file)  # originally
             self.tree.write(self.current_xml_file)
@@ -946,7 +946,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.Directory)
         folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
-        print("save_user_proj_cb():  folder_path=",folder_path)
+        # print("save_user_proj_cb():  folder_path=",folder_path)
         # print("save_user_proj_cb():  len(folder_path)=",len(folder_path))
         if len(folder_path) == 0:   # User hit Cancel on dialog
             print("Canceled - will not attempt to save project.")
@@ -1023,7 +1023,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             
             self.run_tab.cancel_model_cb()
             self.physiboss_models_db.download_model(model_name, os.getcwd(), version=version,backup=True)
-            print(f"studio.py: model {model_name} loaded")
+            # print(f"studio.py: model {model_name} loaded")
             
             self.current_xml_file = os.path.join(os.getcwd(), self.physiboss_models_db.current_model_info()['config'][0])
             self.config_file = self.current_xml_file
@@ -1088,7 +1088,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 try:
                     f2 = os.path.join(proj_path, f)
                     shutil.copy(f2, '.')
-                    print(f"copy {f2} to root")
+                    # print(f"copy {f2} to root")
                 except:
                     print(f"--- Warning: cannot copy {f2}")
 
@@ -1101,9 +1101,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
             for d in ["config", "custom_modules"]:
                 d1 = os.path.join(proj_path, d)
-                print(f"d1 = {d1}")
+                # print(f"d1 = {d1}")
                 for f in glob.glob(str(d1) + "/*"):
-                    print(f"copying {f} to {d}")
+                    # print(f"copying {f} to {d}")
                     shutil.copy(f, d)
 
             # msgBox = QMessageBox()
@@ -1121,7 +1121,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     #---------------------------------
     def load_user_proj_cb(self):
-        print("-------------- load_user_proj_cb")
+        # print("-------------- load_user_proj_cb")
         if not os.path.isfile(os.path.join(self.current_dir, "main.cpp")):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
@@ -1135,7 +1135,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             dialog = QFileDialog(self)
             dialog.setFileMode(QFileDialog.Directory)
             folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
-            print("load_user_proj_cb():  folder_path=",folder_path)
+            # print("load_user_proj_cb():  folder_path=",folder_path)
             if len(folder_path) == 0:   # User hit Cancel on dialog
                 print("Canceled - will not attempt to load project.")
                 return
@@ -1144,13 +1144,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 try:
                     f2 = os.path.join(folder_path, f)
                     shutil.copy(f2, '.')
-                    print(f"copy {f2} to root")
+                    # print(f"copy {f2} to root")
                 except:
                     print(f"--- Warning: cannot copy {f2}")
 
             for d in ["config", "custom_modules"]:
                 d1 = os.path.join(folder_path, d)
-                print(f"d1 = {d1}")
+                # print(f"d1 = {d1}")
                 for f in glob.glob(str(d1) + "/*"):
                     print(f"copying {f} to {d}")
                     shutil.copy(f, d)
