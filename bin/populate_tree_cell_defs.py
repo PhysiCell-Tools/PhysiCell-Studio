@@ -826,7 +826,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     name = var.attrib['name']
                     cell_def_tab.param_d[cell_def_name]["transformation_rate"][name] = sval
             else:
-                print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
+                # print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
                 for tr in trp.findall('transformation_rate'):
                     other_celltype_name = tr.attrib['name']
                     val = tr.text

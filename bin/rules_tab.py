@@ -1084,7 +1084,7 @@ class Rules(QWidget):
 
     #-----------------------------------------------------------
     def fill_rules(self, full_rules_fname):
-        print("\n---------------- fill_rules():  full_rules_fname=",full_rules_fname)
+        # print("\n---------------- fill_rules():  full_rules_fname=",full_rules_fname)
         self.clear_rules()
 
         if os.path.isfile(full_rules_fname):
@@ -1093,11 +1093,11 @@ class Rules(QWidget):
                     csv_reader = csv.reader(self.strip_comments(csvfile)) # strips out all comments which is not helpful in our latest attempt to gracefully handle toggling rules on/off
 
                     # csv_reader = csv.reader(csvfile)
-                    print("     fill_rules():  past csv.reader #1")
+                    # print("     fill_rules():  past csv.reader #1")
                     for elm in csv_reader:
-                        print("elm #0 = ",elm)
+                        print("rule= ",elm)
             except:
-                print("argh, exception opening or reading")
+                # print("argh, exception opening or reading")
                 msg = "fill_rules(): " + full_rules_fname + " is using v1 syntax. Please upgrade."
                 show_studio_warning_window(msg)
                 return
@@ -1110,7 +1110,7 @@ class Rules(QWidget):
                 with open(full_rules_fname, 'r') as csvfile:
                     # csv_reader = csv.reader(self.strip_comments(csvfile)) # comment out to now handle toggling rules
                     csv_reader = csv.reader(csvfile)
-                    print("     fill_rules():  past csv.reader #2")
+                    # print("     fill_rules():  past csv.reader #2")
                     irow = self.num_rules  # append
                     for elm in csv_reader:   # for each rule or comment
                         # raw = row.split('/')[0].strip()
@@ -1130,10 +1130,10 @@ class Rules(QWidget):
 
                         # more hacks (until we XML-ify the rules); this handles cell_rules.csv in immune-function-sample
                         if len(elm) < 8:
-                            print("--- skip this comment due to # elms < 8")
+                            # print("--- skip this comment due to # elms < 8")
                             continue
                         if (elm[7] != '0') and (elm[7] != '1'):
-                            print(f'--- skip this comment due to last entry = {elm[7]}, not "0" or "1"')
+                            # print(f'--- skip this comment due to last entry = {elm[7]}, not "0" or "1"')
                             continue
 
                         # if len(elm)+1 == self.max_rule_table_cols:   # v2 [plus base value == 9 colummns, but the rules has 8 columns]
@@ -1222,7 +1222,7 @@ class Rules(QWidget):
         return
 
     def fill_rule_row(self, irow, elm, toggle_val):
-        print(f"---- fill_rule_row(): elm={elm}, toggle_val={toggle_val}")  # e.g. ['default', 'pressure', 'decreases', 'cycle entry', '0.0', '0.5', '4', '0']
+        # print(f"---- fill_rule_row(): elm={elm}, toggle_val={toggle_val}")  # e.g. ['default', 'pressure', 'decreases', 'cycle entry', '0.0', '0.5', '4', '0']
         # for icol in range(0,self.max_rule_table_cols-3):   # hardcode end of list
         # self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(True)
         self.rules_table.cellWidget(irow,self.rule_use_idx).setChecked(toggle_val)
@@ -1235,10 +1235,10 @@ class Rules(QWidget):
         self.rules_table.cellWidget(irow, 9).setText('??') # hardcoded: load base value
 
         if int(elm[7]) == 0:  # hardcode index for "apply to dead"
-            print("set]ing dead checkbox False")
+            # print("set]ing dead checkbox False")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(False)
         else:
-            print("setting dead checkbox True")
+            # print("setting dead checkbox True")
             self.rules_table.cellWidget(irow,self.rules_applydead_idx).setChecked(True)
 
     #-----------------------------------------------------------

@@ -977,7 +977,7 @@ class ICs(QWidget):
             self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
 
     def enable_3Dwidgets(self, bval):
-        print("----- enable_3Dwidgets: bval = ",bval)
+        # print("----- enable_3Dwidgets: bval = ",bval)
         self.z0val.setEnabled(bval)
         # self.odelw.setEnabled(bval)
 
@@ -986,14 +986,14 @@ class ICs(QWidget):
         else:
             self.r3val.setEnabled(bval)
         if bval:
-            print("----- enable_3Dwidgets: bval = ",bval)
+            # print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             if self.geom_combobox.currentText() == "box":
                 self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             else:
                 self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
         else:
-            print("----- enable_3Dwidgets: bval = ",bval)
+            # print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
@@ -1005,7 +1005,7 @@ class ICs(QWidget):
         self.z0val.setText("0.0")
 
     def zeq0_cb(self,bval):
-        print("----- zeq0_cb: bval = ",bval)
+        # print("----- zeq0_cb: bval = ",bval)
         self.enable_3Dwidgets(not bval)
 
         if not bval:

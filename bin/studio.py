@@ -125,8 +125,8 @@ class PhysiCellXMLCreator(QWidget):
         self.ecm_flag = False 
         self.pytest_flag = pytest_flag 
         self.biwt_flag = biwt_flag
-        print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
-        print("PhysiCellXMLCreator(): self.galaxy_flag= ",self.galaxy_flag)
+        # print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
+        # print("PhysiCellXMLCreator(): self.galaxy_flag= ",self.galaxy_flag)
 
         self.rules_tab_index = None
 
@@ -143,7 +143,7 @@ class PhysiCellXMLCreator(QWidget):
         # if (platform.system().lower() == 'darwin') and ("ARM64" in platform.uname().version):
         # if (platform.system().lower() == 'darwin') and (platform.machine() == 'arm64'):  # vs. machine()=x86_64
             # self.dark_mode = True
-        print(f"  platform.system().lower()={platform.system().lower()}, platform.machine()={platform.machine()}")
+        # print(f"  platform.system().lower()={platform.system().lower()}, platform.machine()={platform.machine()}")
         # print("PhysiCellXMLCreator(): self.dark_mode= ",self.dark_mode)
 
         self.title_prefix = "PhysiCell Model Builder: "
@@ -214,7 +214,7 @@ class PhysiCellXMLCreator(QWidget):
 
         try:
             self.tree = ET.parse(self.config_file)
-            print(f"studio: (default) self.tree = {self.tree}")
+            # print(f"studio: (default) self.tree = {self.tree}")
         except:
             msgBox = QMessageBox()
             msgBox.setText(f'Error parsing the {self.config_file} Please check it for correctness.')
@@ -224,7 +224,7 @@ class PhysiCellXMLCreator(QWidget):
             sys.exit(-1)
 
         self.xml_root = self.tree.getroot()
-        print(f"studio: (default) self.xml_root = {self.xml_root}")   #rwh
+        # print(f"studio: (default) self.xml_root = {self.xml_root}")   
 
 
         self.num_models = 0
@@ -347,7 +347,7 @@ class PhysiCellXMLCreator(QWidget):
             self.ics_tab.reset_info()
 
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
-                print("studio.py: ---- TRUE nanohub_flag: updating ics_tab folder")
+                # print("studio.py: ---- TRUE nanohub_flag: updating ics_tab folder")
                 # self.ics_tab.csv_folder.setText('')
                 self.config_tab.csv_folder.setText(self.absolute_data_dir)
                 self.config_tab.csv_folder.setEnabled(False)
@@ -357,7 +357,7 @@ class PhysiCellXMLCreator(QWidget):
                 self.ics_tab.output_file.setText("mycells.csv")
                 self.ics_tab.csv_folder.setEnabled(False)
             else:
-                print("studio.py: ---- FALSE nanohub_flag: NOT updating ics_tab folder")
+                # print("studio.py: ---- FALSE nanohub_flag: NOT updating ics_tab folder")
                 self.ics_tab.fill_gui()  # New Aug 2023
 
             self.celldef_tab.ics_tab = self.ics_tab
@@ -367,7 +367,7 @@ class PhysiCellXMLCreator(QWidget):
             self.run_tab = RunModel(self)
 
             self.homedir = os.getcwd()
-            print("studio.py: self.homedir = ",self.homedir)
+            # print("studio.py: self.homedir = ",self.homedir)
             if self.nanohub_flag:
                 try:
                     # cachedir = os.environ['CACHEDIR']
@@ -1702,8 +1702,8 @@ def main():
 
         # args = parser.parse_args()
         args, unknown = parser.parse_known_args()
-        print("args=",args)
-        print("unknown=",unknown)
+        # print("args=",args)
+        # print("unknown=",unknown)
         if unknown:
             print("len(unknown)= ",len(unknown))
             print("Invalid argument(s): ",unknown)

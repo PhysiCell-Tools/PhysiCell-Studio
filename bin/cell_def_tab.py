@@ -5232,11 +5232,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #---- in mechanics subtab
     def cell_adhesion_affinity_dropdown_changed_cb(self, idx):
-        print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
+        # print('\n------ cell_adhesion_affinity_dropdown_changed_cb(): idx = ',idx)
 
         celltype_name = self.cell_adhesion_affinity_dropdown.currentText()
         self.cell_adhesion_affinity_celltype = celltype_name
-        print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
+        # print("   self.cell_adhesion_affinity_celltype = ",celltype_name)
 
         if self.cell_adhesion_affinity_celltype in self.param_d[self.current_cell_def]["cell_adhesion_affinity"].keys():
             self.cell_adhesion_affinity.setText(self.param_d[self.current_cell_def]["cell_adhesion_affinity"][self.cell_adhesion_affinity_celltype])
@@ -5828,7 +5828,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                         self.param_d[cdname]['cell_adhesion_affinity'][cdname2] = '1.0'  # default affinity
 
     def new_motility_params(self, cdname):
-        print("new_motility_params(): ",cdname)
+        # print("new_motility_params(): ",cdname)
         sval = self.default_sval
         self.param_d[cdname]["speed"] = '1.0'
         self.param_d[cdname]["persistence_time"] = '5.0'

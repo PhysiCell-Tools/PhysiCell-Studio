@@ -1906,9 +1906,10 @@ class VisBase():
 
     def update_output_dir(self, dir_path):
         if os.path.isdir(dir_path):
-            print("update_output_dir(): yes, it is a dir path", dir_path)
+            # print("update_output_dir(): yes, it is a dir path", dir_path)
+            pass
         else:
-            print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+            print("vis_base.py: update_output_dir(): this is NOT a dir path: ", dir_path)
         self.output_dir = dir_path
         self.output_folder.setText(dir_path)
 
@@ -2060,7 +2061,7 @@ class VisBase():
 
 
     def init_plot_range(self, config_tab):
-        print("vis_base:----- init_plot_range:")
+        # print("vis_base:----- init_plot_range:")
         try:
             # beware of widget callback 
             self.my_xmin.setText(config_tab.xmin.text())
@@ -2072,7 +2073,7 @@ class VisBase():
         except:
             pass
 
-        print("      call get_domain_params()")
+        # print("      call get_domain_params()")
         self.get_domain_params()
 
     def change_plot_range(self):
