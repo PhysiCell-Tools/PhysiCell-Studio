@@ -330,7 +330,7 @@ class VisBase():
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
-        print("--- VisBase: model3D_flag=",model3D_flag)
+        # print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
         self.ecm_flag = ecm_flag 
         self.galaxy_flag = galaxy_flag 
@@ -2157,14 +2157,14 @@ class VisBase():
 
 
     def reset_model(self):
-        print("--------- vis_base: reset_model ----------")
+        # print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            # print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
@@ -2362,7 +2362,7 @@ class VisBase():
 
         else:   # plotting .mat, not .svg
             self.current_frame = last_xml
-            print('self.current_frame= ',self.current_frame)
+            # print('self.current_frame= ',self.current_frame)
 
         self.update_plots()
 
