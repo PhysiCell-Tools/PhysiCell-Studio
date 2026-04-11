@@ -182,7 +182,7 @@ class RunModel(StudioTab):
                     self.output_dir = '.'
                 else:
                     self.output_dir = self.xml_creator.config_tab.folder.text()
-                    os.system('rm -rf ' + self.output_dir)
+                    shutil.rmtree(self.output_dir)
                     logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
                     try:
                         os.makedirs(self.output_dir)  # do 'mkdir output_dir'
