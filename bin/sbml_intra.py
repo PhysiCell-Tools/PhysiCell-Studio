@@ -16,6 +16,8 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QGroupBox,QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton,QFileDialog,QTableWidget,QTableWidgetItem,QHeaderView
+from studio_classes import QLabelSeparator, QLineEdit_custom
+
 from PyQt5.QtWidgets import QMessageBox, QCompleter, QSizePolicy
 from PyQt5.QtCore import QSortFilterProxyModel, Qt, QRect
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont
@@ -185,7 +187,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         label = QLabel("SBML file")
         hbox.addWidget(label)
 
-        self.sbml_file = QLineEdit()
+        self.sbml_file = QLineEdit_custom()
         # self.sbml_file.setFixedWidth(250)
         self.sbml_file.setMinimumWidth(250)
         self.sbml_file.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # ??
@@ -205,7 +207,8 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         label = QLabel("Intracellular dt")
         hbox.addWidget(label)
 
-        self.dt_w = QLineEdit()
+        # self.dt_w = QLineEdit()
+        self.dt_w = QLineEdit_custom()
         self.dt_w.setFixedWidth(70)
         self.dt_w.setValidator(QtGui.QDoubleValidator(bottom=1.e-6))
         hbox.addWidget(self.dt_w)
@@ -392,6 +395,14 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         icol = 0
         # cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"] = 
         # [['PC_substrate', 'oxygen', 'Oxygen'], ['PC_substrate', 'lactate', 'Lactate'], ['PC_substrate', 'glucose', 'Glucose'], ['PC_phenotype', 'da', 'apoptosis_rate'], ['PC_phenotype', 'mms', 'migration_speed'], ['PC_phenotype', 'ssr_lactate', 'Lac_Secretion_Rate'], ['PC_phenotype', 'ctr_0_0', 'Transition_Rate']]
+
+        cdef = self.celldef_tab.current_cell_def
+        if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
+            print("---- sbml_intra.py: fill_map(): missing 'sbml_maps'")
+            msg = f'Error: "sbml_maps" not in dictionary'
+            show_studio_warning_window(msg)
+            return 
+
         for sbml_map in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"]:
             print("sbml_map=",sbml_map)
             if sbml_map[0] == "PC_substrate":

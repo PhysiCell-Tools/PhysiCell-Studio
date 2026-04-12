@@ -3454,9 +3454,14 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.physiboss_boolean_frame.show()
         elif index == 2:
             # logging.debug(f'intracellular is SBML ODEs')
-            if "intracellular" not in self.param_d[self.current_cell_def].keys():
-                self.param_d[self.current_cell_def]["intracellular"] = {}
-            self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
+            print(f'cell_def_tab.py: intracellular is SBML ODEs; ')
+            # if "intracellular" not in self.param_d[self.current_cell_def].keys():
+                # self.param_d[self.current_cell_def]["intracellular"] = {}
+            self.param_d[self.current_cell_def]["intracellular"] = {}
+            print(f'self.param_d[self.current_cell_def]["intracellular"] ={self.param_d[self.current_cell_def]["intracellular"]}')
+
+            if "type" not in self.param_d[self.current_cell_def]["intracellular"].keys():
+                self.param_d[self.current_cell_def]["intracellular"]["type"] = "roadrunner"
             self.ode_sbml_frame.show()
 
         elif index == 3:
@@ -3865,6 +3870,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # Button to add new exchange
         exchange_addbutton = QPushButton("Add new exchange")
+        exchange_addbutton.setMinimumHeight(30)
         # Connect the add exchange button to its handler
         exchange_addbutton.clicked.connect(self.dfba_clicked_add_exchange)
         ly.addWidget(exchange_addbutton)
