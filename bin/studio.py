@@ -937,7 +937,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         if not os.path.isfile(os.path.join(self.current_dir, "main.cpp")):
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Warning: You do not seem to be in a PhysiCell root directory. Continue?")
+            msgBox.setText("Warning: You do not seem to be in a PhysiCell root directory since there is no main.cpp. Continue?")
             msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             returnValue = msgBox.exec()
             if returnValue == QMessageBox.Cancel:
