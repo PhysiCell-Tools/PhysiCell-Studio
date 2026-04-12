@@ -740,6 +740,36 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.user_params_tab.clear_gui()
         self.user_params_tab.fill_gui()
 
+    def update_ICs_tab(self):
+        print("\n\n-------------------------------- studio.py: update_ICs_tab():  getcwd=",os.getcwd())
+        print("        self.current_xml_file =  ",self.current_xml_file )
+        # file_str = os.path.join(os.getcwd(), file_str)
+
+        print("self.config_tab.cells_csv.isChecked() = ",self.config_tab.cells_csv.isChecked())
+        if self.config_tab.cells_csv.isChecked():
+            try:
+                # ics_file = Path( self.config_tab.csv_folder.text(),  self.config_tab.csv_file.text() )
+                # ics_file = os.path.join(os.getcwd(), self.config_tab.csv_folder.text(),  self.config_tab.csv_file.text() )
+                ics_file = Path(os.getcwd(), self.config_tab.csv_folder.text(),  self.config_tab.csv_file.text() )
+                print("   studio.py: update_ICs_tab(), ics_file=",ics_file.resolve() )
+                if ics_file.is_file:
+                    print("   studio.py: update_ICs_tab(), VALID is_file")
+                    self.ics_tab.reset_info()
+                    self.ics_tab.import_from_file(str(ics_file))
+            except:
+                print("   studio.py: update_ICs_tab(), error trying to import ICs file")
+        else:
+            self.ics_tab.reset_info()
+            self.ics_tab.clear_cb()
+            
+
+    def update_vis_tab(self):
+        # self.vis_tab.init_plot_range(self.config_tab)
+        # self.vis_tab.update_output_dir(self.config_tab.folder.text())
+        # self.vis_tab.reset_model()
+        # self.vis_tab.update_plots()
+        self.vis_tab.clear_plot()
+
 
     def show_sample_model(self):
         logging.debug(f'studio: show_sample_model(): self.config_file = {self.config_file}')
@@ -758,6 +788,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         self.setWindowTitle(self.title_prefix + self.config_file)
         if self.model3D_flag:
             self.vis_tab.reset_domain_box()
+
+        self.update_vis_tab()
+        self.update_ICs_tab()
+
 
     def open_as_cb(self):
         # filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
@@ -943,6 +977,8 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             if returnValue == QMessageBox.Cancel:
                 return
 
+        # Save the xml changes before copying files to new folder
+        self.save_cb()
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.Directory)
         folder_path = dialog.getExistingDirectory(None, "Select project folder","user_projects",QFileDialog.ShowDirsOnly)
@@ -967,7 +1003,11 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         try:
             for f in glob.glob("config/*"):
+                # print("-- trying to save ",f)
                 shutil.copy(f, subdir)
+                # shutil.copytree(f, subdir,  dirs_exist_ok=True)
+                # shutil.copytree(f, subdir)
+                # shutil.copytree("config", folder_path)
         except:
             print(f"--- Warning: cannot copy files in config/*")
 
@@ -1122,14 +1162,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
     #---------------------------------
     def load_user_proj_cb(self):
         # print("-------------- load_user_proj_cb")
-        if not os.path.isfile(os.path.join(self.current_dir, "main.cpp")):
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Information)
-            msgBox.setText("Warning: You do not seem to be in a PhysiCell root directory. Continue?")
-            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            returnValue = msgBox.exec()
-            if returnValue == QMessageBox.Cancel:
-                return
+        # if not os.path.isfile(os.path.join(self.current_dir, "main.cpp")):
+        #     msgBox = QMessageBox()
+        #     msgBox.setIcon(QMessageBox.Information)
+        #     msgBox.setText("Warning: You do not seem to be in a PhysiCell root directory since there is no main.cpp. Continue?")
+        #     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        #     returnValue = msgBox.exec()
+        #     if returnValue == QMessageBox.Cancel:
+        #         return
 
         try:
             dialog = QFileDialog(self)
@@ -1157,13 +1197,14 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
             try:
                 time.sleep(1)
+                # print("------ calling load_model...")
                 self.load_model("PhysiCell_settings")
-                msgBox = QMessageBox()
-                msgBox.setIcon(QMessageBox.Information)
-                # msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nUse File->Open to load the .xml configuration file.")
-                msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nStudio should now contain parameters from config/PhysiCell_settings.xml (but if you want a different .xml, you can File->Open)")
-                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                returnValue = msgBox.exec()
+
+                # msgBox = QMessageBox()
+                # msgBox.setIcon(QMessageBox.Information)
+                # msgBox.setText("Loaded (copied) files to:  main.cpp, Makefile, config/*, and custom_modules/*.\n\nStudio should now contain parameters from config/PhysiCell_settings.xml (but if you want a different .xml, you can File->Open)")
+                # msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                # returnValue = msgBox.exec()
             except:
                 msgBox = QMessageBox()
                 msgBox.setIcon(QMessageBox.Information)
@@ -1273,6 +1314,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.run_tab.config_file = self.current_xml_file
 
         self.config_file = self.current_xml_file
+        # print(f'studio.py: calling show_sample_model')
         self.show_sample_model()
         # if self.nanohub_flag:  # rwh - test if works on nanoHUB
         #     print("studio.py: load_model(): ---- TRUE nanohub_flag: updating config_tab and ics_tab folder")

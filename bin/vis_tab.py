@@ -316,6 +316,11 @@ class Vis(VisBase, QWidget):
         self.update_plots()
 
     #--------------------------------------
+    def clear_plot(self):
+        self.ax0.cla()
+        self.canvas.update()
+        self.canvas.draw()
+        self.frame_count.setText('0')
     # Dependent on 2D/3D
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
