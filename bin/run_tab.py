@@ -182,7 +182,10 @@ class RunModel(StudioTab):
                     self.output_dir = '.'
                 else:
                     self.output_dir = self.xml_creator.config_tab.folder.text()
-                    shutil.rmtree(self.output_dir)
+                    try:
+                        shutil.rmtree(self.output_dir)
+                    except:
+                        pass   # dir probably doesn't exist
                     logging.debug(f'run_tab.py:  doing: mkdir {self.output_dir}')
                     try:
                         os.makedirs(self.output_dir)  # do 'mkdir output_dir'
@@ -205,7 +208,7 @@ class RunModel(StudioTab):
 
                 default_config_file = os.path.join(self.output_dir,"PhysiCell_settings.xml")
                 abs_default_config_file = os.path.abspath(default_config_file )
-                print(f"run_tab.py:  also copy to {abs_default_config_file }")
+                # print(f"run_tab.py:  also copy to {abs_default_config_file }")
                 shutil.copy(self.config_file, default_config_file)
 
                 # nanoHUB: Operate from tmpdir. XML: <folder>,</folder>; temporary output goes here.  May be copied to cache later.
@@ -234,7 +237,7 @@ class RunModel(StudioTab):
 
                 # Problem with this is that it only looks at the currently selected cell type
                 # Also, build_physiboss_info will look into all cell types, and if they are no boolean network, will hide everything
-                print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
+                # print("\n--- run_tab:  calling vis_tab.build_physiboss_info()")
                 self.xml_creator.vis_tab.build_physiboss_info()              
 
             if self.p is None:  # No process running.
