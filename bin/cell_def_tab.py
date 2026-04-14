@@ -342,7 +342,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         # -- check for duplicate names
         found = set()
         dupes = [x for x in self.param_d.keys() if x in found or found.add(x)]
-        print("dupes=",dupes)
+        # print("dupes=",dupes)
         if dupes:
             valid = False
         else:
@@ -365,9 +365,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # -- check for ID=0 
         if 0 in id_l:
-            print("  found 0 ID")
+            # print("  found 0 ID")
+            pass
         else:
-            print("  ERROR: No 0 ID")
+            print("cell_def_tab.py:  ERROR: No 0 ID")
             valid = False
             # msg = "Error: one cell type must have ID=0"
 
@@ -6966,12 +6967,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         logging.debug(f'--- live_phagocytosis_rate= {self.param_d[cdef]["live_phagocytosis_rate"]}')
         for key in self.param_d[cdef]['live_phagocytosis_rate'].keys():
             logging.debug(f'  key in live_phagocytosis_rate= {key}')
-            print(f'  key in live_phagocytosis_rate= {key}')
+            # print(f'  key in live_phagocytosis_rate= {key}')
             if len(key) == 0:
                 continue
             val = self.param_d[cdef]['live_phagocytosis_rate'][key]
             logging.debug(f'{key}  --> {val}')
-            print(f'{key}  --> {val}')
+            # print(f'{key}  --> {val}')
             elm = ET.SubElement(lpr, 'phagocytosis_rate', {"name":key, "units":self.default_rate_units})
             elm.text = val
             elm.tail = self.indent16
@@ -7069,7 +7070,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     self.param_d[cdef]['intracellular']['type'] = "maboss"
 
         if self.param_d[cdef]['intracellular'] is not None:
-            print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
+            # print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
 
             if self.param_d[cdef]['intracellular']['type'] == "maboss":
                         
@@ -7490,7 +7491,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         id_l = []
         for cdef in self.param_d.keys():
             id_l.append(self.param_d[cdef]["ID"])
-        print(f'------------cell_def_tab.py: fill_xml(): (original) IDs = {id_l}')
+        # print(f'------------cell_def_tab.py: fill_xml(): (original) IDs = {id_l}')
 
         idx = 0
         done = False

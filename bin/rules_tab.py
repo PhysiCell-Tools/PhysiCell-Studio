@@ -1876,7 +1876,7 @@ class Rules(QWidget):
 
         folder_name = self.rules_folder.text()
         file_name = self.rules_file.text()
-        print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
+        # print("rules_tab: save_rules_cb(): folder, file=",folder_name, file_name)
         # full_rules_fname = os.path.join(folder_name, file_name)
         full_rules_fname = os.path.abspath(os.path.join(".",folder_name, file_name))
         # if os.path.isfile(full_rules_fname):
@@ -1902,7 +1902,7 @@ class Rules(QWidget):
                         break
                     if self.rules_table.cellWidget(irow,self.rule_use_idx).isChecked() is False:
                         rule_str = "//" + rule_str
-                    print("   irow=",irow, ", col 1 text=",rule_str)
+                    # print("   irow=",irow, ", col 1 text=",rule_str)
                     rule_str += ','
                     rule_str += self.rules_table.cellWidget(irow, self.rules_signal_idx).text()
                     rule_str += ','
@@ -1950,7 +1950,7 @@ class Rules(QWidget):
                     # print(rule_str)
                     f.write(rule_str + '\n')
                 f.close()
-                print(f'rules_tab.py: Wrote rules to {full_rules_fname}')
+                # print(f'rules_tab.py: Wrote rules to {full_rules_fname}')
 
         except Exception as e:
         # self.dialog_critical(str(e))

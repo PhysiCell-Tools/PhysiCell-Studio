@@ -321,6 +321,7 @@ class Vis(VisBase, QWidget):
         self.canvas.update()
         self.canvas.draw()
         self.frame_count.setText('0')
+
     # Dependent on 2D/3D
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
@@ -372,7 +373,7 @@ class Vis(VisBase, QWidget):
         try:
             df_all_cells = mcds.get_cell_df()
         except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
+            # print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
             return
         if self.celltype_filter:
             return df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]

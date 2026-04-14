@@ -1233,7 +1233,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
 
     def view2D_cb(self, action):
-        print("view2D_cb(): ",action.text())
+        # print("view2D_cb(): ",action.text())
         if action.text().find("aspect") >= 0:
             self.vis_tab.view_aspect_toggle_cb(action.isChecked())
         elif action.text().find("shading") >= 0:

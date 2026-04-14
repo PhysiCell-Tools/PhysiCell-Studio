@@ -1093,7 +1093,7 @@ class VisBase():
         self.modelSummaryUI.show()
 
     def filterUI_cb(self):
-        print("---- vis_base: filterUI_cb()")
+        # print("---- vis_base: filterUI_cb()")
         # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
         # self.filterUI = FilterUIWindow()
         if self.vis_filter_init_flag:
@@ -1440,12 +1440,12 @@ class VisBase():
     # ------ overridden for 3D (vis3D_tab.py)
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("build_physiboss_info():  config_file=",config_file)
+        # print("build_physiboss_info():  config_file=",config_file)
         basename = os.path.basename(config_file)
-        print("build_physiboss_info():  basename=",basename)
+        # print("build_physiboss_info():  basename=",basename)
         # out_config_file = os.path.join(self.output_dir, basename)
         out_config_file = config_file
-        print("build_physiboss_info():  out_config_file=",out_config_file)
+        # print("build_physiboss_info():  out_config_file=",out_config_file)
 
         try:
             self.tree = ET.parse(config_file)
@@ -1508,7 +1508,7 @@ class VisBase():
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
-        print("physiboss_node_dict :",self.physiboss_node_dict)
+        # print("physiboss_node_dict :",self.physiboss_node_dict)
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
@@ -1561,7 +1561,7 @@ class VisBase():
             self.vbox.addWidget(self.stretch_widget)
 
     def physiboss_vis_hide(self):
-        print("\n--------- physiboss_vis_hide()")
+        # print("\n--------- physiboss_vis_hide()")
 
         if self.physiboss_widgets:
             self.physiboss_widgets = False
@@ -1615,14 +1615,14 @@ class VisBase():
         
         
     def physiboss_state_counts_cb(self):
-        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+        # print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
 
         xml_pattern = self.output_dir + "/" + "output*.xml"
         xml_files = glob.glob(xml_pattern)
 
         num_xml = len(xml_files)
         if num_xml == 0:
-            print("last_plot_cb(): WARNING: no output*.xml files present")
+            # print("last_plot_cb(): WARNING: no output*.xml files present")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
             msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
