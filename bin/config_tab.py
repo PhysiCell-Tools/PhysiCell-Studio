@@ -309,14 +309,14 @@ class Config(StudioTab):
         vbox.addLayout(self.config_tab_layout)
 
         #----------
-        label = QLabel("mechanics voxel size")
-        label.setAlignment(QtCore.Qt.AlignRight)
-        idx_row += 1
-        self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+        # label = QLabel("mechanics voxel size")
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # idx_row += 1
+        # self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
 
-        self.mechanics_voxel_size = QLineEdit()
-        self.mechanics_voxel_size.setValidator(QtGui.QDoubleValidator())
-        self.config_tab_layout.addWidget(self.mechanics_voxel_size, idx_row,1,1,1) # w, row, column, rowspan, colspan
+        # self.mechanics_voxel_size = QLineEdit()
+        # self.mechanics_voxel_size.setValidator(QtGui.QDoubleValidator())
+        # self.config_tab_layout.addWidget(self.mechanics_voxel_size, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
 
         #----------
