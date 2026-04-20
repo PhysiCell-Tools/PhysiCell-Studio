@@ -45,6 +45,7 @@ class Config(StudioTab):
         super().__init__(xml_creator)
 
         self.default_time_units = "min"
+        self.default_mechanics_voxel_size = "30"
 
         self.vis_tab = None
         self.ics_tab = None
@@ -306,6 +307,17 @@ class Config(StudioTab):
         # Use a vbox/hbox instead of the grid for better alignment :/
         vbox = QVBoxLayout()
         vbox.addLayout(self.config_tab_layout)
+
+        #----------
+        # label = QLabel("mechanics voxel size")
+        # label.setAlignment(QtCore.Qt.AlignRight)
+        # idx_row += 1
+        # self.config_tab_layout.addWidget(label, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        # self.mechanics_voxel_size = QLineEdit()
+        # self.mechanics_voxel_size.setValidator(QtGui.QDoubleValidator())
+        # self.config_tab_layout.addWidget(self.mechanics_voxel_size, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
 
         #----------
         hbox = QHBoxLayout()
@@ -707,10 +719,24 @@ class Config(StudioTab):
         else:
             print("\n\n---------virtual_wall_at_domain_edge is None !!!!!!!!!!!!1")
 
+
+        # if self.xml_root.find(".//mechanics_voxel_size") is not None:
+        #     # this intentionally will read in the user_parameter random_seed if it exists. this will facilitate the user using this new placement (importantly, the default custom.cpp will still use the user_parameter to override the value placed here)
+        #     text = self.xml_root.find(".//mechanics_voxel_size").text
+        #     print("\n------------------ config_tab: mechanics_voxel_size= ",text)
+        #     if float(text) <= 0:
+        #         print("               mechanics_voxel_size must be >=0. Setting =30 ")
+        #         self.mechanics_voxel_size.setText(self.default_mechanics_voxel_size)
+        #     else:
+        #         self.mechanics_voxel_size.setText(text)
+        # else:
+        #     self.mechanics_voxel_size.setText(self.default_mechanics_voxel_size)
+
+
         if self.xml_root.find(".//random_seed") is not None:
             # this intentionally will read in the user_parameter random_seed if it exists. this will facilitate the user using this new placement (importantly, the default custom.cpp will still use the user_parameter to override the value placed here)
             text = self.xml_root.find(".//random_seed").text
-            print("\n------------------ config_tab: random_seed = ",text)
+            # print("\n------------------ config_tab: random_seed = ",text)
             if text in  ["system_clock","random","",None]:
                 self.random_seed_random_button.setChecked(True)
             else:
@@ -786,6 +812,11 @@ class Config(StudioTab):
             bval = True
         self.save_full.setChecked(bval)
         self.full_clicked(bval)
+
+        # if self.xml_root.find(".//mechanics_voxel_size") is not None:
+        #     self.mechanics_voxel_size.setText(self.xml_root.find(".//mechanics_voxel_size").text)
+        # else:
+        #     self.mechanics_voxel_size.setText(self.default_mechanics_voxel_size)
 
         uep = self.xml_root.find(".//initial_conditions//cell_positions")
         if uep == None:  # not present
@@ -898,6 +929,19 @@ class Config(StudioTab):
         else:
             self.xml_root.find(".//options//random_seed").text = self.random_seed_integer.text()
 
+
+        # if self.xml_root.find(".//options//mechanics_voxel_size") is not None:
+        #     self.xml_root.find(".//options//mechanics_voxel_size").text = self.mechanics_voxel_size.text()
+        # else:  # missing in original; insert it (happens at write)
+        #     uep = self.xml_root.find('.//options')
+        #     subelm = ET.SubElement(uep, "mechanics_voxel_size")
+        #     subelm.text = self.default_mechanics_voxel_size
+
+        # if self.xml_root.find(".//") is None:
+        #     uep = self.xml_root.find('.//options')
+        #     subelm = ET.SubElement(uep, "mechanics_voxel_size")
+        #     self.xml_root.find(".//options//random_seed").text = self.random_seed_integer.text()
+
         # bval = "false"
         # if self.disable_auto_springs.isChecked():
         #     bval = "true"
@@ -950,7 +994,7 @@ class Config(StudioTab):
         self.xml_root.find(".//dt_phenotype").text = self.phenotype_dt.text()
         self.xml_root.find(".//omp_num_threads").text = self.num_threads.text()
         self.xml_root.find(".//save//folder").text = self.folder.text()
-        print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
+        # print(f'------- config_tab.py: fill_xml(): setting folder = {self.folder.text()}')
 
         if self.save_svg.isChecked():
             self.xml_root.find(".//SVG//enable").text = 'true'

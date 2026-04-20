@@ -45,7 +45,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 class ICs(QWidget):
 
-    def __init__(self, config_tab, celldef_tab, biwt_flag, nanohub_flag):
+    def __init__(self, config_tab, celldef_tab, biwt_flag, nanohub_flag, xml_creator):
         super().__init__()
         # global self.config_params
 
@@ -53,6 +53,7 @@ class ICs(QWidget):
 
         self.celldef_tab = celldef_tab
         self.config_tab = config_tab
+        self.xml_creator = xml_creator
 
         self.biwt_flag = biwt_flag
         self.nanohub_flag = nanohub_flag
@@ -175,7 +176,7 @@ class ICs(QWidget):
         self.tab_widget = QTabWidget()
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
         if self.biwt_flag:
-            self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self)
+            self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self, self.xml_creator)
             self.tab_widget.addTab(self.biwt_tab,"BIWT")
 
         self.layout = QVBoxLayout(self)
@@ -976,7 +977,7 @@ class ICs(QWidget):
             self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
 
     def enable_3Dwidgets(self, bval):
-        print("----- enable_3Dwidgets: bval = ",bval)
+        # print("----- enable_3Dwidgets: bval = ",bval)
         self.z0val.setEnabled(bval)
         # self.odelw.setEnabled(bval)
 
@@ -985,14 +986,14 @@ class ICs(QWidget):
         else:
             self.r3val.setEnabled(bval)
         if bval:
-            print("----- enable_3Dwidgets: bval = ",bval)
+            # print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             if self.geom_combobox.currentText() == "box":
                 self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
             else:
                 self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
         else:
-            print("----- enable_3Dwidgets: bval = ",bval)
+            # print("----- enable_3Dwidgets: bval = ",bval)
             self.z0val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
             self.odelw.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
@@ -1004,7 +1005,7 @@ class ICs(QWidget):
         self.z0val.setText("0.0")
 
     def zeq0_cb(self,bval):
-        print("----- zeq0_cb: bval = ",bval)
+        # print("----- zeq0_cb: bval = ",bval)
         self.enable_3Dwidgets(not bval)
 
         if not bval:

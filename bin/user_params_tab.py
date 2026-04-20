@@ -277,7 +277,7 @@ class UserParams(StudioTab):
     #--------------------------------------------------------
     # rf. def delete_custom_data_cb(self):
     def delete_user_param_cb(self, s):
-        debug_me = True
+        debug_me = False
         row = self.utable.currentRow()
         # print("------------- delete_user_param_cb(), row=",row)  # = -1
 
@@ -607,7 +607,7 @@ class UserParams(StudioTab):
     # Generate the .xml to reflect changes in the GUI
     def fill_xml(self):
         logging.debug(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
-        print(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
+        # print(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
         uep = self.xml_root.find('.//user_parameters')
         if uep:
             logging.debug(f'--------- found //user_parameters')

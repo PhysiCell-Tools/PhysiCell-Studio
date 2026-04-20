@@ -16,6 +16,8 @@ import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etre
 from pathlib import Path
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QLineEdit, QGroupBox,QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,QGridLayout,QPushButton,QFileDialog,QTableWidget,QTableWidgetItem,QHeaderView
+from studio_classes import QLabelSeparator, QLineEdit_custom
+
 from PyQt5.QtWidgets import QMessageBox, QCompleter, QSizePolicy
 from PyQt5.QtCore import QSortFilterProxyModel, Qt, QRect
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont
@@ -44,7 +46,7 @@ class SBML_ODEs(QWidget):
     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
         super().__init__()
 
-        print("\n---------- creating SBML_ODEs(QWidget)")
+        # print("\n---------- creating SBML_ODEs(QWidget)")
         self.nanohub_flag = nanohub_flag
         self.homedir = '.'  # reset in studio.py
         self.absolute_data_dir = None   # updated in studio.py
@@ -80,7 +82,7 @@ class SBML_ODEs(QWidget):
         icol += 1
 
         self.num_cols = icol
-        print("self.num_cols = ",self.num_cols)
+        # print("self.num_cols = ",self.num_cols)
 
         self.num_maps = 0
 
@@ -185,7 +187,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         label = QLabel("SBML file")
         hbox.addWidget(label)
 
-        self.sbml_file = QLineEdit()
+        self.sbml_file = QLineEdit_custom()
         # self.sbml_file.setFixedWidth(250)
         self.sbml_file.setMinimumWidth(250)
         self.sbml_file.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # ??
@@ -205,7 +207,8 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         label = QLabel("Intracellular dt")
         hbox.addWidget(label)
 
-        self.dt_w = QLineEdit()
+        # self.dt_w = QLineEdit()
+        self.dt_w = QLineEdit_custom()
         self.dt_w.setFixedWidth(70)
         self.dt_w.setValidator(QtGui.QDoubleValidator(bottom=1.e-6))
         hbox.addWidget(self.dt_w)
@@ -239,9 +242,9 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # self.layout.addWidget(self.scroll)
 
         #---------------------------------------------------------
-        print("\n---------- calling create_mapping_table")
+        # print("\n---------- calling create_mapping_table")
         mapping_table_vbox = self.create_mapping_table()
-        print("\n---------- back from create_mapping_table")
+        # print("\n---------- back from create_mapping_table")
         self.sbml_tab_layout.addLayout(mapping_table_vbox) 
         # print("\n---------- at 1")
         # self.ode_sbml_frame.setLayout(self.sbml_tab_layout)
@@ -263,9 +266,9 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         # print("\n---------- at 5")
 
         self.layout = QVBoxLayout(self)  # leave this!
-        print("\n---------- at 6")
+        # print("\n---------- at 6")
         self.layout.addWidget(self.scroll)
-        print("\n---------- end of SBML_ODEs")
+        # print("\n---------- end of SBML_ODEs")
 
 
     #--------------------------------------------------------
@@ -392,6 +395,15 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
         icol = 0
         # cell_def_tab.param_d[cell_def_name]["intracellular"]["sbml_maps"] = 
         # [['PC_substrate', 'oxygen', 'Oxygen'], ['PC_substrate', 'lactate', 'Lactate'], ['PC_substrate', 'glucose', 'Glucose'], ['PC_phenotype', 'da', 'apoptosis_rate'], ['PC_phenotype', 'mms', 'migration_speed'], ['PC_phenotype', 'ssr_lactate', 'Lac_Secretion_Rate'], ['PC_phenotype', 'ctr_0_0', 'Transition_Rate']]
+
+        cdef = self.celldef_tab.current_cell_def
+        if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
+            print("---- sbml_intra.py: fill_map(): missing 'sbml_maps'. Creating empty dict.")
+            msg = f'Error: "sbml_maps" not in dictionary'
+            # show_studio_warning_window(msg)
+            self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"] = {}
+            return 
+
         for sbml_map in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"]:
             print("sbml_map=",sbml_map)
             if sbml_map[0] == "PC_substrate":
@@ -656,6 +668,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
     #-----------------------------------------------------------
     def validate_params(self,cdef):
         print("\n--- validate_params(): keys()= ", self.celldef_tab.param_d[cdef]["intracellular"].keys())
+        print(f"   {cdef} --> {self.celldef_tab.param_d[cdef]["intracellular"]}")
         if "type" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'type'")
             msg = f'Error: Missing "type" in intracellular subtab for ODEs. Please provide before saving the XML.'

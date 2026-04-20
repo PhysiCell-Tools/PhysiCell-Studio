@@ -330,7 +330,7 @@ class VisBase():
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
-        print("--- VisBase: model3D_flag=",model3D_flag)
+        # print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
         self.ecm_flag = ecm_flag 
         self.galaxy_flag = galaxy_flag 
@@ -1093,7 +1093,7 @@ class VisBase():
         self.modelSummaryUI.show()
 
     def filterUI_cb(self):
-        print("---- vis_base: filterUI_cb()")
+        # print("---- vis_base: filterUI_cb()")
         # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
         # self.filterUI = FilterUIWindow()
         if self.vis_filter_init_flag:
@@ -1440,12 +1440,12 @@ class VisBase():
     # ------ overridden for 3D (vis3D_tab.py)
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("build_physiboss_info():  config_file=",config_file)
+        # print("build_physiboss_info():  config_file=",config_file)
         basename = os.path.basename(config_file)
-        print("build_physiboss_info():  basename=",basename)
+        # print("build_physiboss_info():  basename=",basename)
         # out_config_file = os.path.join(self.output_dir, basename)
         out_config_file = config_file
-        print("build_physiboss_info():  out_config_file=",out_config_file)
+        # print("build_physiboss_info():  out_config_file=",out_config_file)
 
         try:
             self.tree = ET.parse(config_file)
@@ -1508,7 +1508,7 @@ class VisBase():
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
-        print("physiboss_node_dict :",self.physiboss_node_dict)
+        # print("physiboss_node_dict :",self.physiboss_node_dict)
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
@@ -1561,7 +1561,7 @@ class VisBase():
             self.vbox.addWidget(self.stretch_widget)
 
     def physiboss_vis_hide(self):
-        print("\n--------- physiboss_vis_hide()")
+        # print("\n--------- physiboss_vis_hide()")
 
         if self.physiboss_widgets:
             self.physiboss_widgets = False
@@ -1615,14 +1615,14 @@ class VisBase():
         
         
     def physiboss_state_counts_cb(self):
-        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+        # print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
 
         xml_pattern = self.output_dir + "/" + "output*.xml"
         xml_files = glob.glob(xml_pattern)
 
         num_xml = len(xml_files)
         if num_xml == 0:
-            print("last_plot_cb(): WARNING: no output*.xml files present")
+            # print("last_plot_cb(): WARNING: no output*.xml files present")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
             msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
@@ -1906,9 +1906,10 @@ class VisBase():
 
     def update_output_dir(self, dir_path):
         if os.path.isdir(dir_path):
-            print("update_output_dir(): yes, it is a dir path", dir_path)
+            # print("update_output_dir(): yes, it is a dir path", dir_path)
+            pass
         else:
-            print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+            print("vis_base.py: update_output_dir(): this is NOT a dir path: ", dir_path)
         self.output_dir = dir_path
         self.output_folder.setText(dir_path)
 
@@ -2060,7 +2061,7 @@ class VisBase():
 
 
     def init_plot_range(self, config_tab):
-        print("vis_base:----- init_plot_range:")
+        # print("vis_base:----- init_plot_range:")
         try:
             # beware of widget callback 
             self.my_xmin.setText(config_tab.xmin.text())
@@ -2072,7 +2073,7 @@ class VisBase():
         except:
             pass
 
-        print("      call get_domain_params()")
+        # print("      call get_domain_params()")
         self.get_domain_params()
 
     def change_plot_range(self):
@@ -2157,14 +2158,14 @@ class VisBase():
 
 
     def reset_model(self):
-        print("--------- vis_base: reset_model ----------")
+        # print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            # print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
@@ -2362,7 +2363,7 @@ class VisBase():
 
         else:   # plotting .mat, not .svg
             self.current_frame = last_xml
-            print('self.current_frame= ',self.current_frame)
+            # print('self.current_frame= ',self.current_frame)
 
         self.update_plots()
 

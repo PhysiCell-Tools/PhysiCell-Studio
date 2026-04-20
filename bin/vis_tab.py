@@ -123,7 +123,7 @@ class Vis(VisBase, QWidget):
 
         self.fontsize = 7
         self.label_fontsize = 6
-        self.cbar_label_fontsize = 8
+        self.cbar_label_fontsize = 10   # 8
         self.title_fontsize = 10
 
         self.plot_cells_svg = True
@@ -316,6 +316,12 @@ class Vis(VisBase, QWidget):
         self.update_plots()
 
     #--------------------------------------
+    def clear_plot(self):
+        self.ax0.cla()
+        self.canvas.update()
+        self.canvas.draw()
+        self.frame_count.setText('0')
+
     # Dependent on 2D/3D
     def update_plots(self):
         # print("------ vis_tab.py: update_plots()")
@@ -367,7 +373,7 @@ class Vis(VisBase, QWidget):
         try:
             df_all_cells = mcds.get_cell_df()
         except:
-            print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
+            # print("vis_tab.py: plot_cell_scalar(): error performing mcds.get_cell_df()")
             return
         if self.celltype_filter:
             return df_all_cells.loc[ df_all_cells['cell_type'].isin(self.celltype_filter) ]
@@ -386,14 +392,14 @@ class Vis(VisBase, QWidget):
     #------------------------------
     # Depends on 2D/3D
     def create_figure(self):
-        print("\n--   vis_tab.py: --------- create_figure(): ------- creating figure, canvas, ax0")
+        # print("\n--   vis_tab.py: --------- create_figure(): ------- creating figure, canvas, ax0")
         if self.figure is not None:
             print("              self.figure is None, so return!")
             return
         self.figure = plt.figure()
         self.gs = gridspec.GridSpec(2,2, height_ratios=[20,1], width_ratios=[20,1]) # top row is [plot, substrate colorbar]; bottom row is [cells colorbar, nothing]
         self.canvas = FigureCanvasQTAgg(self.figure)
-        print("     self.canvas= ",self.canvas)
+        # print("     self.canvas= ",self.canvas)
         self.canvas.setStyleSheet("background-color:transparent;")
 
         # Adding one subplot for image

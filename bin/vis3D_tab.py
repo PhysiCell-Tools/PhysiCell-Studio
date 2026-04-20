@@ -68,7 +68,13 @@ class Vis(VisBase, QWidget):
         self.show_yz_slice = True
         self.show_xz_slice = True
         self.show_voxels = False
-        self.show_contour = False
+        # self.show_contour = False
+        self.show_contour = True
+        # self.contour_value = 1.0
+        self.contour_value = 0.7
+        self.contour_value = 0.5
+        self.contour_value = 0.3
+
         self.show_axes = False
         self.sphere_res = 8
 
@@ -89,7 +95,6 @@ class Vis(VisBase, QWidget):
         self.yz_clip_x0 = 0.
         self.xz_clip_y0 = 0.
 
-        self.contour_value = 1.0
 
         self.line_width = 3
 
@@ -852,10 +857,10 @@ class Vis(VisBase, QWidget):
 
     #-----------
     def cell_scalar_combobox_changed_cb(self,idx):
-        print("----- vis3D_tab.py: cell_scalar_combobox_changed_cb: idx = ",idx)
+        # print("----- vis3D_tab.py: cell_scalar_combobox_changed_cb: idx = ",idx)
         # self.field_index = 4 + idx # substrate (0th -> 4 in the .mat)
         choice = self.cell_scalar_combobox.currentText()
-        print("    choice= ", choice)
+        # print("    choice= ", choice)
         if len(choice) == 0:
             return
         if choice in self.cell_scalar_human2mcds_dict.keys():
@@ -2048,16 +2053,18 @@ class Vis(VisBase, QWidget):
 
 
             if self.show_contour:
-                print("------- show_contour!")
+                # print("------- show_contour!")
                 self.c2p.SetInputData(self.substrate_data)  # contour filter *requires* point (not VTK cell) data
                 self.c2p.Update()
 
                 self.contour.SetInputData(self.c2p.GetOutput())
+                # print(f"        contour_value={self.contour_value} ")
                 self.contour.SetValue(0, self.contour_value)
                 self.contour.Update()
 
                 self.contour_mapper.SetInputConnection(self.contour.GetOutputPort())
                 self.contour_mapper.SetScalarRange(vmin, vmax)
+                # print(f"        scalar range={vmin},{vmax} ")
                 self.contour_mapper.SetLookupTable(self.lut_substrate)
 
                 # substrate_actor.GetProperty().SetAmbient(1.)

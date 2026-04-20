@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QGroupBox, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
-from studio_classes import QCheckBox_custom
 # from PyQt5.QtWidgets import QCompleter, QSizePolicy
 # from PyQt5.QtCore import QSortFilterProxyModel
 # from PyQt5.QtSvg import QSvgWidget
@@ -14,6 +13,30 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
         # self.setFrameShadow(QFrame.Plain)
         # self.setStyleSheet("border:1px solid black")
+
+class QCheckBox_custom(QCheckBox):  # it's insane to have to do this!
+    def __init__(self,name):
+        super(QCheckBox, self).__init__(name)
+
+        checkbox_style = """
+                QCheckBox::indicator:checked {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                    image: url(images:checkmark.png);
+                }
+                QCheckBox::indicator:unchecked
+                {
+                    background-color: rgb(255,255,255);
+                    border: 1px solid #5A5A5A;
+                    width : 15px;
+                    height : 15px;
+                    border-radius : 3px;
+                }
+                """
+        self.setStyleSheet(checkbox_style)
 
 
 class FilterUI3DWindow(QWidget):
@@ -88,10 +111,24 @@ class FilterUI3DWindow(QWidget):
         glayout.addWidget(self.xz_slice_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
 
         #------
-        self.voxels_checkbox = QCheckBox_custom('All voxels')
-        self.voxels_checkbox.setChecked(self.voxels_flag)
-        self.voxels_checkbox.clicked.connect(self.voxels_cb)
+        self.contour_checkbox = QCheckBox_custom('Contour:  val= ')
+        self.contour_checkbox.setChecked(self.contour_flag)
+        self.contour_checkbox.clicked.connect(self.contour_cb)
         idx_row += 1
+        glayout.addWidget(self.contour_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
+
+        self.contour_w = QLineEdit()
+        self.contour_w.setValidator(QtGui.QDoubleValidator())
+        self.contour_w.returnPressed.connect(self.contour_val_cb)
+        self.contour_w.setText('1.0')   # match what's defined in vis3D_tab (self.contour_value)
+        glayout.addWidget(self.contour_w, idx_row,1,1,1) # w, row, column, rowspan, colspan
+
+        #------
+        # Skip for now as it typically only produces solid colored boundary faces.
+        # self.voxels_checkbox = QCheckBox_custom('All voxels')
+        # self.voxels_checkbox.setChecked(self.voxels_flag)
+        # self.voxels_checkbox.clicked.connect(self.voxels_cb)
+        # idx_row += 1
         # glayout.addWidget(self.voxels_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
         # voxels_act = view3D_menu.addAction("All voxels")
         # voxels_act.setChecked(False)
@@ -187,25 +224,6 @@ class FilterUI3DWindow(QWidget):
         #-----------
         idx_row += 1
         glayout.addWidget(QHLine(), idx_row,0,1,3) # w, row, column, rowspan, colspan
-
-        idx_row += 1
-        self.save_frame_checkbox = QCheckBox_custom('save frame*')
-        self.save_frame_checkbox.clicked.connect(self.save_frame_cb)
-        idx_row += 1
-        glayout.addWidget(self.save_frame_checkbox, idx_row,0,1,1) # w, row, column, rowspan, colspan
-
-        self.save_frame_filetype = QComboBox()
-        self.save_frame_filetype.addItems(['.png'])
-        self.save_frame_filetype.currentIndexChanged.connect(self.save_frame_filetype_cb)
-        self.save_frame_filetype.setCurrentIndex(0)  # default to png
-        glayout.addWidget(self.save_frame_filetype, idx_row,1,1,1) # w, row, column, rowspan, colspan
-
-        idx_row += 1
-        self.cells_csv_button = QPushButton("Save snap.csv")
-        self.cells_csv_button.setStyleSheet("background-color: lightgreen;")
-        self.cells_csv_button.clicked.connect(self.cells_csv_cb)
-        glayout.addWidget(self.cells_csv_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
-
         idx_row += 1
         glayout.addWidget(QLabel("Keypress j (joystick) vs. t (trackball) "), idx_row,0,1,3) 
         idx_row += 1
@@ -248,6 +266,8 @@ class FilterUI3DWindow(QWidget):
         self.xz_slice_value = 0.0
         self.yz_slice_flag = True
         self.yz_slice_value = 0.0
+        self.contour_flag = False
+        self.contour_value = 1.0
         self.voxels_flag = False
 
         self.xy_clip_flag = False
@@ -305,6 +325,19 @@ class FilterUI3DWindow(QWidget):
         # print(f'----- xz_slice_val_cb = {text}')
         try:
             self.vis_tab.xz_slice_value_cb(float(text))
+        except:
+            pass
+
+    #--------
+    def contour_cb(self):
+        self.vis_tab.contour_toggle_cb(self.contour_checkbox.isChecked())
+        return
+
+    def contour_val_cb(self):
+        text = self.contour_w.text()
+        # print(f'----- contour_val_cb = {text}')
+        try:
+            self.vis_tab.contour_value_cb(float(text))
         except:
             pass
 
@@ -374,16 +407,6 @@ class FilterUI3DWindow(QWidget):
         text = self.sphere_res_w.text()
         # print("vis_base: sphere_res_cb(): = ",int(text))
         self.vis_tab.sphere_res_cb(int(text))
-
-    def save_frame_cb(self):
-        self.vis_tab.frame_ind = 0
-        self.vis_tab.save_frame = self.save_frame_checkbox.isChecked()
-
-    def save_frame_filetype_cb(self):
-        self.vis_tab.save_frame_filetype = self.save_frame_filetype.currentText()
-
-    def cells_csv_cb(self):
-        self.vis_tab.write_cells_csv_cb()
 
     #----------
     def close_filterUI_cb(self):

@@ -169,7 +169,7 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
         glayout.addWidget(self.axes_yr , idx_row,3, 1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        self.reset_axes_button = QPushButton("Update axes")
+        self.reset_axes_button = QPushButton("Update ROI")
         self.reset_axes_button.setStyleSheet("background-color: lightgreen;")
         self.reset_axes_button.clicked.connect(self.reset_axes_cb)
         glayout.addWidget(self.reset_axes_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
@@ -194,7 +194,8 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
         self.mech_grid_size = QLineEdit("30")
         self.mech_grid_size.setFixedWidth(30)
         self.mech_grid_size.textChanged.connect(self.mech_grid_size_changed)
-        self.mech_grid_size.setValidator(DoubleValidatorWidgetBounded(bottom=1, top=999))
+        self.mech_grid_size.returnPressed.connect(self.mech_grid_cb)
+        self.mech_grid_size.setValidator(DoubleValidatorWidgetBounded(bottom=1, top=9999))
         glayout.addWidget(self.mech_grid_size , idx_row,2, 1,1) # w, row, column, rowspan, colspan
 
         #--------------------------
