@@ -123,7 +123,7 @@ class Vis(VisBase, QWidget):
 
         self.fontsize = 7
         self.label_fontsize = 6
-        self.cbar_label_fontsize = 8
+        self.cbar_label_fontsize = 10   # 8
         self.title_fontsize = 10
 
         self.plot_cells_svg = True
