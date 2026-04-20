@@ -398,9 +398,10 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
 
         cdef = self.celldef_tab.current_cell_def
         if "sbml_maps" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
-            print("---- sbml_intra.py: fill_map(): missing 'sbml_maps'")
+            print("---- sbml_intra.py: fill_map(): missing 'sbml_maps'. Creating empty dict.")
             msg = f'Error: "sbml_maps" not in dictionary'
-            show_studio_warning_window(msg)
+            # show_studio_warning_window(msg)
+            self.celldef_tab.param_d[cdef]["intracellular"]["sbml_maps"] = {}
             return 
 
         for sbml_map in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["sbml_maps"]:
@@ -667,6 +668,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
     #-----------------------------------------------------------
     def validate_params(self,cdef):
         print("\n--- validate_params(): keys()= ", self.celldef_tab.param_d[cdef]["intracellular"].keys())
+        print(f"   {cdef} --> {self.celldef_tab.param_d[cdef]["intracellular"]}")
         if "type" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'type'")
             msg = f'Error: Missing "type" in intracellular subtab for ODEs. Please provide before saving the XML.'

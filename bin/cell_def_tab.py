@@ -55,6 +55,7 @@ from rules_tab import create_reserved_words, find_and_replace_rule_cell
 from sbml_intra import SBML_ODEs
 from cell_def_cycle_tab import CycleTab
 from cell_def_tab_param_updates import CellDefParamUpdates
+from studio_functions import show_studio_warning_window
 
 class CellDefException(Exception):
     pass
@@ -326,7 +327,7 @@ class CellDef(StudioTab):
         if self.auto_number_IDs_checkbox.isChecked():
             return
 
-        print('---- check_valid_cell_defs(): ---')
+        # print('---- check_valid_cell_defs(): ---')
 
         error_msg = """
 Error: Cell Type IDs need to consist of unique integers, include 0, and can be re-ordered to form a sequence (0,1,2,...,N), e.g.,
@@ -351,12 +352,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             for cdname in self.param_d.keys():
                 id_num = int(self.param_d[cdname]["ID"])
                 # print('{cdname}, {self.param_d[cdname]["ID"]}')
-                print(f'{cdname}, {self.param_d[cdname]["ID"]}')
+                # print(f'{cdname}, {self.param_d[cdname]["ID"]}')
                 id_l.append(id_num)
-            print(f"id_l={id_l}")
+            # print(f"id_l={id_l}")
 
             id_l.sort()
-            print(f"id_l (sorted)={id_l}")
+            # print(f"id_l (sorted)={id_l}")
 
             for count, value in enumerate(id_l):
                 if count != value:
@@ -6205,8 +6206,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def update_intracellular_params(self):
         cdname = self.current_cell_def
         if self.param_d[cdname]["intracellular"] is not None:
-            print("debugging intracellular type")
-            print(self.param_d[cdname]["intracellular"])
+            # print("debugging intracellular type")
+            # print("\n------> ",self.param_d[cdname]["intracellular"])
+
             if self.param_d[cdname]["intracellular"]["type"] == "maboss":
                 
                 self.physiboss_clear_initial_values()
@@ -6303,6 +6305,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     basal_value.setText(output["basal_value"])
                     smoothing.setText(output["smoothing"])
 
+            #-------------------------
             elif self.param_d[cdname]["intracellular"]["type"] == "roadrunner":
                 print("------ Parsing roadrunner intracellular params")
                 self.ode_sbml_frame.fill_gui(cdname)
@@ -6310,8 +6313,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 # if "sbml_filename" in self.param_d[cdname]["intracellular"].keys(): 
                     # self.ode_sbml_frame.sbml_file.setText(self.param_d[cdname]["intracellular"]["sbml_filename"])
 
+            #-------------------------
             elif self.param_d[cdname]["intracellular"]["type"] == "dfba":
-                print("------ Parsing dFBA intracellular params")
+                print("\n------ Parsing dFBA intracellular params")
+                print(" ---> ",self.param_d[cdname]["intracellular"])
                 # Clear any existing dFBA-specific entries
                 self.clear_transport_exchanges()
                 self.clear_growth_model_params()
@@ -6941,7 +6946,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     def fill_xml_interactions(self,pheno,cdef):
         if self.debug_print_fill_xml:
             logging.debug(f'------------------- fill_xml_interactions():  cdef= {cdef}')
-            print(f'------------------- fill_xml_interactions():  cdef= {cdef}')
+            # print(f'------------------- fill_xml_interactions():  cdef= {cdef}')
 
         interactions = ET.SubElement(pheno, "cell_interactions")
         interactions.text = self.indent12  # affects indent of child
@@ -7055,6 +7060,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
     def fill_xml_intracellular(self, pheno, cdef):
+        # print(f'------------------- cell_def_tab.py:  fill_xml_intracellular()')
         if self.debug_print_fill_xml:
             logging.debug(f'------------------- cell_def_tab.py:  fill_xml_intracellular()')
             logging.debug(f'------ ["intracellular"]: for {cdef}')
@@ -7069,6 +7075,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #     self.param_d[cdef]['intracellular'] = {}
         #     self.param_d[cdef]['intracellular']['type'] = "maboss"
 
+        # print("    ", self.param_d[cdef]['intracellular'])
         if self.param_d[cdef]['intracellular'] is not None:
             # print(f'------ fill_xml_intracellular:  {self.param_d[cdef]["intracellular"]}')
 
@@ -7246,13 +7253,26 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                             t_last_tag.tail = self.indent14
                             
+                #-----------------------------
                 elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
                     self.ode_sbml_frame.fill_xml(pheno, cdef)
 
+                #-----------------------------
                 elif self.param_d[cdef]['intracellular']['type'] == "dfba":
+                    print("dfba settings: ",self.param_d[cdef]['intracellular']["settings"])
                     # Ensure necessary elements are present before writing to XML
+
+                # if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
+
+                    # if 'sbml_filename' not in self.param_d[cdef]['intracellular']["settings"] or \
+                            # not self.param_d[cdef]['intracellular']["settings"]['sbml_filename']:
+
                     if 'sbml_filename' not in self.param_d[cdef]['intracellular']["settings"] or \
-                            not self.param_d[cdef]['intracellular']["settings"]['sbml_filename']:
+                            self.param_d[cdef]['intracellular']["settings"]['sbml_filename'] in [None,""]:
+                        #rwh
+                        # msg = f'Error: Missing SBML filename in intracellular subtab for dFBA for {cdef}. Please provide before saving the XML.'
+                        # show_studio_warning_window(msg)
+                        # return
                         raise CellDefException("Missing SBML file in the " + cdef + " cell definition")
 
                     # Create the intracellular element for dFBA
