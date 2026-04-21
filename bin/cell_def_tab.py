@@ -5432,8 +5432,11 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                 self.cell_adhesion_affinity_dropdown.addItem(name)
 
-                val = self.param_d[self.current_cell_def]['asymmetric_division_probability'][name]
-                self.cycle_tab.add_row_to_asym_div_table(name, val=val)
+                try:
+                    val = self.param_d[self.current_cell_def]['asymmetric_division_probability'][name]
+                    self.cycle_tab.add_row_to_asym_div_table(name, val=val)
+                except:
+                    print(f"fill_celltypes_comboboxes(): Exception: {name}, asymmetric_division_probability= {self.param_d[self.current_cell_def]['asymmetric_division_probability']}")
 
                 # self.ics_tab.celltype_combobox.addItem(name)
 
@@ -5755,6 +5758,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             self.param_d[cdname]['asymmetric_division_probability'][cdname2] = '0' if cdname != cdname2 else '1.0'
             self.param_d[cdname2]['asymmetric_division_probability'][cdname] = '0' if cdname != cdname2 else '1.0'
 
+    # Use default values found in PhysiCell, e.g., *_standard_models.cpp, etc.
     def new_death_params(self, cdname):
         sval = self.default_sval
         duration_sval = '1.e9'
@@ -5762,8 +5766,10 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.param_d[cdname]["apoptosis_death_rate"] = '5.31667e-05'
         self.param_d[cdname]["apoptosis_01_duration"] = '516'
         self.param_d[cdname]["apoptosis_01_fixed_duration"] = False
-
         self.param_d[cdname]["apoptosis_duration_flag"] = False
+
+        self.param_d[cdname]["apoptosis_01_trate"] = '0.001938'
+        self.param_d[cdname]["apoptosis_01_fixed_trate"] = False
 
         self.param_d[cdname]["apoptosis_unlysed_rate"] = '0.05'
         self.param_d[cdname]["apoptosis_lysed_rate"] = '0'
