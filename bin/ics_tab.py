@@ -31,7 +31,8 @@ from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,Q
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QRegExpValidator
 
-from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval
+from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval, StudioTab
+
 from studio_functions import style_sheet_template
 from biwt_tab import BioinformaticsWalkthrough
 
@@ -43,20 +44,18 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-class ICs(QWidget):
-
-    def __init__(self, config_tab, celldef_tab, biwt_flag, nanohub_flag, xml_creator):
-        super().__init__()
-        # global self.config_params
+class ICs(StudioTab):
+    def __init__(self, xml_creator):
+        super().__init__(xml_creator)
 
         self.create_point = False
 
-        self.celldef_tab = celldef_tab
-        self.config_tab = config_tab
-        self.xml_creator = xml_creator
+        # self.xml_creator.celldef_tab = celldef_tab
+        # self.xml_creator.config_tab = config_tab
+        # self.xml_creator = xml_creator
 
-        self.biwt_flag = biwt_flag
-        self.nanohub_flag = nanohub_flag
+        # self.xml_creator.biwt_flag = biwt_flag
+        # self.nanohub_flag = nanohub_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
         # self.mech_voxel_size = 30
@@ -175,9 +174,9 @@ class ICs(QWidget):
 
         self.tab_widget = QTabWidget()
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
-        if self.biwt_flag:
-            self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self, self.xml_creator)
-            self.tab_widget.addTab(self.biwt_tab,"BIWT")
+        if self.xml_creator.biwt_flag:
+            self.xml_creator.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
+            self.tab_widget.addTab(self.xml_creator.biwt_tab,"BIWT")
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tab_widget)
@@ -554,6 +553,8 @@ class ICs(QWidget):
         hbox.addWidget(label)
 
         self.csv_folder = QLineEdit("config")
+        if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
+            self.csv_folder.setEnabled(False)
         # rx_valid_varname = QtCore.QRegExp("^[a-zA-Z][a-zA-Z0-9_]+$")
         # name_validator = QtGui.QRegExpValidator(rx_valid_varname)
         # self.csv_folder.setValidator(name_validator)
@@ -743,6 +744,9 @@ class ICs(QWidget):
 
         self.substrate_save_folder = QLineEdit()
         self.substrate_save_folder.setPlaceholderText("folder")
+        # if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
+        #     self.substrate_save_folder.setEnabled(False)
+        #     self.substrate_save_folder.setPlaceholderText("./config")
         self.substrate_save_file = QLineEdit_custom()
         csv_validator = QRegExpValidator(QtCore.QRegExp(r'^.+\.csv$'))
         self.substrate_save_file.setValidator(csv_validator)
@@ -796,17 +800,17 @@ class ICs(QWidget):
         return splitter
 
     def fill_celltype_combobox(self):
-        logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.celldef_tab.celltypes_list}')
-        for cdef in self.celldef_tab.celltypes_list:
+        logging.debug(f'ics_tab.py: fill_celltype_combobox(): {self.xml_creator.celldef_tab.celltypes_list}')
+        for cdef in self.xml_creator.celldef_tab.celltypes_list:
             self.celltype_combobox.addItem(cdef)
 
     def reset_plot_range(self):
-        self.plot_xmin = float(self.config_tab.xmin.text())
-        self.plot_xmax = float(self.config_tab.xmax.text())
-        self.plot_ymin = float(self.config_tab.ymin.text())
-        self.plot_ymax = float(self.config_tab.ymax.text())
-        self.plot_zmin = float(self.config_tab.zmin.text())
-        self.plot_zmax = float(self.config_tab.zmax.text())
+        self.plot_xmin = float(self.xml_creator.config_tab.xmin.text())
+        self.plot_xmax = float(self.xml_creator.config_tab.xmax.text())
+        self.plot_ymin = float(self.xml_creator.config_tab.ymin.text())
+        self.plot_ymax = float(self.xml_creator.config_tab.ymax.text())
+        self.plot_zmin = float(self.xml_creator.config_tab.zmin.text())
+        self.plot_zmax = float(self.xml_creator.config_tab.zmax.text())
         try:  # due to the initial callback
             # self.my_xmin.setText(str(self.xmin))
             # self.my_xmax.setText(str(self.xmax))
@@ -946,7 +950,7 @@ class ICs(QWidget):
         try:
             # print("----- celltype_combobox_changed_cb: idx = ",idx)
             cdef = self.celltype_combobox.currentText()
-            volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+            volume = float(self.xml_creator.celldef_tab.param_d[cdef]["volume_total"])
             self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
             # print("self.cell_radius= ",self.cell_radius)
         except:
@@ -957,6 +961,7 @@ class ICs(QWidget):
         self.o1val.setEnabled(bval)
         self.o2val.setEnabled(bval)
         self.odelw.setEnabled(bval)
+        self.spacing_w.setEnabled(bval)
 
         # for now, until 3D even possible
         # self.odelw.setEnabled(False)
@@ -1014,27 +1019,7 @@ class ICs(QWidget):
             self.set_to_origin()
 
     def geom_combobox_changed_cb(self,idx):
-        # print("----- geom_combobox_changed_cb: idx = ",idx)
-        # print("----- geom_combobox_changed_cb: geom_combobox.currentText() = ",self.geom_combobox.currentText())
         sel_str = self.geom_combobox.currentText()
-        # if not self.zeq0.isChecked():
-        #     self.create_point = False
-        #     if sel_str == "point":
-        #         self.create_point = True
-        #         print("------- setting 3D point")
-        #         return
-        #     elif sel_str == "box":
-        #         self.r3val.setEnabled(True)
-        #         self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
-        #         self.enable_ring_params(False)
-        #     elif sel_str == "ring":
-        #         self.enable_ring_params(True)
-        #         # self.r3val.setEnabled(True)
-        #         # self.r3val.setStyleSheet("QLineEdit {background-color: white; color: black;}")
-        #     else:
-        #         self.r3val.setEnabled(False)
-        #         self.r3val.setStyleSheet("QLineEdit {background-color: rgb(200,200,200); color: black;}")
-        #         self.enable_ring_params(False)
 
         self.create_point = False
         self.spacing_w.setEnabled(False)
@@ -1058,7 +1043,8 @@ class ICs(QWidget):
 
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
-            if "box" in self.geom_combobox.currentText():
+            # if "box" in self.geom_combobox.currentText():
+            if "box" in self.geom_combobox.currentText() or "annulus" in self.geom_combobox.currentText():
                 self.spacing_w.setEnabled(True)
             else:
                 self.spacing_w.setEnabled(False)
@@ -1076,7 +1062,8 @@ class ICs(QWidget):
         if "hex" in self.fill_combobox.currentText():
             self.num_cells.setEnabled(False)
 
-            if "box" in self.geom_combobox.currentText():
+            # if "box" in self.geom_combobox.currentText():
+            if "box" in self.geom_combobox.currentText() or "annulus" in self.geom_combobox.currentText():
                 self.spacing_w.setEnabled(True)
             else:
                 self.spacing_w.setEnabled(False)
@@ -1108,12 +1095,12 @@ class ICs(QWidget):
         self.numcells_l = []
         self.cell_radii = []
 
-        self.plot_xmin = float(self.config_tab.xmin.text())
-        self.plot_xmax = float(self.config_tab.xmax.text())
-        self.plot_ymin = float(self.config_tab.ymin.text())
-        self.plot_ymax = float(self.config_tab.ymax.text())
-        self.plot_zmin = float(self.config_tab.zmin.text())
-        self.plot_zmax = float(self.config_tab.zmax.text())
+        self.plot_xmin = float(self.xml_creator.config_tab.xmin.text())
+        self.plot_xmax = float(self.xml_creator.config_tab.xmax.text())
+        self.plot_ymin = float(self.xml_creator.config_tab.ymin.text())
+        self.plot_ymax = float(self.xml_creator.config_tab.ymax.text())
+        self.plot_zmin = float(self.xml_creator.config_tab.zmin.text())
+        self.plot_zmax = float(self.xml_creator.config_tab.zmax.text())
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
         self.setup_substrate_plot_parameters()
@@ -1134,7 +1121,7 @@ class ICs(QWidget):
                 rlist = deque()
                 rgba_list = deque()
                 # cdef = self.celltype_combobox.currentText()
-                # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+                # volume = float(self.xml_creator.celldef_tab.param_d[cdef]["volume_total"])
                 # self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
                 rval = self.cell_radius
 
@@ -1431,7 +1418,7 @@ class ICs(QWidget):
             return
 
         # cdef = self.celltype_combobox.currentText()
-        # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
+        # volume = float(self.xml_creator.celldef_tab.param_d[cdef]["volume_total"])
         # self.cell_radius = (volume * 0.75 / np.pi) ** (1./3)
         # logging.debug(f'ics_tab.py: volume= {volume}, radius= {self.cell_radius}')
 
@@ -1538,11 +1525,11 @@ class ICs(QWidget):
         x_spacing = self.cell_radius * 2 * self.spacing
         y_spacing = self.cell_radius * 1.7320508 * self.spacing  # np.sqrt(3) = 1.7320508 
 
-        cells_x = np.array([])
-        cells_y = np.array([])
+        # cells_x = np.array([])
+        # cells_y = np.array([])
 
-        cells_x2 = np.array([])
-        cells_y2 = np.array([])
+        # cells_x2 = np.array([])
+        # cells_y2 = np.array([])
 
         y_idx = 0
         z_idx = 0
@@ -1650,8 +1637,6 @@ class ICs(QWidget):
         ncells = int(self.num_cells.text())
         # print("self.r1_value= ", self.r1_value)
 
-        # x_min = -self.r1_value
-        # x_max =  self.r1_value
         x_min = -self.r2_value
         x_max =  self.r2_value
         y_min = -self.r2_value
@@ -1659,41 +1644,23 @@ class ICs(QWidget):
         y_idx = -1
         # hex packing constants
         x_spacing = self.cell_radius * 2
+        x_spacing *= self.spacing
         y_spacing = self.cell_radius * np.sqrt(3)
+        y_spacing *= self.spacing
 
-        cells_x = np.array([])
-        cells_y = np.array([])
-
-        cells_x2 = np.array([])
-        cells_y2 = np.array([])
-
-        # xctr = 0.0
-        # yctr = 40.0
         xctr = 0.0
         yctr = 0.0
-        #big_radius = 20.0
 
         y_idx = 0
         for yval in np.arange(y_min,y_max, y_spacing):
             y_idx += 1
             for xval in np.arange(x_min,x_max, x_spacing):
                 xval_offset = xval + (y_idx%2) * self.cell_radius
-                # xval_offset = self.x0_value + xval + (y_idx%2) * self.cell_radius
 
-                # ixval = int(xval_offset)
-                # print(ixval)
-                # idx = np.where(x_values == ixval)
                 xdist = xval_offset - xctr
                 ydist = yval - yctr
                 dist = np.sqrt(xdist*xdist + ydist*ydist)
                 if (dist >= self.r1_value) and (dist <= self.r2_value):
-                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
-                #     xv = xval_offset - big_radius
-                #     cells_x = np.append(cells_x, xv)
-                #     cells_y = np.append(cells_y, yval)
-                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
-                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
-
                     xval_offset += self.x0_value
                     yval_offset = yval + self.y0_value
 
@@ -1703,7 +1670,6 @@ class ICs(QWidget):
                     else:
                         xlist.append(xval_offset)
                         ylist.append(yval_offset)
-                        # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
                         self.csv_array = np.append(self.csv_array,[[xval_offset,yval_offset,zval, cell_type_index]],axis=0)
                         rlist.append(rval)
                         self.cell_radii.append(self.cell_radius)
@@ -1749,8 +1715,6 @@ class ICs(QWidget):
         ncells = int(self.num_cells.text())
         # print("self.r1_value= ", self.r1_value)
 
-        # x_min = -self.r1_value
-        # x_max =  self.r1_value
         x_min = -self.r2_value
         x_max =  self.r2_value
         y_min = -self.r2_value
@@ -1760,17 +1724,8 @@ class ICs(QWidget):
         x_spacing = self.cell_radius * 2
         y_spacing = self.cell_radius * np.sqrt(3)
 
-        cells_x = np.array([])
-        cells_y = np.array([])
-
-        cells_x2 = np.array([])
-        cells_y2 = np.array([])
-
-        # xctr = 0.0
-        # yctr = 40.0
         xctr = 0.0
         yctr = 0.0
-        #big_radius = 20.0
 
         y_idx = 0
         for yval in np.arange(y_min,y_max, y_spacing):
@@ -1786,13 +1741,6 @@ class ICs(QWidget):
                 ydist = yval - yctr
                 dist = np.sqrt(xdist*xdist + ydist*ydist)
                 if (dist >= self.r1_value) and (dist <= self.r2_value):
-                # # if (xval >= xvals[kdx]) and (xval <= xvals[kdx+1]):
-                #     xv = xval_offset - big_radius
-                #     cells_x = np.append(cells_x, xv)
-                #     cells_y = np.append(cells_y, yval)
-                #     print(xv,',',yval,',0.0, 2, 101')  # x,y,z, cell type, [sub]cell ID
-                #     # plt.plot(xval_offset,yval,'ro',markersize=30)
-
                     xval_offset += self.x0_value
                     xlist.append(xval_offset)
                     yval_offset = yval + self.y0_value
@@ -1885,15 +1833,6 @@ class ICs(QWidget):
 
         self.ax0.set_aspect(1.0)
 
-        # self.plot_xmin = float(self.xmin)
-        # self.plot_xmax = float(self.xmax)
-        # self.plot_ymin = float(self.ymin)
-        # self.plot_ymax = float(self.ymax)
-
-        # self.plot_xmin = -500
-        # self.plot_xmax = 500
-        # self.plot_ymin = -500
-        # self.plot_ymax = 500
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
 
@@ -2009,6 +1948,7 @@ class ICs(QWidget):
         rval = self.cell_radius
         R = self.r2_value
         delta_theta = np.arcsin(rval / R)
+        delta_theta *= self.spacing
 
         try:
             rmod = int(self.odelw.text())
@@ -2023,8 +1963,8 @@ class ICs(QWidget):
             return
         print("ring(): rmod= ",rmod)
 
-        cells_x = np.array([])
-        cells_y = np.array([])
+        # cells_x = np.array([])
+        # cells_y = np.array([])
 
         xctr = 0.0
         yctr = 0.0
@@ -2032,11 +1972,7 @@ class ICs(QWidget):
         y_idx = 0
         start_radians = self.o1_value * np.pi/180.
         end_radians = self.o2_value * np.pi/180.
-        # delta_radians = self.o2_value * np.pi/180.
 
-        # for theta in np.arange(0, max_radians, np.pi/10.):
-        # for theta in np.arange(0, max_radians, delta_theta * np.pi/180):
-        # for theta in np.arange(start_radians, end_radians, delta_theta):
         for theta in np.arange(start_radians, end_radians, rmod*2*delta_theta):
             # print("theta= ",theta)
             xval = self.x0_value + R * np.cos(theta)
@@ -2048,7 +1984,6 @@ class ICs(QWidget):
             else:
                 xlist.append(xval)
                 ylist.append(yval)
-                # self.csv_array = np.append(self.csv_array,[[xval_offset,yval,zval, cell_type_index]],axis=0)
                 self.csv_array = np.append(self.csv_array,[[xval,yval,zval, cell_type_index]],axis=0)
                 rlist.append(rval)
                 self.cell_radii.append(self.cell_radius)
@@ -2120,17 +2055,6 @@ class ICs(QWidget):
         # if self.nanohub_flag:
         #     os.makedirs('tmpdir')
 
-        # if not os.path.isfile(full_fname):
-        #     msg = "Invalid filename: " + full_fname
-        #     print(msg)
-        #     msgBox = QMessageBox()
-        #     msgBox.setIcon(QMessageBox.Information)
-        #     msgBox.setText(msg)
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     returnValue = msgBox.exec()
-        # else:
-            # np.savetxt('cells.csv', self.csv_array, delimiter=',')
-
 
         # Recall: self.csv_array = np.empty([1,4])  # default floats
         if self.use_names.isChecked():
@@ -2138,7 +2062,7 @@ class ICs(QWidget):
             print("----- full_fname=",full_fname)
             # print("self.csv_array.shape= ",self.csv_array.shape)
             # print(self.csv_array)
-            cell_name = list(self.celldef_tab.param_d.keys())
+            cell_name = list(self.xml_creator.celldef_tab.param_d.keys())
             # print("cell_name=",cell_name)
             with open(full_fname, 'w') as f:
                 f.write('x,y,z,type,volume,cycle entry,custom:GFP,custom:sample\n')  # PhysiCell checks for "x" or "X"
@@ -2186,7 +2110,11 @@ class ICs(QWidget):
         C = C[:,nonzero_substrates] # remove columns of all zeros corresponding to substrates that were not set
         substrates_to_save = [self.substrate_list[i] for i in range(len(self.substrate_list)) if nonzero_substrates[i]]
         header = f'x,y,z,{",".join(substrates_to_save)}'
-        np.savetxt(self.full_substrate_ic_fname, np.concatenate((X,Y,Z,C), axis=1), delimiter=',',header=header,comments='')
+        try:
+            np.savetxt(self.full_substrate_ic_fname, np.concatenate((X,Y,Z,C), axis=1), delimiter=',',header=header,comments='')
+        except:
+            print("Error: can not save substrates .csv in ICs")
+
         self.ic_substrates_enabled.setChecked(True)
 
     #--------------------------------------------------
@@ -2213,10 +2141,10 @@ class ICs(QWidget):
             cell_types_l = [self.celltype_combobox.itemText(i) for i in range(self.celltype_combobox.count())]
             print(cell_types_l)
 
-            xlist = deque()
-            ylist = deque()
-            rlist = deque()
-            rgba_list = deque()
+            # xlist = deque()
+            # ylist = deque()
+            # rlist = deque()
+            # rgba_list = deque()
 
             rval = self.cell_radius
 
@@ -2261,8 +2189,8 @@ class ICs(QWidget):
                             return
 
                         # print('xval,yval=',xval,yval)
-                        # volume = float(self.celldef_tab.param_d[cdef]["volume_total"])
-                        # volume = float(self.celldef_tab.param_d[cell_type_name]["volume_total"])
+                        # volume = float(self.xml_creator.celldef_tab.param_d[cdef]["volume_total"])
+                        # volume = float(self.xml_creator.celldef_tab.param_d[cell_type_name]["volume_total"])
                         # rval = (volume * 0.75 / np.pi) ** (1./3)
                         rval = self.cell_radius
 
@@ -2298,15 +2226,15 @@ class ICs(QWidget):
             print("import_cb():  full_path_model_name is NOT valid")
 
     def fill_gui(self):
-        self.csv_folder.setText(self.config_tab.csv_folder.text())
-        self.output_file.setText(self.config_tab.csv_file.text())
+        self.csv_folder.setText(self.xml_creator.config_tab.csv_folder.text())
+        self.output_file.setText(self.xml_creator.config_tab.csv_file.text())
         self.fill_substrate_combobox()
         self.fill_ic_substrates_widgets()
-        if self.biwt_flag:
-            self.biwt_tab.fill_gui()
+        if self.xml_creator.biwt_flag:
+            self.xml_creator.biwt_tab.fill_gui()
 
     def fill_ic_substrates_widgets(self):
-        substrate_initial_condition_element = self.config_tab.xml_root.find(".//microenvironment_setup//options//initial_condition")
+        substrate_initial_condition_element = self.xml_creator.config_tab.xml_root.find(".//microenvironment_setup//options//initial_condition")
         if substrate_initial_condition_element is None or substrate_initial_condition_element.attrib["enabled"].lower() == "false":
             self.ic_substrates_enabled.setChecked(False)
             return
@@ -2445,7 +2373,7 @@ class ICs(QWidget):
         logging.debug(f'ics_tab.py: ------- fill_substrate_combobox')
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.substrate_combobox.clear()
-        uep = self.config_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
+        uep = self.xml_creator.config_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
         if uep:
             idx = 0
             num_vars = len(uep.findall('variable'))
@@ -2494,13 +2422,13 @@ class ICs(QWidget):
             self.setupGaussianRectangleUpdater()
 
     def setup_substrate_plot_parameters(self):
-        self.xdel = float(self.config_tab.xdel.text())
+        self.xdel = float(self.xml_creator.config_tab.xdel.text())
         self.nx = int(np.ceil((self.plot_xmax - self.plot_xmin) / self.xdel))
         self.plot_xx = np.arange(0,self.nx)*self.xdel+self.plot_xmin+0.5*self.xdel
-        self.ydel = float(self.config_tab.ydel.text())
+        self.ydel = float(self.xml_creator.config_tab.ydel.text())
         self.ny = int(np.ceil((self.plot_ymax - self.plot_ymin) / self.ydel))
         self.plot_yy = np.arange(0,self.ny)*self.ydel+self.plot_ymin+0.5*self.ydel
-        self.zdel = float(self.config_tab.zdel.text())
+        self.zdel = float(self.xml_creator.config_tab.zdel.text())
         self.nz = 1 # only let this work for 2d
         self.plot_zz = np.arange(0,self.nz)*self.zdel+self.plot_zmin+0.5*self.zdel
         self.all_substrate_values = np.zeros((self.ny, self.nx, len(self.substrate_list)))
@@ -2543,8 +2471,8 @@ class ICs(QWidget):
         return
         
     def check_for_new_grid(self):
-        if float(self.config_tab.xmin.text())!=self.plot_xmin or float(self.config_tab.xmax.text())!=self.plot_xmax or float(self.config_tab.xdel.text())!=self.xdel \
-            or float(self.config_tab.ymin.text())!=self.plot_ymin or float(self.config_tab.ymax.text())!=self.plot_ymax or float(self.config_tab.ydel.text())!=self.ydel:
+        if float(self.xml_creator.config_tab.xmin.text())!=self.plot_xmin or float(self.xml_creator.config_tab.xmax.text())!=self.plot_xmax or float(self.xml_creator.config_tab.xdel.text())!=self.xdel \
+            or float(self.xml_creator.config_tab.ymin.text())!=self.plot_ymin or float(self.xml_creator.config_tab.ymax.text())!=self.plot_ymax or float(self.xml_creator.config_tab.ydel.text())!=self.ydel:
             self.reset_plot_range()
             self.setup_substrate_plot_parameters()
             self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
