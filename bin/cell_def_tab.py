@@ -312,7 +312,10 @@ class CellDef(StudioTab):
         self.tab_widget.addTab(self.create_motility_tab(),"Motility")
         self.tab_widget.addTab(self.create_secretion_tab(),"Secretion")
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
-        self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
+        if not self.xml_creator.nanohub_flag and not self.xml_creator.galaxy_flag:
+            self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
+        else:
+            self.intracellular_type_dropdown = None
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
         self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
@@ -6391,7 +6394,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
 
         else:
-            self.intracellular_type_dropdown.setCurrentIndex(0)
+            if self.intracellular_type_dropdown is not None:
+                self.intracellular_type_dropdown.setCurrentIndex(0)
 
     #-----------------------------------------------------------------------------------------
     def update_custom_data_params(self):
