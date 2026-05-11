@@ -28,7 +28,8 @@ import numpy as np
 import pandas as pd
 
 from multivariate_rules import Window_plot_rules
-from studio_classes import ExtendedCombo, HoverWarning, QVLine, QLineEdit_custom, HoverQuestion
+# from studio_classes import ExtendedCombo, HoverWarning, QVLine, QLineEdit_custom, HoverQuestion
+from studio_classes import ExtendedCombo, QLabelSeparator, QLineEdit_custom, QVLine, QCheckBox_custom, QRadioButton_custom, HoverWarning, HoverQuestion, StudioTab
 from studio_functions import show_studio_warning_window
 
 class RulesPlotWindow(QWidget):
@@ -96,19 +97,22 @@ class MyQLineEdit(QLineEdit):
     prev = None
 
 #----------------------------------------------------------------------
-class Rules(QWidget):
-    # def __init__(self, nanohub_flag):
-    def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
-        super().__init__()
+# class Rules(QWidget):
+#     # def __init__(self, nanohub_flag):
+#     def __init__(self, nanohub_flag, microenv_tab, celldef_tab):
+#         super().__init__()
+class Rules(StudioTab):
+    def __init__(self, xml_creator):
+        super().__init__(xml_creator)
 
         self.rules_plot = None
 
-        self.nanohub_flag = nanohub_flag
+        # self.xml_creator.nanohub_flag = nanohub_flag
         self.homedir = '.'  # reset in studio.py
         self.absolute_data_dir = None   # updated in studio.py
 
-        self.microenv_tab = microenv_tab
-        self.celldef_tab = celldef_tab
+        # self.microenv_tab = microenv_tab
+        # self.xml_creator.celldef_tab = celldef_tab
 
         self.celltype_name = None
         self.signal = None
@@ -311,7 +315,7 @@ class Rules(QWidget):
 
         hlayout = QHBoxLayout()
         self.save_button = QPushButton("Save")
-        if self.nanohub_flag:
+        if self.xml_creator.nanohub_flag:
             self.save_button.setEnabled(True)
         self.save_button.setFixedWidth(100)
         self.save_button.setStyleSheet("background-color: yellow")
@@ -322,7 +326,7 @@ class Rules(QWidget):
 
         self.rules_folder = QLineEdit()
         self.rules_folder.setPlaceholderText("folder")
-        if self.nanohub_flag:
+        if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
             self.rules_folder.setEnabled(False)
         # self.rules_folder.setFixedWidth(200)
         hlayout.addWidget(self.rules_folder)
@@ -333,7 +337,7 @@ class Rules(QWidget):
         csv_validator = QRegExpValidator(QtCore.QRegExp(r'^.+\.csv$'))
         self.rules_file.setValidator(csv_validator)
         self.rules_file.setPlaceholderText("file.csv")
-        if self.nanohub_flag:
+        if self.xml_creator.nanohub_flag:
             self.rules_file.setEnabled(True)
         # self.rules_file.setFixedWidth(200)
         hlayout.addWidget(self.rules_file) 
@@ -344,7 +348,7 @@ class Rules(QWidget):
         hlayout.addStretch(1)
 
         self.import_rules_button = QPushButton("Import")
-        if self.nanohub_flag:
+        if self.xml_creator.nanohub_flag:
             self.import_rules_button.setEnabled(True)
         self.import_rules_button.setFixedWidth(100)
         self.import_rules_button.setStyleSheet("background-color: yellow")
@@ -790,8 +794,8 @@ class Rules(QWidget):
         self.celltype_name = self.celltype_combobox.currentText()
         # if self.signal:
         #     print("        signal= ", self.signal)
-        # print("   keys= ", self.celldef_tab.param_d.keys())
-        # print("   self.celldef_tab.param_d[self.celltype_name]= ", self.celldef_tab.param_d[self.celltype_name])
+        # print("   keys= ", self.xml_creator.celldef_tab.param_d.keys())
+        # print("   self.xml_creator.celldef_tab.param_d[self.celltype_name]= ", self.xml_creator.celldef_tab.param_d[self.celltype_name])
 
         # Need to:
         self.update_base_value()
@@ -834,28 +838,28 @@ class Rules(QWidget):
 
         base_val = '??'
         if btokens[0] in ["cycle", "exit"]:
-            cycle_model_idx = self.celldef_tab.param_d[key0]['cycle_choice_idx']
+            cycle_model_idx = self.xml_creator.celldef_tab.param_d[key0]['cycle_choice_idx']
             # print(behavior, cycle_model_idx )
             #{0:"live", 1:"basic Ki67", 2:"advanced Ki67", 3:"flow cytometry", 4:"Flow cytometry model (separated)", 5:"cycling quiescent"}
             if (behavior == 'cycle entry' or behavior == 'exit from cycle phase 0'):
-                if cycle_model_idx == 0 : base_val = self.celldef_tab.param_d[key0]['cycle_live_00_trate']
-                elif cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_01_trate']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_01_trate']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_01_trate']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_01_trate']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_01_trate']
+                if cycle_model_idx == 0 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_live_00_trate']
+                elif cycle_model_idx == 1 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_Ki67_01_trate']
+                elif cycle_model_idx == 2 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_advancedKi67_01_trate']
+                elif cycle_model_idx == 3 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcyto_01_trate']
+                elif cycle_model_idx == 4 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcytosep_01_trate']
+                elif cycle_model_idx == 5 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_quiescent_01_trate']
             elif (behavior == 'exit from cycle phase 1'):
-                if cycle_model_idx == 1 : base_val = self.celldef_tab.param_d[key0]['cycle_Ki67_10_trate']
-                elif cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_12_trate']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_12_trate']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_12_trate']
-                elif cycle_model_idx == 5 : base_val = self.celldef_tab.param_d[key0]['cycle_quiescent_10_trate']
+                if cycle_model_idx == 1 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_Ki67_10_trate']
+                elif cycle_model_idx == 2 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_advancedKi67_12_trate']
+                elif cycle_model_idx == 3 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcyto_12_trate']
+                elif cycle_model_idx == 4 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcytosep_12_trate']
+                elif cycle_model_idx == 5 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_quiescent_10_trate']
             elif (behavior == 'exit from cycle phase 2'):
-                if cycle_model_idx == 2 : base_val = self.celldef_tab.param_d[key0]['cycle_advancedKi67_20_trate']
-                elif cycle_model_idx == 3 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcyto_20_trate']
-                elif cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_23_trate']
+                if cycle_model_idx == 2 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_advancedKi67_20_trate']
+                elif cycle_model_idx == 3 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcyto_20_trate']
+                elif cycle_model_idx == 4 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcytosep_23_trate']
             elif (behavior == 'exit from cycle phase 3'):
-                if cycle_model_idx == 4 : base_val = self.celldef_tab.param_d[key0]['cycle_flowcytosep_30_trate']
+                if cycle_model_idx == 4 : base_val = self.xml_creator.celldef_tab.param_d[key0]['cycle_flowcytosep_30_trate']
                         
         elif btokens[0] in self.substrates:
             key1 = 'secretion'
@@ -869,42 +873,42 @@ class Rules(QWidget):
             else:  # just "<substrate> secretion" which mean its rate
                 key3 = "secretion_rate"
             try:
-                base_val = self.celldef_tab.param_d[key0][key1][key2][key3]
+                base_val = self.xml_creator.celldef_tab.param_d[key0][key1][key2][key3]
             except:
                 print("update_base_value(): ---- got exception")
                 return
         elif btokens[0] == 'apoptosis':
-            base_val = self.celldef_tab.param_d[key0]['apoptosis_death_rate']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['apoptosis_death_rate']
         elif btokens[0] == 'necrosis':
-            base_val = self.celldef_tab.param_d[key0]['necrosis_death_rate']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['necrosis_death_rate']
         elif btokens[0] == 'migration':
             if btokens[1] == 'speed':
-                base_val = self.celldef_tab.param_d[key0]['speed']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['speed']
             elif btokens[1] == 'bias':
-                base_val = self.celldef_tab.param_d[key0]['migration_bias']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['migration_bias']
             elif btokens[1] == 'persistence':
-                base_val = self.celldef_tab.param_d[key0]['persistence_time']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['persistence_time']
         elif btokens[0] == 'cell-cell':
             if btokens[1] == 'adhesion':
                 if len(btokens)==2:
-                    base_val = self.celldef_tab.param_d[key0]['mechanics_adhesion']
+                    base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_adhesion']
                 elif btokens[2] == 'elastic':
-                    base_val = self.celldef_tab.param_d[key0]['mechanics_elastic_constant']
+                    base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_elastic_constant']
             elif btokens[1] == 'repulsion':
-                base_val = self.celldef_tab.param_d[key0]['mechanics_repulsion']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_repulsion']
         elif btokens[0] == 'cell-BM':
             if btokens[1] == 'adhesion':
-                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_adhesion']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_BM_adhesion']
             elif btokens[1] == 'repulsion':
-                base_val = self.celldef_tab.param_d[key0]['mechanics_BM_repulsion']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_BM_repulsion']
         elif behavior == "relative maximum adhesion distance":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_relative_equilibrium_distance']
         elif behavior == "cell attachment rate":
-            base_val = self.celldef_tab.param_d[key0]['attachment_rate']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['attachment_rate']
         elif behavior == "cell detachment rate":
-            base_val = self.celldef_tab.param_d[key0]['detachment_rate']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['detachment_rate']
         elif behavior == "maximum number of cell attachments":
-            base_val = self.celldef_tab.param_d[key0]['mechanics_max_num_attachments']
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['mechanics_max_num_attachments']
 
         elif btokens[0] == "phagocytose":
             print("--- handling phagocytose as token 0")
@@ -912,45 +916,45 @@ class Rules(QWidget):
             if len(btokens)==3 and btokens[2] == "cell" and btokens[1] in ["apoptotic","necrotic"]:
                 if btokens[1] == "apoptotic":
                     print("--- handling phagocytose apoptotic cell")
-                    base_val = self.celldef_tab.param_d[key0]['apoptotic_phagocytosis_rate']
+                    base_val = self.xml_creator.celldef_tab.param_d[key0]['apoptotic_phagocytosis_rate']
                 elif btokens[1] == "necrotic":
                     print("--- handling phagocytose necrotic cell")
-                    base_val = self.celldef_tab.param_d[key0]['necrotic_phagocytosis_rate']
+                    base_val = self.xml_creator.celldef_tab.param_d[key0]['necrotic_phagocytosis_rate']
             elif len(btokens)==4 and btokens[1] == "other" and btokens[2] == "dead" and btokens[3] == "cell":
                 print("--- handling phagocytose other dead cell")
-                base_val = self.celldef_tab.param_d[key0]['other_dead_phagocytosis_rate']
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['other_dead_phagocytosis_rate']
             else:
                 cell_type = behavior[12:]   # length of "phagocytose" 
                 print("      cell_type (for phagocytose)=",cell_type)
-                base_val = self.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
+                base_val = self.xml_creator.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
         elif behavior == "attack damage rate":
-            base_val = self.celldef_tab.param_d[key0]["attack_damage_rate"]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]["attack_damage_rate"]
         elif behavior == "attack duration":
-            base_val = self.celldef_tab.param_d[key0]["attack_duration"]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]["attack_duration"]
         elif btokens[0] == "attack":
             cell_type = behavior[7:]
-            base_val = self.celldef_tab.param_d[key0]['attack_rate'][cell_type]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['attack_rate'][cell_type]
         elif behavior[0:len("fuse to")] == "fuse to":
             cell_type = behavior[len("fuse to")+1:]
-            base_val = self.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
         elif btokens[0] == "immunogenicity":
             base_val = '1.0'
         elif btokens[0] == "is_movable":
             base_val = '1.0'
         elif behavior[0:len("transform to")] == "transform to":
             cell_type = behavior[len("transform to")+1:]
-            base_val = self.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
         elif behavior == "damage rate":
-            base_val = self.celldef_tab.param_d[key0]["damage_rate"]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
-            base_val = self.celldef_tab.param_d[key0]["damage_repair_rate"]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]["damage_repair_rate"]
         elif "asymmetric" == behavior.split()[0]:
             cell_type = behavior.split()[-1]
-            base_val = self.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
+            base_val = self.xml_creator.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
-            print(custom_data_name, self.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
-            base_val = self.celldef_tab.param_d[key0]['custom_data'][custom_data_name][0]
+            print(custom_data_name, self.xml_creator.celldef_tab.param_d[key0]['custom_data'][custom_data_name])
+            base_val = self.xml_creator.celldef_tab.param_d[key0]['custom_data'][custom_data_name][0]
 
         #---------------------
         # Set the base value 
@@ -985,9 +989,9 @@ class Rules(QWidget):
 
         self.rule_max_val.setText(np.format_float_positional(saturation_val))
 
-        # print(self.celldef_tab.param_d.keys())
-        # for ct in self.celldef_tab.param_d.keys():
-            # print(self.celldef_tab.param_d[ct])
+        # print(self.xml_creator.celldef_tab.param_d.keys())
+        # for ct in self.xml_creator.celldef_tab.param_d.keys():
+            # print(self.xml_creator.celldef_tab.param_d[ct])
 
         # rwh: create this list once.  EDIT: Not sure what I was thinking here...
         # static_names = []
@@ -1155,7 +1159,7 @@ class Rules(QWidget):
                                     irow += 1  # but let's still count it in "num_rules"
                                     continue
 
-                            if cell_type not in self.celldef_tab.param_d.keys():
+                            if cell_type not in self.xml_creator.celldef_tab.param_d.keys():
                                 print(f'ERROR: {cell_type} is not a valid cell type name')
                                 show_studio_warning_window(f'ERROR: {cell_type} is not a valid cell type name')
                                 return
@@ -1186,7 +1190,7 @@ class Rules(QWidget):
                             elm[self.rules_response_idx] = "phagocytose other dead cell"
                             self.fill_rule_row(irow, elm, toggle_val)
 
-                        if elm[self.rules_response_idx] == "damage rate" and hasattr(self.celldef_tab, "pre_v1_14_0_damage_rate") and self.celldef_tab.pre_v1_14_0_damage_rate:
+                        if elm[self.rules_response_idx] == "damage rate" and hasattr(self.xml_creator.celldef_tab, "pre_v1_14_0_damage_rate") and self.xml_creator.celldef_tab.pre_v1_14_0_damage_rate:
                             # print("fill_rules(): got to 5")
                             self.rules_table.cellWidget(irow, self.rules_response_idx).setText("attack damage rate")
                             msg = "\"damage rate\" no longer refers to the rate of damage dealt, but rather the rate at which damage accumulates in the given cell type."
@@ -1833,7 +1837,7 @@ class Rules(QWidget):
             # arg! how does it not catch this as an invalid file above??
             # in fill_rules():  full_rules_fname= /Users/heiland/git/data/tumor_rules.csv
             print(f'import_rules_cb():  (guess) calling fill_rules() with ={full_path_rules_name}')
-            # if not self.nanohub_flag:
+            # if not self.xml_creator.nanohub_flag:
             #     full_path_rules_name = os.path.abspath(os.path.join(self.homedir,'tmpdir',folder_name, file_name))
             #     print(f'import_rules_cb():  NOW calling fill_rules() with ={full_path_rules_name}')
 
@@ -2001,16 +2005,19 @@ class Rules(QWidget):
 
         signal_l += ["pressure","volume"]
 
-        # print("       self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
-        for ct in self.celldef_tab.param_d.keys():
+        # print("       self.xml_creator.celldef_tab.param_d.keys()= ",self.xml_creator.celldef_tab.param_d.keys())
+        for ct in self.xml_creator.celldef_tab.param_d.keys():
             signal_l.append("contact with " + ct)
 
         # special
-        signal_l += ["contact with live cell","contact with dead cell","contact with BM","damage","dead","attacking","total attack time","damage delivered","time","apoptotic","necrotic"]
+        signal_l += ["contact with live cell", "contact with dead cell", 
+                     "contact with apoptotic cell", "contact with necrotic cell", 
+                     "contact with BM", "damage","dead", "attacking",
+                     "total attack time", "damage delivered", "time", "apoptotic", "necrotic"]
 
         # append all custom data (but *only* for a single cell_def!)
-        cell_def0 = list(self.celldef_tab.param_d.keys())[0]
-        for custom_var in list(self.celldef_tab.param_d[cell_def0]['custom_data'].keys()):
+        cell_def0 = list(self.xml_creator.celldef_tab.param_d.keys())[0]
+        for custom_var in list(self.xml_creator.celldef_tab.param_d[cell_def0]['custom_data'].keys()):
             signal_name = "custom:" + custom_var
             signal_l.append(signal_name)
 
@@ -2027,7 +2034,7 @@ class Rules(QWidget):
         self.response_combobox.addItems(self.response_l)
 
         self.response_combobox.setCurrentIndex(0)
-        self.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
+        self.xml_creator.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     def create_response_list(self):
         # TODO: figure out how best to organize these responses
@@ -2055,22 +2062,22 @@ class Rules(QWidget):
 
         response_l += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
 
-        for ct in self.celldef_tab.param_d.keys():
+        for ct in self.xml_creator.celldef_tab.param_d.keys():
             response_l.append("adhesive affinity to " + ct)
 
         # special
         response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
 
         for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to ","asymmetric division to "]:  # verb
-            for ct in self.celldef_tab.param_d.keys():
+            for ct in self.xml_creator.celldef_tab.param_d.keys():
                 response_l.append(verb + ct)
 
         # more special
         response_l += ["is_movable","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
 
         # append all custom data (but *only* for a single cell_def!)
-        cell_def0 = list(self.celldef_tab.param_d.keys())[0]
-        for custom_var in self.celldef_tab.param_d[cell_def0]['custom_data'].keys():
+        cell_def0 = list(self.xml_creator.celldef_tab.param_d.keys())[0]
+        for custom_var in self.xml_creator.celldef_tab.param_d[cell_def0]['custom_data'].keys():
             response_name = "custom:" + custom_var
             response_l.append(response_name)
         return response_l
@@ -2082,18 +2089,18 @@ class Rules(QWidget):
 
         self.clear_comboboxes()
 
-        # print("rules_tab.py: fill_gui(): self.celldef_tab.param_d.keys()= ",self.celldef_tab.param_d.keys())
-        for key in self.celldef_tab.param_d.keys():
+        # print("rules_tab.py: fill_gui(): self.xml_creator.celldef_tab.param_d.keys()= ",self.xml_creator.celldef_tab.param_d.keys())
+        for key in self.xml_creator.celldef_tab.param_d.keys():
             # logging.debug(f'cell type ---> {key}')
             # print(f'cell type ---> {key}')
             self.celltype_combobox.addItem(key)
             # self.signal_combobox.addItem(key)
             # break
-        # print("\n\n------------\nrules_tab.py: fill_gui(): self.celldef_tab.param_d = ",self.cell_def_tab.param_d)
+        # print("\n\n------------\nrules_tab.py: fill_gui(): self.xml_creator.celldef_tab.param_d = ",self.cell_def_tab.param_d)
 
         # print("rules_tab.py: fill_gui(): self.microenv_tab.param_d.keys()= ",self.microenv_tab.param_d.keys())
         self.substrates.clear()
-        for key in self.microenv_tab.param_d.keys():
+        for key in self.xml_creator.microenv_tab.param_d.keys():
             # logging.debug(f'substrate type ---> {key}')
             # print(f'substrate type ---> {key}')
             if key == 'gradients' or key == 'track_in_agents':
@@ -2142,14 +2149,14 @@ class Rules(QWidget):
                 self.rules_enabled.setChecked(False)
 
             # print(f'rules_tab.py: fill_gui()----- calling fill_rules() with  full_rules_fname=  {full_rules_fname}')
-            # if not self.nanohub_flag:
+            # if not self.xml_creator.nanohub_flag:
             #     full_path_rules_name = os.path.abspath(os.path.join(self.homedir,'tmpdir',folder_name, file_name))
             #     print(f'import_rules_cb():  fill_gui()-- NOW calling fill_rules() with ={full_path_rules_name}')
             #     self.fill_rules(full_path_rules_name)
             # else:
             #     self.fill_rules(full_rules_fname)
 
-            if self.nanohub_flag:  # sigh
+            if self.xml_creator.nanohub_flag:  # sigh
                 # full_rules_fname = os.path.join(self.absolute_data_dir, file_name)
                 full_rules_fname = os.path.join('.', file_name)
                 self.fill_rules(full_rules_fname)
