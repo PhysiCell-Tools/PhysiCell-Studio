@@ -668,7 +668,7 @@ The entry in column 2), 'phenotype', needs more explanation:\n\n"
     #-----------------------------------------------------------
     def validate_params(self,cdef):
         print("\n--- validate_params(): keys()= ", self.celldef_tab.param_d[cdef]["intracellular"].keys())
-        print(f"   {cdef} --> {self.celldef_tab.param_d[cdef]["intracellular"]}")
+        print(f'   {cdef} --> {self.celldef_tab.param_d[cdef]["intracellular"]}')
         if "type" not in self.celldef_tab.param_d[cdef]["intracellular"].keys():
             print("---- sbml_intra.py: validate_params(): missing 'type'")
             msg = f'Error: Missing "type" in intracellular subtab for ODEs. Please provide before saving the XML.'
