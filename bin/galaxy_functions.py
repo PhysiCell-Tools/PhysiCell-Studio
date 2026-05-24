@@ -307,8 +307,18 @@ class SaveProjectWindow(QWidget):
 
     def save_project_cb(self):
         fname = self.project_name_w.text()
+
+
+        msgBox = QMessageBox()
+        msgBox.setText(f"This will bundle your current model's config file, its cells/substrates ICs, and rules, "
+                   f"then copy '{fname}' to the Galaxy History.")
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        if msgBox.exec() == QMessageBox.Cancel:
+            return
+
         file_str = os.path.join(os.getcwd(), "config/*.csv")
-        print('-------- save_project_cb(): zip up all', file_str)
+        # print('-------- save_project_cb(): zip up all', file_str)
         try:
             with zipfile.ZipFile(fname, 'w') as myzip:
                 myzip.write(self.xml_creator.current_xml_file,
