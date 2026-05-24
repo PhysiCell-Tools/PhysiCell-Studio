@@ -52,7 +52,7 @@ from run_tab import RunModel
 from settings import StudioSettings
 # from legend_tab import Legend 
 
-from galaxy_functions import save_project_galaxy, load_project_galaxy_history, \
+from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history, \
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
@@ -281,9 +281,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            # self.rules_tab = Rules(self.nanohub_flag, self.microenv_tab, self.celldef_tab)
             self.rules_tab = Rules(self)
-            # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
             self.microenv_tab.rules_tab = self.rules_tab
@@ -505,7 +503,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
             else:
                 file_menu.addAction("Open", self.open_as_cb)
-                file_menu.addAction("Save project", lambda: save_project_galaxy(self))
+                file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
                 file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
 
             #------
