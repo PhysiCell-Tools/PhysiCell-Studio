@@ -68,7 +68,7 @@ from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
-from studio_classes import QCheckBox_custom, QRadioButton_custom
+from studio_classes import QCheckBox_custom, QRadioButton_custom, QLineEdit_custom
 from pyMCDS import xmlfile_to_xmlpathfile
 
 #---------------------------
@@ -513,6 +513,7 @@ class VisBase():
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
         self.substrate_grad = False
+        self.substrate_grad_angle = False
 
         self.plot_xmin = None
         self.plot_xmax = None
@@ -565,6 +566,8 @@ class VisBase():
         self.cax2 = None
 
         self.cbar2 = None
+        self.substrate_grad_angle_window = None
+        self.show_gradient_angle_wheel_button = None
 
         self.figsize_width_2Dplot = basic_length
         self.figsize_height_2Dplot = basic_length
@@ -892,8 +895,14 @@ class VisBase():
         self.substrates_grad_checkbox.setChecked(False)
         self.substrates_grad_checkbox.clicked.connect(self.substrates_grad_toggle_cb)
 
+        self.substrates_grad_angle_checkbox = QCheckBox_custom('angle of gradient')
+        self.substrates_grad_angle_checkbox.setEnabled(False)
+        self.substrates_grad_angle_checkbox.setChecked(False)
+        self.substrates_grad_angle_checkbox.clicked.connect(self.substrates_grad_angle_toggle_cb)
+
         hbox.addWidget(self.substrates_checkbox)
         hbox.addWidget(self.substrates_grad_checkbox)
+        hbox.addWidget(self.substrates_grad_angle_checkbox)
         self.vbox.addLayout(hbox)
 
 
@@ -923,7 +932,7 @@ class VisBase():
         label.setAlignment(QtCore.Qt.AlignCenter)
         # label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
-        self.cmin = QLineEdit()
+        self.cmin = QLineEdit_custom()
         self.cmin.setText('0.0')
         self.cmin.setEnabled(False)
         self.cmin.setStyleSheet("background-color: lightgray;")
@@ -938,7 +947,7 @@ class VisBase():
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox.addWidget(label)
-        self.cmax = QLineEdit()
+        self.cmax = QLineEdit_custom()
         self.cmax.setText('1.0')
         self.cmax.setEnabled(False)
         self.cmax.setStyleSheet("background-color: lightgray;")
@@ -2576,8 +2585,12 @@ class VisBase():
             self.cmin.setStyleSheet("background-color: lightgray;")
             self.cmax.setStyleSheet("background-color: lightgray;")
         self.substrates_combobox.setEnabled(bval)
-        self.substrates_cbar_combobox.setEnabled(bval)
+        self.substrates_cbar_combobox.setEnabled(bval and not self.substrate_grad_angle)
         self.substrates_grad_checkbox.setEnabled(bval)
+        self.substrates_grad_angle_checkbox.setEnabled(bval)
+        if self.show_gradient_angle_wheel_button is not None:
+            self.show_gradient_angle_wheel_button.setVisible(bval and self.substrate_grad_angle)
+            self.show_gradient_angle_wheel_button.setEnabled(bval and self.substrate_grad_angle)
 
         # if self.view_shading:
         #     self.view_shading.setEnabled(bval)
@@ -2586,6 +2599,7 @@ class VisBase():
             if self.cax1:
                 self.cax1.remove()
                 self.cax1 = None
+            self.close_gradient_angle_window()
 
         if not self.plot_xmin:
             self.reset_plot_range()
@@ -2594,7 +2608,49 @@ class VisBase():
 
     def substrates_grad_toggle_cb(self,bval):
         self.substrate_grad = bval
+        if bval and self.substrates_grad_angle_checkbox.isChecked():
+            self.substrates_grad_angle_checkbox.blockSignals(True)
+            self.substrates_grad_angle_checkbox.setChecked(False)
+            self.substrates_grad_angle_checkbox.blockSignals(False)
+            self.substrate_grad_angle = False
+            if self.show_gradient_angle_wheel_button is not None:
+                self.show_gradient_angle_wheel_button.setVisible(False)
+                self.show_gradient_angle_wheel_button.setEnabled(False)
+            self.substrates_cbar_combobox.setEnabled(self.substrates_checked_flag)
+        if bval:
+            self.cmin.setEnabled(True)
+            self.cmax.setEnabled(True)
+        else:
+            substrates_cmap_fixed = self.substrates_checked_flag and self.fix_cmap_checkbox.isChecked()
+            self.cmin.setEnabled(substrates_cmap_fixed)
+            self.cmax.setEnabled(substrates_cmap_fixed)
+        if bval:
+            self.close_gradient_angle_window()
         self.update_plots()
+
+    def substrates_grad_angle_toggle_cb(self,bval):
+        self.substrate_grad_angle = bval
+        if bval and self.substrates_grad_checkbox.isChecked():
+            self.substrates_grad_checkbox.blockSignals(True)
+            self.substrates_grad_checkbox.setChecked(False)
+            self.substrates_grad_checkbox.blockSignals(False)
+            self.substrate_grad = False
+        self.substrates_cbar_combobox.setEnabled(self.substrates_checked_flag and not bval)
+        self.fix_cmap_checkbox.setEnabled(self.substrates_checked_flag and not bval)
+        self.cmin.setEnabled(self.substrates_checked_flag and not bval and self.fix_cmap_checkbox.isChecked())
+        self.cmax.setEnabled(self.substrates_checked_flag and not bval and self.fix_cmap_checkbox.isChecked())
+        if self.show_gradient_angle_wheel_button is not None:
+            self.show_gradient_angle_wheel_button.setVisible(self.substrates_checked_flag and bval)
+            self.show_gradient_angle_wheel_button.setEnabled(self.substrates_checked_flag and bval)
+        if not bval:
+            self.close_gradient_angle_window()
+        self.update_plots()
+
+    def show_gradient_angle_window(self):
+        self._draw_gradient_angle_wheel()
+
+    def close_gradient_angle_window(self):
+        self._close_gradient_angle_wheel()
 
     def fix_cells_cmap_toggle_cb(self,bval):
         # print("fix_cells_cmap_toggle_cb():")
