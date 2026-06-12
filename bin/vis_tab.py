@@ -32,7 +32,7 @@ import csv
 import pandas
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel,QMessageBox
+from PyQt5.QtWidgets import QFrame,QWidget,QCheckBox,QComboBox,QVBoxLayout,QLabel,QMessageBox,QPushButton
 from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import QRectF, Qt
@@ -45,21 +45,61 @@ from pyMCDS import pyMCDS
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
+import logging
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+logging.getLogger("matplotlib.font_manager").setLevel(logging.WARNING)
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 #-----------------------------
-#   Future idea of floating Plot window
-class MainPlotWindow(QWidget):
-    def __init__(self, canvas):
-        super().__init__()
-        self.layout = QVBoxLayout()
-        self.label = QLabel("Plot")
+#   Floating angle wheel window
+class GradientAngleWheelWindow(QWidget):
+    def __init__(self, title, vis_parent=None):
+        super().__init__(None)
+        self.vis_parent = vis_parent
+        self.setWindowFlag(Qt.Window, True)
+        self.setWindowTitle(title)
+        self.setMinimumSize(360, 360)
 
-        self.figure = plt.figure()
-        self.layout.addWidget(canvas)
+        self.figure = plt.figure(figsize=(3.8, 3.8), dpi=120)
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.ax = self.figure.add_subplot(111)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
+        self.draw_wheel(title)
+
+    def draw_wheel(self, title):
+        self.ax.cla()
+
+        theta = np.linspace(0.0, 2.0 * np.pi, 361)
+        radius = np.array([0.65, 1.0])
+        theta_grid, radius_grid = np.meshgrid(theta, radius)
+        x_grid = radius_grid * np.cos(theta_grid)
+        y_grid = radius_grid * np.sin(theta_grid)
+
+        self.ax.pcolormesh(x_grid, y_grid, theta_grid, shading='auto', cmap='twilight', vmin=0.0, vmax=2.0 * np.pi)
+        self.ax.add_patch(Circle((0.0, 0.0), 0.65, facecolor='white', edgecolor='none', zorder=3))
+        self.ax.add_patch(Circle((0.0, 0.0), 1.0, fill=False, edgecolor='black', linewidth=0.8, zorder=4))
+        self.ax.set_aspect('equal')
+        self.ax.set_xlim(-1.15, 1.15)
+        self.ax.set_ylim(-1.15, 1.15)
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        self.ax.set_title(title, fontsize=12, pad=20)
+        self.ax.text(1.20, 0.0, "0", ha='left', va='center', fontsize=10)
+        self.ax.text(0.0, 1.14, "pi/2", ha='center', va='bottom', fontsize=10)
+        self.ax.text(-1.20, 0.0, "pi", ha='right', va='center', fontsize=10)
+        self.ax.text(0.0, -1.20, "3pi/2", ha='center', va='top', fontsize=10)
+        self.figure.tight_layout(pad=1.4)
+        self.canvas.draw()
+
+    def closeEvent(self, event):
+        if self.vis_parent is not None and getattr(self.vis_parent, 'substrate_grad_angle_window', None) is self:
+            self.vis_parent.substrate_grad_angle_window = None
+        super().closeEvent(event)
 
 #---------------------------------------------------------------
 class Vis(VisBase, QWidget):
@@ -146,6 +186,7 @@ class Vis(VisBase, QWidget):
 
         self.cax1 = None
         self.cax2 = None
+        self.substrate_grad_angle_window = None
 
         self.figsize_width_2Dplot = basic_length
         self.figsize_height_2Dplot = basic_length
@@ -173,7 +214,7 @@ class Vis(VisBase, QWidget):
         # Need to have the substrates_combobox before doing create_figure!
         self.canvas = None
         self.create_figure()
-        self.scroll_plot.setWidget(self.canvas) # for an embedded Plot window (not floating)
+        self.scroll_plot.setWidget(self.plot_container) # for an embedded Plot window (not floating)
 
 
     #--------------------------------------
@@ -293,6 +334,16 @@ class Vis(VisBase, QWidget):
         self.gs = gridspec.GridSpec(2,2, height_ratios=[20,1], width_ratios=[20,1]) # top row is [plot, substrate colorbar]; bottom row is [cells colorbar, nothing]
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.canvas.setStyleSheet("background-color:transparent;")
+        self.plot_container = QWidget()
+        self.plot_layout = QVBoxLayout()
+        self.plot_layout.addWidget(self.canvas)
+        self.show_gradient_angle_wheel_button = QPushButton("Show color wheel")
+        self.show_gradient_angle_wheel_button.setVisible(False)
+        self.show_gradient_angle_wheel_button.setEnabled(False)
+        self.show_gradient_angle_wheel_button.setFixedWidth(160)
+        self.show_gradient_angle_wheel_button.clicked.connect(self.show_gradient_angle_window)
+        self.plot_layout.addWidget(self.show_gradient_angle_wheel_button, alignment=Qt.AlignHCenter)
+        self.plot_container.setLayout(self.plot_layout)
 
         # Adding one subplot for image
         self.ax0 = self.figure.add_subplot(self.gs[0,0], adjustable='box')
@@ -821,6 +872,25 @@ class Vis(VisBase, QWidget):
         else:
             self.ax0.set_aspect('auto')
 
+    def _draw_gradient_angle_wheel(self):
+        title = "gradient angle"
+        if self.substrate_grad_angle_window is None:
+            self.substrate_grad_angle_window = GradientAngleWheelWindow(title, vis_parent=self)
+        else:
+            self.substrate_grad_angle_window.setWindowTitle(title)
+            self.substrate_grad_angle_window.draw_wheel(title)
+        self.substrate_grad_angle_window.show()
+        self.substrate_grad_angle_window.raise_()
+        self.substrate_grad_angle_window.activateWindow()
+
+    def _close_gradient_angle_wheel(self):
+        if self.substrate_grad_angle_window is not None:
+            try:
+                self.substrate_grad_angle_window.close()
+            except:
+                pass
+            self.substrate_grad_angle_window = None
+
 
     #------------------------------------------------------------
     def plot_substrate(self, frame):
@@ -864,42 +934,63 @@ class Vis(VisBase, QWidget):
             print("vis_tab.py:  zvals Exception; return")
             return
 
-        if (self.substrate_grad):
+        if (self.substrate_grad or self.substrate_grad_angle):
             try:
-                grad_x, grad_y = np.gradient(zvals, ygrid[:,0], xgrid[0,:])
-                zvals = np.sqrt(grad_x**2 + grad_y**2)
+                grad_y, grad_x = np.gradient(zvals, ygrid[:,0], xgrid[0,:])
+                if self.substrate_grad_angle:
+                    # Wrap angle field to [0, 2*pi) so the colorbar spans one full turn.
+                    zvals = np.mod(np.arctan2(grad_y, grad_x), 2.0*np.pi)
+                else:
+                    zvals = np.sqrt(grad_x**2 + grad_y**2)
             except:
                 print("vis_tab.py: unable to compute the substrate gradient.")
 
+        plot_cmap = cbar_name
+        if self.substrate_grad_angle:
+            # Cyclic colormap for periodic angle values in [-pi, pi].
+            plot_cmap = 'twilight'
 
         contour_ok = True
 
         if (self.contour_mesh):
-            if (self.fix_cmap_flag):
+            if self.substrate_grad_angle:
                 try:
-                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=plot_cmap, vmin=0.0, vmax=2.0*np.pi)
+                except:
+                    contour_ok = False
+                    print('\nWARNING: exception while plotting gradient angle. Will not update plot.')
+            elif (self.fix_cmap_flag):
+                try:
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=plot_cmap, vmin=self.cmin_value, vmax=self.cmax_value)
                 except:
                     contour_ok = False
                     print('\nWARNING: exception with fixed colormap range. Will not update plot.')
             else:    
                 try:
-                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=cbar_name) #, vmin=Z.min(), vmax=Z.max())
+                    substrate_plot = self.ax0.pcolormesh(xgrid,ygrid, zvals, shading=self.shading_choice, cmap=plot_cmap) #, vmin=Z.min(), vmax=Z.max())
                 except:
                     contour_ok = False
                     print('\nWARNING: exception with dynamic colormap range. Will not update plot.')
 
         if (self.contour_lines):
-            if (self.fix_cmap_flag):
+            if self.substrate_grad_angle:
+                try:
+                    levels = np.linspace(0.0, 2.0*np.pi, 9)
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=plot_cmap, vmin=0.0, vmax=2.0*np.pi)  # contour lines
+                except:
+                    print("vis_tab: No contour levels were found within the data range.")
+                    return
+            elif (self.fix_cmap_flag):
                 try:
                     delstep = (self.cmax_value - self.cmin_value) / 8
                     levels = np.arange(self.cmin_value + delstep, self.cmax_value, delstep)
-                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=cbar_name, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, levels=levels, cmap=plot_cmap, vmin=self.cmin_value, vmax=self.cmax_value)  # contour lines
                 except:
                     print("vis_tab: No contour levels were found within the data range.")
                     return
             else:    
                 try:
-                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=cbar_name)  # contour lines
+                    substrate_plot = self.ax0.contour(xgrid,ygrid,zvals, cmap=plot_cmap)  # contour lines
                 except:
                     print("vis_tab: No contour levels were found within the data range.")
                     return
@@ -909,15 +1000,17 @@ class Vis(VisBase, QWidget):
         #     self.ax0.contour(xgrid, ygrid, M[self.field_index, :].reshape(self.numy,self.numx), [0.0], linewidths=0.5)
 
         num_axes =  len(self.figure.axes)
-        if self.cax1:
-            self.cax1.remove()  # replace/update the colorbar
-            self.cax1 = self.figure.add_subplot(self.gs[0,1])
-            try:
-                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
-            except:
-                print("vis_tab: No contour levels were found within the data range.")
-            self.cbar1.ax.tick_params(labelsize=self.fontsize)
-        else:
+        if self.substrate_grad_angle:
+            if self.cax1:
+                try:
+                    self.cax1.remove()
+                except:
+                    pass
+                self.cax1 = None
+        elif (self.substrate_grad):
+            if self.cax1:
+                self.cax1.remove()
+                self.cax1 = None
             self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
                 self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
@@ -925,12 +1018,22 @@ class Vis(VisBase, QWidget):
                 print("vis_tab: No contour levels were found within the data range.")
                 return
             self.cbar1.ax.tick_params(labelsize=self.fontsize)
-
-        self.cbar1.set_label(self.substrate_name, fontsize=self.cbar_label_fontsize)
-        if (self.substrate_grad):
             self.cbar1.set_label(self.substrate_name + " (gradient norm)", fontsize=self.cbar_label_fontsize)
         else:
+            if self.cax1:
+                self.cax1.remove()  # replace/update the colorbar
+                self.cax1 = None
+            self.cax1 = self.figure.add_subplot(self.gs[0,1])
+            try:
+                self.cbar1 = self.figure.colorbar(substrate_plot, cax=self.cax1)
+            except:
+                print("vis_tab: No contour levels were found within the data range.")
+                return
+            self.cbar1.ax.tick_params(labelsize=self.fontsize)
             self.cbar1.set_label(self.substrate_name, fontsize=self.cbar_label_fontsize)
+
+        if not self.substrate_grad_angle:
+            self.close_gradient_angle_window()
 
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -940,5 +1043,3 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('equal')
         else:
             self.ax0.set_aspect('auto')
-
-        self.cbar1.ax.tick_params(labelsize=self.fontsize)
