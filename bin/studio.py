@@ -550,6 +550,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 self.sample_models_menu = file_menu.addMenu("Load sample")
                 self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
                 self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
+                self.sample_models_menu.addAction("template", self.template_sample_cb)
 
 
         #-------------------------
@@ -916,6 +917,24 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         urllib.request.urlretrieve(url, "sample.zip")
         # just extract the zombies_and_villagers/config  into /config
         self.extract_subdir("sample.zip", "basic_cancer_immune_drug/config", "config")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
+    def template_sample_cb(self):
+        from_file = os.path.join("config", "template.xml")
+        to_file = os.path.join("config", "PhysiCell_settings.xml")
+        try:
+            shutil.copy(from_file, to_file)
+        except:
+            print(f"--- Warning: cannot copy {from_file} to {to_file}")
 
         try:
             time.sleep(1)
