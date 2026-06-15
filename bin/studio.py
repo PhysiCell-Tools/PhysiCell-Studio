@@ -26,6 +26,7 @@ import traceback
 import shutil # for possible copy of file
 import zipfile
 import glob
+import urllib.request
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
@@ -502,13 +503,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
                 file_menu.addAction("Save as", self.save_as_cb)
                 file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-            else:
-                file_menu.addAction("Open", self.open_as_cb)
-                file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
-                file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
 
-            #------
-            if not self.galaxy_flag:
                 export_menu = file_menu.addMenu("Export")
 
                 simularium_act = QAction('Simularium', self)
@@ -524,10 +519,6 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Load user project", self.load_user_proj_cb)
 
                 file_menu.addSeparator()
-                if self.samples_flag:
-                    self.sample_models_menu = file_menu.addMenu("Load sample")
-                    self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
-                    self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
 
                 if PHYSIBOSS_MODELS_IMPORTED and self.physiboss_models_flag:
                     self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
@@ -549,6 +540,16 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                                 )
                     except:
                         pass
+            else:
+                file_menu.addAction("Open", self.open_as_cb)
+                file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
+                file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
+
+            #------
+            if self.samples_flag:
+                self.sample_models_menu = file_menu.addMenu("Load sample")
+                self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
+                self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
 
 
         #-------------------------
@@ -879,10 +880,52 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
 
     #---------------------------------
+    def extract_subdir(self, zip_path, subdir, dest):
+        prefix = subdir.rstrip('/') + '/'
+        # os.makedirs(dest, exist_ok=True)
+        with zipfile.ZipFile(zip_path) as zf:
+            for member in zf.namelist():
+                print(f"extract_subdir(): {member} ")
+                if member.startswith(prefix) and not member.endswith('/'):
+                    # Strip the subdir prefix
+                    relative = member[len(prefix):]
+                    target = os.path.join(dest, relative)
+                    # os.makedirs(os.path.dirname(target), exist_ok=True)
+                    with zf.open(member) as src, open(target, 'wb') as dst:
+                        # print(f"-- extracting {src} to {dst}")
+                        shutil.copyfileobj(src, dst)
+
     def load_zombies_villagers_cb(self):
-        return
+        url = "https://github.com/physicell-training/essentials/blob/main/code/zombies_and_villagers.zip?raw=true"
+        urllib.request.urlretrieve(url, "sample.zip")
+        # just extract the zombies_and_villagers/config  into /config
+        self.extract_subdir("sample.zip", "zombies_and_villagers/config", "config")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
     def load_cancer_immune_drug_cb(self):
-        return
+        url = "https://github.com/physicell-training/essentials/blob/main/code/basic_cancer_immune_drug.zip?raw=true"
+        urllib.request.urlretrieve(url, "sample.zip")
+        # just extract the zombies_and_villagers/config  into /config
+        self.extract_subdir("sample.zip", "basic_cancer_immune_drug/config", "config")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
 
     #---------------------------------
     def load_physiboss_model_cb(self, model_name, version=None):
