@@ -6,6 +6,7 @@ import shutil
 import time
 import traceback
 from pathlib import Path
+from datetime import datetime
 
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
@@ -15,7 +16,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIntValidator
 # from PyQt5.QtCore import Qt
 
-from studio_classes import DoubleValidatorWidgetBounded
+from studio_classes import DoubleValidatorWidgetBounded, QCheckBox_custom
 
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
@@ -277,22 +278,28 @@ class SaveProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-        self.save_file_button = QPushButton("Save")
+        self.save_file_button = QPushButton("Save .zip")
         self.save_file_button.setFixedWidth(90)
         self.save_file_button.setEnabled(True)
         self.save_file_button.setStyleSheet("background-color: lightgreen;")
         self.save_file_button.clicked.connect(self.save_project_cb)
         glayout.addWidget(self.save_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
 
-        self.project_name_w = QLineEdit("my_model.zip")
+        # self.project_name_w = QLineEdit("my_model.zip")
+        self.project_name_w = QLineEdit("my_model")
+        # self.project_name_w.setFixedWidth(200)
         self.project_name_w.setEnabled(True)
         glayout.addWidget(self.project_name_w, idx_row, 1, 1, 1)
 
+
+        self.timestamp_w = QCheckBox_custom("time-stamp")
+        glayout.addWidget(self.timestamp_w, idx_row, 2, 1, 1)
+
         idx_row += 1
         msg = ("Click Save to have your project zipped and copied to the Galaxy History.\n"
-               "You can rename it here if you wish, but leave the .zip suffix.\n"
+               "Rename the base filename if you wish.\n"
                "It may take several seconds to appear in your History.")
-        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
+        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
 
         self.close_button = QPushButton("Close")
         self.close_button.setStyleSheet("background-color: lightgreen;")
@@ -307,7 +314,11 @@ class SaveProjectWindow(QWidget):
 
     def save_project_cb(self):
         fname = self.project_name_w.text()
-
+        if self.timestamp_w.isChecked():
+            ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            fname = f"{fname}_{ts}.zip"
+        else:
+            fname = f"{fname}.zip"
 
         msgBox = QMessageBox()
         msgBox.setText(f"This will bundle your current model's config file, its cells/substrates ICs, and rules, "
@@ -343,13 +354,15 @@ class SaveProjectWindow(QWidget):
 # Studio-level helper functions (called as save_project_galaxy(self), etc.)
 
 def save_project_galaxy(self):
-    fname = "my_model.zip"
+    # fname = "my_model.zip"
+    fname = "my_model"
     file_str = os.path.join(os.getcwd(), "config/*.csv")
     print('-------- save_project_galaxy(): zip up all', file_str)
 
     msgBox = QMessageBox()
     msgBox.setText(f"This will bundle your current model's config file, its cells/substrates ICs, and rules, "
-                   f"then copy '{fname}' to the Galaxy History.")
+                   f"then copy that file to the Galaxy History.")
+                #    f"then copy '{fname}' to the Galaxy History.")
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     if msgBox.exec() == QMessageBox.Cancel:
