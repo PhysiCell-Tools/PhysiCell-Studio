@@ -1743,6 +1743,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         #---
         self.motility_enabled = QCheckBox_custom("enable motility", objectName="motility_enabled")
         self.motility_enabled.clicked.connect(self.cell_def_param_changed)
+        self.motility_enabled.clicked.connect(self.update_motility_enabled_state)
         idr += 1
         glayout.addWidget(self.motility_enabled, idr,0, 1,1) # w, row, column, rowspan, colspan
 
@@ -1837,10 +1838,35 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
             idr += 1
             glayout.addWidget(blank_line, idr,0, 1,1) # w, row, column, rowspan, colspan
 
+        self.motility_dependent_widgets = [
+            self.speed, self.persistence_time, self.migration_bias,
+            self.motility_use_2D, self.chemotaxis_enabled,
+            self.motility_substrate_dropdown, self.chemotaxis_direction_towards,
+            self.chemotaxis_direction_against, self.advanced_chemotaxis_enabled,
+            self.normalize_each_gradient, self.motility2_substrate_dropdown,
+            self.chemo_sensitivity, self.reset_motility_button,
+        ]
+
         #------
         # vlayout.setVerticalSpacing(10)  # rwh - argh
         motility_tab.setLayout(glayout)
         return motility_tab
+
+    #--------------------------------------------------------
+    def update_motility_enabled_state(self):
+        enabled = self.motility_enabled.isChecked()
+        for w in self.motility_dependent_widgets:
+            w.setEnabled(enabled)
+        if enabled:
+            # Restore chemotaxis sub-widget states without modifying param_d
+            chemo = self.chemotaxis_enabled.isChecked()
+            adv = self.advanced_chemotaxis_enabled.isChecked()
+            self.motility_substrate_dropdown.setEnabled(chemo and not adv)
+            self.chemotaxis_direction_towards.setEnabled(chemo and not adv)
+            self.chemotaxis_direction_against.setEnabled(chemo and not adv)
+            self.motility2_substrate_dropdown.setEnabled(adv)
+            self.chemo_sensitivity.setEnabled(adv)
+            self.normalize_each_gradient.setEnabled(adv)
 
     #--------------------------------------------------------
     def reset_motility_cb(self):
@@ -6140,6 +6166,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                 self.chemo_sensitivity.setText(self.param_d[cdname]['chemotactic_sensitivity'][self.param_d[cdname]['motility_advanced_chemotaxis_substrate']])
 
         # sys.exit(-1)
+        self.update_motility_enabled_state()
         logging.debug(f'----- leave update_motility_params()\n')
 
     #-----------------------------------------------------------------------------------------

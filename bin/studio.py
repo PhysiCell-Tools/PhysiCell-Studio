@@ -26,6 +26,7 @@ import traceback
 import shutil # for possible copy of file
 import zipfile
 import glob
+import urllib.request
 from pathlib import Path
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from xml.dom import minidom   # possibly explore later if we want to access/update *everything* in the DOM
@@ -52,7 +53,7 @@ from run_tab import RunModel
 from settings import StudioSettings
 # from legend_tab import Legend 
 
-from galaxy_functions import save_project_galaxy, load_project_galaxy_history, \
+from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history, \
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
@@ -96,7 +97,7 @@ def quit_cb():
     studio_app.quit()
 
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
         if model3D_flag:
@@ -126,6 +127,7 @@ class PhysiCellXMLCreator(QWidget):
         self.ecm_flag = False 
         self.pytest_flag = pytest_flag 
         self.biwt_flag = biwt_flag
+        self.samples_flag = samples_flag
 
         self.rules_tab_index = None
 
@@ -281,9 +283,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            # self.rules_tab = Rules(self.nanohub_flag, self.microenv_tab, self.celldef_tab)
             self.rules_tab = Rules(self)
-            # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
             self.microenv_tab.rules_tab = self.rules_tab
@@ -503,13 +503,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
                 file_menu.addAction("Save as", self.save_as_cb)
                 file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-            else:
-                file_menu.addAction("Open", self.open_as_cb)
-                file_menu.addAction("Save project", lambda: save_project_galaxy(self))
-                file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
 
-            #------
-            if not self.galaxy_flag:
                 export_menu = file_menu.addMenu("Export")
 
                 simularium_act = QAction('Simularium', self)
@@ -525,6 +519,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Load user project", self.load_user_proj_cb)
 
                 file_menu.addSeparator()
+
                 if PHYSIBOSS_MODELS_IMPORTED and self.physiboss_models_flag:
                     self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
                     try:
@@ -545,6 +540,18 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                                 )
                     except:
                         pass
+            else:
+                file_menu.addAction("Open", self.open_as_cb)
+                file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
+                file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
+
+            #------
+            if self.samples_flag:
+                self.sample_models_menu = file_menu.addMenu("Load sample")
+                self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
+                self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
+                self.sample_models_menu.addAction("template", self.template_sample_cb)
+
 
         #-------------------------
         if self.model3D_flag:
@@ -872,6 +879,72 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         except:
             print(f"--- Warning: cannot copy custom_modules/*")
 
+
+    #---------------------------------
+    def extract_subdir(self, zip_path, subdir, dest):
+        prefix = subdir.rstrip('/') + '/'
+        # os.makedirs(dest, exist_ok=True)
+        with zipfile.ZipFile(zip_path) as zf:
+            for member in zf.namelist():
+                print(f"extract_subdir(): {member} ")
+                if member.startswith(prefix) and not member.endswith('/'):
+                    # Strip the subdir prefix
+                    relative = member[len(prefix):]
+                    target = os.path.join(dest, relative)
+                    # os.makedirs(os.path.dirname(target), exist_ok=True)
+                    with zf.open(member) as src, open(target, 'wb') as dst:
+                        # print(f"-- extracting {src} to {dst}")
+                        shutil.copyfileobj(src, dst)
+
+    def load_zombies_villagers_cb(self):
+        url = "https://github.com/physicell-training/essentials/blob/main/code/zombies_and_villagers.zip?raw=true"
+        urllib.request.urlretrieve(url, "sample.zip")
+        # just extract the zombies_and_villagers/config  into /config
+        self.extract_subdir("sample.zip", "zombies_and_villagers/config", "config")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
+    def load_cancer_immune_drug_cb(self):
+        url = "https://github.com/physicell-training/essentials/blob/main/code/basic_cancer_immune_drug.zip?raw=true"
+        urllib.request.urlretrieve(url, "sample.zip")
+        # just extract the zombies_and_villagers/config  into /config
+        self.extract_subdir("sample.zip", "basic_cancer_immune_drug/config", "config")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
+
+    def template_sample_cb(self):
+        from_file = os.path.join("config", "template.xml")
+        to_file = os.path.join("config", "PhysiCell_settings.xml")
+        try:
+            shutil.copy(from_file, to_file)
+        except:
+            print(f"--- Warning: cannot copy {from_file} to {to_file}")
+
+        try:
+            time.sleep(1)
+            self.load_model("PhysiCell_settings")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error loading config/PhysiCell_settings.xml.")
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            returnValue = msgBox.exec()
 
     #---------------------------------
     def load_physiboss_model_cb(self, model_name, version=None):
@@ -1448,6 +1521,7 @@ def main():
     is_movable_flag = False
     pytest_flag = False
     biwt_flag = False
+    samples_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Studio.')
 
@@ -1461,6 +1535,7 @@ def main():
         parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e ", "--exec", type=str, help="executable model")
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
+        parser.add_argument("--s","--samples", dest="samples_flag", help="menu for sample projects", action="store_true")
 
         if platform.system() == "Windows":
             exec_file = 'project.exe'
@@ -1525,6 +1600,8 @@ def main():
                 sys.exit()
         if args.biwt_flag:
             biwt_flag = True
+        if args.samples_flag:
+            samples_flag = True
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
@@ -1597,7 +1674,7 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag)
     # print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes

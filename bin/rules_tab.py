@@ -1118,6 +1118,9 @@ class Rules(StudioTab):
                     irow = self.num_rules  # append
                     for elm in csv_reader:   # for each rule or comment
                         # raw = row.split('/')[0].strip()
+                        if len(elm) == 0:
+                            # print("--- skip empty line")
+                            continue
                         # print("  elm[0]= ",elm[0])
                         toggle_val = True
                         if elm[0][0] == '/':
@@ -1208,7 +1211,7 @@ class Rules(StudioTab):
             except Exception as e:
             # self.dialog_critical(str(e))
             # print("error opening config/cells_rules.csv")
-                print(f'fill_rules(): Error opening or reading {full_rules_fname}')
+                print(f'fill_rules(): Error opening or reading {full_rules_fname}: {str(e)}')
                 show_studio_warning_window(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # logging.error(f'rules_tab.py: Error opening or reading {full_rules_fname}')
                 # sys.exit(1)
