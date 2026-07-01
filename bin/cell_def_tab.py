@@ -4533,6 +4533,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
                     # print(f"3) self.param_d[{cdname}]['custom_data']= ",self.param_d[cdname]['custom_data'])
 
                 self.sender().prev = None  # update previous to be None
+                self.sender().deleted_prev = prev_name  # stash so rename works when new name is typed
             # return
 
         else:  # vname has >=1 length
@@ -4644,6 +4645,12 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         old_name = f"custom:{prev_name}"
         new_name = f"custom:{text}"
         self.update_par_dist_behaviors(old_name, new_name)
+        if self.rules_tab and text:
+            effective_old = prev_name or getattr(self.sender(), 'deleted_prev', None)
+            if effective_old and effective_old != text:
+                self.rules_tab.custom_data_rename(f"custom:{effective_old}", new_name)
+                if not prev_name:  # consumed deleted_prev; clear it
+                    self.sender().deleted_prev = None
         # print(f'============== leave custom_data_name_changed() --------')
 
 
