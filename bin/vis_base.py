@@ -1739,7 +1739,7 @@ class VisBase():
         self.celldef_tab.config_path = config_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
         # populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
-        populate_tree_cell_defs(self.celldef_tab, False)
+        populate_tree_cell_defs(self.celldef_tab, False, pkpd_flag=self.celldef_tab.pkpd_flag)
 
         self.celldef_tab.fill_celltypes_comboboxes()
 

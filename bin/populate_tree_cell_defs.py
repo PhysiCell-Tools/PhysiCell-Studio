@@ -67,7 +67,78 @@ def handle_parse_error(section_str):
     # returnValue = msgBox.exec()
     sys.exit(-1)
 
-def populate_tree_cell_defs(cell_def_tab, skip_validate):
+def pkpd_populate_tree_cell_defs(cell_def_tab, uep, pkpd_flag):
+    if pkpd_flag is False:
+        return
+    idx = 1
+    for cell_def in uep:
+        if cell_def.tag != "cell_definition":
+            logging.debug(f'--------pkpd_populate_tree_cell_defs: found unexpected child <cell_definitions>; skip over {cell_def}')
+            continue
+        if cell_def.tag == "cell_rules":
+            logging.debug(f'--------pkpd_populate_tree_cell_defs: found cell_rules child; break out on {cell_def}')
+            continue
+        cell_def_name = cell_def.attrib['name']
+        cell_def_tab.param_d[cell_def_name]["pd"] = {}
+        jdx = 1
+        for substrate in cell_def_tab.substrate_list:
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate] = {}
+            if substrate in cell_def_tab.pd_substrates:
+                cell_def_tab.param_d[cell_def_name]['custom_data'][f'{substrate}_damage'] = ["0.0",False]
+            if idx == 1 and jdx == 1:
+                cell_def_tab.current_pd_substrate = substrate
+            jdx += 1
+        uep_pd = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//PD")
+        idx += 1
+        if uep_pd is None:
+            continue
+        for substrate in cell_def_tab.substrate_list:
+            sub_elm = uep_pd.find(f".//substrate[@name='{substrate}']")
+            if sub_elm is None:
+                continue
+            pd_model = "None"
+            pd_model_elm = sub_elm.find(".//model")
+            if pd_model_elm is not None:
+                pd_model = pd_model_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["pd_model"] = pd_model
+            if pd_model != "None":
+                cell_def_tab.add_custom_data(f'{substrate}_damage',"0.0",False,"damage",f'Accumulated damage due to {substrate}')
+                if substrate not in cell_def_tab.pd_substrates:
+                    cell_def_tab.pd_substrates.append(substrate)
+            if substrate in cell_def_tab.pd_substrates:
+                cell_def_tab.param_d[cell_def_name]['custom_data'][f'{substrate}_damage'] = ["0.0",False]
+
+            metabolism_rate = "0"
+            metabolism_rate_elm = sub_elm.find(".//metabolism_rate")
+            if metabolism_rate_elm is not None:
+                metabolism_rate = metabolism_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["metabolism_rate"] = metabolism_rate
+
+            constant_repair_rate = "0"
+            constant_repair_rate_elm = sub_elm.find(".//constant_repair_rate")
+            if constant_repair_rate_elm is not None:
+                constant_repair_rate = constant_repair_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["constant_repair_rate"] = constant_repair_rate
+            
+            linear_repair_rate = "0"
+            linear_repair_rate_elm = sub_elm.find(".//linear_repair_rate")
+            if linear_repair_rate_elm is not None:
+                linear_repair_rate = linear_repair_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["linear_repair_rate"] = linear_repair_rate
+            
+            precompute = "true"
+            precompute_elm = sub_elm.find(".//precompute")
+            if precompute_elm is not None:
+                precompute = precompute_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["precompute"] = precompute
+            
+            dt = "0.01" # default to default diffusion_dt
+            dt_elm = sub_elm.find(".//dt")
+            if dt_elm is not None:
+                dt = dt_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["dt"] = dt
+
+def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
     logging.debug(f'=======================  populate_tree_cell_defs(): ======================= ')
     logging.debug(f'    cell_def_tab.param_d = {cell_def_tab.param_d}')
     # cell_def_tab.master_custom_varname.clear()
@@ -1222,6 +1293,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
+        pkpd_populate_tree_cell_defs(cell_def_tab, uep, pkpd_flag)
     # print("populate_tree_cell_defs.py:  Setting 0th cell")
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
