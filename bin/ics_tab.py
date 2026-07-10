@@ -33,13 +33,13 @@ from PyQt5.QtGui import QRegExpValidator
 
 from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval
 from studio_functions import style_sheet_template
-from biwt_tab import BioinformaticsWalkthrough
 
 try:
     from biwt.gui.walkthrough import create_biwt_widget
     from biwt.types import BiwtInput, DomainSpec
     HAVE_BIWT_PACKAGE = True
 except ImportError:
+    from biwt_tab import BioinformaticsWalkthrough
     HAVE_BIWT_PACKAGE = False
 
 import numpy as np
