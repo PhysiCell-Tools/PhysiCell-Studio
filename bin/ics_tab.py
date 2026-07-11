@@ -187,7 +187,14 @@ class ICs(QWidget):
                 self.biwt_tab = self._create_biwt_package_tab()
             else:
                 self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self, self.xml_creator)
-            self.tab_widget.addTab(self.biwt_tab, "BIWT")
+            biwt_tab_index = self.tab_widget.addTab(self.biwt_tab, "BIWT")
+            if not HAVE_BIWT_PACKAGE:
+                # The built-in BIWT tab is deprecated in favor of the standalone
+                # `biwt` package. Warn the user the first time they open the tab
+                # (once per session) and point them to the install instructions.
+                self._legacy_biwt_tab_index = biwt_tab_index
+                self._legacy_biwt_warned = False
+                self.tab_widget.currentChanged.connect(self._on_tab_changed_warn_legacy_biwt)
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tab_widget)
@@ -2310,6 +2317,37 @@ class ICs(QWidget):
     # ------------------------------------------------------------------
     # New biwt package bridge
     # ------------------------------------------------------------------
+
+    def _on_tab_changed_warn_legacy_biwt(self, index):
+        """Warn once, the first time the user opens the deprecated built-in BIWT tab."""
+        if self._legacy_biwt_warned:
+            return
+        if index != getattr(self, "_legacy_biwt_tab_index", -1):
+            return
+        self._legacy_biwt_warned = True
+        self._warn_legacy_biwt_tab()
+
+    def _warn_legacy_biwt_tab(self):
+        """Warn that the built-in BIWT tab is deprecated and how to switch to
+        the standalone `biwt` package (shown when the package is not installed)."""
+        msgBox = QMessageBox(self)
+        msgBox.setIcon(QMessageBox.Warning)
+        msgBox.setWindowTitle("BIWT: deprecated built-in tab")
+        msgBox.setTextFormat(QtCore.Qt.RichText)
+        msgBox.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        msgBox.setText(
+            "The <b>biwt</b> package is not installed, so Studio is showing the legacy "
+            "built-in BIWT tab.<br><br>"
+            "This built-in tab is <b>deprecated</b> and will be removed in a future release. "
+            "Install the standalone <b>biwt</b> package to keep using BIWT:"
+            "<pre>conda activate studio\npip install biwt</pre>"
+            "For full installation and Seurat/.rds setup, see the "
+            "<a href=\"https://github.com/PhysiCell-Tools/PhysiCell-Studio/blob/main/doc/BIWT.md\">BIWT documentation</a> "
+            "and the "
+            "<a href=\"https://github.com/PhysiCell-Tools/Studio-Guide\">PhysiCell Studio Guide</a>."
+        )
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
 
     def _create_biwt_package_tab(self):
         """Build the BIWT widget from the installed biwt package."""
