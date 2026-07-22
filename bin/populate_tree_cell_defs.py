@@ -522,7 +522,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 cell_def_tab.param_d[cell_def_name]["mechanics_absolute_equilibrium_distance_enabled"] = abs_eq_bval
 
                 if cell_def_name==cell_def_0th:
-                    print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
+                    # print(f"populate_tree_cell_defs.py: cell_def_name= {cell_def_name},  rel_eq_bval= {rel_eq_bval}, abs_eq_bval= {abs_eq_bval}")
                     cell_def_tab.set_relative_equilibrium_distance_enabled.setChecked(rel_eq_bval)
                     cell_def_tab.set_relative_equilibrium_distance_enabled.stateChanged.emit(rel_eq_bval)
                     cell_def_tab.set_absolute_equilibrium_distance_enabled.setChecked(abs_eq_bval)
@@ -806,12 +806,12 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # # --------- cell_transformations  
             transformation_rates_path = f"{phenotype_path}//cell_transformations//transformation_rates"
             logging.debug(f'---- transformation_rates_path = {transformation_rates_path}')
-            print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
+            # print(f'\n\n-----------\npopulate*.py: l. 1255 ---- transformation_rates_path = {transformation_rates_path}')
             trp = uep.find(transformation_rates_path)
             if trp is None:
-                print("---- No cell_transformations found.")
+                # print("---- No cell_transformations found.")
                 logging.debug(f'---- No cell_transformations found. Setting to default values')
-                print(f'---- No cell_transformations found. Setting to default values')
+                # print(f'---- No cell_transformations found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]['transformation_rate'] = {}
 
                 cds_uep = cell_def_tab.xml_root.find('.//cell_definitions')  # find unique entry point
@@ -822,11 +822,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 sval = '0.0'
                 for var in cds_uep.findall('cell_definition'):
                     logging.debug(f' --> {var.attrib["name"]}')
-                    print(f"ugh!---- setting {cell_def_name}'s cell_transformations for {name} = default=0.0")
+                    # print(f"ugh!---- setting {cell_def_name}'s cell_transformations for {name} = default=0.0")
                     name = var.attrib['name']
                     cell_def_tab.param_d[cell_def_name]["transformation_rate"][name] = sval
             else:
-                print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
+                # print(f"---- found cell_transformations for {cell_def_name}, now loop thru them:")
                 for tr in trp.findall('transformation_rate'):
                     other_celltype_name = tr.attrib['name']
                     val = tr.text
@@ -834,30 +834,30 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
 
 
             logging.debug(f' transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
-            print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
+            # print(f'populate_tree_cell_defs.py: {cell_def_name}----> transformation_rate= {cell_def_tab.param_d[cell_def_name]["transformation_rate"]}')
             logging.debug(f'------ done parsing cell_transformations:')
 
             # # --------- cell_integrity  
             cell_integrity_path = f"{phenotype_path}//cell_integrity"
             logging.debug(f'---- cell_integrity_path = {cell_integrity_path}')
-            print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
+            # print(f'\n\n-----------\npopulate*.py: ---- cell_integrity_path = {cell_integrity_path}')
             cip = uep.find(cell_integrity_path)
 
             if cip is None:
-                print("---- No cell_integrity found.")
+                # print("---- No cell_integrity found.")
                 logging.debug(f'---- No cell_integrity found. Setting to default values')
-                print(f'---- No cell_integrity found. Setting to default values')
+                # print(f'---- No cell_integrity found. Setting to default values')
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = '0.0'
                 cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = '0.0'
             else:
-                print(f"---- found cell_integrity for {cell_def_name}")
+                # print(f"---- found cell_integrity for {cell_def_name}")
                 val = cip.find("damage_rate").text
                 cell_def_tab.param_d[cell_def_name]["damage_rate"] = val
                 val = cip.find("damage_repair_rate").text
                 cell_def_tab.param_d[cell_def_name]["damage_repair_rate"] = val
 
             logging.debug(f' damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
-            print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
+            # print(f'populate_tree_cell_defs.py: {cell_def_name}----> damage_rate= {cell_def_tab.param_d[cell_def_name]["damage_rate"]}')
             logging.debug(f'------ done parsing cell_integrity:')
 
             # # ---------  molecular 
@@ -969,6 +969,139 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                     cell_def_tab.physiboss_update_list_behaviours()
                     cell_def_tab.physiboss_update_list_nodes()
                     cell_def_tab.physiboss_update_list_parameters()
+
+                elif uep_intracellular.attrib["type"] == "dfba":
+                    # --------- dFBA specific code
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["type"] = "dfba"
+                    
+                    # Settings SBML filename and intracellular_dt
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"] = {}
+                    uep_settings = uep_intracellular.find("settings")
+                    if uep_settings is not None:
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"] = uep_settings.find(
+                        "sbml_filename").text if uep_settings.find("sbml_filename") is not None else ""
+                        
+                        intracellular_dt = uep_settings.find("intracellular_dt").text if uep_settings.find(
+                            "intracellular_dt") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"] = intracellular_dt
+
+                    # Transport model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"] = {"exchanges": []}
+                    uep_transport_model = uep_intracellular.find("transport_model")
+                    if uep_transport_model is not None:
+                        for exchange in uep_transport_model.findall("exchange"):
+                            substrate = exchange.attrib.get("substrate", "")
+                            fba_flux = exchange.find("fba_flux").text if exchange.find("fba_flux") is not None else ""
+                            km = exchange.find("Km").text if exchange.find("Km") is not None else ""
+                            vmax = exchange.find("Vmax").text if exchange.find("Vmax") is not None else ""
+
+                            cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"]["exchanges"].append(
+                                {
+                                    "substrate": substrate,
+                                    "fba_flux": fba_flux,
+                                    "Km": km,
+                                    "Vmax": vmax,
+                                })
+
+                    # Growth model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"] = {}
+                    uep_growth_model = uep_intracellular.find("growth_model")
+                    if uep_growth_model is not None:
+                        cell_density = uep_growth_model.find("cell_density").text if uep_growth_model.find(
+                            "cell_density") is not None else ""
+                        reference_volume = uep_growth_model.find("reference_volume").text if uep_growth_model.find(
+                            "reference_volume") is not None else ""
+                        max_growth_rate = uep_growth_model.find("max_growth_rate").text if uep_growth_model.find(
+                            "max_growth_rate") is not None else ""
+                        objective_reaction = uep_growth_model.find("objective_reaction").text if uep_growth_model.find(
+                            "objective_reaction") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "cell_density"] = cell_density
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "reference_volume"] = reference_volume
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "max_growth_rate"] = max_growth_rate
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"][
+                            "objective_reaction"] = objective_reaction
+
+                    # Death model
+                    cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"] = {}
+                    uep_death_model = uep_intracellular.find("death_model")
+                    if uep_death_model is not None:
+                        enabled_attr = uep_death_model.get("enabled", "false")
+                        enabled = enabled_attr.lower() == "true"
+
+                        death_type = uep_death_model.find("death_type").text if uep_death_model.find(
+                            "death_type") is not None else ""
+                        death_trigger_flux = uep_death_model.find("death_trigger_flux").text if uep_death_model.find(
+                            "death_trigger_flux") is not None else ""
+                        death_flux_threshold = uep_death_model.find("death_flux_threshold").text if uep_death_model.find(
+                            "death_flux_threshold") is not None else ""
+                        death_rate_increase = uep_death_model.find("death_rate_increase").text if uep_death_model.find(
+                            "death_rate_increase") is not None else ""
+
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "enabled"] = enabled
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_type"] = death_type
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_trigger_flux"] = death_trigger_flux
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_flux_threshold"] = death_flux_threshold
+                        cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"][
+                            "death_rate_increase"] = death_rate_increase
+
+                    # Update widget values (specific to dFBA)
+                    cell_def_tab.clear_intracellular_dt()
+                    cell_def_tab.clear_transport_exchanges()
+                    cell_def_tab.clear_growth_model_params()
+                    cell_def_tab.clear_death_model_params()
+
+                    # Populate SBML filename in the settings
+                    if "sbml_filename" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        sbml_filename = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["sbml_filename"]
+                        cell_def_tab.sbml_filename.setText(sbml_filename)
+
+                    # Populate intracellular dt in the settings
+                    if "intracellular_dt" in cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]:
+                        intracellular_dt = cell_def_tab.param_d[cell_def_name]["intracellular"]["settings"]["intracellular_dt"]
+                        cell_def_tab.intracellular_dt.setText(intracellular_dt)
+
+                    # Iterate over the exchanges and populate the UI
+                    for exchange in cell_def_tab.param_d[cell_def_name]["intracellular"]["transport_model"][
+                        "exchanges"]:
+                        cell_def_tab.add_exchange()
+                        substrate_combo, fba_flux_edit, km_edit, vmax_edit, _, _ = cell_def_tab.transport_exchanges[-1]
+
+                        if "substrate" in exchange.keys():
+                            index = cell_def_tab.substrate_list.index(exchange["substrate"]) if exchange[
+                                                                                                    "substrate"] in cell_def_tab.substrate_list else -1
+                            if index != -1:
+                                substrate_combo.setCurrentIndex(index)
+
+                        fba_flux_edit.setText(exchange["fba_flux"])
+                        km_edit.setText(exchange["Km"])
+                        vmax_edit.setText(exchange["Vmax"])
+
+                    # Populate growth model parameters in the UI
+                    if "growth_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        growth_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["growth_model"]
+
+                        cell_def_tab.cell_density.setText(growth_model.get("cell_density", ""))
+                        cell_def_tab.reference_volume.setText(growth_model.get("reference_volume", ""))
+                        cell_def_tab.max_growth_rate.setText(growth_model.get("max_growth_rate", ""))
+                        cell_def_tab.objective_reaction.setText(growth_model.get("objective_reaction", ""))
+
+                    # Populate death model parameters in the UI
+                    if "death_model" in cell_def_tab.param_d[cell_def_name]["intracellular"]:
+                        death_model = cell_def_tab.param_d[cell_def_name]["intracellular"]["death_model"]
+                        cell_def_tab.enable_death_checkbox.setChecked(death_model.get("enabled", False))
+                        cell_def_tab.death_type.setText(death_model.get("death_type", ""))
+                        cell_def_tab.death_trigger_flux.setText(death_model.get("death_trigger_flux", ""))
+                        cell_def_tab.death_flux_threshold.setText(death_model.get("death_flux_threshold", ""))
+                        cell_def_tab.death_rate_increase.setText(death_model.get("death_rate_increase", ""))
 
                 elif uep_intracellular.attrib["type"] == "roadrunner":
                     # <intracellular type="roadrunner">
@@ -1089,11 +1222,11 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
-    print("populate_tree_cell_defs.py:  Setting 0th cell")
+    # print("populate_tree_cell_defs.py:  Setting 0th cell")
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
     cell_def_tab.tree_item_clicked_cb(cell_def_tab.tree.topLevelItem(0), 0)  # and have its params shown
-    print("populate_tree_cell_defs.py:  Set 0th cell")
+    # print("populate_tree_cell_defs.py:  Set 0th cell")
 
 
     #----------------------------------

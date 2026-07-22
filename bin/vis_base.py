@@ -68,7 +68,7 @@ from phenotypeSummary import PhenotypeWindow
 
 from populate_tree_cell_defs import populate_tree_cell_defs
 
-from studio_classes import QCheckBox_custom, QRadioButton_custom
+from studio_classes import QCheckBox_custom, QRadioButton_custom, QLineEdit_custom
 from pyMCDS import xmlfile_to_xmlpathfile
 
 #---------------------------
@@ -330,7 +330,7 @@ class VisBase():
 
         # self.vis2D = True
         self.model3D_flag = model3D_flag 
-        print("--- VisBase: model3D_flag=",model3D_flag)
+        # print("--- VisBase: model3D_flag=",model3D_flag)
         self.tensor_flag = tensor_flag 
         self.ecm_flag = ecm_flag 
         self.galaxy_flag = galaxy_flag 
@@ -513,6 +513,7 @@ class VisBase():
         self.field_index = 4  # substrate (0th -> 4 in the .mat)
         self.substrate_name = None
         self.substrate_grad = False
+        self.substrate_grad_angle = False
 
         self.plot_xmin = None
         self.plot_xmax = None
@@ -565,6 +566,8 @@ class VisBase():
         self.cax2 = None
 
         self.cbar2 = None
+        self.substrate_grad_angle_window = None
+        self.show_gradient_angle_wheel_button = None
 
         self.figsize_width_2Dplot = basic_length
         self.figsize_height_2Dplot = basic_length
@@ -892,8 +895,14 @@ class VisBase():
         self.substrates_grad_checkbox.setChecked(False)
         self.substrates_grad_checkbox.clicked.connect(self.substrates_grad_toggle_cb)
 
+        self.substrates_grad_angle_checkbox = QCheckBox_custom('angle of gradient')
+        self.substrates_grad_angle_checkbox.setEnabled(False)
+        self.substrates_grad_angle_checkbox.setChecked(False)
+        self.substrates_grad_angle_checkbox.clicked.connect(self.substrates_grad_angle_toggle_cb)
+
         hbox.addWidget(self.substrates_checkbox)
         hbox.addWidget(self.substrates_grad_checkbox)
+        hbox.addWidget(self.substrates_grad_angle_checkbox)
         self.vbox.addLayout(hbox)
 
 
@@ -923,7 +932,7 @@ class VisBase():
         label.setAlignment(QtCore.Qt.AlignCenter)
         # label.setAlignment(QtCore.Qt.AlignLeft)
         hbox.addWidget(label)
-        self.cmin = QLineEdit()
+        self.cmin = QLineEdit_custom()
         self.cmin.setText('0.0')
         self.cmin.setEnabled(False)
         self.cmin.setStyleSheet("background-color: lightgray;")
@@ -938,7 +947,7 @@ class VisBase():
         # label.setFixedWidth(label_width)
         label.setAlignment(QtCore.Qt.AlignCenter)
         hbox.addWidget(label)
-        self.cmax = QLineEdit()
+        self.cmax = QLineEdit_custom()
         self.cmax.setText('1.0')
         self.cmax.setEnabled(False)
         self.cmax.setStyleSheet("background-color: lightgray;")
@@ -1093,7 +1102,7 @@ class VisBase():
         self.modelSummaryUI.show()
 
     def filterUI_cb(self):
-        print("---- vis_base: filterUI_cb()")
+        # print("---- vis_base: filterUI_cb()")
         # print("    filterUI_cb():  vis_filter_init_flag=",self.vis_filter_init_flag)
         # self.filterUI = FilterUIWindow()
         if self.vis_filter_init_flag:
@@ -1440,12 +1449,12 @@ class VisBase():
     # ------ overridden for 3D (vis3D_tab.py)
     def build_physiboss_info(self):
         config_file = self.run_tab.config_xml_name.text()
-        print("build_physiboss_info():  config_file=",config_file)
+        # print("build_physiboss_info():  config_file=",config_file)
         basename = os.path.basename(config_file)
-        print("build_physiboss_info():  basename=",basename)
+        # print("build_physiboss_info():  basename=",basename)
         # out_config_file = os.path.join(self.output_dir, basename)
         out_config_file = config_file
-        print("build_physiboss_info():  out_config_file=",out_config_file)
+        # print("build_physiboss_info():  out_config_file=",out_config_file)
 
         try:
             self.tree = ET.parse(config_file)
@@ -1508,7 +1517,7 @@ class VisBase():
                     self.physiboss_node_dict[cell_def.get("name")] = list_output_nodes
 
           
-        print("physiboss_node_dict :",self.physiboss_node_dict)
+        # print("physiboss_node_dict :",self.physiboss_node_dict)
         if len(self.physiboss_node_dict) > 0:
             self.physiboss_vis_show()
             self.fill_physiboss_cell_types_combobox(list(self.physiboss_node_dict.keys()))
@@ -1561,7 +1570,7 @@ class VisBase():
             self.vbox.addWidget(self.stretch_widget)
 
     def physiboss_vis_hide(self):
-        print("\n--------- physiboss_vis_hide()")
+        # print("\n--------- physiboss_vis_hide()")
 
         if self.physiboss_widgets:
             self.physiboss_widgets = False
@@ -1615,14 +1624,14 @@ class VisBase():
         
         
     def physiboss_state_counts_cb(self):
-        print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
+        # print("---- physiboss_state_counts_cb(): --> window for 2D physiboss state population plots")
 
         xml_pattern = self.output_dir + "/" + "output*.xml"
         xml_files = glob.glob(xml_pattern)
 
         num_xml = len(xml_files)
         if num_xml == 0:
-            print("last_plot_cb(): WARNING: no output*.xml files present")
+            # print("last_plot_cb(): WARNING: no output*.xml files present")
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Information)
             msgBox.setText("Could not find any " + self.output_dir + "/output*.xml")
@@ -1906,9 +1915,10 @@ class VisBase():
 
     def update_output_dir(self, dir_path):
         if os.path.isdir(dir_path):
-            print("update_output_dir(): yes, it is a dir path", dir_path)
+            # print("update_output_dir(): yes, it is a dir path", dir_path)
+            pass
         else:
-            print("update_output_dir(): NO, it is NOT a dir path", dir_path)
+            print("vis_base.py: update_output_dir(): this is NOT a dir path: ", dir_path)
         self.output_dir = dir_path
         self.output_folder.setText(dir_path)
 
@@ -2060,7 +2070,7 @@ class VisBase():
 
 
     def init_plot_range(self, config_tab):
-        print("vis_base:----- init_plot_range:")
+        # print("vis_base:----- init_plot_range:")
         try:
             # beware of widget callback 
             self.my_xmin.setText(config_tab.xmin.text())
@@ -2072,7 +2082,7 @@ class VisBase():
         except:
             pass
 
-        print("      call get_domain_params()")
+        # print("      call get_domain_params()")
         self.get_domain_params()
 
     def change_plot_range(self):
@@ -2157,14 +2167,14 @@ class VisBase():
 
 
     def reset_model(self):
-        print("--------- vis_base: reset_model ----------")
+        # print("--------- vis_base: reset_model ----------")
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
         if not os.path.isfile(xml_file):
-            print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
+            # print("vis_base.py: reset_model(): Warning: Expecting initial.xml, but does not exist.")
             # msgBox = QMessageBox()
             # msgBox.setIcon(QMessageBox.Information)
             # msgBox.setText("Did not find 'initial.xml' in the output directory. Will plot a dummy substrate until you run a simulation.")
@@ -2362,7 +2372,7 @@ class VisBase():
 
         else:   # plotting .mat, not .svg
             self.current_frame = last_xml
-            print('self.current_frame= ',self.current_frame)
+            # print('self.current_frame= ',self.current_frame)
 
         self.update_plots()
 
@@ -2575,8 +2585,12 @@ class VisBase():
             self.cmin.setStyleSheet("background-color: lightgray;")
             self.cmax.setStyleSheet("background-color: lightgray;")
         self.substrates_combobox.setEnabled(bval)
-        self.substrates_cbar_combobox.setEnabled(bval)
+        self.substrates_cbar_combobox.setEnabled(bval and not self.substrate_grad_angle)
         self.substrates_grad_checkbox.setEnabled(bval)
+        self.substrates_grad_angle_checkbox.setEnabled(bval)
+        if self.show_gradient_angle_wheel_button is not None:
+            self.show_gradient_angle_wheel_button.setVisible(bval and self.substrate_grad_angle)
+            self.show_gradient_angle_wheel_button.setEnabled(bval and self.substrate_grad_angle)
 
         # if self.view_shading:
         #     self.view_shading.setEnabled(bval)
@@ -2585,6 +2599,7 @@ class VisBase():
             if self.cax1:
                 self.cax1.remove()
                 self.cax1 = None
+            self.close_gradient_angle_window()
 
         if not self.plot_xmin:
             self.reset_plot_range()
@@ -2593,7 +2608,49 @@ class VisBase():
 
     def substrates_grad_toggle_cb(self,bval):
         self.substrate_grad = bval
+        if bval and self.substrates_grad_angle_checkbox.isChecked():
+            self.substrates_grad_angle_checkbox.blockSignals(True)
+            self.substrates_grad_angle_checkbox.setChecked(False)
+            self.substrates_grad_angle_checkbox.blockSignals(False)
+            self.substrate_grad_angle = False
+            if self.show_gradient_angle_wheel_button is not None:
+                self.show_gradient_angle_wheel_button.setVisible(False)
+                self.show_gradient_angle_wheel_button.setEnabled(False)
+            self.substrates_cbar_combobox.setEnabled(self.substrates_checked_flag)
+        if bval:
+            self.cmin.setEnabled(True)
+            self.cmax.setEnabled(True)
+        else:
+            substrates_cmap_fixed = self.substrates_checked_flag and self.fix_cmap_checkbox.isChecked()
+            self.cmin.setEnabled(substrates_cmap_fixed)
+            self.cmax.setEnabled(substrates_cmap_fixed)
+        if bval:
+            self.close_gradient_angle_window()
         self.update_plots()
+
+    def substrates_grad_angle_toggle_cb(self,bval):
+        self.substrate_grad_angle = bval
+        if bval and self.substrates_grad_checkbox.isChecked():
+            self.substrates_grad_checkbox.blockSignals(True)
+            self.substrates_grad_checkbox.setChecked(False)
+            self.substrates_grad_checkbox.blockSignals(False)
+            self.substrate_grad = False
+        self.substrates_cbar_combobox.setEnabled(self.substrates_checked_flag and not bval)
+        self.fix_cmap_checkbox.setEnabled(self.substrates_checked_flag and not bval)
+        self.cmin.setEnabled(self.substrates_checked_flag and not bval and self.fix_cmap_checkbox.isChecked())
+        self.cmax.setEnabled(self.substrates_checked_flag and not bval and self.fix_cmap_checkbox.isChecked())
+        if self.show_gradient_angle_wheel_button is not None:
+            self.show_gradient_angle_wheel_button.setVisible(self.substrates_checked_flag and bval)
+            self.show_gradient_angle_wheel_button.setEnabled(self.substrates_checked_flag and bval)
+        if not bval:
+            self.close_gradient_angle_window()
+        self.update_plots()
+
+    def show_gradient_angle_window(self):
+        self._draw_gradient_angle_wheel()
+
+    def close_gradient_angle_window(self):
+        self._close_gradient_angle_wheel()
 
     def fix_cells_cmap_toggle_cb(self,bval):
         # print("fix_cells_cmap_toggle_cb():")

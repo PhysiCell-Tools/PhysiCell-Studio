@@ -1232,10 +1232,10 @@ class pyMCDS:
                     dir_label = ['_x', '_y', '_z']
                 else:
                     dir_label = [];
-                    for nn in range(100):
+                    for nn in range(nlabels):
                         dir_label.append( '_%u' % nn )
                 # print( dir_label )
-                for i in range(int(label.get('size'))):
+                for i in range(nlabels):
                     s_label = fixed_label + dir_label[i]
                     # print(s_label)
                     data_labels.append(s_label)

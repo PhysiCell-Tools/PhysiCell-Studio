@@ -904,13 +904,13 @@ class SubstrateDef(QWidget):
             logging.debug(f'microrenv_tab.py: key in param_d.keys() = {substrate}')
             if substrate in substrates_in_tree:
                 logging.debug(f'matched! {substrate}')
-                print("----> ",self.param_d[substrate])
+                # print("----> ",self.param_d[substrate])
                 for key in self.param_d[substrate]:
                     if "enable" not in key and "units" not in key:   # hacky
                         sfx = key[-4:]
                         if ("min" in sfx or "max" in sfx) and self.param_d[substrate]["enable_"+sfx]:   # hacky
                             try:
-                                print("--- attempt to do float on key= ",key)
+                                print("microenv_tab.py: --- attempt to do float on key= ",key)
                                 foo = float(self.param_d[substrate][key])
                             except:
                                 self.popup_msg("You seem to have invalid (non-numeric) Microenvironment parameter values. Please fix them.")
