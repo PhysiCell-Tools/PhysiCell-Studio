@@ -1128,7 +1128,10 @@ class Vis(VisBase, QWidget):
         num_axes =  len(self.figure.axes)
         # print("# axes = ",num_axes)
         if self.cax1:
-            self.cax1.remove()  # replace/update the colorbar
+            try:
+                self.cax1.remove()  # replace/update the colorbar
+            except:
+                pass
             # print("# axes(after substrate remove) = ",len(self.figure.axes))
             # print(" self.figure.axes= ",self.figure.axes)
             #ppp

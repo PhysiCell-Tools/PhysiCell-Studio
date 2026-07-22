@@ -1009,7 +1009,10 @@ class Vis(VisBase, QWidget):
                 self.cax1 = None
         elif (self.substrate_grad):
             if self.cax1:
-                self.cax1.remove()
+                try:
+                    self.cax1.remove()
+                except:
+                    pass
                 self.cax1 = None
             self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
@@ -1021,7 +1024,10 @@ class Vis(VisBase, QWidget):
             self.cbar1.set_label(self.substrate_name + " (gradient norm)", fontsize=self.cbar_label_fontsize)
         else:
             if self.cax1:
-                self.cax1.remove()  # replace/update the colorbar
+                try:
+                    self.cax1.remove()  # replace/update the colorbar
+                except:
+                    pass
                 self.cax1 = None
             self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
