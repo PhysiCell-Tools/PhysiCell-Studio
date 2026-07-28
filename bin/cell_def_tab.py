@@ -7103,6 +7103,110 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
     #-------------------------------------------------------------------
     # Get values from the dict and generate/write a new XML
+    def fill_xml_dfba_intracellular(self, pheno, cdef):
+        intracellular_params = self.param_d[cdef]['intracellular']
+        settings_params = intracellular_params.get("settings", {})
+
+        if 'sbml_filename' not in settings_params or settings_params['sbml_filename'] in [None, ""]:
+            raise CellDefException("Missing SBML file in the " + cdef + " cell definition")
+
+        intracellular = ET.SubElement(pheno, "intracellular", {"type": "dfba"})
+        intracellular.text = self.indent12
+        intracellular.tail = "\n" + self.indent10
+
+        settings = ET.SubElement(intracellular, "settings")
+        settings.text = self.indent14
+        settings.tail = self.indent12
+
+        sbml_filename = ET.SubElement(settings, "sbml_filename")
+        sbml_filename.text = settings_params['sbml_filename']
+        sbml_filename.tail = self.indent14
+
+        intracellular_dt = ET.SubElement(settings, "intracellular_dt", {"units": "min"})
+        intracellular_dt.text = settings_params.get('intracellular_dt', "")
+        intracellular_dt.tail = self.indent12
+
+        if "transport_model" in intracellular_params:
+            transport_model = ET.SubElement(intracellular, "transport_model")
+            transport_model.text = self.indent14
+            transport_model.tail = self.indent12
+
+            for exchange in intracellular_params["transport_model"].get("exchanges", []):
+                exchange_elem = ET.SubElement(transport_model, "exchange",
+                                              {"substrate": exchange.get("substrate", "")})
+                exchange_elem.text = self.indent16
+                exchange_elem.tail = self.indent14
+
+                if "fba_flux" in exchange:
+                    fba_flux_elem = ET.SubElement(exchange_elem, "fba_flux")
+                    fba_flux_elem.text = exchange["fba_flux"]
+                    fba_flux_elem.tail = self.indent18
+
+                if "Km" in exchange:
+                    km_elem = ET.SubElement(exchange_elem, "Km", {"units": "mM"})
+                    km_elem.text = exchange["Km"]
+                    km_elem.tail = self.indent18
+
+                if "Vmax" in exchange:
+                    vmax_elem = ET.SubElement(exchange_elem, "Vmax", {"units": "fmol/pg DW cell/min"})
+                    vmax_elem.text = exchange["Vmax"]
+                    vmax_elem.tail = self.indent16
+
+        if "growth_model" in intracellular_params:
+            growth_model = ET.SubElement(intracellular, "growth_model")
+            growth_model.text = self.indent14
+            growth_model.tail = self.indent12
+
+            growth_params = intracellular_params["growth_model"]
+            if "cell_density" in growth_params:
+                cell_density_elem = ET.SubElement(growth_model, "cell_density", {"units": "g/ml"})
+                cell_density_elem.text = growth_params["cell_density"]
+                cell_density_elem.tail = self.indent16
+
+            if "reference_volume" in growth_params:
+                reference_volume_elem = ET.SubElement(growth_model, "reference_volume", {"units": "pg"})
+                reference_volume_elem.text = growth_params["reference_volume"]
+                reference_volume_elem.tail = self.indent16
+
+            if "max_growth_rate" in growth_params:
+                max_growth_rate_elem = ET.SubElement(growth_model, "max_growth_rate", {"units": "1/min"})
+                max_growth_rate_elem.text = growth_params["max_growth_rate"]
+                max_growth_rate_elem.tail = self.indent16
+
+            if "objective_reaction" in growth_params:
+                objective_reaction_elem = ET.SubElement(growth_model, "objective_reaction")
+                objective_reaction_elem.text = growth_params["objective_reaction"]
+                objective_reaction_elem.tail = self.indent12
+
+        if "death_model" in intracellular_params:
+            death_params = intracellular_params["death_model"]
+            death_model = ET.SubElement(intracellular, "death_model",
+                                        {"enabled": str(death_params.get('enabled', False)).lower()})
+            death_model.text = self.indent14
+            death_model.tail = self.indent12
+
+            if "death_type" in death_params:
+                death_type_elem = ET.SubElement(death_model, "death_type", {"units": "g/ml"})
+                death_type_elem.text = death_params["death_type"]
+                death_type_elem.tail = self.indent16
+
+            if "death_trigger_flux" in death_params:
+                death_trigger_flux_elem = ET.SubElement(death_model, "death_trigger_flux", {"units": "1/min"})
+                death_trigger_flux_elem.text = death_params["death_trigger_flux"]
+                death_trigger_flux_elem.tail = self.indent16
+
+            if "death_flux_threshold" in death_params:
+                death_flux_threshold_elem = ET.SubElement(death_model, "death_flux_threshold")
+                death_flux_threshold_elem.text = death_params["death_flux_threshold"]
+                death_flux_threshold_elem.tail = self.indent16
+
+            if "death_rate_increase" in death_params:
+                death_rate_increase_elem = ET.SubElement(death_model, "death_rate_increase")
+                death_rate_increase_elem.text = death_params["death_rate_increase"]
+                death_rate_increase_elem.tail = self.indent12
+
+    #-------------------------------------------------------------------
+    # Get values from the dict and generate/write a new XML
     def fill_xml_intracellular(self, pheno, cdef):
         # print(f'------------------- cell_def_tab.py:  fill_xml_intracellular()')
         if self.debug_print_fill_xml:
@@ -7297,140 +7401,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
                             t_last_tag.tail = self.indent14
                             
-                #-----------------------------
-                elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
-                    self.ode_sbml_frame.fill_xml(pheno, cdef)
-
-                #-----------------------------
-                elif self.param_d[cdef]['intracellular']['type'] == "dfba":
-                    print("dfba settings: ",self.param_d[cdef]['intracellular']["settings"])
-                    # Ensure necessary elements are present before writing to XML
-
-                # if 'cfg_filename' not in self.param_d[cdef]['intracellular'] or self.param_d[cdef]['intracellular']['cfg_filename'] in [None, ""]:
-
-                    # if 'sbml_filename' not in self.param_d[cdef]['intracellular']["settings"] or \
-                            # not self.param_d[cdef]['intracellular']["settings"]['sbml_filename']:
-
-                    if 'sbml_filename' not in self.param_d[cdef]['intracellular']["settings"] or \
-                            self.param_d[cdef]['intracellular']["settings"]['sbml_filename'] in [None,""]:
-                        #rwh
-                        # msg = f'Error: Missing SBML filename in intracellular subtab for dFBA for {cdef}. Please provide before saving the XML.'
-                        # show_studio_warning_window(msg)
-                        # return
-                        raise CellDefException("Missing SBML file in the " + cdef + " cell definition")
-
-                    # Create the intracellular element for dFBA
-                    intracellular = ET.SubElement(pheno, "intracellular", {"type": "dfba"})
-                    intracellular.text = self.indent12
-                    intracellular.tail = "\n" + self.indent10
-
-
-                    # Add Time Step (intracellular_dt)
-                    settings = ET.SubElement(intracellular, "settings")
-                    # Add SBML Filename
-                    sbml_filename = ET.SubElement(settings, "sbml_filename")
-                    sbml_filename.text = self.param_d[cdef]['intracellular']["settings"]['sbml_filename']
-                    sbml_filename.tail = self.indent12
-                    intracellular_dt = ET.SubElement(settings, "intracellular_dt", {"units": "min"})
-                    intracellular_dt.text = self.param_d[cdef]['intracellular']['settings']['intracellular_dt']
-                    intracellular_dt.tail = self.indent12
-
-                    # Add Transport Model exchanges if present
-                    if "transport_model" in self.param_d[cdef]['intracellular']:
-                        transport_model = ET.SubElement(intracellular, "transport_model")
-                        transport_model.text = self.indent14
-                        transport_model.tail = self.indent12
-
-                        if "exchanges" in self.param_d[cdef]['intracellular']['transport_model']:
-                            for exchange in self.param_d[cdef]['intracellular']['transport_model']['exchanges']:
-                                exchange_elem = ET.SubElement(transport_model, "exchange",
-                                                              {"substrate": exchange["substrate"]})
-                                exchange_elem.text = self.indent16
-                                exchange_elem.tail = self.indent14
-
-                                # Add exchange parameters (fba_flux, Km, Vmax)
-                                if "fba_flux" in exchange:
-                                    fba_flux_elem = ET.SubElement(exchange_elem, "fba_flux")
-                                    fba_flux_elem.text = exchange["fba_flux"]
-                                    fba_flux_elem.tail = self.indent18
-
-                                if "Km" in exchange:
-                                    km_elem = ET.SubElement(exchange_elem, "Km", {"units": "mM"})
-                                    km_elem.text = exchange["Km"]
-                                    km_elem.tail = self.indent18
-
-                                if "Vmax" in exchange:
-                                    vmax_elem = ET.SubElement(exchange_elem, "Vmax", {"units": "fmol/pg DW cell/min"})
-                                    vmax_elem.text = exchange["Vmax"]
-                                    vmax_elem.tail = self.indent16
-
-                    # Add Growth Model if present
-                    if "growth_model" in self.param_d[cdef]['intracellular']:
-                        growth_model = ET.SubElement(intracellular, "growth_model")
-                        growth_model.text = self.indent14
-                        growth_model.tail = self.indent12
-
-                        # Add growth model parameters (cell_density, max_growth_rate, objective_reaction)
-                        if "cell_density" in self.param_d[cdef]['intracellular']['growth_model']:
-                            cell_density_elem = ET.SubElement(growth_model, "cell_density", {"units": "g/ml"})
-                            cell_density_elem.text = self.param_d[cdef]['intracellular']['growth_model']["cell_density"]
-                            cell_density_elem.tail = self.indent16
-
-                        if "reference_volume" in self.param_d[cdef]['intracellular']['growth_model']:
-                            reference_volume_elem = ET.SubElement(growth_model, "reference_volume", {"units": "pg"})
-                            reference_volume_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
-                                "reference_volume"]
-                            reference_volume_elem.tail = self.indent16
-
-                        if "max_growth_rate" in self.param_d[cdef]['intracellular']['growth_model']:
-                            max_growth_rate_elem = ET.SubElement(growth_model, "max_growth_rate", {"units": "1/min"})
-                            max_growth_rate_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
-                                "max_growth_rate"]
-                            max_growth_rate_elem.tail = self.indent16
-
-                        if "objective_reaction" in self.param_d[cdef]['intracellular']['growth_model']:
-                            objective_reaction_elem = ET.SubElement(growth_model, "objective_reaction")
-                            objective_reaction_elem.text = self.param_d[cdef]['intracellular']['growth_model'][
-                                "objective_reaction"]
-                            objective_reaction_elem.tail = self.indent12
-                    
-                    if len(self.param_d[cdef]['intracellular']['outputs']) == 0 and tag_input is not None:
-                        tag_input.tail = self.indent12
-                    elif tag_output is not None:
-                        tag_output.tail = self.indent12
-
-                    if "death_model" in self.param_d[cdef]['intracellular']:
-                        death_model = ET.SubElement(intracellular, "death_model",
-                                                    {"enabled": str(
-                                                        self.param_d[cdef]['intracellular']['death_model'].get(
-                                                            'enabled', False)).lower()})
-                        death_model.text = self.indent14
-                        death_model.tail = self.indent12
-
-                        # Add death model parameters (death_type, death_trigger_flux, death_flux_threshold, death_rate_increase)
-                        if "death_type" in self.param_d[cdef]['intracellular']['death_model']:
-                            death_type_elem = ET.SubElement(death_model, "death_type", {"units": "g/ml"})
-                            death_type_elem.text = self.param_d[cdef]['intracellular']['death_model']["death_type"]
-                            death_type_elem.tail = self.indent16
-
-                        if "death_trigger_flux" in self.param_d[cdef]['intracellular']['death_model']:
-                            death_trigger_flux_elem = ET.SubElement(death_model, "death_trigger_flux", {"units": "1/min"})
-                            death_trigger_flux_elem.text = self.param_d[cdef]['intracellular']['death_model'][
-                                "death_trigger_flux"]
-                            death_trigger_flux_elem.tail = self.indent16
-
-                        if "death_flux_threshold" in self.param_d[cdef]['intracellular']['death_model']:
-                            death_flux_threshold_elem = ET.SubElement(death_model, "death_flux_threshold")
-                            death_flux_threshold_elem.text = self.param_d[cdef]['intracellular']['death_model'][
-                                "death_flux_threshold"]
-                            death_flux_threshold_elem.tail = self.indent12
-
-                        if "death_rate_increase" in self.param_d[cdef]['intracellular']['death_model']:
-                            death_rate_increase_elem = ET.SubElement(death_model, "death_rate_increase")
-                            death_rate_increase_elem.text = self.param_d[cdef]['intracellular']['death_model'][
-                                "death_rate_increase"]
-                            death_rate_increase_elem.tail = self.indent12
-
+            elif self.param_d[cdef]['intracellular']['type'] == "dfba":
+                self.fill_xml_dfba_intracellular(pheno, cdef)
 
             elif self.param_d[cdef]['intracellular']['type'] == "roadrunner":
                 self.ode_sbml_frame.fill_xml(pheno, cdef)
