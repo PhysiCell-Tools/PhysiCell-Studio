@@ -2269,9 +2269,11 @@ class ICs(StudioTab):
             "This built-in tab is <b>deprecated</b> and will be removed in a future release. "
             "Install the standalone <b>biwt</b> package to keep using BIWT:"
             "<pre>conda activate studio\npip install biwt</pre>"
-            "For full installation and Seurat/.rds setup, see the "
-            "<a href=\"https://github.com/PhysiCell-Tools/PhysiCell-Studio/blob/main/doc/BIWT.md\">BIWT documentation</a> "
-            "and the "
+            "For installing BIWT alongside Studio's dependencies, see "
+            "<a href=\"https://github.com/PhysiCell-Tools/PhysiCell-Studio/blob/main/doc/BIWT.md\">Studio's BIWT doc</a>; "
+            "for the package's own installation guide and troubleshooting, see the "
+            "<a href=\"https://drbergman-lab.github.io/biwt/getting-started/installation/\">BIWT documentation</a>. "
+            "See also the "
             "<a href=\"https://github.com/PhysiCell-Tools/Studio-Guide\">PhysiCell Studio Guide</a>."
         )
         msgBox.setStandardButtons(QMessageBox.Ok)
