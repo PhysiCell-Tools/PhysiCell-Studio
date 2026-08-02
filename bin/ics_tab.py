@@ -2361,10 +2361,12 @@ class ICs(StudioTab):
             existing = _pd.read_csv(out_path)
             new_rows = result.coordinates[["x", "y", "z", "type"]]
             _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
-            result.output_csv_path = out_path
         else:
             result.to_csv(out_path)
 
+        # Neither BiwtInput nor BiwtResult records the output path -- the host owns
+        # it. Studio's copy lives in these two widgets, read back by save_cb() and
+        # by this method's default_path on the next run.
         out_folder, out_fname = os.path.split(out_path)
         self.csv_folder.setText(out_folder or ".")
         self.output_file.setText(out_fname)
