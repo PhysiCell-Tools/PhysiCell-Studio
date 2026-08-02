@@ -8,8 +8,10 @@ See the [PhysiCell Studio Guide](https://github.com/PhysiCell-Tools/Studio-Guide
 
 BIWT is a standalone, pip-installable package that adds a guided wizard for importing
 single-cell data (`.csv`, `.h5ad`, and Seurat `.rds`) into PhysiCell initial conditions,
-enabled with `python3 bin/studio.py --biwt`. See [doc/BIWT.md](doc/BIWT.md) for installation
-(including the Seurat / R setup) and troubleshooting.
+enabled with `python bin/studio.py --biwt`. See [doc/BIWT.md](doc/BIWT.md) for installing it
+alongside Studio's dependencies, and the
+[BIWT documentation](https://drbergman-lab.github.io/biwt/) for the user guide, Seurat / R
+setup, and troubleshooting.
 
 # License
 
