@@ -827,11 +827,13 @@ class Rules(StudioTab):
         self.update_base_value_by_name(behavior, True)
 
     def update_base_value_by_name(self, behavior, update_widgets, cell_type = None):
+        # print(f"--- update_base_value_by_name(): cell_type (0)= {cell_type}")
         # update behavior of specified cell type (if None, use current in combobox)
         if cell_type is not None:
             key0 = cell_type
         else:
             key0 = self.celltype_combobox.currentText()
+        print(f"---    cell_type (1)= {cell_type}")
         btokens = behavior.split()
         if len(btokens) == 0:
             return
@@ -875,7 +877,8 @@ class Rules(StudioTab):
             try:
                 base_val = self.xml_creator.celldef_tab.param_d[key0][key1][key2][key3]
             except:
-                print("update_base_value(): ---- got exception")
+                # print("update_base_value(): ---- got exception")
+                print(f"update_base_value(): ---- got exception: key0={key0},key1={key1},key2={key2},key3={key3}")
                 return
         elif btokens[0] == 'apoptosis':
             base_val = self.xml_creator.celldef_tab.param_d[key0]['apoptosis_death_rate']
