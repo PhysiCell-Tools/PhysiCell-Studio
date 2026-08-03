@@ -40,13 +40,19 @@ try:
     from biwt.types import BiwtInput, DomainSpec
     HAVE_BIWT_PACKAGE = True
     BIWT_IMPORT_ERROR = None
-except ImportError as e:
+except Exception as e:
+    # Catch more than ImportError: an installed biwt whose own import raises
+    # something else (e.g. a binary dependency failing at load) would otherwise
+    # take Studio down at startup instead of falling back to the legacy tab.
     from biwt_tab import BioinformaticsWalkthrough
     HAVE_BIWT_PACKAGE = False
-    # Keep the reason: a missing 'biwt' means "not installed", but an ImportError
-    # raised from *inside* biwt (missing transitive dep, partial install) lands here
-    # too, and reporting that as "not installed" misdirects anyone debugging it.
-    BIWT_IMPORT_ERROR = e
+    # Keep the reason: a missing 'biwt' means "not installed", but a failure raised
+    # from *inside* biwt (missing transitive dep, partial install, bad binary dep)
+    # lands here too, and reporting that as "not installed" misdirects debugging.
+    if isinstance(e, ImportError):
+        BIWT_IMPORT_ERROR = e
+    else:
+        BIWT_IMPORT_ERROR = ImportError(f"{type(e).__name__}: {e}", name="biwt_import_failed")
 
 import numpy as np
 import matplotlib
@@ -2388,11 +2394,14 @@ class ICs(StudioTab):
                 _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
             else:
                 result.to_csv(out_path)
-        except (OSError, ValueError) as e:
+        except Exception as e:
+            # Deliberately broad: besides OSError, the append path can raise KeyError
+            # if the result lacks the x/y/z/type columns, and a malformed existing CSV
+            # raises from pandas. None of that should take the UI down mid-save.
             QMessageBox.critical(
                 self,
                 "BIWT — Could not save cells CSV",
-                f"Failed to write '{out_path}':\n\n{e}",
+                f"Failed to write '{out_path}':\n\n{type(e).__name__}: {e}",
             )
             return
 
