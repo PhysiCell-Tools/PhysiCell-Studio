@@ -4762,7 +4762,7 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         # print(f"-------   its varname is {varname}")
         if varname not in self.master_custom_var_d.keys():
-            self.master_custom_var_d[varname] = [wroww, '', '']   # [wrow, units, desc]
+            self.master_custom_var_d[varname] = [wrow, '', '']   # [wrow, units, desc]
         self.master_custom_var_d[varname][2] = text  # hack, hard-code
         # print("self.master_custom_var_d[varname]= ",self.master_custom_var_d[varname])
 
