@@ -55,6 +55,8 @@ from settings import StudioSettings
 
 from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history, \
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
+from python_shell import open_python_shell
+from project_io import ProjectIO
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
@@ -81,6 +83,20 @@ else:
 
 def SingleBrowse(self):
     filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
+
+def add_menu_separator(menu, color="#888888", thickness=1, v_margin=3, h_margin=8):
+    """Add a visible horizontal separator to a QMenu via QWidgetAction."""
+    line = QLabel()
+    line.setFixedHeight(thickness)
+    line.setStyleSheet(f"background-color: {color}; border: none;")
+    wrapper = QWidget()
+    layout = QVBoxLayout(wrapper)
+    layout.setContentsMargins(h_margin, v_margin, h_margin, v_margin)
+    layout.setSpacing(0)
+    layout.addWidget(line)
+    action = QWidgetAction(menu)
+    action.setDefaultWidget(wrapper)
+    menu.addAction(action)
 
 def startup_notice():
     msgBox = QMessageBox()
@@ -172,6 +188,8 @@ class PhysiCellXMLCreator(QWidget):
                 msgBox.setText(f'Unable to create the physiboss_models.Database(). It requires being online.')
                 msgBox.setStandardButtons(QMessageBox.Ok)
                 returnValue = msgBox.exec()
+
+        self.project_io = ProjectIO(self)
 
         # Menus
         vlayout = QVBoxLayout(self)
@@ -368,7 +386,7 @@ class PhysiCellXMLCreator(QWidget):
             self.enablePlotTab(False)
             self.enablePlotTab(True)
 
-            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab)  # pass in dict eventually
+            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab, self.galaxy_flag)  # pass in dict eventually
 
             self.run_tab.vis_tab = self.vis_tab
             logging.debug(f'studio.py: calling vis_tab.substrates_cbox_changed_cb(2)')
@@ -480,14 +498,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             """
         # QString style = "QMenuBar::item:selected { background: white; } QMenuBar::item:pressed {  background: white; }"
         menubar.setStyleSheet("color: black")
-        # menubar.setStyleSheet(stylesheet)
 
         #--------------
         studio_menu = menubar.addMenu('&Studio')
         studio_menu.addAction("About", self.about_studio)
         studio_menu.addAction("Settings", self.settings_studio_cb)
         if not self.nanohub_flag:
-            studio_menu.addSeparator()
+            add_menu_separator(studio_menu)
             studio_menu.addAction("Quit", quit_cb)
 
         #-----
@@ -500,25 +517,17 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_menu = None
 
             if not self.galaxy_flag:
-                file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-                file_menu.addAction("Save as", self.save_as_cb)
-                file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-
-                export_menu = file_menu.addMenu("Export")
-
-                simularium_act = QAction('Simularium', self)
-                export_menu.addAction(simularium_act)
-                simularium_act.triggered.connect(self.simularium_cb)
-                if not self.studio_flag:
-                    print("simularium_installed is ",simularium_installed)
-                    export_menu.setEnabled(False)
+                file_menu.addAction("Open .xml", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
+                file_menu.addAction("Save .xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+                file_menu.addAction("Save as .xml", self.save_as_cb)
 
                 #------
-                file_menu.addSeparator()
-                file_menu.addAction("Save user project", self.save_user_proj_cb)
-                file_menu.addAction("Load user project", self.load_user_proj_cb)
+                add_menu_separator(file_menu)
+                user_proj_menu = file_menu.addMenu("User project")
+                user_proj_menu.addAction("Save", self.save_user_proj_cb)
+                user_proj_menu.addAction("Load", self.load_user_proj_cb)
 
-                file_menu.addSeparator()
+                add_menu_separator(file_menu)
 
                 if PHYSIBOSS_MODELS_IMPORTED and self.physiboss_models_flag:
                     self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
@@ -540,13 +549,24 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                                 )
                     except:
                         pass
-            else:
+
+            else:   # Galaxy options
                 file_menu.addAction("Open", self.open_as_cb)
                 file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
                 file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
 
             #------
+            add_menu_separator(file_menu)
+            file_menu.addAction("Export project - GitHub", self.project_io.export_project_github)
+            file_menu.addAction("Import project - GitHub", self.project_io.import_project_github)
+
+            if not self.galaxy_flag:
+                add_menu_separator(file_menu)
+                # generate a .simularium output file using results in the output dir
+                file_menu.addAction("Simularium export", self.simularium_cb)
+
             if self.samples_flag:
+                add_menu_separator(file_menu)
                 self.sample_models_menu = file_menu.addMenu("Load sample")
                 self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
                 self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
@@ -577,6 +597,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_zipped_csv_item = self.download_menu.addAction("all_csv.zip", lambda: download_zipped_csv_galaxy(self))
             self.download_all_zipped_item = self.download_menu.addAction("all_output.zip", lambda: download_all_zipped_galaxy(self))
 
+            add_menu_separator(misc_menu)
+            misc_menu.addAction("Python shell", self.open_python_shell_cb)
+
         if not self.nanohub_flag and not self.galaxy_flag:
             action_menu = menubar.addMenu('&Action')
             action_menu.addAction("Run", self.run_model_cb, QtGui.QKeySequence('Ctrl+r'))
@@ -586,7 +609,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             guide_act = help_menu.addAction("User Guide (link)", self.open_help_url)
             issues_act = help_menu.addAction("Create Issue (link)", self.create_issue_url)
 
+        # on Galaxy, use ctl-shift; on Mac, cmd-shift (although probably don't need on desktop Studio)
+        QShortcut(QtGui.QKeySequence('Ctrl+Shift+P'), self, self.open_python_shell_cb)
+
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
+
+    def open_python_shell_cb(self):
+        self._python_shell = open_python_shell(parent=self, local_vars={'studio': self})
 
     def open_help_url(self):
         url = QtCore.QUrl('https://github.com/PhysiCell-Tools/Studio-Guide/blob/main/README.md')
@@ -1624,6 +1653,7 @@ def main():
     # studio_app.setApplicationName("Randy's app")   # argh, doesn't work
 
     # print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
+    studio_app.setStyle(QStyleFactory.create("Fusion"))  # ensures QSS rules (e.g. menu separators) are honoured on macOS
 
     # Use a palette to help force light-mode (not dark) style
     # Not all seem to be used, but beware/test(!) if changed.
@@ -1656,7 +1686,11 @@ def main():
 
     studio_app.setPalette(palette)
 
-    studio_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+        # "QMenu::separator { height: 1px; background: #808080; margin: 2px 8px; }"
+    studio_app.setStyleSheet(
+        "QLineEdit { background-color: white };"
+        "QMenu::separator { height: 9px; background: black; margin: 4px 8px; }"
+    )
 
 
     rules_flag = True
