@@ -223,6 +223,7 @@ class LoadProjectWindow(QWidget):
             time.sleep(1)
             self.xml_creator.config_file = "config/PhysiCell_settings.xml"
             self.xml_creator.show_sample_model()
+
         except FileNotFoundError:
             msg = f"Error: The file {zip_file} was not found."
             print(msg)
@@ -327,6 +328,8 @@ class SaveProjectWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         if msgBox.exec() == QMessageBox.Cancel:
             return
+
+        self.xml_creator.save_cb()
 
         file_str = os.path.join(os.getcwd(), "config/*.csv")
         # print('-------- save_project_cb(): zip up all', file_str)
