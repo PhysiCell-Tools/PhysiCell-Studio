@@ -2451,8 +2451,19 @@ class ICs(StudioTab):
             )
             if not xml_path:
                 return
-            with open(xml_path, "w", encoding="utf-8") as fh:
-                fh.write(result.cell_definitions_xml)
+            try:
+                with open(xml_path, "w", encoding="utf-8") as fh:
+                    fh.write(result.cell_definitions_xml)
+            except Exception as e:
+                # Same reasoning as the CSV save above: report and stop rather than
+                # letting an unwritable path take the UI down, or falling through to
+                # offer a reload of a config that was never written.
+                QMessageBox.critical(
+                    self,
+                    "BIWT — Could not save config XML",
+                    f"Failed to write '{xml_path}':\n\n{type(e).__name__}: {e}",
+                )
+                return
 
             reload_reply = QMessageBox.question(
                 self,
