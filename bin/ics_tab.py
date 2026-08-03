@@ -185,7 +185,7 @@ class ICs(StudioTab):
             if HAVE_BIWT_PACKAGE:
                 self.biwt_tab = self._create_biwt_package_tab()
             else:
-                self.biwt_tab = BioinformaticsWalkthrough(self.config_tab, self.celldef_tab, self, self.xml_creator)
+                self.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
             biwt_tab_index = self.tab_widget.addTab(self.biwt_tab, "BIWT")
             if not HAVE_BIWT_PACKAGE:
                 # The built-in BIWT tab is deprecated in favor of the standalone
@@ -2281,7 +2281,7 @@ class ICs(StudioTab):
 
     def _create_biwt_package_tab(self):
         """Build the BIWT widget from the installed biwt package."""
-        ct = self.config_tab
+        ct = self.xml_creator.config_tab
         try:
             domain = DomainSpec(
                 xmin=float(ct.xmin.text()),
