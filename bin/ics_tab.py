@@ -39,9 +39,14 @@ try:
     from biwt.gui.walkthrough import create_biwt_widget
     from biwt.types import BiwtInput, DomainSpec
     HAVE_BIWT_PACKAGE = True
-except ImportError:
+    BIWT_IMPORT_ERROR = None
+except ImportError as e:
     from biwt_tab import BioinformaticsWalkthrough
     HAVE_BIWT_PACKAGE = False
+    # Keep the reason: a missing 'biwt' means "not installed", but an ImportError
+    # raised from *inside* biwt (missing transitive dep, partial install) lands here
+    # too, and reporting that as "not installed" misdirects anyone debugging it.
+    BIWT_IMPORT_ERROR = e
 
 import numpy as np
 import matplotlib
@@ -2263,9 +2268,21 @@ class ICs(StudioTab):
         msgBox.setWindowTitle("BIWT: deprecated built-in tab")
         msgBox.setTextFormat(QtCore.Qt.RichText)
         msgBox.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        # "not installed" only if the missing module is biwt itself; an ImportError from
+        # inside an installed biwt means a broken/incomplete install, so say that instead.
+        if getattr(BIWT_IMPORT_ERROR, "name", None) in (None, "biwt"):
+            why = ("The <b>biwt</b> package is not installed, so Studio is showing the "
+                   "legacy built-in BIWT tab.")
+        else:
+            from html import escape
+            why = ("The <b>biwt</b> package is installed but could not be imported, so "
+                   "Studio is showing the legacy built-in BIWT tab.<br><br>"
+                   f"<i>{escape(str(BIWT_IMPORT_ERROR))}</i><br><br>"
+                   "This usually means a dependency is missing or the install is "
+                   "incomplete -- reinstalling biwt normally fixes it.")
+
         msgBox.setText(
-            "The <b>biwt</b> package is not installed, so Studio is showing the legacy "
-            "built-in BIWT tab.<br><br>"
+            f"{why}<br><br>"
             "This built-in tab is <b>deprecated</b> and will be removed in a future release. "
             "Install the standalone <b>biwt</b> package to keep using BIWT:"
             "<pre>conda activate studio\npip install biwt</pre>"
@@ -2356,13 +2373,28 @@ class ICs(StudioTab):
         if not out_path:
             return
 
-        if os.path.exists(out_path) and append_rb.isChecked():
-            import pandas as _pd
-            existing = _pd.read_csv(out_path)
-            new_rows = result.coordinates[["x", "y", "z", "type"]]
-            _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
-        else:
-            result.to_csv(out_path)
+        # Create the target directory if needed (as save_cb() does), otherwise pandas
+        # raises "Cannot save file into a non-existent directory" and the write is lost.
+        # BIWT no longer validates this -- the host owns the write.
+        out_dir = os.path.dirname(out_path)
+        try:
+            if out_dir and not os.path.isdir(out_dir):
+                os.makedirs(out_dir, exist_ok=True)
+
+            if os.path.exists(out_path) and append_rb.isChecked():
+                import pandas as _pd
+                existing = _pd.read_csv(out_path)
+                new_rows = result.coordinates[["x", "y", "z", "type"]]
+                _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
+            else:
+                result.to_csv(out_path)
+        except (OSError, ValueError) as e:
+            QMessageBox.critical(
+                self,
+                "BIWT — Could not save cells CSV",
+                f"Failed to write '{out_path}':\n\n{e}",
+            )
+            return
 
         # Neither BiwtInput nor BiwtResult records the output path -- the host owns
         # it. Studio's copy lives in these two widgets, read back by save_cb() and
