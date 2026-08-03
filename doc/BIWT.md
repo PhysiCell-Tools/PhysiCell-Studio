@@ -19,9 +19,15 @@ Install `biwt` into Studio's conda environment and launch Studio with `--biwt`:
 ```bash
 conda env create -f environment.yml   # creates the "studio" environment
 conda activate studio
-pip install biwt                       # GUI, .csv, and .h5ad come via the conda env
+pip install biwt                       # no extras -- see the warning below
 python bin/studio.py --biwt            # within the activated env
 ```
+
+> **Install `biwt` without extras here.** Studio's conda environment already provides
+> PyQt5, matplotlib, and anndata, so `biwt[gui]`, `biwt[anndata]`, and `biwt[all]` are
+> unnecessary — and `biwt[gui]` is actively harmful, because it installs pip's own PyQt5
+> on top of conda's and breaks Studio. (`biwt[seurat]` is the one exception: it is needed
+> for `.rds` input and does not touch PyQt5 — see below.)
 
 If `biwt` is not installed, Studio falls back to the legacy built-in BIWT tab.
 

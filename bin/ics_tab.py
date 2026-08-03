@@ -2389,9 +2389,19 @@ class ICs(StudioTab):
 
             if os.path.exists(out_path) and append_rb.isChecked():
                 import pandas as _pd
-                existing = _pd.read_csv(out_path)
                 new_rows = result.coordinates[["x", "y", "z", "type"]]
-                _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
+                with open(out_path, "r", encoding="utf-8") as fh:
+                    header = [c.strip() for c in fh.readline().strip().split(",")]
+                if header == ["x", "y", "z", "type"]:
+                    # Exactly the columns we write: append rows in place, no rewrite.
+                    new_rows.to_csv(out_path, mode="a", header=False, index=False)
+                else:
+                    # Different columns or order. Align by name and rewrite: appending
+                    # positionally here would silently write values into the wrong
+                    # columns (e.g. a 'type,x,y,z' file), or emit a ragged row for a
+                    # file with extra columns, which PhysiCell may not parse.
+                    existing = _pd.read_csv(out_path)
+                    _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
             else:
                 result.to_csv(out_path)
         except Exception as e:
