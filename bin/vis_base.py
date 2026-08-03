@@ -1192,6 +1192,19 @@ class VisBase():
         # print("get_cell_types():  basename=",basename)
         out_config_file = os.path.join(self.output_dir, basename)
         # print("get_cell_types():  out_config_file=",out_config_file)
+        if not os.path.isfile(out_config_file):
+            fallback = os.path.join(self.output_dir, "PhysiCell_settings.xml")
+            if os.path.isfile(fallback):
+                out_config_file = fallback
+            else:
+                # out_config_file = None
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msg = f"get_cell_types_from_config(): Error - cannot find {os.path.join(self.output_dir, basename)} or {out_config_file}"  
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return False
 
         try:
             self.tree = ET.parse(out_config_file)
@@ -3331,10 +3344,17 @@ class VisBase():
         # model_name = os.path.basename(self.current_xml_file)
         model_name = os.path.basename(xml_file)
         model_name = model_name[:-4]   # strip off .xml suffix
-        PhysicellConverter(simularium_model_data).save(model_name)
-        print(f"--> {model_name}.simularium")
-
-        print("Load this model at: https://simularium.allencell.org/viewer")
+        try:
+            PhysicellConverter(simularium_model_data).save(model_name)
+            print(f"--> {model_name}.simularium")
+            print("Load this model at: https://simularium.allencell.org/viewer")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error generating Simularium model")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
 
     def make_movie_cb(self):
         # Check if ffmpeg is installed
