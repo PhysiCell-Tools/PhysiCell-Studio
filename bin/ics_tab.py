@@ -2390,16 +2390,26 @@ class ICs(StudioTab):
             if os.path.exists(out_path) and append_rb.isChecked():
                 import pandas as _pd
                 new_rows = result.coordinates[["x", "y", "z", "type"]]
-                with open(out_path, "r", encoding="utf-8") as fh:
-                    header = [c.strip() for c in fh.readline().strip().split(",")]
-                if header == ["x", "y", "z", "type"]:
-                    # Exactly the columns we write: append rows in place, no rewrite.
+
+                # A Studio cells CSV starts with x,y,z,type. Let pandas parse the header
+                # (nrows=0 reads columns only) and refuse anything else rather than
+                # trying to reshape it: appending to a file whose columns are ordered
+                # differently would silently write each value into the wrong column.
+                existing_cols = list(_pd.read_csv(out_path, nrows=0).columns)
+                if existing_cols[:4] != ["x", "y", "z", "type"]:
+                    raise ValueError(
+                        f"Cannot append: this file's first four columns are "
+                        f"{existing_cols[:4]}, but a PhysiCell cells CSV must start with "
+                        f"['x', 'y', 'z', 'type']. Pick another file, or overwrite it."
+                    )
+
+                if len(existing_cols) == 4:
+                    # Exactly the columns we write: append in place, no rewrite.
                     new_rows.to_csv(out_path, mode="a", header=False, index=False)
                 else:
-                    # Different columns or order. Align by name and rewrite: appending
-                    # positionally here would silently write values into the wrong
-                    # columns (e.g. a 'type,x,y,z' file), or emit a ragged row for a
-                    # file with extra columns, which PhysiCell may not parse.
+                    # Extra columns after x,y,z,type (e.g. custom data). Appending only
+                    # four fields would leave a ragged row PhysiCell may not parse, so
+                    # align by name and rewrite, leaving the extras blank for new cells.
                     existing = _pd.read_csv(out_path)
                     _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
             else:
