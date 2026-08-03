@@ -654,6 +654,7 @@ class VisBase():
         self.substrates_cbar_combobox.addItem("turbo")
         self.substrates_cbar_combobox.addItem("plasma")
         self.substrates_cbar_combobox.addItem("jet")
+        self.substrates_cbar_combobox.addItem("coolwarm")
         # # self.substrates_cbar_combobox.addItem("jet_r")
         self.substrates_cbar_combobox.setEnabled(False)
 
@@ -823,6 +824,7 @@ class VisBase():
         self.cell_scalar_cbar_combobox.addItem("turbo")
         self.cell_scalar_cbar_combobox.addItem("plasma")
         self.cell_scalar_cbar_combobox.addItem("jet")
+        self.cell_scalar_cbar_combobox.addItem("coolwarm")
         # self.cell_scalar_cbar_combobox.addItem("jet_r")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(self.model3D_flag)  # for 3D
