@@ -319,11 +319,11 @@ class CellDef(StudioTab):
         self.tab_widget.addTab(self.create_interaction_tab(),"Interactions")
         if not self.xml_creator.nanohub_flag and not self.xml_creator.galaxy_flag:
             self.tab_widget.addTab(self.create_intracellular_tab(),"Intracellular")
+        else:
+            self.intracellular_type_dropdown = None
         if self.pkpd_flag:
             self.pd_setup_complete = False
             self.tab_widget.addTab(self.create_pd_tab(),"PD")
-        else:
-            self.intracellular_type_dropdown = None
         self.tab_widget.addTab(self.create_custom_data_tab(),"Custom Data")
         self.tab_widget.addTab(self.create_miscellaneous_tab(),"Misc")
 
