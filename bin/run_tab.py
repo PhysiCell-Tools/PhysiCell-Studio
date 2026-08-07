@@ -287,7 +287,7 @@ class RunModel(StudioTab):
             QProcess.UnknownError: "An unknown error occurred. This is the default return value of error()"
         }
         print(errorMessage[error])
-        print("Detailed logs : ", self.p.errorString())
+        # print("Detailed logs : ", self.p.errorString())
         print("\n\n")
         
     def cancel_model_cb(self):
