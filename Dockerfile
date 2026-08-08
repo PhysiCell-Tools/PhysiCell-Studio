@@ -73,10 +73,11 @@ RUN chmod +x /startapp.sh
 COPY ./bin/* /opt/pcstudio/bin/
 COPY ./bin/images/* /opt/pcstudio/bin/images/
 COPY ./bin/icon/* /opt/pcstudio/bin/icon/
+COPY ./bin/BIWT_parameters* /opt/pcstudio/bin/BIWT_parameters
 COPY ./config/* /opt/pcstudio/config/
 COPY ./samples/* /opt/pcstudio/samples/
 COPY ./project /opt/pcstudio/
-COPY ./omp_hello /opt/pcstudio/
+# COPY ./omp_hello /opt/pcstudio/
 COPY ./VERSION.txt /opt/pcstudio/
 RUN chmod -R 777 /opt/pcstudio
 
