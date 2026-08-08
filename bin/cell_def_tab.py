@@ -5478,8 +5478,9 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
 
         self.cycle_tab.asym_div_normalize_probabilities() # to get the coloring right
         # print("cell_def_tab.py: ------- fill_celltypes_comboboxes:  self.celltypes_list = ",self.celltypes_list)
-        self.physiboss_update_list_signals()
-        self.physiboss_update_list_behaviours()
+        if not self.xml_creator.nanohub_flag and not self.xml_creator.galaxy_flag:
+            self.physiboss_update_list_signals()
+            self.physiboss_update_list_behaviours()
 
     #-----------------------------------------------------------------------------------------
     def add_new_celltype_comboboxes(self, name):
@@ -6546,7 +6547,8 @@ Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affec
         self.update_motility_params()
         self.update_secretion_params()
         self.update_interaction_params()
-        self.update_intracellular_params()
+        if not self.xml_creator.nanohub_flag and not self.xml_creator.galaxy_flag:
+            self.update_intracellular_params()
         # self.update_molecular_params()
         self.update_custom_data_params()
 
