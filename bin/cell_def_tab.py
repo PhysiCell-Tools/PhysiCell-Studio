@@ -404,7 +404,7 @@ class CellDef(StudioTab):
                 f"<b>and</b> a non-zero cell-cell adhesion strength:<br><br>"
                 f"<b>{names}</b><br><br>"
                 "Using both simultaneously may produce unintended adhesion behaviour. "
-                "We recommend setting one of them to 0."
+                "We recommend setting one of them to 0, but you may continue if you really want to."
             )
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Warning)
@@ -432,8 +432,7 @@ class CellDef(StudioTab):
             if flagged:
                 names = ", ".join(flagged)
                 warn_msg = (
-                    f"Warning: you have defined a 2D model and the following cell type(s) have a non-zero attachment rate<br><br>"
-                    f"and the max number of attachments is not 6."
+                    f"Warning: you have defined a 2D model, but the following cell type(s) have a non-zero attachment rate and the max number of attachments is not 6 (which it typically would be).<br><br>"
                     f"<b>{names}</b><br><br>"
                     "Do you want to continue?"
                 )
