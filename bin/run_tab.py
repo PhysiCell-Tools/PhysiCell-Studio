@@ -145,7 +145,8 @@ class RunModel(StudioTab):
             self.show_error_message(f"Exec file {exec_file} does not exist.")
             return
 
-        self.xml_creator.celldef_tab.check_valid_cell_defs()
+        if self.xml_creator.celldef_tab.check_valid_cell_defs() is False:
+            return
 
         if self.xml_creator.config_tab.save_svg.isChecked() and self.xml_creator.config_tab.save_full.isChecked():
             if float(self.xml_creator.config_tab.svg_interval.text()) != float(self.xml_creator.config_tab.full_interval.text()):

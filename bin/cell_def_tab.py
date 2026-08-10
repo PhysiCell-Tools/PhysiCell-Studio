@@ -327,61 +327,129 @@ class CellDef(StudioTab):
         return self.current_cell_def
     #----------------------------------------------------------------------
     def check_valid_cell_defs(self):
+
         if self.auto_number_IDs_checkbox.isChecked():
-            return
+            return_value = True
 
+        else:
         # print('---- check_valid_cell_defs(): ---')
+            valid = True
 
-        error_msg = """
-Error: Cell Type IDs need to consist of unique integers, include 0, and can be re-ordered to form a sequence (0,1,2,...,N), e.g.,
-<br><br>
-Valid: (0,1,2,3) or (3,0,2,1)<br>
-Invalid: (0,2,3) or (1,2,3)
-<br><br>
-Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affect a cell.csv file that references cell types by ID.
-"""
+            # -- check for duplicate names
+            found = set()
+            dupes = [x for x in self.param_d.keys() if x in found or found.add(x)]
+            # print("dupes=",dupes)
+            if dupes:
+                valid = False
+            else:
+                # -- check for duplicate IDs
+                id_l = []
+                for cdname in self.param_d.keys():
+                    id_num = int(self.param_d[cdname]["ID"])
+                    # print('{cdname}, {self.param_d[cdname]["ID"]}')
+                    # print(f'{cdname}, {self.param_d[cdname]["ID"]}')
+                    id_l.append(id_num)
+                # print(f"id_l={id_l}")
 
-        valid = True
+                id_l.sort()
+                # print(f"id_l (sorted)={id_l}")
 
-        # -- check for duplicate names
-        found = set()
-        dupes = [x for x in self.param_d.keys() if x in found or found.add(x)]
-        # print("dupes=",dupes)
-        if dupes:
-            valid = False
-        else:
-            # -- check for duplicate IDs
-            id_l = []
-            for cdname in self.param_d.keys():
-                id_num = int(self.param_d[cdname]["ID"])
-                # print('{cdname}, {self.param_d[cdname]["ID"]}')
-                # print(f'{cdname}, {self.param_d[cdname]["ID"]}')
-                id_l.append(id_num)
-            # print(f"id_l={id_l}")
+                for count, value in enumerate(id_l):
+                    if count != value:
+                        valid = False
+                        break
 
-            id_l.sort()
-            # print(f"id_l (sorted)={id_l}")
+            # -- check for ID=0 
+            if 0 in id_l:
+                # print("  found 0 ID")
+                pass
+            else:
+                print("cell_def_tab.py:  ERROR: No 0 ID")
+                valid = False
+                # msg = "Error: one cell type must have ID=0"
 
-            for count, value in enumerate(id_l):
-                if count != value:
-                    valid = False
-                    break
+            if not valid:
+                msgBox = QMessageBox()
+                msgBox.setTextFormat(Qt.RichText)
+                error_msg = """
+    Error: Cell Type IDs need to consist of unique integers, include 0, and can be re-ordered to form a sequence (0,1,2,...,N), e.g.,
+    <br><br>
+    Valid: (0,1,2,3) or (3,0,2,1)<br>
+    Invalid: (0,2,3) or (1,2,3)
+    <br><br>
+    Please fix the IDs in the Cell Types tab. Also, be mindful of how this may affect a cell.csv file that references cell types by ID.
+    """
+                msgBox.setText(error_msg)
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                msgBox.button(QMessageBox.Ok).setText("Continue")
+                returnValue = msgBox.exec()
+                if returnValue == QMessageBox.Cancel:
+                    return False
 
-        # -- check for ID=0 
-        if 0 in id_l:
-            # print("  found 0 ID")
-            pass
-        else:
-            print("cell_def_tab.py:  ERROR: No 0 ID")
-            valid = False
-            # msg = "Error: one cell type must have ID=0"
-
-        if not valid:
+        #-------------------------------
+        # Warn if a cell type has a non-zero attachment_rate but also a non-zero mechanics_adhesion
+        flagged = []
+        for cdname in self.param_d.keys():
+            try:
+                attach = float(self.param_d[cdname].get("attachment_rate", 0))
+                adhesion = float(self.param_d[cdname].get("mechanics_adhesion", 0))
+            except (ValueError, TypeError):
+                continue
+            if attach != 0.0 and adhesion != 0.0:
+                flagged.append(cdname)
+        if flagged:
+            names = ", ".join(flagged)
+            warn_msg = (
+                f"Warning: the following cell type(s) have a non-zero attachment rate "
+                f"<b>and</b> a non-zero cell-cell adhesion strength:<br><br>"
+                f"<b>{names}</b><br><br>"
+                "Using both simultaneously may produce unintended adhesion behaviour. "
+                "We recommend setting one of them to 0."
+            )
             msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
             msgBox.setTextFormat(Qt.RichText)
-            msgBox.setText(error_msg)
-            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.setText(warn_msg)
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            msgBox.button(QMessageBox.Ok).setText("Continue")
             returnValue = msgBox.exec()
+            if returnValue == QMessageBox.Cancel:
+                return False
+
+        #-------------------------------
+        # If a 2D sim and attachment_rate is non-zero, check if max_attachments is 6
+        if self.xml_root.find(".//domain//use_2D").text.lower() == 'true':
+            flagged = []
+            for cdname in self.param_d.keys():
+                try:
+                    attach = float(self.param_d[cdname].get("attachment_rate", 0))
+                    max_num_attach = int(self.param_d[cdname].get("mechanics_max_num_attachments", 0))
+                except (ValueError, TypeError):
+                    continue
+                if attach != 0.0 and max_num_attach != 6:
+                    flagged.append(cdname)
+
+            if flagged:
+                names = ", ".join(flagged)
+                warn_msg = (
+                    f"Warning: you have defined a 2D model and the following cell type(s) have a non-zero attachment rate<br><br>"
+                    f"and the max number of attachments is not 6."
+                    f"<b>{names}</b><br><br>"
+                    "Do you want to continue?"
+                )
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Warning)
+                msgBox.setTextFormat(Qt.RichText)
+                msgBox.setText(warn_msg)
+                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                msgBox.button(QMessageBox.Ok).setText("Continue")
+                returnValue = msgBox.exec()
+                if returnValue == QMessageBox.Cancel:
+                    return False
+
+
+        return True
+
 
     #----------------------------------------------------------------------
     def custom_duplicate_error(self,row,col,msg):
