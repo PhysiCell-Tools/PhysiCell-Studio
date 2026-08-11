@@ -98,10 +98,7 @@ ENV TAKE_CONFIG_OWNERSHIP=1
 
 COPY rc.xml.template /opt/base/etc/openbox/rc.xml.template
 
-# "Remote Resizing" 
-#RUN sed -i 's|<script type="module">|<script>localStorage.setItem("noVNC_setting_resize","remote");</script>\n    <script type="module">|' /opt/noVNC/index.html
-
+# force "Remote Resizing" 
 RUN sed -i "s|UI.initSetting('resize', resize);|UI.initSetting('resize', 'remote');|" /opt/noVNC/app/ui.js
-
 
 WORKDIR /config
