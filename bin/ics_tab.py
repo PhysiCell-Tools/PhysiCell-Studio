@@ -34,7 +34,25 @@ from PyQt5.QtGui import QRegExpValidator
 from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval, StudioTab
 
 from studio_functions import style_sheet_template
-from biwt_tab import BioinformaticsWalkthrough
+
+try:
+    from biwt.gui.walkthrough import create_biwt_widget
+    from biwt.types import BiwtInput, DomainSpec
+    HAVE_BIWT_PACKAGE = True
+    BIWT_IMPORT_ERROR = None
+except Exception as e:
+    # Catch more than ImportError: an installed biwt whose own import raises
+    # something else (e.g. a binary dependency failing at load) would otherwise
+    # take Studio down at startup instead of falling back to the legacy tab.
+    from biwt_tab import BioinformaticsWalkthrough
+    HAVE_BIWT_PACKAGE = False
+    # Keep the reason: a missing 'biwt' means "not installed", but a failure raised
+    # from *inside* biwt (missing transitive dep, partial install, bad binary dep)
+    # lands here too, and reporting that as "not installed" misdirects debugging.
+    if isinstance(e, ImportError):
+        BIWT_IMPORT_ERROR = e
+    else:
+        BIWT_IMPORT_ERROR = ImportError(f"{type(e).__name__}: {e}", name="biwt_import_failed")
 
 import numpy as np
 import matplotlib
@@ -54,7 +72,7 @@ class ICs(StudioTab):
         # self.xml_creator.config_tab = config_tab
         # self.xml_creator = xml_creator
 
-        # self.xml_creator.biwt_flag = biwt_flag
+        self.biwt_flag = self.xml_creator.biwt_flag
         # self.nanohub_flag = nanohub_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
@@ -174,9 +192,19 @@ class ICs(StudioTab):
 
         self.tab_widget = QTabWidget()
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
-        if self.xml_creator.biwt_flag:
-            self.xml_creator.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
-            self.tab_widget.addTab(self.xml_creator.biwt_tab,"BIWT")
+        if self.biwt_flag:
+            if HAVE_BIWT_PACKAGE:
+                self.biwt_tab = self._create_biwt_package_tab()
+            else:
+                self.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
+            biwt_tab_index = self.tab_widget.addTab(self.biwt_tab, "BIWT")
+            if not HAVE_BIWT_PACKAGE:
+                # The built-in BIWT tab is deprecated in favor of the standalone
+                # `biwt` package. Warn the user the first time they open the tab
+                # (once per session) and point them to the install instructions.
+                self._legacy_biwt_tab_index = biwt_tab_index
+                self._legacy_biwt_warned = False
+                self.tab_widget.currentChanged.connect(self._on_tab_changed_warn_legacy_biwt)
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tab_widget)
@@ -2225,13 +2253,236 @@ class ICs(StudioTab):
         else:
             print("import_cb():  full_path_model_name is NOT valid")
 
+    # ------------------------------------------------------------------
+    # New biwt package bridge
+    # ------------------------------------------------------------------
+
+    def _on_tab_changed_warn_legacy_biwt(self, index):
+        """Warn once, the first time the user opens the deprecated built-in BIWT tab."""
+        if self._legacy_biwt_warned:
+            return
+        if index != getattr(self, "_legacy_biwt_tab_index", -1):
+            return
+        self._legacy_biwt_warned = True
+        self._warn_legacy_biwt_tab()
+
+    def _warn_legacy_biwt_tab(self):
+        """Warn that the built-in BIWT tab is deprecated and how to switch to
+        the standalone `biwt` package (shown when the package is not installed)."""
+        msgBox = QMessageBox(self)
+        msgBox.setIcon(QMessageBox.Warning)
+        msgBox.setWindowTitle("BIWT: deprecated built-in tab")
+        msgBox.setTextFormat(QtCore.Qt.RichText)
+        msgBox.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        # "not installed" only if the missing module is biwt itself; an ImportError from
+        # inside an installed biwt means a broken/incomplete install, so say that instead.
+        if getattr(BIWT_IMPORT_ERROR, "name", None) in (None, "biwt"):
+            why = ("The <b>biwt</b> package is not installed, so Studio is showing the "
+                   "legacy built-in BIWT tab.")
+        else:
+            from html import escape
+            why = ("The <b>biwt</b> package is installed but could not be imported, so "
+                   "Studio is showing the legacy built-in BIWT tab.<br><br>"
+                   f"<i>{escape(str(BIWT_IMPORT_ERROR))}</i><br><br>"
+                   "This usually means a dependency is missing or the install is "
+                   "incomplete -- reinstalling biwt normally fixes it.")
+
+        msgBox.setText(
+            f"{why}<br><br>"
+            "This built-in tab is <b>deprecated</b> and will be removed in a future release. "
+            "Install the standalone <b>biwt</b> package to keep using BIWT:"
+            "<pre>conda activate studio\npip install biwt</pre>"
+            "For installing BIWT alongside Studio's dependencies, see "
+            "<a href=\"https://github.com/PhysiCell-Tools/PhysiCell-Studio/blob/main/doc/BIWT.md\">Studio's BIWT doc</a>; "
+            "for the package's own installation guide and troubleshooting, see the "
+            "<a href=\"https://drbergman-lab.github.io/biwt/getting-started/installation/\">BIWT documentation</a>. "
+            "See also the "
+            "<a href=\"https://github.com/PhysiCell-Tools/Studio-Guide\">PhysiCell Studio Guide</a>."
+        )
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
+
+    def _create_biwt_package_tab(self):
+        """Build the BIWT widget from the installed biwt package."""
+        ct = self.xml_creator.config_tab
+        try:
+            domain = DomainSpec(
+                xmin=float(ct.xmin.text()),
+                xmax=float(ct.xmax.text()),
+                ymin=float(ct.ymin.text()),
+                ymax=float(ct.ymax.text()),
+            )
+        except (ValueError, AttributeError):
+            domain = DomainSpec(xmin=-500, xmax=500, ymin=-500, ymax=500)
+
+        biwt_input = BiwtInput(preferred_domain=domain, host_name="Studio")
+        return create_biwt_widget(biwt_input, on_complete=self._biwt_complete)
+
+    def _biwt_complete(self, result) -> None:
+        """Called by the biwt package when the walkthrough finishes."""
+        import os
+        from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+
+        folder = self.csv_folder.text().strip() or "config"
+        fname  = self.output_file.text().strip() or "cells.csv"
+        default_path = os.path.join(folder, fname)
+
+        # --- Save CSV dialog (always shown so the user can confirm/change path) ---
+        dlg = QDialog(self)
+        dlg.setWindowTitle("BIWT Complete — Save Cells CSV")
+        vbox = QVBoxLayout(dlg)
+        vbox.addWidget(QLabel("BIWT is complete. Save the cell positions CSV:"))
+
+        path_hbox = QHBoxLayout()
+        path_edit = QLineEdit(default_path)
+        browse_btn = QPushButton("Browse…")
+        path_hbox.addWidget(path_edit, 1)
+        path_hbox.addWidget(browse_btn)
+        vbox.addLayout(path_hbox)
+
+        # Overwrite / Append — shown only when chosen path already exists
+        mode_widget = QWidget()
+        mode_hbox = QHBoxLayout(mode_widget)
+        mode_hbox.setContentsMargins(0, 0, 0, 0)
+        mode_hbox.addWidget(QLabel("File exists — "))
+        overwrite_rb = QRadioButton("Overwrite")
+        append_rb    = QRadioButton("Append to existing")
+        overwrite_rb.setChecked(True)
+        mode_hbox.addWidget(overwrite_rb)
+        mode_hbox.addWidget(append_rb)
+        mode_hbox.addStretch()
+        vbox.addWidget(mode_widget)
+
+        btn_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        btn_box.accepted.connect(dlg.accept)
+        btn_box.rejected.connect(dlg.reject)
+        vbox.addWidget(btn_box)
+
+        def _update_mode():
+            mode_widget.setVisible(os.path.exists(path_edit.text().strip()))
+        def _browse():
+            p, _ = QFileDialog.getSaveFileName(
+                dlg, "Save cells.csv", path_edit.text(),
+                "CSV files (*.csv);;All files (*)",
+            )
+            if p:
+                path_edit.setText(p)
+
+        path_edit.textChanged.connect(_update_mode)
+        browse_btn.clicked.connect(_browse)
+        _update_mode()
+
+        if dlg.exec_() != QDialog.Accepted:
+            return
+
+        out_path = path_edit.text().strip()
+        if not out_path:
+            return
+
+        # Create the target directory if needed (as save_cb() does), otherwise pandas
+        # raises "Cannot save file into a non-existent directory" and the write is lost.
+        # BIWT no longer validates this -- the host owns the write.
+        out_dir = os.path.dirname(out_path)
+        try:
+            if out_dir and not os.path.isdir(out_dir):
+                os.makedirs(out_dir, exist_ok=True)
+
+            if os.path.exists(out_path) and append_rb.isChecked():
+                import pandas as _pd
+                new_rows = result.coordinates[["x", "y", "z", "type"]]
+
+                # A Studio cells CSV starts with x,y,z,type. Let pandas parse the header
+                # (nrows=0 reads columns only) and refuse anything else rather than
+                # trying to reshape it: appending to a file whose columns are ordered
+                # differently would silently write each value into the wrong column.
+                existing_cols = list(_pd.read_csv(out_path, nrows=0).columns)
+                if existing_cols[:4] != ["x", "y", "z", "type"]:
+                    raise ValueError(
+                        f"Cannot append: this file's first four columns are "
+                        f"{existing_cols[:4]}, but a PhysiCell cells CSV must start with "
+                        f"['x', 'y', 'z', 'type']. Pick another file, or overwrite it."
+                    )
+
+                if len(existing_cols) == 4:
+                    # Exactly the columns we write: append in place, no rewrite.
+                    new_rows.to_csv(out_path, mode="a", header=False, index=False)
+                else:
+                    # Extra columns after x,y,z,type (e.g. custom data). Appending only
+                    # four fields would leave a ragged row PhysiCell may not parse, so
+                    # align by name and rewrite, leaving the extras blank for new cells.
+                    existing = _pd.read_csv(out_path)
+                    _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
+            else:
+                result.to_csv(out_path)
+        except Exception as e:
+            # Deliberately broad: besides OSError, the append path can raise KeyError
+            # if the result lacks the x/y/z/type columns, and a malformed existing CSV
+            # raises from pandas. None of that should take the UI down mid-save.
+            QMessageBox.critical(
+                self,
+                "BIWT — Could not save cells CSV",
+                f"Failed to write '{out_path}':\n\n{type(e).__name__}: {e}",
+            )
+            return
+
+        # Neither BiwtInput nor BiwtResult records the output path -- the host owns
+        # it. Studio's copy lives in these two widgets, read back by save_cb() and
+        # by this method's default_path on the next run.
+        out_folder, out_fname = os.path.split(out_path)
+        self.csv_folder.setText(out_folder or ".")
+        self.output_file.setText(out_fname)
+
+        # --- Cell definitions ---
+        if result.cell_definitions_xml:
+            reply = QMessageBox.question(
+                self,
+                "BIWT — New Cell Definitions",
+                "BIWT generated new cell definitions.\n\n"
+                "Would you like to save these in a new PhysiCell Config file?",
+                QMessageBox.Save | QMessageBox.Cancel,
+                QMessageBox.Save,
+            )
+            if reply != QMessageBox.Save:
+                return
+            xml_path, _ = QFileDialog.getSaveFileName(
+                self, "Save PhysiCell Config",
+                "PhysiCell_settings_biwt.xml",
+                "XML files (*.xml);;All files (*)",
+            )
+            if not xml_path:
+                return
+            try:
+                with open(xml_path, "w", encoding="utf-8") as fh:
+                    fh.write(result.cell_definitions_xml)
+            except Exception as e:
+                # Same reasoning as the CSV save above: report and stop rather than
+                # letting an unwritable path take the UI down, or falling through to
+                # offer a reload of a config that was never written.
+                QMessageBox.critical(
+                    self,
+                    "BIWT — Could not save config XML",
+                    f"Failed to write '{xml_path}':\n\n{type(e).__name__}: {e}",
+                )
+                return
+
+            reload_reply = QMessageBox.question(
+                self,
+                "BIWT — Reload Config?",
+                f"Would you like to reload Studio with {os.path.basename(xml_path)}?",
+                QMessageBox.Ok | QMessageBox.Cancel,
+                QMessageBox.Ok,
+            )
+            if reload_reply == QMessageBox.Ok:
+                self.xml_creator.config_file = xml_path
+                self.xml_creator.show_sample_model()  # misleading name — actually reloads and displays any config file
+
     def fill_gui(self):
         self.csv_folder.setText(self.xml_creator.config_tab.csv_folder.text())
         self.output_file.setText(self.xml_creator.config_tab.csv_file.text())
         self.fill_substrate_combobox()
         self.fill_ic_substrates_widgets()
-        if self.xml_creator.biwt_flag:
-            self.xml_creator.biwt_tab.fill_gui()
+        if self.biwt_flag and hasattr(self.biwt_tab, "fill_gui"):
+            self.biwt_tab.fill_gui()
 
     def fill_ic_substrates_widgets(self):
         substrate_initial_condition_element = self.xml_creator.config_tab.xml_root.find(".//microenvironment_setup//options//initial_condition")
