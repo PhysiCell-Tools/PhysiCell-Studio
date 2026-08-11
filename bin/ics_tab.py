@@ -11,6 +11,7 @@ Rf. Credits.md
 import sys
 import os
 import logging
+import math
 import time
 import csv
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -27,7 +28,7 @@ from collections import deque
 import glob
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QRegExpValidator
 
@@ -2302,179 +2303,108 @@ class ICs(StudioTab):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
 
-    def _create_biwt_package_tab(self):
-        """Build the BIWT widget from the installed biwt package."""
-        ct = self.xml_creator.config_tab
-        try:
-            domain = DomainSpec(
-                xmin=float(ct.xmin.text()),
-                xmax=float(ct.xmax.text()),
-                ymin=float(ct.ymin.text()),
-                ymax=float(ct.ymax.text()),
-            )
-        except (ValueError, AttributeError):
-            domain = DomainSpec(xmin=-500, xmax=500, ymin=-500, ymax=500)
+    def _domain_from_config_tab(self):
+        """A DomainSpec describing this model's domain, or None if it is unusable.
 
-        biwt_input = BiwtInput(preferred_domain=domain, host_name="Studio")
-        return create_biwt_widget(biwt_input, on_complete=self._biwt_complete)
+        All six bounds, z included: BIWT places cells in whatever domain it is given, and
+        Studio offers to adopt the one it gets back. Sending only x and y would leave z at
+        DomainSpec's own -10/+10, so a 3D model would come back as a 2D slab and adopting
+        that would flatten it.
+
+        Usable means what it means to BIWT: every bound a finite number, and lo strictly
+        below hi on every axis. Equal bounds are not usable -- a zero-width axis divides by
+        zero in BIWT's placement scaling.
+
+        Returns None rather than substituting numbers of its own. BiwtInput then falls back
+        to BIWT's default and reports the domain as coming from BIWT, which is true and
+        visible in the completion dialog; quietly passing an invented +/-500 would be
+        reported as coming from Studio, which is not.
+        """
+        names = ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
+        try:
+            ct = self.xml_creator.config_tab
+            bounds = {name: float(getattr(ct, name).text()) for name in names}
+        except (ValueError, AttributeError, TypeError):
+            return None
+
+        if not all(math.isfinite(value) for value in bounds.values()):
+            return None
+        for lo, hi in (("xmin", "xmax"), ("ymin", "ymax"), ("zmin", "zmax")):
+            if bounds[lo] >= bounds[hi]:
+                return None
+
+        return DomainSpec(**bounds)
+
+    def _build_biwt_input(self):
+        """What this model currently holds. Called by BIWT at the start of each run.
+
+        Only what can change while Studio is open -- BiwtInput carries nothing else, so the
+        name and the template library are given once, at _create_biwt_package_tab().
+
+        Names BiwtInput and DomainSpec, so it only runs where they imported: reached solely
+        from _create_biwt_package_tab(), itself guarded by HAVE_BIWT_PACKAGE.
+
+        Must not raise. BIWT refuses the import outright if this fails -- no session, no
+        walkthrough, just a dialog naming Studio -- so every read here degrades to a usable
+        default instead. It can be called while Studio is mid-reload, and losing the user's
+        import because a tab was momentarily unreadable would be a poor trade.
+        """
+        # Deliberately broad: the point is that nothing reaches BIWT as an exception. Each of
+        # these is a read of live GUI state whose absence is survivable on its own.
+        try:
+            host_cell_type_names = list(self.xml_creator.celldef_tab.param_d.keys())
+        except Exception:
+            host_cell_type_names = []
+
+        # DomainSpec.default() rather than bounds of Studio's own invention when this model's
+        # domain is unusable: it reports source="default", so BIWT tells the user the domain
+        # came from BIWT. Anything Studio made up would arrive labelled as Studio's.
+        try:
+            domain = self._domain_from_config_tab()
+        except Exception:
+            domain = None
+
+        return BiwtInput(
+            host_cell_type_names=host_cell_type_names,
+            preferred_domain=domain if domain is not None else DomainSpec.default(),
+        )
+
+    def _create_biwt_package_tab(self):
+        """Build the BIWT widget from the installed biwt package.
+
+        The builder is passed rather than a BiwtInput: BIWT calls it when a run starts, so a
+        domain bound or cell type the user changed since the widget was built is picked up
+        without Studio having to notice and push it. The resolved value is snapshotted for the
+        run, so nothing edited mid-walkthrough can move the domain cells are placed into.
+
+        host_name and cell_template_paths go here instead, because they are read once: a
+        library passed per-run would come back after the user removed it at the Cell
+        templates step.
+        """
+        # BIWT ships no phenotype templates of its own -- without cell_template_paths every
+        # dropdown at its Cell templates step offers only "(none)". It seeds the library
+        # rather than pinning it: the user can load further .toml files there, or remove this
+        # one, and BIWT's result may name a file Studio has never seen.
+        try:
+            from biwt_bridge import BUNDLED_TEMPLATE_LIBRARY
+            cell_template_paths = [BUNDLED_TEMPLATE_LIBRARY]
+        except Exception:
+            cell_template_paths = []
+
+        return create_biwt_widget(self._build_biwt_input, on_complete=self._biwt_complete,
+                                  host_name="Studio",
+                                  cell_template_paths=cell_template_paths)
 
     def _biwt_complete(self, result) -> None:
-        """Called by the biwt package when the walkthrough finishes."""
-        import os
-        from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+        """Called by the biwt package when the walkthrough finishes.
 
-        folder = self.csv_folder.text().strip() or "config"
-        fname  = self.output_file.text().strip() or "cells.csv"
-        default_path = os.path.join(folder, fname)
+        Everything past this point -- saving the .csv, deciding what to do with the cell
+        definitions BIWT built, and reconciling them against this model -- lives in
+        biwt_bridge_ui.BiwtCompletionFlow.
+        """
+        from biwt_bridge_ui import BiwtCompletionFlow
 
-        # --- Save CSV dialog (always shown so the user can confirm/change path) ---
-        dlg = QDialog(self)
-        dlg.setWindowTitle("BIWT Complete — Save Cells CSV")
-        vbox = QVBoxLayout(dlg)
-        vbox.addWidget(QLabel("BIWT is complete. Save the cell positions CSV:"))
-
-        path_hbox = QHBoxLayout()
-        path_edit = QLineEdit(default_path)
-        browse_btn = QPushButton("Browse…")
-        path_hbox.addWidget(path_edit, 1)
-        path_hbox.addWidget(browse_btn)
-        vbox.addLayout(path_hbox)
-
-        # Overwrite / Append — shown only when chosen path already exists
-        mode_widget = QWidget()
-        mode_hbox = QHBoxLayout(mode_widget)
-        mode_hbox.setContentsMargins(0, 0, 0, 0)
-        mode_hbox.addWidget(QLabel("File exists — "))
-        overwrite_rb = QRadioButton("Overwrite")
-        append_rb    = QRadioButton("Append to existing")
-        overwrite_rb.setChecked(True)
-        mode_hbox.addWidget(overwrite_rb)
-        mode_hbox.addWidget(append_rb)
-        mode_hbox.addStretch()
-        vbox.addWidget(mode_widget)
-
-        btn_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        btn_box.accepted.connect(dlg.accept)
-        btn_box.rejected.connect(dlg.reject)
-        vbox.addWidget(btn_box)
-
-        def _update_mode():
-            mode_widget.setVisible(os.path.exists(path_edit.text().strip()))
-        def _browse():
-            p, _ = QFileDialog.getSaveFileName(
-                dlg, "Save cells.csv", path_edit.text(),
-                "CSV files (*.csv);;All files (*)",
-            )
-            if p:
-                path_edit.setText(p)
-
-        path_edit.textChanged.connect(_update_mode)
-        browse_btn.clicked.connect(_browse)
-        _update_mode()
-
-        if dlg.exec_() != QDialog.Accepted:
-            return
-
-        out_path = path_edit.text().strip()
-        if not out_path:
-            return
-
-        # Create the target directory if needed (as save_cb() does), otherwise pandas
-        # raises "Cannot save file into a non-existent directory" and the write is lost.
-        # BIWT no longer validates this -- the host owns the write.
-        out_dir = os.path.dirname(out_path)
-        try:
-            if out_dir and not os.path.isdir(out_dir):
-                os.makedirs(out_dir, exist_ok=True)
-
-            if os.path.exists(out_path) and append_rb.isChecked():
-                import pandas as _pd
-                new_rows = result.coordinates[["x", "y", "z", "type"]]
-
-                # A Studio cells CSV starts with x,y,z,type. Let pandas parse the header
-                # (nrows=0 reads columns only) and refuse anything else rather than
-                # trying to reshape it: appending to a file whose columns are ordered
-                # differently would silently write each value into the wrong column.
-                existing_cols = list(_pd.read_csv(out_path, nrows=0).columns)
-                if existing_cols[:4] != ["x", "y", "z", "type"]:
-                    raise ValueError(
-                        f"Cannot append: this file's first four columns are "
-                        f"{existing_cols[:4]}, but a PhysiCell cells CSV must start with "
-                        f"['x', 'y', 'z', 'type']. Pick another file, or overwrite it."
-                    )
-
-                if len(existing_cols) == 4:
-                    # Exactly the columns we write: append in place, no rewrite.
-                    new_rows.to_csv(out_path, mode="a", header=False, index=False)
-                else:
-                    # Extra columns after x,y,z,type (e.g. custom data). Appending only
-                    # four fields would leave a ragged row PhysiCell may not parse, so
-                    # align by name and rewrite, leaving the extras blank for new cells.
-                    existing = _pd.read_csv(out_path)
-                    _pd.concat([existing, new_rows], ignore_index=True).to_csv(out_path, index=False)
-            else:
-                result.to_csv(out_path)
-        except Exception as e:
-            # Deliberately broad: besides OSError, the append path can raise KeyError
-            # if the result lacks the x/y/z/type columns, and a malformed existing CSV
-            # raises from pandas. None of that should take the UI down mid-save.
-            QMessageBox.critical(
-                self,
-                "BIWT — Could not save cells CSV",
-                f"Failed to write '{out_path}':\n\n{type(e).__name__}: {e}",
-            )
-            return
-
-        # Neither BiwtInput nor BiwtResult records the output path -- the host owns
-        # it. Studio's copy lives in these two widgets, read back by save_cb() and
-        # by this method's default_path on the next run.
-        out_folder, out_fname = os.path.split(out_path)
-        self.csv_folder.setText(out_folder or ".")
-        self.output_file.setText(out_fname)
-
-        # --- Cell definitions ---
-        if result.cell_definitions_xml:
-            reply = QMessageBox.question(
-                self,
-                "BIWT — New Cell Definitions",
-                "BIWT generated new cell definitions.\n\n"
-                "Would you like to save these in a new PhysiCell Config file?",
-                QMessageBox.Save | QMessageBox.Cancel,
-                QMessageBox.Save,
-            )
-            if reply != QMessageBox.Save:
-                return
-            xml_path, _ = QFileDialog.getSaveFileName(
-                self, "Save PhysiCell Config",
-                "PhysiCell_settings_biwt.xml",
-                "XML files (*.xml);;All files (*)",
-            )
-            if not xml_path:
-                return
-            try:
-                with open(xml_path, "w", encoding="utf-8") as fh:
-                    fh.write(result.cell_definitions_xml)
-            except Exception as e:
-                # Same reasoning as the CSV save above: report and stop rather than
-                # letting an unwritable path take the UI down, or falling through to
-                # offer a reload of a config that was never written.
-                QMessageBox.critical(
-                    self,
-                    "BIWT — Could not save config XML",
-                    f"Failed to write '{xml_path}':\n\n{type(e).__name__}: {e}",
-                )
-                return
-
-            reload_reply = QMessageBox.question(
-                self,
-                "BIWT — Reload Config?",
-                f"Would you like to reload Studio with {os.path.basename(xml_path)}?",
-                QMessageBox.Ok | QMessageBox.Cancel,
-                QMessageBox.Ok,
-            )
-            if reload_reply == QMessageBox.Ok:
-                self.xml_creator.config_file = xml_path
-                self.xml_creator.show_sample_model()  # misleading name — actually reloads and displays any config file
+        BiwtCompletionFlow(self).run(result)
 
     def fill_gui(self):
         self.csv_folder.setText(self.xml_creator.config_tab.csv_folder.text())

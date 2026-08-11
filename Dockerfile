@@ -73,6 +73,7 @@ RUN chmod +x /startapp.sh
 COPY ./bin/* /opt/pcstudio/bin/
 COPY ./bin/images/* /opt/pcstudio/bin/images/
 COPY ./bin/icon/* /opt/pcstudio/bin/icon/
+COPY ./bin/cell_templates/* /opt/pcstudio/bin/cell_templates/
 COPY ./bin/BIWT_parameters* /opt/pcstudio/bin/BIWT_parameters
 COPY ./config/* /opt/pcstudio/config/
 COPY ./samples/* /opt/pcstudio/samples/

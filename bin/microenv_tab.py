@@ -957,7 +957,16 @@ class SubstrateDef(QWidget):
                 self.new_substrate_count += 1
             else:
                 break
-            
+
+        self.new_substrate_named(subname)
+
+    def new_substrate_named(self, subname):
+        # Same split as cell_def_tab.new_cell_def_named(): add a substrate under a caller's
+        # name rather than the next "substrateNN". Callers should come through here rather
+        # than write the <variable> themselves -- the fan-out below seeds secretion and
+        # chemotactic sensitivity on *every* cell def, and cell_def_tab.fill_xml() raises on
+        # any that were missed.
+
         # Make a new substrate (that's a copy of the currently selected one)
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
 
