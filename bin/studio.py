@@ -112,8 +112,42 @@ def quit_cb():
     global studio_app
     studio_app.quit()
 
+def xml_has_pkpd_elements(xml_root):
+    return xml_root.find(".//PK") is not None or xml_root.find(".//PD") is not None
+
+def pkpd_not_found_notice():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.RichText)
+    msgBox.setText("The --pkpd flag was passed, but no PhysiPKPD elements (&lt;PK&gt; or &lt;PD&gt;) were found in this config file. "
+                    "This may mean PhysiPKPD was not included when your project was compiled. "
+                    "Visit <a href=\"https://github.com/drbergman-lab/PhysiPKPD.git\">https://github.com/drbergman-lab/PhysiPKPD.git</a> to add PhysiPKPD to your project.")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    msgBox.exec()
+
+def pkpd_flag_missing_notice():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.PlainText)
+    msgBox.setText("This config file contains PhysiPKPD elements (<PK> and/or <PD>), but Studio was launched without the --pkpd flag. "
+                    "You will not be able to view or edit these parameters, and saving from this session will permanently remove them from the file. "
+                    "Re-launch with --pkpd to preserve and edit them.")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    msgBox.exec()
+
+def confirm_save_without_pkpd():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.PlainText)
+    msgBox.setText("This config file contains PhysiPKPD elements (<PK> and/or <PD>), but Studio was launched without the --pkpd flag. "
+                    "Saving now will permanently remove those elements from the file. "
+                    "Cancel and re-launch with --pkpd if you want to keep them.")
+    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    msgBox.setDefaultButton(QMessageBox.Cancel)
+    return msgBox.exec() == QMessageBox.Ok
+
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
         if model3D_flag:
@@ -143,6 +177,7 @@ class PhysiCellXMLCreator(QWidget):
         self.ecm_flag = False 
         self.pytest_flag = pytest_flag 
         self.biwt_flag = biwt_flag
+        self.pkpd_flag = pkpd_flag
         self.samples_flag = samples_flag
 
         self.rules_tab_index = None
@@ -229,7 +264,12 @@ class PhysiCellXMLCreator(QWidget):
             sys.exit(-1)
 
         self.xml_root = self.tree.getroot()
-        # print(f"studio: (default) self.xml_root = {self.xml_root}")   
+        # print(f"studio: (default) self.xml_root = {self.xml_root}")
+
+        if self.pkpd_flag and not xml_has_pkpd_elements(self.xml_root):
+            pkpd_not_found_notice()
+        elif not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            pkpd_flag_missing_notice()
 
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
@@ -249,7 +289,7 @@ class PhysiCellXMLCreator(QWidget):
             self.config_tab.folder.setText('.')
             self.config_tab.csv_folder.setEnabled(False)
 
-        self.microenv_tab = SubstrateDef(self.config_tab)
+        self.microenv_tab = SubstrateDef(self.config_tab, self.pkpd_flag)
         self.microenv_tab_index = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
@@ -266,10 +306,11 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: first_cell_def_name= {cd_name}')
         self.celldef_tab.config_path = self.current_xml_file
 
+
         self.celldef_tab.fill_substrates_comboboxes() # do before populate? Yes, assuming we check for cell_def != None
 
         # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag, pkpd_flag=self.pkpd_flag)
         # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
 
 
@@ -638,6 +679,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # print(f"\nreset_xml_root() self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
         # print(f"reset_xml_root() self.xml_root = {self.xml_root}")
+
+        if self.pkpd_flag and not xml_has_pkpd_elements(self.xml_root):
+            pkpd_not_found_notice()
+        elif not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            pkpd_flag_missing_notice()
+
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
@@ -659,7 +706,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         self.celldef_tab.config_path = self.current_xml_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag, pkpd_flag=self.pkpd_flag)
 
         self.celldef_tab.fill_celltypes_comboboxes()
 
@@ -836,6 +883,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     #---------------------------------
     def update_xml_from_gui(self):
+        if not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            if not confirm_save_without_pkpd():
+                return False
+
         if not self.user_params_tab.validate_utable():
             self.run_tab.enable_run(True)
             return False
@@ -1550,6 +1601,7 @@ def main():
     is_movable_flag = False
     pytest_flag = False
     biwt_flag = False
+    pkpd_flag = False
     samples_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Studio.')
@@ -1564,6 +1616,7 @@ def main():
         parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e ", "--exec", type=str, help="executable model")
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
+        parser.add_argument("--pkpd", help="display PK and PD tabs", action="store_true")
         parser.add_argument("--s","--samples", dest="samples_flag", help="menu for sample projects", action="store_true")
 
         if platform.system() == "Windows":
@@ -1629,6 +1682,8 @@ def main():
                 sys.exit()
         if args.biwt_flag:
             biwt_flag = True
+        if args.pkpd:
+            pkpd_flag = True
         if args.samples_flag:
             samples_flag = True
     except:
@@ -1708,7 +1763,7 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag)
     # print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes
