@@ -1743,7 +1743,7 @@ def main():
 
         # "QMenu::separator { height: 1px; background: #808080; margin: 2px 8px; }"
     studio_app.setStyleSheet(
-        "QLineEdit { background-color: white };"
+        "QLineEdit { background-color: white }"
         "QMenu::separator { height: 9px; background: black; margin: 4px 8px; }"
     )
 
