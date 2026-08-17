@@ -19,15 +19,15 @@ Install `biwt` into Studio's conda environment and launch Studio with `--biwt`:
 ```bash
 conda env create -f environment.yml   # creates the "studio" environment
 conda activate studio
-pip install biwt                       # no extras -- see the warning below
-python bin/studio.py --biwt            # within the activated env
+pip install 'biwt>=0.6.0'             # no extras -- see the warning below
+python bin/studio.py --biwt           # within the activated env
 ```
 
-> **Install `biwt` without extras here.** Studio's conda environment already provides
-> PyQt5, matplotlib, and anndata, so `biwt[gui]`, `biwt[anndata]`, and `biwt[all]` are
-> unnecessary — and `biwt[gui]` is actively harmful, because it installs pip's own PyQt5
-> on top of conda's and breaks Studio. (`biwt[seurat]` is the one exception: it is needed
-> for `.rds` input and does not touch PyQt5 — see below.)
+> **Install `biwt` without extras here.** This environment already has everything the
+> extras would add: PyQt5 from pip, matplotlib and anndata from conda (see
+> `environment.yml`). So `biwt[gui]`, `biwt[anndata]`, and `biwt[all]` buy nothing, and
+> `biwt[gui]` can re-resolve PyQt5 to a different build than the one Studio is running on.
+> (`biwt[seurat]` is the one exception: it is needed for `.rds` input — see below.)
 
 If `biwt` is not installed, Studio falls back to the legacy built-in BIWT tab.
 
@@ -50,8 +50,7 @@ Two Studio-specific substitutions when following those pages: the environment th
 `<env>` is `studio`, and where they launch the host application, run
 `python bin/studio.py --biwt`.
 
-If Studio dies with a segmentation fault when importing a `.rds`, that is the R / `rpy2`
-mismatch covered under Troubleshooting above — not a Studio bug.
+
 
 ## Using BIWT
 

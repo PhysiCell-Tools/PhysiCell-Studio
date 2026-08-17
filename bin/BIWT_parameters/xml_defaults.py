@@ -1,89 +1,24 @@
-xml_defaults = {
+"""
+xml_defaults.py - config defaults for the deprecated in-tree BIWT tab (bin/biwt_tab.py).
 
-    "domain": """
-            <x_min>-500</x_min>
-            <x_max>500</x_max>
-            <y_min>-500</y_min>
-            <y_max>500</y_max>
-            <z_min>-10</z_min>
-            <z_max>10</z_max>
-            <dx>20</dx>
-            <dy>20</dy>
-            <dz>20</dz>
-            <use_2D>true</use_2D>
-    """,
+The sections themselves now live in bin/physicell_xml_defaults.py, which the current BIWT
+bridge uses. This module only rebuilds the dict in the shape biwt_tab.add_xml_defaults()
+expects: the same ten keys in the same order, with "cell_definitions" between
+"microenvironment_setup" and "initial_conditions". add_xml_defaults() iterates .items() and
+appends each in turn, so the order here is the order of the file it writes.
 
-    "overall": """
-            <max_time units="min">7200</max_time>
-            <time_units>min</time_units>
-            <space_units>micron</space_units>
-            <dt_diffusion units="min">0.01</dt_diffusion>
-            <dt_mechanics units="min">0.1</dt_mechanics>
-            <dt_phenotype units="min">6</dt_phenotype>
-    """,
+Nothing new should import this. When the deprecated tab goes, so does bin/BIWT_parameters/.
+"""
 
-    "parallel": """
-            <omp_num_threads>4</omp_num_threads>
-    """,
+from physicell_xml_defaults import XML_DEFAULT_SECTIONS, CELL_DEFINITIONS_AFTER
 
-    "save":
-      """
-            <folder>output</folder>
-            <full_data>
-                <interval units="min">60</interval>
-                <enable>true</enable>
-            </full_data>
-            <SVG>
-                <interval units="min">60</interval>
-                <enable>true</enable>
-                <plot_substrate enabled="false" limits="false">
-                    <substrate>substrate</substrate>
-                    <min_conc />
-                    <max_conc />
-                </plot_substrate>
-            </SVG>
-            <legacy_data>
-                <enable>false</enable>
-            </legacy_data>
-    """,
 
-    "options": """
-            <legacy_random_points_on_sphere_in_divide>false</legacy_random_points_on_sphere_in_divide>
-            <virtual_wall_at_domain_edge>true</virtual_wall_at_domain_edge>
-            <disable_automated_spring_adhesions>false</disable_automated_spring_adhesions>
-            <random_seed>0</random_seed>
-        """,
-        
-    "microenvironment_setup":"""
-            <variable name="substrate" units="dimensionless" ID="0">
-                <physical_parameter_set>
-                    <diffusion_coefficient units="micron^2/min">100000.0</diffusion_coefficient>
-                    <decay_rate units="1/min">10</decay_rate>
-                </physical_parameter_set>
-                <initial_condition units="mmHg">0</initial_condition>
-                <Dirichlet_boundary_condition units="mmHg" enabled="False">0</Dirichlet_boundary_condition>
-                <Dirichlet_options>
-                    <boundary_value ID="xmin" enabled="False">0</boundary_value>
-                    <boundary_value ID="xmax" enabled="False">0</boundary_value>
-                    <boundary_value ID="ymin" enabled="False">0</boundary_value>
-                    <boundary_value ID="ymax" enabled="False">0</boundary_value>
-                    <boundary_value ID="zmin" enabled="False">0</boundary_value>
-                    <boundary_value ID="zmax" enabled="False">0</boundary_value>
-                </Dirichlet_options>
-            </variable>
-            <options>
-                <calculate_gradients>true</calculate_gradients>
-                <track_internalized_substrates_in_each_agent>true</track_internalized_substrates_in_each_agent>
-                <initial_condition type="matlab" enabled="false">
-                    <filename>./config/initial.mat</filename>
-                </initial_condition>
-                <dirichlet_nodes type="matlab" enabled="false">
-                    <filename>./config/dirichlet.mat</filename>
-                </dirichlet_nodes>
-            </options>
-        """,
-
-    "cell_definitions": """
+# The <cell_definition name="default"> the deprecated tab appends to the file it writes.
+# Verbatim, so that tab's output is unchanged. It carries Cortex_1/Dentate_gyrus/...
+# asymmetric-division probabilities baked in from one mouse-brain dataset, which is why it
+# sits here rather than with the sections every config shares: deleting this directory has
+# to delete it too.
+LEGACY_DEFAULT_CELL_DEFINITION = """
         <cell_definition name="default" ID="0">
                 <phenotype>
                     <cycle code="6" name="Flow cytometry model (separated)">
@@ -312,26 +247,11 @@ xml_defaults = {
                     </distribution>
                 </initial_parameter_distributions>
             </cell_definition>
-        """,
+        """
 
-    "initial_conditions": """
-            <cell_positions type="csv" enabled="true">
-                <folder>./config</folder>
-                <filename>cells.csv</filename>
-            </cell_positions>
-    """,
-
-    "cell_rules": """
-            <rulesets>
-                <ruleset protocol="CBHG" version="3.0" format="csv" enabled="false">
-                    <folder>./config</folder>
-                    <filename>rules0.csv</filename>
-                </ruleset>
-            </rulesets>
-            <settings />
-    """,
-
-    "user_parameters": """
-            <number_of_cells type="int" units="none" description="initial number of cells (for each cell type)">5</number_of_cells>
-    """
-}
+xml_defaults = {}
+for _key, _fragment in XML_DEFAULT_SECTIONS.items():
+    xml_defaults[_key] = _fragment
+    if _key == CELL_DEFINITIONS_AFTER:
+        xml_defaults["cell_definitions"] = LEGACY_DEFAULT_CELL_DEFINITION
+del _key, _fragment
