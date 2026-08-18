@@ -354,7 +354,6 @@ class VisBase():
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.discrete_variable_observed = set()
-        self.cell_scalar_updated = True
 
         self.cell_scalar_human2mcds_dict = {} # initialize here for vis_tab.py
 
@@ -1791,7 +1790,6 @@ class VisBase():
 
     def cell_scalar_combobox_changed_cb(self, idx):
         self.discrete_variable_observed = set()
-        self.cell_scalar_updated = True
         self.update_plots()
     
     #-------------------------------------
@@ -1865,6 +1863,7 @@ class VisBase():
             except:
                 pass
             self.cax2 = None
+            self.cbar2 = None   # its Axes is gone; do not draw into it again
 
     def cells_svg_mat_cb(self):
         # print("\n---------cells_svg_mat_cb(self)")
@@ -2575,9 +2574,10 @@ class VisBase():
             if self.cax2:
                 try:
                     self.cax2.remove()
-                    self.cax2 = None
                 except:
                     pass
+                self.cax2 = None
+                self.cbar2 = None   # its Axes is gone; do not draw into it again
             
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
@@ -3419,6 +3419,11 @@ class VisBase():
             msgBox.exec()
 
         self.current_svg_frame = original_frame  # Restore the original frame number
+
+        # pyplot's Gcf holds every figure until it is closed, and each `ims` entry is a full
+        # copy of the canvas framebuffer, so drop them both here.
+        ims.clear()
+        plt.close(fig)
 
     def cancel_movie_cb(self):
         self.cancel_movie = True
