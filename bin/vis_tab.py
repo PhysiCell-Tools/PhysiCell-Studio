@@ -510,14 +510,13 @@ class Vis(VisBase, QWidget):
                     rgba = [1,1,1,1.0]
                     rgba[0:3] = [x for x in rgb_tuple]
 
-                # test for bogus x,y locations (rwh TODO: use max of domain?)
-                too_large_val = 10000.
-                if (np.fabs(xval) > too_large_val):
+                # test for bogus x,y locations, i.e., outside the domain of the loaded output
+                if (xval < self.xmin) or (xval > self.xmax):
                     print("bogus xval=", xval)
                     break
                 yval = float(circle.attrib['cy'])
                 yval = yval/self.y_range * self.y_range + self.ymin
-                if (np.fabs(yval) > too_large_val):
+                if (yval < self.ymin) or (yval > self.ymax):
                     print("bogus yval=", yval)
                     break
 
