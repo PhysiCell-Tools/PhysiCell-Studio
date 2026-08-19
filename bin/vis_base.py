@@ -543,6 +543,15 @@ class VisBase():
         self.xdel = 20
         self.z_range = self.zmax - self.zmin
 
+        # Domain of the *loaded output*, read from its initial.xml; None until an
+        # output dir has been read. The values above are only placeholders and
+        # self.xmin, etc. later track the Config tab, which need not describe the
+        # output being plotted, so plot_svg() maps .svg coords with these instead.
+        self.output_xmin = None
+        self.output_xmax = None
+        self.output_ymin = None
+        self.output_ymax = None
+
         self.aspect_ratio = 0.7
 
         self.view_aspect_square = True
@@ -2225,6 +2234,14 @@ class VisBase():
         self.plot_ymin = self.ymin
         self.plot_ymax = self.ymax
 
+        # PhysiCell writes cell centers in the .svg files relative to the lower
+        # corner of this domain, so keep it for plot_svg(); self.xmin, etc. get
+        # overwritten from the Config tab by reset_domain_box() below.
+        self.output_xmin = self.xmin
+        self.output_xmax = self.xmax
+        self.output_ymin = self.ymin
+        self.output_ymax = self.ymax
+
         self.zmin = float(bds[2])
         self.zmax = float(bds[5])
 
@@ -2304,6 +2321,12 @@ class VisBase():
         self.ymin = float(bds[1])
         self.ymax = float(bds[4])
         self.y_range = self.ymax - self.ymin
+
+        # rf. reset_model(): the frame of reference for the .svg cell coords
+        self.output_xmin = self.xmin
+        self.output_xmax = self.xmax
+        self.output_ymin = self.ymin
+        self.output_ymax = self.ymax
 
         # and plot 1st frame (.svg)
         self.current_svg_frame = 0
