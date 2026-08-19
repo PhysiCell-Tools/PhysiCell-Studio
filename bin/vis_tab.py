@@ -656,9 +656,10 @@ class Vis(VisBase, QWidget):
         if self.cax2:
             try:
                 self.cax2.remove()
-                self.cax2 = None
             except:
                 pass
+            self.cax2 = None
+            self.cbar2 = None   # its Axes is gone; do not draw into it again
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -673,7 +674,7 @@ class Vis(VisBase, QWidget):
         boolean_colors = ["green", "red", "grey"]
         
         # Creating empty plots to add the legend
-        lp = lambda i: plt.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
+        lp = lambda i: self.ax0.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
                                 label="Feature {:g}".format(i), ls="", marker="o")[0]
         handles = [lp(i) for i in range(3)]
         try: # cautionary for out of date mpl versions, e.g., nanoHUB
@@ -829,14 +830,15 @@ class Vis(VisBase, QWidget):
             if self.cax2 is not None:
                 try:
                     self.cax2.remove()
-                    self.cax2 = None
                 except:
                     pass
+                self.cax2 = None
+                self.cbar2 = None   # its Axes is gone; do not draw into it again
             # Coloring the cells as it used to be
             cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
             
             # Creating empty plots to add the legend
-            lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
+            lp = lambda i: self.ax0.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
                                     label="Feature {:g}".format(i), ls="", marker="o")[0]
             handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
             try: # cautionary for out of date mpl versions, e.g., nanoHUB
@@ -848,16 +850,15 @@ class Vis(VisBase, QWidget):
             # If it's not there, we create it
             if self.cax2 is None:
                 self.cax2 = self.figure.add_subplot(self.gs[1,0])
-                # added 5/11/26 to fix toggling back to .mat after .svg
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-                self.cell_scalar_updated = False
+                self.cbar2 = None   # a new Axes needs its own Colorbar
+
             if self.cbar2 is None:
                 self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-            elif self.cell_scalar_updated:
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-                self.cell_scalar_updated = False
-            else:  # called on continuous "Play" plots; range auto-updates
-                self.cbar2.update_normal(cell_plot)  # partial fix for memory leak
+            else:
+                # Never build a second Colorbar on a live cax2: each one chains itself onto the
+                # previous via cax2._axes_locator and pins that frame's cell PatchCollection forever.
+                # update_normal() picks up a new cmap and range just as well.
+                self.cbar2.update_normal(cell_plot)
 
             self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
