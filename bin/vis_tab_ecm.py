@@ -440,6 +440,13 @@ class Vis(VisBase, QWidget):
             print("vis_tab.py: plot_svg(): Warning: full_fname not found: ",full_fname)
             return
 
+        if self.output_xmin is None:
+            # No output has been read yet, e.g. during startup when populating the
+            # substrates combobox replots before reset_model() has parsed
+            # initial.xml. Without the domain that produced this .svg there is
+            # nothing to map its coords into; reset_model() replots once it has one.
+            return
+
         # self.ax0.cla()
         self.title_str = ""
 
@@ -517,6 +524,13 @@ class Vis(VisBase, QWidget):
                 break
             numChildren += 1
 
+        # PhysiCell freezes cells that wander out of the domain instead of removing
+        # them, so a cell center just outside it is legitimate. Pad the domain by its
+        # own width so the check below only rejects coords that could not be a cell
+        # position at all, e.g. from a partially written .svg.
+        x_pad = self.output_xmax - self.output_xmin
+        y_pad = self.output_ymax - self.output_ymin
+
         num_cells = 0
         #  print('------ search cells')
         for child in cells_parent:
@@ -527,9 +541,8 @@ class Vis(VisBase, QWidget):
                 #      print('  --- cx,cy=',circle.attrib['cx'],circle.attrib['cy'])
                 xval = float(circle.attrib['cx'])
 
-                # map SVG coords into comp domain
-                # xval = (xval-self.svg_xmin)/self.svg_xrange * self.x_range + self.xmin
-                xval = xval/self.x_range * self.x_range + self.xmin
+                # map SVG coords into the domain that produced them
+                xval += self.output_xmin
 
                 s = circle.attrib['fill']
                 # print("s=",s)
@@ -567,14 +580,13 @@ class Vis(VisBase, QWidget):
                     rgba = [1,1,1,1.0]
                     rgba[0:3] = [x for x in rgb_tuple]
 
-                # test for bogus x,y locations, i.e., outside the domain of the loaded output
-                if (xval < self.xmin) or (xval > self.xmax):
+                # test for bogus x,y locations
+                if (xval < self.output_xmin - x_pad) or (xval > self.output_xmax + x_pad):
                     print("bogus xval=", xval)
                     break
                 yval = float(circle.attrib['cy'])
-                # yval = (yval - self.svg_xmin)/self.svg_xrange * self.y_range + self.ymin
-                yval = yval/self.y_range * self.y_range + self.ymin
-                if (yval < self.ymin) or (yval > self.ymax):
+                yval += self.output_ymin
+                if (yval < self.output_ymin - y_pad) or (yval > self.output_ymax + y_pad):
                     print("bogus yval=", yval)
                     break
 
