@@ -52,7 +52,7 @@ RUN printf "root:x:0:\nstaff:x:50:\n" > /tmp/.group && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /usr/local/pcstudio-venv
-RUN /usr/local/pcstudio-venv/bin/pip install matplotlib scipy pandas PyQt5 galaxy-ie-helpers PyGithub 
+RUN /usr/local/pcstudio-venv/bin/pip install matplotlib scipy pandas PyQt5 galaxy-ie-helpers PyGithub "biwt[anndata]"
 
 RUN mkdir -p /opt/pcstudio/bin/images &&\
     mkdir -p /opt/pcstudio/bin/icon &&\
