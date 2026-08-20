@@ -2,7 +2,6 @@ import os
 import sys
 import glob
 import zipfile
-import shutil
 import time
 import traceback
 from pathlib import Path
@@ -11,7 +10,7 @@ from datetime import datetime
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
     QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QMessageBox,
+    QLabel, QLineEdit, QPushButton, QMessageBox, QFileDialog,
 )
 from PyQt5.QtGui import QIntValidator
 # from PyQt5.QtCore import Qt
@@ -142,7 +141,6 @@ class LoadProjectWindow(QWidget):
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
             """
 
-        self.file_id = 0
         self.xml_creator = None    # set by caller
 
         self.setStyleSheet(stylesheet)
@@ -153,26 +151,18 @@ class LoadProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-        self.load_file_button = QPushButton("Load project with ID=")
+        self.load_file_button = QPushButton("Load project...")
         self.load_file_button.setFixedWidth(270)
         self.load_file_button.setEnabled(True)
         self.load_file_button.setStyleSheet("background-color: lightgreen;")
         self.load_file_button.clicked.connect(self.load_project_cb)
-        # glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
-        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
-
-        self.file_id_w = QLineEdit("0")
-        self.file_id_w.setEnabled(True)
-        self.file_id_w.setFixedWidth(70)
-        self.file_id_w.setValidator(QIntValidator())
-        self.file_id_w.textChanged.connect(self.file_id_changed)
-        glayout.addWidget(self.file_id_w, idx_row, 1, 1, 1)
+        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        msg = ("Enter the integer ID value of a previously saved project on the\n"
-               "Galaxy History then press the Load button above.\n"
+        msg = ("Click Load project and choose a previously saved project .zip file.\n"
+               "Upload it into this container first via the browser's own file manager\n"
+               "(e.g. into /import), then browse to it here.\n"
                "This will unzip those files into your /config directory and update the Studio.")
-        # glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
         self.close_button = QPushButton("Close")
@@ -194,28 +184,23 @@ class LoadProjectWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec_()
 
-    def load_project_cb(self, sval):
-        self.file_id = int(self.file_id_w.text())
-        zip_file = "my_model.zip"
-        msgBox = QMessageBox()
-        from_filename = "/import/"
+    def load_project_cb(self, sval=None):
+        # /import is where the browser's own file manager (jlesage/baseimage-gui) lands
+        # files uploaded from the user's real desktop into this container -- same landing
+        # spot the History-based "get" flow used to copy datasets into. Default there, but
+        # let the user browse elsewhere in the container filesystem if they placed it there.
+        default_dir = "/import" if os.path.isdir("/import") else "."
+        zip_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load project",
+            default_dir,
+            "Zip files (*.zip);;All files (*)",
+        )
+        if not zip_file:
+            return
 
+        msgBox = QMessageBox()
         try:
-            msgBox.setText('Copying the requested data from the Galaxy History')
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            get(self.file_id)
-            from_filename += str(self.file_id)
-            try:
-                print(f"load_project_cb(): attempting to copy {from_filename} to {zip_file}")
-                shutil.copy(from_filename, zip_file)
-                os.remove(from_filename)
-            except:
-                msg = f"Error: unable to copy {from_filename} to {zip_file}"
-                print(msg)
-                msgBox.setText(msg)
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                msgBox.exec()
             with zipfile.ZipFile(zip_file, 'r') as zip_ref:
                 zip_ref.extractall(path="config")
                 msgBox.setText('Successful extractall into /config ...now loading into the Studio')
@@ -238,13 +223,8 @@ class LoadProjectWindow(QWidget):
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
         except Exception as e:
-            # msg = f'load_project_cb(): There was a problem getting or unzipping {from_filename} with History ID {self.file_id}.'
             msg = traceback.format_exc()
             self.show_error_message(msg)
-            # print(msg)
-            # msgBox.setText(msg)
-            # msgBox.setStandardButtons(QMessageBox.Ok)
-            # msgBox.exec()
 
     def show_error_message(self, message):
         msg = QMessageBox()
@@ -253,12 +233,6 @@ class LoadProjectWindow(QWidget):
         msg.setWindowTitle("Error")
         msg.setFixedWidth(500)
         msg.exec_()
-
-    def file_id_changed(self, sval):
-        try:
-            self.file_id = int(sval)
-        except:
-            pass
 
 
 #-----------------------------------------------------------------
@@ -471,7 +445,6 @@ class ImportBIWTDataWindow(QWidget):
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
             """
 
-        self.file_id = 0
         self.xml_creator = None    # set by caller
         self.biwt_widget = None    # set by caller; the BioinformaticsWalkthrough instance to import into
 
@@ -483,26 +456,18 @@ class ImportBIWTDataWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-        self.load_file_button = QPushButton("Load data with ID=")
+        self.load_file_button = QPushButton("Load BIWT data...")
         self.load_file_button.setFixedWidth(270)
         self.load_file_button.setEnabled(True)
         self.load_file_button.setStyleSheet("background-color: lightgreen;")
         self.load_file_button.clicked.connect(self.load_biwt_data_cb)
-        # glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
-        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
-
-        self.file_id_w = QLineEdit("0")
-        self.file_id_w.setEnabled(True)
-        self.file_id_w.setFixedWidth(70)
-        self.file_id_w.setValidator(QIntValidator())
-        self.file_id_w.textChanged.connect(self.file_id_changed)
-        glayout.addWidget(self.file_id_w, idx_row, 1, 1, 1)
+        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        msg = ("Enter the integer ID value of the BIWT data on the\n"
-               "Galaxy History then press the Load button above.\n"
-               "This will copy the file into /config/my_biwt.dat.")
-        # glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
+        msg = ("Click Load BIWT data and choose a single-cell data file\n"
+               "(*.h5ad, *.rds, *.rda, *.rdata, *.csv).\n"
+               "Upload it into this container first via the browser's own file manager\n"
+               "(e.g. into /import), then browse to it here.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
         self.close_button = QPushButton("Close")
@@ -524,53 +489,31 @@ class ImportBIWTDataWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec_()
 
-    def load_biwt_data_cb(self, sval):
-        self.file_id = int(self.file_id_w.text())
-        biwt_file = "my_biwt.dat"
-        msgBox = QMessageBox()
-        from_filename = "/import/"
+    def load_biwt_data_cb(self, sval=None):
+        # /import is where the browser's own file manager (jlesage/baseimage-gui) lands
+        # files uploaded from the user's real desktop into this container.
+        default_dir = "/import" if os.path.isdir("/import") else "."
+        biwt_file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Import single-cell data",
+            default_dir,
+            "Supported files (*.h5ad *.rds *.rda *.rdata *.csv);;All files (*)",
+        )
+        if not biwt_file:
+            return
 
         try:
-            msgBox.setText('Copying the requested BIWT data from the Galaxy History')
-            msgBox.setStandardButtons(QMessageBox.Ok)
-            msgBox.exec()
-            get(self.file_id)   # galaxy_ie_helpers API
-            from_filename += str(self.file_id)
-            try:
-                print(f"load_project_cb(): attempting to copy {from_filename} to {biwt_file}")
-                shutil.copy(from_filename, biwt_file)
-                os.remove(from_filename)
-            except:
-                msg = f"Error: unable to copy {from_filename} to {biwt_file}"
-                print(msg)
-                msgBox.setText(msg)
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                msgBox.exec()
-            # with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-            #     zip_ref.extractall(path="config")
-            #     msgBox.setText('Successful extractall into /config ...now loading into the Studio')
-            #     msgBox.setStandardButtons(QMessageBox.Ok)
-            #     msgBox.exec()
-            time.sleep(1)
-            # self.xml_creator.config_file = "config/PhysiCell_settings.xml"
-            # self.xml_creator.show_sample_model()
             if self.biwt_widget is not None:
                 self.biwt_widget._import_file(biwt_file)
 
         except FileNotFoundError:
             msg = f"Error: The file {biwt_file} was not found."
             print(msg)
+            msgBox = QMessageBox()
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
-        # except zipfile.BadZipFile:
-        #     msg = f"Error: The file {zip_file} is not a valid or supported zip file."
-        #     print(msg)
-        #     msgBox.setText(msg)
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     msgBox.exec()
         except Exception as e:
-            # msg = f'load_project_cb(): There was a problem getting or unzipping {from_filename} with History ID {self.file_id}.'
             msg = traceback.format_exc()
             self.show_error_message(msg)
 
@@ -581,9 +524,3 @@ class ImportBIWTDataWindow(QWidget):
         msg.setWindowTitle("Error")
         msg.setFixedWidth(500)
         msg.exec_()
-
-    def file_id_changed(self, sval):
-        try:
-            self.file_id = int(sval)
-        except:
-            pass
