@@ -51,7 +51,8 @@ class GalaxyHistoryWindow(QWidget):
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
             """
 
-        self.file_id = 0
+        self.file_id = 0   # for the project (.xml, .csv files)
+        self.biwt_file_id = 0
         self.xml_creator = xml_creator
 
         self.setStyleSheet(stylesheet)
@@ -460,3 +461,129 @@ def download_all_zipped_galaxy(self):
         put(fname)
     except:
         self.show_error_message(f"Error: put({fname})")
+
+#-----------------------------------------------------------------
+class ImportBIWTDataWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        stylesheet = """
+            QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
+            """
+
+        self.file_id = 0
+        self.xml_creator = None    # set by caller
+        self.biwt_widget = None    # set by caller; the BioinformaticsWalkthrough instance to import into
+
+        self.setStyleSheet(stylesheet)
+
+        self.scroll = QScrollArea()
+        self.vbox = QVBoxLayout()
+        glayout = QGridLayout()
+        self.vbox.addLayout(glayout)
+
+        idx_row = 0
+        self.load_file_button = QPushButton("Load data with ID=")
+        self.load_file_button.setFixedWidth(270)
+        self.load_file_button.setEnabled(True)
+        self.load_file_button.setStyleSheet("background-color: lightgreen;")
+        self.load_file_button.clicked.connect(self.load_biwt_data_cb)
+        # glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
+
+        self.file_id_w = QLineEdit("0")
+        self.file_id_w.setEnabled(True)
+        self.file_id_w.setFixedWidth(70)
+        self.file_id_w.setValidator(QIntValidator())
+        self.file_id_w.textChanged.connect(self.file_id_changed)
+        glayout.addWidget(self.file_id_w, idx_row, 1, 1, 1)
+
+        idx_row += 1
+        msg = ("Enter the integer ID value of the BIWT data on the\n"
+               "Galaxy History then press the Load button above.\n"
+               "This will copy the file into /config/my_biwt.dat.")
+        # glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
+        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
+
+        self.close_button = QPushButton("Close")
+        self.close_button.setStyleSheet("background-color: lightgreen;")
+        self.close_button.clicked.connect(self.close)
+
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setWidgetResizable(True)
+
+        self.vbox.addWidget(self.close_button)
+        self.setLayout(self.vbox)
+        # self.resize(190, 200)
+
+    def show_info_message(self, message):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText(message)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec_()
+
+    def load_biwt_data_cb(self, sval):
+        self.file_id = int(self.file_id_w.text())
+        biwt_file = "my_biwt.dat"
+        msgBox = QMessageBox()
+        from_filename = "/import/"
+
+        try:
+            msgBox.setText('Copying the requested BIWT data from the Galaxy History')
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            get(self.file_id)   # galaxy_ie_helpers API
+            from_filename += str(self.file_id)
+            try:
+                print(f"load_project_cb(): attempting to copy {from_filename} to {biwt_file}")
+                shutil.copy(from_filename, biwt_file)
+                os.remove(from_filename)
+            except:
+                msg = f"Error: unable to copy {from_filename} to {biwt_file}"
+                print(msg)
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+            # with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+            #     zip_ref.extractall(path="config")
+            #     msgBox.setText('Successful extractall into /config ...now loading into the Studio')
+            #     msgBox.setStandardButtons(QMessageBox.Ok)
+            #     msgBox.exec()
+            time.sleep(1)
+            # self.xml_creator.config_file = "config/PhysiCell_settings.xml"
+            # self.xml_creator.show_sample_model()
+            if self.biwt_widget is not None:
+                self.biwt_widget._import_file(biwt_file)
+
+        except FileNotFoundError:
+            msg = f"Error: The file {biwt_file} was not found."
+            print(msg)
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+        # except zipfile.BadZipFile:
+        #     msg = f"Error: The file {zip_file} is not a valid or supported zip file."
+        #     print(msg)
+        #     msgBox.setText(msg)
+        #     msgBox.setStandardButtons(QMessageBox.Ok)
+        #     msgBox.exec()
+        except Exception as e:
+            # msg = f'load_project_cb(): There was a problem getting or unzipping {from_filename} with History ID {self.file_id}.'
+            msg = traceback.format_exc()
+            self.show_error_message(msg)
+
+    def show_error_message(self, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(message)
+        msg.setWindowTitle("Error")
+        msg.setFixedWidth(500)
+        msg.exec_()
+
+    def file_id_changed(self, sval):
+        try:
+            self.file_id = int(sval)
+        except:
+            pass
