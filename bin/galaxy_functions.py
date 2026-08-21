@@ -10,7 +10,7 @@ from datetime import datetime
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
     QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QMessageBox, QFileDialog,
+    QLabel, QLineEdit, QPushButton, QMessageBox, QListWidget,
 )
 from PyQt5.QtGui import QIntValidator
 # from PyQt5.QtCore import Qt
@@ -18,10 +18,25 @@ from PyQt5.QtGui import QIntValidator
 from studio_classes import DoubleValidatorWidgetBounded, QCheckBox_custom
 
 try:
-    from galaxy_ie_helpers import put, find_matching_history_ids, get
+    from galaxy_ie_helpers import put, find_matching_history_ids, get, get_user_history
 except:
     print("----- Note: cannot import from galaxy_ie_helpers")
     pass
+
+
+def _list_history_datasets(history_id=None):
+    """(hid, name) pairs, sorted by hid, for visible/successful datasets in the
+    current Galaxy History -- the names shown to the user in the load windows."""
+    entries = get_user_history(history_id=history_id)
+    datasets = [
+        (d['hid'], d['name'])
+        for d in entries
+        if d.get('history_content_type', 'dataset') == 'dataset'
+        and d.get('state', 'ok') == 'ok'
+        and not d.get('deleted', False)
+    ]
+    datasets.sort(key=lambda t: t[0])
+    return datasets
 
 #-----------------------------------------------------------------
 # UI helper widget used by GalaxyHistoryWindow
@@ -142,6 +157,7 @@ class LoadProjectWindow(QWidget):
             """
 
         self.xml_creator = None    # set by caller
+        self.history_datasets = []    # [(hid, name), ...] currently listed
 
         self.setStyleSheet(stylesheet)
 
@@ -151,17 +167,25 @@ class LoadProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-        self.load_file_button = QPushButton("Load project...")
-        self.load_file_button.setFixedWidth(270)
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setStyleSheet("background-color: lightgreen;")
+        self.refresh_button.clicked.connect(self.refresh_history_cb)
+        glayout.addWidget(self.refresh_button, idx_row, 0, 1, 1)
+
+        self.load_file_button = QPushButton("Load selected")
         self.load_file_button.setEnabled(True)
         self.load_file_button.setStyleSheet("background-color: lightgreen;")
         self.load_file_button.clicked.connect(self.load_project_cb)
-        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.load_file_button, idx_row, 1, 1, 1)
 
         idx_row += 1
-        msg = ("Click Load project and choose a previously saved project .zip file.\n"
-               "Upload it into this container first via the browser's own file manager\n"
-               "(e.g. into /import), then browse to it here.\n"
+        self.history_list = QListWidget()
+        self.history_list.itemDoubleClicked.connect(self.load_project_cb)
+        glayout.addWidget(self.history_list, idx_row, 0, 1, 2)
+
+        idx_row += 1
+        msg = ("Datasets currently in your Galaxy History are listed above by name.\n"
+               "Select a previously saved project .zip (or double-click it) then Load.\n"
                "This will unzip those files into your /config directory and update the Studio.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
@@ -177,6 +201,8 @@ class LoadProjectWindow(QWidget):
         self.setLayout(self.vbox)
         # self.resize(190, 200)
 
+        self.refresh_history_cb()    # best-effort initial population
+
     def show_info_message(self, message):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
@@ -184,23 +210,26 @@ class LoadProjectWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec_()
 
+    def refresh_history_cb(self):
+        self.history_list.clear()
+        self.history_datasets = []
+        try:
+            self.history_datasets = _list_history_datasets()
+        except Exception:
+            return    # leave the list empty; user can hit Refresh again once History is ready
+        for hid, name in self.history_datasets:
+            self.history_list.addItem(f"{hid}: {name}")
+
     def load_project_cb(self, sval=None):
-        # /import is where the browser's own file manager (jlesage/baseimage-gui) lands
-        # files uploaded from the user's real desktop into this container -- same landing
-        # spot the History-based "get" flow used to copy datasets into. Default there, but
-        # let the user browse elsewhere in the container filesystem if they placed it there.
-        default_dir = "/import" if os.path.isdir("/import") else "."
-        zip_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Load project",
-            default_dir,
-            "Zip files (*.zip);;All files (*)",
-        )
-        if not zip_file:
+        row = self.history_list.currentRow()
+        if row < 0 or row >= len(self.history_datasets):
+            QMessageBox.warning(self, "No dataset selected", "Select a dataset from the list first.")
             return
+        hid, name = self.history_datasets[row]
 
         msgBox = QMessageBox()
         try:
+            zip_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>
             with zipfile.ZipFile(zip_file, 'r') as zip_ref:
                 zip_ref.extractall(path="config")
                 msgBox.setText('Successful extractall into /config ...now loading into the Studio')
@@ -211,13 +240,13 @@ class LoadProjectWindow(QWidget):
             self.xml_creator.show_sample_model()
 
         except FileNotFoundError:
-            msg = f"Error: The file {zip_file} was not found."
+            msg = f"Error: The file for '{name}' was not found."
             print(msg)
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
             msgBox.exec()
         except zipfile.BadZipFile:
-            msg = f"Error: The file {zip_file} is not a valid or supported zip file."
+            msg = f"Error: '{name}' is not a valid or supported zip file."
             print(msg)
             msgBox.setText(msg)
             msgBox.setStandardButtons(QMessageBox.Ok)
@@ -447,6 +476,7 @@ class ImportBIWTDataWindow(QWidget):
 
         self.xml_creator = None    # set by caller
         self.biwt_widget = None    # set by caller; the BioinformaticsWalkthrough instance to import into
+        self.history_datasets = []    # [(hid, name), ...] currently listed
 
         self.setStyleSheet(stylesheet)
 
@@ -456,18 +486,26 @@ class ImportBIWTDataWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-        self.load_file_button = QPushButton("Load BIWT data...")
-        self.load_file_button.setFixedWidth(270)
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setStyleSheet("background-color: lightgreen;")
+        self.refresh_button.clicked.connect(self.refresh_history_cb)
+        glayout.addWidget(self.refresh_button, idx_row, 0, 1, 1)
+
+        self.load_file_button = QPushButton("Load selected")
         self.load_file_button.setEnabled(True)
         self.load_file_button.setStyleSheet("background-color: lightgreen;")
         self.load_file_button.clicked.connect(self.load_biwt_data_cb)
-        glayout.addWidget(self.load_file_button, idx_row, 0, 1, 2) # w, row, column, rowspan, colspan
+        glayout.addWidget(self.load_file_button, idx_row, 1, 1, 1)
 
         idx_row += 1
-        msg = ("Click Load BIWT data and choose a single-cell data file\n"
-               "(*.h5ad, *.rds, *.rda, *.rdata, *.csv).\n"
-               "Upload it into this container first via the browser's own file manager\n"
-               "(e.g. into /import), then browse to it here.")
+        self.history_list = QListWidget()
+        self.history_list.itemDoubleClicked.connect(self.load_biwt_data_cb)
+        glayout.addWidget(self.history_list, idx_row, 0, 1, 2)
+
+        idx_row += 1
+        msg = ("Datasets currently in your Galaxy History are listed above by name.\n"
+               "Select a single-cell data file (*.h5ad, *.rds, *.rda, *.rdata, *.csv)\n"
+               "(or double-click it) then Load.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
         self.close_button = QPushButton("Close")
@@ -482,6 +520,8 @@ class ImportBIWTDataWindow(QWidget):
         self.setLayout(self.vbox)
         # self.resize(190, 200)
 
+        self.refresh_history_cb()    # best-effort initial population
+
     def show_info_message(self, message):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
@@ -489,25 +529,30 @@ class ImportBIWTDataWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec_()
 
+    def refresh_history_cb(self):
+        self.history_list.clear()
+        self.history_datasets = []
+        try:
+            self.history_datasets = _list_history_datasets()
+        except Exception:
+            return    # leave the list empty; user can hit Refresh again once History is ready
+        for hid, name in self.history_datasets:
+            self.history_list.addItem(f"{hid}: {name}")
+
     def load_biwt_data_cb(self, sval=None):
-        # /import is where the browser's own file manager (jlesage/baseimage-gui) lands
-        # files uploaded from the user's real desktop into this container.
-        default_dir = "/import" if os.path.isdir("/import") else "."
-        biwt_file, _ = QFileDialog.getOpenFileName(
-            self,
-            "Import single-cell data",
-            default_dir,
-            "Supported files (*.h5ad *.rds *.rda *.rdata *.csv);;All files (*)",
-        )
-        if not biwt_file:
+        row = self.history_list.currentRow()
+        if row < 0 or row >= len(self.history_datasets):
+            QMessageBox.warning(self, "No dataset selected", "Select a dataset from the list first.")
             return
+        hid, name = self.history_datasets[row]
 
         try:
+            biwt_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>
             if self.biwt_widget is not None:
                 self.biwt_widget._import_file(biwt_file)
 
         except FileNotFoundError:
-            msg = f"Error: The file {biwt_file} was not found."
+            msg = f"Error: The file for '{name}' was not found."
             print(msg)
             msgBox = QMessageBox()
             msgBox.setText(msg)
