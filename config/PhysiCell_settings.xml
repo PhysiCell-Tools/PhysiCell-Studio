@@ -23,7 +23,7 @@
     </overall>
 
     <parallel>
-        <omp_num_threads>4</omp_num_threads>
+        <omp_num_threads>1</omp_num_threads>
     </parallel>
 
     <save>
@@ -156,7 +156,7 @@
                 </mechanics>
                 <motility>
                     <speed units="micron/min">1</speed>
-                    <persistence_time units="min">5</persistence_time>
+                    <persistence_time units="min">1</persistence_time>
                     <migration_bias units="dimensionless">.5</migration_bias>
                     <options>
                         <enabled>false</enabled>
@@ -248,7 +248,7 @@
     </cell_definitions>
 
     <initial_conditions>
-        <cell_positions type="csv" enabled="true">
+        <cell_positions type="csv" enabled="false">
             <folder>./config</folder>
             <filename>cells.csv</filename>
         </cell_positions>
@@ -256,7 +256,7 @@
 
     <cell_rules>
         <rulesets>
-            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="false">
+            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="true">
                 <folder>./config</folder>
                 <filename>rules0.csv</filename>
             </ruleset>

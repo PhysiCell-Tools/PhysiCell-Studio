@@ -23,7 +23,7 @@
     </overall>
 
     <parallel>
-        <omp_num_threads>4</omp_num_threads>
+        <omp_num_threads>1</omp_num_threads>
     </parallel>
 
     <save>
@@ -92,6 +92,9 @@
                         <duration index="2" fixed_duration="true">240.</duration>
                         <duration index="3" fixed_duration="true">60.</duration>
                     </phase_durations>
+                    <standard_asymmetric_division enabled="False">
+                        <asymmetric_division_probability name="default" units="dimensionless">1.0</asymmetric_division_probability>
+                    </standard_asymmetric_division>
                 </cycle>
                 <death>
                     <model code="100" name="apoptosis">
@@ -153,7 +156,7 @@
                 </mechanics>
                 <motility>
                     <speed units="micron/min">1</speed>
-                    <persistence_time units="min">5</persistence_time>
+                    <persistence_time units="min">1</persistence_time>
                     <migration_bias units="dimensionless">.5</migration_bias>
                     <options>
                         <enabled>false</enabled>
@@ -253,7 +256,7 @@
 
     <cell_rules>
         <rulesets>
-            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="false">
+            <ruleset protocol="CBHG" version="3.0" format="csv" enabled="true">
                 <folder>./config</folder>
                 <filename>rules0.csv</filename>
             </ruleset>

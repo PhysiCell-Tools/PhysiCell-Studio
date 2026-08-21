@@ -1,6 +1,7 @@
 import os
 import sys
 import glob
+import shutil
 import zipfile
 import time
 import traceback
@@ -547,7 +548,14 @@ class ImportBIWTDataWindow(QWidget):
         hid, name = self.history_datasets[row]
 
         try:
-            biwt_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>
+            biwt_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>, no extension
+            ext = Path(name).suffix
+            if ext:
+                # biwt's loader dispatches on file suffix; the bare "/import/<hid>"
+                # path from get() has none, so give it a named copy to read instead.
+                named_file = f"{biwt_file}{ext}"
+                shutil.copyfile(biwt_file, named_file)
+                biwt_file = named_file
             if self.biwt_widget is not None:
                 self.biwt_widget._import_file(biwt_file)
 
