@@ -43,39 +43,26 @@ try:
     HAVE_BIWT_PACKAGE = True
     BIWT_IMPORT_ERROR = None
 
-    # Monkey-patch: override BioinformaticsWalkthrough._import_cb before any
-    # instance is created. __init__ does
+    # Monkey-patch target: replaces BioinformaticsWalkthrough._import_cb so the
+    # "Import file…" button pulls from the Galaxy History rather than a local file
+    # dialog. Only defined here — it is installed in ICs.__init__, which is the first
+    # point that knows whether this is a Galaxy session. __init__ does
     #   self.import_button.clicked.connect(self._import_cb)
-    # which resolves self._import_cb (and thus this class attribute) at
-    # connect time, so patching here — before create_biwt_widget() is ever
-    # called — is early enough for the signal to pick up our version.
-    def _biwt_import_cb(self) -> None:
-        # if self.xml_creator.nanohub_flag or self.xml_creator.galaxy_flag:
-        if self.xml_creator.galaxy_flag:
-            # Kept as an attribute (not a local) so the window isn't garbage-collected
-            # once this callback returns; load_biwt_data_cb calls back into
-            # self._import_file() on this widget once the Galaxy data is copied in.
-            self._galaxy_import_win = ImportBIWTDataWindow()
-            self._galaxy_import_win.xml_creator = self.xml_creator
-            self._galaxy_import_win.biwt_widget = self
-            self._galaxy_import_win.show()
-        else:
-            path, _ = QFileDialog.getOpenFileName(
-                self,
-                "Import single-cell data",
-                "",
-                "Supported files (*.h5ad *.rds *.rda *.rdata *.csv);;All files (*)",
-            )
-            if not path:
-                return
-            self._import_file(path)
+    # which resolves self._import_cb (and thus this class attribute) at connect time,
+    # so the patch has to land before create_biwt_widget() builds the widget.
+    def _biwt_import_cb(biwt_widget) -> None:
+        # Kept as an attribute (not a local) so the window isn't garbage-collected
+        # once this callback returns; load_biwt_data_cb calls back into
+        # biwt_widget._import_file() on this widget once the Galaxy data is copied in.
+        # The window needs nothing from Studio but this widget itself.
+        biwt_widget._galaxy_import_win = ImportBIWTDataWindow(biwt_widget)
+        biwt_widget._galaxy_import_win.show()
 
-    BioinformaticsWalkthrough._import_cb = _biwt_import_cb
 except Exception as e:
     # Catch more than ImportError: an installed biwt whose own import raises
     # something else (e.g. a binary dependency failing at load) would otherwise
     # take Studio down at startup instead of falling back to the legacy tab.
-    from biwt_tab import BioinformaticsWalkthrough
+    from biwt_tab import BioinformaticsWalkthrough as LegacyBioinformaticsWalkthrough
     HAVE_BIWT_PACKAGE = False
     # Keep the reason: a missing 'biwt' means "not installed", but a failure raised
     # from *inside* biwt (missing transitive dep, partial install, bad binary dep)
@@ -225,9 +212,16 @@ class ICs(StudioTab):
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
         if self.biwt_flag:
             if HAVE_BIWT_PACKAGE:
+                # Galaxy only. ImportBIWTDataWindow lists the Galaxy History through
+                # galaxy_ie_helpers, so installing it anywhere else (nanohub, desktop)
+                # would trade a working file dialog for an empty list. Everywhere else
+                # the class attribute is left alone and biwt's own _import_cb runs.
+                # Has to precede _create_biwt_package_tab() — see _biwt_import_cb.
+                if self.xml_creator.galaxy_flag:
+                    BioinformaticsWalkthrough._import_cb = _biwt_import_cb
                 self.biwt_tab = self._create_biwt_package_tab()
             else:
-                self.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
+                self.biwt_tab = LegacyBioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
             biwt_tab_index = self.tab_widget.addTab(self.biwt_tab, "BIWT")
             if not HAVE_BIWT_PACKAGE:
                 # The built-in BIWT tab is deprecated in favor of the standalone
@@ -2421,14 +2415,10 @@ class ICs(StudioTab):
         except Exception:
             cell_template_paths = []
 
-        widget = create_biwt_widget(self._build_biwt_input, on_complete=self._biwt_complete,
+        biwt_widget = create_biwt_widget(self._build_biwt_input, on_complete=self._biwt_complete,
                                   host_name="Studio",
                                   cell_template_paths=cell_template_paths)
-        # _biwt_import_cb (monkey-patched onto BioinformaticsWalkthrough above) reads
-        # self.xml_creator.galaxy_flag; the widget has no such attribute on its own,
-        # so hand it the same xml_creator this ICs tab was built with.
-        widget.xml_creator = self.xml_creator
-        return widget
+        return biwt_widget
 
     def _biwt_complete(self, result) -> None:
         """Called by the biwt package when the walkthrough finishes.

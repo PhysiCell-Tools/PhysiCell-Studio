@@ -468,15 +468,16 @@ def download_all_zipped_galaxy(self):
 
 #-----------------------------------------------------------------
 class ImportBIWTDataWindow(QWidget):
-    def __init__(self):
+    def __init__(self, biwt_widget):
         super().__init__()
 
         stylesheet = """
             QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
             """
 
-        self.xml_creator = None    # set by caller
-        self.biwt_widget = None    # set by caller; the BioinformaticsWalkthrough instance to import into
+        # Required, and not a Qt parent — this is a top-level window. It is the
+        # BioinformaticsWalkthrough instance to import into.
+        self.biwt_widget = biwt_widget
         self.history_datasets = []    # [(hid, name), ...] currently listed
 
         self.setStyleSheet(stylesheet)
@@ -556,8 +557,8 @@ class ImportBIWTDataWindow(QWidget):
                 named_file = f"{biwt_file}{ext}"
                 shutil.copyfile(biwt_file, named_file)
                 biwt_file = named_file
-            if self.biwt_widget is not None:
-                self.biwt_widget._import_file(biwt_file)
+
+            self.biwt_widget._import_file(biwt_file)
 
         except FileNotFoundError:
             msg = f"Error: The file for '{name}' was not found."
