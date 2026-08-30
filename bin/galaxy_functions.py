@@ -25,9 +25,12 @@ except:
     pass
 
 
-def _list_history_datasets(history_id=None):
+def _list_history_datasets(history_id=None, suffixes=None):
     """(hid, name) pairs, sorted by hid, for visible/successful datasets in the
-    current Galaxy History -- the names shown to the user in the load windows."""
+    current Galaxy History -- the names shown to the user in the load windows.
+
+    suffixes: optional tuple/list of lowercase file extensions (e.g. ('.zip',))
+    to restrict the listing to; unfiltered when None."""
     entries = get_user_history(history_id=history_id)
     datasets = [
         (d['hid'], d['name'])
@@ -35,8 +38,9 @@ def _list_history_datasets(history_id=None):
         if d.get('history_content_type', 'dataset') == 'dataset'
         and d.get('state', 'ok') == 'ok'
         and not d.get('deleted', False)
+        and (suffixes is None or d['name'].lower().endswith(tuple(suffixes)))
     ]
-    datasets.sort(key=lambda t: t[0])
+    datasets.sort(key=lambda t: t[0], reverse=True)
     return datasets
 
 #-----------------------------------------------------------------
@@ -215,7 +219,7 @@ class LoadProjectWindow(QWidget):
         self.history_list.clear()
         self.history_datasets = []
         try:
-            self.history_datasets = _list_history_datasets()
+            self.history_datasets = _list_history_datasets(suffixes=('.zip',))
         except Exception:
             return    # leave the list empty; user can hit Refresh again once History is ready
         for hid, name in self.history_datasets:
@@ -506,7 +510,7 @@ class ImportBIWTDataWindow(QWidget):
 
         idx_row += 1
         msg = ("Datasets currently in your Galaxy History are listed above by name.\n"
-               "Select a single-cell data file (*.h5ad, *.rds, *.rda, *.rdata, *.csv)\n"
+               "Select a single-cell data file (*.h5ad, *.csv)\n"
                "(or double-click it) then Load.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
@@ -535,7 +539,7 @@ class ImportBIWTDataWindow(QWidget):
         self.history_list.clear()
         self.history_datasets = []
         try:
-            self.history_datasets = _list_history_datasets()
+            self.history_datasets = _list_history_datasets(suffixes=('.csv', '.h5ad'))
         except Exception:
             return    # leave the list empty; user can hit Refresh again once History is ready
         for hid, name in self.history_datasets:
