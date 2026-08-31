@@ -1231,7 +1231,7 @@ class VisBase():
         try:
             self.celltype_name.clear()
             uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
-            if uep:
+            if uep is not None:
                 idx = 0
                 for var in uep.findall('cell_definition'):
                     name = var.attrib['name']
@@ -2263,7 +2263,7 @@ class VisBase():
 
         #-------------------
         vars_uep = xml_root.find(".//microenvironment//domain//variables")
-        if vars_uep:
+        if vars_uep is not None:
             sub_names = []
             for var in vars_uep:
             # self.substrate.clear()

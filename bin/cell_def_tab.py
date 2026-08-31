@@ -5779,7 +5779,7 @@ class CellDef(StudioTab):
         self.secretion_substrate_dropdown.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
         # vp = []   # pointers to <variable> nodes
-        if uep:
+        if uep is not None:
             idx = 0
             for var in uep.findall('variable'):
                 # vp.append(var)
@@ -5799,7 +5799,7 @@ class CellDef(StudioTab):
             return
         self.pd_substrate_combobox.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
-        if uep:
+        if uep is not None:
             idx = 0
             for var in uep.findall('variable'):
                 # vp.append(var)
@@ -5826,7 +5826,7 @@ class CellDef(StudioTab):
         self.cell_adhesion_affinity_dropdown.clear()
         uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
         # vp = []   # pointers to <variable> nodes
-        if uep:
+        if uep is not None:
             idx = 0
             for i, var in enumerate(uep.findall('cell_definition')):
                 # vp.append(var)
@@ -7033,7 +7033,7 @@ class CellDef(StudioTab):
     #-------------------------------------------------------------------
     def first_cell_def_name(self):
         uep = self.xml_root.find(".//cell_definitions//cell_definition")
-        if uep:
+        if uep is not None:
                 return(uep.attrib['name'])
 
     def iterate_tree(self, node, count, subs):
@@ -7976,7 +7976,7 @@ class CellDef(StudioTab):
         # print("\n------ updated cell_def custom_data:")
         # print(self.param_d[cdef]['custom_data'])
 
-        if elm:
+        if elm is not None:
             elm.tail = self.indent8   # back up 2 for the very last one
 
         # if self.debug_print_fill_xml:
@@ -8012,7 +8012,7 @@ class CellDef(StudioTab):
                 par_elm = ET.SubElement(dist_elm, par_name)
                 par_elm.text = par_value
 
-        if elm:
+        if elm is not None:
             elm.tail = self.indent8   # back up 2 for the very last one
 
     #-------------------------------------------------------------------
@@ -8021,7 +8021,7 @@ class CellDef(StudioTab):
         logging.debug(f'\n\n----------- cell_def_tab.py: fill_xml(): ----------')
 
         uep = self.xml_root.find('.//cell_definitions') # guaranteed to exist since we start with a valid model
-        if uep:
+        if uep is not None:
             # Begin by removing all previously defined cell defs in the .xml
             for cell_def in uep.findall('cell_definition'):
                 uep.remove(cell_def)

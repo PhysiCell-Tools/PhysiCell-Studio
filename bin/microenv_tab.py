@@ -1270,7 +1270,7 @@ class SubstrateDef(QWidget):
     def populate_tree(self):
         logging.debug(f'=======================  microenv populate_tree  ======================= ')
         uep = self.xml_root.find(".//microenvironment_setup")
-        if uep:
+        if uep is not None:
 
             self.tree.clear()
             idx = 0
@@ -1343,7 +1343,7 @@ class SubstrateDef(QWidget):
 
                     self.dirichlet_options_exist = True  # rwh/todo - how to handle this?
                     options_path = var_path.find('.//Dirichlet_options')
-                    if options_path:
+                    if options_path is not None:
                         for bv in options_path:
                             logging.debug(f'bv = {bv}')
                             if "xmin" in bv.attrib['ID'].lower():
@@ -1519,7 +1519,7 @@ class SubstrateDef(QWidget):
     #----------------------------------------------------------------------------
     def first_substrate_name(self):
         uep = self.xml_root.find(".//microenvironment_setup//variable")
-        if uep:
+        if uep is not None:
                 return(uep.attrib['name'])
 
             #----------------------------------------------------------------------------
@@ -1538,7 +1538,7 @@ class SubstrateDef(QWidget):
         logging.debug(f'----------- microenv_tab.py: fill_xml(): ----------')
         uep = self.xml_root.find('.//microenvironment_setup') # guaranteed to exist since we start with a valid model
         vp = []   # pointers to <variable> nodes
-        if uep:
+        if uep is not None:
             # Begin by removing all previously defined substrates in the .xml
             for var in uep.findall('variable'):
                 uep.remove(var)

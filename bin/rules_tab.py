@@ -2078,7 +2078,7 @@ class Rules(StudioTab):
         #----------------------------------
         uep = self.xml_root.find(".//cell_rules//rulesets//ruleset")
         # print(f'rules_tab.py: fill_gui(): <cell_rules> =  {uep}')
-        if uep:
+        if uep is not None:
             folder_name = uep.find(".//folder").text
             # print(f'rules_tab.py: fill_gui():  folder_name =  {folder_name}')
             self.rules_folder.setText(folder_name)
@@ -2147,7 +2147,7 @@ class Rules(StudioTab):
 
         # ---- v3
         uep = self.xml_root.find(".")
-        if not self.xml_root.find(".//cell_rules"):
+        if self.xml_root.find(".//cell_rules") is None:
             enabled_flag = "false"
             if self.rules_enabled.isChecked():
                 enabled_flag = "true"

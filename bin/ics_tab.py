@@ -2580,7 +2580,7 @@ class ICs(StudioTab):
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.substrate_combobox.clear()
         uep = self.xml_creator.config_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
-        if uep:
+        if uep is not None:
             idx = 0
             num_vars = len(uep.findall('variable'))
             self.all_substrate_values = np.zeros((self.ny, self.nx, num_vars))

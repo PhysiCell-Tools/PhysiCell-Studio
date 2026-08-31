@@ -990,7 +990,7 @@ class Vis(VisBase, QWidget):
 
         #-------------------
         vars_uep = xml_root.find(".//microenvironment//domain//variables")
-        if vars_uep:
+        if vars_uep is not None:
             sub_names = []
             for var in vars_uep:
             # self.substrate.clear()

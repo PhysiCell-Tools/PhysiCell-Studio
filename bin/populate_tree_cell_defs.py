@@ -151,7 +151,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
     validate_cell_defs(uep, skip_validate)
 
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
-    if uep:
+    if uep is not None:
         cell_def_tab.tree.clear()
         for idx, cell_def in enumerate(uep):
             # <cell_definition name="default" ID="0">
@@ -270,7 +270,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
             pt_uep = None
             for path in possible_paths:
                 pt_uep = uep.find(path)
-                if pt_uep:
+                if pt_uep is not None:
                     break
             if path.endswith("//transition_rates"):
                 logging.debug(f'\n\n--------------------- NOTE -----------------------------')
@@ -520,7 +520,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
             logging.debug(f'mechanics_path={mechanics_path}')
             try:
                 is_movable_tag =  uep.find(mechanics_path+"is_movable")
-                if is_movable_tag:
+                if is_movable_tag is not None:
                     val =  uep.find(mechanics_path+"is_movable").text
                     if val.lower() == 'true':
                         cell_def_tab.param_d[cell_def_name]["is_movable"] = True
@@ -1226,7 +1226,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
             # to call 'append_more_cb' for the excess.
             cell_def_tab.custom_var_count = 0
             cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
-            if uep_custom_data:
+            if uep_custom_data is not None:
                 logging.debug(f'--------------- populate_tree: (empty)custom_data = {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
                 for var in uep_custom_data:
                     val = var.text
@@ -1258,7 +1258,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
                 
             cell_def_tab.param_d[cell_def_name]["par_dists"] = {}
             uep_par_dists = cell_def_tab.xml_root.find(f"{cell_definition_path}//initial_parameter_distributions")
-            if uep_par_dists:
+            if uep_par_dists is not None:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = uep_par_dists.attrib["enabled"].lower() != "true"
                 for par_dist in uep_par_dists:
                     # get behavior element of par_dist
@@ -1307,7 +1307,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
     #----------------------------------
     # at the end of <cell_definitions>
     uep_cell_rules = cell_def_tab.xml_root.find(".//cell_definitions//cell_rules")
-    if uep_cell_rules:
+    if uep_cell_rules is not None:
         rules_folder = uep_cell_rules.find(".//folder").text 
         rules_file = uep_cell_rules.find(".//filename").text 
         logging.debug(f'------- populate_tree_cell_defs.py: setting rules.csv folder = {rules_folder}')
