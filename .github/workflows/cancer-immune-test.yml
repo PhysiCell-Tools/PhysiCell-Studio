@@ -1,0 +1,39 @@
+name: cancer_immune model regression test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-simulation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download latest PhysiCell template-linux release asset
+        run: |
+          curl -sL -o template-linux.tar.gz \
+            "https://github.com/MathCancer/PhysiCell/releases/latest/download/template-linux.tar.gz"
+
+      - name: Extract and install the project executable
+        run: |
+          tmpdir=$(mktemp -d)
+          tar -xzf template-linux.tar.gz -C "$tmpdir"
+          cp "$tmpdir/project" tests/project
+          chmod +x tests/project
+          rm -rf "$tmpdir" template-linux.tar.gz
+
+      - name: Run the simulation
+        working-directory: tests
+        run: ./project config/cancer_immune_model.xml
+
+      - name: Verify output snapshot matches groundtruth
+        working-directory: tests
+        run: |
+          diff_lines=$(diff output/snapshot00000012.svg groundtruth/cancer_immune/snapshot00000012.svg | wc -l)
+          echo "diff line count: $diff_lines"
+          if [ "$diff_lines" -ne 4 ]; then
+            echo "::error::Expected 4 diff lines between output and groundtruth SVG, got $diff_lines"
+            exit 1
+          fi
