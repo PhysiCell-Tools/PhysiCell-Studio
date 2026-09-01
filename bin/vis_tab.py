@@ -429,6 +429,13 @@ class Vis(VisBase, QWidget):
             print("vis_tab.py: plot_svg(): Warning: full_fname not found: ",full_fname)
             return
 
+        if self.output_xmin is None:
+            # No output has been read yet, e.g. during startup when populating the
+            # substrates combobox replots before reset_model() has parsed
+            # initial.xml. Without the domain that produced this .svg there is
+            # nothing to map its coords into; reset_model() replots once it has one.
+            return
+
         self.title_str = ""
 
         xlist = deque()
@@ -467,6 +474,13 @@ class Vis(VisBase, QWidget):
                 break
             numChildren += 1
 
+        # PhysiCell freezes cells that wander out of the domain instead of removing
+        # them, so a cell center just outside it is legitimate. Pad the domain by its
+        # own width so the check below only rejects coords that could not be a cell
+        # position at all, e.g. from a partially written .svg.
+        x_pad = self.output_xmax - self.output_xmin
+        y_pad = self.output_ymax - self.output_ymin
+
         num_cells = 0
         if self.celltype_filter:
             # if the list is not empty, filter the cells
@@ -484,8 +498,8 @@ class Vis(VisBase, QWidget):
                 except:
                     continue
 
-                # map SVG coords into comp domain
-                xval = xval/self.x_range * self.x_range + self.xmin
+                # map SVG coords into the domain that produced them
+                xval += self.output_xmin
 
                 s = circle.attrib['fill']
                 if( s[0:4] == "rgba" ):
@@ -510,14 +524,13 @@ class Vis(VisBase, QWidget):
                     rgba = [1,1,1,1.0]
                     rgba[0:3] = [x for x in rgb_tuple]
 
-                # test for bogus x,y locations (rwh TODO: use max of domain?)
-                too_large_val = 10000.
-                if (np.fabs(xval) > too_large_val):
+                # test for bogus x,y locations
+                if (xval < self.output_xmin - x_pad) or (xval > self.output_xmax + x_pad):
                     print("bogus xval=", xval)
                     break
                 yval = float(circle.attrib['cy'])
-                yval = yval/self.y_range * self.y_range + self.ymin
-                if (np.fabs(yval) > too_large_val):
+                yval += self.output_ymin
+                if (yval < self.output_ymin - y_pad) or (yval > self.output_ymax + y_pad):
                     print("bogus yval=", yval)
                     break
 
@@ -657,9 +670,10 @@ class Vis(VisBase, QWidget):
         if self.cax2:
             try:
                 self.cax2.remove()
-                self.cax2 = None
             except:
                 pass
+            self.cax2 = None
+            self.cbar2 = None   # its Axes is gone; do not draw into it again
    
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
@@ -674,7 +688,7 @@ class Vis(VisBase, QWidget):
         boolean_colors = ["green", "red", "grey"]
         
         # Creating empty plots to add the legend
-        lp = lambda i: plt.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
+        lp = lambda i: self.ax0.plot([],color=boolean_colors[i], ms=np.sqrt(81), mec="none",
                                 label="Feature {:g}".format(i), ls="", marker="o")[0]
         handles = [lp(i) for i in range(3)]
         try: # cautionary for out of date mpl versions, e.g., nanoHUB
@@ -830,14 +844,15 @@ class Vis(VisBase, QWidget):
             if self.cax2 is not None:
                 try:
                     self.cax2.remove()
-                    self.cax2 = None
                 except:
                     pass
+                self.cax2 = None
+                self.cbar2 = None   # its Axes is gone; do not draw into it again
             # Coloring the cells as it used to be
             cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
             
             # Creating empty plots to add the legend
-            lp = lambda i: plt.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
+            lp = lambda i: self.ax0.plot([],color=cmaps.paint_clist[i], ms=np.sqrt(81), mec="none",
                                     label="Feature {:g}".format(i), ls="", marker="o")[0]
             handles = [lp(self.discrete_variable.index(i)) for i in sorted(list(self.discrete_variable_observed)) if i in self.discrete_variable]
             try: # cautionary for out of date mpl versions, e.g., nanoHUB
@@ -849,16 +864,15 @@ class Vis(VisBase, QWidget):
             # If it's not there, we create it
             if self.cax2 is None:
                 self.cax2 = self.figure.add_subplot(self.gs[1,0])
-                # added 5/11/26 to fix toggling back to .mat after .svg
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-                self.cell_scalar_updated = False
+                self.cbar2 = None   # a new Axes needs its own Colorbar
+
             if self.cbar2 is None:
                 self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-            elif self.cell_scalar_updated:
-                self.cbar2 = self.figure.colorbar(cell_plot, ticks=None, cax=self.cax2, orientation="horizontal")
-                self.cell_scalar_updated = False
-            else:  # called on continuous "Play" plots; range auto-updates
-                self.cbar2.update_normal(cell_plot)  # partial fix for memory leak
+            else:
+                # Never build a second Colorbar on a live cax2: each one chains itself onto the
+                # previous via cax2._axes_locator and pins that frame's cell PatchCollection forever.
+                # update_normal() picks up a new cmap and range just as well.
+                self.cbar2.update_normal(cell_plot)
 
             self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
@@ -1009,7 +1023,10 @@ class Vis(VisBase, QWidget):
                 self.cax1 = None
         elif (self.substrate_grad):
             if self.cax1:
-                self.cax1.remove()
+                try:
+                    self.cax1.remove()
+                except:
+                    pass
                 self.cax1 = None
             self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:
@@ -1021,7 +1038,10 @@ class Vis(VisBase, QWidget):
             self.cbar1.set_label(self.substrate_name + " (gradient norm)", fontsize=self.cbar_label_fontsize)
         else:
             if self.cax1:
-                self.cax1.remove()  # replace/update the colorbar
+                try:
+                    self.cax1.remove()  # replace/update the colorbar
+                except:
+                    pass
                 self.cax1 = None
             self.cax1 = self.figure.add_subplot(self.gs[0,1])
             try:

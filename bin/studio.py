@@ -55,6 +55,8 @@ from settings import StudioSettings
 
 from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history, \
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
+from python_shell import open_python_shell
+from project_io import ProjectIO
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
@@ -82,6 +84,20 @@ else:
 def SingleBrowse(self):
     filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
 
+def add_menu_separator(menu, color="#888888", thickness=1, v_margin=3, h_margin=8):
+    """Add a visible horizontal separator to a QMenu via QWidgetAction."""
+    line = QLabel()
+    line.setFixedHeight(thickness)
+    line.setStyleSheet(f"background-color: {color}; border: none;")
+    wrapper = QWidget()
+    layout = QVBoxLayout(wrapper)
+    layout.setContentsMargins(h_margin, v_margin, h_margin, v_margin)
+    layout.setSpacing(0)
+    layout.addWidget(line)
+    action = QWidgetAction(menu)
+    action.setDefaultWidget(wrapper)
+    menu.addAction(action)
+
 def startup_notice():
     msgBox = QMessageBox()
     msgBox.setIcon(QMessageBox.Information)
@@ -96,8 +112,42 @@ def quit_cb():
     global studio_app
     studio_app.quit()
 
+def xml_has_pkpd_elements(xml_root):
+    return xml_root.find(".//PK") is not None or xml_root.find(".//PD") is not None
+
+def pkpd_not_found_notice():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.RichText)
+    msgBox.setText("The --pkpd flag was passed, but no PhysiPKPD elements (&lt;PK&gt; or &lt;PD&gt;) were found in this config file. "
+                    "This may mean PhysiPKPD was not included when your project was compiled. "
+                    "Visit <a href=\"https://github.com/drbergman-lab/PhysiPKPD.git\">https://github.com/drbergman-lab/PhysiPKPD.git</a> to add PhysiPKPD to your project.")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    msgBox.exec()
+
+def pkpd_flag_missing_notice():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.PlainText)
+    msgBox.setText("This config file contains PhysiPKPD elements (<PK> and/or <PD>), but Studio was launched without the --pkpd flag. "
+                    "You will not be able to view or edit these parameters, and saving from this session will permanently remove them from the file. "
+                    "Re-launch with --pkpd to preserve and edit them.")
+    msgBox.setStandardButtons(QMessageBox.Ok)
+    msgBox.exec()
+
+def confirm_save_without_pkpd():
+    msgBox = QMessageBox()
+    msgBox.setIcon(QMessageBox.Warning)
+    msgBox.setTextFormat(Qt.PlainText)
+    msgBox.setText("This config file contains PhysiPKPD elements (<PK> and/or <PD>), but Studio was launched without the --pkpd flag. "
+                    "Saving now will permanently remove those elements from the file. "
+                    "Cancel and re-launch with --pkpd if you want to keep them.")
+    msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+    msgBox.setDefaultButton(QMessageBox.Cancel)
+    return msgBox.exec() == QMessageBox.Ok
+
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
         if model3D_flag:
@@ -127,6 +177,7 @@ class PhysiCellXMLCreator(QWidget):
         self.ecm_flag = False 
         self.pytest_flag = pytest_flag 
         self.biwt_flag = biwt_flag
+        self.pkpd_flag = pkpd_flag
         self.samples_flag = samples_flag
 
         self.rules_tab_index = None
@@ -173,6 +224,8 @@ class PhysiCellXMLCreator(QWidget):
                 msgBox.setStandardButtons(QMessageBox.Ok)
                 returnValue = msgBox.exec()
 
+        self.project_io = ProjectIO(self)
+
         # Menus
         vlayout = QVBoxLayout(self)
         menuWidget = QWidget(self.menu())
@@ -211,7 +264,12 @@ class PhysiCellXMLCreator(QWidget):
             sys.exit(-1)
 
         self.xml_root = self.tree.getroot()
-        # print(f"studio: (default) self.xml_root = {self.xml_root}")   
+        # print(f"studio: (default) self.xml_root = {self.xml_root}")
+
+        if self.pkpd_flag and not xml_has_pkpd_elements(self.xml_root):
+            pkpd_not_found_notice()
+        elif not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            pkpd_flag_missing_notice()
 
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
@@ -231,7 +289,7 @@ class PhysiCellXMLCreator(QWidget):
             self.config_tab.folder.setText('.')
             self.config_tab.csv_folder.setEnabled(False)
 
-        self.microenv_tab = SubstrateDef(self.config_tab)
+        self.microenv_tab = SubstrateDef(self.config_tab, self.pkpd_flag)
         self.microenv_tab_index = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
@@ -248,10 +306,11 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: first_cell_def_name= {cd_name}')
         self.celldef_tab.config_path = self.current_xml_file
 
+
         self.celldef_tab.fill_substrates_comboboxes() # do before populate? Yes, assuming we check for cell_def != None
 
         # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag, pkpd_flag=self.pkpd_flag)
         # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
 
 
@@ -368,7 +427,7 @@ class PhysiCellXMLCreator(QWidget):
             self.enablePlotTab(False)
             self.enablePlotTab(True)
 
-            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab)  # pass in dict eventually
+            self.studio_settings = StudioSettings(self, self.fix_min_size, self.vis_tab, self.galaxy_flag)  # pass in dict eventually
 
             self.run_tab.vis_tab = self.vis_tab
             logging.debug(f'studio.py: calling vis_tab.substrates_cbox_changed_cb(2)')
@@ -480,14 +539,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             """
         # QString style = "QMenuBar::item:selected { background: white; } QMenuBar::item:pressed {  background: white; }"
         menubar.setStyleSheet("color: black")
-        # menubar.setStyleSheet(stylesheet)
 
         #--------------
         studio_menu = menubar.addMenu('&Studio')
         studio_menu.addAction("About", self.about_studio)
         studio_menu.addAction("Settings", self.settings_studio_cb)
         if not self.nanohub_flag:
-            studio_menu.addSeparator()
+            add_menu_separator(studio_menu)
             studio_menu.addAction("Quit", quit_cb)
 
         #-----
@@ -500,25 +558,17 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_menu = None
 
             if not self.galaxy_flag:
-                file_menu.addAction("Open", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
-                file_menu.addAction("Save as", self.save_as_cb)
-                file_menu.addAction("Save", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
-
-                export_menu = file_menu.addMenu("Export")
-
-                simularium_act = QAction('Simularium', self)
-                export_menu.addAction(simularium_act)
-                simularium_act.triggered.connect(self.simularium_cb)
-                if not self.studio_flag:
-                    print("simularium_installed is ",simularium_installed)
-                    export_menu.setEnabled(False)
+                file_menu.addAction("Open .xml", self.open_as_cb, QtGui.QKeySequence('Ctrl+o'))
+                file_menu.addAction("Save .xml", self.save_cb, QtGui.QKeySequence('Ctrl+s'))
+                file_menu.addAction("Save as .xml", self.save_as_cb)
 
                 #------
-                file_menu.addSeparator()
-                file_menu.addAction("Save user project", self.save_user_proj_cb)
-                file_menu.addAction("Load user project", self.load_user_proj_cb)
+                add_menu_separator(file_menu)
+                user_proj_menu = file_menu.addMenu("User project")
+                user_proj_menu.addAction("Save", self.save_user_proj_cb)
+                user_proj_menu.addAction("Load", self.load_user_proj_cb)
 
-                file_menu.addSeparator()
+                add_menu_separator(file_menu)
 
                 if PHYSIBOSS_MODELS_IMPORTED and self.physiboss_models_flag:
                     self.physiboss_models_menu = file_menu.addMenu("Load from PhysiBoSS-Models")
@@ -540,13 +590,24 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                                 )
                     except:
                         pass
-            else:
+
+            else:   # Galaxy options
                 file_menu.addAction("Open", self.open_as_cb)
                 file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
                 file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
 
             #------
+            add_menu_separator(file_menu)
+            file_menu.addAction("Export project - GitHub", self.project_io.export_project_github)
+            file_menu.addAction("Import project - GitHub", self.project_io.import_project_github)
+
+            if not self.galaxy_flag:
+                add_menu_separator(file_menu)
+                # generate a .simularium output file using results in the output dir
+                file_menu.addAction("Simularium export", self.simularium_cb)
+
             if self.samples_flag:
+                add_menu_separator(file_menu)
                 self.sample_models_menu = file_menu.addMenu("Load sample")
                 self.sample_models_menu.addAction("zombies & villagers", self.load_zombies_villagers_cb)
                 self.sample_models_menu.addAction("cancer,immune,drug", self.load_cancer_immune_drug_cb)
@@ -577,6 +638,9 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             self.download_zipped_csv_item = self.download_menu.addAction("all_csv.zip", lambda: download_zipped_csv_galaxy(self))
             self.download_all_zipped_item = self.download_menu.addAction("all_output.zip", lambda: download_all_zipped_galaxy(self))
 
+            add_menu_separator(misc_menu)
+            misc_menu.addAction("Python shell", self.open_python_shell_cb)
+
         if not self.nanohub_flag and not self.galaxy_flag:
             action_menu = menubar.addMenu('&Action')
             action_menu.addAction("Run", self.run_model_cb, QtGui.QKeySequence('Ctrl+r'))
@@ -586,7 +650,13 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             guide_act = help_menu.addAction("User Guide (link)", self.open_help_url)
             issues_act = help_menu.addAction("Create Issue (link)", self.create_issue_url)
 
+        # on Galaxy, use ctl-shift; on Mac, cmd-shift (although probably don't need on desktop Studio)
+        QShortcut(QtGui.QKeySequence('Ctrl+Shift+P'), self, self.open_python_shell_cb)
+
         menubar.adjustSize()  # Argh. Otherwise, only 1st menu appears, with ">>" to others!
+
+    def open_python_shell_cb(self):
+        self._python_shell = open_python_shell(parent=self, local_vars={'studio': self})
 
     def open_help_url(self):
         url = QtCore.QUrl('https://github.com/PhysiCell-Tools/Studio-Guide/blob/main/README.md')
@@ -609,6 +679,12 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
         # print(f"\nreset_xml_root() self.tree = {self.tree}")
         self.xml_root = self.tree.getroot()
         # print(f"reset_xml_root() self.xml_root = {self.xml_root}")
+
+        if self.pkpd_flag and not xml_has_pkpd_elements(self.xml_root):
+            pkpd_not_found_notice()
+        elif not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            pkpd_flag_missing_notice()
+
         self.config_tab.xml_root = self.xml_root
         self.microenv_tab.xml_root = self.xml_root
         self.celldef_tab.xml_root = self.xml_root
@@ -630,7 +706,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         self.celldef_tab.config_path = self.current_xml_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag, pkpd_flag=self.pkpd_flag)
 
         self.celldef_tab.fill_celltypes_comboboxes()
 
@@ -807,6 +883,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
     #---------------------------------
     def update_xml_from_gui(self):
+        if not self.pkpd_flag and xml_has_pkpd_elements(self.xml_root):
+            if not confirm_save_without_pkpd():
+                return False
+
         if not self.user_params_tab.validate_utable():
             self.run_tab.enable_run(True)
             return False
@@ -1521,6 +1601,7 @@ def main():
     is_movable_flag = False
     pytest_flag = False
     biwt_flag = False
+    pkpd_flag = False
     samples_flag = False
     try:
         parser = argparse.ArgumentParser(description='PhysiCell Studio.')
@@ -1535,6 +1616,7 @@ def main():
         parser.add_argument("-c ", "--config", type=str, help="config file (.xml)")
         parser.add_argument("-e ", "--exec", type=str, help="executable model")
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
+        parser.add_argument("--pkpd", help="display PK and PD tabs", action="store_true")
         parser.add_argument("--s","--samples", dest="samples_flag", help="menu for sample projects", action="store_true")
 
         if platform.system() == "Windows":
@@ -1600,6 +1682,8 @@ def main():
                 sys.exit()
         if args.biwt_flag:
             biwt_flag = True
+        if args.pkpd:
+            pkpd_flag = True
         if args.samples_flag:
             samples_flag = True
     except:
@@ -1624,6 +1708,7 @@ def main():
     # studio_app.setApplicationName("Randy's app")   # argh, doesn't work
 
     # print(f'QStyleFactory.keys() = {QStyleFactory.keys()}')   # ['macintosh', 'Windows', 'Fusion']
+    studio_app.setStyle(QStyleFactory.create("Fusion"))  # ensures QSS rules (e.g. menu separators) are honoured on macOS
 
     # Use a palette to help force light-mode (not dark) style
     # Not all seem to be used, but beware/test(!) if changed.
@@ -1656,7 +1741,11 @@ def main():
 
     studio_app.setPalette(palette)
 
-    studio_app.setStyleSheet("QLineEdit { background-color: white };")  # doesn't seem to always work, forcing us to take different approach in, e.g., Cell Types sub-tabs
+        # "QMenu::separator { height: 1px; background: #808080; margin: 2px 8px; }"
+    studio_app.setStyleSheet(
+        "QLineEdit { background-color: white }"
+        "QMenu::separator { height: 9px; background: black; margin: 4px 8px; }"
+    )
 
 
     rules_flag = True
@@ -1674,7 +1763,7 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag)
     # print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes

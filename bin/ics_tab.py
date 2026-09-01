@@ -11,6 +11,7 @@ Rf. Credits.md
 import sys
 import os
 import logging
+import math
 import time
 import csv
 # import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
@@ -27,14 +28,49 @@ from collections import deque
 import glob
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QRadioButton,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
+from PyQt5.QtWidgets import QFrame,QApplication,QWidget,QTabWidget,QFormLayout,QLineEdit, QHBoxLayout,QVBoxLayout,QLabel,QCheckBox,QComboBox,QScrollArea,  QMainWindow,QGridLayout, QPushButton, QFileDialog, QMessageBox, QStackedWidget, QSplitter
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QRegExpValidator
 
 from studio_classes import QHLine, DoubleValidatorWidgetBounded, HoverQuestion, QLineEdit_custom, QCheckBox_custom, DoubleValidatorOpenInterval, StudioTab
 
 from studio_functions import style_sheet_template
-from biwt_tab import BioinformaticsWalkthrough
+from galaxy_functions import ImportBIWTDataWindow
+
+try:
+    from biwt.gui.walkthrough import create_biwt_widget, BioinformaticsWalkthrough
+    from biwt.types import BiwtInput, DomainSpec
+    HAVE_BIWT_PACKAGE = True
+    BIWT_IMPORT_ERROR = None
+
+    # Monkey-patch target: replaces BioinformaticsWalkthrough._import_cb so the
+    # "Import file…" button pulls from the Galaxy History rather than a local file
+    # dialog. Only defined here — it is installed in ICs.__init__, which is the first
+    # point that knows whether this is a Galaxy session. __init__ does
+    #   self.import_button.clicked.connect(self._import_cb)
+    # which resolves self._import_cb (and thus this class attribute) at connect time,
+    # so the patch has to land before create_biwt_widget() builds the widget.
+    def _biwt_import_cb(biwt_widget) -> None:
+        # Kept as an attribute (not a local) so the window isn't garbage-collected
+        # once this callback returns; load_biwt_data_cb calls back into
+        # biwt_widget._import_file() on this widget once the Galaxy data is copied in.
+        # The window needs nothing from Studio but this widget itself.
+        biwt_widget._galaxy_import_win = ImportBIWTDataWindow(biwt_widget)
+        biwt_widget._galaxy_import_win.show()
+
+except Exception as e:
+    # Catch more than ImportError: an installed biwt whose own import raises
+    # something else (e.g. a binary dependency failing at load) would otherwise
+    # take Studio down at startup instead of falling back to the legacy tab.
+    from biwt_tab import BioinformaticsWalkthrough as LegacyBioinformaticsWalkthrough
+    HAVE_BIWT_PACKAGE = False
+    # Keep the reason: a missing 'biwt' means "not installed", but a failure raised
+    # from *inside* biwt (missing transitive dep, partial install, bad binary dep)
+    # lands here too, and reporting that as "not installed" misdirects debugging.
+    if isinstance(e, ImportError):
+        BIWT_IMPORT_ERROR = e
+    else:
+        BIWT_IMPORT_ERROR = ImportError(f"{type(e).__name__}: {e}", name="biwt_import_failed")
 
 import numpy as np
 import matplotlib
@@ -54,7 +90,7 @@ class ICs(StudioTab):
         # self.xml_creator.config_tab = config_tab
         # self.xml_creator = xml_creator
 
-        # self.xml_creator.biwt_flag = biwt_flag
+        self.biwt_flag = self.xml_creator.biwt_flag
         # self.nanohub_flag = nanohub_flag
 
         # self.circle_radius = 100  # will be set in run_tab.py using the .xml
@@ -174,9 +210,26 @@ class ICs(StudioTab):
 
         self.tab_widget = QTabWidget()
         self.base_tab_id = self.tab_widget.addTab(self.create_base_ics_tab(),"Base")
-        if self.xml_creator.biwt_flag:
-            self.xml_creator.biwt_tab = BioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
-            self.tab_widget.addTab(self.xml_creator.biwt_tab,"BIWT")
+        if self.biwt_flag:
+            if HAVE_BIWT_PACKAGE:
+                # Galaxy only. ImportBIWTDataWindow lists the Galaxy History through
+                # galaxy_ie_helpers, so installing it anywhere else (nanohub, desktop)
+                # would trade a working file dialog for an empty list. Everywhere else
+                # the class attribute is left alone and biwt's own _import_cb runs.
+                # Has to precede _create_biwt_package_tab() — see _biwt_import_cb.
+                if self.xml_creator.galaxy_flag:
+                    BioinformaticsWalkthrough._import_cb = _biwt_import_cb
+                self.biwt_tab = self._create_biwt_package_tab()
+            else:
+                self.biwt_tab = LegacyBioinformaticsWalkthrough(self.xml_creator.config_tab, self.xml_creator.celldef_tab, self, self.xml_creator)
+            biwt_tab_index = self.tab_widget.addTab(self.biwt_tab, "BIWT")
+            if not HAVE_BIWT_PACKAGE:
+                # The built-in BIWT tab is deprecated in favor of the standalone
+                # `biwt` package. Warn the user the first time they open the tab
+                # (once per session) and point them to the install instructions.
+                self._legacy_biwt_tab_index = biwt_tab_index
+                self._legacy_biwt_warned = False
+                self.tab_widget.currentChanged.connect(self._on_tab_changed_warn_legacy_biwt)
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(self.tab_widget)
@@ -2225,13 +2278,166 @@ class ICs(StudioTab):
         else:
             print("import_cb():  full_path_model_name is NOT valid")
 
+    # ------------------------------------------------------------------
+    # New biwt package bridge
+    # ------------------------------------------------------------------
+
+    def _on_tab_changed_warn_legacy_biwt(self, index):
+        """Warn once, the first time the user opens the deprecated built-in BIWT tab."""
+        if self._legacy_biwt_warned:
+            return
+        if index != getattr(self, "_legacy_biwt_tab_index", -1):
+            return
+        self._legacy_biwt_warned = True
+        self._warn_legacy_biwt_tab()
+
+    def _warn_legacy_biwt_tab(self):
+        """Warn that the built-in BIWT tab is deprecated and how to switch to
+        the standalone `biwt` package (shown when the package is not installed)."""
+        msgBox = QMessageBox(self)
+        msgBox.setIcon(QMessageBox.Warning)
+        msgBox.setWindowTitle("BIWT: deprecated built-in tab")
+        msgBox.setTextFormat(QtCore.Qt.RichText)
+        msgBox.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        # "not installed" only if the missing module is biwt itself; an ImportError from
+        # inside an installed biwt means a broken/incomplete install, so say that instead.
+        if getattr(BIWT_IMPORT_ERROR, "name", None) in (None, "biwt"):
+            why = ("The <b>biwt</b> package is not installed, so Studio is showing the "
+                   "legacy built-in BIWT tab.")
+        else:
+            from html import escape
+            why = ("The <b>biwt</b> package is installed but could not be imported, so "
+                   "Studio is showing the legacy built-in BIWT tab.<br><br>"
+                   f"<i>{escape(str(BIWT_IMPORT_ERROR))}</i><br><br>"
+                   "This usually means a dependency is missing or the install is "
+                   "incomplete -- reinstalling biwt normally fixes it.")
+
+        msgBox.setText(
+            f"{why}<br><br>"
+            "This built-in tab is <b>deprecated</b> and will be removed in a future release. "
+            "Install the standalone <b>biwt</b> package to keep using BIWT:"
+            "<pre>conda activate studio\npip install biwt</pre>"
+            "For installing BIWT alongside Studio's dependencies, see "
+            "<a href=\"https://github.com/PhysiCell-Tools/PhysiCell-Studio/blob/main/doc/BIWT.md\">Studio's BIWT doc</a>; "
+            "for the package's own installation guide and troubleshooting, see the "
+            "<a href=\"https://drbergman-lab.github.io/biwt/getting-started/installation/\">BIWT documentation</a>. "
+            "See also the "
+            "<a href=\"https://github.com/PhysiCell-Tools/Studio-Guide\">PhysiCell Studio Guide</a>."
+        )
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
+
+    def _domain_from_config_tab(self):
+        """A DomainSpec describing this model's domain, or None if it is unusable.
+
+        All six bounds, z included: BIWT places cells in whatever domain it is given, and
+        Studio offers to adopt the one it gets back. Sending only x and y would leave z at
+        DomainSpec's own -10/+10, so a 3D model would come back as a 2D slab and adopting
+        that would flatten it.
+
+        Usable means what it means to BIWT: every bound a finite number, and lo strictly
+        below hi on every axis. Equal bounds are not usable -- a zero-width axis divides by
+        zero in BIWT's placement scaling.
+
+        Returns None rather than substituting numbers of its own. BiwtInput then falls back
+        to BIWT's default and reports the domain as coming from BIWT, which is true and
+        visible in the completion dialog; quietly passing an invented +/-500 would be
+        reported as coming from Studio, which is not.
+        """
+        names = ("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
+        try:
+            ct = self.xml_creator.config_tab
+            bounds = {name: float(getattr(ct, name).text()) for name in names}
+        except (ValueError, AttributeError, TypeError):
+            return None
+
+        if not all(math.isfinite(value) for value in bounds.values()):
+            return None
+        for lo, hi in (("xmin", "xmax"), ("ymin", "ymax"), ("zmin", "zmax")):
+            if bounds[lo] >= bounds[hi]:
+                return None
+
+        return DomainSpec(**bounds)
+
+    def _build_biwt_input(self):
+        """What this model currently holds. Called by BIWT at the start of each run.
+
+        Only what can change while Studio is open -- BiwtInput carries nothing else, so the
+        name and the template library are given once, at _create_biwt_package_tab().
+
+        Names BiwtInput and DomainSpec, so it only runs where they imported: reached solely
+        from _create_biwt_package_tab(), itself guarded by HAVE_BIWT_PACKAGE.
+
+        Must not raise. BIWT refuses the import outright if this fails -- no session, no
+        walkthrough, just a dialog naming Studio -- so every read here degrades to a usable
+        default instead. It can be called while Studio is mid-reload, and losing the user's
+        import because a tab was momentarily unreadable would be a poor trade.
+        """
+        # Deliberately broad: the point is that nothing reaches BIWT as an exception. Each of
+        # these is a read of live GUI state whose absence is survivable on its own.
+        try:
+            host_cell_type_names = list(self.xml_creator.celldef_tab.param_d.keys())
+        except Exception:
+            host_cell_type_names = []
+
+        # DomainSpec.default() rather than bounds of Studio's own invention when this model's
+        # domain is unusable: it reports source="default", so BIWT tells the user the domain
+        # came from BIWT. Anything Studio made up would arrive labelled as Studio's.
+        try:
+            domain = self._domain_from_config_tab()
+        except Exception:
+            domain = None
+
+        return BiwtInput(
+            host_cell_type_names=host_cell_type_names,
+            preferred_domain=domain if domain is not None else DomainSpec.default(),
+        )
+
+    def _create_biwt_package_tab(self):
+        """Build the BIWT widget from the installed biwt package.
+
+        The builder is passed rather than a BiwtInput: BIWT calls it when a run starts, so a
+        domain bound or cell type the user changed since the widget was built is picked up
+        without Studio having to notice and push it. The resolved value is snapshotted for the
+        run, so nothing edited mid-walkthrough can move the domain cells are placed into.
+
+        host_name and cell_template_paths go here instead, because they are read once: a
+        library passed per-run would come back after the user removed it at the Cell
+        templates step.
+        """
+        # BIWT ships no phenotype templates of its own -- without cell_template_paths every
+        # dropdown at its Cell templates step offers only "(none)". It seeds the library
+        # rather than pinning it: the user can load further .toml files there, or remove this
+        # one, and BIWT's result may name a file Studio has never seen.
+        try:
+            from biwt_bridge import BUNDLED_TEMPLATE_LIBRARY
+            cell_template_paths = [BUNDLED_TEMPLATE_LIBRARY]
+        except Exception:
+            cell_template_paths = []
+
+        biwt_widget = create_biwt_widget(self._build_biwt_input, on_complete=self._biwt_complete,
+                                  host_name="Studio",
+                                  cell_template_paths=cell_template_paths)
+        return biwt_widget
+
+    def _biwt_complete(self, result) -> None:
+        """Called by the biwt package when the walkthrough finishes.
+
+        Everything past this point -- saving the .csv, deciding what to do with the cell
+        definitions BIWT built, and reconciling them against this model -- lives in
+        biwt_bridge_ui.BiwtCompletionFlow.
+        """
+        from biwt_bridge_ui import BiwtCompletionFlow
+
+        BiwtCompletionFlow(self).run(result)
+
     def fill_gui(self):
         self.csv_folder.setText(self.xml_creator.config_tab.csv_folder.text())
         self.output_file.setText(self.xml_creator.config_tab.csv_file.text())
         self.fill_substrate_combobox()
         self.fill_ic_substrates_widgets()
-        if self.xml_creator.biwt_flag:
-            self.xml_creator.biwt_tab.fill_gui()
+        if self.biwt_flag and hasattr(self.biwt_tab, "fill_gui"):
+            self.biwt_tab.fill_gui()
 
     def fill_ic_substrates_widgets(self):
         substrate_initial_condition_element = self.xml_creator.config_tab.xml_root.find(".//microenvironment_setup//options//initial_condition")
@@ -2374,7 +2580,7 @@ class ICs(StudioTab):
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.substrate_combobox.clear()
         uep = self.xml_creator.config_tab.xml_root.find('.//microenvironment_setup')  # find unique entry point
-        if uep:
+        if uep is not None:
             idx = 0
             num_vars = len(uep.findall('variable'))
             self.all_substrate_values = np.zeros((self.ny, self.nx, num_vars))

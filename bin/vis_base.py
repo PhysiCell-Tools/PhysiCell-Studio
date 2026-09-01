@@ -354,7 +354,6 @@ class VisBase():
         self.bgcolor = [1,1,1,1]  # all 1.0 for white 
 
         self.discrete_variable_observed = set()
-        self.cell_scalar_updated = True
 
         self.cell_scalar_human2mcds_dict = {} # initialize here for vis_tab.py
 
@@ -544,6 +543,15 @@ class VisBase():
         self.xdel = 20
         self.z_range = self.zmax - self.zmin
 
+        # Domain of the *loaded output*, read from its initial.xml; None until an
+        # output dir has been read. The values above are only placeholders and
+        # self.xmin, etc. later track the Config tab, which need not describe the
+        # output being plotted, so plot_svg() maps .svg coords with these instead.
+        self.output_xmin = None
+        self.output_xmax = None
+        self.output_ymin = None
+        self.output_ymax = None
+
         self.aspect_ratio = 0.7
 
         self.view_aspect_square = True
@@ -654,6 +662,7 @@ class VisBase():
         self.substrates_cbar_combobox.addItem("turbo")
         self.substrates_cbar_combobox.addItem("plasma")
         self.substrates_cbar_combobox.addItem("jet")
+        self.substrates_cbar_combobox.addItem("coolwarm")
         # # self.substrates_cbar_combobox.addItem("jet_r")
         self.substrates_cbar_combobox.setEnabled(False)
 
@@ -823,6 +832,7 @@ class VisBase():
         self.cell_scalar_cbar_combobox.addItem("turbo")
         self.cell_scalar_cbar_combobox.addItem("plasma")
         self.cell_scalar_cbar_combobox.addItem("jet")
+        self.cell_scalar_cbar_combobox.addItem("coolwarm")
         # self.cell_scalar_cbar_combobox.addItem("jet_r")
         # self.cell_scalar_cbar_combobox.setEnabled(False)
         self.cell_scalar_cbar_combobox.setEnabled(self.model3D_flag)  # for 3D
@@ -1190,6 +1200,19 @@ class VisBase():
         # print("get_cell_types():  basename=",basename)
         out_config_file = os.path.join(self.output_dir, basename)
         # print("get_cell_types():  out_config_file=",out_config_file)
+        if not os.path.isfile(out_config_file):
+            fallback = os.path.join(self.output_dir, "PhysiCell_settings.xml")
+            if os.path.isfile(fallback):
+                out_config_file = fallback
+            else:
+                # out_config_file = None
+                msgBox = QMessageBox()
+                msgBox.setIcon(QMessageBox.Information)
+                msg = f"get_cell_types_from_config(): Error - cannot find {os.path.join(self.output_dir, basename)} or {out_config_file}"  
+                msgBox.setText(msg)
+                msgBox.setStandardButtons(QMessageBox.Ok)
+                msgBox.exec()
+                return False
 
         try:
             self.tree = ET.parse(out_config_file)
@@ -1208,7 +1231,7 @@ class VisBase():
         try:
             self.celltype_name.clear()
             uep = self.xml_root.find('.//cell_definitions')  # find unique entry point
-            if uep:
+            if uep is not None:
                 idx = 0
                 for var in uep.findall('cell_definition'):
                     name = var.attrib['name']
@@ -1739,7 +1762,7 @@ class VisBase():
         self.celldef_tab.config_path = config_file
         self.celldef_tab.fill_substrates_comboboxes()   # do before populate_tree_cell_defs
         # populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
-        populate_tree_cell_defs(self.celldef_tab, False)
+        populate_tree_cell_defs(self.celldef_tab, False, pkpd_flag=self.celldef_tab.pkpd_flag)
 
         self.celldef_tab.fill_celltypes_comboboxes()
 
@@ -1776,7 +1799,6 @@ class VisBase():
 
     def cell_scalar_combobox_changed_cb(self, idx):
         self.discrete_variable_observed = set()
-        self.cell_scalar_updated = True
         self.update_plots()
     
     #-------------------------------------
@@ -1850,6 +1872,7 @@ class VisBase():
             except:
                 pass
             self.cax2 = None
+            self.cbar2 = None   # its Axes is gone; do not draw into it again
 
     def cells_svg_mat_cb(self):
         # print("\n---------cells_svg_mat_cb(self)")
@@ -2211,6 +2234,14 @@ class VisBase():
         self.plot_ymin = self.ymin
         self.plot_ymax = self.ymax
 
+        # PhysiCell writes cell centers in the .svg files relative to the lower
+        # corner of this domain, so keep it for plot_svg(); self.xmin, etc. get
+        # overwritten from the Config tab by reset_domain_box() below.
+        self.output_xmin = self.xmin
+        self.output_xmax = self.xmax
+        self.output_ymin = self.ymin
+        self.output_ymax = self.ymax
+
         self.zmin = float(bds[2])
         self.zmax = float(bds[5])
 
@@ -2232,7 +2263,7 @@ class VisBase():
 
         #-------------------
         vars_uep = xml_root.find(".//microenvironment//domain//variables")
-        if vars_uep:
+        if vars_uep is not None:
             sub_names = []
             for var in vars_uep:
             # self.substrate.clear()
@@ -2290,6 +2321,12 @@ class VisBase():
         self.ymin = float(bds[1])
         self.ymax = float(bds[4])
         self.y_range = self.ymax - self.ymin
+
+        # rf. reset_model(): the frame of reference for the .svg cell coords
+        self.output_xmin = self.xmin
+        self.output_xmax = self.xmax
+        self.output_ymin = self.ymin
+        self.output_ymax = self.ymax
 
         # and plot 1st frame (.svg)
         self.current_svg_frame = 0
@@ -2560,9 +2597,10 @@ class VisBase():
             if self.cax2:
                 try:
                     self.cax2.remove()
-                    self.cax2 = None
                 except:
                     pass
+                self.cax2 = None
+                self.cbar2 = None   # its Axes is gone; do not draw into it again
             
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
@@ -3329,10 +3367,17 @@ class VisBase():
         # model_name = os.path.basename(self.current_xml_file)
         model_name = os.path.basename(xml_file)
         model_name = model_name[:-4]   # strip off .xml suffix
-        PhysicellConverter(simularium_model_data).save(model_name)
-        print(f"--> {model_name}.simularium")
-
-        print("Load this model at: https://simularium.allencell.org/viewer")
+        try:
+            PhysicellConverter(simularium_model_data).save(model_name)
+            print(f"--> {model_name}.simularium")
+            print("Load this model at: https://simularium.allencell.org/viewer")
+        except:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText("Error generating Simularium model")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return False
 
     def make_movie_cb(self):
         # Check if ffmpeg is installed
@@ -3397,6 +3442,11 @@ class VisBase():
             msgBox.exec()
 
         self.current_svg_frame = original_frame  # Restore the original frame number
+
+        # pyplot's Gcf holds every figure until it is closed, and each `ims` entry is a full
+        # copy of the canvas framebuffer, so drop them both here.
+        ims.clear()
+        plt.close(fig)
 
     def cancel_movie_cb(self):
         self.cancel_movie = True

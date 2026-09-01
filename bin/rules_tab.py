@@ -31,6 +31,7 @@ from multivariate_rules import Window_plot_rules
 # from studio_classes import ExtendedCombo, HoverWarning, QVLine, QLineEdit_custom, HoverQuestion
 from studio_classes import ExtendedCombo, QLabelSeparator, QLineEdit_custom, QVLine, QCheckBox_custom, QRadioButton_custom, HoverWarning, HoverQuestion, StudioTab
 from studio_functions import show_studio_warning_window
+import rules_tokens
 
 class RulesPlotWindow(QWidget):
     def __init__(self):
@@ -827,13 +828,24 @@ class Rules(StudioTab):
         self.update_base_value_by_name(behavior, True)
 
     def update_base_value_by_name(self, behavior, update_widgets, cell_type = None):
+        # print(f"--- update_base_value_by_name(): cell_type (0)= {cell_type}")
         # update behavior of specified cell type (if None, use current in combobox)
         if cell_type is not None:
             key0 = cell_type
         else:
             key0 = self.celltype_combobox.currentText()
+        print(f"---    cell_type (1)= {cell_type}")
         btokens = behavior.split()
         if len(btokens) == 0:
+            return
+
+        if key0 not in self.xml_creator.celldef_tab.param_d:
+            # Nearly every branch below indexes param_d[key0] and only one of them is guarded,
+            # so an unknown cell type here takes Studio down with a KeyError. Two ways to get
+            # one: clear_comboboxes() empties the cell type combobox before the behavior one,
+            # so the change callback runs with "" while the previous behavior is still
+            # selected; and the rules table can name a cell type this model does not define.
+            self.base_val = '??'    # what the callers already expect when it cannot be read
             return
 
         base_val = '??'
@@ -875,7 +887,8 @@ class Rules(StudioTab):
             try:
                 base_val = self.xml_creator.celldef_tab.param_d[key0][key1][key2][key3]
             except:
-                print("update_base_value(): ---- got exception")
+                # print("update_base_value(): ---- got exception")
+                print(f"update_base_value(): ---- got exception: key0={key0},key1={key1},key2={key2},key3={key3}")
                 return
         elif btokens[0] == 'apoptosis':
             base_val = self.xml_creator.celldef_tab.param_d[key0]['apoptosis_death_rate']
@@ -924,7 +937,7 @@ class Rules(StudioTab):
                 print("--- handling phagocytose other dead cell")
                 base_val = self.xml_creator.celldef_tab.param_d[key0]['other_dead_phagocytosis_rate']
             else:
-                cell_type = behavior[12:]   # length of "phagocytose" 
+                cell_type = rules_tokens.extract_cell_type(behavior)
                 print("      cell_type (for phagocytose)=",cell_type)
                 base_val = self.xml_creator.celldef_tab.param_d[key0]['live_phagocytosis_rate'][cell_type]
         elif behavior == "attack damage rate":
@@ -932,24 +945,24 @@ class Rules(StudioTab):
         elif behavior == "attack duration":
             base_val = self.xml_creator.celldef_tab.param_d[key0]["attack_duration"]
         elif btokens[0] == "attack":
-            cell_type = behavior[7:]
+            cell_type = rules_tokens.extract_cell_type(behavior)
             base_val = self.xml_creator.celldef_tab.param_d[key0]['attack_rate'][cell_type]
         elif behavior[0:len("fuse to")] == "fuse to":
-            cell_type = behavior[len("fuse to")+1:]
+            cell_type = rules_tokens.extract_cell_type(behavior)
             base_val = self.xml_creator.celldef_tab.param_d[key0]['fusion_rate'][cell_type]
         elif btokens[0] == "immunogenicity":
             base_val = '1.0'
         elif btokens[0] == "is_movable":
             base_val = '1.0'
         elif behavior[0:len("transform to")] == "transform to":
-            cell_type = behavior[len("transform to")+1:]
+            cell_type = rules_tokens.extract_cell_type(behavior)
             base_val = self.xml_creator.celldef_tab.param_d[key0]['transformation_rate'][cell_type]
         elif behavior == "damage rate":
             base_val = self.xml_creator.celldef_tab.param_d[key0]["damage_rate"]
         elif behavior == "damage repair rate":
             base_val = self.xml_creator.celldef_tab.param_d[key0]["damage_repair_rate"]
         elif "asymmetric" == behavior.split()[0]:
-            cell_type = behavior.split()[-1]
+            cell_type = rules_tokens.extract_cell_type(behavior)
             base_val = self.xml_creator.celldef_tab.param_d[key0]["asymmetric_division_probability"][cell_type]
         elif "custom:" in btokens[0]:
             custom_data_name = btokens[0].split(':')[-1] # return string after colon
@@ -1997,34 +2010,22 @@ class Rules(StudioTab):
 
         self.signal_combobox.setCurrentIndex(0)
 
+    def celltypes_and_custom_vars(self):
+        """Cell type names, and the custom data variables to build tokens from.
+
+        Custom data comes from a *single* cell def, as it always has: the variables are
+        meant to be the same across all of them, and a rule names one without saying whose.
+        """
+        cell_types = list(self.xml_creator.celldef_tab.param_d.keys())
+        custom_vars = []
+        if cell_types:
+            cell_def0 = cell_types[0]
+            custom_vars = list(self.xml_creator.celldef_tab.param_d[cell_def0]['custom_data'].keys())
+        return cell_types, custom_vars
+
     def create_signal_list(self):
-        signal_l = []
-        for s in self.substrates:
-            signal_l.append(s)
-        for s in self.substrates:
-            signal_l.append("intracellular " + s)
-        for s in self.substrates:
-            signal_l.append(s + " gradient")
-
-        signal_l += ["pressure","volume"]
-
-        # print("       self.xml_creator.celldef_tab.param_d.keys()= ",self.xml_creator.celldef_tab.param_d.keys())
-        for ct in self.xml_creator.celldef_tab.param_d.keys():
-            signal_l.append("contact with " + ct)
-
-        # special
-        signal_l += ["contact with live cell", "contact with dead cell", 
-                     "contact with apoptotic cell", "contact with necrotic cell", 
-                     "contact with BM", "damage","dead", "attacking",
-                     "total attack time", "damage delivered", "time", "apoptotic", "necrotic"]
-
-        # append all custom data (but *only* for a single cell_def!)
-        cell_def0 = list(self.xml_creator.celldef_tab.param_d.keys())[0]
-        for custom_var in list(self.xml_creator.celldef_tab.param_d[cell_def0]['custom_data'].keys()):
-            signal_name = "custom:" + custom_var
-            signal_l.append(signal_name)
-
-        return signal_l
+        cell_types, custom_vars = self.celltypes_and_custom_vars()
+        return rules_tokens.build_signal_list(self.substrates, cell_types, custom_vars)
 
     #-----------------------------------------------------------
     def fill_responses_widget(self):
@@ -2040,50 +2041,8 @@ class Rules(StudioTab):
         self.xml_creator.celldef_tab.par_dist_fill_responses_widget(self.response_l + ["Volume"]) # everything else is lowercase, but this can stand out because it's not a true behavior, but rather the unique non-behavior that can be set by ICs
 
     def create_response_list(self):
-        # TODO: figure out how best to organize these responses
-        response_l = []
-        for s in self.substrates:
-            response_l.append(s + " secretion")
-        for s in self.substrates:
-            response_l.append(s + " secretion target")
-        for s in self.substrates:
-            response_l.append(s + " uptake")
-        for s in self.substrates:
-            response_l.append(s + " export")
-        response_l.append("cycle entry")
-        response_l.append("attack damage rate")
-        response_l.append("attack duration")
-        response_l.append("damage rate")
-        response_l.append("damage repair rate")
-        for idx in range(6):  # TODO: hardwired
-            response_l.append("exit from cycle phase " + str(idx))
-
-        response_l += ["apoptosis","necrosis","migration speed","migration bias","migration persistence time"]
-
-        for s in self.substrates:
-            response_l.append("chemotactic response to " + s)
-
-        response_l += ["cell-cell adhesion", "cell-cell adhesion elastic constant"]
-
-        for ct in self.xml_creator.celldef_tab.param_d.keys():
-            response_l.append("adhesive affinity to " + ct)
-
-        # special
-        response_l += ["relative maximum adhesion distance","cell-cell repulsion","cell-BM adhesion","cell-BM repulsion","phagocytose apoptotic cell","phagocytose necrotic cell","phagocytose other dead cell"]
-
-        for verb in ["phagocytose ","attack ","fuse to ","transform to ","immunogenicity to ","asymmetric division to "]:  # verb
-            for ct in self.xml_creator.celldef_tab.param_d.keys():
-                response_l.append(verb + ct)
-
-        # more special
-        response_l += ["is_movable","cell attachment rate","cell detachment rate","maximum number of cell attachments"]
-
-        # append all custom data (but *only* for a single cell_def!)
-        cell_def0 = list(self.xml_creator.celldef_tab.param_d.keys())[0]
-        for custom_var in self.xml_creator.celldef_tab.param_d[cell_def0]['custom_data'].keys():
-            response_name = "custom:" + custom_var
-            response_l.append(response_name)
-        return response_l
+        cell_types, custom_vars = self.celltypes_and_custom_vars()
+        return rules_tokens.build_behavior_list(self.substrates, cell_types, custom_vars)
 
     #-----------------------------------------------------------
     def fill_gui(self):
@@ -2119,7 +2078,7 @@ class Rules(StudioTab):
         #----------------------------------
         uep = self.xml_root.find(".//cell_rules//rulesets//ruleset")
         # print(f'rules_tab.py: fill_gui(): <cell_rules> =  {uep}')
-        if uep:
+        if uep is not None:
             folder_name = uep.find(".//folder").text
             # print(f'rules_tab.py: fill_gui():  folder_name =  {folder_name}')
             self.rules_folder.setText(folder_name)
@@ -2188,7 +2147,7 @@ class Rules(StudioTab):
 
         # ---- v3
         uep = self.xml_root.find(".")
-        if not self.xml_root.find(".//cell_rules"):
+        if self.xml_root.find(".//cell_rules") is None:
             enabled_flag = "false"
             if self.rules_enabled.isChecked():
                 enabled_flag = "true"

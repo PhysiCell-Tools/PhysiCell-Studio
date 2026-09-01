@@ -1135,7 +1135,7 @@ class Config(StudioTab):
         self.substrate_list.clear()  # rwh/todo: where/why/how is this list maintained?
         self.svg_substrate_to_plot_dropdown.clear()
         uep = self.xml_root.find('.//microenvironment_setup')  # find unique entry point
-        if uep:
+        if uep is not None:
             idx = 0
             for var in uep.findall('variable'):
                 logging.debug(f' --> {var.attrib["name"]}')

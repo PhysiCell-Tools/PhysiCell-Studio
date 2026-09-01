@@ -2,3 +2,5 @@
 studio_debug.log
 .DS_Store
 __pycache__/
+.venv
+.vscode/

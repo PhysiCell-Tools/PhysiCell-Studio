@@ -1,4 +1,5 @@
 import sys
+import os
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent, QTimer
@@ -225,7 +226,19 @@ class QRadioButton_custom(QRadioButton):
 class QComboBox_custom(QComboBox):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet("QComboBox{color: #000000; background-color: #FFFFFF;}")
+
+        combobox_style = """
+        QComboBox {
+            color: black;
+            background-color: white;
+        }
+        QComboBox:disabled {
+            color: black;
+            background-color:lightgray;
+        }
+        """
+        self.setStyleSheet(combobox_style)
+
 class ExtendedCombo( QComboBox ):
     def __init__( self,  parent = None):
         super( ExtendedCombo, self ).__init__( parent )
@@ -475,3 +488,24 @@ class DoubleValidatorOpenInterval(QDoubleValidator):
                 state = QDoubleValidator.Intermediate
 
         return state, value, pos
+
+##### Custom validators
+
+class FolderPathValidator(QValidator):
+    def validate(self, string, pos):
+        if os.path.isdir(string):
+            return QValidator.Acceptable, string, pos
+        else:
+            return QValidator.Intermediate, string, pos
+
+class FileNameValidator(QValidator):
+    def __init__(self, folder_line_edit):
+        super().__init__()
+        self.folder_line_edit = folder_line_edit
+
+    def validate(self, string, pos):
+        folder = self.folder_line_edit.text()
+        if os.path.isfile(os.path.join(folder, string)):
+            return QValidator.Acceptable, string, pos
+        else:
+            return QValidator.Intermediate, string, pos

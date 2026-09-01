@@ -102,9 +102,13 @@ class PhysiCellXMLCreator(QWidget):
         self.rules_flag = rules_flag 
         self.model3D_flag = model3D_flag 
         self.tensor_flag = tensor_flag 
-        self.nanohub_flag = nanohub_flag 
-        self.ecm_flag = False 
-        self.pytest_flag = pytest_flag 
+        self.nanohub_flag = nanohub_flag
+        self.galaxy_flag = False
+        self.ecm_flag = False
+        self.pytest_flag = pytest_flag
+        self.biwt_flag = False
+        self.pkpd_flag = False
+        self.samples_flag = False
         print("PhysiCellXMLCreator(): self.nanohub_flag= ",self.nanohub_flag)
 
         self.rules_tab_index = None
@@ -304,7 +308,7 @@ class PhysiCellXMLCreator(QWidget):
         self.num_models = 0
         self.model = {}  # key: name, value:[read-only, tree]
 
-        self.config_tab = Config(self.studio_flag)
+        self.config_tab = Config(self)
         self.config_tab_index = 0
         self.config_tab.xml_root = self.xml_root
         self.config_tab.fill_gui()
@@ -323,7 +327,7 @@ class PhysiCellXMLCreator(QWidget):
         else:
             print("studio.py: ---- FALSE nanohub_flag: NOT updating config_tab folder")
 
-        self.microenv_tab = SubstrateDef(self.config_tab)
+        self.microenv_tab = SubstrateDef(self.config_tab, self.pkpd_flag)
         self.microenv_tab_index = 1
         self.microenv_tab.xml_root = self.xml_root
         substrate_name = self.microenv_tab.first_substrate_name()
@@ -332,7 +336,7 @@ class PhysiCellXMLCreator(QWidget):
 
         # self.tab2.tree.setCurrentItem(QTreeWidgetItem,0)  # item
 
-        self.celldef_tab = CellDef(self.pytest_flag)
+        self.celldef_tab = CellDef(self)
         self.celldef_tab.xml_root = self.xml_root
         if is_movable_flag:
             self.celldef_tab.is_movable_w.setEnabled(True)
@@ -346,7 +350,7 @@ class PhysiCellXMLCreator(QWidget):
         self.celldef_tab.fill_substrates_comboboxes() # do before populate? Yes, assuming we check for cell_def != None
 
         # Beware: this may set the substrate chosen for Motility/[Advanced]Chemotaxis
-        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag)
+        populate_tree_cell_defs(self.celldef_tab, self.skip_validate_flag, pkpd_flag=self.pkpd_flag)
         # self.celldef_tab.customdata.param_d = self.celldef_tab.param_d
 
         # self.celldef_tab.enable_interaction_callbacks()
@@ -364,7 +368,7 @@ class PhysiCellXMLCreator(QWidget):
 
         self.microenv_tab.celldef_tab = self.celldef_tab
 
-        self.user_params_tab = UserParams()
+        self.user_params_tab = UserParams(self)
         self.user_params_tab.xml_root = self.xml_root
         self.user_params_tab.fill_gui()
 
@@ -407,7 +411,7 @@ class PhysiCellXMLCreator(QWidget):
         logging.debug(f'studio.py: self.current_dir = {self.current_dir}')
 
         if self.rules_flag:
-            self.rules_tab = Rules(self.nanohub_flag, self.microenv_tab, self.celldef_tab)
+            self.rules_tab = Rules(self)
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.rules_tab,"Rules")
             self.rules_tab.xml_root = self.xml_root
@@ -422,8 +426,11 @@ class PhysiCellXMLCreator(QWidget):
 
         if self.studio_flag:
             logging.debug(f'studio.py: creating ICs, Run, and Plot tabs')
-            self.ics_tab = ICs(self.config_tab, self.celldef_tab, False, False, False)
+            self.ics_tab = ICs(self)
+            self.config_tab.ics_tab = self.ics_tab
+            self.microenv_tab.ics_tab = self.ics_tab
             self.ics_tab.fill_celltype_combobox()
+            self.ics_tab.fill_substrate_combobox()
             self.ics_tab.reset_info()
 
             if self.nanohub_flag:  # rwh - test if works on nanoHUB
@@ -444,7 +451,7 @@ class PhysiCellXMLCreator(QWidget):
             # self.rules_tab.fill_gui()
             self.tabWidget.addTab(self.ics_tab,"ICs")
 
-            self.run_tab = RunModel(self.nanohub_flag, self.tabWidget, self.celldef_tab, self.rules_flag, self.download_menu)
+            self.run_tab = RunModel(self)
 
             self.homedir = os.getcwd()
             print("studio.py: self.homedir = ",self.homedir)
@@ -487,7 +494,7 @@ class PhysiCellXMLCreator(QWidget):
 
             # config_tab needed for 3D domain boundary outline
             # self.vis_tab = Vis(self.studio_flag, self.nanohub_flag, self.config_tab, self.celldef_tab, self.run_tab, self.model3D_flag, self.tensor_flag, self.ecm_flag)
-            self.vis_tab = Vis(self.studio_flag, self.rules_flag, self.nanohub_flag, self.config_tab, self.microenv_tab, self.celldef_tab, self.user_params_tab, self.rules_tab, self.ics_tab, self.run_tab, self.model3D_flag, self.tensor_flag, self.ecm_flag)
+            self.vis_tab = Vis(self.studio_flag, self.rules_flag, self.nanohub_flag, self.config_tab, self.microenv_tab, self.celldef_tab, self.user_params_tab, self.rules_tab, self.ics_tab, self.run_tab, self.model3D_flag, self.tensor_flag, self.ecm_flag, self.galaxy_flag)
             # if not self.nanohub_flag:
             self.vis_tab.output_folder.setText(self.config_tab.folder.text())
             self.vis_tab.update_output_dir(self.config_tab.folder.text())

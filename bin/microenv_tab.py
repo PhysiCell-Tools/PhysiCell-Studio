@@ -6,17 +6,20 @@ Dr. Paul Macklin (macklinp@iu.edu)
 """
 
 import sys
+import os
 import copy
 import logging
 import xml.etree.ElementTree as ET  # https://docs.python.org/2/library/xml.etree.elementtree.html
 # from ElementTree_pretty import prettify
 
+from studio_classes import QLineEdit_custom, FolderPathValidator, FileNameValidator, QLabelSeparator
+
 from PyQt5 import QtCore, QtGui
-# from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QFrame,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QPushButton,QLabel,QScrollArea,QTreeWidget,QTreeWidgetItem,QSplitter,QMessageBox
+# # from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QFrame,QWidget,QLineEdit,QHBoxLayout,QVBoxLayout,QPushButton,QLabel,QScrollArea,QTreeWidget,QTreeWidgetItem,QSplitter,QMessageBox,QTabWidget
 
 from PyQt5.QtGui import QIcon, QDoubleValidator
-from studio_classes import QCheckBox_custom
+from studio_classes import QCheckBox_custom, QComboBox_custom
 
 class QHLine(QFrame):
     def __init__(self):
@@ -25,15 +28,13 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Sunken)
 
 class SubstrateDef(QWidget):
-    def __init__(self, config_tab):
+    def __init__(self, config_tab, pkpd_flag):
         super().__init__()
-        # global self.microenv_params
-
+        self.pk_setup_complete = False
         self.param_d = {}  # a dict of dicts - rwh/todo, used anymore?
         # self.substrate = {}
         self.current_substrate = None
         self.xml_root = None
-        self.config_tab = config_tab
         self.new_substrate_count = 1
 
         self.is_3D = False
@@ -43,20 +44,21 @@ class SubstrateDef(QWidget):
 
         self.ics_tab = None   # update in studio.py
         self.rules_tab = None   # update in studio.py
-
-        # self.stacked_w = QStackedWidget()
-        # self.stack_w = []
-        # self.stack_w.append(QStackedWidget())
-        # self.stacked_w.addWidget(self.stack_w[0])
-
-        #---------------
-        # self.cell_defs = CellDefInstances()
-        # self.microenv_hbox = QHBoxLayout()
-
-        splitter = QSplitter()
-        leftwidth = 150
-        # splitter.setSizes([split_leftwidth, self.width() - leftwidth])
-        # splitter.setSizes([leftwidth, self.width() - leftwidth])
+        # global self.microenv_params
+        self.config_tab = config_tab
+        self.pkpd_flag = pkpd_flag
+        self.tab_widget = QTabWidget()
+        self.splitter = QSplitter()
+        self.scroll_substrate_tree = QScrollArea()
+        self.splitter.addWidget(self.scroll_substrate_tree)
+        self.splitter.addWidget(self.tab_widget)
+        self.tab_widget.addTab(self.create_base_microenv_tab(),"Base")
+        if self.pkpd_flag:
+            self.tab_widget.addTab(self.create_pk_tab(),"PK")
+            self.pk_setup_complete = True
+            
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.splitter)
 
         tree_widget_width = 240
         tree_widget_height = 400
@@ -105,7 +107,7 @@ class SubstrateDef(QWidget):
         # self.microenv_hbox.addWidget(self.name_list)
 
 
-        self.scroll_substrate_tree = QScrollArea()
+        # self.scroll_substrate_tree = QScrollArea()
         # self.scroll_substrate_tree.setFixedWidth(tree_widget_width)
 
         # self.tree_w = QWidget()
@@ -146,10 +148,342 @@ class SubstrateDef(QWidget):
         tree_w_vbox.addLayout(tree_w_hbox)
         self.tree_w.setLayout(tree_w_vbox)
         self.scroll_substrate_tree.setWidget(self.tree_w)
+
+        # self.layout.addLayout(controls_hbox)
+ 
+        # self.layout.addWidget(self.tabs)
+        # self.layout.addWidget(QHLine())
+        # self.layout.addWidget(self.params)
+
+        # self.layout.addWidget(self.scroll_area)
+        # self.layout.addWidget(splitter)
+
+        self.new_substrate_count = self.config_tab.count_substrates()
+
+    def create_pk_tab(self):
+        self.pk_tab = QWidget()
+        self.pk_tab_layout = QVBoxLayout()
+
+        label_width = 150
+        units_width = 150
+
+        hbox = QHBoxLayout()
+        hbox.addStretch()
+        label = QLabel("PK Model")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_model_combobox = QComboBox_custom()
+        self.pk_model_combobox.currentIndexChanged.connect(self.pk_model_combobox_changed_cb)
+        self.pk_model_combobox.addItem("None")
+        self.pk_model_combobox.addItem("Constant")
+        self.pk_model_combobox.addItem("1C")
+        self.pk_model_combobox.addItem("2C")
+        self.pk_model_combobox.addItem("SBML")
+        hbox.addWidget(self.pk_model_combobox)
+
+        label = QLabel("Schedule Format")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_schedule_format_combobox = QComboBox_custom() # put this here before connecting pk_model_combobox to cb to prevent error
+        self.pk_schedule_format_combobox.setEnabled(False)
+        self.pk_schedule_format_combobox.addItem("parameters")
+        self.pk_schedule_format_combobox.addItem("csv")
+        self.pk_schedule_format_combobox.currentIndexChanged.connect(self.pk_schedule_format_combobox_changed_cb)
+        hbox.addWidget(self.pk_schedule_format_combobox)
+
+        label = QLabel("Biot number")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_biot_number = QLineEdit_custom()
+        self.pk_biot_number.setFixedWidth(60)
+        self.pk_biot_number.setEnabled(False)
+        self.pk_biot_number.setValidator(QtGui.QDoubleValidator())
+        self.pk_biot_number.textChanged.connect(self.pk_biot_number_changed_cb)
+        hbox.addWidget(self.pk_biot_number)
+
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        self.pk_tab_layout.addWidget(QLabelSeparator("Schedule parameters"))
+        
+        hbox = QHBoxLayout()
+
+        label = QLabel("Number of doses:")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setStyleSheet("font-weight: bold")
+        hbox.addWidget(label)
+
+        label = QLabel("Total #")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_total_doses = QLineEdit_custom()
+        self.pk_total_doses.setFixedWidth(30)
+        self.pk_total_doses.setEnabled(False)
+        self.pk_total_doses.setValidator(QtGui.QIntValidator())
+        self.pk_total_doses.textChanged.connect(self.pk_total_doses_changed_cb)
+        hbox.addWidget(self.pk_total_doses)
+
+        label = QLabel("Loading #")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_loading_doses = QLineEdit_custom()
+        self.pk_loading_doses.setFixedWidth(30)
+        self.pk_loading_doses.setEnabled(False)
+        self.pk_loading_doses.setValidator(QtGui.QIntValidator())
+        self.pk_loading_doses.textChanged.connect(self.pk_loading_doses_changed_cb)
+        hbox.addWidget(self.pk_loading_doses)
+
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+
+        label = QLabel("Dose amount:")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setStyleSheet("font-weight: bold")
+        hbox.addWidget(label)
+
+        label = QLabel("Regular Dose")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_regular_dose = QLineEdit_custom()
+        self.pk_regular_dose.setFixedWidth(60)
+        self.pk_regular_dose.setEnabled(False)
+        self.pk_regular_dose.setValidator(QtGui.QDoubleValidator())
+        self.pk_regular_dose.textChanged.connect(self.pk_regular_dose_changed_cb)
+        hbox.addWidget(self.pk_regular_dose)
+
+        label = QLabel("Loading Dose")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_loading_dose = QLineEdit_custom()
+        self.pk_loading_dose.setFixedWidth(60)
+        self.pk_loading_dose.setEnabled(False)
+        self.pk_loading_dose.setValidator(QtGui.QDoubleValidator())
+        self.pk_loading_dose.textChanged.connect(self.pk_loading_dose_changed_cb)
+        hbox.addWidget(self.pk_loading_dose)
+
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+
+        label = QLabel("Dose timing:")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setStyleSheet("font-weight: bold")
+        hbox.addWidget(label)
+
+        label = QLabel("First Dose Time")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_first_dose_time = QLineEdit_custom()
+        self.pk_first_dose_time.setFixedWidth(30)
+        self.pk_first_dose_time.setEnabled(False)
+        self.pk_first_dose_time.setValidator(QtGui.QDoubleValidator())
+        self.pk_first_dose_time.textChanged.connect(self.pk_first_dose_time_changed_cb)
+        hbox.addWidget(self.pk_first_dose_time)
+
+        units = QLabel("days")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(units)
+
+        label = QLabel("Dose Interval")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_dose_interval = QLineEdit_custom()
+        self.pk_dose_interval.setFixedWidth(30)
+        self.pk_dose_interval.setEnabled(False)
+        self.pk_dose_interval.setValidator(QtGui.QDoubleValidator())
+        self.pk_dose_interval.textChanged.connect(self.pk_dose_interval_changed_cb)
+        hbox.addWidget(self.pk_dose_interval)
+
+        units = QLabel("days")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(units)
+
+        hbox.addStretch()
+
+        self.pk_tab_layout.addLayout(hbox)
+
+        self.pk_tab_layout.addWidget(QLabelSeparator("PK rate parameters"))
+
+        # PK rate parameters
+        hbox = QHBoxLayout()
+
+        label = QLabel("Elimination Rate")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_elimination_rate = QLineEdit_custom()
+        self.pk_elimination_rate.setFixedWidth(60)
+        self.pk_elimination_rate.setEnabled(False)
+        self.pk_elimination_rate.setValidator(QtGui.QDoubleValidator())
+        self.pk_elimination_rate.textChanged.connect(self.pk_elimination_rate_changed_cb)
+        hbox.addWidget(self.pk_elimination_rate)
+
+        units = QLabel("1/min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(units)
+
+        label = QLabel("k12")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_k12 = QLineEdit_custom()
+        self.pk_k12.setFixedWidth(60)
+        self.pk_k12.setEnabled(False)
+        self.pk_k12.setValidator(QtGui.QDoubleValidator())
+        self.pk_k12.textChanged.connect(self.pk_k12_changed_cb)
+        hbox.addWidget(self.pk_k12)
+
+        units = QLabel("1/min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(units)
+
+        label = QLabel("k21")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_k21 = QLineEdit_custom()
+        self.pk_k21.setFixedWidth(60)
+        self.pk_k21.setEnabled(False)
+        self.pk_k21.setValidator(QtGui.QDoubleValidator())
+        self.pk_k21.textChanged.connect(self.pk_k21_changed_cb)
+        hbox.addWidget(self.pk_k21)
+
+        units = QLabel("1/min")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        hbox.addWidget(units)
+
+        label = QLabel("R (V_C/V_P)")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_volume_ratio = QLineEdit_custom()
+        self.pk_volume_ratio.setFixedWidth(60)
+        self.pk_volume_ratio.setEnabled(False)
+        self.pk_volume_ratio.setValidator(QtGui.QDoubleValidator())
+        self.pk_volume_ratio.textChanged.connect(self.pk_volume_ratio_changed_cb)
+        hbox.addWidget(self.pk_volume_ratio)
+
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        self.pk_tab_layout.addWidget(QLabelSeparator("Supporting files"))
+
+        hbox = QHBoxLayout()
+        label = QLabel("CSV-defined PK schedule")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setStyleSheet("font-weight: bold")
+        hbox.addWidget(label)
+        hbox.addStretch()
+
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+
+        label = QLabel("Folder")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_csv_folder = QLineEdit_custom()
+        self.pk_csv_folder.setEnabled(False)
+        self.pk_csv_folder.setValidator(FolderPathValidator())
+        self.pk_csv_folder.textChanged.connect(self.pk_csv_folder_changed_cb)
+        hbox.addWidget(self.pk_csv_folder)
+
+        label = QLabel("Filename")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_csv_filename = QLineEdit_custom()
+        self.pk_csv_filename.setEnabled(False)
+        self.pk_csv_filename.setValidator(FileNameValidator(self.pk_csv_folder))
+        self.pk_csv_filename.textChanged.connect(self.pk_csv_filename_changed_cb)
+        hbox.addWidget(self.pk_csv_filename)
+
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        label = QLabel("SBML file")
+        label.setAlignment(QtCore.Qt.AlignLeft)
+        label.setStyleSheet("font-weight: bold")
+        hbox.addWidget(label)
+        hbox.addStretch()
+
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+
+        label = QLabel("Folder")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+
+        self.pk_sbml_folder = QLineEdit_custom()
+        self.pk_sbml_folder.setEnabled(False)
+        self.pk_sbml_folder.setValidator(FolderPathValidator())
+        self.pk_sbml_folder.textChanged.connect(self.pk_sbml_folder_changed_cb)
+        hbox.addWidget(self.pk_sbml_folder)
+        
+        label = QLabel("Filename")
+        label.setAlignment(QtCore.Qt.AlignRight)
+        hbox.addWidget(label)
+        self.pk_sbml_filename = QLineEdit_custom()
+        self.pk_sbml_filename.setEnabled(False)
+        self.pk_sbml_filename.setValidator(FileNameValidator(self.pk_sbml_folder))
+        self.pk_sbml_filename.textChanged.connect(self.pk_sbml_filename_changed_cb)
+        hbox.addWidget(self.pk_sbml_filename)
+
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        hbox = QHBoxLayout()
+        label = QLabel(f"The boxes above turn red if the file cannot be found.\nRelative paths are relative to {os.getcwd()} ")
+        hbox.addWidget(label)
+        hbox.addStretch()
+        self.pk_tab_layout.addLayout(hbox)
+
+        self.pk_tab_layout.addStretch()
+        self.pk_tab.setLayout(self.pk_tab_layout)
+
+        self.pk_tab.scroll_area = QScrollArea()
+
+        self.pk_tab.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.pk_tab.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.pk_tab.scroll_area.setWidgetResizable(True)
+        self.pk_tab.scroll_area.setWidget(self.pk_tab)
+
+        return self.pk_tab.scroll_area
+
+    def create_base_microenv_tab(self):
+        # self.stacked_w = QStackedWidget()
+        # self.stack_w = []
+        # self.stack_w.append(QStackedWidget())
+        # self.stacked_w.addWidget(self.stack_w[0])
+
+        #---------------
+        # self.cell_defs = CellDefInstances()
+        # self.microenv_hbox = QHBoxLayout()
+
+        # splitter = QSplitter()
+        leftwidth = 150
+        # splitter.setSizes([split_leftwidth, self.width() - leftwidth])
+        # splitter.setSizes([leftwidth, self.width() - leftwidth])
+
+        
         # self.scroll_substrate_tree.setWidget(self.tree)
         #---------
         # splitter.addWidget(self.tree)
-        splitter.addWidget(self.scroll_substrate_tree)
+        # splitter.addWidget(self.scroll_substrate_tree)
 
         #-------------------------------------------
         # self.tab = QWidget()
@@ -160,11 +494,11 @@ class SubstrateDef(QWidget):
         units_width = 150
 
         # self.scroll = QScrollArea()
-        self.scroll_area = QScrollArea()
-        splitter.addWidget(self.scroll_area)
+        # self.scroll_area = QScrollArea()
+        # splitter.addWidget(self.scroll_area)
         # self.microenv_hbox.addWidget(self.scroll_area)
 
-        self.microenv_params = QWidget()
+        self.microenv_params_tab = QWidget()
         stylesheet = """ 
             QPushButton {
                 color: #000000;
@@ -368,17 +702,17 @@ class SubstrateDef(QWidget):
         #==================================================================
         self.vbox.addStretch()
 
-        self.microenv_params.setLayout(self.vbox)
+        self.microenv_params_tab.setLayout(self.vbox)
 
-        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setWidget(self.microenv_params)
+        self.microenv_params_tab.scroll_area = QScrollArea()
+        # self.microenv_params_tab.addWidget(self.microenv_params_tab.scroll_area)
 
-        self.layout = QVBoxLayout(self)
-        self.layout.addWidget(splitter)
+        self.microenv_params_tab.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.microenv_params_tab.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.microenv_params_tab.scroll_area.setWidgetResizable(True)
+        self.microenv_params_tab.scroll_area.setWidget(self.microenv_params_tab)
 
-        self.new_substrate_count = self.config_tab.count_substrates()
+        return self.microenv_params_tab.scroll_area
 
     def apply_dc_cb(self):
         text = self.dirichlet_bc.text()
@@ -388,7 +722,6 @@ class SubstrateDef(QWidget):
         self.dirichlet_ymax.setText(text)
         self.dirichlet_zmin.setText(text)
         self.dirichlet_zmax.setText(text)
-
 
     def update_3D(self):
         try:
@@ -409,8 +742,170 @@ class SubstrateDef(QWidget):
     def diffusion_coef_changed(self, text):
         self.param_d[self.current_substrate]["diffusion_coef"] = text
 
+    def enable_schedule_parameters(self):
+        self.pk_csv_folder.setEnabled(False)
+        self.pk_csv_filename.setEnabled(False)
+
+        self.pk_total_doses.setEnabled(True)
+        self.pk_total_doses.setText(str(self.param_d[self.current_substrate]["total_doses"]))
+        
+        self.pk_loading_doses.setEnabled(True)
+        self.pk_loading_doses.setText(str(self.param_d[self.current_substrate]["loading_doses"]))
+
+        self.pk_first_dose_time.setEnabled(True)
+        self.pk_first_dose_time.setText(str(self.param_d[self.current_substrate]["first_dose_time"]))
+
+        self.pk_dose_interval.setEnabled(True)
+        self.pk_dose_interval.setText(str(self.param_d[self.current_substrate]["dose_interval"]))
+
+        self.pk_regular_dose.setEnabled(True)
+        self.pk_regular_dose.setText(str(self.param_d[self.current_substrate]["regular_dose"]))
+
+        self.pk_loading_dose.setEnabled(True)
+        self.pk_loading_dose.setText(str(self.param_d[self.current_substrate]["loading_dose"]))
+
+    def disable_all_schedule(self):
+        self.pk_schedule_format_combobox.setEnabled(False)
+        self.disable_schedule_parameters()
+
+    def pk_model_combobox_changed_cb(self, idx):
+        if self.current_substrate is not None:
+            self.param_d[self.current_substrate]["pk_model"] = self.pk_model_combobox.currentText()
+        if self.pk_setup_complete is False:
+            return
+        if self.pk_model_combobox.currentText() == "None" or self.pk_model_combobox.currentText() == "SBML":
+            self.disable_all_schedule()
+            self.disable_rate_parameters()
+            self.pk_csv_folder.setEnabled(False)
+            self.pk_csv_filename.setEnabled(False)
+        elif self.pk_model_combobox.currentText() == "Constant":
+            self.pk_schedule_format_combobox.setCurrentIndex(self.pk_schedule_format_combobox.findText("csv"))
+            self.pk_schedule_format_combobox.setEnabled(False)
+            self.disable_rate_parameters()
+            self.pk_csv_folder.setEnabled(True)
+            self.pk_csv_filename.setEnabled(True)
+        else:
+            self.enable_all_schedule()
+            self.enable_rate_parameters()
+
+        if self.pk_model_combobox.currentText() == "None":
+            self.pk_biot_number.setEnabled(False)
+        else:
+            self.pk_biot_number.setEnabled(True)
+            self.pk_biot_number.setText(str(self.param_d[self.current_substrate]["biot_number"]))
+
+        if self.pk_model_combobox.currentText() == "SBML":
+            self.pk_sbml_folder.setEnabled(True)
+            self.pk_sbml_folder.setText(str(self.param_d[self.current_substrate]["sbml_folder"]))
+            self.pk_sbml_filename.setEnabled(True)
+            self.pk_sbml_filename.setText(str(self.param_d[self.current_substrate]["sbml_filename"]))
+        else:
+            self.pk_sbml_folder.setEnabled(False)
+            self.pk_sbml_folder.setText(str(self.param_d[self.current_substrate]["sbml_folder"]))
+            self.pk_sbml_filename.setEnabled(False)
+            self.pk_sbml_filename.setText(str(self.param_d[self.current_substrate]["sbml_filename"]))
+
+    def enable_rate_parameters(self):
+        self.disable_rate_parameters() # simple way to turn off any unneeded parameters
+
+        self.pk_elimination_rate.setEnabled(True)
+        self.pk_elimination_rate.setText(str(self.param_d[self.current_substrate]["elimination_rate"]))
+        
+        if self.pk_model_combobox.currentText() == "2C":
+            self.pk_k12.setEnabled(True)
+            self.pk_k12.setText(str(self.param_d[self.current_substrate]["k12"]))
+
+            self.pk_k21.setEnabled(True)
+            self.pk_k21.setText(str(self.param_d[self.current_substrate]["k21"]))
+
+            self.pk_volume_ratio.setEnabled(True)
+            self.pk_volume_ratio.setText(str(self.param_d[self.current_substrate]["volume_ratio"]))
+
+    def enable_all_schedule(self):
+        self.pk_schedule_format_combobox.setEnabled(True)
+        if self.pk_schedule_format_combobox.currentText() == "parameters":
+            self.enable_schedule_parameters()
+        else:
+            self.disable_schedule_parameters()
+            self.pk_csv_folder.setEnabled(True)
+            self.pk_csv_filename.setEnabled(True)
+
+    def disable_rate_parameters(self):
+        self.pk_elimination_rate.setEnabled(False)
+        self.pk_k12.setEnabled(False)
+        self.pk_k21.setEnabled(False)
+        self.pk_volume_ratio.setEnabled(False)
+
+    def disable_schedule_parameters(self):
+        self.pk_total_doses.setEnabled(False)
+        self.pk_loading_doses.setEnabled(False)
+        self.pk_first_dose_time.setEnabled(False)
+        self.pk_dose_interval.setEnabled(False)
+        self.pk_regular_dose.setEnabled(False)
+        self.pk_loading_dose.setEnabled(False)
+
+    def pk_schedule_format_combobox_changed_cb(self, idx):
+        if self.current_substrate is not None:
+            self.param_d[self.current_substrate]["schedule_format"] = self.pk_schedule_format_combobox.currentText()
+
+        if self.pk_model_combobox.currentText() == "None" or self.pk_model_combobox.currentText() == "SBML" or self.pk_schedule_format_combobox.currentText() != "parameters":
+            self.disable_schedule_parameters()
+            if self.pk_schedule_format_combobox.currentText() == "csv":
+                self.pk_csv_folder.setEnabled(True)
+                self.pk_csv_filename.setEnabled(True)
+        else:
+            self.enable_schedule_parameters()
+
+    def pk_total_doses_changed_cb(self, text):
+        self.param_d[self.current_substrate]["total_doses"] = text
+
+    def pk_loading_doses_changed_cb(self, text):
+        self.param_d[self.current_substrate]["loading_doses"] = text
+
+    def pk_first_dose_time_changed_cb(self, text):
+        self.param_d[self.current_substrate]["first_dose_time"] = text
+
+    def pk_dose_interval_changed_cb(self, text):
+        self.param_d[self.current_substrate]["dose_interval"] = text
+
+    def pk_regular_dose_changed_cb(self, text):
+        self.param_d[self.current_substrate]["regular_dose"] = text
+
+    def pk_loading_dose_changed_cb(self, text):
+        self.param_d[self.current_substrate]["loading_dose"] = text
+
+    def pk_elimination_rate_changed_cb(self, text):
+        self.param_d[self.current_substrate]["elimination_rate"] = text
+
+    def pk_k12_changed_cb(self, text):
+        self.param_d[self.current_substrate]["k12"] = text
+
+    def pk_k21_changed_cb(self, text):
+        self.param_d[self.current_substrate]["k21"] = text
+
+    def pk_volume_ratio_changed_cb(self, text):
+        self.param_d[self.current_substrate]["volume_ratio"] = text
+
+    def pk_biot_number_changed_cb(self, text):
+        self.param_d[self.current_substrate]["biot_number"] = text
+
+    def pk_csv_folder_changed_cb(self, text):
+        self.param_d[self.current_substrate]["pk_csv_folder"] = text
+        self.pk_csv_filename.check_validity(self.pk_csv_filename.text())
+
+    def pk_csv_filename_changed_cb(self, text):
+        self.param_d[self.current_substrate]["pk_csv_filename"] = text
+
+    def pk_sbml_folder_changed_cb(self, text):
+        self.param_d[self.current_substrate]["sbml_folder"] = text
+        self.pk_sbml_filename.check_validity(self.pk_sbml_filename.text())
+
+    def pk_sbml_filename_changed_cb(self, text):
+        self.param_d[self.current_substrate]["sbml_filename"] = text
+
     def decay_rate_changed(self, text):
         self.param_d[self.current_substrate]["decay_rate"] = text
+
     def init_cond_changed(self, text):
         self.param_d[self.current_substrate]["init_cond"] = text
 
@@ -462,7 +957,16 @@ class SubstrateDef(QWidget):
                 self.new_substrate_count += 1
             else:
                 break
-            
+
+        self.new_substrate_named(subname)
+
+    def new_substrate_named(self, subname):
+        # Same split as cell_def_tab.new_cell_def_named(): add a substrate under a caller's
+        # name rather than the next "substrateNN". Callers should come through here rather
+        # than write the <variable> themselves -- the fan-out below seeds secretion and
+        # chemotactic sensitivity on *every* cell def, and cell_def_tab.fill_xml() raises on
+        # any that were missed.
+
         # Make a new substrate (that's a copy of the currently selected one)
         # self.param_d[subname] = self.param_d[self.current_substrate].copy()  #rwh - "copy()" is critical
 
@@ -495,6 +999,25 @@ class SubstrateDef(QWidget):
         self.param_d[subname]["enable_zmin"] = bval
         self.param_d[subname]["enable_zmax"] = bval
 
+        if self.pkpd_flag:
+            self.param_d[subname]["pk_model"] = "None"
+            self.param_d[subname]["schedule_format"] = "parameters"
+            self.param_d[subname]["total_doses"] = "0"
+            self.param_d[subname]["loading_doses"] = "0"
+            self.param_d[subname]["first_dose_time"] = "0"
+            self.param_d[subname]["dose_interval"] = "1"
+            self.param_d[subname]["regular_dose"] = "0"
+            self.param_d[subname]["loading_dose"] = "0"
+            self.param_d[subname]["elimination_rate"] = "0"
+            self.param_d[subname]["k12"] = "0"
+            self.param_d[subname]["k21"] = "0"
+            self.param_d[subname]["volume_ratio"] = "1"
+            self.param_d[subname]["biot_number"] = "1"
+            self.param_d[subname]["pk_csv_folder"] = None
+            self.param_d[subname]["pk_csv_filename"] = None
+            self.param_d[subname]["sbml_folder"] = "./config"
+            self.param_d[subname]["sbml_filename"] = "PK_default.xml"
+
         # NOooo!
         # self.param_d["gradients"] = bval
         # self.param_d["track_in_agents"] = bval
@@ -505,7 +1028,8 @@ class SubstrateDef(QWidget):
 
         self.new_substrate_count += 1
 
-        self.celldef_tab.add_new_substrate(subname)
+        substrate_to_copy = None
+        self.celldef_tab.add_new_substrate(subname, substrate_to_copy)
         self.config_tab.add_new_substrate(subname)
         self.ics_tab.add_new_substrate(subname)
         # self.celldef_tab.add_new_substrate_comboboxes(subname)
@@ -554,7 +1078,8 @@ class SubstrateDef(QWidget):
 
         # self.celldef_tab.add_new_substrate_comboboxes(subname)
 
-        self.celldef_tab.add_new_substrate(subname)
+        substrate_to_copy = self.current_substrate
+        self.celldef_tab.add_new_substrate(subname, substrate_to_copy)
         self.config_tab.add_new_substrate(subname)
         self.ics_tab.add_new_substrate(subname)
 
@@ -717,6 +1242,24 @@ class SubstrateDef(QWidget):
             self.enable_zmin.setChecked(self.param_d[self.current_substrate]["enable_zmin"])
             self.enable_zmax.setChecked(self.param_d[self.current_substrate]["enable_zmax"])
 
+        if self.pkpd_flag:
+            self.pk_model_combobox.setCurrentIndex(self.pk_model_combobox.findText(self.param_d[self.current_substrate]["pk_model"]))
+            self.pk_schedule_format_combobox.setCurrentIndex(self.pk_schedule_format_combobox.findText(self.param_d[self.current_substrate]["schedule_format"]))
+            self.pk_total_doses.setText(str(self.param_d[self.current_substrate]["total_doses"]))
+            self.pk_loading_doses.setText(str(self.param_d[self.current_substrate]["loading_doses"]))
+            self.pk_first_dose_time.setText(str(self.param_d[self.current_substrate]["first_dose_time"]))
+            self.pk_dose_interval.setText(str(self.param_d[self.current_substrate]["dose_interval"]))
+            self.pk_regular_dose.setText(str(self.param_d[self.current_substrate]["regular_dose"]))
+            self.pk_loading_dose.setText(str(self.param_d[self.current_substrate]["loading_dose"]))
+            self.pk_elimination_rate.setText(str(self.param_d[self.current_substrate]["elimination_rate"]))
+            self.pk_k12.setText(str(self.param_d[self.current_substrate]["k12"]))
+            self.pk_k21.setText(str(self.param_d[self.current_substrate]["k21"]))
+            self.pk_volume_ratio.setText(str(self.param_d[self.current_substrate]["volume_ratio"]))
+            self.pk_biot_number.setText(str(self.param_d[self.current_substrate]["biot_number"]))
+            self.pk_csv_folder.setText(str(self.param_d[self.current_substrate]["pk_csv_folder"]))
+            self.pk_csv_filename.setText(str(self.param_d[self.current_substrate]["pk_csv_filename"]))
+            self.pk_sbml_folder.setText(str(self.param_d[self.current_substrate]["sbml_folder"]))
+            self.pk_sbml_filename.setText(str(self.param_d[self.current_substrate]["sbml_filename"]))
 
         # global to all substrates
         self.gradients.setChecked(self.param_d["gradients"])
@@ -727,7 +1270,7 @@ class SubstrateDef(QWidget):
     def populate_tree(self):
         logging.debug(f'=======================  microenv populate_tree  ======================= ')
         uep = self.xml_root.find(".//microenvironment_setup")
-        if uep:
+        if uep is not None:
 
             self.tree.clear()
             idx = 0
@@ -800,7 +1343,7 @@ class SubstrateDef(QWidget):
 
                     self.dirichlet_options_exist = True  # rwh/todo - how to handle this?
                     options_path = var_path.find('.//Dirichlet_options')
-                    if options_path:
+                    if options_path is not None:
                         for bv in options_path:
                             logging.debug(f'bv = {bv}')
                             if "xmin" in bv.attrib['ID'].lower():
@@ -841,6 +1384,120 @@ class SubstrateDef(QWidget):
                         self.param_d[substrate_name]["enable_zmin"] = default_dc_enabled
                         self.param_d[substrate_name]["enable_zmax"] = default_dc_enabled
 
+                    if self.pkpd_flag:
+                        pk_path = var_path.find(".//PK")
+                        if pk_path is None:
+                            pk_model_enabled = "false"
+                        else:
+                            pk_model_enabled = pk_path.attrib["enabled"]
+                        schedule_format = "parameters"
+                        total_doses = "0"
+                        loading_doses = "0"
+                        first_dose_time = "0"
+                        dose_interval = "1"
+                        regular_dose = "0"
+                        loading_dose = "0"
+                        elimination_rate = "0"
+                        k12 = "0"
+                        k21 = "0"
+                        volume_ratio = "1"
+                        biot_number = "1"
+                        csv_folder = None
+                        csv_filename = None
+                        sbml_folder = "./config"
+                        sbml_filename = "PK_default.xml"
+                        if pk_model_enabled == "true":
+                            pk_model = pk_path.find(".//model").text
+                            if pk_model != "SBML":
+                                schedule_elm = pk_path.find(".//schedule")
+                                if schedule_elm is not None:
+                                    schedule_format = schedule_elm.attrib["format"]
+                                    if schedule_format == "parameters":
+                                        total_doses_elm = schedule_elm.find(".//total_doses")
+                                        if total_doses_elm is not None and total_doses_elm.text is not None:
+                                            total_doses = total_doses_elm.text
+                                        loading_doses_elm = schedule_elm.find(".//loading_doses")
+                                        if loading_doses_elm is not None and loading_doses_elm.text is not None:
+                                            loading_doses = loading_doses_elm.text
+                                        first_dose_time_elm = schedule_elm.find(".//first_dose_time")
+                                        if first_dose_time_elm is not None and first_dose_time_elm.text is not None:
+                                            first_dose_time = first_dose_time_elm.text
+                                        dose_interval_elm = schedule_elm.find(".//dose_interval")
+                                        if dose_interval_elm is not None and dose_interval_elm.text is not None:
+                                            dose_interval = dose_interval_elm.text
+                                        regular_dose_elm = schedule_elm.find(".//regular_dose")
+                                        if regular_dose_elm is not None and regular_dose_elm.text is not None:
+                                            regular_dose = regular_dose_elm.text
+                                        loading_dose_elm = schedule_elm.find(".//loading_dose")
+                                        if loading_dose_elm is not None and loading_dose_elm.text is not None:
+                                            loading_dose = loading_dose_elm.text
+                                    elif schedule_format == "csv":
+                                        csv_folder_elm = pk_path.find(".//folder")
+                                        if csv_folder_elm is not None and csv_folder_elm.text is not None:
+                                            csv_folder = csv_folder_elm.text
+                                        csv_filename_elm = pk_path.find(".//filename")
+                                        if csv_filename_elm is not None and csv_filename_elm.text is not None:
+                                            csv_filename = csv_filename_elm.text
+                                elimination_rate_elm = pk_path.find(".//elimination_rate")
+                                if elimination_rate_elm is not None and elimination_rate_elm.text is not None:
+                                    elimination_rate = elimination_rate_elm.text
+                                k12_elm = pk_path.find(".//k12")
+                                if k12_elm is not None and k12_elm.text is not None:
+                                    k12 = k12_elm.text
+                                k21_elm = pk_path.find(".//k21")
+                                if k21_elm is not None and k21_elm.text is not None:
+                                    k21 = k21_elm.text
+                                volume_ratio_elm = pk_path.find(".//volume_ratio")
+                                if volume_ratio_elm is not None and volume_ratio_elm.text is not None:
+                                    volume_ratio = volume_ratio_elm.text
+                            else:
+                                sbml_folder_elm = pk_path.find(".//sbml_folder")
+                                if sbml_folder_elm is not None and sbml_folder_elm.text is not None:
+                                    sbml_folder = sbml_folder_elm.text
+                                sbml_filename_elm = pk_path.find(".//sbml_filename")
+                                if sbml_filename_elm is not None and sbml_filename_elm.text is not None:
+                                    sbml_filename = sbml_filename_elm.text
+                            biot_number_elm = pk_path.find(".//biot_number")
+                            if biot_number_elm is not None and biot_number_elm.text is not None:
+                                biot_number = biot_number_elm.text
+                                    
+                        else:
+                            pk_model = "None"
+
+                        self.param_d[substrate_name]["pk_model"] = pk_model
+                        self.param_d[substrate_name]["schedule_format"] = schedule_format
+                        self.param_d[substrate_name]["total_doses"] = total_doses
+                        self.param_d[substrate_name]["loading_doses"] = loading_doses
+                        self.param_d[substrate_name]["first_dose_time"] = first_dose_time
+                        self.param_d[substrate_name]["dose_interval"] = dose_interval
+                        self.param_d[substrate_name]["regular_dose"] = regular_dose
+                        self.param_d[substrate_name]["loading_dose"] = loading_dose
+                        self.param_d[substrate_name]["elimination_rate"] = elimination_rate
+                        self.param_d[substrate_name]["k12"] = k12
+                        self.param_d[substrate_name]["k21"] = k21
+                        self.param_d[substrate_name]["volume_ratio"] = volume_ratio
+                        self.param_d[substrate_name]["biot_number"] = biot_number
+                        self.param_d[substrate_name]["pk_csv_folder"] = csv_folder
+                        self.param_d[substrate_name]["pk_csv_filename"] = csv_filename
+                        self.param_d[substrate_name]["sbml_folder"] = sbml_folder
+                        self.param_d[substrate_name]["sbml_filename"] = sbml_filename
+
+                        if idx == 1:
+                            self.pk_model_combobox.setCurrentIndex(self.pk_model_combobox.findText(pk_model))
+                            self.pk_schedule_format_combobox.setCurrentIndex(self.pk_schedule_format_combobox.findText(schedule_format))
+                            self.pk_total_doses.setText(str(total_doses))
+                            self.pk_loading_doses.setText(str(loading_doses))
+                            self.pk_first_dose_time.setText(str(first_dose_time))
+                            self.pk_dose_interval.setText(str(dose_interval))
+                            self.pk_regular_dose.setText(str(regular_dose))
+                            self.pk_loading_dose.setText(str(loading_dose))
+                            self.pk_elimination_rate.setText(str(elimination_rate))
+                            self.pk_k12.setText(str(k12))
+                            self.pk_k21.setText(str(k21))
+                            self.pk_volume_ratio.setText(str(volume_ratio))
+                            self.pk_biot_number.setText(str(biot_number))
+                            self.pk_sbml_filename.setText(str(sbml_filename))
+
                 elif var.tag == 'options':
                     self.param_d["gradients"] = False
                     self.param_d["track_in_agents"] = False
@@ -862,7 +1519,7 @@ class SubstrateDef(QWidget):
     #----------------------------------------------------------------------------
     def first_substrate_name(self):
         uep = self.xml_root.find(".//microenvironment_setup//variable")
-        if uep:
+        if uep is not None:
                 return(uep.attrib['name'])
 
             #----------------------------------------------------------------------------
@@ -881,7 +1538,7 @@ class SubstrateDef(QWidget):
         logging.debug(f'----------- microenv_tab.py: fill_xml(): ----------')
         uep = self.xml_root.find('.//microenvironment_setup') # guaranteed to exist since we start with a valid model
         vp = []   # pointers to <variable> nodes
-        if uep:
+        if uep is not None:
             # Begin by removing all previously defined substrates in the .xml
             for var in uep.findall('variable'):
                 uep.remove(var)
@@ -898,6 +1555,7 @@ class SubstrateDef(QWidget):
         indent6 = '\n      '
         indent8 = '\n        '
         indent10 = '\n          '
+        indent12 = '\n             '
 
         idx = 0
         for substrate in self.param_d.keys():
@@ -984,6 +1642,73 @@ class SubstrateDef(QWidget):
                     "enabled":str(self.param_d[substrate]["enable_zmax"])} )
                 subelm2.text = self.param_d[substrate]["dirichlet_zmax"]
                 subelm2.tail = indent8
+
+                if self.pkpd_flag:
+                    if self.param_d[substrate]["pk_model"] == "None":
+                        subelm = ET.SubElement(elm, "PK",{"enabled":"false"})
+                    else:
+                        subelm = ET.SubElement(elm, "PK",{"enabled":"true"})
+                        subelm.text = indent10
+                        subelm.tail = indent8
+                        
+                        subelm2 = ET.SubElement(subelm, "model")
+                        subelm2.text = self.param_d[substrate]["pk_model"]
+                        subelm2.tail = indent10
+
+                        if self.param_d[substrate]["pk_model"] != "SBML":
+                            subelm2 = ET.SubElement(subelm, "schedule",{"format":self.param_d[substrate]["schedule_format"]})
+                            if self.param_d[substrate]["schedule_format"] == "parameters":
+                                subelm3 = ET.SubElement(subelm2, "total_doses")
+                                subelm3.text = self.param_d[substrate]["total_doses"]
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "loading_doses")
+                                subelm3.text = self.param_d[substrate]["loading_doses"]
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "first_dose_time",{"units":"days"})
+                                subelm3.text = self.param_d[substrate]["first_dose_time"]
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "dose_interval",{"units":"days"})
+                                subelm3.text = str(self.param_d[substrate]["dose_interval"]) # no idea why this one needs to be explicitly converted to a string and not the others...
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "regular_dose")
+                                subelm3.text = str(self.param_d[substrate]["regular_dose"]) # no idea why this one needs to be explicitly converted to a string and not the others...
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "loading_dose")
+                                subelm3.text = str(self.param_d[substrate]["loading_dose"]) # no idea why this one needs to be explicitly converted to a string and not the others...
+                                subelm3.tail = indent12
+
+                            elif self.param_d[substrate]["schedule_format"] == "csv":
+                                subelm3 = ET.SubElement(subelm2, "folder")
+                                subelm3.text = self.param_d[substrate]["pk_csv_folder"]
+                                subelm3.tail = indent12
+                                subelm3 = ET.SubElement(subelm2, "filename")
+                                subelm3.text = self.param_d[substrate]["pk_csv_filename"]
+                                subelm3.tail = indent12
+
+                            if self.param_d[substrate]["pk_model"] in ["1C", "2C"]:
+                                subelm2 = ET.SubElement(subelm, "elimination_rate",{"units":"1/min"})
+                                subelm2.text = self.param_d[substrate]["elimination_rate"]
+                                subelm2.tail = indent10
+                                if self.param_d[substrate]["pk_model"] == "2C":
+                                    subelm2 = ET.SubElement(subelm, "k12",{"units":"1/min"})
+                                    subelm2.text = self.param_d[substrate]["k12"]
+                                    subelm2.tail = indent10
+                                    subelm2 = ET.SubElement(subelm, "k21",{"units":"1/min"})
+                                    subelm2.text = self.param_d[substrate]["k21"]
+                                    subelm2.tail = indent10
+                                    subelm2 = ET.SubElement(subelm, "volume_ratio")
+                                    subelm2.text = self.param_d[substrate]["volume_ratio"]
+                                    subelm2.tail = indent10
+                        else:
+                            subelm2 = ET.SubElement(subelm, "sbml_folder")
+                            subelm2.text = str(self.param_d[substrate]["sbml_folder"])
+                            subelm2.tail = indent10
+                            subelm2 = ET.SubElement(subelm, "sbml_filename")
+                            subelm2.text = str(self.param_d[substrate]["sbml_filename"])
+                            subelm2.tail = indent10
+                        subelm2 = ET.SubElement(subelm, "biot_number")
+                        subelm2.text = str(self.param_d[substrate]["biot_number"])
+                        subelm2.tail = indent10
                         
                 uep.insert(idx,elm)
                 idx += 1

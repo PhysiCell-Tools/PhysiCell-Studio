@@ -67,7 +67,78 @@ def handle_parse_error(section_str):
     # returnValue = msgBox.exec()
     sys.exit(-1)
 
-def populate_tree_cell_defs(cell_def_tab, skip_validate):
+def pkpd_populate_tree_cell_defs(cell_def_tab, uep, pkpd_flag):
+    if pkpd_flag is False:
+        return
+    idx = 1
+    for cell_def in uep:
+        if cell_def.tag != "cell_definition":
+            logging.debug(f'--------pkpd_populate_tree_cell_defs: found unexpected child <cell_definitions>; skip over {cell_def}')
+            continue
+        if cell_def.tag == "cell_rules":
+            logging.debug(f'--------pkpd_populate_tree_cell_defs: found cell_rules child; break out on {cell_def}')
+            continue
+        cell_def_name = cell_def.attrib['name']
+        cell_def_tab.param_d[cell_def_name]["pd"] = {}
+        jdx = 1
+        for substrate in cell_def_tab.substrate_list:
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate] = {}
+            if substrate in cell_def_tab.pd_substrates:
+                cell_def_tab.param_d[cell_def_name]['custom_data'][f'{substrate}_damage'] = ["0.0",False]
+            if idx == 1 and jdx == 1:
+                cell_def_tab.current_pd_substrate = substrate
+            jdx += 1
+        uep_pd = cell_def_tab.xml_root.find(".//cell_definitions//cell_definition[" + str(idx) + "]//PD")
+        idx += 1
+        if uep_pd is None:
+            continue
+        for substrate in cell_def_tab.substrate_list:
+            sub_elm = uep_pd.find(f".//substrate[@name='{substrate}']")
+            if sub_elm is None:
+                continue
+            pd_model = "None"
+            pd_model_elm = sub_elm.find(".//model")
+            if pd_model_elm is not None:
+                pd_model = pd_model_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["pd_model"] = pd_model
+            if pd_model != "None":
+                cell_def_tab.add_custom_data(f'{substrate}_damage',"0.0",False,"damage",f'Accumulated damage due to {substrate}')
+                if substrate not in cell_def_tab.pd_substrates:
+                    cell_def_tab.pd_substrates.append(substrate)
+            if substrate in cell_def_tab.pd_substrates:
+                cell_def_tab.param_d[cell_def_name]['custom_data'][f'{substrate}_damage'] = ["0.0",False]
+
+            metabolism_rate = "0"
+            metabolism_rate_elm = sub_elm.find(".//metabolism_rate")
+            if metabolism_rate_elm is not None:
+                metabolism_rate = metabolism_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["metabolism_rate"] = metabolism_rate
+
+            constant_repair_rate = "0"
+            constant_repair_rate_elm = sub_elm.find(".//constant_repair_rate")
+            if constant_repair_rate_elm is not None:
+                constant_repair_rate = constant_repair_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["constant_repair_rate"] = constant_repair_rate
+            
+            linear_repair_rate = "0"
+            linear_repair_rate_elm = sub_elm.find(".//linear_repair_rate")
+            if linear_repair_rate_elm is not None:
+                linear_repair_rate = linear_repair_rate_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["linear_repair_rate"] = linear_repair_rate
+            
+            precompute = "true"
+            precompute_elm = sub_elm.find(".//precompute")
+            if precompute_elm is not None:
+                precompute = precompute_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["precompute"] = precompute
+            
+            dt = "0.01" # default to default diffusion_dt
+            dt_elm = sub_elm.find(".//dt")
+            if dt_elm is not None:
+                dt = dt_elm.text
+            cell_def_tab.param_d[cell_def_name]["pd"][substrate]["dt"] = dt
+
+def populate_tree_cell_defs(cell_def_tab, skip_validate, pkpd_flag=False):
     logging.debug(f'=======================  populate_tree_cell_defs(): ======================= ')
     logging.debug(f'    cell_def_tab.param_d = {cell_def_tab.param_d}')
     # cell_def_tab.master_custom_varname.clear()
@@ -80,7 +151,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     validate_cell_defs(uep, skip_validate)
 
     uep = cell_def_tab.xml_root.find(".//cell_definitions")
-    if uep:
+    if uep is not None:
         cell_def_tab.tree.clear()
         for idx, cell_def in enumerate(uep):
             # <cell_definition name="default" ID="0">
@@ -199,7 +270,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             pt_uep = None
             for path in possible_paths:
                 pt_uep = uep.find(path)
-                if pt_uep:
+                if pt_uep is not None:
                     break
             if path.endswith("//transition_rates"):
                 logging.debug(f'\n\n--------------------- NOTE -----------------------------')
@@ -449,7 +520,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             logging.debug(f'mechanics_path={mechanics_path}')
             try:
                 is_movable_tag =  uep.find(mechanics_path+"is_movable")
-                if is_movable_tag:
+                if is_movable_tag is not None:
                     val =  uep.find(mechanics_path+"is_movable").text
                     if val.lower() == 'true':
                         cell_def_tab.param_d[cell_def_name]["is_movable"] = True
@@ -958,17 +1029,20 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                                     })
                                     
                     # Update widget values
-                    cell_def_tab.physiboss_clear_initial_values()
-                    cell_def_tab.physiboss_clear_parameters()
-                    cell_def_tab.physiboss_clear_mutants()
-                    cell_def_tab.physiboss_clear_node_inheritance()
-                    cell_def_tab.physiboss_clear_inputs()
-                    cell_def_tab.physiboss_clear_outputs()
+                    try:
+                        cell_def_tab.physiboss_clear_initial_values()
+                        cell_def_tab.physiboss_clear_parameters()
+                        cell_def_tab.physiboss_clear_mutants()
+                        cell_def_tab.physiboss_clear_node_inheritance()
+                        cell_def_tab.physiboss_clear_inputs()
+                        cell_def_tab.physiboss_clear_outputs()
                     
-                    cell_def_tab.physiboss_update_list_signals()
-                    cell_def_tab.physiboss_update_list_behaviours()
-                    cell_def_tab.physiboss_update_list_nodes()
-                    cell_def_tab.physiboss_update_list_parameters()
+                        cell_def_tab.physiboss_update_list_signals()
+                        cell_def_tab.physiboss_update_list_behaviours()
+                        cell_def_tab.physiboss_update_list_nodes()
+                        cell_def_tab.physiboss_update_list_parameters()
+                    except:
+                        print("Warning: populate_tree_cell_defs.py: updating physiboss widget values (Galaxy-related)")
 
                 elif uep_intracellular.attrib["type"] == "dfba":
                     # --------- dFBA specific code
@@ -1152,7 +1226,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             # to call 'append_more_cb' for the excess.
             cell_def_tab.custom_var_count = 0
             cell_def_tab.param_d[cell_def_name]['custom_data'] = {}
-            if uep_custom_data:
+            if uep_custom_data is not None:
                 logging.debug(f'--------------- populate_tree: (empty)custom_data = {cell_def_tab.param_d[cell_def_name]["custom_data"]}')
                 for var in uep_custom_data:
                     val = var.text
@@ -1184,7 +1258,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
                 
             cell_def_tab.param_d[cell_def_name]["par_dists"] = {}
             uep_par_dists = cell_def_tab.xml_root.find(f"{cell_definition_path}//initial_parameter_distributions")
-            if uep_par_dists:
+            if uep_par_dists is not None:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = uep_par_dists.attrib["enabled"].lower() != "true"
                 for par_dist in uep_par_dists:
                     # get behavior element of par_dist
@@ -1222,6 +1296,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
             else:
                 cell_def_tab.param_d[cell_def_name]["par_dists_disabled"] = True
 
+        pkpd_populate_tree_cell_defs(cell_def_tab, uep, pkpd_flag)
     # print("populate_tree_cell_defs.py:  Setting 0th cell")
     cell_def_tab.current_cell_def = cell_def_0th
     cell_def_tab.tree.setCurrentItem(cell_def_tab.tree.topLevelItem(0))  # select the top (0th) item
@@ -1232,7 +1307,7 @@ def populate_tree_cell_defs(cell_def_tab, skip_validate):
     #----------------------------------
     # at the end of <cell_definitions>
     uep_cell_rules = cell_def_tab.xml_root.find(".//cell_definitions//cell_rules")
-    if uep_cell_rules:
+    if uep_cell_rules is not None:
         rules_folder = uep_cell_rules.find(".//folder").text 
         rules_file = uep_cell_rules.find(".//filename").text 
         logging.debug(f'------- populate_tree_cell_defs.py: setting rules.csv folder = {rules_folder}')

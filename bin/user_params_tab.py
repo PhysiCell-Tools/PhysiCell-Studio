@@ -609,7 +609,7 @@ class UserParams(StudioTab):
         logging.debug(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
         # print(f'\n--------- user_params_tab.py:  fill_xml(): self.count = {self.count}')
         uep = self.xml_root.find('.//user_parameters')
-        if uep:
+        if uep is not None:
             logging.debug(f'--------- found //user_parameters')
             # Begin by removing all previously defined user params in the .xml
             # weird, this only removes the 1st child
@@ -651,7 +651,7 @@ class UserParams(StudioTab):
                     elm.tail = '\n        '
                     uep.insert(knt,elm)
                     knt += 1
-            if elm:
+            if elm is not None:
                 elm.tail = '\n    '
             logging.debug(f'found {knt}')
 

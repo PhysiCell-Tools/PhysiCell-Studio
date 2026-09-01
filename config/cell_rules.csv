@@ -1,0 +1,7 @@
+cancer,pressure,decreases,cycle entry,0,1,4,0
+cancer,oxygen,increases,cycle entry,0.00093,21.5,4,0
+cancer,oxygen,decreases,necrosis,0,3.75,8,0
+cancer,drug,increases,apoptosis,5e-3,0.5,4,0
+cancer,dead,increases,debris secretion,1,0.5,10,1
+macrophage,contact with dead cell,increases,transform to M1 macrophage,0.1,0.5,10,0
+cancer,damage,increases,apoptosis,0.023,45,10,0
