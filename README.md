@@ -1,5 +1,7 @@
 # PhysiCell Studio
 
+[![cancer_immune model regression test](https://github.com/PhysiCell-Tools/PhysiCell-Studio/actions/workflows/cancer-immune-test.yml/badge.svg)](https://github.com/PhysiCell-Tools/PhysiCell-Studio/actions/workflows/cancer-immune-test.yml)
+
 A graphical tool to create, execute, and visualize a multicellular model using PhysiCell.
 
 See the [PhysiCell Studio Guide](https://github.com/PhysiCell-Tools/Studio-Guide/blob/main/README.md) for full documentation.
