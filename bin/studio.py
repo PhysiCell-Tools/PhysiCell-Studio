@@ -53,7 +53,8 @@ from run_tab import RunModel
 from settings import StudioSettings
 # from legend_tab import Legend 
 
-from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history, \
+from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history,  \
+    save_output_galaxy_ui, \
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
 from python_shell import open_python_shell
 from project_io import ProjectIO
@@ -595,6 +596,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 file_menu.addAction("Open", self.open_as_cb)
                 file_menu.addAction("Save project", lambda: save_project_galaxy_ui(self))
                 file_menu.addAction("Load project", lambda: load_project_galaxy_history(self))
+                file_menu.addAction("Save sim output", lambda: save_output_galaxy_ui(self))
 
             #------
             add_menu_separator(file_menu)
@@ -633,10 +635,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
             misc_menu = menubar.addMenu('&Misc')
             misc_menu.addAction("get from History", self.get_galaxy_history_cb)
 
-            self.download_menu = misc_menu.addMenu('put on History')
-            self.download_config_item = self.download_menu.addAction("current config .xml", lambda: download_config_galaxy(self))
-            self.download_zipped_csv_item = self.download_menu.addAction("all_csv.zip", lambda: download_zipped_csv_galaxy(self))
-            self.download_all_zipped_item = self.download_menu.addAction("all_output.zip", lambda: download_all_zipped_galaxy(self))
+            # self.download_menu = misc_menu.addMenu('put on History')
+            # self.download_config_item = self.download_menu.addAction("current config .xml", lambda: download_config_galaxy(self))
+            # self.download_zipped_csv_item = self.download_menu.addAction("all_csv.zip", lambda: download_zipped_csv_galaxy(self))
+            # self.download_all_zipped_item = self.download_menu.addAction("all_output.zip", lambda: download_all_zipped_galaxy(self))
 
             add_menu_separator(misc_menu)
             misc_menu.addAction("Python shell", self.open_python_shell_cb)

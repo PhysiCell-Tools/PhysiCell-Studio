@@ -361,6 +361,97 @@ class SaveProjectWindow(QWidget):
         msg.setFixedWidth(500)
         msg.exec_()
 
+#-----------------------------------------------------------------
+class SaveOutputWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        stylesheet = """
+            QPushButton{ border: 1px solid; border-color: rgb(145, 200, 145); border-radius: 1px;  background-color: lightgreen; color: black; width: 64px; padding-right: 8px; padding-left: 8px; padding-top: 3px; padding-bottom: 3px; }
+            """
+
+        self.xml_creator = None    # set by caller
+
+        self.setStyleSheet(stylesheet)
+
+        self.scroll = QScrollArea()
+        self.vbox = QVBoxLayout()
+        glayout = QGridLayout()
+        self.vbox.addLayout(glayout)
+
+        idx_row = 0
+        self.save_file_button = QPushButton("Save .zip")
+        self.save_file_button.setFixedWidth(90)
+        self.save_file_button.setEnabled(True)
+        self.save_file_button.setStyleSheet("background-color: lightgreen;")
+        self.save_file_button.clicked.connect(self.save_output_cb)
+        glayout.addWidget(self.save_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
+
+        self.output_name_w = QLineEdit("my_output")
+        # self.project_name_w.setFixedWidth(200)
+        self.output_name_w.setEnabled(True)
+        glayout.addWidget(self.output_name_w, idx_row, 1, 1, 1)
+
+
+        self.timestamp_w = QCheckBox_custom("time-stamp")
+        glayout.addWidget(self.timestamp_w, idx_row, 2, 1, 1)
+
+        idx_row += 1
+        msg = ("Click Save to have your /output files zipped and copied to the Galaxy History.\n"
+               "Rename the base filename if you wish.\n"
+               "If you have a lot of files in your /output, this may take some time.")
+        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
+
+        self.close_button = QPushButton("Close")
+        self.close_button.setStyleSheet("background-color: lightgreen;")
+        self.close_button.clicked.connect(self.close)
+
+        self.scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll.setWidgetResizable(True)
+
+        self.vbox.addWidget(self.close_button)
+        self.setLayout(self.vbox)
+
+    def save_output_cb(self):
+        fname = self.output_name_w.text()
+        if self.timestamp_w.isChecked():
+            ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            fname = f"{fname}_{ts}.zip"
+        else:
+            fname = f"{fname}.zip"
+
+        msgBox = QMessageBox()
+        msgBox.setText(f"This will zip your simulation /output "
+                   f"then copy '{fname}' to the Galaxy History.")
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        if msgBox.exec() == QMessageBox.Cancel:
+            return
+
+        # self.xml_creator.save_cb()
+
+        file_str = os.path.join(os.getcwd(), "output/*")
+        # print('-------- save_project_cb(): zip up all', file_str)
+        try:
+            with zipfile.ZipFile(fname, 'w') as myzip:
+                myzip.write(self.xml_creator.current_xml_file,
+                            os.path.basename(self.xml_creator.current_xml_file))
+                for f in glob.glob(file_str):
+                    myzip.write(f, os.path.basename(f))
+            put(fname)
+        except KeyError:
+            msg = traceback.format_exc()
+            self.show_error_message(msg)
+
+    def show_error_message(self, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText(message)
+        msg.setWindowTitle("Error")
+        msg.setFixedWidth(500)
+        msg.exec_()
+
 
 #-----------------------------------------------------------------
 # Studio-level helper functions (called as save_project_galaxy(self), etc.)
@@ -396,6 +487,11 @@ def save_project_galaxy_ui(self):
     self.galaxy_save_project_UI.hide()
     self.galaxy_save_project_UI.show()
 
+def save_output_galaxy_ui(self):
+    self.galaxy_save_output_UI = SaveOutputWindow()
+    self.galaxy_save_output_UI.xml_creator = self
+    self.galaxy_save_output_UI.hide()
+    self.galaxy_save_output_UI.show()
 
 def load_project_galaxy_history(self):
     self.project_historyUI = LoadProjectWindow()
