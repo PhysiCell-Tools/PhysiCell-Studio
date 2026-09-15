@@ -633,7 +633,7 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
 
         if self.galaxy_flag:
             misc_menu = menubar.addMenu('&Misc')
-            misc_menu.addAction("get from History", self.get_galaxy_history_cb)
+#            misc_menu.addAction("get from History", self.get_galaxy_history_cb)
 
             # self.download_menu = misc_menu.addMenu('put on History')
             # self.download_config_item = self.download_menu.addAction("current config .xml", lambda: download_config_galaxy(self))

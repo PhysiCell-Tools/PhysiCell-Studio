@@ -19,7 +19,7 @@ from PyQt5.QtGui import QIntValidator
 from studio_classes import DoubleValidatorWidgetBounded, QCheckBox_custom
 
 try:
-    from galaxy_ie_helpers import put, find_matching_history_ids, get, get_user_history
+    from galaxy_ie_helpers import put, find_matching_history_ids, get, get_user_history, get_galaxy_connection
 except:
     print("----- Note: cannot import from galaxy_ie_helpers")
     pass
@@ -42,6 +42,8 @@ def _list_history_datasets(history_id=None, suffixes=None):
     ]
     datasets.sort(key=lambda t: t[0], reverse=True)
     return datasets
+
+PHYSICELL_HISTORY = "PhysiCell"
 
 #-----------------------------------------------------------------
 # UI helper widget used by GalaxyHistoryWindow
@@ -151,6 +153,12 @@ class GalaxyHistoryWindow(QWidget):
     def close_galaxy_history_cb(self):
         self.close()
 
+def get_or_create_history(name):
+    gi = get_galaxy_connection(obj=False)
+    matches = gi.histories.get_histories(name=name)
+    if matches:
+        return matches[0]['id']
+    return gi.histories.create_history(name=name)['id']
 
 #-----------------------------------------------------------------
 class LoadProjectWindow(QWidget):
@@ -163,6 +171,7 @@ class LoadProjectWindow(QWidget):
 
         self.xml_creator = None    # set by caller
         self.history_datasets = []    # [(hid, name), ...] currently listed
+        self.history_id = None    # History the current listing came from; set by refresh_history_cb
 
         self.setStyleSheet(stylesheet)
 
@@ -172,6 +181,12 @@ class LoadProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
+        self.pc_load_history_w = QCheckBox_custom("'PhysiCell' History")
+        self.pc_load_history_w.setChecked(True)
+        glayout.addWidget(self.pc_load_history_w, idx_row, 0, 1, 1)
+        # self.pc_history_w.
+
+        idx_row += 1
         self.refresh_button = QPushButton("Refresh")
         self.refresh_button.setStyleSheet("background-color: lightgreen;")
         self.refresh_button.clicked.connect(self.refresh_history_cb)
@@ -189,7 +204,7 @@ class LoadProjectWindow(QWidget):
         glayout.addWidget(self.history_list, idx_row, 0, 1, 2)
 
         idx_row += 1
-        msg = ("Datasets currently in your Galaxy History are listed above by name.\n"
+        msg = (f"Datasets currently in your Galaxy [{PHYSICELL_HISTORY}] History are listed above by name.\n"
                "Select a previously saved project .zip (or double-click it) then Load.\n"
                "This will unzip those files into your /config directory and update the Studio.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
@@ -218,8 +233,18 @@ class LoadProjectWindow(QWidget):
     def refresh_history_cb(self):
         self.history_list.clear()
         self.history_datasets = []
+        # Resolved here (not cached from __init__) so toggling the checkbox and hitting
+        # Refresh picks up the change; get_or_create_history is only called -- and thus
+        # only creates the History as a side effect -- when the box is actually checked.
         try:
-            self.history_datasets = _list_history_datasets(suffixes=('.zip',))
+            self.history_id = get_or_create_history(PHYSICELL_HISTORY) if self.pc_load_history_w.isChecked() else None
+        except Exception:
+            # No Galaxy connection available (e.g. testing outside a Galaxy IE
+            # container). Fall through with no History resolved; the listing
+            # attempt below will fail the same way and is already handled.
+            self.history_id = None
+        try:
+            self.history_datasets = _list_history_datasets(history_id=self.history_id, suffixes=('.zip',))
         except Exception:
             return    # leave the list empty; user can hit Refresh again once History is ready
         for hid, name in self.history_datasets:
@@ -234,7 +259,12 @@ class LoadProjectWindow(QWidget):
 
         msgBox = QMessageBox()
         try:
-            zip_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>
+            # self.history_id: the same History refresh_history_cb listed hid from --
+            # hid values are only unique within a History, so the fetch must target
+            # the History the listing actually came from, not whatever the checkbox
+            # currently shows (it may have been toggled since the last Refresh).
+            zip_file = get(hid, history_id=self.history_id)    # galaxy_ie_helpers API; downloads into /import/<hid>
+
             with zipfile.ZipFile(zip_file, 'r') as zip_ref:
                 zip_ref.extractall(path="config")
                 msgBox.setText('Successful extractall into /config ...now loading into the Studio')
@@ -288,6 +318,12 @@ class SaveProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
+        self.pc_save_history_w = QCheckBox_custom("'PhysiCell' History")
+        self.pc_save_history_w.setChecked(True)
+        glayout.addWidget(self.pc_save_history_w, idx_row, 0, 1, 1)
+        # self.pc_history_w.
+
+        idx_row += 1
         self.save_file_button = QPushButton("Save .zip")
         self.save_file_button.setFixedWidth(90)
         self.save_file_button.setEnabled(True)
@@ -306,7 +342,7 @@ class SaveProjectWindow(QWidget):
         glayout.addWidget(self.timestamp_w, idx_row, 2, 1, 1)
 
         idx_row += 1
-        msg = ("Click Save to have your project zipped and copied to the Galaxy History.\n"
+        msg = (f"Click Save to have your project zipped and copied to the Galaxy [{PHYSICELL_HISTORY}] History.\n"
                "Rename the base filename if you wish.\n"
                "It may take several seconds to appear in your History.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
@@ -332,13 +368,13 @@ class SaveProjectWindow(QWidget):
 
         msgBox = QMessageBox()
         msgBox.setText(f"This will bundle your current model's config file, its cells/substrates ICs, and rules, "
-                   f"then copy '{fname}' to the Galaxy History.")
+                   f"then copy '{fname}' to a Galaxy [{PHYSICELL_HISTORY}] History ")
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         if msgBox.exec() == QMessageBox.Cancel:
             return
 
-        self.xml_creator.save_cb()
+        self.xml_creator.save_cb()  # update config params from GUI
 
         file_str = os.path.join(os.getcwd(), "config/*.csv")
         # print('-------- save_project_cb(): zip up all', file_str)
@@ -348,8 +384,13 @@ class SaveProjectWindow(QWidget):
                             os.path.basename(self.xml_creator.current_xml_file))
                 for f in glob.glob(file_str):
                     myzip.write(f, os.path.basename(f))
-            put(fname)
-        except KeyError:
+
+            if self.pc_save_history_w.isChecked():
+                history_id = get_or_create_history(PHYSICELL_HISTORY)
+            else:
+                history_id = None
+            put(fname, history_id=history_id)
+        except Exception:
             msg = traceback.format_exc()
             self.show_error_message(msg)
 
@@ -380,6 +421,11 @@ class SaveOutputWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
+        self.pc_save_history_w = QCheckBox_custom("'PhysiCell' History")
+        self.pc_save_history_w.setChecked(True)
+        glayout.addWidget(self.pc_save_history_w, idx_row, 0, 1, 1)
+
+        idx_row += 1
         self.save_file_button = QPushButton("Save .zip")
         self.save_file_button.setFixedWidth(90)
         self.save_file_button.setEnabled(True)
@@ -397,7 +443,7 @@ class SaveOutputWindow(QWidget):
         glayout.addWidget(self.timestamp_w, idx_row, 2, 1, 1)
 
         idx_row += 1
-        msg = ("Click Save to have your /output files zipped and copied to the Galaxy History.\n"
+        msg = (f"Click Save to have your /output files zipped and copied to the Galaxy [{PHYSICELL_HISTORY}] History.\n"
                "Rename the base filename if you wish.\n"
                "If you have a lot of files in your /output, this may take some time.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
@@ -423,7 +469,7 @@ class SaveOutputWindow(QWidget):
 
         msgBox = QMessageBox()
         msgBox.setText(f"This will zip your simulation /output "
-                   f"then copy '{fname}' to the Galaxy History.")
+                   f"then copy '{fname}' to the Galaxy [{PHYSICELL_HISTORY}] History.")
         msgBox.setIcon(QMessageBox.Information)
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
         if msgBox.exec() == QMessageBox.Cancel:
@@ -439,7 +485,12 @@ class SaveOutputWindow(QWidget):
                             os.path.basename(self.xml_creator.current_xml_file))
                 for f in glob.glob(file_str):
                     myzip.write(f, os.path.basename(f))
-            put(fname)
+
+            if self.pc_save_history_w.isChecked():
+                history_id = get_or_create_history(PHYSICELL_HISTORY)
+            else:
+                history_id = None
+            put(fname, history_id=history_id)
         except KeyError:
             msg = traceback.format_exc()
             self.show_error_message(msg)
@@ -464,8 +515,7 @@ def save_project_galaxy(self):
 
     msgBox = QMessageBox()
     msgBox.setText(f"This will bundle your current model's config file, its cells/substrates ICs, and rules, "
-                   f"then copy that file to the Galaxy History.")
-                #    f"then copy '{fname}' to the Galaxy History.")
+                   f"then copy that file to the Galaxy [{PHYSICELL_HISTORY}]  History.")
     msgBox.setIcon(QMessageBox.Information)
     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     if msgBox.exec() == QMessageBox.Cancel:
@@ -579,6 +629,7 @@ class ImportBIWTDataWindow(QWidget):
         # BioinformaticsWalkthrough instance to import into.
         self.biwt_widget = biwt_widget
         self.history_datasets = []    # [(hid, name), ...] currently listed
+        self.history_id = None    # History the current listing came from; set by refresh_history_cb
 
         self.setStyleSheet(stylesheet)
 
@@ -588,6 +639,11 @@ class ImportBIWTDataWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
+        self.pc_biwt_history_w = QCheckBox_custom("'PhysiCell' History")
+        self.pc_biwt_history_w.setChecked(True)
+        glayout.addWidget(self.pc_biwt_history_w, idx_row, 0, 1, 1)
+
+        idx_row += 1
         self.refresh_button = QPushButton("Refresh")
         self.refresh_button.setStyleSheet("background-color: lightgreen;")
         self.refresh_button.clicked.connect(self.refresh_history_cb)
@@ -605,7 +661,7 @@ class ImportBIWTDataWindow(QWidget):
         glayout.addWidget(self.history_list, idx_row, 0, 1, 2)
 
         idx_row += 1
-        msg = ("Datasets currently in your Galaxy History are listed above by name.\n"
+        msg = (f"Datasets currently in your Galaxy [{PHYSICELL_HISTORY}] History are listed above by name.\n"
                "Select a single-cell data file (*.h5ad, *.csv)\n"
                "(or double-click it) then Load.")
         glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
@@ -634,8 +690,18 @@ class ImportBIWTDataWindow(QWidget):
     def refresh_history_cb(self):
         self.history_list.clear()
         self.history_datasets = []
+        # Resolved here (not cached from __init__) so toggling the checkbox and hitting
+        # Refresh picks up the change; get_or_create_history is only called -- and thus
+        # only creates the History as a side effect -- when the box is actually checked.
         try:
-            self.history_datasets = _list_history_datasets(suffixes=('.csv', '.h5ad'))
+            self.history_id = get_or_create_history(PHYSICELL_HISTORY) if self.pc_biwt_history_w.isChecked() else None
+        except Exception:
+            # No Galaxy connection available (e.g. testing outside a Galaxy IE
+            # container). Fall through with no History resolved; the listing
+            # attempt below will fail the same way and is already handled.
+            self.history_id = None
+        try:
+            self.history_datasets = _list_history_datasets(history_id=self.history_id, suffixes=('.csv', '.h5ad'))
         except Exception:
             return    # leave the list empty; user can hit Refresh again once History is ready
         for hid, name in self.history_datasets:
@@ -649,7 +715,11 @@ class ImportBIWTDataWindow(QWidget):
         hid, name = self.history_datasets[row]
 
         try:
-            biwt_file = get(hid)    # galaxy_ie_helpers API; downloads into /import/<hid>, no extension
+            # self.history_id: the same History refresh_history_cb listed hid from --
+            # hid values are only unique within a History, so the fetch must target
+            # the History the listing actually came from, not whatever the checkbox
+            # currently shows (it may have been toggled since the last Refresh).
+            biwt_file = get(hid, history_id=self.history_id)    # galaxy_ie_helpers API; downloads into /import/<hid>, no extension
             ext = Path(name).suffix
             if ext:
                 # biwt's loader dispatches on file suffix; the bare "/import/<hid>"
