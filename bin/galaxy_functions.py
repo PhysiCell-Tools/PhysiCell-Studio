@@ -421,6 +421,11 @@ class SaveOutputWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
+        self.pc_save_history_w = QCheckBox_custom("'PhysiCell' History")
+        self.pc_save_history_w.setChecked(True)
+        glayout.addWidget(self.pc_save_history_w, idx_row, 0, 1, 1)
+
+        idx_row += 1
         self.save_file_button = QPushButton("Save .zip")
         self.save_file_button.setFixedWidth(90)
         self.save_file_button.setEnabled(True)
@@ -480,7 +485,12 @@ class SaveOutputWindow(QWidget):
                             os.path.basename(self.xml_creator.current_xml_file))
                 for f in glob.glob(file_str):
                     myzip.write(f, os.path.basename(f))
-            put(fname)
+
+            if self.pc_save_history_w.isChecked():
+                history_id = get_or_create_history(PHYSICELL_HISTORY)
+            else:
+                history_id = None
+            put(fname, history_id=history_id)
         except KeyError:
             msg = traceback.format_exc()
             self.show_error_message(msg)
