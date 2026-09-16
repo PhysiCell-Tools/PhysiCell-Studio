@@ -1,8 +1,11 @@
-name: Build and push to quay.io on release
+name: Build and push to quay.io
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to publish"
+        required: true
 
 jobs:
   build-and-push:
@@ -29,4 +32,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: quay.io/physicell/pcstudio:${{ github.event.release.tag_name }}
+          tags: quay.io/physicell/pcstudio:${{ inputs.tag }}
