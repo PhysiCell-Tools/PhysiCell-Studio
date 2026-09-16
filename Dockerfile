@@ -25,10 +25,11 @@ ENV LIBGL_ALWAYS_INDIRECT=1
         #  openjfx \
 RUN printf "root:x:0:\nstaff:x:50:\n" > /tmp/.group && \
     printf "root:x:0:0:root:/root:/bin/bash\n" > /tmp/.passwd && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-         ca-certificates \
-         wget \
+        apt-get update -y && \
+        apt-get install -y --no-install-recommends \
+            ca-certificates \
+            wget \
+            jq \
          zip \
          libgl1 \
          xz-utils \
@@ -77,7 +78,17 @@ COPY ./bin/cell_templates/* /opt/pcstudio/bin/cell_templates/
 COPY ./bin/BIWT_parameters* /opt/pcstudio/bin/BIWT_parameters
 COPY ./config/* /opt/pcstudio/config/
 COPY ./samples/* /opt/pcstudio/samples/
-COPY ./project /opt/pcstudio/
+
+# Download template-linux.tar.gz from latest PhysiCell release assets, extract the "project"  executable and copy to /opt/pcstudio 
+RUN set -eux; \
+    API_URL="https://api.github.com/repos/MathCancer/PhysiCell/releases/latest"; \
+    ASSET_URL=$(wget -qO- "$API_URL" | jq -r '.assets[] | select(.name=="template-linux.tar.gz") | .browser_download_url'); \
+    if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then echo "template-linux.tar.gz not found in latest release"; exit 1; fi; \
+    wget -qO /tmp/template-linux.tar.gz "$ASSET_URL"; \
+    mkdir -p /tmp/extract && \
+    tar -xzf /tmp/template-linux.tar.gz -C /tmp/extract || true; \
+    if [ -f /tmp/extract/project ]; then mv /tmp/extract/project /opt/pcstudio/; else echo "project executable not found in archive"; exit 1; fi; \
+    rm -rf /tmp/extract /tmp/template-linux.tar.gz
 # COPY ./omp_hello /opt/pcstudio/
 COPY ./VERSION.txt /opt/pcstudio/
 RUN chmod -R 777 /opt/pcstudio
