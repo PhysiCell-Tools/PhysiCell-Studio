@@ -284,7 +284,11 @@ class Vis(VisBase, QWidget):
                     xvals = df_cells['position_x']
                     yvals = df_cells['position_y']
                     for c1,c2 in self.attachments:
-                        self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
+                        # attachments/neighbors come from the raw graph file and include
+                        # every cell, regardless of the cell-type filter; skip an edge
+                        # whose cell was filtered out of df_cells rather than KeyError.
+                        if c1 in xvals.index and c2 in xvals.index:
+                            self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
 
         # show grid(s), but only if Cells or Substrates checked?
         if self.show_voxel_grid:
