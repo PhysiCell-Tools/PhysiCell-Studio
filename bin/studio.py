@@ -38,6 +38,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QFont
 from PyQt5.QtCore import Qt, QLocale
 from PyQt5.QtWidgets import QStyleFactory
 
+from validate_xml_accessory_files import validate_xml_accessory_files
 from pretty_print_xml import pretty_print
 from config_tab import Config
 from cell_def_tab import CellDef, CellDefException
@@ -246,6 +247,12 @@ class PhysiCellXMLCreator(QWidget):
             if not Path(self.current_xml_file).is_file():
                 print("\n\nError: A default config/PhysiCell_settings.xml does not exist\n and you did not specify a config file using the '-c' argument.\n")
                 sys.exit(1)
+
+        retval = validate_xml_accessory_files(self.current_xml_file)
+        # print("retval from validate xml accessory files ---> ",retval)
+        if len(retval) > 0:
+            print(f"\nERROR: {retval}\n")
+            sys.exit(-1)
 
 
         # NOTE! We operate *directly* on a default .xml file, not a copy.
