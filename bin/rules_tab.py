@@ -1176,8 +1176,8 @@ class Rules(StudioTab):
                                     continue
 
                             if self.rules_enabled_attr and cell_type not in self.xml_creator.celldef_tab.param_d.keys():
-                                print(f'ERROR: {cell_type} is not a valid cell type name')
-                                show_studio_warning_window(f'ERROR: {cell_type} is not a valid cell type name')
+                                print(f'ERROR parsing rules: {cell_type} is not a valid cell type name')
+                                show_studio_warning_window(f'ERROR parsing rules: "{cell_type}" is not a valid cell type name. The rules table will not match the rules file.')
                                 return
 
                                 # self.rules_table.setCellWidget(irow, self.custom_icol_name, w_varname)   # 1st col
