@@ -41,11 +41,9 @@ class RunModel(StudioTab):
         #-------------------------------------------
         # used with nanoHUB app
         # self.nanohub = True
-        # following set in pmb.py
         self.current_dir = ''   
         self.config_file = None
 
-        # these get set in pmb.py
         # self.config_tab = None
         self.microenv_tab = None
         # self.celldef_tab = None
@@ -261,7 +259,11 @@ class RunModel(StudioTab):
                     self.p.start("submit",["--local",exec_str,xml_str])
                 else:
                     # logging.debug(f'\nrun_tab.py: running: {exec_str}, {xml_str}')
-                    self.p.start(exec_str, [xml_str])
+                    if exec_str[-3:] == ".py":
+                        # -u: unbuffered, else Python block-buffers stdout when it is a pipe and nothing shows until exit
+                        self.p.start("python", ["-u", exec_str, xml_str])
+                    else:
+                        self.p.start(exec_str, [xml_str])
 
                     # print("\n\nrun_tab.py: running: ",exec_str," output/config.xml")
                     # self.p.start(exec_str, ["output/config.xml"])
