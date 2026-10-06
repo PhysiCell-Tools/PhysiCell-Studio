@@ -81,7 +81,7 @@ def _domain_source_label(source):
 
 
 def _csv_types_without_definitions(result, prospective_cell_types):
-    """Cell types the .csv places but the model will have no definition for.
+    """Cell types the .csv places that BIWT sent no definition for.
 
     See BiwtCompletionFlow._add_requests_for_csv_types for why these matter.
     """
@@ -626,9 +626,9 @@ class BiwtCompletionFlow:
             return  # BIWT calls back with None when the user cancels.
 
         requests = bridge.extract_cell_defs(result)
-        self._add_requests_for_csv_types(result, requests)
+        from_csv = self._add_requests_for_csv_types(result, requests)
         self._resolve(requests, self.xml_creator.xml_root.find(".//cell_definitions"))
-        context = self._build_context(result, requests)
+        context = self._build_context(result, requests, from_csv)
         dialog = BiwtSaveDialog(self.ics, context)
         if dialog.exec_() != QDialog.Accepted:
             return
@@ -674,19 +674,28 @@ class BiwtCompletionFlow:
     def _add_requests_for_csv_types(self, result, requests):
         """Add a request for every cell type the .csv places that has no definition coming.
 
-        A type left at "(none)" is simply absent from BIWT's mapping. Where the model already
-        has that type, absence is the useful answer -- keep the definition Studio holds. Where
-        it does not, the .csv would place cells that nothing defines, which PhysiCell refuses
-        and the ICs tab reports only as an opaque "Invalid cell type name".
+        A type left at "(none)" is simply absent from BIWT's mapping, and the .csv still
+        places cells of it, so whichever config is written needs a definition for it or
+        PhysiCell refuses the .csv -- which the ICs tab reports only as an opaque "Invalid
+        cell type name". Where this model already has that type, the definition is a copy of
+        the model's own: in a merge that is the type copied onto itself, and in a new file it
+        is the only way the type gets there at all. Where it does not, Studio's default
+        phenotype stands in.
+
+        Every placed type gets a request, whatever the destination: the destination is not
+        known until the dialog closes, and the dialog describes the requests.
+
+        Returns the names it added, so the dialog can tell a copy BIWT asked for from one
+        made here.
         """
         try:
             existing = list(self.xml_creator.celldef_tab.param_d.keys())
         except AttributeError:
             existing = []
-        known = list(requests) + existing
-        for name in _csv_types_without_definitions(result, known):
-            requests[name] = bridge.request_for_csv_type(name)
-        return requests
+        added = _csv_types_without_definitions(result, list(requests))
+        for name in added:
+            requests[name] = bridge.request_for_csv_type(name, existing)
+        return added
 
     def _resolve(self, requests, cell_definitions_elm):
         """Give every request an element, then fill in any phenotype section it lacks."""
@@ -696,7 +705,7 @@ class BiwtCompletionFlow:
         bridge.repair_cell_defs(requests, nanohub_flag=nanohub, data_dir=data_dir)
         return requests
 
-    def _build_context(self, result, requests):
+    def _build_context(self, result, requests, from_csv=()):
         xml_root = self.xml_creator.xml_root
         celldef_tab = self.xml_creator.celldef_tab
         existing_names = list(celldef_tab.param_d.keys())
@@ -734,6 +743,11 @@ class BiwtCompletionFlow:
         no_template = sorted(r.name for r in rows
                              if not r.request.chose_template()
                              and r.request.origin == bridge.ORIGIN_DEFAULT)
+        # The third: no template chosen, but the model has the type, so it is copied rather
+        # than defaulted. Worth a line because the dialog shows nothing else for it -- the
+        # copy is "unchanged", and unchanged types get no row.
+        copied = sorted(name for name in from_csv
+                        if requests[name].origin == bridge.ORIGIN_HOST)
         unusable = sorted(r.name for r in rows
                           if r.request.chose_template()
                           and r.request.origin == bridge.ORIGIN_DEFAULT)
@@ -749,6 +763,12 @@ class BiwtCompletionFlow:
                 "! No template was chosen for: %s. The .csv places cells of these types so "
                 "they will be created with Studio's generic default phenotype."
                 % ", ".join(no_template))
+        if copied:
+            notes.append(
+                "No template was chosen for: %s. This model already defines %s, so the "
+                "definition is copied from this model. To start from a generic phenotype "
+                "instead, pick a template in BIWT."
+                % (", ".join(copied), "this type" if len(copied) == 1 else "these types"))
         # Only the cell types that actually arrive without secretion values. A run where every
         # type came from this model's own definitions changes no secretion at all, and saying
         # otherwise sends the user looking for something that is not there.

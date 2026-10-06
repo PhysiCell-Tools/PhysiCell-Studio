@@ -255,8 +255,23 @@ def extract_cell_defs(result):
     return requests
 
 
-def request_for_csv_type(name):
-    """A request for a cell type the .csv places that BIWT assigned no template to."""
+def request_for_csv_type(name, host_names=()):
+    """A request for a cell type the .csv places that BIWT assigned no template to.
+
+    Copied from the host when the host already defines a type of that name, so a name the
+    model knows keeps the definition it has wherever it is written -- a merge or a new file.
+    Anyone who wants a generic phenotype under a name the model already uses picks one in
+    BIWT; "(none)" is not that choice. Where the host has no such type, nothing exists to
+    copy, and the request is left for resolve_cell_defs() to fill with Studio's default.
+
+    *host_names* are taken as the host spells them: the match is classify_names()'s, but the
+    request keeps the host's own spelling as its template_name, which is what the copy is
+    looked up by.
+    """
+    for host_name in host_names:
+        matched, _added = classify_names([name], [host_name])
+        if matched:
+            return CellDefRequest(name, HOST_SOURCE, host_name)
     return CellDefRequest(name)
 
 
