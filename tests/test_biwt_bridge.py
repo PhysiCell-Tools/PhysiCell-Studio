@@ -97,9 +97,9 @@ def test_every_placed_type_gets_a_request_whatever_the_model_holds():
     requests = bridge.extract_cell_defs(_result(KNOWN, NEW, KNOWN_TOO))
     assert requests == {}   # the templates step was skipped
 
-    added = flow._add_requests_for_csv_types(_result(KNOWN, NEW, KNOWN_TOO), requests)
+    flow._add_requests_for_csv_types(_result(KNOWN, NEW, KNOWN_TOO), requests)
 
-    assert sorted(added) == sorted([KNOWN, NEW, KNOWN_TOO])
+    assert sorted(requests) == sorted([KNOWN, NEW, KNOWN_TOO])
     assert requests[KNOWN].from_host() and requests[KNOWN_TOO].from_host()
     assert not requests[NEW].from_host()
 
@@ -110,9 +110,9 @@ def test_a_type_biwt_chose_a_template_for_is_left_alone():
     result.cell_templates = {KNOWN: ("/lib.toml", "neuron", "<phenotype/>")}
     requests = bridge.extract_cell_defs(result)
 
-    added = flow._add_requests_for_csv_types(result, requests)
+    flow._add_requests_for_csv_types(result, requests)
 
-    assert added == []
+    assert list(requests) == [KNOWN]
     assert requests[KNOWN].source == "/lib.toml"
 
 

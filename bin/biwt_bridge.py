@@ -264,13 +264,11 @@ def request_for_csv_type(name, host_names=()):
     BIWT; "(none)" is not that choice. Where the host has no such type, nothing exists to
     copy, and the request is left for resolve_cell_defs() to fill with Studio's default.
 
-    *host_names* are taken as the host spells them: the match is classify_names()'s, but the
-    request keeps the host's own spelling as its template_name, which is what the copy is
-    looked up by.
+    Matched by classify_names()'s rule, but the request keeps the host's own spelling as its
+    template_name, since that is what the copy is looked up by.
     """
     for host_name in host_names:
-        matched, _added = classify_names([name], [host_name])
-        if matched:
+        if classify_names([name], [host_name])[0]:
             return CellDefRequest(name, HOST_SOURCE, host_name)
     return CellDefRequest(name)
 
