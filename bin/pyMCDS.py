@@ -53,6 +53,43 @@ def graphfile_parser(s_pathfile):
     return(dei_graph)
 
 
+# Optional per-folder frame loaders (see uq_physicell.py): output folders whose data
+# does not live in .mat files. A loader is a callable
+# loader(xmlfile, output_path, microenv, graph) -> dict shaped like pyMCDS.data.
+_frame_loaders = {}
+
+def _folder_key(output_path):
+    return str(pathlib.Path(output_path).resolve())
+
+def set_frame_loader(output_path, loader):
+    """Register (or with loader=None, remove) the frame loader for an output folder."""
+    if loader is None:
+        _frame_loaders.pop(_folder_key(output_path), None)
+    else:
+        _frame_loaders[_folder_key(output_path)] = loader
+
+def get_frame_loader(output_path):
+    """Frame loader registered for an output folder, or None."""
+    if not _frame_loaders:
+        return None
+    return _frame_loaders.get(_folder_key(output_path))
+
+def frame_microenv_matrix(xmlfile, output_path):
+    """Loader-backed equivalent of the 'multiscale_microenvironment' matrix in
+    outputNNNNNNNN_microenvironment0.mat: rows x, y, z, volume, then one per substrate.
+    Returns None if the frame has no microenvironment data."""
+    xmlpathfile, output_path = xmlfile_to_xmlpathfile(xmlfile, output_path)
+    data = get_frame_loader(output_path)(xmlpathfile.name, output_path, True, False)
+    substrates = data.get('continuum_variables', {})
+    if not substrates:
+        return None
+    coords = data['mesh']['mnp_coordinate']
+    i, j, k = (np.searchsorted(axis, coords[n]) for n, axis in enumerate(data['mesh']['mnp_axis']))
+    rows = [coords, data['mesh']['volumes'][np.newaxis, :]]
+    rows += [sub['data'][j, i, k][np.newaxis, :] for sub in substrates.values()]
+    return np.vstack(rows)
+
+
 # object classes
 class pyMCDS:
     """
@@ -95,7 +132,12 @@ class pyMCDS:
         self.microenv = microenv
         self.graph = graph
         self.verbose = verbose
-        self.data = self._read_xml(xmlfile, output_path)
+        xmlpathfile, folder = xmlfile_to_xmlpathfile(xmlfile, output_path)
+        loader = get_frame_loader(folder)
+        if loader is not None:
+            self.data = loader(xmlpathfile.name, str(folder), microenv, graph)
+        else:
+            self.data = self._read_xml(xmlfile, output_path)
 
 
     ## METADATA RELATED FUNCTIONS ##

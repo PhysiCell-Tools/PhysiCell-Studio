@@ -70,6 +70,7 @@ from populate_tree_cell_defs import populate_tree_cell_defs
 
 from studio_classes import QCheckBox_custom, QRadioButton_custom, QLineEdit_custom
 from pyMCDS import xmlfile_to_xmlpathfile
+from uq_physicell_db import open_database_in_folder
 
 #---------------------------
 class ExtendedComboBox(QComboBox):
@@ -1050,6 +1051,10 @@ class VisBase():
             hbox.addWidget(self.cancel_button)
             self.vbox.addLayout(hbox)
 
+        # filled by uq_physicell_db.py when a UQ-PhysiCell database is opened
+        self.uq_panel_vbox = QVBoxLayout()
+        self.vbox.addLayout(self.uq_panel_vbox)
+
         self.physiboss_qline = None
         
         self.cells_physiboss_rb = None
@@ -1804,7 +1809,8 @@ class VisBase():
     #-------------------------------------
     def output_folder_cb(self):
         print(f"output_folder_cb(): old={self.output_dir}")
-        self.output_dir = self.output_folder.text()
+        if getattr(self, 'uq_panel', None) is None or not self.uq_panel.is_loaded():   # field shows a database label otherwise
+            self.output_dir = self.output_folder.text()
         print(f"                    new={self.output_dir}")
 
         msgBox = QMessageBox()
@@ -1827,6 +1833,10 @@ class VisBase():
             return
         if not Path(dir_path).is_dir():
             print("vis_base.py: output_folder_cb():  full_path_model_name is NOT valid")
+
+        # no PhysiCell output here, but maybe UQ-PhysiCell databases (uq_physicell_db.py)
+        if not glob.glob(os.path.join(dir_path, "output*.xml")) and open_database_in_folder(self, dir_path):
+            return
 
         print("select_plot_output_cb():  dir_path is valid")
         self.output_dir = dir_path
@@ -2191,6 +2201,8 @@ class VisBase():
 
     def reset_model(self):
         # print("--------- vis_base: reset_model ----------")
+        if getattr(self, 'uq_panel', None) is not None:   # unload a UQ-PhysiCell database run if output_dir moved on
+            self.uq_panel.output_dir_changed(self.output_dir)
         self.cell_scalars_filled = False
 
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml

@@ -59,6 +59,7 @@ from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
 from python_shell import open_python_shell
 from project_io import ProjectIO
+from uq_physicell_db import open_database_at_startup
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
@@ -1600,6 +1601,7 @@ def main():
     global studio_app
     # inputfile = ''
     config_file = None
+    uq_db = None   # --uq: UQ-PhysiCell database to open at startup
     studio_flag = True
     model3D_flag = False
     tensor_flag = False
@@ -1627,6 +1629,7 @@ def main():
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
         parser.add_argument("--pkpd", help="display PK and PD tabs", action="store_true")
         parser.add_argument("--s","--samples", dest="samples_flag", help="menu for sample projects", action="store_true")
+        parser.add_argument("-uq", "--uq", dest="uq_db", type=str, help="UQ-PhysiCell database (.db) to plot; requires -c")
 
         if platform.system() == "Windows":
             exec_file = 'project.exe'
@@ -1695,6 +1698,11 @@ def main():
             pkpd_flag = True
         if args.samples_flag:
             samples_flag = True
+        if args.uq_db:
+            if not args.config:
+                print("--uq requires -c (the model's config file)")
+                sys.exit(1)
+            uq_db = os.path.abspath(args.uq_db)
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
@@ -1783,6 +1791,8 @@ def main():
     # ex.repaint()  # Config (default)
 
     ex.show()
+    if uq_db:
+        QtCore.QTimer.singleShot(0, lambda: open_database_at_startup(ex, uq_db))
 
     # -- Insanity. Just trying to refresh the initial Config tab so the checkboxes will render properly :/
     # ex.config_tab.update()  # attempt to refresh, to show checkboxes!
