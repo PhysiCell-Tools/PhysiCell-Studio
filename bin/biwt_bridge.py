@@ -175,7 +175,7 @@ def _parse_content(content):
     return None, "is not a cell definition (its root element is <%s>)" % element.tag
 
 
-def extract_cell_defs(result, host_names=()):
+def extract_cell_defs(result, studio_cell_types=()):
     """Read BIWT's result into {cell type: CellDefRequest}, one per cell type it returned.
 
     The cell types are cell_type_map's non-None values: every type that came through BIWT's
@@ -183,27 +183,28 @@ def extract_cell_defs(result, host_names=()):
     places no cells and still expects a definition. What each is built from:
 
       * the template BIWT assigned it, when cell_templates has one;
-      * else, when the host already defines a type of that name, that definition, copied. A
-        name the model knows keeps the definition it has, in a merge or a new file alike;
-        anyone who wants a generic phenotype under such a name picks a template in BIWT,
-        because "(none)" is not that choice;
+      * else, when Studio's open model already defines a type of that name, that definition,
+        copied. A name the model knows keeps the definition it has, in a merge or a new file
+        alike; anyone who wants a generic phenotype under such a name picks a template in
+        BIWT, because "(none)" is not that choice;
       * else nothing yet -- resolve_cell_defs() fills in Studio's default phenotype.
 
     Records what BIWT said and nothing more; see resolve_cell_defs() for turning that into
     XML. Nothing raises and nothing is discarded: content that will not parse is kept on the
     request as `error`, so the cell type is still reported as one a template was chosen for.
 
-    The host match is classify_names()'s -- stripped, exact -- but the request keeps the
-    host's own spelling as its template_name, since that is what the copy is looked up by.
+    *studio_cell_types* are the open model's cell type names. The match is classify_names()'s
+    -- stripped, exact -- but the request keeps Studio's own spelling as its template_name,
+    since that is what the copy is looked up by.
     """
     requests = {}
     if result is None:
         return requests
 
     templates = {(key or "").strip(): value for key, value in result.cell_templates.items()}
-    hosts = {}
-    for host_name in host_names:
-        hosts.setdefault((host_name or "").strip(), host_name)
+    studio_cell_defs = {}
+    for cell_type in studio_cell_types:
+        studio_cell_defs.setdefault((cell_type or "").strip(), cell_type)
 
     for final in result.cell_type_map.values():
         name = (final or "").strip()
@@ -214,8 +215,8 @@ def extract_cell_defs(result, host_names=()):
             request = CellDefRequest(name, source, template_name, content)
             if not request.from_host():
                 request.element, request.error = _parse_content(content)
-        elif name in hosts:
-            request = CellDefRequest(name, HOST_SOURCE, hosts[name])
+        elif name in studio_cell_defs:
+            request = CellDefRequest(name, HOST_SOURCE, studio_cell_defs[name])
         else:
             request = CellDefRequest(name)
         requests[name] = request

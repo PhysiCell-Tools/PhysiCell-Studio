@@ -96,10 +96,10 @@ def test_a_type_the_model_lacks_is_left_for_the_default():
     assert not request.chose_template()
 
 
-def test_host_match_is_stripped_and_exact_but_keeps_the_host_spelling():
+def test_studio_match_is_stripped_and_exact_but_keeps_studio_spelling():
     request = bridge.extract_cell_defs(_result("Zorg"), ["  Zorg "])["Zorg"]
     assert request.from_host()
-    assert request.template_name == "  Zorg "   # looked up by the host's own spelling
+    assert request.template_name == "  Zorg "   # looked up by Studio's own spelling
     assert not bridge.extract_cell_defs(_result("zorg"), ["Zorg"])["zorg"].from_host()
 
 

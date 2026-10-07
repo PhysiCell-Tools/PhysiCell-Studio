@@ -586,6 +586,8 @@ class BiwtCompletionFlow:
         if result is None:
             return  # BIWT calls back with None when the user cancels.
 
+        # param_d, not celltypes_list: deleting a cell type removes it from param_d at once,
+        # while celltypes_list keeps it until the next reload.
         requests = bridge.extract_cell_defs(result, list(self.xml_creator.celldef_tab.param_d))
         self._resolve(requests, self.xml_creator.xml_root.find(".//cell_definitions"))
         context = self._build_context(result, requests)
