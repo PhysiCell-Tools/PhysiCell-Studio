@@ -103,7 +103,7 @@ def test_studio_match_is_stripped_and_exact_but_keeps_studio_spelling():
     assert not bridge.extract_cell_defs(_result("zorg"), ["Zorg"])["zorg"].from_host()
 
 
-def test_resolve_copies_the_host_definition_under_the_csv_name():
+def test_resolve_copies_the_model_definition_under_biwts_name():
     requests = bridge.extract_cell_defs(_result(KNOWN), MODEL)
     bridge.resolve_cell_defs(requests, _model_cell_definitions(*MODEL))
     request = requests[KNOWN]
@@ -116,7 +116,7 @@ def test_resolve_copies_the_host_definition_under_the_csv_name():
 # The reported failure, end to end through the new-file builders
 # ---------------------------------------------------------------------------
 
-def test_new_file_defines_every_type_the_csv_places():
+def test_new_file_defines_every_type_biwt_returns():
     requests = bridge.extract_cell_defs(_result(KNOWN, NEW, KNOWN_TOO), MODEL)
     bridge.resolve_cell_defs(requests, _model_cell_definitions(*MODEL))
     bridge.repair_cell_defs(requests)
