@@ -256,7 +256,7 @@ def extract_cell_defs(result):
 
 
 def request_for_csv_type(name, host_names=()):
-    """A request for a cell type the .csv places that BIWT assigned no template to.
+    """A request for a cell type BIWT returned without a template.
 
     Copied from the host when the host already defines a type of that name, so a name the
     model knows keeps the definition it has wherever it is written -- a merge or a new file.

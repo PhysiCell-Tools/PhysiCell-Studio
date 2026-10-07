@@ -608,7 +608,7 @@ class BiwtCompletionFlow:
             return  # BIWT calls back with None when the user cancels.
 
         requests = bridge.extract_cell_defs(result)
-        self._add_requests_for_csv_types(result, requests)
+        self._add_requests_for_unassigned_types(result, requests)
         self._resolve(requests, self.xml_creator.xml_root.find(".//cell_definitions"))
         context = self._build_context(result, requests)
         dialog = BiwtSaveDialog(self.ics, context)
@@ -653,22 +653,24 @@ class BiwtCompletionFlow:
         result.coordinates = coordinates.assign(
             type=coordinates["type"].astype(str).str.strip())
 
-    def _add_requests_for_csv_types(self, result, requests):
-        """Add a request for every cell type the .csv places that BIWT sent no template for.
+    def _add_requests_for_unassigned_types(self, result, requests):
+        """Add a request for every cell type BIWT returned without a template.
 
-        A type left at "(none)" is simply absent from BIWT's mapping, but the .csv still
-        places cells of it, and a config pointed at a .csv naming a type it does not define
-        fails -- the ICs tab reports only an opaque "Invalid cell type name". So every placed
-        type gets a request, whatever the destination turns out to be: one the model already
-        defines is copied from the model, any other gets Studio's default phenotype. See
-        request_for_csv_type() for why the copy.
+        A type left at "(none)" is simply absent from cell_templates. It is still one of the
+        result's cell types -- it came through BIWT's edit and rename steps, and the .csv
+        places its cells -- so whichever config is written has to define it: a config pointed
+        at a .csv naming a type it does not define fails, and the ICs tab reports only an
+        opaque "Invalid cell type name". Every such type gets a request, whatever the
+        destination turns out to be. One the model already defines is copied from the model;
+        any other gets Studio's default phenotype. See request_for_csv_type() for why the copy.
+
+        The types are read from cell_type_map, not from the .csv: BIWT allows a kept type a
+        count of zero, which places no cells and still expects a definition.
         """
-        try:
-            placed = {str(name).strip() for name in result.coordinates["type"].unique()}
-        except (AttributeError, KeyError, TypeError):
-            return requests
+        final = {str(name).strip() for name in result.cell_type_map.values()
+                 if name is not None}
         existing = list(self.xml_creator.celldef_tab.param_d)
-        for name in sorted(placed - {""} - set(requests)):
+        for name in sorted(final - {""} - set(requests)):
             requests[name] = bridge.request_for_csv_type(name, existing)
         return requests
 
@@ -734,9 +736,9 @@ class BiwtCompletionFlow:
                 % (", ".join(unusable), "it was" if len(unusable) == 1 else "they were"))
         if no_template:
             notes.append(
-                "! No template was chosen for: %s. The .csv places cells of these types so "
-                "they will be created with Studio's generic default phenotype."
-                % ", ".join(no_template))
+                "! No template was chosen for: %s, so %s created with Studio's generic "
+                "default phenotype."
+                % (", ".join(no_template), "it is" if len(no_template) == 1 else "they are"))
         if kept:
             notes.append(
                 "%s %s already defined in this model and %s that definition. To start from a "

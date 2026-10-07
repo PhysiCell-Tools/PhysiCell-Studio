@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""What Studio does with a cell type BIWT placed but assigned no template to.
+"""What Studio does with a cell type BIWT returned but assigned no template to.
 
 Such a type is absent from BIWT's mapping, so Studio has to decide its definition. The rule:
 copy this model's definition when the model has one by that name, Studio's default phenotype
@@ -37,11 +37,14 @@ def _model_cell_definitions(*names):
     return container
 
 
-def _result(*placed):
+def _result(*placed, unplaced=()):
+    """A BIWT result placing one cell of each of *placed*; *unplaced* are kept zero-count types."""
     coordinates = pd.DataFrame({
         "x": range(len(placed)), "y": [0.0] * len(placed), "z": [0.0] * len(placed),
         "type": list(placed)})
-    return types.SimpleNamespace(coordinates=coordinates, cell_type_map={}, cell_templates={})
+    cell_type_map = {name: name for name in placed + tuple(unplaced)}
+    return types.SimpleNamespace(coordinates=coordinates, cell_type_map=cell_type_map,
+                                 cell_templates={})
 
 
 # ---------------------------------------------------------------------------
@@ -92,16 +95,29 @@ def _flow(model_types):
     return ui.BiwtCompletionFlow(ics_tab)
 
 
-def test_every_placed_type_gets_a_request_whatever_the_model_holds():
+def test_every_returned_type_gets_a_request_whatever_the_model_holds():
     flow = _flow([KNOWN, KNOWN_TOO, "default"])
     requests = bridge.extract_cell_defs(_result(KNOWN, NEW, KNOWN_TOO))
     assert requests == {}   # the templates step was skipped
 
-    flow._add_requests_for_csv_types(_result(KNOWN, NEW, KNOWN_TOO), requests)
+    flow._add_requests_for_unassigned_types(_result(KNOWN, NEW, KNOWN_TOO), requests)
 
     assert sorted(requests) == sorted([KNOWN, NEW, KNOWN_TOO])
     assert requests[KNOWN].from_host() and requests[KNOWN_TOO].from_host()
     assert not requests[NEW].from_host()
+
+
+def test_a_kept_type_with_no_cells_is_still_defined():
+    # BIWT allows a count of zero at its counts step: the type reaches the host in
+    # cell_type_map and places nothing. Only the deleted ones (mapped to None) are gone.
+    flow = _flow([])
+    result = _result(KNOWN, unplaced=(NEW,))
+    result.cell_type_map["Dropped in BIWT"] = None
+    requests = bridge.extract_cell_defs(result)
+
+    flow._add_requests_for_unassigned_types(result, requests)
+
+    assert sorted(requests) == sorted([KNOWN, NEW])
 
 
 def test_a_type_biwt_chose_a_template_for_is_left_alone():
@@ -110,7 +126,7 @@ def test_a_type_biwt_chose_a_template_for_is_left_alone():
     result.cell_templates = {KNOWN: ("/lib.toml", "neuron", "<phenotype/>")}
     requests = bridge.extract_cell_defs(result)
 
-    flow._add_requests_for_csv_types(result, requests)
+    flow._add_requests_for_unassigned_types(result, requests)
 
     assert list(requests) == [KNOWN]
     assert requests[KNOWN].source == "/lib.toml"
@@ -121,7 +137,7 @@ def test_new_file_defines_every_type_the_csv_places():
     flow = _flow([KNOWN, KNOWN_TOO, "default"])
     result = _result(KNOWN, NEW, KNOWN_TOO)
     requests = bridge.extract_cell_defs(result)
-    flow._add_requests_for_csv_types(result, requests)
+    flow._add_requests_for_unassigned_types(result, requests)
 
     container = _model_cell_definitions(KNOWN, KNOWN_TOO, "default")
     bridge.resolve_cell_defs(requests, container)
