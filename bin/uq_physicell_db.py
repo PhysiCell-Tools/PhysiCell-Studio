@@ -1,9 +1,10 @@
 """
-Plot simulations stored in a UQ-PhysiCell database (``studio.py -c <config> --uq <database>``, or a Plot tab
-folder holding databases).
+Plot simulations stored in a UQ-PhysiCell database: ``studio.py --uq`` adds File -> Import UQ-PhysiCell
+database, ``studio.py -c <config> --uq <database>`` also opens one at startup, and the Plot tab's folder
+Select offers the databases of a folder without PhysiCell output.
 
 Optional: requires the uq_physicell package (pip install uq-physicell), which is imported
-only when a database is opened (--uq, or a folder holding databases in the Plot tab).
+only when a database is opened.
 A dialog summarizes the database (model INI and XML, sampling, parameters) for confirmation;
 the Plot tab then shows its first run. Each (SampleID, ReplicateID) is exposed to the Plot tab
 as a temporary output folder of index .xml files; the cell and substrate data are served from
@@ -715,3 +716,18 @@ def open_database_at_startup(studio, db_file):
         _message("The Plot tab is not available (Studio was started in bare mode).")
         return
     open_database(vis_tab, db_file, studio)
+
+
+def open_uq_database_cb(studio):
+    """File -> Import UQ-PhysiCell database (shown with ``studio.py --uq``): choose a database,
+    then show it in the Plot tab."""
+    vis_tab = getattr(studio, "vis_tab", None)
+    if vis_tab is None:
+        _message("The Plot tab is not available (Studio was started in bare mode).")
+        return
+    if _import_pc_studio() is None:
+        return
+    db_file, _ = QFileDialog.getOpenFileName(studio, "Import UQ-PhysiCell database", "",
+                                             "Database (*.db *.sqlite *.sqlite3);;All files (*)")
+    if db_file:
+        open_database(vis_tab, db_file, studio)
