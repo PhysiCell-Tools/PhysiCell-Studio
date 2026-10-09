@@ -15,7 +15,7 @@ from github import Github
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import (
     QWidget, QScrollArea, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QMessageBox,
+    QLabel, QLineEdit, QPushButton, QMessageBox, QListWidget,
 )
 # from PyQt5.QtGui import QIntValidator
 
@@ -215,6 +215,7 @@ class ImportProjectWindow(QWidget):
             """
 
         self.xml_creator = None    # set by caller
+        self.zip_names = []    # .zip filenames currently listed, parallel to self.zip_list rows
 
         self.setStyleSheet(stylesheet)
 
@@ -224,59 +225,48 @@ class ImportProjectWindow(QWidget):
         self.vbox.addLayout(glayout)
 
         idx_row = 0
-
-
-        # idx_row += 1
-        glayout.addWidget(QLabel("Import project (.zip) from GitHub:"), idx_row, 0, 1, 1)
-        # upload_binary_file(..., repo_name, local_path, github_path, commit_message, branch_name):
-        # glayout.addWidget(QLabel("username"), idx_row, 1, 1, 1)
-        # glayout.addWidget(QLabel("repo"), idx_row, 2, 1, 1)
-
-        idx_row += 1
-        # self.github_user_name = "user"
-        glayout.addWidget(QLabel("username:"), idx_row, 0, 1, 1)
-        self.github_user_name = None
-        self.github_user_w = QLineEdit(self.github_user_name)
-        # self.github_user_w.setFixedWidth(200)
-        self.github_user_w.setEnabled(True)
-        glayout.addWidget(self.github_user_w, idx_row, 1, 1, 1)
-
-        idx_row += 1
-        glayout.addWidget(QLabel("repo:"), idx_row, 0, 1, 1)
-        # self.github_repo_name = "repo"
-        self.github_repo_name = None
-        self.github_repo_w = QLineEdit(self.github_repo_name)
-        # self.github_user_w.setFixedWidth(200)
-        self.github_repo_w.setEnabled(True)
-        glayout.addWidget(self.github_repo_w, idx_row, 1, 1, 1)
+        glayout.addWidget(QLabel("Import project (.zip) from github.com:"), idx_row, 0, 1, 2)
 
         idx_row += 1
         glayout.addWidget(QLabel("path:"), idx_row, 0, 1, 1)
-        self.github_path_name = None
-        self.github_path_w = QLineEdit(self.github_path_name)
-        # self.github_user_w.setFixedWidth(200)
-        self.github_path_w.setEnabled(True)
-        glayout.addWidget(self.github_path_w, idx_row, 1, 1, 1)
+        self.path_name = None
+        self.path_name_w = QLineEdit(self.path_name)
+        self.path_name_w.setPlaceholderText("owner/repo or owner/repo/subdir")
+        self.path_name_w.setToolTip("owner/repo, optionally followed by a path within the repo, e.g.\nPhysiCell-Tools/PhysiCell-Studio/samples")
+        self.path_name_w.setEnabled(True)
+        glayout.addWidget(self.path_name_w, idx_row, 1, 1, 1)
 
         idx_row += 1
-        self.import_file_button = QPushButton("Import .zip")
-        self.import_file_button.setFixedWidth(90)
+        glayout.addWidget(QLabel("branch:"), idx_row, 0, 1, 1)
+        self.branch_name = "main"
+        self.branch_name_w = QLineEdit(self.branch_name)
+        self.branch_name_w.setEnabled(True)
+        glayout.addWidget(self.branch_name_w, idx_row, 1, 1, 1)
+
+        idx_row += 1
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.setStyleSheet("background-color: lightgreen;")
+        self.refresh_button.clicked.connect(self.refresh_zip_list_cb)
+        glayout.addWidget(self.refresh_button, idx_row, 0, 1, 1)
+
+        self.import_file_button = QPushButton("Import selected")
         self.import_file_button.setEnabled(True)
         self.import_file_button.setStyleSheet("background-color: lightgreen;")
         self.import_file_button.clicked.connect(self.import_project_cb)
-        glayout.addWidget(self.import_file_button, idx_row, 0, 1, 1) # w, row, column, rowspan, colspan
-
-        # self.project_name_w = QLineEdit("my_model")
-        self.project_name_w = QLineEdit()
-        # self.project_name_w.setFixedWidth(200)
-        self.project_name_w.setEnabled(True)
-        glayout.addWidget(self.project_name_w, idx_row, 1, 1, 1)
+        glayout.addWidget(self.import_file_button, idx_row, 1, 1, 1)
 
         idx_row += 1
-        msg = ("Click Import to have a project (.zip) copied from your GitHub repo.\n"
+        self.zip_list = QListWidget()
+        self.zip_list.itemDoubleClicked.connect(self.import_project_cb)
+        glayout.addWidget(self.zip_list, idx_row, 0, 1, 2)
+
+        idx_row += 1
+        msg = ("Enter a GitHub path (owner/repo, optionally /subdir) and branch, then click Refresh.\n"
+               ".zip files found there are listed above by name.\n"
+               "Select one (or double-click it) then Import selected.\n"
                "The Studio should be refreshed with that model's parameters.\n"
                "It may take a few seconds to update.")
-        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 3)
+        glayout.addWidget(QLabel(msg), idx_row, 0, 1, 2)
 
         self.close_button = QPushButton("Close")
         self.close_button.setStyleSheet("background-color: lightgreen;")
@@ -289,6 +279,11 @@ class ImportProjectWindow(QWidget):
         self.vbox.addWidget(self.close_button)
         self.setLayout(self.vbox)
 
+        # Not refreshed here, unlike galaxy_functions.LoadProjectWindow's "best-effort
+        # initial population": there's no sensible default path to list yet, so it
+        # would just be a wasted GitHub API call. User fills in the fields, then
+        # clicks Refresh.
+
     def show_info_message(self, message):
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
@@ -296,34 +291,53 @@ class ImportProjectWindow(QWidget):
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec_()
 
-    def import_project_cb(self):
-        self.github_user_name = self.github_user_w.text()
-        self.github_repo_name = self.github_repo_w.text()
-        self.github_path_name = self.github_path_w.text()
+    def _split_path_name(self):
+        """self.path_name is 'owner/repo' or 'owner/repo/sub/dir'. Returns
+        (owner, repo, subpath), with subpath == "" when none was given, or
+        (None, None, None) if it doesn't even have an owner/repo."""
+        parts = [p for p in self.path_name.strip("/").split("/") if p]
+        if len(parts) < 2:
+            return None, None, None
+        return parts[0], parts[1], "/".join(parts[2:])
 
-        project_name = self.project_name_w.text()
-        print(f"----- import_project_cb(): len(project_name)={len(project_name)}")
-        if len(project_name) == 0:
-            self.show_error_message(f"Invalid project name: {project_name}")
+    def refresh_zip_list_cb(self):
+        self.zip_list.clear()
+        self.zip_names = []
+
+        self.path_name = self.path_name_w.text().strip()
+        self.branch_name = self.branch_name_w.text().strip() or "main"
+        owner, repo, subpath = self._split_path_name()
+        if not owner or not repo:
             return
 
-        print(f"----- import_project_cb(): project_name={project_name}, project_name[:-4]={project_name[:-4]}")
-        if project_name[-4:] != '.zip':
-            project_name += ".zip"
+        try:
+            github_pat_str = None
+            if self.xml_creator is not None:
+                github_pat_str = self.xml_creator.project_io.github_pat
+            g = Github(github_pat_str) if github_pat_str else Github()
+            repo_obj = g.get_repo(f"{owner}/{repo}")
+            contents = repo_obj.get_contents(subpath, ref=self.branch_name)
+            if not isinstance(contents, list):
+                contents = [contents]
+            self.zip_names = sorted(c.name for c in contents if c.name.lower().endswith(".zip"))
+        except Exception:
+            return    # leave the list empty; user can hit Refresh again once path/branch are valid
 
+        for name in self.zip_names:
+            self.zip_list.addItem(name)
 
-        # url = "https://github.com/physicell-training/essentials/blob/main/code/zombies_and_villagers.zip?raw=true"
-        #  https://github.com/physicell-training/essentials/tree/main/code  
-        # url = f"https://github.com/{self.github_user_name}/{self.github_repo_name}/blob/main/code/zombies_and_villagers.zip?raw=true"
-        branch_name = "main"
-        # url = f"https://github.com/{self.github_user_name}/{self.github_repo_name}/blob/{branch_name}"
-        # url = f"https://github.com/{self.github_user_name}/{self.github_repo_name}/raw/{branch_name}"
-        # raw.githubusercontent.com
-        # url = f"https://raw.githubusercontent.com/{self.github_user_name}/{self.github_repo_name}/raw/{branch_name}"
-        url = f"https://raw.githubusercontent.com/{self.github_user_name}/{self.github_repo_name}/{branch_name}"
-        url += f"/{self.github_path_name}"
+    def import_project_cb(self, sval=None):
+        row = self.zip_list.currentRow()
+        if row < 0 or row >= len(self.zip_names):
+            QMessageBox.warning(self, "No file selected", "Select a .zip file from the list first.")
+            return
+        project_name = self.zip_names[row]
+
+        owner, repo, subpath = self._split_path_name()
+        url = f"https://raw.githubusercontent.com/{owner}/{repo}/{self.branch_name}"
+        if subpath:
+            url += f"/{subpath}"
         url += f"/{project_name}"
-        # url += f"?raw=true"
 
         msgBox = QMessageBox()
         msgBox.setText(f"This will attempt to retrieve {url}")
@@ -369,50 +383,6 @@ class ImportProjectWindow(QWidget):
             msgBox.setText("Error loading config/PhysiCell_settings.xml.")
             msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
             returnValue = msgBox.exec()
-
-
-        # msgBox = QMessageBox()
-        # try:
-        #     msgBox.setText('Copying the requested data from the Galaxy History')
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     msgBox.exec()
-        #     # get(self.file_id)
-        #     # from_filename += str(self.file_id)
-        #     try:
-        #         print(f"load_project_cb(): attempting to copy {from_filename} to {zip_file}")
-        #         shutil.copy(from_filename, zip_file)
-        #         os.remove(from_filename)
-        #     except:
-        #         msg = f"Error: unable to copy {from_filename} to {zip_file}"
-        #         print(msg)
-        #         msgBox.setText(msg)
-        #         msgBox.setStandardButtons(QMessageBox.Ok)
-        #         msgBox.exec()
-        #     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        #         zip_ref.extractall(path="config")
-        #         msgBox.setText('Successful extractall into /config ...now loading into the Studio')
-        #         msgBox.setStandardButtons(QMessageBox.Ok)
-        #         msgBox.exec()
-        #     time.sleep(1)
-        #     self.xml_creator.config_file = "config/PhysiCell_settings.xml"
-        #     self.xml_creator.show_sample_model()
-
-        # except FileNotFoundError:
-        #     msg = f"Error: The file {zip_file} was not found."
-        #     print(msg)
-        #     msgBox.setText(msg)
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     msgBox.exec()
-        # except zipfile.BadZipFile:
-        #     msg = f"Error: The file {zip_file} is not a valid or supported zip file."
-        #     print(msg)
-        #     msgBox.setText(msg)
-        #     msgBox.setStandardButtons(QMessageBox.Ok)
-        #     msgBox.exec()
-        # except Exception as e:
-        #     # msg = f'load_project_cb(): There was a problem getting or unzipping {from_filename} with History ID {self.file_id}.'
-        #     msg = traceback.format_exc()
-        #     self.show_error_message(msg)
 
 
     def show_error_message(self, message):
