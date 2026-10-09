@@ -59,6 +59,7 @@ from galaxy_functions import save_project_galaxy_ui, load_project_galaxy_history
     get_galaxy_history, download_config_galaxy, download_zipped_csv_galaxy, download_all_zipped_galaxy
 from python_shell import open_python_shell
 from project_io import ProjectIO
+from uq_physicell_db import open_uq_database_cb, open_database_at_startup
 try:
     from galaxy_ie_helpers import put, find_matching_history_ids, get
 except:
@@ -149,7 +150,7 @@ def confirm_save_without_pkpd():
     return msgBox.exec() == QMessageBox.Ok
 
 class PhysiCellXMLCreator(QWidget):
-    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag, parent = None):
+    def __init__(self, config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag, uq_flag=False, parent = None):
         super(PhysiCellXMLCreator, self).__init__(parent)
         QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
         if model3D_flag:
@@ -180,6 +181,7 @@ class PhysiCellXMLCreator(QWidget):
         self.pytest_flag = pytest_flag 
         self.biwt_flag = biwt_flag
         self.pkpd_flag = pkpd_flag
+        self.uq_flag = uq_flag   # --uq: File menu entry to import a UQ-PhysiCell database
         self.samples_flag = samples_flag
 
         self.rules_tab_index = None
@@ -614,6 +616,10 @@ PhysiCell Studio is provided "AS IS" without warranty of any kind. &nbsp; In no 
                 add_menu_separator(file_menu)
                 # generate a .simularium output file using results in the output dir
                 file_menu.addAction("Simularium export", self.simularium_cb)
+
+                if self.uq_flag:
+                    # plot simulations stored in a UQ-PhysiCell database (optional uq_physicell package)
+                    file_menu.addAction("Import UQ-PhysiCell database", lambda: open_uq_database_cb(self))
 
             if self.samples_flag:
                 add_menu_separator(file_menu)
@@ -1600,6 +1606,8 @@ def main():
     global studio_app
     # inputfile = ''
     config_file = None
+    uq_flag = False   # --uq: File menu entry for UQ-PhysiCell databases
+    uq_db = None      # --uq <database>: also open it at startup
     studio_flag = True
     model3D_flag = False
     tensor_flag = False
@@ -1627,6 +1635,8 @@ def main():
         parser.add_argument("--bioinf_import","--biwt", dest="biwt_flag", help="display bioinformatics walkthrough tab on ICs tab", action="store_true")
         parser.add_argument("--pkpd", help="display PK and PD tabs", action="store_true")
         parser.add_argument("--s","--samples", dest="samples_flag", help="menu for sample projects", action="store_true")
+        parser.add_argument("-uq", "--uq", dest="uq_db", nargs="?", const="", default=None, type=str, metavar="DATABASE",
+                            help="File menu entry to import a UQ-PhysiCell database (.db); with a database, also open it (requires -c)")
 
         if platform.system() == "Windows":
             exec_file = 'project.exe'
@@ -1695,6 +1705,13 @@ def main():
             pkpd_flag = True
         if args.samples_flag:
             samples_flag = True
+        if args.uq_db is not None:
+            uq_flag = True
+            if args.uq_db:
+                if not args.config:
+                    print("--uq <database> requires -c (the model's config file)")
+                    sys.exit(1)
+                uq_db = os.path.abspath(args.uq_db)
     except:
         # print("Error parsing command line args.")
         sys.exit(-1)
@@ -1772,7 +1789,7 @@ def main():
             sys.exit(1)
             # print("Warning: Rules module not found.\n")
 
-    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag)
+    ex = PhysiCellXMLCreator(config_file, studio_flag, skip_validate_flag, rules_flag, model3D_flag, tensor_flag, exec_file, nanohub_flag, galaxy_flag, is_movable_flag, pytest_flag, biwt_flag, samples_flag, pkpd_flag, uq_flag)
     # print("size=",ex.size())
 
     # -- Insanity. Trying/failing to force the proper display of (default) checkboxes
@@ -1783,6 +1800,8 @@ def main():
     # ex.repaint()  # Config (default)
 
     ex.show()
+    if uq_db:
+        QtCore.QTimer.singleShot(0, lambda: open_database_at_startup(ex, uq_db))
 
     # -- Insanity. Just trying to refresh the initial Config tab so the checkboxes will render properly :/
     # ex.config_tab.update()  # attempt to refresh, to show checkboxes!

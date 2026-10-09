@@ -41,7 +41,7 @@ locale_en_US = QtCore.QLocale(QtCore.QLocale.English, QtCore.QLocale.UnitedState
 import numpy as np
 import scipy.io
 from pyMCDS_cells import pyMCDS_cells 
-from pyMCDS import pyMCDS
+from pyMCDS import pyMCDS, get_frame_loader, frame_microenv_matrix
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -928,15 +928,21 @@ class Vis(VisBase, QWidget):
         days = int(hrs/24)
         self.title_str = '%d days, %d hrs, %d mins' % (days,hrs-days*24, mins-hrs*60)
 
-        fname = "output%08d_microenvironment0.mat" % frame
-        full_fname = os.path.join(self.output_dir, fname)
-        if not Path(full_fname).is_file():
-            print("ERROR: file not found",full_fname)
-            return
+        if get_frame_loader(self.output_dir) is not None:   # output stored outside .mat files (uq_physicell.py)
+            M = frame_microenv_matrix(xml_file_root, self.output_dir)
+            if M is None or self.field_index >= M.shape[0]:
+                print("vis_tab.py: no substrate data stored for", xml_file_root)
+                return
+        else:
+            fname = "output%08d_microenvironment0.mat" % frame
+            full_fname = os.path.join(self.output_dir, fname)
+            if not Path(full_fname).is_file():
+                print("ERROR: file not found",full_fname)
+                return
 
-        info_dict = {}
-        scipy.io.loadmat(full_fname, info_dict)
-        M = info_dict['multiscale_microenvironment']
+            info_dict = {}
+            scipy.io.loadmat(full_fname, info_dict)
+            M = info_dict['multiscale_microenvironment']
 
         try:
             xgrid = M[0, :].reshape(self.numy, self.numx)

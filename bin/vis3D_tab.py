@@ -937,6 +937,8 @@ class Vis(VisBase, QWidget):
 
     def reset_model(self):
         print("\n--------- vis3D_tab: reset_model ----------")
+        if getattr(self, 'uq_panel', None) is not None:   # unload a UQ-PhysiCell database run if output_dir moved on
+            self.uq_panel.output_dir_changed(self.output_dir)
         # Verify initial.xml and at least one .svg file exist. Obtain bounds from initial.xml
         # tree = ET.parse(self.output_dir + "/" + "initial.xml")
         xml_file = Path(self.output_dir, "initial.xml")
