@@ -741,6 +741,7 @@ class CellDef(StudioTab):
 
         # TODO: is this safe? Seems so.
         del self.param_d[self.current_cell_def]
+        self.celltypes_list.remove(self.current_cell_def)
 
         # do *after* removing from param_d keys.
         if self.rules_tab:
