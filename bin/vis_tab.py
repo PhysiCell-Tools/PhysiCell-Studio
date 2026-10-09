@@ -246,7 +246,7 @@ class Vis(VisBase, QWidget):
         csv_file.close()
 
     #--------------------------------------
-    def reset_axes_cb(self):
+    def update_roi_cb(self):
         self.plot_xmin = self.axes_x_center - self.axes_x_radius
         self.plot_xmax = self.axes_x_center + self.axes_x_radius
 

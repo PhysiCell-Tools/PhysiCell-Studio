@@ -255,8 +255,8 @@ class Vis(VisBase, QWidget):
 
 
     #--------------------------------------
-    def reset_axes_cb(self):
-        # print("vis_tab.py: reset_axes_cb")
+    def update_roi_cb(self):
+        # print("vis_tab.py: update_roi_cb")
         # self.axes_x_center, axes_y_center, axes_x_radius, axes_y_radius, 
         self.plot_xmin = self.axes_x_center - self.axes_x_radius
         self.plot_xmax = self.axes_x_center + self.axes_x_radius

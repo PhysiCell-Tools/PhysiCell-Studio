@@ -1973,11 +1973,6 @@ class VisBase():
 
     def reset_plot_range(self):
         try:  # due to the initial callback
-            self.my_xmin.setText(str(self.xmin))
-            self.my_xmax.setText(str(self.xmax))
-            self.my_ymin.setText(str(self.ymin))
-            self.my_ymax.setText(str(self.ymax))
-
             self.plot_xmin = float(self.xmin)
             self.plot_xmax = float(self.xmax)
             self.plot_ymin = float(self.ymin)
