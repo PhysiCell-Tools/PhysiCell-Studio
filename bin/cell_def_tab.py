@@ -6065,10 +6065,7 @@ class CellDef(StudioTab):
         self.rename_behavior_distributions(old_name, new_name)
 
     def rename_behavior_distributions(self, old_name, new_name):
-        possible_superstrings = self.celltypes_list
-        possible_superstrings += self.substrate_list
-        reserved_words = create_reserved_words()
-        possible_superstrings += reserved_words
+        possible_superstrings = self.celltypes_list + self.substrate_list + create_reserved_words()
         super_strings = [x for x in possible_superstrings if (old_name in x) and (old_name != x)] # the other elements in the list that contain the old_name
         for cdname in self.param_d.keys():
             if "par_dists" in self.param_d[cdname].keys():
