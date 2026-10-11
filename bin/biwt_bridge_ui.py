@@ -30,6 +30,9 @@ from PyQt5.QtWidgets import (
     QFileDialog, QMessageBox, QScrollArea, QFrame, QSpacerItem, QSizePolicy,
 )
 
+import biwt
+from biwt.types import DomainSource
+
 import biwt_bridge as bridge
 import physicell_xml_defaults as pcdefaults
 from studio_classes import QLabelSeparator, QCheckBox_custom
@@ -52,50 +55,17 @@ def _timestamp():
 # Studio always sends a domain unless this model's own is malformed (see
 # ICs._domain_from_config_tab), so DEFAULT means the domain describes neither the model nor
 # the data -- the one case where adopting it is wrong.
-try:  # biwt may be absent or may not export DomainSource; fall back to the raw strings
-    from biwt.types import DomainSource as _DomainSource
-    _DOMAIN_SOURCE_LABELS = {
-        _DomainSource.HOST: "from Studio",
-        _DomainSource.DATA: "from data",
-        _DomainSource.USER: "user-edited",
-        _DomainSource.DEFAULT: "BIWT default",
-    }
-except Exception:
-    _DOMAIN_SOURCE_LABELS = {
-        "host": "from Studio",
-        "data": "from data",
-        "user": "user-edited",
-        "default": "BIWT default",
-    }
+_DOMAIN_SOURCE_LABELS = {
+    DomainSource.HOST: "from Studio",
+    DomainSource.DATA: "from data",
+    DomainSource.USER: "user-edited",
+    DomainSource.DEFAULT: "BIWT default",
+}
 
 
 def _domain_source_label(source):
-    """Plain wording for a DomainSpec.source, or the raw marker if it is unfamiliar.
-
-    BIWT's DomainSource docstring and its code disagree on which values exist, so an
-    unrecognised marker is shown as-is rather than mapped onto the nearest known label.
-    """
-    if not source:
-        return ""
-    return _DOMAIN_SOURCE_LABELS.get(source, source.replace("_", " "))
-
-
-def _csv_types_without_definitions(result, prospective_cell_types):
-    """Cell types the .csv places but the model will have no definition for.
-
-    See BiwtCompletionFlow._add_requests_for_csv_types for why these matter.
-    """
-    coordinates = getattr(result, "coordinates", None)
-    if coordinates is None:
-        return []
-    try:
-        placed = [str(name).strip() for name in coordinates["type"].unique()]
-    except (KeyError, TypeError, AttributeError):
-        return []
-    # Through classify_names() so this uses the same "is it the same name?" rule as the cell
-    # definitions do, rather than a second copy of it that could drift.
-    _matched, added = bridge.classify_names(placed, prospective_cell_types)
-    return sorted(set(name for name in added if name))
+    """Plain wording for a DomainSpec.source, or the raw marker if it is unfamiliar."""
+    return _DOMAIN_SOURCE_LABELS.get(source, source)
 
 
 def _rules_note(findings, subject):
@@ -120,15 +90,6 @@ def _new_file_rules_note(rule_count):
         return ""
     return ("! The new config gets no rules - the %d in this model stay%s with it."
             % (rule_count, "s" if rule_count == 1 else ""))
-
-
-def _biwt_version():
-    """The installed BIWT's version, for the receipt. Empty if it does not publish one."""
-    try:
-        import biwt
-        return getattr(biwt, "__version__", "") or ""
-    except Exception:
-        return ""
 
 
 def backup_config(path):
@@ -625,8 +586,9 @@ class BiwtCompletionFlow:
         if result is None:
             return  # BIWT calls back with None when the user cancels.
 
-        requests = bridge.extract_cell_defs(result)
-        self._add_requests_for_csv_types(result, requests)
+        # param_d, not celltypes_list: deleting a cell type removes it from param_d at once,
+        # while celltypes_list keeps it until the next reload.
+        requests = bridge.extract_cell_defs(result, list(self.xml_creator.celldef_tab.param_d))
         self._resolve(requests, self.xml_creator.xml_root.find(".//cell_definitions"))
         context = self._build_context(result, requests)
         dialog = BiwtSaveDialog(self.ics, context)
@@ -665,28 +627,8 @@ class BiwtCompletionFlow:
     # ------------------------------------------------------------------
     def _strip_csv_type_names(self, result):
         """Trim whitespace off the .csv's cell type names, as the config's are trimmed."""
-        coordinates = getattr(result, "coordinates", None)
-        if coordinates is None or "type" not in getattr(coordinates, "columns", []):
-            return
-        result.coordinates = coordinates.assign(
-            type=coordinates["type"].astype(str).str.strip())
-
-    def _add_requests_for_csv_types(self, result, requests):
-        """Add a request for every cell type the .csv places that has no definition coming.
-
-        A type left at "(none)" is simply absent from BIWT's mapping. Where the model already
-        has that type, absence is the useful answer -- keep the definition Studio holds. Where
-        it does not, the .csv would place cells that nothing defines, which PhysiCell refuses
-        and the ICs tab reports only as an opaque "Invalid cell type name".
-        """
-        try:
-            existing = list(self.xml_creator.celldef_tab.param_d.keys())
-        except AttributeError:
-            existing = []
-        known = list(requests) + existing
-        for name in _csv_types_without_definitions(result, known):
-            requests[name] = bridge.request_for_csv_type(name)
-        return requests
+        result.coordinates = result.coordinates.assign(
+            type=result.coordinates["type"].astype(str).str.strip())
 
     def _resolve(self, requests, cell_definitions_elm):
         """Give every request an element, then fill in any phenotype section it lacks."""
@@ -734,6 +676,10 @@ class BiwtCompletionFlow:
         no_template = sorted(r.name for r in rows
                              if not r.request.chose_template()
                              and r.request.origin == bridge.ORIGIN_DEFAULT)
+        # A type that keeps this model's definition of the same name -- whether BIWT picked
+        # that or the type was left at "(none)" -- gets no row, since nothing about it
+        # changes. It still needs a line: in a new file it is being written somewhere.
+        kept = sorted(r.name for r in rows if r.unchanged())
         unusable = sorted(r.name for r in rows
                           if r.request.chose_template()
                           and r.request.origin == bridge.ORIGIN_DEFAULT)
@@ -746,9 +692,15 @@ class BiwtCompletionFlow:
                 % (", ".join(unusable), "it was" if len(unusable) == 1 else "they were"))
         if no_template:
             notes.append(
-                "! No template was chosen for: %s. The .csv places cells of these types so "
-                "they will be created with Studio's generic default phenotype."
-                % ", ".join(no_template))
+                "! No template was chosen for: %s, so %s created with Studio's generic "
+                "default phenotype."
+                % (", ".join(no_template), "it is" if len(no_template) == 1 else "they are"))
+        if kept:
+            notes.append(
+                "%s %s already defined in this model and %s that definition. To start from a "
+                "generic phenotype instead, pick a template in BIWT."
+                % (", ".join(kept), "is" if len(kept) == 1 else "are",
+                   "keeps" if len(kept) == 1 else "keep"))
         # Only the cell types that actually arrive without secretion values. A run where every
         # type came from this model's own definitions changes no secretion at all, and saying
         # otherwise sends the user looking for something that is not there.
@@ -768,13 +720,9 @@ class BiwtCompletionFlow:
         # Both numbers off the .csv, which is what "placed" means. len(requests) is the
         # number of cell definitions Studio will build, and the two differ whenever a type is
         # defined but has no cells, or has cells and a definition the model already holds.
-        count, kinds = 0, 0
-        try:
-            count = len(result.coordinates)
-            kinds = len({str(n).strip() for n in result.coordinates["type"].unique()
-                         if str(n).strip()})
-        except Exception:
-            pass
+        count = len(result.coordinates)
+        kinds = len({str(n).strip() for n in result.coordinates["type"].unique()
+                     if str(n).strip()})
         headline = "BIWT placed %s cells in %d cell type%s." % (
             format(count, ","), kinds, "" if kinds == 1 else "s")
         if not count:
@@ -809,10 +757,8 @@ class BiwtCompletionFlow:
         return os.path.join(folder, name)
 
     def _domain_context(self, result):
-        domain = getattr(result, "domain_used", None)
+        domain = result.domain_used
         config_tab = self.xml_creator.config_tab
-        if domain is None:
-            return {"domain_rows": [], "domain_differs": False, "dimensionality_flip": ""}
 
         def current(widget, fallback=0.0):
             try:
@@ -829,7 +775,7 @@ class BiwtCompletionFlow:
 
         # Pairs in the Config tab's order: x, y, z.
         fmt = lambda d: "[%g, %g] x [%g, %g] x [%g, %g]" % d
-        label = _domain_source_label(getattr(domain, "source", ""))
+        label = _domain_source_label(domain.source)
         rows = [("current:", fmt(now)),
                 ("BIWT:", fmt(theirs) + ("   (%s)" % label if label else ""))]
 
@@ -1067,7 +1013,7 @@ class BiwtCompletionFlow:
         elements = {name: request.element for name, request in chosen.items()}
         bridge.assign_names_and_ids(elements, start_id=0)
 
-        domain = getattr(result, "domain_used", None) if dialog.wants_domain() else None
+        domain = result.domain_used if dialog.wants_domain() else None
         config_tab = self.xml_creator.config_tab
         deltas = []
         for widget in (config_tab.xdel, config_tab.ydel, config_tab.zdel):
@@ -1113,14 +1059,13 @@ class BiwtCompletionFlow:
         config_tab = self.xml_creator.config_tab
 
         if dialog.wants_domain():
-            domain = getattr(result, "domain_used", None)
-            if domain is not None:
-                for widget, value in (
-                    (config_tab.xmin, domain.xmin), (config_tab.xmax, domain.xmax),
-                    (config_tab.ymin, domain.ymin), (config_tab.ymax, domain.ymax),
-                    (config_tab.zmin, domain.zmin), (config_tab.zmax, domain.zmax),
-                ):
-                    widget.setText(str(value))
+            domain = result.domain_used
+            for widget, value in (
+                (config_tab.xmin, domain.xmin), (config_tab.xmax, domain.xmax),
+                (config_tab.ymin, domain.ymin), (config_tab.ymax, domain.ymax),
+                (config_tab.zmin, domain.zmin), (config_tab.zmax, domain.zmax),
+            ):
+                widget.setText(str(value))
 
         if dialog.wants_ics_pointed():
             # fill_xml() returns early when <initial_conditions> is missing and dereferences
@@ -1176,9 +1121,7 @@ class BiwtCompletionFlow:
 
     def _cell_type_trail(self, result):
         """Lines describing labels BIWT dropped or merged, or [] if nothing to say."""
-        mapping = getattr(result, "cell_type_map", None)
-        if not isinstance(mapping, dict) or not mapping:
-            return []
+        mapping = result.cell_type_map
 
         deleted = sorted(original for original, final in mapping.items() if final is None)
         merged = {}
@@ -1202,11 +1145,7 @@ class BiwtCompletionFlow:
         # with plain text the continuation returns to the left margin and the indentation
         # stops meaning anything. List items keep a hanging indent when they wrap.
         esc = _escape
-        csv_item = esc(csv_path)
-        try:
-            csv_item += " &mdash; %s cells" % format(len(result.coordinates), ",")
-        except Exception:
-            pass
+        csv_item = "%s &mdash; %s cells" % (esc(csv_path), format(len(result.coordinates), ","))
 
         html = ["<b>Wrote</b>", "<ul>", "<li>%s</li>" % csv_item]
 
@@ -1299,7 +1238,7 @@ class BiwtCompletionFlow:
             notes.insert(0, "Studio still has the previous model open - open %s to make any of "
                             "the changes below." % esc(os.path.basename(config_path)))
 
-        version = _biwt_version()
+        version = biwt.__version__
         if version:
             html.append("<p style='color:gray;'>BIWT %s</p>" % esc(version))
 

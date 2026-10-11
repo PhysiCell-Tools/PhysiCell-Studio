@@ -169,10 +169,15 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
         glayout.addWidget(self.axes_yr , idx_row,3, 1,1) # w, row, column, rowspan, colspan
 
         idx_row += 1
-        self.reset_axes_button = QPushButton("Update ROI")
-        self.reset_axes_button.setStyleSheet("background-color: lightgreen;")
-        self.reset_axes_button.clicked.connect(self.reset_axes_cb)
-        glayout.addWidget(self.reset_axes_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
+        self.update_roi_button = QPushButton("Update ROI")
+        self.update_roi_button.setStyleSheet("background-color: lightgreen;")
+        self.update_roi_button.clicked.connect(self.update_roi_cb)
+        glayout.addWidget(self.update_roi_button, idx_row,0,1,2) # w, row, column, rowspan, colspan
+
+        self.reset_roi_button = QPushButton("Reset")
+        self.reset_roi_button.setStyleSheet("background-color: lightgreen;")
+        self.reset_roi_button.clicked.connect(self.reset_roi_cb)
+        glayout.addWidget(self.reset_roi_button, idx_row,2,1,2) # w, row, column, rowspan, colspan
 
         #--------------------------
         idx_row += 1
@@ -332,8 +337,12 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
             self.vis_tab.axes_y_radius = float(sval)
         except:
             pass
-    def reset_axes_cb(self):
-        self.vis_tab.reset_axes_cb()
+    def update_roi_cb(self):
+        self.vis_tab.update_roi_cb()
+
+    def reset_roi_cb(self):
+        # resets the plot axes back to the full domain, as given by the config (Domain tab)
+        self.vis_tab.reset_plot_range()
 
 
     def voxel_grid_cb(self):

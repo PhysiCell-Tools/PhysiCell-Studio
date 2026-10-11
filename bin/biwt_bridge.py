@@ -77,16 +77,6 @@ def is_bundled_library(path):
     except OSError:
         return os.path.abspath(path) == BUNDLED_TEMPLATE_LIBRARY
 
-# BiwtResult.cell_templates is the field as of BIWT 0.5: {cell type: (path, name, content)}.
-# The others are tried only so that a rename on BIWT's side degrades to a named problem in
-# the dialog rather than a silent "BIWT sent nothing".
-_CELL_DEF_ATTRS = (
-    "cell_templates",
-    "cell_definitions",
-    "cell_defs",
-)
-
-
 # What a cell definition was actually built from, once resolved.
 ORIGIN_TEMPLATE = "template"   # a template out of a .toml library
 ORIGIN_HOST = "host"           # this model's own definition of another cell type
@@ -156,41 +146,6 @@ class ReconcileReport:
 # Reading BIWT's result
 # ---------------------------------------------------------------------------
 
-def _looks_like_cell_defs(value):
-    """True for a {name: content} mapping, false for BIWT's other dicts.
-
-    cell_type_map is the one to keep out: it is {str: str|None} and would otherwise pass.
-    """
-    if not isinstance(value, dict) or not value:
-        return False
-    for key, item in value.items():
-        if not isinstance(key, str):
-            return False
-        if isinstance(item, (tuple, list)):
-            if len(item) != 3:
-                return False
-        elif not isinstance(item, (str, ET.Element)):
-            return False
-    return True
-
-
-def _find_cell_def_payload(result):
-    """The cell templates off *result*, or None."""
-    for attr in _CELL_DEF_ATTRS:
-        value = getattr(result, attr, None)
-        if _looks_like_cell_defs(value):
-            return value
-
-    # No known name matched: accept any attribute shaped like the mapping, so a renamed field
-    # still yields cell types instead of an empty result.
-    for attr, value in sorted(vars(result).items()) if hasattr(result, "__dict__") else ():
-        if attr == "cell_type_map":
-            continue
-        if _looks_like_cell_defs(value):
-            return value
-    return None
-
-
 def _parse_content(content):
     """A <cell_definition> from template content, or (None, why it could not be used)."""
     if isinstance(content, ET.Element):
@@ -220,44 +175,53 @@ def _parse_content(content):
     return None, "is not a cell definition (its root element is <%s>)" % element.tag
 
 
-def extract_cell_defs(result):
-    """Read BIWT's result into {name: CellDefRequest}.
+def extract_cell_defs(result, studio_cell_types=()):
+    """Read BIWT's result into {cell type: CellDefRequest}, one per cell type it returned.
 
-    Records what BIWT said and nothing more -- see resolve_cell_defs() for turning that into
+    The cell types are cell_type_map's non-None values: every type that came through BIWT's
+    edit and rename steps, in that order. That includes a type given a count of zero, which
+    places no cells and still expects a definition. What each is built from:
+
+      * the template BIWT assigned it, when cell_templates has one;
+      * else, when Studio's open model already defines a type of that name, that definition,
+        copied. A name the model knows keeps the definition it has, in a merge or a new file
+        alike; anyone who wants a generic phenotype under such a name picks a template in
+        BIWT, because "(none)" is not that choice;
+      * else nothing yet -- resolve_cell_defs() fills in Studio's default phenotype.
+
+    Records what BIWT said and nothing more; see resolve_cell_defs() for turning that into
     XML. Nothing raises and nothing is discarded: content that will not parse is kept on the
     request as `error`, so the cell type is still reported as one a template was chosen for.
+
+    *studio_cell_types* are the open model's cell type names. The match is classify_names()'s
+    -- stripped, exact -- but the request keeps Studio's own spelling as its template_name,
+    since that is what the copy is looked up by.
     """
     requests = {}
     if result is None:
         return requests
 
-    payload = _find_cell_def_payload(result)
-    if payload is None:
-        return requests
+    templates = {(key or "").strip(): value for key, value in result.cell_templates.items()}
+    studio_cell_defs = {}
+    for cell_type in studio_cell_types:
+        studio_cell_defs.setdefault((cell_type or "").strip(), cell_type)
 
-    for key, value in payload.items():
-        name = (key or "").strip()
+    for final in result.cell_type_map.values():
+        name = (final or "").strip()
         if not name or name in requests:
-            # A blank name, or two that collide once trimmed. Neither can be built, and
-            # neither is something the user can act on from here.
             continue
-
-        source = template_name = None
-        content = value
-        if isinstance(value, (tuple, list)):
-            source, template_name, content = value
-
-        request = CellDefRequest(name, source, template_name, content)
-        if not request.from_host():
-            request.element, request.error = _parse_content(content)
+        if name in templates:
+            source, template_name, content = templates[name]
+            request = CellDefRequest(name, source, template_name, content)
+            if not request.from_host():
+                request.element, request.error = _parse_content(content)
+        elif name in studio_cell_defs:
+            request = CellDefRequest(name, HOST_SOURCE, studio_cell_defs[name])
+        else:
+            request = CellDefRequest(name)
         requests[name] = request
 
     return requests
-
-
-def request_for_csv_type(name):
-    """A request for a cell type the .csv places that BIWT assigned no template to."""
-    return CellDefRequest(name)
 
 
 def resolve_cell_defs(requests, cell_definitions_elm=None, nanohub_flag=False, data_dir=None):
