@@ -3402,11 +3402,18 @@ class VisBase():
         ims = []
         original_frame = self.current_svg_frame  # Save the original frame number
 
-        # Determine the total number of frames
-        svg_pattern = self.output_dir + "/" + "snapshot*.svg"
-        svg_files = glob.glob(svg_pattern)
-        svg_files.sort()
-        max_frame = len(svg_files) - 1
+        # Determine the total number of frames. Without .svg snapshots (cells plotted from .mat,
+        # e.g. a run loaded from a database) count the output*.xml files instead, rf. play_plot_cb()
+        frame_pattern = "snapshot*.svg" if self.cells_svg_rb.isChecked() else "output*.xml"
+        max_frame = len(glob.glob(os.path.join(self.output_dir, frame_pattern))) - 1
+        if max_frame < 1:   # ffmpeg would "save" an empty, unplayable .mp4
+            plt.close(fig)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setText(f"No frames ({frame_pattern}) found in {self.output_dir}; movie not created.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
 
         # Simulate play button click
         self.animating_flag = True
