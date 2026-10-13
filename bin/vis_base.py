@@ -3400,37 +3400,45 @@ class VisBase():
         ax.axis('off')  # Turn off the axis
         fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Remove borders
         ims = []
-        original_frame = self.current_svg_frame  # Save the original frame number
+        original_frame = self.current_frame  # Save the original frame number
 
-        # Determine the total number of frames
-        svg_pattern = self.output_dir + "/" + "snapshot*.svg"
-        svg_files = glob.glob(svg_pattern)
-        svg_files.sort()
-        max_frame = len(svg_files) - 1
+        # Determine the total number of frames. Without .svg snapshots (cells plotted from .mat,
+        # e.g. a run loaded from a database) count the output*.xml files instead, rf. play_plot_cb()
+        frame_pattern = "snapshot*.svg" if self.cells_svg_rb.isChecked() else "output*.xml"
+        max_frame = len(glob.glob(os.path.join(self.output_dir, frame_pattern))) - 1
+        if max_frame < 1:   # ffmpeg would "save" an empty, unplayable .mp4
+            plt.close(fig)
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Warning)
+            msgBox.setText(f"No frames ({frame_pattern}) found in {self.output_dir}; movie not created.")
+            msgBox.setStandardButtons(QMessageBox.Ok)
+            msgBox.exec()
+            return
 
-        # Simulate play button click
+        # Show the play button as "Pause" (pressing it cancels the movie), but step the frames
+        # here instead of with the play timer: play_plot_cb() would advance the frame between
+        # the plot and its capture, so the movie would start at frame 1.
+        self.timer.stop()
         self.animating_flag = True
         self.play_button.setText("Pause")
-        self.timer.start(1)
 
         self.cancel_movie = False  # Add a flag to cancel the movie creation
 
-        for frame in range(max_frame):
+        for frame in range(max_frame + 1):
             if self.animating_flag is False:  self.cancel_movie = True # Check if the pause button was pressed
             if self.cancel_movie:  # Check if the cancel button was pressed
                 print("Movie creation canceled.")
                 break
             self.current_svg_frame = frame
+            self.current_frame = frame   # the frame update_plots() plots (and draws on the canvas)
             self.update_plots()
-            self.canvas.draw_idle()  # Force a redraw of the canvas
-            self.canvas.flush_events()  # Ensure the canvas is updated
             im = ax.imshow(self.canvas.buffer_rgba(), animated=True)
             ims.append([im])
+            self.canvas.flush_events()  # Show the frame and handle the Pause/Cancel buttons
 
         # Stop the animation
         self.animating_flag = False
         self.play_button.setText("Play")
-        self.timer.stop()
 
         if not self.cancel_movie:  # Only save the movie if it was not canceled
             # Get the movie name from the movie_name_edit field and ensure it has .mp4 extension
@@ -3449,6 +3457,8 @@ class VisBase():
             msgBox.exec()
 
         self.current_svg_frame = original_frame  # Restore the original frame number
+        self.current_frame = original_frame
+        self.update_plots()
 
         # pyplot's Gcf holds every figure until it is closed, and each `ims` entry is a full
         # copy of the canvas framebuffer, so drop them both here.
