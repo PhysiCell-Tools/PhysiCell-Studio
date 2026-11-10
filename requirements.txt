@@ -4,4 +4,5 @@ scipy
 pandas
 simulariumio[physicell]
 requests
+PyGithub
 git+https://github.com/PhysiBoSS-Models/physiboss-models/
