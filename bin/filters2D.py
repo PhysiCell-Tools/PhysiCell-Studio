@@ -64,6 +64,11 @@ class FilterUI2DWindow(QWidget):
         self.cell_nucleus_checkbox.clicked.connect(self.cell_nucleus_cb)
         glayout.addWidget(self.cell_nucleus_checkbox, idx_row,2,1,1) # w, row, column, rowspan, colspan
 
+        self.fibres_checkbox = QCheckBox_custom('fibres')
+        self.fibres_checkbox.setChecked(getattr(self.vis_tab, 'show_fibres', True))
+        self.fibres_checkbox.clicked.connect(self.fibres_cb)
+        glayout.addWidget(self.fibres_checkbox, idx_row,3,1,1) # w, row, column, rowspan, colspan
+
         idx_row += 1
         self.cells_csv_button = QPushButton("Save snap.csv")
         self.cells_csv_button.setStyleSheet("background-color: lightgreen;")
@@ -282,6 +287,9 @@ This overlays edges representing cell-cell interactions on the Plot tab. Note th
 
     def cell_nucleus_cb(self):
         self.vis_tab.cell_nucleus_cb(self.cell_nucleus_checkbox.isChecked())
+
+    def fibres_cb(self):
+        self.vis_tab.fibres_cb(self.fibres_checkbox.isChecked())
 
     def cells_csv_cb(self):
         self.vis_tab.write_cells_csv_cb()

@@ -20,7 +20,7 @@ from vis_base import VisBase
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 from matplotlib.collections import LineCollection
-from matplotlib.patches import Circle, Ellipse, Rectangle
+from matplotlib.patches import Circle, Ellipse, Rectangle, Polygon
 from matplotlib.collections import PatchCollection
 import matplotlib.colors as mplc
 import cmaps
@@ -179,6 +179,8 @@ class Vis(VisBase, QWidget):
         self.show_edge = True
         self.show_nucleus = False
         self.alpha = 0.7
+
+        self.show_fibres = True
 
         basic_length = 12.0
         self.figsize_width_substrate = 15.0  # allow extra for colormap(s)
@@ -446,7 +448,8 @@ class Vis(VisBase, QWidget):
         ylist = deque()
         rlist = deque()
         rgba_list = deque()
-
+        polys = deque()
+        
         try:
             tree = ET.parse(full_fname)
         except:
@@ -496,57 +499,89 @@ class Vis(VisBase, QWidget):
         for child in cells_parent:
             if filter_out(child):
                 continue
-            for circle in child:  # two circles in each child: outer + nucleus
-                try:
-                    xval = float(circle.attrib['cx'])
-                except:
-                    continue
 
-                # map SVG coords into the domain that produced them
-                xval += self.output_xmin
+            if self.show_fibres and child.attrib['type'] in ["ecm", "fiber", "fibre", "matrix", "rod"]:
+                
+                    for line in child:
+                        x1 = float(line.attrib['x1'])
+                        x1 = x1/self.x_range * self.x_range + self.xmin
+                        x2 = float(line.attrib['x2'])
+                        x2 = x2/self.x_range * self.x_range + self.xmin
+                        y1 = float(line.attrib['y1'])
+                        y1 = y1/self.y_range * self.y_range + self.ymin
+                        y2 = float(line.attrib['y2'])
+                        y2 = y2/self.y_range * self.y_range + self.ymin
 
-                s = circle.attrib['fill']
-                if( s[0:4] == "rgba" ):
-                    # background = bgcolor[0] * 255.0; # coudl also be 255.0 for white
-                    rgba_float =list(map(float,s[5:-1].split(",")))
-                    r = rgba_float[0]
-                    g = rgba_float[1]
-                    b = rgba_float[2]                    
-                    alpha = rgba_float[3]
-                    alpha *= 2.0; # cell_alpha_toggle
-                    if( alpha > 1.0 ):
-                        alpha = 1.0
-                    rgba = [1,1,1,alpha]
-                    rgba[0:3] = [ np.round(r), np.round(g), np.round(b) ]
-                    rgba[0:3] = [x / 255. for x in rgba[0:3] ]  
-                elif (s[0:3] == "rgb"):  # if an rgb string, e.g. "rgb(175,175,80)" 
-                    rgba = [1,1,1,1.0]
-                    rgba[0:3] = list(map(int, s[4:-1].split(",")))  
-                    rgba[0:3] = [x / 255. for x in rgba[0:3] ]
-                else:     # otherwise, must be a color name
-                    rgb_tuple = mplc.to_rgb(mplc.cnames[s])  # a tuple
-                    rgba = [1,1,1,1.0]
-                    rgba[0:3] = [x for x in rgb_tuple]
+                        p1 = np.array([x1, y1])
+                        p2 = np.array([x2, y2])
+                        d = p2 - p1
+                        radians = np.arctan2(d[1], d[0]) - np.pi/2
+                        w = float(line.attrib['stroke-width'])
+                        c = line.attrib['stroke']
+                        
+                        x0_ = x1 + (w*np.cos(radians)/2)
+                        y0_ = y1 + (w*np.sin(radians)/2)
+                        x1_ = x1 - (w*np.cos(radians)/2)
+                        y1_ = y1 - (w*np.sin(radians)/2)
+                        
+                        x2_ = x2 + (w*np.cos(radians)/2)
+                        y2_ = y2 + (w*np.sin(radians)/2)
+                        x3_ = x2 - (w*np.cos(radians)/2)
+                        y3_ = y2 - (w*np.sin(radians)/2)
+                        
+                        polys.append((np.array([(x0_, y0_), (x1_, y1_), (x3_, y3_), (x2_, y2_), ]), c))
+            else:
+                for circle in child:  # two circles in each child: outer + nucleus
+                    try:
+                        xval = float(circle.attrib['cx'])
+                    except:
+                        continue
 
-                # test for bogus x,y locations
-                if (xval < self.output_xmin - x_pad) or (xval > self.output_xmax + x_pad):
-                    print("bogus xval=", xval)
-                    break
-                yval = float(circle.attrib['cy'])
-                yval += self.output_ymin
-                if (yval < self.output_ymin - y_pad) or (yval > self.output_ymax + y_pad):
-                    print("bogus yval=", yval)
-                    break
+                    # map SVG coords into the domain that produced them
+                    xval += self.output_xmin
 
-                rval = float(circle.attrib['r'])
-                xlist.append(xval)
-                ylist.append(yval)
-                rlist.append(rval)
-                rgba_list.append(rgba)
+                    s = circle.attrib['fill']
+                    if( s[0:4] == "rgba" ):
+                        # background = bgcolor[0] * 255.0; # coudl also be 255.0 for white
+                        rgba_float =list(map(float,s[5:-1].split(",")))
+                        r = rgba_float[0]
+                        g = rgba_float[1]
+                        b = rgba_float[2]                    
+                        alpha = rgba_float[3]
+                        alpha *= 2.0; # cell_alpha_toggle
+                        if( alpha > 1.0 ):
+                            alpha = 1.0
+                        rgba = [1,1,1,alpha]
+                        rgba[0:3] = [ np.round(r), np.round(g), np.round(b) ]
+                        rgba[0:3] = [x / 255. for x in rgba[0:3] ]  
+                    elif (s[0:3] == "rgb"):  # if an rgb string, e.g. "rgb(175,175,80)" 
+                        rgba = [1,1,1,1.0]
+                        rgba[0:3] = list(map(int, s[4:-1].split(",")))  
+                        rgba[0:3] = [x / 255. for x in rgba[0:3] ]
+                    else:     # otherwise, must be a color name
+                        rgb_tuple = mplc.to_rgb(mplc.cnames[s])  # a tuple
+                        rgba = [1,1,1,1.0]
+                        rgba[0:3] = [x for x in rgb_tuple]
 
-                # For .svg files with cells that *have* a nucleus, there will be a 2nd
-                if (not self.show_nucleus):
-                    break
+                    # test for bogus x,y locations
+                    if (xval < self.output_xmin - x_pad) or (xval > self.output_xmax + x_pad):
+                        print("bogus xval=", xval)
+                        break
+                    yval = float(circle.attrib['cy'])
+                    yval += self.output_ymin
+                    if (yval < self.output_ymin - y_pad) or (yval > self.output_ymax + y_pad):
+                        print("bogus yval=", yval)
+                        break
+
+                    rval = float(circle.attrib['r'])
+                    xlist.append(xval)
+                    ylist.append(yval)
+                    rlist.append(rval)
+                    rgba_list.append(rgba)
+
+                    # For .svg files with cells that *have* a nucleus, there will be a 2nd
+                    if (not self.show_nucleus):
+                        break
 
             num_cells += 1
 
@@ -576,6 +611,8 @@ class Vis(VisBase, QWidget):
         else:  # transparent cells, but with (thicker) edges
             self.circles(xvals,yvals, s=rvals, color=(1,1,1,0),  edgecolor=rgbas, linewidth=self.cell_line_width2) 
 
+        if self.show_fibres:
+            self.polygons(polys=polys)
 
         if self.view_aspect_square:
             self.ax0.set_aspect('equal')
@@ -840,7 +877,8 @@ class Vis(VisBase, QWidget):
             else:
                 cell_plot = self.circles(xvals,yvals, s=cell_radii, c=cell_scalar, cmap=cbar_name, vmin=vmin, vmax=vmax, alpha=self.cell_alpha)
 
-
+        if self.fibres_checked_flag:
+            self.polygons(polys=polys)
         num_axes =  len(self.figure.axes)
     
         if( self.discrete_variable ): # Generic way: if variable is discrete
