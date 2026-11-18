@@ -710,7 +710,7 @@ class PhysiBoSS_Frame(QWidget):
     def clicked_add_parameter(self):
         self.add_parameter()
         self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["parameters"].append({
-            'name': self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["list_parameters"][0] if "list_nodes" in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"].keys() else "",
+            'name': self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["list_parameters"][0] if "list_parameters" in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"].keys() else "",
             'value': "1.0"
         })
 
@@ -1229,8 +1229,8 @@ class PhysiBoSS_Frame(QWidget):
         for i, parameter in enumerate(self.celldef_tab.param_d[cdname]["intracellular"]["parameters"]):
             self.add_parameter()
             name, value, _, _ = self.parameters[i]
-            if "list_nodes" not in self.celldef_tab.param_d[cdname]["intracellular"].keys():
-                print("----- ERROR(2): update_intracellular_params() has no 'list_nodes' key.")
+            if "list_parameters" not in self.celldef_tab.param_d[cdname]["intracellular"].keys():
+                print("----- ERROR(2): update_intracellular_params() has no 'list_parameters' key.")
                 break
             name.setCurrentIndex(self.celldef_tab.param_d[cdname]["intracellular"]["list_parameters"].index(parameter["name"]))
             value.setText(parameter["value"])
