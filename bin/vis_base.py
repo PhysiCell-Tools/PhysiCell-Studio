@@ -21,7 +21,7 @@ from pathlib import Path
 from matplotlib.colors import BoundaryNorm, rgb2hex
 from matplotlib.ticker import MaxNLocator
 from matplotlib.collections import LineCollection
-from matplotlib.patches import Circle, Ellipse, Rectangle
+from matplotlib.patches import Circle, Ellipse, Rectangle, Polygon
 from matplotlib.collections import PatchCollection
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from matplotlib import gridspec
@@ -475,7 +475,12 @@ class VisBase():
             self.cell_colors.append(rgb)
         # print("with appended random colors= ",self.cell_colors)
 
-
+        self.fibre_colors = {
+            'blue': (0.,0.,1.),
+            'steelblue': (70/255.,130/255.,180/255.),
+            'lightskyblue': (135/255.,206/255.,250/255.),
+            'darkblue': (0.,0.,139/255.),
+        }
         self.animating_flag = False
 
         self.called_from_update = False
@@ -2508,6 +2513,10 @@ class VisBase():
         self.show_nucleus = bval
         self.update_plots()
 
+    def fibres_cb(self,bval):
+        self.show_fibres = bval
+        self.update_plots()
+
     # def write_cells_csv_cb(self,bval):
     #     print("vis_base.py: write_cells_csv_cb")
 
@@ -3154,7 +3163,40 @@ class VisBase():
         #         print("--- ERROR in circles() doing plt.sci(collection)")
         return collection
 
+    
+    def polygons(self, polys=[], c='b', vmin=None, vmax=None, **kwargs):
+        # if np.isscalar(c):
+        #     kwargs.setdefault('color', c)
+        #     c = None
 
+        if 'fc' in kwargs:
+            kwargs.setdefault('facecolor', kwargs.pop('fc'))
+        if 'ec' in kwargs:
+            kwargs.setdefault('edgecolor', kwargs.pop('ec'))
+        if 'ls' in kwargs:
+            kwargs.setdefault('linestyle', kwargs.pop('ls'))
+        if 'lw' in kwargs:
+            kwargs.setdefault('linewidth', kwargs.pop('lw'))
+        # You can set `facecolor` with an array for each patch,
+        # while you can only set `facecolors` with a value for all.
+        
+        patches = [Polygon(poly, closed=True, color=self.fibre_colors[clr]) for poly, clr in polys]
+        collection = PatchCollection(patches, match_original=True, **kwargs)
+        # I think the next lines never got called somehow
+        # if c is not None:
+        #     c = np.broadcast_to(c, zipped.shape).ravel()
+        #     collection.set_array(c)
+        #     collection.set_clim(vmin, vmax)
+
+        ax = plt.gca()
+        ax.add_collection(collection)
+        ax.autoscale_view()
+        plt.draw_if_interactive()
+        if c is not None:
+            plt.sci(collection)
+        return collection
+
+    
     #  for Simularium, among other reasons later
     def get_simularium_info(self):
         print("--------- vis_base: get_simularium_info----------")
