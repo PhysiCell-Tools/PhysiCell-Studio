@@ -262,9 +262,8 @@ class PhysiBoSS_Frame(QWidget):
         self.global_inheritance = QHBoxLayout()
 
         self.global_inheritance_checkbox = QCheckBox_custom('Global inheritance')
-        self.global_inheritance_flag = False
         self.global_inheritance_checkbox.setEnabled(True)
-        self.global_inheritance_checkbox.setChecked(self.global_inheritance_flag)
+        self.global_inheritance_checkbox.setChecked(False)
         self.global_inheritance_checkbox.clicked.connect(self.global_inheritance_checkbox_cb)
         self.global_inheritance.addWidget(self.global_inheritance_checkbox)
         self.inheritance_layout.addLayout(self.global_inheritance)
@@ -1033,7 +1032,6 @@ class PhysiBoSS_Frame(QWidget):
             self.remove_output(i)
 
     def global_inheritance_checkbox_cb(self, bval):
-        self.global_inheritance_flag = bval
         if self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"] is not None:
             self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["global_inheritance"] = str(bval)
 
@@ -1041,7 +1039,7 @@ class PhysiBoSS_Frame(QWidget):
         self.add_node_inheritance()
         self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["node_inheritance"].append({
             'node': self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["list_nodes"][0] if "list_nodes" in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"].keys() else "",
-            'flag': str(not self.global_inheritance_flag),
+            'flag': str(not self.global_inheritance_checkbox.isChecked()),
         })
         
     def add_node_inheritance(self):
@@ -1056,7 +1054,7 @@ class PhysiBoSS_Frame(QWidget):
                 
         node_inheritance_checkbox = QCheckBox_custom('Node-specific inheritance')
         node_inheritance_checkbox.setEnabled(True)
-        node_inheritance_checkbox.setChecked(not self.global_inheritance_flag)
+        node_inheritance_checkbox.setChecked(not self.global_inheritance_checkbox.isChecked())
         
         node_inheritance_remove = QPushButton(icon=QIcon(sys.path[0] +"/icon/bin.svg"), parent=self)
 
