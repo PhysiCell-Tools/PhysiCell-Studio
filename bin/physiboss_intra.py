@@ -1041,7 +1041,7 @@ class PhysiBoSS_Frame(QWidget):
         self.add_node_inheritance()
         self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["node_inheritance"].append({
             'node': self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"]["list_nodes"][0] if "list_nodes" in self.celldef_tab.param_d[self.celldef_tab.current_cell_def]["intracellular"].keys() else "",
-            'flag': str(not self.global_inheritance),
+            'flag': str(not self.global_inheritance_flag),
         })
         
     def add_node_inheritance(self):
