@@ -76,6 +76,8 @@ except:
 PHYSIBOSS_MODELS_IMPORTED = False
 try:
     import physiboss_models
+    import requests
+    from github import RateLimitExceededException
 except ImportError:
     print("----- Warning: physiboss_models not imported.")
     print("      You can try to run 'pip install -r requirements.txt'")
@@ -83,6 +85,15 @@ except ImportError:
     PHYSIBOSS_MODELS_IMPORTED = False
 else:
     PHYSIBOSS_MODELS_IMPORTED = True
+    # PyGithub's default retry sleeps until the GitHub API quota resets (up to an hour),
+    # which blocks Studio startup. Fail fast instead, and skip the PhysiBoSS-Models menu.
+    try:
+        from functools import partial
+        from github import Github
+        import physiboss_models.models
+        physiboss_models.models.Github = partial(Github, retry=None, timeout=10)
+    except (ImportError, AttributeError):
+        pass
 
 def SingleBrowse(self):
     filePath = QFileDialog.getOpenFileName(self,'',".",'*.xml')
@@ -221,12 +232,15 @@ class PhysiCellXMLCreator(QWidget):
                 self.physiboss_models_menu = None
                 self.physiboss_models_menus = {}
                 self.physiboss_models_configs = {}
-            except:
+            except RateLimitExceededException:
                 self.physiboss_models_flag = False
-                msgBox = QMessageBox()
-                msgBox.setText(f'Unable to create the physiboss_models.Database(). It requires being online.')
-                msgBox.setStandardButtons(QMessageBox.Ok)
-                returnValue = msgBox.exec()
+                print("----- Warning: GitHub API rate limit exceeded; PhysiBoSS-Models menu disabled for this session.")
+            except requests.exceptions.RequestException:
+                self.physiboss_models_flag = False
+                print("----- Warning: unable to reach GitHub (offline?); PhysiBoSS-Models menu disabled for this session.")
+            except Exception as e:
+                self.physiboss_models_flag = False
+                print(f"----- Warning: unable to create the physiboss_models.Database() ({type(e).__name__}: {e}); PhysiBoSS-Models menu disabled for this session.")
 
         self.project_io = ProjectIO(self)
 
