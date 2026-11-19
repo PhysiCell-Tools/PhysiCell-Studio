@@ -186,6 +186,7 @@ class Vis(VisBase, QWidget):
 
         self.cax1 = None
         self.cax2 = None
+        self.cax_hist = None
         self.substrate_grad_angle_window = None
 
         self.figsize_width_2Dplot = basic_length
@@ -672,13 +673,8 @@ class Vis(VisBase, QWidget):
                 self.ax0.plot([xvals[c1], xvals[c2]], [yvals[c1], yvals[c2]], 'k-', lw=0.5)
     
         if self.cax2:
-            try:
-                self.cax2.remove()
-            except:
-                pass
-            self.cax2 = None
-            self.cbar2 = None   # its Axes is gone; do not draw into it again
-   
+            self.remove_cells_cbar_axes()
+
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
@@ -844,14 +840,9 @@ class Vis(VisBase, QWidget):
         num_axes =  len(self.figure.axes)
     
         if( self.discrete_variable ): # Generic way: if variable is discrete
-            # Then we don't need the cax2
+            # Then we don't need the cax2 (nor its histogram)
             if self.cax2 is not None:
-                try:
-                    self.cax2.remove()
-                except:
-                    pass
-                self.cax2 = None
-                self.cbar2 = None   # its Axes is gone; do not draw into it again
+                self.remove_cells_cbar_axes()
             # Coloring the cells as it used to be
             cell_plot.set_clim(vmin=-0.5,vmax=len(self.discrete_variable)-0.5) 
             
@@ -867,7 +858,14 @@ class Vis(VisBase, QWidget):
         else:   # Note: vis_tab_ecm.py seems to avoid any memory leak and with simpler code
             # If it's not there, we create it
             if self.cax2 is None:
-                self.cax2 = self.figure.add_subplot(self.gs[1,0])
+                self.set_cells_cbar_row_height(self.cells_hist_flag)
+                if self.cells_hist_flag:
+                    # split the colorbar row: histogram on top, colorbar right below it (no gap)
+                    sub_gs = self.gs[1,0].subgridspec(2, 1, height_ratios=[3,1], hspace=0)
+                    self.cax_hist = self.figure.add_subplot(sub_gs[0])
+                    self.cax2 = self.figure.add_subplot(sub_gs[1])
+                else:
+                    self.cax2 = self.figure.add_subplot(self.gs[1,0])
                 self.cbar2 = None   # a new Axes needs its own Colorbar
 
             if self.cbar2 is None:
@@ -880,7 +878,10 @@ class Vis(VisBase, QWidget):
 
             self.cbar2.ax.set_xlabel(cell_scalar_humanreadable_name, fontsize=self.cbar_label_fontsize)
             self.cbar2.ax.tick_params(labelsize=self.fontsize)
-   
+
+            if self.cax_hist is not None:
+                self.plot_cells_histogram(cell_scalar)
+
         self.ax0.set_title(self.title_str, fontsize=self.title_fontsize)
         self.ax0.set_xlim(self.plot_xmin, self.plot_xmax)
         self.ax0.set_ylim(self.plot_ymin, self.plot_ymax)
@@ -889,6 +890,31 @@ class Vis(VisBase, QWidget):
             self.ax0.set_aspect('equal')
         else:
             self.ax0.set_aspect('auto')
+
+    def plot_cells_histogram(self, cell_scalar, max_bins=50):
+        # Histogram of the cells' scalar on cax_hist, sharing the x range (and colors) of the colorbar below it.
+        ax = self.cax_hist
+        ax.cla()
+        xmin, xmax = self.cbar2.ax.get_xlim()   # = the colorbar's (vmin, vmax)
+        vals = np.asarray(cell_scalar, dtype=float)
+        vals = vals[np.isfinite(vals)]
+        ymax = 0
+        if vals.size > 0:
+            edges = np.histogram_bin_edges(vals, bins='auto', range=(xmin, xmax))
+            if len(edges) - 1 > max_bins:
+                edges = np.linspace(xmin, xmax, max_bins + 1)
+            counts, edges = np.histogram(vals, bins=edges)   # values outside [cmin, cmax] are not counted
+            centers = 0.5 * (edges[:-1] + edges[1:])
+            colors = self.cbar2.cmap(self.cbar2.norm(centers))
+            ax.bar(centers, counts, width=np.diff(edges), color=colors, edgecolor='black', linewidth=0.3)
+            ymax = counts.max()
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(0, max(ymax, 1) * 1.05)
+        ax.set_xticks([])
+        ax.set_yticks([ymax] if ymax > 0 else [])   # only label the peak count (a "0" label would overlap the colorbar)
+        ax.tick_params(axis='y', labelsize=self.fontsize)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
 
     def _draw_gradient_angle_wheel(self):
         title = "gradient angle"
