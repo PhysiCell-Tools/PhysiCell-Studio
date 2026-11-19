@@ -573,6 +573,7 @@ class VisBase():
 
         self.cax1 = None
         self.cax2 = None
+        self.cax_hist = None   # histogram on top of the cells' colorbar (cax2)
 
         self.cbar2 = None
         self.substrate_grad_angle_window = None
@@ -882,6 +883,14 @@ class VisBase():
         self.cells_cmax.setFixedWidth(cvalue_width)
         self.cells_cmax.setValidator(QtGui.QDoubleValidator())
         hbox.addWidget(self.cells_cmax)
+
+        # histogram of the cells' scalar, drawn on top of (and aligned with) its colorbar (2D only)
+        self.cells_hist_checkbox = QCheckBox_custom('plot histogram')
+        self.cells_hist_flag = False
+        self.cells_hist_checkbox.setChecked(self.cells_hist_flag)
+        self.cells_hist_checkbox.setEnabled(False)
+        self.cells_hist_checkbox.clicked.connect(self.cells_hist_toggle_cb)
+        hbox.addWidget(self.cells_hist_checkbox)
 
         hbox.addStretch(1)  # not sure about this, but keeps buttons shoved to left
 
@@ -1874,15 +1883,36 @@ class VisBase():
         self.cells_cmin.setStyleSheet("background-color: lightgray;")
         self.cells_cmax.setEnabled(False)
         self.cells_cmax.setStyleSheet("background-color: lightgray;")
+        self.cells_hist_checkbox.setEnabled(False)
         # self.fix_cmap_checkbox.setEnabled(bval)
 
-        if self.cax2:
-            try:   # otherwise, physiboss UI can crash
-                self.cax2.remove()
-            except:
-                pass
-            self.cax2 = None
-            self.cbar2 = None   # its Axes is gone; do not draw into it again
+        self.remove_cells_cbar_axes()   # otherwise, physiboss UI can crash
+
+    def set_cells_cbar_row_height(self, with_hist):
+        # The bottom gridspec row (2D only) holds the cells' colorbar; make it taller when a histogram sits on top of it.
+        gs = getattr(self, 'gs', None)
+        if gs is None:
+            return
+        ratios = [20, 4] if with_hist else [20, 1]
+        if list(gs.get_height_ratios()) == ratios:
+            return
+        gs.set_height_ratios(ratios)
+        for ax in (getattr(self, 'ax0', None), getattr(self, 'cax1', None)):   # persistent axes must pick up the new geometry
+            if ax is not None and ax.get_subplotspec() is not None:
+                ax.set_subplotspec(ax.get_subplotspec())
+
+    def remove_cells_cbar_axes(self):
+        # Remove the cells' scalar colorbar (cax2) and its histogram (cax_hist), if present.
+        for name in ('cax_hist', 'cax2'):
+            ax = getattr(self, name, None)
+            if ax is not None:
+                try:
+                    ax.remove()
+                except:
+                    pass
+                setattr(self, name, None)
+        self.cbar2 = None   # its Axes is gone; do not draw into it again
+        self.set_cells_cbar_row_height(False)
 
     def cells_svg_mat_cb(self):
         # print("\n---------cells_svg_mat_cb(self)")
@@ -1935,6 +1965,7 @@ class VisBase():
             self.fix_cells_cmap_checkbox.setEnabled(True)
             self.cells_cmin.setEnabled(True)
             self.cells_cmax.setEnabled(True)
+            self.cells_hist_checkbox.setEnabled(not self.model3D_flag)
             if self.fix_cells_cmap_checkbox.isChecked():
                 self.cells_cmin.setStyleSheet("background-color: white;")
                 self.cells_cmax.setStyleSheet("background-color: white;")
@@ -2568,6 +2599,7 @@ class VisBase():
             # self.cells_cmin.setStyleSheet("background-color: white;")
             self.cells_cmax.setEnabled(not self.plot_cells_svg)  # if plotting svg, do not enable cells_cmax
             # self.cells_cmax.setStyleSheet("background-color: white;")
+            self.cells_hist_checkbox.setEnabled(not self.plot_cells_svg and not self.model3D_flag)
             
             if self.physiboss_widgets:
                 self.physiboss_cell_type_combobox.setEnabled(self.physiboss_vis_flag)
@@ -2594,6 +2626,7 @@ class VisBase():
             self.cells_cmin.setStyleSheet("background-color: lightgray;")
             self.cells_cmax.setEnabled(False)
             self.cells_cmax.setStyleSheet("background-color: lightgray;")
+            self.cells_hist_checkbox.setEnabled(False)
             if self.physiboss_widgets:
                 self.physiboss_cell_type_combobox.setEnabled(False)
                 self.physiboss_node_combobox.setEnabled(False)
@@ -2601,14 +2634,8 @@ class VisBase():
 
         if not self.cells_checked_flag:
             self.cell_scalar_combobox.setEnabled(False)
-            if self.cax2:
-                try:
-                    self.cax2.remove()
-                except:
-                    pass
-                self.cax2 = None
-                self.cbar2 = None   # its Axes is gone; do not draw into it again
-            
+            self.remove_cells_cbar_axes()
+
         # print("\n>>> calling update_plots() from "+ inspect.stack()[0][3])
         self.update_plots()
 
@@ -2709,6 +2736,11 @@ class VisBase():
             self.cells_cmin.setStyleSheet("background-color: lightgray;")
             self.cells_cmax.setStyleSheet("background-color: lightgray;")
 
+        self.update_plots()
+
+    def cells_hist_toggle_cb(self,bval):
+        self.cells_hist_flag = bval
+        self.remove_cells_cbar_axes()   # the colorbar row is rebuilt (with/without histogram) on the next plot
         self.update_plots()
 
 
